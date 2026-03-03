@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "__MSG_extName__",
   "description": "__MSG_extDescription__",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "default_locale": "en",
   "permissions": [
     "storage",
@@ -38,7 +38,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["src/lib/page-bridge.js", "src/bridge/*", "assets/*"],
+      "resources": ["src/lib/page-bridge.js", "src/data/*", "src/bridge/*", "assets/*"],
       "matches": ["https://*.skilljar.com/*"]
     }
   ]

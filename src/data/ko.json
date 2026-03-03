@@ -1,0 +1,140 @@
+{
+  "_meta": {
+    "lang": "ko",
+    "langName": "한국어",
+    "version": "2.1.0",
+    "lastUpdated": "2026-03-04"
+  },
+  "ui": {
+    "Anthropic Academy": "Anthropic 아카데미",
+    "Courses": "과정",
+    "My Profile": "내 프로필",
+    "Sign Out": "로그아웃",
+    "Enroll in Course": "과정 등록",
+    "FREE": "무료",
+    "Share on X": "X에서 공유",
+    "Share on LinkedIn": "LinkedIn에서 공유",
+    "Certificate of completion": "수료 증명서",
+    "lectures": "강의",
+    "hour of video": "시간 분량의 동영상",
+    "quiz": "퀴즈",
+    "Next": "다음",
+    "Previous": "이전",
+    "Course Overview": "과정 개요",
+    "About this course": "이 과정에 대하여",
+    "What you'll learn": "학습 내용",
+    "Prerequisites": "선수 조건",
+    "Back to course": "과정으로 돌아가기"
+  },
+  "catalog": {
+    "Anthropic courses": "Anthropic 과정",
+    "Anthropic Academy / Courses": "Anthropic 아카데미 / 과정",
+
+    "Claude Code in Action": "Claude Code 활용하기",
+    "Integrate Claude Code into your development workflow": "Claude Code를 개발 워크플로우에 통합하는 방법을 학습합니다",
+
+    "Claude 101": "Claude 101",
+    "Learn how to use Claude for everyday work tasks, understand core features, and explore resources for more advanced learning on other topics.": "일상 업무에 Claude를 활용하는 방법을 배우고, 핵심 기능을 이해하며, 심화 학습을 위한 리소스를 탐색합니다.",
+
+    "AI Fluency: Framework & Foundations": "AI 유창성: 프레임워크 및 기본 원리",
+
+    "Real World Prompting": "실전 프롬프팅",
+    "Master the art of prompting Claude for real-world applications": "실제 활용을 위한 Claude 프롬프팅 기술을 마스터합니다",
+
+    "Prompt Engineering Interactive Tutorial": "프롬프트 엔지니어링 대화형 튜토리얼",
+    "An interactive, hands-on tutorial for learning prompt engineering techniques with Claude.": "Claude를 활용한 프롬프트 엔지니어링 기법을 실습으로 배우는 대화형 튜토리얼입니다.",
+
+    "Claude for Enterprise: Admin Essentials": "기업용 Claude: 관리자 필수 과정",
+
+    "Anthropic API Foundations": "Anthropic API 기초",
+    "Build with the Anthropic API": "Anthropic API를 활용한 개발",
+
+    "Extended Thinking with Claude": "Claude의 확장된 사고",
+    "Learn how to leverage Claude's extended thinking capabilities": "Claude의 확장된 사고 기능을 활용하는 방법을 학습합니다"
+  },
+  "faq": {
+    "Data and Privacy": "데이터 및 개인 정보 보호",
+
+    "What is Skilljar and why am I logging into it?": "Skilljar란 무엇이며, 왜 여기에 로그인하고 있나요?",
+    "Skilljar is a learning management system that hosts our educational content. You can access Anthropic course materials through this separate platform. It provides an interactive learning experience, tracks your progress, and allows you to access content systematically.": "Skilljar는 우리의 교육 콘텐츠를 호스팅하는 학습 관리 시스템입니다. 이 별도의 플랫폼을 통해 Anthropic 과정 자료에 접근할 수 있습니다. 상호작용적인 학습 경험을 제공하고, 학습 진행 상황을 추적하며, 체계적으로 콘텐츠에 접근할 수 있게 합니다.",
+
+    "What information does Skilljar collect about my learning activity?": "Skilljar는 내 학습 활동에 대해 어떤 정보를 수집하나요?",
+
+    "How is my Skilljar data different from my Anthropic account data?": "내 Skilljar 데이터는 내 Anthropic 계정 데이터와 어떻게 다른가요?",
+
+    "Is Skilljar secure? Where is my data stored?": "Skilljar는 안전한가요? 내 데이터는 어디에 저장되나요?",
+
+    "How do I delete my learning activity or Skilljar account?": "내 학습 활동이나 Skilljar 계정을 어떻게 삭제하나요?",
+
+    "Do I need an Anthropic account to access the learning content?": "학습 콘텐츠에 접근하려면 Anthropic 계정이 필요합니까?"
+  },
+  "claude101": {
+    "Meet Claude": "Claude를 만나보세요",
+    "What is Claude?": "Claude란 무엇인가요?",
+    "Your first conversation with Claude": "Claude와의 첫 대화",
+    "Getting better results": "더 나은 결과 얻기",
+
+    "Organizing your work and knowledge": "작업과 지식 정리하기",
+    "Introduction to projects": "프로젝트 소개",
+    "Creating with artifacts": "아티팩트로 만들기",
+    "Working with skills": "스킬 활용하기",
+
+    "Expanding Claude's reach": "Claude의 활용 범위 넓히기",
+    "Connecting your tools": "도구 연결하기",
+    "Enterprise search": "엔터프라이즈 검색",
+    "Research mode for deep dives": "심층 분석을 위한 리서치 모드",
+
+    "Putting it all together": "모든 것을 종합하기",
+
+    "Key takeaways": "주요 요점",
+
+    "This video introduces Claude as not just a simple chatbot, but as an AI assistant designed to be your thinking partner.": "이 비디오는 Claude를 단순한 챗봇이 아닌, 당신의 사고 파트너로 설계된 AI 어시스턴트로 소개합니다.",
+    "Claude is designed to be helpful, harmless, and honest.": "Claude는 유용하고, 해를 끼치지 않으며, 정직하도록 설계되었습니다.",
+    "At the highest level, Claude avoids harmful or unethical outputs, and if something is illegal, unethical, or could cause harm, Claude will decline to help.": "가장 높은 수준에서 Claude는 유해하거나 비윤리적인 출력을 피하며, 불법적이거나 비윤리적이거나 해를 끼칠 수 있는 것에 대해서는 도움을 거부합니다."
+  },
+  "claudeCode": {
+    "Claude Code in Action": "Claude Code 활용하기",
+    "A practical guide to Claude Code": "Claude Code에 대한 실용적인 안내",
+    "for accelerating your development workflow": "개발 워크플로우를 가속화하기 위해",
+    "This course covers Claude Code, a command-line AI assistant that performs development tasks using language models.": "이 과정은 언어 모델을 사용하여 개발 작업을 수행하는 명령줄 AI 어시스턴트인 Claude Code를 다룹니다.",
+    "About this course": "이 과정에 대하여"
+  },
+  "aiFluency": {
+    "AI Fluency: Framework & Foundations": "AI 유창성: 프레임워크 및 기본 원리",
+    "Build a strong foundation in AI concepts and practical applications": "AI 개념과 실용적 활용에 대한 탄탄한 기초를 쌓습니다"
+  },
+  "common": {
+    "Overview": "개요",
+    "Introduction": "소개",
+    "Summary": "요약",
+    "Conclusion": "결론",
+    "Example": "예시",
+    "Examples": "예시",
+    "Note": "참고",
+    "Important": "중요",
+    "Warning": "경고",
+    "Tip": "팁",
+    "Learn more": "더 알아보기",
+    "Get started": "시작하기",
+    "Read more": "더 읽기",
+    "See also": "참조",
+    "Table of contents": "목차",
+    "Lesson": "레슨",
+    "Module": "모듈",
+    "Chapter": "장",
+    "Section": "섹션",
+    "Welcome": "환영합니다",
+    "Complete": "완료",
+    "In Progress": "진행 중",
+    "Not Started": "시작하지 않음",
+    "Quiz": "퀴즈",
+    "Assessment": "평가",
+    "Certificate": "수료증",
+    "Congratulations": "축하합니다",
+    "Submit": "제출",
+    "Continue": "계속",
+    "Back": "뒤로",
+    "Start": "시작",
+    "Finish": "완료"
+  }
+}

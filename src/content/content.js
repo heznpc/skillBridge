@@ -111,91 +111,19 @@
   }
 
   // ============================================================
-  // INDEXEDDB PERSISTENT CACHE
-  // ============================================================
-
-  const DB_NAME = 'skilljar_i18n_cache';
-  const DB_VERSION = 1;
-  const STORE_NAME = 'translations';
-  let db = null;
-
-  function openDB() {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(DB_NAME, DB_VERSION);
-      request.onupgradeneeded = (e) => {
-        const d = e.target.result;
-        if (!d.objectStoreNames.contains(STORE_NAME)) {
-          const store = d.createObjectStore(STORE_NAME, { keyPath: 'key' });
-          store.createIndex('timestamp', 'timestamp');
-        }
-      };
-      request.onsuccess = (e) => {
-        db = e.target.result;
-        resolve(db);
-      };
-      request.onerror = () => reject(request.error);
-    });
-  }
-
-  async function getCachedTranslation(text, lang) {
-    if (!db) return null;
-    return new Promise((resolve) => {
-      try {
-        const tx = db.transaction(STORE_NAME, 'readonly');
-        const store = tx.objectStore(STORE_NAME);
-        const key = `${lang}::${text.substring(0, 200)}`;
-        const req = store.get(key);
-        req.onsuccess = () => resolve(req.result?.translated || null);
-        req.onerror = () => resolve(null);
-      } catch {
-        resolve(null);
-      }
-    });
-  }
-
-  async function setCachedTranslation(text, lang, translated) {
-    if (!db) return;
-    try {
-      const tx = db.transaction(STORE_NAME, 'readwrite');
-      const store = tx.objectStore(STORE_NAME);
-      store.put({
-        key: `${lang}::${text.substring(0, 200)}`,
-        original: text,
-        translated,
-        lang,
-        timestamp: Date.now(),
-      });
-    } catch { /* ignore */ }
-  }
-
-  async function getBatchCached(texts, lang) {
-    if (!db) return { cached: {}, uncached: texts.map((t, i) => ({ idx: i, text: t })) };
-    const cached = {};
-    const uncached = [];
-    for (let i = 0; i < texts.length; i++) {
-      const hit = await getCachedTranslation(texts[i], lang);
-      if (hit) {
-        cached[i] = hit;
-      } else {
-        uncached.push({ idx: i, text: texts[i] });
-      }
-    }
-    return { cached, uncached };
-  }
-
-  // ============================================================
   // INITIALIZATION
   // ============================================================
 
   async function init() {
     try {
-      // Open IndexedDB cache
-      await openDB().catch(e => console.warn('[Skilljar i18n] IndexedDB unavailable:', e));
-
       const stored = await chrome.storage.local.get(['targetLanguage', 'autoTranslate']);
       currentLang = stored.targetLanguage || 'en';
 
       translator = new SkilljarTranslator();
+      // Load static translations for current language
+      if (currentLang !== 'en') {
+        await translator.loadStaticTranslations(currentLang);
+      }
       const bridgeOk = await translator.initialize();
 
       if (!bridgeOk) {
@@ -234,9 +162,8 @@
 
   async function translatePage(targetLang) {
     if (isTranslating) return;
-    if (!translator || !translator.isReady) {
-      console.warn('[Skilljar i18n] Translator not ready');
-      updateProgressText('AI engine loading... please wait and retry');
+    if (!translator) {
+      updateProgressText('Translator not loaded.');
       showProgress(true);
       setTimeout(() => showProgress(false), 3000);
       return;
@@ -249,19 +176,22 @@
     updateProgressText('Preparing translation...');
 
     try {
+      // Load static translations if not yet loaded for this language
+      if (Object.keys(translator.staticDict).length === 0 && targetLang !== 'en') {
+        await translator.loadStaticTranslations(targetLang);
+      }
+
       const elements = getTranslatableElements();
 
       if (elements.length === 0) {
-        updateProgressText('No translatable content found on this page.');
+        updateProgressText('No translatable content found.');
         setTimeout(() => showProgress(false), 3000);
         isTranslating = false;
         return;
       }
 
-      // Collect all text nodes and their texts
-      const nodeMap = []; // { node, text, elementIdx }
-      const textsToTranslate = [];
-
+      // Collect all text nodes
+      const nodeMap = [];
       for (let i = 0; i < elements.length; i++) {
         const el = elements[i];
         if (!el.textContent.trim()) continue;
@@ -275,66 +205,54 @@
           const text = node.textContent.trim();
           if (text.length < 2) continue;
           if (isCodeContent(node)) continue;
-          nodeMap.push({ node, text, elementIdx: i });
-          textsToTranslate.push(text);
+          nodeMap.push({ node, text });
         }
       }
 
-      if (textsToTranslate.length === 0) {
+      if (nodeMap.length === 0) {
         updateProgressText('No translatable text found.');
         setTimeout(() => showProgress(false), 3000);
         isTranslating = false;
         return;
       }
 
-      updateProgressText(`Translating ${textsToTranslate.length} items...`);
+      // Phase 1: Apply static translations (instant)
+      const needsLLM = [];
+      let staticCount = 0;
 
-      // Step 1: Check IndexedDB cache first
-      const { cached, uncached } = await getBatchCached(textsToTranslate, targetLang);
-      const cachedCount = Object.keys(cached).length;
-
-      if (cachedCount > 0) {
-        console.log(`[Skilljar i18n] ${cachedCount} items from cache, ${uncached.length} need translation`);
-        // Apply cached translations immediately
-        for (const [idx, translated] of Object.entries(cached)) {
-          const { node, text } = nodeMap[idx];
-          if (translated && translated !== text) {
-            node.textContent = translated;
-          }
+      for (let i = 0; i < nodeMap.length; i++) {
+        const { node, text } = nodeMap[i];
+        const staticResult = translator.staticLookup(text);
+        if (staticResult) {
+          node.textContent = staticResult;
+          staticCount++;
+        } else {
+          needsLLM.push({ node, text, idx: i });
         }
-        updateProgressText(`Applied ${cachedCount} cached, translating ${uncached.length} remaining...`);
-        updateProgressBar(cachedCount / textsToTranslate.length);
       }
 
-      // Step 2: Batch translate uncached items
-      if (uncached.length > 0) {
-        const results = await translator.translateBatch(
-          uncached.map(u => u.text),
-          targetLang,
-          '',
-          (completed, total) => {
-            const totalDone = cachedCount + completed;
-            const pct = Math.round((totalDone / textsToTranslate.length) * 100);
-            updateProgressText(`Translating... ${pct}%`);
-            updateProgressBar(totalDone / textsToTranslate.length);
-          }
-        );
+      console.log(`[Skilljar i18n] Static: ${staticCount}/${nodeMap.length}, LLM needed: ${needsLLM.length}`);
+      updateProgressText(`Applied ${staticCount} instant translations`);
+      updateProgressBar(staticCount / nodeMap.length);
 
-        // Apply and cache results
-        let appliedCount = 0;
-        for (let i = 0; i < results.length; i++) {
-          const result = results[i];
-          const originalIdx = uncached[i].idx;
-          const { node, text } = nodeMap[originalIdx];
-
-          if (result && result.success && result.result && result.result !== text) {
-            node.textContent = result.result;
-            appliedCount++;
-            // Save to IndexedDB for future visits
-            setCachedTranslation(text, targetLang, result.result);
+      // Phase 2: LLM translate remaining (one by one, proven method)
+      if (needsLLM.length > 0 && translator.isReady) {
+        let llmDone = 0;
+        for (const item of needsLLM) {
+          try {
+            const translated = await translator.translate(item.text, targetLang);
+            if (translated && translated !== item.text) {
+              item.node.textContent = translated;
+            }
+          } catch (e) {
+            console.warn('[Skilljar i18n] LLM skip:', e.message);
           }
+          llmDone++;
+          const totalDone = staticCount + llmDone;
+          const pct = Math.round((totalDone / nodeMap.length) * 100);
+          updateProgressText(`Translating... ${pct}%`);
+          updateProgressBar(totalDone / nodeMap.length);
         }
-        console.log(`[Skilljar i18n] Applied ${appliedCount + cachedCount} translations (${cachedCount} cached, ${appliedCount} new)`);
       }
 
       updateProgressText('Translation complete!');
@@ -450,24 +368,26 @@
   function debounceTranslateNew(node) {
     clearTimeout(translateTimeout);
     translateTimeout = setTimeout(async () => {
-      if (currentLang !== 'en' && translator?.isReady) {
+      if (currentLang !== 'en' && translator) {
         const textNodes = getTextNodes(node);
         for (const tn of textNodes) {
           const original = tn.textContent.trim();
           if (original.length >= 2 && !isCodeContent(tn)) {
-            // Check IndexedDB first
-            const cached = await getCachedTranslation(original, currentLang);
-            if (cached) {
-              tn.textContent = cached;
+            // Static dict first (instant)
+            const staticResult = translator.staticLookup(original);
+            if (staticResult) {
+              tn.textContent = staticResult;
               continue;
             }
-            try {
-              const translated = await translator.translate(original, currentLang);
-              if (translated && translated !== original) {
-                tn.textContent = translated;
-                setCachedTranslation(original, currentLang, translated);
-              }
-            } catch (e) { /* skip */ }
+            // LLM fallback
+            if (translator.isReady) {
+              try {
+                const translated = await translator.translate(original, currentLang);
+                if (translated && translated !== original) {
+                  tn.textContent = translated;
+                }
+              } catch (e) { /* skip */ }
+            }
           }
         }
       }
@@ -618,10 +538,13 @@
     const langSelect = document.getElementById('si18n-lang-select');
     if (langSelect) {
       langSelect.value = currentLang;
-      langSelect.addEventListener('change', (e) => {
+      langSelect.addEventListener('change', async (e) => {
         currentLang = e.target.value;
         chrome.storage.local.set({ targetLanguage: currentLang });
-        // Update tutor greeting when language changes
+        // Load static translations for new language
+        if (translator && currentLang !== 'en') {
+          await translator.loadStaticTranslations(currentLang);
+        }
         updateTutorGreeting();
       });
     }
