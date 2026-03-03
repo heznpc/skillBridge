@@ -16,7 +16,7 @@ A Chrome extension that:
 
 - **Translates** course pages into 15+ languages in real-time
 - **AI Tutor** answers your questions about course material in your language
-- **Zero cost** — powered by [Puter.js](https://puter.com) + GLM-4-Flash (no API key needed)
+- **Zero cost** — powered by [Puter.js](https://puter.com) + GPT-4o-mini (no API key needed)
 - **Respects copyright** — translates on-the-fly only, never stores or redistributes content
 
 ## Supported Languages
@@ -76,7 +76,7 @@ skilljar-i18n-assistant/
 │   ├── background/            # Service worker
 │   ├── content/               # Content script + styles
 │   ├── popup/                 # Extension popup UI
-│   └── lib/                   # Translation engine (Puter.js + GLM-4-Flash)
+│   └── lib/                   # Translation engine (Puter.js + GPT-4o-mini)
 ├── assets/icons/              # Extension icons
 └── docs/                      # Landing page & docs
 ```
@@ -97,7 +97,7 @@ This is analogous to using your browser's built-in translation feature — a per
 
 | Component | Technology | Why |
 |-----------|-----------|-----|
-| AI Engine | [Puter.js](https://puter.com) + GLM-4-Flash | Free, no API key, instant setup |
+| AI Engine | [Puter.js](https://puter.com) + GPT-4o-mini | Free, no API key, instant setup |
 | Extension | Chrome Manifest V3 | Modern, secure extension platform |
 | UI | Vanilla CSS + JS | Zero dependencies, fast loading |
 | i18n | Chrome i18n API | Native multilingual support |
@@ -117,7 +117,7 @@ Key areas where help is needed:
 ## FAQ
 
 **Q: Is this free?**
-A: Yes, completely. Puter.js provides free AI inference with GLM-4-Flash.
+A: Yes, completely. Puter.js provides free AI inference with GPT-4o-mini.
 
 **Q: Do I need an API key?**
 A: No. Puter.js handles everything — no signup, no keys, no billing.
@@ -129,7 +129,7 @@ A: No. This is a community-built tool to improve accessibility of Anthropic's fr
 A: This extension functions like a personal translation tool (similar to Google Translate). It only translates displayed content in your browser and never stores, redistributes, or scrapes content.
 
 **Q: What about translation quality?**
-A: GLM-4-Flash provides good general translation. Technical terms are kept in English for accuracy. Quality may vary by language.
+A: GPT-4o-mini provides good general translation. Technical terms are kept in English for accuracy. Quality may vary by language.
 
 ## License
 

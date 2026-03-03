@@ -182,7 +182,7 @@ Return ONLY the translated text, nothing else.`;
         systemPrompt,
         text,
         targetLang,
-        model: 'glm-4-flash',
+        model: 'gpt-4o-mini',
       });
 
       // Cache
@@ -212,7 +212,7 @@ ${courseContext ? `Current course context: ${courseContext}` : ''}`;
         type: 'CHAT_REQUEST',
         systemPrompt,
         userMessage,
-        model: 'glm-4-flash',
+        model: 'gpt-4o-mini',
       });
     } catch (err) {
       console.error('[Skilljar i18n] Chat error:', err);

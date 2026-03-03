@@ -433,7 +433,7 @@
           <div class="si18n-chat-msg si18n-chat-bot">
             <div class="si18n-chat-avatar">AI</div>
             <div class="si18n-chat-bubble">
-              Hi! I'm your AI learning assistant. Ask me anything about this course. Powered by GLM-4 Flash via Puter.js (free, no API key).
+              Hi! I'm your AI learning assistant. Ask me anything about this course. Powered by GPT-4o-mini via Puter.js (free, no API key).
             </div>
           </div>
         </div>
@@ -448,7 +448,7 @@
       </div>
 
       <div class="si18n-footer">
-        <span>Powered by <a href="https://puter.com" target="_blank">Puter.js</a> + GLM-4 Flash</span>
+        <span>Powered by <a href="https://puter.com" target="_blank">Puter.js</a> + GPT-4o-mini</span>
         <span class="si18n-footer-sep">|</span>
         <a href="https://github.com" target="_blank">Open Source</a>
       </div>

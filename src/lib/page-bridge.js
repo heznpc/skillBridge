@@ -71,7 +71,7 @@
         if (!puterReady) await loadPuter();
 
         const response = await puter.ai.chat(data.systemPrompt, data.text, {
-          model: data.model || 'glm-4-flash',
+          model: data.model || 'gpt-4o-mini',
           stream: false,
         });
 
@@ -87,13 +87,14 @@
           result: result,
         }, '*');
       } catch (err) {
-        log('Translate error:', err.message);
+        const errMsg = err?.error || err?.message || String(err);
+        log('Translate error:', errMsg);
         window.postMessage({
           __skilljar_i18n__: true,
           type: 'TRANSLATE_RESPONSE',
           id: data.id,
           success: false,
-          error: err.message,
+          error: errMsg,
           result: data.text,
         }, '*');
       }
@@ -104,7 +105,7 @@
         if (!puterReady) await loadPuter();
 
         const response = await puter.ai.chat(data.systemPrompt, data.userMessage, {
-          model: data.model || 'glm-4-flash',
+          model: data.model || 'gpt-4o-mini',
           stream: false,
         });
 
@@ -120,14 +121,15 @@
           result: result,
         }, '*');
       } catch (err) {
-        log('Chat error:', err.message);
+        const errMsg = err?.error || err?.message || String(err);
+        log('Chat error:', errMsg);
         window.postMessage({
           __skilljar_i18n__: true,
           type: 'CHAT_RESPONSE',
           id: data.id,
           success: false,
-          error: err.message,
-          result: 'Error: ' + err.message,
+          error: errMsg,
+          result: 'Error: ' + errMsg,
         }, '*');
       }
     }

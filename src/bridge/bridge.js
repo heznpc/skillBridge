@@ -66,7 +66,7 @@
         if (!puterReady) throw new Error('Puter.js not ready');
 
         const response = await puter.ai.chat(systemPrompt, text, {
-          model: model || 'glm-4-flash',
+          model: model || 'gpt-4o-mini',
           stream: false,
         });
 
@@ -92,7 +92,7 @@
         if (!puterReady) throw new Error('Puter.js not ready');
 
         const response = await puter.ai.chat(systemPrompt, userMessage, {
-          model: model || 'glm-4-flash',
+          model: model || 'gpt-4o-mini',
           stream: false,
         });
 

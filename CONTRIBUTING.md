@@ -22,7 +22,7 @@ Thank you for your interest in contributing! This project aims to make Anthropic
 5. Submit a PR with a clear description
 
 ### Improving AI Translation Quality
-- The translation engine uses Puter.js + GLM-4-Flash
+- The translation engine uses Puter.js + GPT-4o-mini
 - Prompt improvements in `src/lib/translator.js` are welcome
 - Please test across multiple languages before submitting
 
