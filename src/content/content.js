@@ -19,6 +19,7 @@
     'td', 'th',                                   // table cells
     'label',                                      // form labels
     'figcaption',                                  // figure captions
+    'span',                                        // spans with text
     '.btn-text', '.nav-text',                     // button/nav text
     'blockquote',                                  // quotes
     'dt', 'dd',                                    // definition lists
@@ -35,6 +36,18 @@
     '[role="navigation"]',
   ].join(', ');
 
+  // Greetings per language for AI Tutor
+  const TUTOR_GREETINGS = {
+    'en': "Hi! I'm your AI learning assistant. Ask me anything about this course. Powered by GPT-4o-mini via Puter.js (free, no API key).",
+    'ko': "안녕하세요! AI 학습 도우미입니다. 이 과정에 대해 무엇이든 물어보세요. Puter.js + GPT-4o-mini 기반 (무료, API 키 불필요).",
+    'ja': "こんにちは！AI学習アシスタントです。このコースについて何でも聞いてください。Puter.js + GPT-4o-mini（無料、APIキー不要）。",
+    'zh-CN': "你好！我是你的AI学习助手。关于这门课程，有什么都可以问我。基于 Puter.js + GPT-4o-mini（免费，无需API密钥）。",
+    'zh-TW': "你好！我是你的AI學習助手。關於這門課程，有什麼都可以問我。基於 Puter.js + GPT-4o-mini（免費，無需API金鑰）。",
+    'es': "¡Hola! Soy tu asistente de aprendizaje con IA. Pregúntame lo que quieras sobre este curso. Powered by Puter.js + GPT-4o-mini (gratis, sin API key).",
+    'fr': "Bonjour ! Je suis votre assistant d'apprentissage IA. Posez-moi n'importe quelle question sur ce cours. Propulsé par Puter.js + GPT-4o-mini (gratuit, sans clé API).",
+    'de': "Hallo! Ich bin dein KI-Lernassistent. Frag mich alles über diesen Kurs. Powered by Puter.js + GPT-4o-mini (kostenlos, kein API-Schlüssel nötig).",
+  };
+
   let translator = null;
   let currentLang = 'en';
   let isTranslating = false;
@@ -45,14 +58,12 @@
 
   // ============================================================
   // REGISTER MESSAGE LISTENER IMMEDIATELY (before async init)
-  // This prevents "Receiving end does not exist" error
   // ============================================================
 
   chrome.runtime.onMessage.addListener(handleMessage);
   console.log('[Skilljar i18n] Message listener registered');
 
   function handleMessage(request, sender, sendResponse) {
-    // If translator isn't ready yet, queue the action
     if (!isReady && request.action === 'translatePage') {
       pendingActions.push({ request, sendResponse });
       sendResponse({ success: true, queued: true });
@@ -67,7 +78,7 @@
           console.error('[Skilljar i18n] translatePage error:', err);
           sendResponse({ success: false, error: err.message });
         });
-        return true; // keep channel open for async response
+        return true;
 
       case 'restoreOriginal':
         restoreOriginal();
@@ -100,11 +111,87 @@
   }
 
   // ============================================================
-  // INITIALIZATION (async, but message listener is already active)
+  // INDEXEDDB PERSISTENT CACHE
+  // ============================================================
+
+  const DB_NAME = 'skilljar_i18n_cache';
+  const DB_VERSION = 1;
+  const STORE_NAME = 'translations';
+  let db = null;
+
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+      request.onupgradeneeded = (e) => {
+        const d = e.target.result;
+        if (!d.objectStoreNames.contains(STORE_NAME)) {
+          const store = d.createObjectStore(STORE_NAME, { keyPath: 'key' });
+          store.createIndex('timestamp', 'timestamp');
+        }
+      };
+      request.onsuccess = (e) => {
+        db = e.target.result;
+        resolve(db);
+      };
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async function getCachedTranslation(text, lang) {
+    if (!db) return null;
+    return new Promise((resolve) => {
+      try {
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+        const key = `${lang}::${text.substring(0, 200)}`;
+        const req = store.get(key);
+        req.onsuccess = () => resolve(req.result?.translated || null);
+        req.onerror = () => resolve(null);
+      } catch {
+        resolve(null);
+      }
+    });
+  }
+
+  async function setCachedTranslation(text, lang, translated) {
+    if (!db) return;
+    try {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      store.put({
+        key: `${lang}::${text.substring(0, 200)}`,
+        original: text,
+        translated,
+        lang,
+        timestamp: Date.now(),
+      });
+    } catch { /* ignore */ }
+  }
+
+  async function getBatchCached(texts, lang) {
+    if (!db) return { cached: {}, uncached: texts.map((t, i) => ({ idx: i, text: t })) };
+    const cached = {};
+    const uncached = [];
+    for (let i = 0; i < texts.length; i++) {
+      const hit = await getCachedTranslation(texts[i], lang);
+      if (hit) {
+        cached[i] = hit;
+      } else {
+        uncached.push({ idx: i, text: texts[i] });
+      }
+    }
+    return { cached, uncached };
+  }
+
+  // ============================================================
+  // INITIALIZATION
   // ============================================================
 
   async function init() {
     try {
+      // Open IndexedDB cache
+      await openDB().catch(e => console.warn('[Skilljar i18n] IndexedDB unavailable:', e));
+
       const stored = await chrome.storage.local.get(['targetLanguage', 'autoTranslate']);
       currentLang = stored.targetLanguage || 'en';
 
@@ -121,7 +208,6 @@
 
       console.log('[Skilljar i18n] Content script ready');
 
-      // Process any queued actions from popup
       for (const { request } of pendingActions) {
         if (request.action === 'translatePage') {
           await translatePage(request.language);
@@ -129,16 +215,13 @@
       }
       pendingActions = [];
 
-      // Auto-translate if enabled
       if (stored.autoTranslate && currentLang !== 'en' && bridgeOk) {
         await translatePage(currentLang);
       }
 
-      // Observe DOM changes
       observeDOM();
     } catch (err) {
       console.error('[Skilljar i18n] Init error:', err);
-      // Still mark as ready so sidebar/button work
       isReady = true;
       injectSidebar();
       injectFloatingButton();
@@ -183,7 +266,6 @@
         const el = elements[i];
         if (!el.textContent.trim()) continue;
 
-        // Store original HTML
         if (!originalTexts.has(el)) {
           originalTexts.set(el, el.innerHTML);
         }
@@ -207,31 +289,55 @@
 
       updateProgressText(`Translating ${textsToTranslate.length} items...`);
 
-      // Batch translate all at once (parallel, fast)
-      const results = await translator.translateBatch(
-        textsToTranslate,
-        targetLang,
-        '',
-        (completed, total) => {
-          const pct = Math.round((completed / total) * 100);
-          updateProgressText(`Translating... ${pct}%`);
-          updateProgressBar(completed / total);
-        }
-      );
+      // Step 1: Check IndexedDB cache first
+      const { cached, uncached } = await getBatchCached(textsToTranslate, targetLang);
+      const cachedCount = Object.keys(cached).length;
 
-      // Apply translations to DOM
-      let appliedCount = 0;
-      for (let i = 0; i < nodeMap.length; i++) {
-        const { node, text } = nodeMap[i];
-        const result = results[i];
-        if (result && result.success && result.result && result.result !== text) {
-          node.textContent = result.result;
-          appliedCount++;
+      if (cachedCount > 0) {
+        console.log(`[Skilljar i18n] ${cachedCount} items from cache, ${uncached.length} need translation`);
+        // Apply cached translations immediately
+        for (const [idx, translated] of Object.entries(cached)) {
+          const { node, text } = nodeMap[idx];
+          if (translated && translated !== text) {
+            node.textContent = translated;
+          }
         }
+        updateProgressText(`Applied ${cachedCount} cached, translating ${uncached.length} remaining...`);
+        updateProgressBar(cachedCount / textsToTranslate.length);
       }
 
-      console.log(`[Skilljar i18n] Applied ${appliedCount}/${textsToTranslate.length} translations`);
-      updateProgressText(`Translation complete! (${appliedCount} items)`);
+      // Step 2: Batch translate uncached items
+      if (uncached.length > 0) {
+        const results = await translator.translateBatch(
+          uncached.map(u => u.text),
+          targetLang,
+          '',
+          (completed, total) => {
+            const totalDone = cachedCount + completed;
+            const pct = Math.round((totalDone / textsToTranslate.length) * 100);
+            updateProgressText(`Translating... ${pct}%`);
+            updateProgressBar(totalDone / textsToTranslate.length);
+          }
+        );
+
+        // Apply and cache results
+        let appliedCount = 0;
+        for (let i = 0; i < results.length; i++) {
+          const result = results[i];
+          const originalIdx = uncached[i].idx;
+          const { node, text } = nodeMap[originalIdx];
+
+          if (result && result.success && result.result && result.result !== text) {
+            node.textContent = result.result;
+            appliedCount++;
+            // Save to IndexedDB for future visits
+            setCachedTranslation(text, targetLang, result.result);
+          }
+        }
+        console.log(`[Skilljar i18n] Applied ${appliedCount + cachedCount} translations (${cachedCount} cached, ${appliedCount} new)`);
+      }
+
+      updateProgressText('Translation complete!');
       updateProgressBar(1);
       setTimeout(() => showProgress(false), 2000);
     } catch (err) {
@@ -263,11 +369,18 @@
       const parent = el.parentElement;
       if (parent && parent.matches && parent.matches(TRANSLATABLE_SELECTOR) &&
           !parent.closest(EXCLUDE_SELECTOR)) {
-        // Allow if parent is an <a> or <div> (wrapper), skip if parent is another text element
         const parentTag = parent.tagName;
         if (['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI', 'TD', 'TH', 'BLOCKQUOTE'].includes(parentTag)) {
           return false;
         }
+      }
+      // Skip tiny spans (icons, badges) — only for <span>
+      if (el.tagName === 'SPAN') {
+        const text = el.textContent.trim();
+        // Skip spans with very short text or that contain child elements (likely UI components)
+        if (text.length < 4) return false;
+        // Skip if span has many child elements (likely a container, not text)
+        if (el.children.length > 3) return false;
       }
       // Must have actual text content
       const text = el.textContent.trim();
@@ -342,9 +455,18 @@
         for (const tn of textNodes) {
           const original = tn.textContent.trim();
           if (original.length >= 2 && !isCodeContent(tn)) {
+            // Check IndexedDB first
+            const cached = await getCachedTranslation(original, currentLang);
+            if (cached) {
+              tn.textContent = cached;
+              continue;
+            }
             try {
               const translated = await translator.translate(original, currentLang);
-              if (translated && translated !== original) tn.textContent = translated;
+              if (translated && translated !== original) {
+                tn.textContent = translated;
+                setCachedTranslation(original, currentLang, translated);
+              }
             } catch (e) { /* skip */ }
           }
         }
@@ -383,6 +505,10 @@
     sidebar.innerHTML = getSidebarHTML();
     document.body.appendChild(sidebar);
     setTimeout(bindSidebarEvents, 100);
+  }
+
+  function getTutorGreeting() {
+    return TUTOR_GREETINGS[currentLang] || TUTOR_GREETINGS['en'];
   }
 
   function getSidebarHTML() {
@@ -455,7 +581,7 @@
           <div class="si18n-chat-msg si18n-chat-bot">
             <div class="si18n-chat-avatar">AI</div>
             <div class="si18n-chat-bubble">
-              Hi! I'm your AI learning assistant. Ask me anything about this course. Powered by GPT-4o-mini via Puter.js (free, no API key).
+              ${getTutorGreeting()}
             </div>
           </div>
         </div>
@@ -495,6 +621,8 @@
       langSelect.addEventListener('change', (e) => {
         currentLang = e.target.value;
         chrome.storage.local.set({ targetLanguage: currentLang });
+        // Update tutor greeting when language changes
+        updateTutorGreeting();
       });
     }
 
@@ -517,14 +645,29 @@
       chrome.storage.local.set({ autoTranslate: e.target.checked });
     });
 
+    // Chat input — prevent IME double-send (Korean, Japanese, Chinese)
     const chatInput = document.getElementById('si18n-chat-input');
+    let isComposing = false;
+
+    chatInput?.addEventListener('compositionstart', () => { isComposing = true; });
+    chatInput?.addEventListener('compositionend', () => { isComposing = false; });
+
     document.getElementById('si18n-chat-send')?.addEventListener('click', sendChatMessage);
     chatInput?.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
+      if (e.key === 'Enter' && !e.shiftKey && !isComposing && !e.isComposing) {
         e.preventDefault();
         sendChatMessage();
       }
     });
+  }
+
+  function updateTutorGreeting() {
+    const messagesEl = document.getElementById('si18n-chat-messages');
+    if (!messagesEl) return;
+    const firstBubble = messagesEl.querySelector('.si18n-chat-bot .si18n-chat-bubble');
+    if (firstBubble && messagesEl.children.length === 1) {
+      firstBubble.textContent = getTutorGreeting();
+    }
   }
 
   // ============================================================
