@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skilljar i18n Assistant</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      width: 320px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #FAFAF9;
+      color: #1C1917;
+    }
+
+    .popup-header {
+      background: #3D405B;
+      color: white;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .popup-header svg { flex-shrink: 0; }
+
+    .popup-header h1 {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .popup-header p {
+      font-size: 11px;
+      opacity: 0.8;
+      margin-top: 2px;
+    }
+
+    .popup-body { padding: 16px 20px; }
+
+    .field { margin-bottom: 14px; }
+
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #78716C;
+      margin-bottom: 6px;
+    }
+
+    .field select, .field input {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid #E7E5E4;
+      border-radius: 8px;
+      font-size: 13px;
+      background: white;
+      color: #1C1917;
+    }
+
+    .field select:focus, .field input:focus {
+      outline: none;
+      border-color: #E07A5F;
+    }
+
+    .actions { display: flex; gap: 8px; margin-bottom: 14px; }
+
+    .btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #E07A5F;
+      color: white;
+    }
+    .btn-primary:hover { background: #C96A52; }
+
+    .btn-secondary {
+      background: white;
+      color: #1C1917;
+      border: 1px solid #E7E5E4;
+    }
+    .btn-secondary:hover { background: #F5F5F4; }
+
+    .btn-sidebar {
+      width: 100%;
+      padding: 10px;
+      background: #3D405B;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 14px;
+    }
+    .btn-sidebar:hover { background: #2E3047; }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #78716C;
+      margin-bottom: 12px;
+    }
+
+    .toggle-row input { accent-color: #E07A5F; }
+
+    .status {
+      font-size: 12px;
+      color: #78716C;
+      text-align: center;
+      padding: 8px;
+      min-height: 20px;
+    }
+
+    .status.success { color: #81B29A; }
+    .status.error { color: #E07A5F; }
+
+    .footer {
+      text-align: center;
+      padding: 10px 20px 14px;
+      font-size: 10px;
+      color: #A8A29E;
+      border-top: 1px solid #E7E5E4;
+    }
+
+    .footer a {
+      color: #E07A5F;
+      text-decoration: none;
+    }
+
+    .not-skilljar {
+      padding: 30px 20px;
+      text-align: center;
+      color: #78716C;
+    }
+
+    .not-skilljar svg {
+      margin-bottom: 12px;
+      opacity: 0.4;
+    }
+
+    .not-skilljar p { font-size: 13px; line-height: 1.5; }
+    .not-skilljar a { color: #E07A5F; }
+  </style>
+</head>
+<body>
+  <div class="popup-header">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+    </svg>
+    <div>
+      <h1>Skilljar i18n Assistant</h1>
+      <p>Multilingual learning for Anthropic courses</p>
+    </div>
+  </div>
+
+  <div id="main-content" class="popup-body" style="display:none">
+    <div class="field">
+      <label>Target Language</label>
+      <select id="lang-select">
+        <option value="en">English (Original)</option>
+        <option value="ko">한국어</option>
+        <option value="ja">日本語</option>
+        <option value="zh-CN">中文(简体)</option>
+        <option value="zh-TW">中文(繁體)</option>
+        <option value="es">Español</option>
+        <option value="fr">Français</option>
+        <option value="de">Deutsch</option>
+        <option value="pt-BR">Português (BR)</option>
+        <option value="vi">Tiếng Việt</option>
+        <option value="th">ภาษาไทย</option>
+        <option value="id">Bahasa Indonesia</option>
+        <option value="ar">العربية</option>
+        <option value="hi">हिन्दी</option>
+        <option value="ru">Русский</option>
+        <option value="tr">Türkçe</option>
+      </select>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" id="translate-btn">Translate</button>
+      <button class="btn btn-secondary" id="restore-btn">Restore</button>
+    </div>
+
+    <button class="btn-sidebar" id="sidebar-btn">Open AI Tutor Sidebar</button>
+
+    <label class="toggle-row">
+      <input type="checkbox" id="auto-translate" />
+      <span>Auto-translate on page load</span>
+    </label>
+
+    <div id="status" class="status"></div>
+  </div>
+
+  <div id="not-skilljar" class="not-skilljar" style="display:none">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+    </svg>
+    <p>Navigate to <a href="https://anthropic.skilljar.com" target="_blank">anthropic.skilljar.com</a> to start translating courses.</p>
+  </div>
+
+  <div class="footer">
+    Powered by Puter.js + GLM-4 Flash &middot; <a href="https://github.com" target="_blank">GitHub</a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "Skilljar i18n 助手",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "Anthropic Skilljar课程的多语言学习助手。通过AI辅导将课程翻译成15+种语言。",
+    "description": "Extension description"
+  }
+}

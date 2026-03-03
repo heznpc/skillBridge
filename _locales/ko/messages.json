@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "Skilljar i18n 어시스턴트",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "Anthropic Skilljar 강의를 위한 다국어 학습 어시스턴트. AI 튜터링으로 15개 이상의 언어로 강의를 번역합니다.",
+    "description": "Extension description"
+  }
+}
