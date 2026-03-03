@@ -1,7 +1,9 @@
 /**
  * Skilljar i18n Assistant - AI Translation Engine
- * Uses a bridge iframe to load Puter.js (bypasses Chrome extension CSP)
- * The bridge.html is a web_accessible_resource that can load external scripts
+ *
+ * Injects page-bridge.js into the HOST PAGE's main world context.
+ * The host page (skilljar.com) can load external scripts freely.
+ * Communication between content script and page script via window.postMessage.
  *
  * Copyright respecting: translates on-the-fly only, never stores or redistributes original content
  */
@@ -13,7 +15,6 @@ class SkilljarTranslator {
     this.isReady = false;
     this.pendingCallbacks = new Map();
     this.requestId = 0;
-    this.bridgeIframe = null;
     this.rateLimitDelay = 400;
     this.lastRequestTime = 0;
     this.supportedLanguages = {
@@ -37,40 +38,32 @@ class SkilljarTranslator {
 
   async initialize() {
     try {
-      // Set up the global message listener ONCE
       this._setupMessageListener();
-      await this._createBridge();
-      console.log('[Skilljar i18n] Translator initialized successfully');
+      await this._injectPageBridge();
+      console.log('[Skilljar i18n] Translator initialized');
       return true;
     } catch (err) {
-      console.error('[Skilljar i18n] Failed to initialize translator:', err);
+      console.error('[Skilljar i18n] Init failed:', err);
       return false;
     }
   }
 
   /**
-   * Single global message listener for all bridge responses
+   * Listen for responses from the page bridge
    */
   _setupMessageListener() {
     window.addEventListener('message', (event) => {
+      if (event.source !== window) return;
       const data = event.data;
-      if (!data || !data.type) return;
+      if (!data || !data.__skilljar_i18n__) return;
 
-      if (data.type === 'PUTER_BRIDGE_READY') {
-        console.log('[Skilljar i18n] Received PUTER_BRIDGE_READY');
+      if (data.type === 'BRIDGE_READY') {
+        console.log('[Skilljar i18n] Page bridge ready');
         this.isReady = true;
-        if (this._bridgeReadyResolve) {
-          this._bridgeReadyResolve();
-          this._bridgeReadyResolve = null;
-        }
       }
 
-      if (data.type === 'PUTER_BRIDGE_ERROR') {
+      if (data.type === 'BRIDGE_ERROR') {
         console.error('[Skilljar i18n] Bridge error:', data.error);
-        if (this._bridgeReadyReject) {
-          this._bridgeReadyReject(new Error(data.error));
-          this._bridgeReadyReject = null;
-        }
       }
 
       if (data.type === 'TRANSLATE_RESPONSE' || data.type === 'CHAT_RESPONSE') {
@@ -84,68 +77,54 @@ class SkilljarTranslator {
   }
 
   /**
-   * Creates a hidden iframe that loads bridge.html
-   * bridge.html is a web_accessible_resource that can load Puter.js externally
-   * No sandbox attribute - let it run with full capabilities
+   * Inject page-bridge.js into the host page's main world.
+   * This allows loading Puter.js from CDN (host page has no CSP blocking it).
    */
-  _createBridge() {
+  _injectPageBridge() {
     return new Promise((resolve, reject) => {
-      this._bridgeReadyResolve = resolve;
-      this._bridgeReadyReject = reject;
-
-      const bridgeUrl = chrome.runtime.getURL('src/bridge/bridge.html');
-      console.log('[Skilljar i18n] Loading bridge from:', bridgeUrl);
-
-      const iframe = document.createElement('iframe');
-      iframe.src = bridgeUrl;
-      iframe.id = 'skilljar-i18n-bridge';
-      // Hidden but still functional - NO sandbox attribute
-      iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none;opacity:0;pointer-events:none;';
-      // Allow the iframe to load scripts
-      iframe.allow = 'scripts';
-
-      this.bridgeIframe = iframe;
-
-      // Timeout after 20 seconds
       const timeout = setTimeout(() => {
-        console.warn('[Skilljar i18n] Bridge timed out after 20s');
-        this._bridgeReadyResolve = null;
-        this._bridgeReadyReject = null;
-        reject(new Error('Bridge timed out. Check if Puter.js is accessible.'));
+        console.warn('[Skilljar i18n] Bridge ready timeout - resolving anyway');
+        resolve(); // Don't block init, bridge might still load
       }, 20000);
 
-      // Clear timeout when resolved/rejected
-      const origResolve = resolve;
-      const origReject = reject;
-      this._bridgeReadyResolve = () => {
-        clearTimeout(timeout);
-        origResolve();
+      // Listen for BRIDGE_READY
+      const onReady = (event) => {
+        if (event.source !== window) return;
+        if (event.data?.__skilljar_i18n__ && event.data.type === 'BRIDGE_READY') {
+          clearTimeout(timeout);
+          window.removeEventListener('message', onReady);
+          this.isReady = true;
+          resolve();
+        }
+        if (event.data?.__skilljar_i18n__ && event.data.type === 'BRIDGE_ERROR') {
+          clearTimeout(timeout);
+          window.removeEventListener('message', onReady);
+          reject(new Error(event.data.error));
+        }
       };
-      this._bridgeReadyReject = (err) => {
-        clearTimeout(timeout);
-        origReject(err);
-      };
+      window.addEventListener('message', onReady);
 
-      // Handle iframe load errors
-      iframe.onerror = () => {
-        clearTimeout(timeout);
-        reject(new Error('Bridge iframe failed to load'));
+      // Inject the page-bridge.js script into the page's main world
+      const script = document.createElement('script');
+      script.src = chrome.runtime.getURL('src/lib/page-bridge.js');
+      script.onload = () => {
+        console.log('[Skilljar i18n] page-bridge.js injected into page');
+        script.remove(); // Clean up the script tag
       };
-
-      document.documentElement.appendChild(iframe);
-      console.log('[Skilljar i18n] Bridge iframe appended to page');
+      script.onerror = () => {
+        clearTimeout(timeout);
+        window.removeEventListener('message', onReady);
+        reject(new Error('Failed to inject page-bridge.js'));
+      };
+      (document.head || document.documentElement).appendChild(script);
     });
   }
 
   /**
-   * Send a request to the bridge iframe and wait for response
+   * Send request to page bridge via postMessage
    */
-  _sendToBridge(message) {
+  _sendRequest(message) {
     return new Promise((resolve, reject) => {
-      if (!this.bridgeIframe) {
-        reject(new Error('Bridge not created'));
-        return;
-      }
       if (!this.isReady) {
         reject(new Error('Bridge not ready'));
         return;
@@ -153,11 +132,12 @@ class SkilljarTranslator {
 
       const id = ++this.requestId;
       message.id = id;
+      message.__skilljar_i18n__ = true;
 
       const timeout = setTimeout(() => {
         this.pendingCallbacks.delete(id);
         console.warn('[Skilljar i18n] Request', id, 'timed out');
-        resolve(message.text || message.userMessage || 'Translation timed out');
+        resolve(message.text || message.userMessage || 'Timed out');
       }, 30000);
 
       this.pendingCallbacks.set(id, (response) => {
@@ -165,14 +145,7 @@ class SkilljarTranslator {
         resolve(response.result);
       });
 
-      try {
-        this.bridgeIframe.contentWindow.postMessage(message, '*');
-      } catch (e) {
-        clearTimeout(timeout);
-        this.pendingCallbacks.delete(id);
-        console.error('[Skilljar i18n] postMessage failed:', e);
-        resolve(message.text || message.userMessage || 'Error');
-      }
+      window.postMessage(message, '*');
     });
   }
 
@@ -185,16 +158,12 @@ class SkilljarTranslator {
     if (targetLang === 'en') return text;
 
     const cacheKey = this.getCacheKey(text, targetLang);
-    if (this.cache.has(cacheKey)) {
-      return this.cache.get(cacheKey);
-    }
+    if (this.cache.has(cacheKey)) return this.cache.get(cacheKey);
 
     // Rate limiting
     const now = Date.now();
-    const timeSinceLast = now - this.lastRequestTime;
-    if (timeSinceLast < this.rateLimitDelay) {
-      await new Promise(r => setTimeout(r, this.rateLimitDelay - timeSinceLast));
-    }
+    const wait = this.rateLimitDelay - (now - this.lastRequestTime);
+    if (wait > 0) await new Promise(r => setTimeout(r, wait));
     this.lastRequestTime = Date.now();
 
     try {
@@ -208,7 +177,7 @@ Rules:
 ${context ? `Context: ${context}` : ''}
 Return ONLY the translated text, nothing else.`;
 
-      const translated = await this._sendToBridge({
+      const translated = await this._sendRequest({
         type: 'TRANSLATE_REQUEST',
         systemPrompt,
         text,
@@ -222,7 +191,6 @@ Return ONLY the translated text, nothing else.`;
         this.cache.delete(firstKey);
       }
       this.cache.set(cacheKey, translated);
-
       return translated;
     } catch (err) {
       console.error('[Skilljar i18n] Translation error:', err);
@@ -240,7 +208,7 @@ Keep technical terms in English when appropriate.
 Be encouraging and supportive.
 ${courseContext ? `Current course context: ${courseContext}` : ''}`;
 
-      return await this._sendToBridge({
+      return await this._sendRequest({
         type: 'CHAT_REQUEST',
         systemPrompt,
         userMessage,
