@@ -6,3 +6,4 @@ dist/
 .env.local
 *.crx
 *.pem
+.idea/

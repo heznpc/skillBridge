@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "__MSG_extName__",
   "description": "__MSG_extDescription__",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "default_locale": "en",
   "permissions": [
     "storage",
@@ -22,7 +22,7 @@
   "content_scripts": [
     {
       "matches": ["https://*.skilljar.com/*"],
-      "js": ["src/lib/puter-sdk.js", "src/lib/translator.js", "src/content/content.js"],
+      "js": ["src/lib/translator.js", "src/content/content.js"],
       "css": ["src/content/content.css"],
       "run_at": "document_idle"
     }
@@ -35,9 +35,15 @@
     "48": "assets/icons/icon48.png",
     "128": "assets/icons/icon128.png"
   },
+  "content_security_policy": {
+    "sandbox": "sandbox allow-scripts allow-forms allow-popups allow-modals; script-src 'self' https://js.puter.com; child-src 'self'"
+  },
+  "sandbox": {
+    "pages": ["src/bridge/bridge.html"]
+  },
   "web_accessible_resources": [
     {
-      "resources": ["src/sidebar/*", "assets/*"],
+      "resources": ["src/bridge/*", "assets/*"],
       "matches": ["https://*.skilljar.com/*"]
     }
   ]
