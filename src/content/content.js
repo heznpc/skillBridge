@@ -9,19 +9,31 @@
 (function () {
   'use strict';
 
-  const SELECTORS = {
-    courseTitle: '.course-title, h1.title, .catalog-course-title, .course-catalog-title',
-    lessonContent: '.lesson-content, .page-content, .content-area, .catalog-course-description',
-    headings: 'h1, h2, h3, h4, h5, h6',
-    paragraphs: '.lesson-content p, .page-content p, .content-area p, main p, article p',
-    listItems: '.lesson-content li, .page-content li, main li',
-    buttons: '.btn-text, button span, .nav-text',
-    sidebarItems: '.sidebar-item, .lesson-title, .section-title',
-    quizContent: '.quiz-question, .quiz-answer, .assessment-content',
-    // Broader fallback selectors for Skilljar variants
-    generic: 'main p, main li, main h1, main h2, main h3, main h4, article p, article li',
-    excludeSelectors: 'code, pre, .code-block, .syntax-highlight, script, style, .skilljar-i18n-sidebar, #skilljar-i18n-bridge, #skilljar-i18n-fab',
-  };
+  // Target ALL visible text elements directly — Skilljar pages
+  // don't use <main>/<article> wrappers around course content.
+  // Course cards are <a> > <h2> + <p> structure.
+  const TRANSLATABLE_SELECTOR = [
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',       // all headings
+    'p',                                          // all paragraphs
+    'li',                                         // all list items
+    'td', 'th',                                   // table cells
+    'label',                                      // form labels
+    'figcaption',                                  // figure captions
+    '.btn-text', '.nav-text',                     // button/nav text
+    'blockquote',                                  // quotes
+    'dt', 'dd',                                    // definition lists
+  ].join(', ');
+
+  const EXCLUDE_SELECTOR = [
+    'code', 'pre', 'script', 'style', 'noscript',
+    '.code-block', '.syntax-highlight',
+    '.skilljar-i18n-sidebar',
+    '#skilljar-i18n-bridge',
+    '#skilljar-i18n-fab',
+    'nav',                                         // skip navigation
+    'footer',                                      // skip footer
+    '[role="navigation"]',
+  ].join(', ');
 
   let translator = null;
   let currentLang = 'en';
@@ -220,26 +232,24 @@
   }
 
   function getTranslatableElements() {
-    const allSelectors = [
-      SELECTORS.courseTitle,
-      SELECTORS.lessonContent,
-      SELECTORS.paragraphs,
-      SELECTORS.listItems,
-      SELECTORS.sidebarItems,
-      SELECTORS.quizContent,
-      SELECTORS.generic,
-    ].join(', ');
-
-    const elements = Array.from(document.querySelectorAll(allSelectors));
+    const elements = Array.from(document.querySelectorAll(TRANSLATABLE_SELECTOR));
 
     return elements.filter(el => {
-      // Skip our own UI
-      if (el.closest('.skilljar-i18n-sidebar')) return false;
-      if (el.closest('#skilljar-i18n-bridge')) return false;
-      if (el.closest('#skilljar-i18n-fab')) return false;
-      // Skip code/script
-      if (el.closest('code, pre, script, style')) return false;
-      return el.textContent.trim().length > 1;
+      // Skip our own extension UI
+      if (el.closest(EXCLUDE_SELECTOR)) return false;
+      // Skip if inside another matched element (avoid duplicate translation)
+      const parent = el.parentElement;
+      if (parent && parent.matches && parent.matches(TRANSLATABLE_SELECTOR) &&
+          !parent.closest(EXCLUDE_SELECTOR)) {
+        // Allow if parent is an <a> or <div> (wrapper), skip if parent is another text element
+        const parentTag = parent.tagName;
+        if (['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI', 'TD', 'TH', 'BLOCKQUOTE'].includes(parentTag)) {
+          return false;
+        }
+      }
+      // Must have actual text content
+      const text = el.textContent.trim();
+      return text.length > 1;
     });
   }
 
@@ -270,8 +280,8 @@
   }
 
   function getPageContext() {
-    const title = document.querySelector(SELECTORS.courseTitle)?.textContent || document.title || '';
-    const headings = Array.from(document.querySelectorAll(SELECTORS.headings))
+    const title = document.querySelector('h1, h2, .course-title')?.textContent || document.title || '';
+    const headings = Array.from(document.querySelectorAll('h1, h2, h3, h4'))
       .map(h => h.textContent.trim())
       .slice(0, 5)
       .join(', ');
