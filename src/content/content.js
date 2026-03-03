@@ -167,50 +167,72 @@
 
     try {
       const elements = getTranslatableElements();
-      const total = elements.length;
 
-      if (total === 0) {
+      if (elements.length === 0) {
         updateProgressText('No translatable content found on this page.');
         setTimeout(() => showProgress(false), 3000);
         isTranslating = false;
         return;
       }
 
-      let completed = 0;
+      // Collect all text nodes and their texts
+      const nodeMap = []; // { node, text, elementIdx }
+      const textsToTranslate = [];
 
-      for (const el of elements) {
+      for (let i = 0; i < elements.length; i++) {
+        const el = elements[i];
         if (!el.textContent.trim()) continue;
 
-        // Store original
+        // Store original HTML
         if (!originalTexts.has(el)) {
           originalTexts.set(el, el.innerHTML);
         }
 
-        // Translate text nodes, preserve HTML structure
         const textNodes = getTextNodes(el);
         for (const node of textNodes) {
-          const original = node.textContent.trim();
-          if (original.length < 2) continue;
+          const text = node.textContent.trim();
+          if (text.length < 2) continue;
           if (isCodeContent(node)) continue;
-
-          try {
-            const translated = await translator.translate(original, targetLang);
-            if (translated && translated !== original) {
-              node.textContent = translated;
-            }
-          } catch (e) {
-            // Skip individual failures, continue with rest
-            console.warn('[Skilljar i18n] Skipping node:', e.message);
-          }
+          nodeMap.push({ node, text, elementIdx: i });
+          textsToTranslate.push(text);
         }
-
-        completed++;
-        const pct = Math.round((completed / total) * 100);
-        updateProgressText(`Translating... ${pct}%`);
-        updateProgressBar(completed / total);
       }
 
-      updateProgressText('Translation complete!');
+      if (textsToTranslate.length === 0) {
+        updateProgressText('No translatable text found.');
+        setTimeout(() => showProgress(false), 3000);
+        isTranslating = false;
+        return;
+      }
+
+      updateProgressText(`Translating ${textsToTranslate.length} items...`);
+
+      // Batch translate all at once (parallel, fast)
+      const results = await translator.translateBatch(
+        textsToTranslate,
+        targetLang,
+        '',
+        (completed, total) => {
+          const pct = Math.round((completed / total) * 100);
+          updateProgressText(`Translating... ${pct}%`);
+          updateProgressBar(completed / total);
+        }
+      );
+
+      // Apply translations to DOM
+      let appliedCount = 0;
+      for (let i = 0; i < nodeMap.length; i++) {
+        const { node, text } = nodeMap[i];
+        const result = results[i];
+        if (result && result.success && result.result && result.result !== text) {
+          node.textContent = result.result;
+          appliedCount++;
+        }
+      }
+
+      console.log(`[Skilljar i18n] Applied ${appliedCount}/${textsToTranslate.length} translations`);
+      updateProgressText(`Translation complete! (${appliedCount} items)`);
+      updateProgressBar(1);
       setTimeout(() => showProgress(false), 2000);
     } catch (err) {
       console.error('[Skilljar i18n] Translation error:', err);

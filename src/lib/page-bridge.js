@@ -34,7 +34,6 @@
       const script = document.createElement('script');
       script.src = 'https://js.puter.com/v2/';
       script.onload = () => {
-        // Wait for puter.ai to be available
         let checks = 0;
         const interval = setInterval(() => {
           checks++;
@@ -50,7 +49,6 @@
         }, 100);
       };
       script.onerror = () => {
-        log('Failed to load Puter.js from CDN');
         reject(new Error('Failed to load Puter.js'));
       };
       document.head.appendChild(script);
@@ -59,32 +57,92 @@
     return puterLoadPromise;
   }
 
+  /**
+   * Call puter.ai.chat with the correct API format.
+   * Puter.js uses: puter.ai.chat(promptString, options)
+   */
+  async function callAI(prompt, model) {
+    const response = await puter.ai.chat(prompt, {
+      model: model || 'gpt-4o-mini',
+      stream: false,
+    });
+    // Response format: { message: { content: "..." } } or string
+    if (typeof response === 'string') return response;
+    return response?.message?.content || response?.text || '';
+  }
+
   // Handle requests from content script
   window.addEventListener('message', async (event) => {
-    // Only accept messages from same window (content script)
     if (event.source !== window) return;
     const data = event.data;
     if (!data || !data.__skilljar_i18n__) return;
 
-    if (data.type === 'TRANSLATE_REQUEST') {
+    // === BATCH TRANSLATE (multiple texts at once) ===
+    if (data.type === 'BATCH_TRANSLATE_REQUEST') {
       try {
         if (!puterReady) await loadPuter();
 
-        const response = await puter.ai.chat(data.systemPrompt, data.text, {
-          model: data.model || 'gpt-4o-mini',
-          stream: false,
-        });
+        const results = [];
+        // Process in parallel with concurrency limit
+        const concurrency = 3;
+        const texts = data.texts;
+        for (let i = 0; i < texts.length; i += concurrency) {
+          const batch = texts.slice(i, i + concurrency);
+          const promises = batch.map(async (item) => {
+            try {
+              const prompt = data.systemPrompt + '\n\nText to translate:\n' + item.text;
+              return { idx: item.idx, result: await callAI(prompt, data.model), success: true };
+            } catch(e) {
+              return { idx: item.idx, result: item.text, success: false };
+            }
+          });
+          const batchResults = await Promise.all(promises);
+          results.push(...batchResults);
 
-        const result = typeof response === 'string'
-          ? response
-          : response?.message?.content || response?.text || data.text;
+          // Notify progress
+          window.postMessage({
+            __skilljar_i18n__: true,
+            type: 'BATCH_PROGRESS',
+            id: data.id,
+            completed: Math.min(i + concurrency, texts.length),
+            total: texts.length,
+          }, '*');
+        }
+
+        window.postMessage({
+          __skilljar_i18n__: true,
+          type: 'BATCH_TRANSLATE_RESPONSE',
+          id: data.id,
+          success: true,
+          results: results,
+        }, '*');
+      } catch (err) {
+        const errMsg = err?.error || err?.message || String(err);
+        log('Batch translate error:', errMsg);
+        window.postMessage({
+          __skilljar_i18n__: true,
+          type: 'BATCH_TRANSLATE_RESPONSE',
+          id: data.id,
+          success: false,
+          error: errMsg,
+          results: [],
+        }, '*');
+      }
+    }
+
+    // === SINGLE TRANSLATE (backward compat) ===
+    if (data.type === 'TRANSLATE_REQUEST') {
+      try {
+        if (!puterReady) await loadPuter();
+        const prompt = (data.systemPrompt || '') + '\n\nText to translate:\n' + data.text;
+        const result = await callAI(prompt, data.model);
 
         window.postMessage({
           __skilljar_i18n__: true,
           type: 'TRANSLATE_RESPONSE',
           id: data.id,
           success: true,
-          result: result,
+          result: result || data.text,
         }, '*');
       } catch (err) {
         const errMsg = err?.error || err?.message || String(err);
@@ -100,25 +158,19 @@
       }
     }
 
+    // === CHAT ===
     if (data.type === 'CHAT_REQUEST') {
       try {
         if (!puterReady) await loadPuter();
-
-        const response = await puter.ai.chat(data.systemPrompt, data.userMessage, {
-          model: data.model || 'gpt-4o-mini',
-          stream: false,
-        });
-
-        const result = typeof response === 'string'
-          ? response
-          : response?.message?.content || response?.text || 'No response';
+        const prompt = (data.systemPrompt || '') + '\n\nUser: ' + data.userMessage;
+        const result = await callAI(prompt, data.model);
 
         window.postMessage({
           __skilljar_i18n__: true,
           type: 'CHAT_RESPONSE',
           id: data.id,
           success: true,
-          result: result,
+          result: result || 'No response',
         }, '*');
       } catch (err) {
         const errMsg = err?.error || err?.message || String(err);
