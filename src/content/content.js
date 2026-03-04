@@ -666,32 +666,64 @@
    * @param {Object} inlineTranslations - Map of placeholder ID → translated text for that tag's content
    * @returns {string} Final HTML with inline tags restored
    */
+  /**
+   * Clean up duplicate text that GT leaves adjacent to restored inline tags.
+   * When GT processes "<x id="0"/>", it sometimes outputs "<x id="0"/>name"
+   * (the tag content echoed as plain text). After we restore the placeholder,
+   * this becomes "<strong>name</strong>name". This function finds inline elements
+   * whose textContent matches the immediately following text node and removes
+   * that duplicate text.
+   */
+  function cleanupDuplicateAdjacentText(el) {
+    for (const child of Array.from(el.childNodes)) {
+      if (child.nodeType !== Node.ELEMENT_NODE) continue;
+      if (!INLINE_TAGS.has(child.tagName)) continue;
+
+      const innerText = child.textContent;
+      if (!innerText || innerText.length < 2) continue;
+
+      const next = child.nextSibling;
+      if (next && next.nodeType === Node.TEXT_NODE) {
+        const text = next.textContent;
+        // Check if text node starts with the inline tag's content (duplicate)
+        if (text.startsWith(innerText)) {
+          next.textContent = text.slice(innerText.length);
+        }
+        // Also check lowercase variant (GT might lowercase it)
+        else if (text.toLowerCase().startsWith(innerText.toLowerCase())) {
+          next.textContent = text.slice(innerText.length);
+        }
+      }
+    }
+  }
+
   function restoreInlineTags(translatedHtml, tagMap, inlineTranslations) {
     let result = translatedHtml;
 
     for (const [id, originalHtml] of Object.entries(tagMap)) {
-      // Build the restored tag with translated inner text
       const placeholder = new RegExp(`<x\\s+id=["']?${id}["']?\\s*\\/?>`, 'g');
 
+      let restoredHtml;
+
       if (inlineTranslations && inlineTranslations[id]) {
-        // We have a translated version of the inline content
-        // Parse original tag to get its attributes, replace inner text
         const temp = document.createElement('div');
         temp.innerHTML = originalHtml;
         const originalEl = temp.firstElementChild;
         if (originalEl) {
           originalEl.textContent = inlineTranslations[id];
-          result = result.replace(placeholder, originalEl.outerHTML);
+          restoredHtml = originalEl.outerHTML;
         } else {
-          result = result.replace(placeholder, originalHtml);
+          restoredHtml = originalHtml;
         }
       } else {
-        // No separate translation — keep original tag as-is
-        result = result.replace(placeholder, originalHtml);
+        restoredHtml = originalHtml;
       }
+
+      // Replace placeholder with restored tag
+      result = result.replace(placeholder, restoredHtml);
     }
 
-    // Clean up any remaining unmatched placeholders (edge case)
+    // Clean up any remaining unmatched placeholders
     result = result.replace(/<x\s+id=["']?\d+["']?\s*\/?>/g, '');
 
     return result;
@@ -765,6 +797,10 @@
       originalTexts.set(el, el.innerHTML);
     }
     el.innerHTML = finalHtml;
+
+    // GT sometimes duplicates inline tag content as adjacent text.
+    // e.g. <strong>name</strong>name → remove the trailing "name"
+    cleanupDuplicateAdjacentText(el);
 
     // Track for Gemini verification
     trackTranslatedElement(pureText, el);
