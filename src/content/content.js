@@ -613,31 +613,31 @@
    * Value: the correct English term to restore.
    * Loaded per-language from the static dict's "_protected" section.
    */
-  let PROTECTED_TERMS_MAP = {};
+  let PROTECTED_TERMS_SORTED = []; // pre-sorted [wrong, correct] pairs
+  let _protectedTermsLang = null;
 
   /**
    * Build the protected terms map from the static dictionary.
    * Called after translator loads static translations.
+   * Skips rebuild if language hasn't changed.
    */
   function buildProtectedTermsMap(targetLang) {
-    PROTECTED_TERMS_MAP = {};
+    if (_protectedTermsLang === targetLang) return;
+    _protectedTermsLang = targetLang;
+
+    const map = {};
     const protectedEntries = translator.getProtectedTerms?.() || {};
     for (const [correct, wrongForms] of Object.entries(protectedEntries)) {
       if (Array.isArray(wrongForms)) {
         for (const wrong of wrongForms) {
-          PROTECTED_TERMS_MAP[wrong] = correct;
+          map[wrong] = correct;
         }
       }
     }
-    // Also build from identity-mapped common terms
-    const dict = translator._dict || {};
-    for (const [key, val] of Object.entries(dict)) {
-      if (key === val && /^[A-Z]/.test(key)) {
-        // Identity-mapped term (e.g., "Enterprise" → "Enterprise")
-        // Don't auto-build — rely on explicit _protected section
-      }
-    }
-    console.log(`[SkillBridge] Protected terms map: ${Object.keys(PROTECTED_TERMS_MAP).length} entries`);
+    // Pre-sort by length descending so longer terms match first
+    PROTECTED_TERMS_SORTED = Object.entries(map)
+      .sort((a, b) => b[0].length - a[0].length);
+    console.log(`[SkillBridge] Protected terms map: ${PROTECTED_TERMS_SORTED.length} entries`);
   }
 
   /**
@@ -646,14 +646,11 @@
    * This function reverses those known mistranslations.
    */
   function restoreProtectedTerms(text) {
-    if (Object.keys(PROTECTED_TERMS_MAP).length === 0) return text;
+    if (PROTECTED_TERMS_SORTED.length === 0) return text;
     let result = text;
-    // Sort by length descending so longer terms match first
-    const sorted = Object.entries(PROTECTED_TERMS_MAP)
-      .sort((a, b) => b[0].length - a[0].length);
-    for (const [wrong, correct] of sorted) {
+    for (const [wrong, correct] of PROTECTED_TERMS_SORTED) {
       if (result.includes(wrong)) {
-        result = result.split(wrong).join(correct);
+        result = result.replaceAll(wrong, correct);
       }
     }
     return result;
@@ -822,11 +819,8 @@ RULES:
         return; // Gemini returned the prompt, ignore
       }
 
-      // Convert XML markers back to real HTML
-      const finalHtml = xmlToHtml(trimmed, tagInfo);
-
-      // Update DOM
-      el.innerHTML = finalHtml;
+      // Convert XML markers back to real HTML and update DOM
+      el.innerHTML = xmlToHtml(trimmed, tagInfo);
       el.classList.remove('si18n-verifying');
 
       // Cache the result
@@ -1092,7 +1086,14 @@ RULES:
       });
     }
 
-    // Chat input — prevent IME double-send (Korean, Japanese, Chinese)
+    bindChatInputEvents();
+  }
+
+  /**
+   * Bind chat input events (IME composition, Enter key, send button).
+   * Extracted to avoid duplication between bindSidebarEvents and closeHistoryPanel.
+   */
+  function bindChatInputEvents() {
     const chatInput = document.getElementById('si18n-chat-input');
     let isComposing = false;
 
@@ -1326,18 +1327,8 @@ RULES:
     delete chatPanel._savedHTML;
     historyPanelOpen = false;
 
-    // Re-bind chat events
-    const chatInput = document.getElementById('si18n-chat-input');
-    let isComposing = false;
-    chatInput?.addEventListener('compositionstart', () => { isComposing = true; });
-    chatInput?.addEventListener('compositionend', () => { isComposing = false; });
-    document.getElementById('si18n-chat-send')?.addEventListener('click', sendChatMessage);
-    chatInput?.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey && !isComposing && !e.isComposing) {
-        e.preventDefault();
-        sendChatMessage();
-      }
-    });
+    // Re-bind chat events (DOM was recreated via innerHTML)
+    bindChatInputEvents();
   }
 
   async function loadHistoryList() {
@@ -1446,6 +1437,13 @@ RULES:
     // Ignore selections inside the sidebar
     if (e.target.closest?.('.skillbridge-sidebar')) return;
     if (e.target.closest?.('.si18n-ask-tutor-btn')) return;
+
+    // Quick check: skip timeout for normal clicks (no selection)
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed) {
+      hideAskButton();
+      return;
+    }
 
     // Small delay to let browser finalize selection
     setTimeout(() => {
