@@ -218,7 +218,7 @@
 
       // Initialize YouTube subtitle translation (non-blocking)
       if (typeof YouTubeSubtitleManager !== 'undefined') {
-        subtitleManager = new YouTubeSubtitleManager(translator, currentLang);
+        subtitleManager = new YouTubeSubtitleManager(currentLang);
         subtitleManager.initialize().then(() => {
           console.log('[SkillBridge] YouTube subtitle manager ready');
         }).catch(err => {
@@ -337,17 +337,20 @@
       const batch = gtTranslateQueue.splice(0, 10);
       const targetLang = batch[0].targetLang;
 
-      // First check IndexedDB cache
+      // Check IndexedDB cache in parallel
+      const cacheResults = await Promise.all(
+        batch.map(item => translator.cachedLookup(item.text, targetLang))
+      );
       const uncached = [];
-      for (const item of batch) {
-        const cached = await translator.cachedLookup(item.text, targetLang);
-        if (cached) {
+      for (let i = 0; i < batch.length; i++) {
+        if (cacheResults[i]) {
+          const item = batch[i];
           if (item.el && item.el.parentNode) {
-            safeReplaceText(item.el, cached);
+            safeReplaceText(item.el, cacheResults[i]);
             trackTranslatedElement(item.text, item.el);
           }
         } else {
-          uncached.push(item);
+          uncached.push(batch[i]);
         }
       }
 
