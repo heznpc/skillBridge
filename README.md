@@ -1,5 +1,13 @@
 <div align="center">
 
+🌐 **English** · [한국어](README_KO.md) · [日本語](README_JA.md) · [中文](README_ZH-CN.md) · [Español](README_ES.md) · [Français](README_FR.md) · [Deutsch](README_DE.md)
+
+</div>
+
+---
+
+<div align="center">
+
 <img src="assets/icons/icon128.png" alt="SkillBridge" width="80" />
 
 # SkillBridge for Anthropic Academy
@@ -10,8 +18,6 @@
 
 **Break the language barrier on Anthropic's free AI courses.**
 
-Anthropic 무료 AI 강의의 언어 장벽을 허물다 · Anthropicの無料AI講座の言語の壁を取り払う · 打破 Anthropic 免费 AI 课程的语言障碍 · Rompe la barrera del idioma en los cursos gratuitos de IA de Anthropic · Brisez la barrière linguistique des cours IA gratuits d'Anthropic · Überwinde die Sprachbarriere bei Anthropics kostenlosen KI-Kursen
-
 </div>
 
 ---
@@ -20,33 +26,15 @@ Anthropic 무료 AI 강의의 언어 장벽을 허물다 · Anthropicの無料AI
 
 > No API keys. No cost. Just install and learn.
 
----
-
-## Demo
-
-<p align="center">
-  <img src="assets/screenshots/skillbridge-demo.gif" alt="SkillBridge Demo — English to Korean translation" width="720" />
-</p>
-
-| Before (English only) | After (Korean) |
-|:---:|:---:|
-| <img src="assets/screenshots/before.png" width="400" /> | <img src="assets/screenshots/after-ko.png" width="400" /> |
-
-| AI Tutor (Claude Sonnet 4) |
-|:---:|
-| <img src="assets/screenshots/tutor.png" width="500" /> |
-
----
-
 ## Features
 
 ### Three-Tier Translation Engine
 
 | Layer | Method | Speed |
 |-------|--------|-------|
-| 1 | **Static dictionary** — 560+ hand-tuned entries per language | Instant (0ms) |
-| 2 | **IndexedDB cache** — previously verified translations | Instant (0ms) |
-| 3 | **Google Translate + Gemini 2.0 Flash** verification | ~200ms + background check |
+| 1 | **Static dictionary** — 560+ hand-tuned entries per language | Instant |
+| 2 | **IndexedDB cache** — previously verified translations | Instant |
+| 3 | **Google Translate + Gemini 2.0 Flash** verification | ~200ms |
 
 Short UI strings skip AI verification. The smart trigger only fires on complex prose (80+ characters) that Google Translate might struggle with.
 
@@ -66,28 +54,24 @@ On first visit, the extension detects your browser language and offers to transl
 
 CJK font weights are matched to Skilljar's Copernicus serif hierarchy. Progress checkboxes, icons, and other child elements are preserved during translation via safe text-node replacement.
 
----
-
 ## Supported Languages
 
 ### Premium — Static Dictionary + Google Translate + AI Verification
 
-| | Language | Code | Dictionary |
-|---|----------|------|------------|
-| 🇰🇷 | 한국어 (Korean) | `ko` | 560+ entries |
-| 🇯🇵 | 日本語 (Japanese) | `ja` | 560+ entries |
-| 🇨🇳 | 中文简体 (Chinese Simplified) | `zh-CN` | 560+ entries |
-| 🇪🇸 | Español (Spanish) | `es` | 560+ entries |
-| 🇫🇷 | Français (French) | `fr` | 560+ entries |
-| 🇩🇪 | Deutsch (German) | `de` | 560+ entries |
+| Language | Code | Dictionary |
+|----------|------|------------|
+| 🇰🇷 한국어 (Korean) | `ko` | 560+ entries |
+| 🇯🇵 日本語 (Japanese) | `ja` | 560+ entries |
+| 🇨🇳 中文简体 (Chinese Simplified) | `zh-CN` | 560+ entries |
+| 🇪🇸 Español (Spanish) | `es` | 560+ entries |
+| 🇫🇷 Français (French) | `fr` | 560+ entries |
+| 🇩🇪 Deutsch (German) | `de` | 560+ entries |
 
 ### Standard — Google Translate + AI Verification
 
 🇹🇼 中文繁體 · 🇧🇷 Português (BR) · 🇵🇹 Português (PT) · 🇮🇹 Italiano · 🇳🇱 Nederlands · 🇷🇺 Русский · 🇵🇱 Polski · 🇺🇦 Українська · 🇨🇿 Čeština · 🇸🇪 Svenska · 🇩🇰 Dansk · 🇫🇮 Suomi · 🇳🇴 Norsk · 🇹🇷 Türkçe · 🇸🇦 العربية · 🇮🇳 हिन्दी · 🇹🇭 ภาษาไทย · 🇻🇳 Tiếng Việt · 🇮🇩 Bahasa Indonesia · 🇲🇾 Bahasa Melayu · 🇵🇭 Filipino · 🇧🇩 বাংলা · 🇮🇱 עברית · 🇷🇴 Română · 🇭🇺 Magyar · 🇬🇷 Ελληνικά
 
 > Want to promote a Standard language to Premium? Contribute a static dictionary — see [CONTRIBUTING.md](CONTRIBUTING.md).
-
----
 
 ## Installation
 
@@ -101,20 +85,6 @@ git clone https://github.com/heznpc/skillbridge.git
 4. Visit [academy.anthropic.com](https://academy.anthropic.com/) and start learning!
 
 > Chrome Web Store listing coming soon.
-
----
-
-## Usage
-
-**Popup** — Click extension icon → select language → "Translate"
-
-**Auto-detect** — First visit shows a banner detecting your browser language
-
-**Sidebar** — Click the chat bubble (bottom-right) → change language from dropdown
-
-Enable **"Auto-translate on page load"** in the popup for automatic translation on every page.
-
----
 
 ## Architecture
 
@@ -134,17 +104,12 @@ skillbridge/
 │   ├── lib/
 │   │   ├── translator.js      # 3-tier translation engine + Gemini verify
 │   │   ├── page-bridge.js     # Main-world bridge for Puter.js AI
-│   │   └── youtube-subtitles.js  # YouTube subtitle auto-enable
+│   │   └── youtube-subtitles.js
 │   └── data/
 │       ├── ko.json            # Korean dictionary (560+ entries)
-│       ├── ja.json            # Japanese
-│       ├── zh-CN.json         # Chinese Simplified
-│       ├── es.json            # Spanish
-│       ├── fr.json            # French
-│       └── de.json            # German
+│       ├── ja.json / zh-CN.json / es.json / fr.json / de.json
 └── assets/
-    ├── icons/                 # Extension icons
-    └── screenshots/           # README + Web Store assets
+    └── icons/                 # Extension icons
 ```
 
 ### Translation Flow
@@ -152,18 +117,16 @@ skillbridge/
 ```
 Page text
   │
-  ├─ Static dict match? ───→ Apply instantly (0ms)
+  ├─ Static dict match? ───→ Apply instantly
   │
-  ├─ IndexedDB cache? ─────→ Apply instantly (0ms)
+  ├─ IndexedDB cache? ─────→ Apply instantly
   │
   └─ Google Translate ─────→ Apply (~200ms)
        │
        └─ Complex prose (80+ chars)?
-            ├─ YES → Gemini 2.0 Flash verifies → update DOM if improved → cache
+            ├─ YES → Gemini 2.0 Flash verifies → update if improved → cache
             └─ NO  → Done
 ```
-
----
 
 ## Tech Stack
 
@@ -174,32 +137,19 @@ Page text
 | AI Tutor | Claude Sonnet 4 via Puter.js |
 | Static Dictionaries | Hand-curated JSON (560+ × 6 languages) |
 | Translation Cache | IndexedDB |
-| CJK Font Rendering | Google Fonts Noto Sans (injected via `<link>`) |
+| CJK Font Rendering | Google Fonts Noto Sans |
 
----
+## Contributing
+
+We welcome contributions of all kinds — translation fixes, new premium languages, code improvements, and screenshots.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide, [Good First Issues](../../issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) to get started, and [ROADMAP.md](ROADMAP.md) for where this project is heading.
 
 ## Copyright & Disclaimer
 
 SkillBridge is a personal translation tool, similar to your browser's built-in translate feature. Text is translated on-the-fly in your browser — never stored or redistributed.
 
 > **SkillBridge for Anthropic Academy** is an unofficial community project. It is not affiliated with, endorsed by, or sponsored by Anthropic. "Anthropic", "Claude", and "Skilljar" are trademarks of their respective owners.
-
----
-
-## Contributing
-
-We welcome contributions of all kinds:
-
-- **Translation fixes** — Improve entries in the static dictionaries
-- **New premium languages** — Create a curated JSON dictionary
-- **Code improvements** — Translation engine, AI Tutor, subtitle features
-- **Screenshots** — Submit before/after screenshots in your language
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide.
-Check out [Good First Issues](../../issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) to get started.
-See [ROADMAP.md](ROADMAP.md) for where this project is heading.
-
----
 
 ## License
 

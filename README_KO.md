@@ -1,21 +1,28 @@
+<div align="center">
+
+🌐 [English](README.md) · **한국어** · [日本語](README_JA.md) · [中文](README_ZH-CN.md) · [Español](README_ES.md) · [Français](README_FR.md) · [Deutsch](README_DE.md)
+
+</div>
+
+---
+
+<div align="center">
+
+<img src="assets/icons/icon128.png" alt="SkillBridge" width="80" />
+
 # SkillBridge for Anthropic Academy
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Chrome Extension](https://img.shields.io/badge/Chrome-Extension-blue.svg)](https://developer.chrome.com/docs/extensions/)
+[![Chrome MV3](https://img.shields.io/badge/Chrome-Extension_MV3-blue.svg)](https://developer.chrome.com/docs/extensions/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
-[![Good First Issues](https://img.shields.io/github/issues/heznpc/skillbridge/good%20first%20issue)](../../issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
 
 **Anthropic 무료 AI 강의의 언어 장벽을 허물다.**
 
-[Anthropic Skilljar 강의](https://anthropic.skilljar.com/)는 Claude, 프롬프트 엔지니어링, AI 안전성에 대한 최고 수준의 무료 교육을 제공합니다. 하지만 영어로만 제공되죠. **SkillBridge for Anthropic Academy**는 커뮤니티가 만든 Chrome 확장 프로그램으로, 전체 학습 경험을 30개 이상의 언어로 번역하고, AI 튜터가 실시간으로 질문에 답합니다.
+</div>
+
+[Anthropic Academy](https://academy.anthropic.com/)는 Claude, 프롬프트 엔지니어링, AI 안전성에 대한 최고 수준의 무료 교육을 제공합니다. 하지만 영어로만 제공되죠. **SkillBridge**는 커뮤니티가 만든 Chrome 확장 프로그램으로, 전체 학습 경험을 30개 이상의 언어로 번역하고, AI 튜터가 실시간으로 질문에 답합니다.
 
 > API 키 불필요. 비용 없음. 설치하고 바로 학습하세요.
-
-<p align="center">
-  <img src="assets/icons/icon128.png" alt="SkillBridge" width="96" />
-</p>
-
-[English](README.md) · [日本語](README_JA.md) · [中文](README_ZH-CN.md) · [Español](README_ES.md) · [Français](README_FR.md) · [Deutsch](README_DE.md)
 
 ---
 
