@@ -122,15 +122,16 @@ When users get a Gemini-verified translation, it's only cached locally. Create a
 
 ---
 
-## Issue 10: Add Unit Tests
+## Issue 10: Expand Unit Test Coverage
 **Labels:** `good first issue`, `testing`
 
 **Description:**
-The project has zero tests. Add basic unit tests for the core translation logic.
+The project has 66 tests covering `staticLookup`, `_normalizeTypography`, protected terms, and language JSON validation. Help expand coverage to more areas.
 
 **What to do:**
-1. Set up a minimal test framework (Jest or Vitest)
-2. Test `translator.js`: dictionary lookup, cache hit/miss, Gemini trigger heuristics
-3. Test language code mapping functions
-4. No need to test Chrome extension APIs (those need integration tests)
+1. Tests live in `tests/` and run with `npm test` (Jest)
+2. Add tests for `queueGeminiVerify` heuristics (short text skip, alpha ratio, prose detection)
+3. Add tests for Google Translate batch edge cases (empty input, rate limiting)
+4. Add tests for `hasInlineTags` detection logic
+5. No need to test Chrome extension APIs (those need integration tests)
 

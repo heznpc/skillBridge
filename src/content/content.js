@@ -73,6 +73,17 @@
     'de': "Frage zum Kursinhalt stellen...",
   };
 
+  // Welcome banner UI strings per language
+  const BANNER_UI = {
+    'en': { prompt: 'Translate this page to', confirm: 'Translate', dismiss: 'Close' },
+    'ko': { prompt: '이 페이지를 다음 언어로 번역할까요?', confirm: '번역', dismiss: '닫기' },
+    'ja': { prompt: 'このページを翻訳しますか？', confirm: '翻訳', dismiss: '閉じる' },
+    'zh-CN': { prompt: '将此页面翻译为', confirm: '翻译', dismiss: '关闭' },
+    'es': { prompt: '¿Traducir esta página a', confirm: 'Traducir', dismiss: 'Cerrar' },
+    'fr': { prompt: 'Traduire cette page en', confirm: 'Traduire', dismiss: 'Fermer' },
+    'de': { prompt: 'Diese Seite übersetzen auf', confirm: 'Übersetzen', dismiss: 'Schließen' },
+  };
+
   let translator = null;
   let subtitleManager = null;
   let currentLang = 'en';
@@ -1574,15 +1585,16 @@ RULES:
 
     const banner = document.createElement('div');
     banner.id = 'si18n-welcome-banner';
+    const ui = BANNER_UI[detectedLang] || BANNER_UI['en'];
     banner.innerHTML = `
       <span class="si18n-banner-icon">🌐</span>
       <div class="si18n-banner-text">
-        이 페이지를 <strong>${langLabel}</strong>로 번역할까요?
+        ${ui.prompt} <strong>${langLabel}</strong>
         <select id="si18n-banner-lang">${langOptions}</select>
       </div>
       <div class="si18n-banner-actions">
-        <button class="si18n-banner-btn si18n-banner-confirm" id="si18n-banner-yes">번역</button>
-        <button class="si18n-banner-btn si18n-banner-change" id="si18n-banner-no">닫기</button>
+        <button class="si18n-banner-btn si18n-banner-confirm" id="si18n-banner-yes">${ui.confirm}</button>
+        <button class="si18n-banner-btn si18n-banner-change" id="si18n-banner-no">${ui.dismiss}</button>
       </div>
     `;
     document.body.appendChild(banner);
