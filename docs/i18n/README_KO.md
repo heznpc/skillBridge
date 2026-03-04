@@ -1,6 +1,6 @@
 <div align="center">
 
-🌐 [English](README.md) · **한국어** · [日本語](README_JA.md) · [中文](README_ZH-CN.md) · [Español](README_ES.md) · [Français](README_FR.md) · [Deutsch](README_DE.md)
+🌐 [English](../../README.md) · **한국어** · [日本語](README_JA.md) · [中文](README_ZH-CN.md) · [Español](README_ES.md) · [Français](README_FR.md) · [Deutsch](README_DE.md)
 
 </div>
 
@@ -12,9 +12,9 @@
 
 # SkillBridge for Anthropic Academy
 
-[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](../../LICENSE)
 [![Chrome MV3](https://img.shields.io/badge/Chrome-Extension_MV3-blue.svg)](https://developer.chrome.com/docs/extensions/)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](../../CONTRIBUTING.md)
 
 **Anthropic 무료 AI 강의의 언어 장벽을 허물다.**
 
@@ -87,13 +87,13 @@ SkillBridge는 커뮤니티가 만들고, 커뮤니티를 위한 프로젝트입
 - **코드 기여** — 번역 엔진, AI 튜터, YouTube 기능 개선
 - **문서화** — README 개선, 튜토리얼 작성, 스크린샷 추가
 
-자세한 가이드는 [CONTRIBUTING.md](CONTRIBUTING.md)를 참고하세요. [Good First Issues](../../issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)에서 시작해보세요.
+자세한 가이드는 [CONTRIBUTING.md](../../CONTRIBUTING.md)를 참고하세요. [Good First Issues](../../issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)에서 시작해보세요.
 
-프로젝트 방향은 [ROADMAP.md](ROADMAP.md)를 참고하세요.
+프로젝트 방향은 [ROADMAP.md](../ROADMAP.md)를 참고하세요.
 
 ## 라이선스
 
-MIT — [LICENSE](LICENSE)
+MIT — [LICENSE](../../LICENSE)
 
 ---
 

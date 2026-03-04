@@ -1,6 +1,6 @@
 <div align="center">
 
-🌐 **English** · [한국어](README_KO.md) · [日本語](README_JA.md) · [中文](README_ZH-CN.md) · [Español](README_ES.md) · [Français](README_FR.md) · [Deutsch](README_DE.md)
+🌐 **English** · [한국어](docs/i18n/README_KO.md) · [日本語](docs/i18n/README_JA.md) · [中文](docs/i18n/README_ZH-CN.md) · [Español](docs/i18n/README_ES.md) · [Français](docs/i18n/README_FR.md) · [Deutsch](docs/i18n/README_DE.md)
 
 </div>
 
@@ -150,7 +150,7 @@ Disagree with a term choice? That's exactly the kind of PR we want — see [CONT
 
 **Native speakers wanted!** The single most impactful way to contribute is improving the translation dictionary for your language — no code required, just edit a JSON file. Even fixing one bad translation helps every learner using that language.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide, [Good First Issues](../../issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) to get started, and [ROADMAP.md](ROADMAP.md) for where this project is heading.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide, [Good First Issues](../../issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) to get started, and [ROADMAP.md](docs/ROADMAP.md) for where this project is heading.
 
 ## Disclaimer
 

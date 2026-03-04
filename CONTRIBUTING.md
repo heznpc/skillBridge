@@ -98,8 +98,11 @@ skillbridge/
 │       ├── fr.json            # English → French
 │       └── de.json            # English → German
 ├── assets/icons/              # Extension icons
-├── ROADMAP.md                 # Project roadmap
-└── README.md                  # Main readme (+ translations)
+├── docs/                      # Roadmap, i18n READMEs, CWS listing
+│   ├── i18n/                  # Translated READMEs (KO, JA, ZH-CN, ES, FR, DE)
+│   ├── ROADMAP.md             # Project roadmap
+│   └── CHROME_WEB_STORE.md   # Chrome Web Store listing copy
+└── README.md                  # Main readme
 ```
 
 ---
