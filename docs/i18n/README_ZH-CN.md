@@ -1,6 +1,6 @@
 <div align="center">
 
-🌐 [English](README.md) · [한국어](README_KO.md) · [日本語](README_JA.md) · **中文** · [Español](README_ES.md) · [Français](README_FR.md) · [Deutsch](README_DE.md)
+🌐 [English](../../README.md) · [한국어](README_KO.md) · [日本語](README_JA.md) · **中文** · [Español](README_ES.md) · [Français](README_FR.md) · [Deutsch](README_DE.md)
 
 </div>
 
@@ -12,9 +12,9 @@
 
 # SkillBridge for Anthropic Academy
 
-[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](../../LICENSE)
 [![Chrome MV3](https://img.shields.io/badge/Chrome-Extension_MV3-blue.svg)](https://developer.chrome.com/docs/extensions/)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](../../CONTRIBUTING.md)
 
 **打破Anthropic免费AI课程的语言障碍。**
 
@@ -87,13 +87,13 @@ SkillBridge 由社区构建，服务于社区。我们欢迎各种形式的贡�
 - **代码贡献** — 改进翻译引擎、AI 导师或 YouTube 功能
 - **文档** — 改进 README、编写教程、添加截图
 
-详细指南请参阅 [CONTRIBUTING.md](CONTRIBUTING.md)。从 [Good First Issues](../../issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) 开始吧。
+详细指南请参阅 [CONTRIBUTING.md](../../CONTRIBUTING.md)。从 [Good First Issues](../../issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) 开始吧。
 
-项目方向请参阅 [ROADMAP.md](ROADMAP.md)。
+项目方向请参阅 [ROADMAP.md](../ROADMAP.md)。
 
 ## 许可证
 
-MIT — 参见 [LICENSE](LICENSE)
+MIT — 参见 [LICENSE](../../LICENSE)
 
 ---
 

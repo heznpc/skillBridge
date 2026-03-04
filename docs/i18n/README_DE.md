@@ -1,6 +1,6 @@
 <div align="center">
 
-🌐 [English](README.md) · [한국어](README_KO.md) · [日本語](README_JA.md) · [中文](README_ZH-CN.md) · [Español](README_ES.md) · [Français](README_FR.md) · **Deutsch**
+🌐 [English](../../README.md) · [한국어](README_KO.md) · [日本語](README_JA.md) · [中文](README_ZH-CN.md) · [Español](README_ES.md) · [Français](README_FR.md) · **Deutsch**
 
 </div>
 
@@ -12,9 +12,9 @@
 
 # SkillBridge for Anthropic Academy
 
-[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](../../LICENSE)
 [![Chrome MV3](https://img.shields.io/badge/Chrome-Extension_MV3-blue.svg)](https://developer.chrome.com/docs/extensions/)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](../../CONTRIBUTING.md)
 
 **Überwindung der Sprachbarriere bei Anthropics kostenlosen KI-Kursen.**
 
@@ -78,13 +78,13 @@ SkillBridge wird von der Community für die Community entwickelt. Wir freuen uns
 - **Code-Beiträge** — Übersetzungsengine, AI Tutor oder YouTube-Funktionen verbessern
 - **Dokumentation** — READMEs verbessern, Tutorials schreiben, Screenshots hinzufügen
 
-Siehe [CONTRIBUTING.md](CONTRIBUTING.md) für den vollständigen Leitfaden. Starten Sie mit unseren [Good First Issues](../../issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
+Siehe [CONTRIBUTING.md](../../CONTRIBUTING.md) für den vollständigen Leitfaden. Starten Sie mit unseren [Good First Issues](../../issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
 
-Siehe [ROADMAP.md](ROADMAP.md) für die Projektrichtung.
+Siehe [ROADMAP.md](../ROADMAP.md) für die Projektrichtung.
 
 ## Lizenz
 
-MIT — siehe [LICENSE](LICENSE)
+MIT — siehe [LICENSE](../../LICENSE)
 
 ---
 
