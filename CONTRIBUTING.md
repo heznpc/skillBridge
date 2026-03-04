@@ -104,56 +104,91 @@ skilljar-i18n-assistant/
 
 ## How to Contribute
 
-### 1. Translation Contributions
+### 1. Translation Contributions — 🌍 Native Speakers Wanted!
 
-This is the most impactful way to help. There are several levels:
+**This is the single most impactful way to contribute.** You don't need to write any code — just edit a JSON file in your native language. Each dictionary improvement instantly helps every learner using that language.
 
-#### a) Fix an Existing Translation (Easiest)
+#### How the Dictionary Works
 
-Found a bad translation? The static dictionaries are simple JSON key-value pairs:
+Each language has a JSON file (`src/data/{lang}.json`) organized into sections:
+
+```
+src/data/ko.json (Korean example — 590+ entries)
+├── _meta          → version info (don't edit)
+├── ui             → navigation: "Next", "Previous", "Courses"
+├── catalog        → course titles and descriptions
+├── claude101      → Claude 101 course content
+├── claudeCode     → Claude Code course content
+├── agentSkills    → Agent Skills course content
+├── aiFluency      → AI Fluency course content
+├── faq            → FAQ page content
+├── common         → shared terms: "Overview", "Submit", etc.
+└── _protected     → terms GT mistranslates (see below)
+```
+
+> **How matching works:** The extension tries to match the **exact English text** of each element on the page against dictionary keys. If found, the curated translation is used instantly — no Google Translate, no delay. For text not in the dictionary, the system falls back to Google Translate → Gemini AI verification.
+
+#### a) Fix a Translation — ⏱️ 2 minutes
+
+Found a bad translation? Just edit the value:
 
 ```json
-// src/data/ko.json
-{
-  "Prompt Engineering": "프롬프트 엔지니어링",
-  "Fine-tuning": "파인튜닝",
-  "Retrieval-Augmented Generation": "검색 증강 생성"
+// Before (wrong — GT translated "Claude" to Korean)
+"Claude loads only skill names and descriptions at startup": "클로드는 시작 시 기술 이름과 설명만 로드합니다"
+
+// After (correct)
+"Claude loads only skill names and descriptions at startup": "Claude는 시작할 때 skill 이름과 설명만 로드합니다"
+```
+
+Submit a PR with: the original English text, your correction, and a brief reason why.
+
+#### b) Add Missing Entries — ⏱️ 10 minutes
+
+The most effective way to improve quality: browse any Anthropic Academy course page with SkillBridge active, spot an awkward translation, and add the correct version to the dictionary.
+
+**High-impact additions:**
+- **Full sentences** that GT translates awkwardly (sentence-level entries bypass GT entirely)
+- **AI/ML terms** that GT gets wrong (e.g., "hallucination", "token window", "system prompt")
+- **Course-specific phrases** that repeat across lessons
+- **Time/format patterns** like "(5 minutes)" → "(5분)" that appear everywhere
+
+**Tip:** Open DevTools → Console → filter `[SkillBridge]` to see which texts hit the dictionary ("Static: N translations") vs. which go to GT ("GT queue: N"). Everything in the GT queue is a candidate for a dictionary entry.
+
+#### c) Fix Protected Terms — 🛡️ Stop GT from Breaking Brand Names
+
+The `_protected` section maps **correct English** → **known GT mistranslations**. After GT translates a sentence, the extension replaces these known errors with the correct term:
+
+```json
+"_protected": {
+  "Claude Code": ["클로드 코드", "클로드 Code"],   // Korean
+  "Claude": ["クロード"],                          // Japanese
+  "Enterprise": ["企业"],                          // Chinese
+  "skill": ["기술", "스킬"]                         // Korean
 }
 ```
 
-Just edit the value and submit a PR. Please include:
-- The original English text
-- The current (wrong) translation
-- Your corrected translation
-- Why it's better (context helps reviewers)
+If you notice GT consistently translating a brand/technical term wrong in your language, add the wrong form to the `_protected` section. The extension will auto-correct it after GT runs.
 
-#### b) Add Entries to an Existing Dictionary
+#### d) Create a New Premium Language — 🏆 Big Impact
 
-Browse the Skilljar courses and note technical terms that are being translated poorly by Google Translate. Add them to the appropriate dictionary file.
+Want to promote a standard language (GT-only) to premium? Create `src/data/{langCode}.json`:
 
-**Good candidates for dictionary entries:**
-- AI/ML technical terms (e.g., "token window", "system prompt", "hallucination")
-- Anthropic-specific terms (e.g., "Constitutional AI", "Claude", "Artifacts")
-- Course navigation terms that Google Translate mangles
+1. Copy `src/data/ko.json` as a template
+2. Translate all entries into your language
+3. Adapt the `_protected` section with GT mistakes specific to your language
+4. Add the language code to `premiumLanguages` in `src/lib/translator.js`
+5. Test on actual Anthropic Academy pages
+6. Submit a PR — native speaker review is required
 
-#### c) Create a New Premium Language Dictionary
+You don't need to translate everything at once. **Even 100 entries is a great start** — especially if they cover the `ui`, `common`, and `_protected` sections.
 
-Want to promote a standard language to premium? Create a new `src/data/{langCode}.json` file with at least 100 curated entries. See existing dictionaries for reference.
+#### e) Add a New Standard Language
 
-**Steps:**
-1. Copy `src/data/ko.json` as a starting template
-2. Translate all entries into your target language
-3. Add the language code to the `premiumLanguages` array in `src/lib/translator.js`
-4. Test thoroughly on actual Skilljar pages
-5. Submit a PR — native speaker review is required
-
-#### d) Add a New Standard Language
-
-Standard languages work with Google Translate only (no dictionary). To add one:
+Standard languages use Google Translate + Gemini verification (no dictionary). To add one:
 1. Add the language code and name to `AVAILABLE_LANGUAGES` in `src/content/content.js`
 2. Add it to the Standard `<optgroup>` in `src/popup/popup.html`
 3. Add the language mapping in `src/lib/youtube-subtitles.js` `_ytLangName()`
-4. Test that Google Translate returns reasonable results for Skilljar content
+4. Test that Google Translate returns reasonable results for the content
 
 ### 2. Code Contributions
 

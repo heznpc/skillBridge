@@ -33,7 +33,7 @@ You might think: *"I'll just use Google Translate."* Here's why that falls short
 | | Google Translate (page) | SkillBridge |
 |---|---|---|
 | AI terminology | ❌ "Prompt" → "신속한" (wrong) | ✅ "Prompt" → "프롬프트" (correct) |
-| Technical accuracy | ❌ Generic machine translation | ✅ 560+ hand-curated terms per language + Gemini AI verification |
+| Technical accuracy | ❌ Generic machine translation | ✅ 560+ hand-curated terms per language + protected terms auto-fix + Gemini AI verification |
 | Context-aware help | ❌ None | ✅ AI tutor (Claude Sonnet 4) answers questions about the lesson |
 | Video subtitles | ❌ Separate manual toggle | ✅ Auto-translated subtitles in your language |
 | UI preservation | ❌ Breaks checkboxes, progress bars | ✅ Preserves all interactive elements |
@@ -43,7 +43,7 @@ You might think: *"I'll just use Google Translate."* Here's why that falls short
 
 ## How It Works
 
-SkillBridge uses a **three-tier translation engine** for speed and accuracy:
+SkillBridge uses a **five-tier translation engine** that prioritizes speed and accuracy:
 
 ```
 Page text
@@ -52,10 +52,17 @@ Page text
   │
   ├─ Local cache (IndexedDB) ───────→ Instant (previously verified)
   │
-  └─ Google Translate ──────────────→ ~200ms
+  ├─ Has inline HTML tags? (<strong>, <a>, <code>...)
+  │     └─ Yes → Gemini 2.0 Flash translates with tag preservation
+  │
+  └─ Plain text → Google Translate ─→ ~200ms
+       │
+       ├─ Protected Terms auto-fix ─→ Restores brand/tech terms GT mistranslates
        │
        └─ Complex sentence? → Gemini 2.0 Flash verifies → corrects if needed
 ```
+
+**Protected Terms** — Each language defines known GT mistakes (e.g., GT translates "Claude" → "클로드" in Korean). After GT runs, the extension auto-corrects these back to the proper form. Brand names, technical terms, and product hierarchy stay in English — matching [Anthropic's official multilingual docs](https://docs.anthropic.com).
 
 All translation happens **in your browser** — nothing is stored or sent to third-party servers.
 
@@ -125,7 +132,9 @@ skillbridge/
 | Component | Technology |
 |-----------|-----------|
 | Page Translation | Google Translate API |
+| Inline Tag Translation | Gemini 2.0 Flash (preserves `<strong>`, `<a>`, `<code>`) |
 | Quality Verification | Gemini 2.0 Flash via [Puter.js](https://docs.puter.com/) |
+| Protected Terms | Auto-correction of GT brand/tech term errors per language |
 | AI Tutor | Claude Sonnet 4 via Puter.js |
 | Curated Dictionaries | Hand-tuned JSON (560+ × 6 languages) |
 | Translation Cache | IndexedDB |
@@ -133,7 +142,7 @@ skillbridge/
 
 ## Contributing
 
-We welcome contributions of all kinds — translation fixes, new premium languages, code improvements, and screenshots.
+**Native speakers wanted!** The single most impactful way to contribute is improving the translation dictionary for your language — no code required, just edit a JSON file. Even fixing one bad translation helps every learner using that language.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide, [Good First Issues](../../issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) to get started, and [ROADMAP.md](ROADMAP.md) for where this project is heading.
 
