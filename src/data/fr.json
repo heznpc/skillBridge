@@ -584,6 +584,13 @@
     "name": "name",
     "description": "description",
     "trigger": "trigger",
-    "SKILL.md": "SKILL.md"
+    "SKILL.md": "SKILL.md",
+    "Enterprise": "Enterprise",
+    "Personal": "Personal",
+    "Project": "Project",
+    "Plugin": "Plugin",
+    "Plugins": "Plugins",
+    "skill": "skill",
+    "skills": "skills"
   }
 }
