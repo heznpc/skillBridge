@@ -317,22 +317,18 @@
   }
 
   /**
-   * Queue elements for Google Translate, process in batches.
-   * Elements with inline tags (e.g., <p>text <strong>bold</strong> more</p>)
-   * are handled separately via block-level translation with tag preservation.
+   * Queue elements for translation, process in batches.
+   * Simple text-only elements → Google Translate (fast batch).
+   * Elements with inline tags → Gemini block translation (XML tag preservation).
+   * GT cannot preserve inline HTML tags; Gemini (as an LLM) can follow
+   * instructions to preserve XML markers and reorder for target grammar.
    */
   function queueForGoogleTranslate(elements, targetLang) {
     for (const el of elements) {
       const text = el.textContent.trim();
       if (!text || text.length < 4) continue;
-
-      if (hasInlineTags(el)) {
-        // Block-level translation with inline tag preservation
-        gtTranslateQueue.push({ el, text, targetLang, blockMode: true });
-      } else {
-        // Simple text-only translation (no inline tags)
-        gtTranslateQueue.push({ el, text, targetLang, blockMode: false });
-      }
+      const needsGemini = hasInlineTags(el);
+      gtTranslateQueue.push({ el, text, targetLang, needsGemini });
     }
     processGTQueue();
   }
@@ -341,61 +337,65 @@
     if (gtProcessing || gtTranslateQueue.length === 0) return;
     gtProcessing = true;
 
+    // Collect elements needing Gemini 2nd pass
+    const geminiQueue = [];
+
     while (gtTranslateQueue.length > 0) {
-      // Separate block-mode items from simple items
       const batch = gtTranslateQueue.splice(0, 10);
       const targetLang = batch[0].targetLang;
 
-      const blockItems = batch.filter(item => item.blockMode);
-      const simpleItems = batch.filter(item => !item.blockMode);
-
-      // Handle block-mode items (inline tag preservation)
-      for (const item of blockItems) {
-        if (!item.el || !item.el.parentNode) continue;
-        try {
-          await translateBlockWithInlineTags(item.el, targetLang);
-        } catch (err) {
-          console.warn('[SkillBridge] Block translation failed, falling back:', err);
-          // Fallback to simple translation
-          simpleItems.push({ ...item, blockMode: false });
-        }
-      }
-
-      // Handle simple items (existing flow)
-      if (simpleItems.length > 0) {
-        // Check IndexedDB cache in parallel
-        const cacheResults = await Promise.all(
-          simpleItems.map(item => translator.cachedLookup(item.text, targetLang))
-        );
-        const uncached = [];
-        for (let i = 0; i < simpleItems.length; i++) {
-          if (cacheResults[i]) {
-            const item = simpleItems[i];
-            if (item.el && item.el.parentNode) {
+      // Check IndexedDB cache in parallel
+      const cacheResults = await Promise.all(
+        batch.map(item => translator.cachedLookup(item.text, targetLang))
+      );
+      const uncached = [];
+      for (let i = 0; i < batch.length; i++) {
+        if (cacheResults[i]) {
+          const item = batch[i];
+          if (item.el && item.el.parentNode) {
+            if (item.needsGemini) {
+              // Inline-tag elements: skip text-only cache, queue Gemini directly
+              // (cache stores plain text but we need HTML-aware translation)
+              uncached.push(item);
+            } else {
               safeReplaceText(item.el, cacheResults[i]);
               trackTranslatedElement(item.text, item.el);
             }
-          } else {
-            uncached.push(simpleItems[i]);
           }
+        } else {
+          uncached.push(batch[i]);
         }
+      }
 
-        if (uncached.length > 0) {
-          // Batch Google Translate
-          const texts = uncached.map(i => i.text);
-          const translations = await translator.googleTranslateBatch(texts, targetLang);
+      // Separate: inline-tag elements go straight to Gemini, rest go through GT
+      const gtItems = uncached.filter(item => !item.needsGemini);
+      const geminiItems = uncached.filter(item => item.needsGemini);
 
-          for (let i = 0; i < uncached.length; i++) {
-            const item = uncached[i];
-            const translated = translations[i];
-            if (translated && translated !== item.text && item.el && item.el.parentNode) {
-              safeReplaceText(item.el, translated);
-              trackTranslatedElement(item.text, item.el);
-              // Queue Gemini check — only add spinner if actually queued
-              const queued = translator.queueGeminiVerify(item.text, translated, targetLang);
-              if (queued) {
-                addVerifySpinner(item.el);
-              }
+      // Queue inline-tag elements for Gemini block translation (skip GT entirely)
+      for (const item of geminiItems) {
+        if (item.el && item.el.parentNode) {
+          if (!originalTexts.has(item.el)) {
+            originalTexts.set(item.el, item.el.innerHTML);
+          }
+          geminiQueue.push({ el: item.el, targetLang: item.targetLang });
+        }
+      }
+
+      // 1st pass: Batch Google Translate for simple text-only items
+      if (gtItems.length > 0) {
+        const texts = gtItems.map(i => i.text);
+        const translations = await translator.googleTranslateBatch(texts, targetLang);
+
+        for (let i = 0; i < gtItems.length; i++) {
+          const item = gtItems[i];
+          const translated = translations[i];
+          if (translated && translated !== item.text && item.el && item.el.parentNode) {
+            safeReplaceText(item.el, translated);
+            trackTranslatedElement(item.text, item.el);
+            // Queue Gemini verify for quality check
+            const queued = translator.queueGeminiVerify(item.text, translated, targetLang);
+            if (queued) {
+              addVerifySpinner(item.el);
             }
           }
         }
@@ -408,6 +408,13 @@
     }
 
     gtProcessing = false;
+
+    // 2nd pass: Queue Gemini block translations for inline-tag elements
+    for (const { el, targetLang } of geminiQueue) {
+      if (el && el.parentNode) {
+        queueGeminiBlockTranslation(el, targetLang);
+      }
+    }
   }
 
   /**
@@ -590,226 +597,180 @@
   }
 
   // ============================================================
-  // INLINE TAG PRESERVATION (Block-level translation)
+  // INLINE TAG PRESERVATION (Gemini-based block translation)
   // ============================================================
 
   /**
-   * Inline tags that should be preserved as placeholders during translation.
-   * These are tags that appear INSIDE a block element (p, li, h1-h6, etc.)
-   * and wrap part of a sentence (e.g., <strong>bold text</strong>).
+   * Inline tags that indicate a block element has mixed content
+   * (text + formatting tags) that should be translated as a unit.
    */
   const INLINE_TAGS = new Set([
     'STRONG', 'B', 'EM', 'I', 'A', 'SPAN', 'CODE',
     'MARK', 'SUB', 'SUP', 'ABBR', 'SMALL', 'U', 'S',
   ]);
 
+  const NO_TRANSLATE_TAGS = new Set(['CODE', 'PRE', 'KBD', 'SAMP', 'VAR']);
+
   /**
    * Check if a block element contains inline tags that split a sentence.
-   * Returns true if the element has mixed text nodes + inline child elements.
    */
   function hasInlineTags(el) {
     if (el.children.length === 0) return false;
     let hasText = false;
     let hasInline = false;
     for (const node of el.childNodes) {
-      if (node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0) {
-        hasText = true;
-      }
-      if (node.nodeType === Node.ELEMENT_NODE && INLINE_TAGS.has(node.tagName)) {
-        hasInline = true;
-      }
+      if (node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0) hasText = true;
+      if (node.nodeType === Node.ELEMENT_NODE && INLINE_TAGS.has(node.tagName)) hasInline = true;
     }
     return hasText && hasInline;
   }
 
   /**
-   * Extract inline tags from an element's innerHTML, replacing them with
-   * XML-style placeholders that Google Translate will preserve.
+   * Build a simplified XML representation of a block element for Gemini.
+   * Replaces inline tags with numbered XML markers: <x1>content</x1>, <x2>content</x2>
+   * Code-like tags use self-closing: <c1/> (content preserved as-is, not translated)
    *
    * Example:
-   *   Input:  "Click <strong>here</strong> to learn <a href="...">more</a>."
-   *   Output: { text: 'Click <x id="0"/> to learn <x id="1"/>.', tagMap: { 0: '<strong>here</strong>', 1: '<a href="...">more</a>' } }
-   *
-   * Uses <x id="N"/> format because Google Translate preserves XML/HTML tags
-   * better than {{N}} style placeholders which get corrupted.
+   *   Input:  "The <strong>name</strong> identifies your <code>skill</code>."
+   *   Output: { xml: 'The <x1>name</x1> identifies your <c1/>.',
+   *             tagInfo: { x1: { tag: 'strong', attrs: '' }, c1: { tag: 'code', original: '<code>skill</code>' } } }
    */
-  function extractInlineTags(el) {
-    const tagMap = {};
-    let counter = 0;
-    let result = '';
+  function buildXmlForGemini(el) {
+    const tagInfo = {};
+    let xCounter = 0;
+    let cCounter = 0;
+    let xml = '';
 
     for (const node of el.childNodes) {
       if (node.nodeType === Node.TEXT_NODE) {
-        result += node.textContent;
+        xml += node.textContent;
       } else if (node.nodeType === Node.ELEMENT_NODE && INLINE_TAGS.has(node.tagName)) {
-        const id = counter++;
-        tagMap[id] = node.outerHTML;
-        result += `<x id="${id}"/>`;
+        if (NO_TRANSLATE_TAGS.has(node.tagName)) {
+          // Code tags: self-closing marker, content NOT translated
+          const id = `c${++cCounter}`;
+          tagInfo[id] = { tag: node.tagName.toLowerCase(), original: node.outerHTML };
+          xml += `<${id}/>`;
+        } else {
+          // Translatable inline tags: wrap content with marker
+          const id = `x${++xCounter}`;
+          tagInfo[id] = {
+            tag: node.tagName.toLowerCase(),
+            attrs: getAttrsString(node),
+          };
+          xml += `<${id}>${node.textContent}</${id}>`;
+        }
       } else if (node.nodeType === Node.ELEMENT_NODE) {
-        // Non-inline element (e.g., div, br) — keep as-is
-        result += node.outerHTML;
+        xml += node.outerHTML;
       }
     }
 
-    return { text: result.trim(), tagMap };
+    return { xml: xml.trim(), tagInfo };
   }
 
-  /**
-   * Restore inline tags from placeholders after translation.
-   *
-   * The translation engine may reorder placeholders (e.g., for SVO → SOV languages).
-   * This function finds each <x id="N"/> and replaces it with the original tag,
-   * but with the tag's TEXT CONTENT translated separately.
-   *
-   * @param {string} translatedHtml - Translated text with <x id="N"/> placeholders
-   * @param {Object} tagMap - Map of placeholder ID → original outerHTML
-   * @param {Object} inlineTranslations - Map of placeholder ID → translated text for that tag's content
-   * @returns {string} Final HTML with inline tags restored
-   */
-  /**
-   * Clean up duplicate text that GT leaves adjacent to restored inline tags.
-   * When GT processes "<x id="0"/>", it sometimes outputs "<x id="0"/>name"
-   * (the tag content echoed as plain text). After we restore the placeholder,
-   * this becomes "<strong>name</strong>name". This function finds inline elements
-   * whose textContent matches the immediately following text node and removes
-   * that duplicate text.
-   */
-  function cleanupDuplicateAdjacentText(el) {
-    for (const child of Array.from(el.childNodes)) {
-      if (child.nodeType !== Node.ELEMENT_NODE) continue;
-      if (!INLINE_TAGS.has(child.tagName)) continue;
-
-      const innerText = child.textContent;
-      if (!innerText || innerText.length < 2) continue;
-
-      const next = child.nextSibling;
-      if (next && next.nodeType === Node.TEXT_NODE) {
-        const text = next.textContent;
-        // Check if text node starts with the inline tag's content (duplicate)
-        if (text.startsWith(innerText)) {
-          next.textContent = text.slice(innerText.length);
-        }
-        // Also check lowercase variant (GT might lowercase it)
-        else if (text.toLowerCase().startsWith(innerText.toLowerCase())) {
-          next.textContent = text.slice(innerText.length);
-        }
-      }
+  function getAttrsString(el) {
+    const attrs = [];
+    for (const attr of el.attributes) {
+      attrs.push(`${attr.name}="${attr.value}"`);
     }
+    return attrs.length ? ' ' + attrs.join(' ') : '';
   }
 
-  function restoreInlineTags(translatedHtml, tagMap, inlineTranslations) {
-    let result = translatedHtml;
+  /**
+   * Convert Gemini's XML-tagged translation back to real HTML.
+   * <x1>번역</x1> → <strong>번역</strong>
+   * <c1/> → <code>skill</code> (original preserved)
+   */
+  function xmlToHtml(translatedXml, tagInfo) {
+    let html = translatedXml;
 
-    for (const [id, originalHtml] of Object.entries(tagMap)) {
-      const placeholder = new RegExp(`<x\\s+id=["']?${id}["']?\\s*\\/?>`, 'g');
-
-      let restoredHtml;
-
-      if (inlineTranslations && inlineTranslations[id]) {
-        const temp = document.createElement('div');
-        temp.innerHTML = originalHtml;
-        const originalEl = temp.firstElementChild;
-        if (originalEl) {
-          originalEl.textContent = inlineTranslations[id];
-          restoredHtml = originalEl.outerHTML;
-        } else {
-          restoredHtml = originalHtml;
-        }
+    for (const [id, info] of Object.entries(tagInfo)) {
+      if (id.startsWith('c')) {
+        // Code/preserved tag: replace self-closing marker with original
+        const pattern = new RegExp(`<${id}\\s*/>`, 'g');
+        html = html.replace(pattern, info.original);
       } else {
-        restoredHtml = originalHtml;
+        // Translatable tag: replace <xN>content</xN> with real tag
+        const pattern = new RegExp(`<${id}>([\\s\\S]*?)</${id}>`, 'g');
+        html = html.replace(pattern, (_, content) => {
+          return `<${info.tag}${info.attrs}>${content}</${info.tag}>`;
+        });
       }
-
-      // Replace placeholder with restored tag
-      result = result.replace(placeholder, restoredHtml);
     }
 
-    // Clean up any remaining unmatched placeholders
-    result = result.replace(/<x\s+id=["']?\d+["']?\s*\/?>/g, '');
+    // Clean up any remaining markers
+    html = html.replace(/<[xc]\d+\s*\/?>/g, '');
+    html = html.replace(/<\/[xc]\d+>/g, '');
 
-    return result;
+    return html;
   }
 
   /**
-   * Apply block-level translation with inline tag preservation.
-   * This is the core function that handles the full flow:
-   * 1. Extract inline tags as placeholders
-   * 2. Send the flattened text to Google Translate
-   * 3. Separately translate inline tag contents
-   * 4. Restore tags with translated content in correct positions
-   *
-   * @param {HTMLElement} el - Block-level element to translate
-   * @param {string} targetLang - Target language code
-   * @returns {Promise<boolean>} Whether translation was applied
+   * Queue a block element with inline tags for Gemini translation.
+   * Strategy:
+   *   1st pass: Normal node-level GT translation shows quickly (may be fragmented)
+   *   2nd pass: Gemini receives the full block as XML, returns natural translation
+   *             with tags properly reordered for target language grammar.
    */
-  async function translateBlockWithInlineTags(el, targetLang) {
-    const { text: flatText, tagMap } = extractInlineTags(el);
+  function queueGeminiBlockTranslation(el, targetLang) {
+    const { xml, tagInfo } = buildXmlForGemini(el);
+    const pureText = el.textContent.trim();
 
-    // Nothing to translate
-    if (!flatText || flatText.trim().length < 4) return false;
-    if (!isLikelyEnglish(flatText.replace(/<x\s+id=["']?\d+["']?\s*\/?>/g, ''))) return false;
+    if (!pureText || pureText.length < 10) return;
+    if (!isLikelyEnglish(pureText)) return;
 
-    // Strip placeholders to get pure text for translation
-    const pureText = flatText.replace(/<x\s+id=["']?\d+["']?\s*\/?>/g, ' ').replace(/\s+/g, ' ').trim();
-
-    // Translate the main text (with placeholders intact)
-    const translations = await translator.googleTranslateBatch([flatText], targetLang);
-    const translatedFlat = translations[0];
-
-    if (!translatedFlat || translatedFlat === flatText) return false;
-
-    // Translate inline tag contents separately (skip <code> — preserve as-is)
-    const NO_TRANSLATE_TAGS = new Set(['CODE', 'PRE', 'KBD', 'SAMP', 'VAR']);
-    const inlineTexts = {};
-    const inlineOriginals = {};
-    for (const [id, html] of Object.entries(tagMap)) {
-      const temp = document.createElement('div');
-      temp.innerHTML = html;
-      const el = temp.firstElementChild;
-      // Skip code-like tags — never translate their contents
-      if (el && NO_TRANSLATE_TAGS.has(el.tagName)) continue;
-      const innerText = temp.textContent.trim();
-      if (innerText && innerText.length >= 2 && isLikelyEnglish(innerText)) {
-        // Check static dict first
-        const staticMatch = translator.staticLookup(innerText);
-        if (staticMatch) {
-          inlineTexts[id] = staticMatch;
-        } else {
-          inlineOriginals[id] = innerText;
-        }
-      }
-    }
-
-    // Batch-translate remaining inline texts
-    const idsToTranslate = Object.keys(inlineOriginals);
-    if (idsToTranslate.length > 0) {
-      const textsToTranslate = idsToTranslate.map(id => inlineOriginals[id]);
-      const inlineResults = await translator.googleTranslateBatch(textsToTranslate, targetLang);
-      for (let i = 0; i < idsToTranslate.length; i++) {
-        inlineTexts[idsToTranslate[i]] = inlineResults[i];
-      }
-    }
-
-    // Restore inline tags with translated content
-    const finalHtml = restoreInlineTags(translatedFlat, tagMap, inlineTexts);
-
-    // Apply to DOM
+    // Save original for restore
     if (!originalTexts.has(el)) {
       originalTexts.set(el, el.innerHTML);
     }
-    el.innerHTML = finalHtml;
 
-    // GT sometimes duplicates inline tag content as adjacent text.
-    // e.g. <strong>name</strong>name → remove the trailing "name"
-    cleanupDuplicateAdjacentText(el);
+    const langName = translator.supportedLanguages[targetLang] || targetLang;
 
-    // Track for Gemini verification
-    trackTranslatedElement(pureText, el);
+    const prompt = `You are translating technical education content (Anthropic AI courses) to ${langName}.
 
-    // Queue Gemini check
-    const queued = translator.queueGeminiVerify(pureText, el.textContent.trim(), targetLang);
-    if (queued) addVerifySpinner(el);
+SOURCE (XML-tagged English):
+${xml}
 
-    return true;
+RULES:
+- Translate to natural, fluent ${langName}
+- PRESERVE all XML tags exactly: <x1>...</x1>, <x2>...</x2>, <c1/>, <c2/> etc.
+- You may REORDER tags to match ${langName} grammar (e.g., SOV word order for Korean/Japanese)
+- Translate the TEXT INSIDE <xN>...</xN> tags
+- NEVER modify <cN/> tags (they are code identifiers — keep exactly as-is)
+- Keep technical terms in English: API, SDK, Claude, Anthropic, Claude Code
+- Output ONLY the translated text with tags. No explanations.`;
+
+    // Send to Gemini via the existing bridge
+    translator._sendRequest({
+      type: 'VERIFY_REQUEST',
+      systemPrompt: prompt,
+      model: 'gemini-2.0-flash',
+    }).then(result => {
+      if (!result) return;
+      const trimmed = result.trim();
+
+      // Sanity check
+      if (trimmed.length > xml.length * 3 || trimmed.includes('SOURCE') || trimmed.includes('RULES:')) {
+        return; // Gemini returned the prompt, ignore
+      }
+
+      // Convert XML markers back to real HTML
+      const finalHtml = xmlToHtml(trimmed, tagInfo);
+
+      // Update DOM
+      el.innerHTML = finalHtml;
+      el.classList.remove('si18n-verifying');
+
+      // Cache the result
+      translator._cacheTranslation(pureText, el.textContent.trim(), targetLang);
+
+      console.log(`[SkillBridge] Gemini block translation: "${pureText.substring(0, 40)}..." → "${el.textContent.substring(0, 40)}..."`);
+    }).catch(err => {
+      console.warn('[SkillBridge] Gemini block translation failed:', err.message);
+      el.classList.remove('si18n-verifying');
+    });
+
+    // Mark as pending Gemini
+    el.classList.add('si18n-verifying');
   }
 
   function isCodeContent(node) {
