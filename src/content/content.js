@@ -1027,20 +1027,17 @@ RULES:
     return `
       <div class="si18n-header">
         <div class="si18n-header-left">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-          </svg>
+          <button class="si18n-history-btn" id="si18n-history-btn" title="Chat history">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </button>
           <span>SkillBridge Tutor</span>
         </div>
         <div class="si18n-header-right">
           <select id="si18n-lang-select" class="si18n-lang-chip" title="Page language">
             ${langOptions}
           </select>
-          <button class="si18n-history-btn" id="si18n-history-btn" title="Chat history">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-            </svg>
-          </button>
           <button class="si18n-close" id="si18n-close">&times;</button>
         </div>
       </div>
@@ -1058,8 +1055,8 @@ RULES:
           <textarea id="si18n-chat-input" class="si18n-chat-input"
             rows="1"></textarea>
           <button id="si18n-chat-send" class="si18n-chat-send-btn" title="Send">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-              <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94l18.04-8.25a.75.75 0 000-1.39L3.478 2.405z"/>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
             </svg>
           </button>
         </div>
