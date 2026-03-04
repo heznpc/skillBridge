@@ -725,12 +725,16 @@
 
     if (!translatedFlat || translatedFlat === flatText) return false;
 
-    // Translate inline tag contents separately
+    // Translate inline tag contents separately (skip <code> — preserve as-is)
+    const NO_TRANSLATE_TAGS = new Set(['CODE', 'PRE', 'KBD', 'SAMP', 'VAR']);
     const inlineTexts = {};
     const inlineOriginals = {};
     for (const [id, html] of Object.entries(tagMap)) {
       const temp = document.createElement('div');
       temp.innerHTML = html;
+      const el = temp.firstElementChild;
+      // Skip code-like tags — never translate their contents
+      if (el && NO_TRANSLATE_TAGS.has(el.tagName)) continue;
       const innerText = temp.textContent.trim();
       if (innerText && innerText.length >= 2 && isLikelyEnglish(innerText)) {
         // Check static dict first
