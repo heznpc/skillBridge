@@ -19,7 +19,13 @@
 
 ---
 
-## Screenshots
+## Demo
+
+<p align="center">
+  <img src="assets/screenshots/skillbridge-demo.gif" alt="SkillBridge Demo — English to Korean translation" width="720" />
+</p>
+
+### Screenshots
 
 | Before (English only) | After (Korean) |
 |---|---|
