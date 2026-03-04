@@ -318,12 +318,21 @@
 
   /**
    * Queue elements for Google Translate, process in batches.
+   * Elements with inline tags (e.g., <p>text <strong>bold</strong> more</p>)
+   * are handled separately via block-level translation with tag preservation.
    */
   function queueForGoogleTranslate(elements, targetLang) {
     for (const el of elements) {
       const text = el.textContent.trim();
       if (!text || text.length < 4) continue;
-      gtTranslateQueue.push({ el, text, targetLang });
+
+      if (hasInlineTags(el)) {
+        // Block-level translation with inline tag preservation
+        gtTranslateQueue.push({ el, text, targetLang, blockMode: true });
+      } else {
+        // Simple text-only translation (no inline tags)
+        gtTranslateQueue.push({ el, text, targetLang, blockMode: false });
+      }
     }
     processGTQueue();
   }
@@ -333,43 +342,61 @@
     gtProcessing = true;
 
     while (gtTranslateQueue.length > 0) {
-      // Batch 10 at a time for speed
+      // Separate block-mode items from simple items
       const batch = gtTranslateQueue.splice(0, 10);
       const targetLang = batch[0].targetLang;
 
-      // Check IndexedDB cache in parallel
-      const cacheResults = await Promise.all(
-        batch.map(item => translator.cachedLookup(item.text, targetLang))
-      );
-      const uncached = [];
-      for (let i = 0; i < batch.length; i++) {
-        if (cacheResults[i]) {
-          const item = batch[i];
-          if (item.el && item.el.parentNode) {
-            safeReplaceText(item.el, cacheResults[i]);
-            trackTranslatedElement(item.text, item.el);
-          }
-        } else {
-          uncached.push(batch[i]);
+      const blockItems = batch.filter(item => item.blockMode);
+      const simpleItems = batch.filter(item => !item.blockMode);
+
+      // Handle block-mode items (inline tag preservation)
+      for (const item of blockItems) {
+        if (!item.el || !item.el.parentNode) continue;
+        try {
+          await translateBlockWithInlineTags(item.el, targetLang);
+        } catch (err) {
+          console.warn('[SkillBridge] Block translation failed, falling back:', err);
+          // Fallback to simple translation
+          simpleItems.push({ ...item, blockMode: false });
         }
       }
 
-      if (uncached.length === 0) continue;
+      // Handle simple items (existing flow)
+      if (simpleItems.length > 0) {
+        // Check IndexedDB cache in parallel
+        const cacheResults = await Promise.all(
+          simpleItems.map(item => translator.cachedLookup(item.text, targetLang))
+        );
+        const uncached = [];
+        for (let i = 0; i < simpleItems.length; i++) {
+          if (cacheResults[i]) {
+            const item = simpleItems[i];
+            if (item.el && item.el.parentNode) {
+              safeReplaceText(item.el, cacheResults[i]);
+              trackTranslatedElement(item.text, item.el);
+            }
+          } else {
+            uncached.push(simpleItems[i]);
+          }
+        }
 
-      // Batch Google Translate
-      const texts = uncached.map(i => i.text);
-      const translations = await translator.googleTranslateBatch(texts, targetLang);
+        if (uncached.length > 0) {
+          // Batch Google Translate
+          const texts = uncached.map(i => i.text);
+          const translations = await translator.googleTranslateBatch(texts, targetLang);
 
-      for (let i = 0; i < uncached.length; i++) {
-        const item = uncached[i];
-        const translated = translations[i];
-        if (translated && translated !== item.text && item.el && item.el.parentNode) {
-          safeReplaceText(item.el, translated);
-          trackTranslatedElement(item.text, item.el);
-          // Queue Gemini check — only add spinner if actually queued
-          const queued = translator.queueGeminiVerify(item.text, translated, targetLang);
-          if (queued) {
-            addVerifySpinner(item.el);
+          for (let i = 0; i < uncached.length; i++) {
+            const item = uncached[i];
+            const translated = translations[i];
+            if (translated && translated !== item.text && item.el && item.el.parentNode) {
+              safeReplaceText(item.el, translated);
+              trackTranslatedElement(item.text, item.el);
+              // Queue Gemini check — only add spinner if actually queued
+              const queued = translator.queueGeminiVerify(item.text, translated, targetLang);
+              if (queued) {
+                addVerifySpinner(item.el);
+              }
+            }
           }
         }
       }
@@ -560,6 +587,189 @@
         el.textContent = newText;
       }
     }
+  }
+
+  // ============================================================
+  // INLINE TAG PRESERVATION (Block-level translation)
+  // ============================================================
+
+  /**
+   * Inline tags that should be preserved as placeholders during translation.
+   * These are tags that appear INSIDE a block element (p, li, h1-h6, etc.)
+   * and wrap part of a sentence (e.g., <strong>bold text</strong>).
+   */
+  const INLINE_TAGS = new Set([
+    'STRONG', 'B', 'EM', 'I', 'A', 'SPAN', 'CODE',
+    'MARK', 'SUB', 'SUP', 'ABBR', 'SMALL', 'U', 'S',
+  ]);
+
+  /**
+   * Check if a block element contains inline tags that split a sentence.
+   * Returns true if the element has mixed text nodes + inline child elements.
+   */
+  function hasInlineTags(el) {
+    if (el.children.length === 0) return false;
+    let hasText = false;
+    let hasInline = false;
+    for (const node of el.childNodes) {
+      if (node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0) {
+        hasText = true;
+      }
+      if (node.nodeType === Node.ELEMENT_NODE && INLINE_TAGS.has(node.tagName)) {
+        hasInline = true;
+      }
+    }
+    return hasText && hasInline;
+  }
+
+  /**
+   * Extract inline tags from an element's innerHTML, replacing them with
+   * XML-style placeholders that Google Translate will preserve.
+   *
+   * Example:
+   *   Input:  "Click <strong>here</strong> to learn <a href="...">more</a>."
+   *   Output: { text: 'Click <x id="0"/> to learn <x id="1"/>.', tagMap: { 0: '<strong>here</strong>', 1: '<a href="...">more</a>' } }
+   *
+   * Uses <x id="N"/> format because Google Translate preserves XML/HTML tags
+   * better than {{N}} style placeholders which get corrupted.
+   */
+  function extractInlineTags(el) {
+    const tagMap = {};
+    let counter = 0;
+    let result = '';
+
+    for (const node of el.childNodes) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        result += node.textContent;
+      } else if (node.nodeType === Node.ELEMENT_NODE && INLINE_TAGS.has(node.tagName)) {
+        const id = counter++;
+        tagMap[id] = node.outerHTML;
+        result += `<x id="${id}"/>`;
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        // Non-inline element (e.g., div, br) — keep as-is
+        result += node.outerHTML;
+      }
+    }
+
+    return { text: result.trim(), tagMap };
+  }
+
+  /**
+   * Restore inline tags from placeholders after translation.
+   *
+   * The translation engine may reorder placeholders (e.g., for SVO → SOV languages).
+   * This function finds each <x id="N"/> and replaces it with the original tag,
+   * but with the tag's TEXT CONTENT translated separately.
+   *
+   * @param {string} translatedHtml - Translated text with <x id="N"/> placeholders
+   * @param {Object} tagMap - Map of placeholder ID → original outerHTML
+   * @param {Object} inlineTranslations - Map of placeholder ID → translated text for that tag's content
+   * @returns {string} Final HTML with inline tags restored
+   */
+  function restoreInlineTags(translatedHtml, tagMap, inlineTranslations) {
+    let result = translatedHtml;
+
+    for (const [id, originalHtml] of Object.entries(tagMap)) {
+      // Build the restored tag with translated inner text
+      const placeholder = new RegExp(`<x\\s+id=["']?${id}["']?\\s*\\/?>`, 'g');
+
+      if (inlineTranslations && inlineTranslations[id]) {
+        // We have a translated version of the inline content
+        // Parse original tag to get its attributes, replace inner text
+        const temp = document.createElement('div');
+        temp.innerHTML = originalHtml;
+        const originalEl = temp.firstElementChild;
+        if (originalEl) {
+          originalEl.textContent = inlineTranslations[id];
+          result = result.replace(placeholder, originalEl.outerHTML);
+        } else {
+          result = result.replace(placeholder, originalHtml);
+        }
+      } else {
+        // No separate translation — keep original tag as-is
+        result = result.replace(placeholder, originalHtml);
+      }
+    }
+
+    // Clean up any remaining unmatched placeholders (edge case)
+    result = result.replace(/<x\s+id=["']?\d+["']?\s*\/?>/g, '');
+
+    return result;
+  }
+
+  /**
+   * Apply block-level translation with inline tag preservation.
+   * This is the core function that handles the full flow:
+   * 1. Extract inline tags as placeholders
+   * 2. Send the flattened text to Google Translate
+   * 3. Separately translate inline tag contents
+   * 4. Restore tags with translated content in correct positions
+   *
+   * @param {HTMLElement} el - Block-level element to translate
+   * @param {string} targetLang - Target language code
+   * @returns {Promise<boolean>} Whether translation was applied
+   */
+  async function translateBlockWithInlineTags(el, targetLang) {
+    const { text: flatText, tagMap } = extractInlineTags(el);
+
+    // Nothing to translate
+    if (!flatText || flatText.trim().length < 4) return false;
+    if (!isLikelyEnglish(flatText.replace(/<x\s+id=["']?\d+["']?\s*\/?>/g, ''))) return false;
+
+    // Strip placeholders to get pure text for translation
+    const pureText = flatText.replace(/<x\s+id=["']?\d+["']?\s*\/?>/g, ' ').replace(/\s+/g, ' ').trim();
+
+    // Translate the main text (with placeholders intact)
+    const translations = await translator.googleTranslateBatch([flatText], targetLang);
+    const translatedFlat = translations[0];
+
+    if (!translatedFlat || translatedFlat === flatText) return false;
+
+    // Translate inline tag contents separately
+    const inlineTexts = {};
+    const inlineOriginals = {};
+    for (const [id, html] of Object.entries(tagMap)) {
+      const temp = document.createElement('div');
+      temp.innerHTML = html;
+      const innerText = temp.textContent.trim();
+      if (innerText && innerText.length >= 2 && isLikelyEnglish(innerText)) {
+        // Check static dict first
+        const staticMatch = translator.staticLookup(innerText);
+        if (staticMatch) {
+          inlineTexts[id] = staticMatch;
+        } else {
+          inlineOriginals[id] = innerText;
+        }
+      }
+    }
+
+    // Batch-translate remaining inline texts
+    const idsToTranslate = Object.keys(inlineOriginals);
+    if (idsToTranslate.length > 0) {
+      const textsToTranslate = idsToTranslate.map(id => inlineOriginals[id]);
+      const inlineResults = await translator.googleTranslateBatch(textsToTranslate, targetLang);
+      for (let i = 0; i < idsToTranslate.length; i++) {
+        inlineTexts[idsToTranslate[i]] = inlineResults[i];
+      }
+    }
+
+    // Restore inline tags with translated content
+    const finalHtml = restoreInlineTags(translatedFlat, tagMap, inlineTexts);
+
+    // Apply to DOM
+    if (!originalTexts.has(el)) {
+      originalTexts.set(el, el.innerHTML);
+    }
+    el.innerHTML = finalHtml;
+
+    // Track for Gemini verification
+    trackTranslatedElement(pureText, el);
+
+    // Queue Gemini check
+    const queued = translator.queueGeminiVerify(pureText, el.textContent.trim(), targetLang);
+    if (queued) addVerifySpinner(el);
+
+    return true;
   }
 
   function isCodeContent(node) {
