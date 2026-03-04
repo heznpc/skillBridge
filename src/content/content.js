@@ -477,6 +477,7 @@
     translatedTexts.clear();
     gtTranslateQueue = [];
     currentLang = 'en';
+    _protectedTermsLang = null;
     updateLangClass('en');
   }
 
@@ -613,8 +614,9 @@
    * Value: the correct English term to restore.
    * Loaded per-language from the static dict's "_protected" section.
    */
-  let PROTECTED_TERMS_SORTED = []; // pre-sorted [wrong, correct] pairs
+  let _protectedTermsSorted = []; // pre-sorted [wrong, correct] pairs
   let _protectedTermsLang = null;
+  let _protectedKeepEnglish = '';
 
   /**
    * Build the protected terms map from the static dictionary.
@@ -635,9 +637,14 @@
       }
     }
     // Pre-sort by length descending so longer terms match first
-    PROTECTED_TERMS_SORTED = Object.entries(map)
+    _protectedTermsSorted = Object.entries(map)
       .sort((a, b) => b[0].length - a[0].length);
-    console.log(`[SkillBridge] Protected terms map: ${PROTECTED_TERMS_SORTED.length} entries`);
+    // Pre-compute keep-English string for Gemini prompts
+    const terms = Object.keys(protectedEntries);
+    _protectedKeepEnglish = terms.length > 0
+      ? terms.join(', ')
+      : 'API, SDK, Claude, Anthropic, Claude Code, Enterprise, Personal, Plugin, skill, SKILL.md, frontmatter';
+    console.log(`[SkillBridge] Protected terms map: ${_protectedTermsSorted.length} entries`);
   }
 
   /**
@@ -646,9 +653,9 @@
    * This function reverses those known mistranslations.
    */
   function restoreProtectedTerms(text) {
-    if (PROTECTED_TERMS_SORTED.length === 0) return text;
+    if (_protectedTermsSorted.length === 0) return text;
     let result = text;
-    for (const [wrong, correct] of PROTECTED_TERMS_SORTED) {
+    for (const [wrong, correct] of _protectedTermsSorted) {
       if (result.includes(wrong)) {
         result = result.replaceAll(wrong, correct);
       }
@@ -785,12 +792,6 @@
 
     const langName = translator.supportedLanguages[targetLang] || targetLang;
 
-    // Build protected terms list from dict
-    const protectedTerms = Object.keys(translator.getProtectedTerms());
-    const keepEnglish = protectedTerms.length > 0
-      ? protectedTerms.join(', ')
-      : 'API, SDK, Claude, Anthropic, Claude Code, Enterprise, Personal, Plugin, skill, SKILL.md, frontmatter';
-
     const prompt = `You are translating technical education content (Anthropic AI courses) to ${langName}.
 
 SOURCE (XML-tagged English):
@@ -802,7 +803,7 @@ RULES:
 - You may REORDER tags to match ${langName} grammar (e.g., SOV word order for Korean/Japanese)
 - Translate the TEXT INSIDE <xN>...</xN> tags
 - NEVER modify <cN/> tags (they are code identifiers — keep exactly as-is)
-- Keep these terms in English (DO NOT translate): ${keepEnglish}
+- Keep these terms in English (DO NOT translate): ${_protectedKeepEnglish}
 - Output ONLY the translated text with tags. No explanations.`;
 
     // Send to Gemini via the existing bridge
