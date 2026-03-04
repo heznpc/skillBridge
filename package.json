@@ -1,0 +1,10 @@
+{
+  "name": "skillbridge",
+  "private": true,
+  "scripts": {
+    "test": "jest --verbose"
+  },
+  "devDependencies": {
+    "jest": "^30.2.0"
+  }
+}
