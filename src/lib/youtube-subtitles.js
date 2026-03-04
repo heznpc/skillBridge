@@ -9,12 +9,14 @@
  */
 
 class YouTubeSubtitleManager {
-  constructor(translator, targetLang) {
-    this.translator = translator;
+  static EMBED_SELECTOR = 'iframe[src*="youtube.com/embed"], iframe[src*="youtube-nocookie.com/embed"]';
+  static EMBED_DOMAINS = ['youtube.com/embed', 'youtube-nocookie.com/embed'];
+
+  constructor(targetLang) {
     this.targetLang = targetLang;
     this._iframes = new Set();
     this._domObserver = null;
-    this._messageListenerBound = false;
+    this._messageHandler = null;
   }
 
   async initialize() {
@@ -44,20 +46,25 @@ class YouTubeSubtitleManager {
       this._domObserver.disconnect();
       this._domObserver = null;
     }
+    if (this._messageHandler) {
+      window.removeEventListener('message', this._messageHandler);
+      this._messageHandler = null;
+    }
     this._iframes.clear();
   }
 
   // ==================== IFRAME DISCOVERY ====================
 
+  _trackIframe(iframe) {
+    if (this._iframes.has(iframe)) return;
+    this._enableAutoSubtitles(iframe);
+    this._iframes.add(iframe);
+  }
+
   _processExistingIframes() {
-    const iframes = document.querySelectorAll(
-      'iframe[src*="youtube.com/embed"], iframe[src*="youtube-nocookie.com/embed"]'
-    );
+    const iframes = document.querySelectorAll(YouTubeSubtitleManager.EMBED_SELECTOR);
     for (const iframe of iframes) {
-      if (this._iframes.has(iframe)) continue;
-      console.log('[SkillBridge] Found YouTube embed');
-      this._enableAutoSubtitles(iframe);
-      this._iframes.add(iframe);
+      this._trackIframe(iframe);
     }
   }
 
@@ -68,21 +75,12 @@ class YouTubeSubtitleManager {
         for (const node of mutation.addedNodes) {
           if (node.nodeType !== Node.ELEMENT_NODE) continue;
           if (node.tagName === 'IFRAME' && this._isYouTubeEmbed(node)) {
-            if (!this._iframes.has(node)) {
-              console.log('[SkillBridge] New YouTube iframe detected');
-              this._enableAutoSubtitles(node);
-              this._iframes.add(node);
-            }
+            this._trackIframe(node);
           }
-          const childIframes = node.querySelectorAll?.(
-            'iframe[src*="youtube.com/embed"], iframe[src*="youtube-nocookie.com/embed"]'
-          );
+          const childIframes = node.querySelectorAll?.(YouTubeSubtitleManager.EMBED_SELECTOR);
           if (childIframes) {
             for (const iframe of childIframes) {
-              if (!this._iframes.has(iframe)) {
-                this._enableAutoSubtitles(iframe);
-                this._iframes.add(iframe);
-              }
+              this._trackIframe(iframe);
             }
           }
         }
@@ -93,7 +91,7 @@ class YouTubeSubtitleManager {
 
   _isYouTubeEmbed(iframe) {
     const src = iframe.src || '';
-    return src.includes('youtube.com/embed') || src.includes('youtube-nocookie.com/embed');
+    return YouTubeSubtitleManager.EMBED_DOMAINS.some(d => src.includes(d));
   }
 
   // ==================== MESSAGE LISTENER ====================
@@ -104,10 +102,9 @@ class YouTubeSubtitleManager {
    * the player actually signals it's ready.
    */
   _startMessageListener() {
-    if (this._messageListenerBound) return;
-    this._messageListenerBound = true;
+    if (this._messageHandler) return;
 
-    window.addEventListener('message', (event) => {
+    this._messageHandler = (event) => {
       // Only process messages from YouTube
       if (!event.origin.includes('youtube.com') &&
           !event.origin.includes('youtube-nocookie.com')) return;
@@ -129,7 +126,8 @@ class YouTubeSubtitleManager {
         // Find which iframe this came from and send caption commands
         this._onPlayerEvent(event.source);
       }
-    });
+    };
+    window.addEventListener('message', this._messageHandler);
   }
 
   /**
