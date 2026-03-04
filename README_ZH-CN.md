@@ -1,21 +1,28 @@
+<div align="center">
+
+🌐 [English](README.md) · [한국어](README_KO.md) · [日本語](README_JA.md) · **中文** · [Español](README_ES.md) · [Français](README_FR.md) · [Deutsch](README_DE.md)
+
+</div>
+
+---
+
+<div align="center">
+
+<img src="assets/icons/icon128.png" alt="SkillBridge" width="80" />
+
 # SkillBridge for Anthropic Academy
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Chrome Extension](https://img.shields.io/badge/Chrome-Extension-blue.svg)](https://developer.chrome.com/docs/extensions/)
+[![Chrome MV3](https://img.shields.io/badge/Chrome-Extension_MV3-blue.svg)](https://developer.chrome.com/docs/extensions/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
-[![Good First Issues](https://img.shields.io/github/issues/heznpc/skillbridge/good%20first%20issue)](../../issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
 
 **打破Anthropic免费AI课程的语言障碍。**
 
-[Anthropic Skilljar课程](https://anthropic.skilljar.com/)提供关于Claude、提示工程和AI安全的顶级免费培训，但仅提供英语版本。**SkillBridge for Anthropic Academy** 是社区开发的Chrome扩展程序，将整个学习体验翻译为30多种语言，AI导师实时回答您的问题。
+</div>
+
+[Anthropic Academy](https://academy.anthropic.com/)提供关于Claude、提示工程和AI安全的顶级免费培训，但仅提供英语版本。**SkillBridge** 是社区开发的Chrome扩展程序，将整个学习体验翻译为30多种语言，AI导师实时回答您的问题。
 
 > 无需API密钥。完全免费。安装即可开始学习。
-
-<p align="center">
-  <img src="assets/icons/icon128.png" alt="SkillBridge" width="96" />
-</p>
-
-[English](README.md) · [한국어](README_KO.md) · [日本語](README_JA.md) · [Español](README_ES.md) · [Français](README_FR.md) · [Deutsch](README_DE.md)
 
 ---
 

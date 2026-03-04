@@ -1,21 +1,28 @@
+<div align="center">
+
+🌐 [English](README.md) · [한국어](README_KO.md) · [日本語](README_JA.md) · [中文](README_ZH-CN.md) · **Español** · [Français](README_FR.md) · [Deutsch](README_DE.md)
+
+</div>
+
+---
+
+<div align="center">
+
+<img src="assets/icons/icon128.png" alt="SkillBridge" width="80" />
+
 # SkillBridge for Anthropic Academy
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Chrome Extension](https://img.shields.io/badge/Chrome-Extension-blue.svg)](https://developer.chrome.com/docs/extensions/)
+[![Chrome MV3](https://img.shields.io/badge/Chrome-Extension_MV3-blue.svg)](https://developer.chrome.com/docs/extensions/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
-[![Good First Issues](https://img.shields.io/github/issues/heznpc/skillbridge/good%20first%20issue)](../../issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
 
 **Elimina la barrera del idioma en los cursos gratuitos de IA de Anthropic.**
 
-Los [cursos de Anthropic en Skilljar](https://anthropic.skilljar.com/) ofrecen formación de primer nivel sobre Claude, ingeniería de prompts y seguridad de IA, pero solo en inglés. **SkillBridge for Anthropic Academy** es una extensión de Chrome desarrollada por la comunidad que traduce toda la experiencia de aprendizaje a más de 30 idiomas, con un tutor de IA que responde tus preguntas en tiempo real.
+</div>
+
+Los [cursos de Anthropic Academy](https://academy.anthropic.com/) ofrecen formación de primer nivel sobre Claude, ingeniería de prompts y seguridad de IA, pero solo en inglés. **SkillBridge** es una extensión de Chrome desarrollada por la comunidad que traduce toda la experiencia de aprendizaje a más de 30 idiomas, con un tutor de IA que responde tus preguntas en tiempo real.
 
 > Sin claves API. Sin costos. Solo instala y aprende.
-
-<p align="center">
-  <img src="assets/icons/icon128.png" alt="SkillBridge" width="96" />
-</p>
-
-[English](README.md) · [한국어](README_KO.md) · [日本語](README_JA.md) · [中文](README_ZH-CN.md) · [Français](README_FR.md) · [Deutsch](README_DE.md)
 
 ---
 
