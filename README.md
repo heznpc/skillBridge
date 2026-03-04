@@ -140,6 +140,12 @@ skillbridge/
 | Translation Cache | IndexedDB |
 | CJK Font Rendering | Google Fonts Noto Sans |
 
+## Translation Philosophy
+
+Each language's dictionary is curated to sound natural to native speakers. We currently align with [Anthropic's official multilingual docs](https://docs.anthropic.com) as a baseline, but community conventions matter too — if Korean developers say "프롬프트" instead of "prompt", that's what we use.
+
+Disagree with a term choice? That's exactly the kind of PR we want — see [CONTRIBUTING.md](CONTRIBUTING.md) for how to improve your language's dictionary.
+
 ## Contributing
 
 **Native speakers wanted!** The single most impactful way to contribute is improving the translation dictionary for your language — no code required, just edit a JSON file. Even fixing one bad translation helps every learner using that language.

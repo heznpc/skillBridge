@@ -310,3 +310,5 @@ By contributing, you agree that your contributions will be licensed under the [M
 ## Questions?
 
 Open a [Discussion](../../discussions) or file an issue. We're happy to help you get started!
+
+> 💡 **This document is in English only.** Want to translate it into your language? That PR is welcome too!
