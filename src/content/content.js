@@ -960,6 +960,11 @@
           <select id="si18n-lang-select" class="si18n-lang-chip" title="Page language">
             ${langOptions}
           </select>
+          <button class="si18n-history-btn" id="si18n-history-btn" title="Chat history">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </button>
           <button class="si18n-close" id="si18n-close">&times;</button>
         </div>
       </div>
@@ -992,6 +997,7 @@
 
   function bindSidebarEvents() {
     document.getElementById('si18n-close')?.addEventListener('click', toggleSidebar);
+    document.getElementById('si18n-history-btn')?.addEventListener('click', toggleHistoryPanel);
 
     // Language selector in tutor header — changes page translation + tutor greeting
     const langSelect = document.getElementById('si18n-lang-select');
@@ -1115,9 +1121,11 @@
         }
       });
 
-      // Stream complete — remove cursor
+      // Stream complete — remove cursor + save to history
       if (bubble) {
         bubble.classList.remove('si18n-streaming-cursor');
+        const answerText = bubble.textContent?.trim() || '';
+        if (answerText) saveConversation(text, answerText, currentLang);
       }
     } catch (err) {
       if (bubble) {
@@ -1142,6 +1150,198 @@
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
       .replace(/`(.*?)`/g, '<code>$1</code>')
       .replace(/\n/g, '<br>');
+  }
+
+  // ============================================================
+  // TUTOR CONVERSATION HISTORY (IndexedDB)
+  // ============================================================
+
+  const HISTORY_DB_NAME = 'skillbridge-tutor';
+  const HISTORY_STORE = 'conversations';
+  let historyDb = null;
+
+  function openHistoryDb() {
+    return new Promise((resolve, reject) => {
+      if (historyDb) return resolve(historyDb);
+      const req = indexedDB.open(HISTORY_DB_NAME, 1);
+      req.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(HISTORY_STORE)) {
+          const store = db.createObjectStore(HISTORY_STORE, { keyPath: 'id', autoIncrement: true });
+          store.createIndex('timestamp', 'timestamp');
+          store.createIndex('chapter', 'chapter');
+        }
+      };
+      req.onsuccess = (e) => { historyDb = e.target.result; resolve(historyDb); };
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function saveConversation(question, answer, lang) {
+    try {
+      const db = await openHistoryDb();
+      const chapter = document.querySelector('h1')?.textContent?.trim() || 'Unknown';
+      const tx = db.transaction(HISTORY_STORE, 'readwrite');
+      tx.objectStore(HISTORY_STORE).add({
+        question,
+        answer,
+        lang,
+        chapter,
+        timestamp: Date.now(),
+        url: location.href,
+      });
+    } catch (e) {
+      console.warn('[SkillBridge] Failed to save conversation:', e);
+    }
+  }
+
+  async function getConversations(limit = 50) {
+    try {
+      const db = await openHistoryDb();
+      return new Promise((resolve) => {
+        const tx = db.transaction(HISTORY_STORE, 'readonly');
+        const store = tx.objectStore(HISTORY_STORE);
+        const idx = store.index('timestamp');
+        const results = [];
+        const req = idx.openCursor(null, 'prev');
+        req.onsuccess = (e) => {
+          const cursor = e.target.result;
+          if (cursor && results.length < limit) {
+            results.push(cursor.value);
+            cursor.continue();
+          } else {
+            resolve(results);
+          }
+        };
+        req.onerror = () => resolve([]);
+      });
+    } catch (e) {
+      return [];
+    }
+  }
+
+  let historyPanelOpen = false;
+
+  function toggleHistoryPanel() {
+    const chatPanel = document.getElementById('si18n-panel-chat');
+    if (!chatPanel) return;
+
+    if (historyPanelOpen) {
+      // Restore chat view
+      closeHistoryPanel();
+      return;
+    }
+
+    historyPanelOpen = true;
+    // Save current chat HTML
+    chatPanel._savedHTML = chatPanel.innerHTML;
+    chatPanel.innerHTML = `
+      <div class="si18n-history-header">
+        <button class="si18n-history-back" id="si18n-history-back">← Back</button>
+        <span class="si18n-history-title">${currentLang === 'ko' ? '대화 기록' : currentLang === 'ja' ? '会話履歴' : 'Chat History'}</span>
+      </div>
+      <div class="si18n-history-list" id="si18n-history-list">
+        <div class="si18n-history-loading">${currentLang === 'ko' ? '불러오는 중...' : 'Loading...'}</div>
+      </div>
+    `;
+
+    document.getElementById('si18n-history-back')?.addEventListener('click', closeHistoryPanel);
+    loadHistoryList();
+  }
+
+  function closeHistoryPanel() {
+    const chatPanel = document.getElementById('si18n-panel-chat');
+    if (!chatPanel || !chatPanel._savedHTML) return;
+    chatPanel.innerHTML = chatPanel._savedHTML;
+    delete chatPanel._savedHTML;
+    historyPanelOpen = false;
+
+    // Re-bind chat events
+    const chatInput = document.getElementById('si18n-chat-input');
+    let isComposing = false;
+    chatInput?.addEventListener('compositionstart', () => { isComposing = true; });
+    chatInput?.addEventListener('compositionend', () => { isComposing = false; });
+    document.getElementById('si18n-chat-send')?.addEventListener('click', sendChatMessage);
+    chatInput?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey && !isComposing && !e.isComposing) {
+        e.preventDefault();
+        sendChatMessage();
+      }
+    });
+  }
+
+  async function loadHistoryList() {
+    const listEl = document.getElementById('si18n-history-list');
+    if (!listEl) return;
+
+    const conversations = await getConversations();
+    if (conversations.length === 0) {
+      listEl.innerHTML = `<div class="si18n-history-empty">${
+        currentLang === 'ko' ? '대화 기록이 없습니다' : 'No conversations yet'
+      }</div>`;
+      return;
+    }
+
+    // Group by chapter
+    const grouped = {};
+    for (const conv of conversations) {
+      const ch = conv.chapter || 'Other';
+      if (!grouped[ch]) grouped[ch] = [];
+      grouped[ch].push(conv);
+    }
+
+    let html = '';
+    for (const [chapter, convs] of Object.entries(grouped)) {
+      html += `<div class="si18n-history-chapter">${escapeHtml(chapter)}</div>`;
+      for (const conv of convs) {
+        const preview = conv.question.length > 50
+          ? conv.question.slice(0, 50) + '…'
+          : conv.question;
+        const time = new Date(conv.timestamp).toLocaleDateString(undefined, {
+          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+        });
+        html += `
+          <div class="si18n-history-item" data-id="${conv.id}">
+            <div class="si18n-history-item-q">${escapeHtml(preview)}</div>
+            <div class="si18n-history-item-time">${time}</div>
+          </div>
+        `;
+      }
+    }
+    listEl.innerHTML = html;
+
+    // Bind click events
+    listEl.querySelectorAll('.si18n-history-item').forEach((item) => {
+      item.addEventListener('click', () => showConversationDetail(item.dataset.id));
+    });
+  }
+
+  async function showConversationDetail(id) {
+    try {
+      const db = await openHistoryDb();
+      const tx = db.transaction(HISTORY_STORE, 'readonly');
+      const req = tx.objectStore(HISTORY_STORE).get(Number(id));
+      req.onsuccess = () => {
+        const conv = req.result;
+        if (!conv) return;
+        const listEl = document.getElementById('si18n-history-list');
+        if (!listEl) return;
+        listEl.innerHTML = `
+          <div class="si18n-history-detail">
+            <div class="si18n-chat-msg si18n-chat-user">
+              <div class="si18n-chat-bubble">${escapeHtml(conv.question)}</div>
+              <div class="si18n-chat-avatar">You</div>
+            </div>
+            <div class="si18n-chat-msg si18n-chat-bot">
+              <div class="si18n-chat-avatar">AI</div>
+              <div class="si18n-chat-bubble">${formatResponse(conv.answer)}</div>
+            </div>
+          </div>
+        `;
+      };
+    } catch (e) {
+      console.warn('[SkillBridge] Failed to load conversation:', e);
+    }
   }
 
   // ============================================================

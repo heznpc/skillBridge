@@ -677,3 +677,100 @@ body.si18n-lang-ko,
 .si18n-chat-quote-dismiss:hover {
   color: var(--si18n-text, #1c1917);
 }
+
+/* ============================================================
+   History panel
+   ============================================================ */
+
+.si18n-history-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 2px;
+  opacity: 0.8;
+  display: flex;
+  align-items: center;
+}
+
+.si18n-history-btn:hover {
+  opacity: 1;
+}
+
+.si18n-history-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--si18n-border, #e7e5e4);
+}
+
+.si18n-history-back {
+  background: none;
+  border: none;
+  color: var(--si18n-primary, #D97757);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0;
+}
+
+.si18n-history-back:hover {
+  text-decoration: underline;
+}
+
+.si18n-history-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--si18n-text, #1c1917);
+}
+
+.si18n-history-list {
+  overflow-y: auto;
+  flex: 1;
+  padding: 4px 0;
+}
+
+.si18n-history-chapter {
+  padding: 8px 12px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--si18n-text-secondary, #78716C);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.si18n-history-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--si18n-border, #e7e5e4);
+  transition: background 0.1s;
+}
+
+.si18n-history-item:hover {
+  background: var(--si18n-bg-secondary, #f5f5f4);
+}
+
+.si18n-history-item-q {
+  font-size: 13px;
+  color: var(--si18n-text, #1c1917);
+  line-height: 1.4;
+}
+
+.si18n-history-item-time {
+  font-size: 11px;
+  color: var(--si18n-text-secondary, #78716C);
+  margin-top: 2px;
+}
+
+.si18n-history-empty,
+.si18n-history-loading {
+  padding: 24px 12px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--si18n-text-secondary, #78716C);
+}
+
+.si18n-history-detail {
+  padding: 12px;
+}
