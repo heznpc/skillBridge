@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "__MSG_extName__",
   "description": "__MSG_extDescription__",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "default_locale": "en",
   "permissions": [
     "storage",
@@ -10,7 +10,9 @@
     "tabs"
   ],
   "host_permissions": [
-    "https://*.skilljar.com/*"
+    "https://*.skilljar.com/*",
+    "https://*.youtube.com/*",
+    "https://translate.googleapis.com/*"
   ],
   "action": {
     "default_popup": "src/popup/popup.html",
@@ -23,7 +25,7 @@
   "content_scripts": [
     {
       "matches": ["https://*.skilljar.com/*"],
-      "js": ["src/lib/translator.js", "src/content/content.js"],
+      "js": ["src/lib/translator.js", "src/lib/youtube-subtitles.js", "src/content/content.js"],
       "css": ["src/content/content.css"],
       "run_at": "document_idle"
     }

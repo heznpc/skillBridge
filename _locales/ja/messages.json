@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "Skilljar i18n アシスタント",
+    "message": "SkillBridge for Anthropic Academy",
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "Anthropic Skilljarコースの多言語学習アシスタント。AIチューターで15以上の言語にコースを翻訳します。",
+    "message": "Anthropic Skilljarコースの多言語学習アシスタント。AIチューターと一緒にコースを翻訳 — APIキー不要。",
     "description": "Extension description"
   }
 }

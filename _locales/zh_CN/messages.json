@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "Skilljar i18n 助手",
+    "message": "SkillBridge for Anthropic Academy",
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "Anthropic Skilljar课程的多语言学习助手。通过AI辅导将课程翻译成15+种语言。",
+    "message": "Anthropic Skilljar课程的多语言学习助手。通过AI辅导翻译课程 — 无需API密钥。",
     "description": "Extension description"
   }
 }

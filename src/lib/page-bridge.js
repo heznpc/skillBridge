@@ -7,14 +7,14 @@
 (function() {
   'use strict';
 
-  if (window.__SKILLJAR_I18N_BRIDGE__) return;
-  window.__SKILLJAR_I18N_BRIDGE__ = true;
+  if (window.__SKILLBRIDGE_BRIDGE__) return;
+  window.__SKILLBRIDGE_BRIDGE__ = true;
 
   let puterReady = false;
   let puterLoadPromise = null;
 
   function log(...args) {
-    console.log('[Skilljar i18n PageBridge]', ...args);
+    console.log('[SkillBridge PageBridge]', ...args);
   }
 
   function loadPuter() {
@@ -58,13 +58,24 @@
       stream: false,
     });
     if (typeof response === 'string') return response;
-    return response?.message?.content || response?.text || '';
+
+    // Handle different model response formats
+    const content = response?.message?.content;
+    if (typeof content === 'string') return content;
+    // Claude returns content as array: [{type:"text", text:"..."}]
+    if (Array.isArray(content)) {
+      return content
+        .filter(c => c.type === 'text')
+        .map(c => c.text)
+        .join('\n');
+    }
+    return response?.text || '';
   }
 
   window.addEventListener('message', async (event) => {
     if (event.source !== window) return;
     const data = event.data;
-    if (!data || !data.__skilljar_i18n__) return;
+    if (!data || !data.__skillbridge__) return;
 
     // === TRANSLATE ===
     if (data.type === 'TRANSLATE_REQUEST') {
@@ -75,7 +86,7 @@
         const result = await callAI(prompt, data.model);
 
         window.postMessage({
-          __skilljar_i18n__: true,
+          __skillbridge__: true,
           type: 'TRANSLATE_RESPONSE',
           id: data.id,
           success: true,
@@ -85,7 +96,7 @@
         const errMsg = err?.error || err?.message || String(err);
         log('Translate error:', errMsg);
         window.postMessage({
-          __skilljar_i18n__: true,
+          __skillbridge__: true,
           type: 'TRANSLATE_RESPONSE',
           id: data.id,
           success: false,
@@ -95,25 +106,80 @@
       }
     }
 
-    // === CHAT ===
+    // === GEMINI VERIFY (background quality check) ===
+    if (data.type === 'VERIFY_REQUEST') {
+      try {
+        if (!puterReady) await loadPuter();
+        const prompt = data.systemPrompt;
+        const result = await callAI(prompt, data.model || 'gemini-2.0-flash');
+
+        window.postMessage({
+          __skillbridge__: true,
+          type: 'VERIFY_RESPONSE',
+          id: data.id,
+          success: true,
+          result: result || '',
+        }, '*');
+      } catch (err) {
+        const errMsg = err?.error || err?.message || String(err);
+        log('Verify error:', errMsg);
+        window.postMessage({
+          __skillbridge__: true,
+          type: 'VERIFY_RESPONSE',
+          id: data.id,
+          success: false,
+          error: errMsg,
+          result: '',
+        }, '*');
+      }
+    }
+
+    // === CHAT (streaming) ===
     if (data.type === 'CHAT_REQUEST') {
       try {
         if (!puterReady) await loadPuter();
         const prompt = data.systemPrompt || data.userMessage;
-        const result = await callAI(prompt, data.model);
 
-        window.postMessage({
-          __skilljar_i18n__: true,
-          type: 'CHAT_RESPONSE',
-          id: data.id,
-          success: true,
-          result: result || 'No response',
-        }, '*');
+        if (data.stream) {
+          // Streaming mode — send chunks via postMessage
+          const response = await puter.ai.chat(prompt, {
+            model: data.model || 'gpt-4o-mini',
+            stream: true,
+          });
+
+          for await (const chunk of response) {
+            const text = chunk?.text || chunk?.message?.content || '';
+            if (text) {
+              window.postMessage({
+                __skillbridge__: true,
+                type: 'CHAT_STREAM_CHUNK',
+                id: data.id,
+                text,
+              }, '*');
+            }
+          }
+          window.postMessage({
+            __skillbridge__: true,
+            type: 'CHAT_STREAM_END',
+            id: data.id,
+            success: true,
+          }, '*');
+        } else {
+          // Non-streaming fallback
+          const result = await callAI(prompt, data.model);
+          window.postMessage({
+            __skillbridge__: true,
+            type: 'CHAT_RESPONSE',
+            id: data.id,
+            success: true,
+            result: result || 'No response',
+          }, '*');
+        }
       } catch (err) {
         const errMsg = err?.error || err?.message || String(err);
         log('Chat error:', errMsg);
         window.postMessage({
-          __skilljar_i18n__: true,
+          __skillbridge__: true,
           type: 'CHAT_RESPONSE',
           id: data.id,
           success: false,
@@ -125,9 +191,9 @@
   });
 
   loadPuter().then(() => {
-    window.postMessage({ __skilljar_i18n__: true, type: 'BRIDGE_READY' }, '*');
+    window.postMessage({ __skillbridge__: true, type: 'BRIDGE_READY' }, '*');
   }).catch((err) => {
     log('Auto-load failed:', err.message);
-    window.postMessage({ __skilljar_i18n__: true, type: 'BRIDGE_ERROR', error: err.message }, '*');
+    window.postMessage({ __skillbridge__: true, type: 'BRIDGE_ERROR', error: err.message }, '*');
   });
 })();

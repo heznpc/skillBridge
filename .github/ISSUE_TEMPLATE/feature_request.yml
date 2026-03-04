@@ -1,0 +1,41 @@
+name: "✨ Feature Request"
+description: "Suggest a new feature or improvement"
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem-statement
+    attributes:
+      label: Problem Statement
+      description: "What problem does this feature solve?"
+      placeholder: "Currently, users cannot... This causes..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution
+      description: "How should this feature work? What would be the ideal user experience?"
+      placeholder: |
+        The feature should:
+        - [Feature aspect 1]
+        - [Feature aspect 2]
+        - [Feature aspect 3]
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives-considered
+    attributes:
+      label: Alternatives Considered (optional)
+      description: "What other approaches did you consider?"
+      placeholder: "Alternative 1: ... (rejected because)
+      Alternative 2: ... (rejected because)"
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context (optional)
+      description: "Any other information that might be helpful"
+      placeholder: "Related issues: #XX, #YY
+      Relevant links: ..."

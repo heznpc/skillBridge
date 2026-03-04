@@ -1,5 +1,5 @@
 /**
- * Skilljar i18n Assistant - Popup Script
+ * SkillBridge for Anthropic Academy - Popup Script
  */
 
 document.addEventListener('DOMContentLoaded', async () => {

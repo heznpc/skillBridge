@@ -1,6 +1,100 @@
 /* ============================================================
-   Skilljar i18n Assistant - Styles
+   SkillBridge - Styles
    ============================================================ */
+
+/* ============================================================
+   Language-specific font fallbacks
+   Skilljar uses Copernicus (headings), Tiempos (body), Styrene B (links),
+   Open Sans (UI) — all Latin-only fonts. CJK and other scripts need
+   proper fallbacks to prevent rendering issues (tofu/boxes).
+
+   Strategy: Inject Google Fonts Noto Sans variants per language,
+   and use :lang() selectors to apply proper font stacks.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;700&family=Noto+Sans+Devanagari:wght@400;500;700&family=Noto+Sans+Thai:wght@400;500;700&display=swap');
+
+/* Korean */
+[lang="ko"] body,
+body.si18n-lang-ko,
+.si18n-lang-ko {
+  font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif !important;
+}
+.si18n-lang-ko h1, .si18n-lang-ko h2, .si18n-lang-ko h3,
+.si18n-lang-ko h4, .si18n-lang-ko h5, .si18n-lang-ko h6,
+.si18n-lang-ko .coursebox-text, .si18n-lang-ko .section-title {
+  font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif !important;
+  font-weight: 700;
+}
+/* Skilljar tab links, nav items, breadcrumbs — override Styrene B (Latin-only) */
+.si18n-lang-ko .focus-link-v2,
+.si18n-lang-ko .sj-tab-text,
+.si18n-lang-ko .sj-breadcrumb,
+.si18n-lang-ko .breadcrumbs a,
+.si18n-lang-ko .left-nav a,
+.si18n-lang-ko .lesson-row .title,
+.si18n-lang-ko div.title,
+.si18n-lang-ko .course-time,
+.si18n-lang-ko .sj-ribbon-text,
+.si18n-lang-ko button,
+.si18n-lang-ko a {
+  font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif !important;
+}
+/* Fix tab text rendering — Skilljar uses Styrene B with tight letter-spacing */
+.si18n-lang-ko .focus-link-v2 {
+  letter-spacing: -0.02em;
+  font-weight: 500;
+}
+
+/* Japanese */
+.si18n-lang-ja {
+  font-family: "Noto Sans JP", "Hiragino Kaku Gothic Pro", "Yu Gothic", "Meiryo", sans-serif !important;
+}
+.si18n-lang-ja h1, .si18n-lang-ja h2, .si18n-lang-ja h3,
+.si18n-lang-ja h4, .si18n-lang-ja h5, .si18n-lang-ja h6 {
+  font-family: "Noto Sans JP", "Hiragino Kaku Gothic Pro", "Yu Gothic", sans-serif !important;
+  font-weight: 700;
+}
+
+/* Chinese Simplified */
+.si18n-lang-zh-CN {
+  font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif !important;
+}
+.si18n-lang-zh-CN h1, .si18n-lang-zh-CN h2, .si18n-lang-zh-CN h3 {
+  font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif !important;
+  font-weight: 700;
+}
+
+/* Chinese Traditional */
+.si18n-lang-zh-TW {
+  font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif !important;
+}
+.si18n-lang-zh-TW h1, .si18n-lang-zh-TW h2, .si18n-lang-zh-TW h3 {
+  font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif !important;
+  font-weight: 700;
+}
+
+/* Arabic (RTL support) */
+.si18n-lang-ar {
+  font-family: "Noto Sans Arabic", "Segoe UI", "Tahoma", sans-serif !important;
+  direction: rtl;
+  text-align: right;
+}
+
+/* Hindi/Devanagari */
+.si18n-lang-hi {
+  font-family: "Noto Sans Devanagari", "Mangal", sans-serif !important;
+}
+
+/* Thai */
+.si18n-lang-th {
+  font-family: "Noto Sans Thai", "Tahoma", "Leelawadee", sans-serif !important;
+}
+
+/* Vietnamese - Latin extended, system fonts are fine */
+.si18n-lang-vi {
+  font-family: "Segoe UI", "Roboto", "Arial", sans-serif !important;
+}
 
 :root {
   --si18n-primary: #E07A5F;
@@ -14,11 +108,11 @@
   --si18n-success: #81B29A;
   --si18n-radius: 12px;
   --si18n-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-  --si18n-sidebar-width: 360px;
+  --si18n-sidebar-width: 380px;
 }
 
 /* Floating Action Button */
-#skilljar-i18n-fab {
+#skillbridge-fab {
   position: fixed;
   bottom: 24px;
   right: 24px;
@@ -37,218 +131,130 @@
   border: none;
 }
 
-#skilljar-i18n-fab:hover {
+#skillbridge-fab:hover {
   transform: scale(1.08);
   box-shadow: 0 6px 24px rgba(61, 64, 91, 0.45);
 }
 
-#skilljar-i18n-fab.hidden {
+#skillbridge-fab.hidden {
   transform: scale(0);
   opacity: 0;
   pointer-events: none;
 }
 
-/* Sidebar */
-.skilljar-i18n-sidebar {
+/* Chatbot widget — bottom-right popup */
+.skillbridge-sidebar {
   position: fixed;
-  top: 0;
-  right: -400px;
+  bottom: 90px;
+  right: 24px;
   width: var(--si18n-sidebar-width);
-  height: 100vh;
+  height: 560px;
+  max-height: calc(100vh - 120px);
   background: var(--si18n-bg);
-  box-shadow: var(--si18n-shadow);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
   z-index: 100000;
   display: flex;
   flex-direction: column;
-  transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 16px;
+  overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 14px;
   color: var(--si18n-text);
+  transform: scale(0.9) translateY(20px);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.skilljar-i18n-sidebar.open {
-  right: 0;
+.skillbridge-sidebar.open {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+  pointer-events: auto;
 }
 
-/* Header */
+/* Header — compact chatbot style */
 .si18n-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--si18n-border);
-  background: var(--si18n-surface);
+  background: var(--si18n-accent);
+  color: white;
 }
 
-.si18n-logo {
+.si18n-header-left {
   display: flex;
   align-items: center;
   gap: 8px;
   font-weight: 600;
   font-size: 15px;
-  color: var(--si18n-accent);
+}
+
+.si18n-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Compact language selector chip in header */
+.si18n-lang-chip {
+  padding: 4px 8px;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 6px;
+  background: rgba(255,255,255,0.15);
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  padding-right: 22px;
+}
+
+.si18n-lang-chip:hover {
+  background: rgba(255,255,255,0.25);
+}
+
+.si18n-lang-chip:focus {
+  outline: none;
+  border-color: rgba(255,255,255,0.6);
+}
+
+.si18n-lang-chip option {
+  color: var(--si18n-text);
+  background: var(--si18n-surface);
 }
 
 .si18n-close {
   background: none;
   border: none;
-  font-size: 22px;
+  font-size: 20px;
   cursor: pointer;
-  color: var(--si18n-text-secondary);
-  padding: 4px 8px;
-  border-radius: 6px;
+  color: rgba(255,255,255,0.8);
+  padding: 2px 6px;
+  border-radius: 4px;
   transition: background 0.2s;
+  line-height: 1;
 }
 
 .si18n-close:hover {
-  background: var(--si18n-border);
-}
-
-/* Tabs */
-.si18n-tabs {
-  display: flex;
-  border-bottom: 1px solid var(--si18n-border);
-  background: var(--si18n-surface);
-}
-
-.si18n-tab {
-  flex: 1;
-  padding: 12px 16px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--si18n-text-secondary);
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s;
-}
-
-.si18n-tab:hover {
-  color: var(--si18n-text);
-}
-
-.si18n-tab.active {
-  color: var(--si18n-primary);
-  border-bottom-color: var(--si18n-primary);
-}
-
-/* Panels */
-.si18n-panel {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 20px;
-  gap: 16px;
-  overflow-y: auto;
-}
-
-/* Form Elements */
-.si18n-label {
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--si18n-text-secondary);
-  margin-bottom: 6px;
-  display: block;
-}
-
-.si18n-select {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--si18n-border);
-  border-radius: 8px;
-  background: var(--si18n-surface);
-  font-size: 14px;
-  color: var(--si18n-text);
-  cursor: pointer;
-  transition: border-color 0.2s;
-}
-
-.si18n-select:focus {
-  outline: none;
-  border-color: var(--si18n-primary);
-}
-
-/* Buttons */
-.si18n-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.si18n-btn {
-  padding: 10px 16px;
-  border: none;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.si18n-btn-primary {
-  flex: 1;
-  background: var(--si18n-primary);
+  background: rgba(255,255,255,0.15);
   color: white;
 }
 
-.si18n-btn-primary:hover {
-  background: var(--si18n-primary-hover);
-}
-
-.si18n-btn-secondary {
-  background: var(--si18n-surface);
-  color: var(--si18n-text);
-  border: 1px solid var(--si18n-border);
-}
-
-.si18n-btn-secondary:hover {
-  background: var(--si18n-border);
-}
-
-/* Toggle */
-.si18n-toggle-row {
-  padding: 4px 0;
-}
-
-.si18n-toggle-label {
+/* Chat Panel — takes full sidebar height */
+.si18n-panel-chat {
+  flex: 1;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  padding: 12px 14px;
   gap: 8px;
-  font-size: 13px;
-  color: var(--si18n-text-secondary);
-  cursor: pointer;
-}
-
-.si18n-toggle-label input[type="checkbox"] {
-  accent-color: var(--si18n-primary);
-}
-
-/* Progress */
-.si18n-progress {
-  margin-top: 4px;
-}
-
-.si18n-progress-bar {
-  height: 4px;
-  background: var(--si18n-border);
-  border-radius: 2px;
   overflow: hidden;
-}
-
-.si18n-progress-fill {
-  height: 100%;
-  width: 0%;
-  background: var(--si18n-primary);
-  border-radius: 2px;
-  transition: width 0.3s;
-}
-
-.si18n-progress-text {
-  font-size: 12px;
-  color: var(--si18n-text-secondary);
-  margin-top: 6px;
 }
 
 /* Chat */
@@ -312,9 +318,44 @@
   font-size: 12px;
 }
 
+/* Tutor streaming cursor */
 .si18n-typing {
   opacity: 0.7;
   font-style: italic;
+}
+
+.si18n-streaming-cursor::after {
+  content: '▊';
+  animation: si18n-blink 0.8s step-end infinite;
+  color: var(--si18n-primary);
+  font-weight: normal;
+}
+
+@keyframes si18n-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.si18n-thinking-dots {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.si18n-thinking-dots .si18n-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--si18n-accent);
+  animation: si18n-pulse 1.2s ease-in-out infinite;
+}
+
+.si18n-thinking-dots .si18n-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.si18n-thinking-dots .si18n-dot:nth-child(3) {
+  animation-delay: 0.4s;
 }
 
 /* Chat Input */
@@ -322,18 +363,21 @@
   display: flex;
   gap: 8px;
   align-items: flex-end;
+  padding-top: 8px;
+  border-top: 1px solid var(--si18n-border);
 }
 
 .si18n-chat-input {
   flex: 1;
   padding: 10px 12px;
   border: 1px solid var(--si18n-border);
-  border-radius: 8px;
+  border-radius: 20px;
   font-size: 13px;
   font-family: inherit;
   resize: none;
   background: var(--si18n-surface);
   color: var(--si18n-text);
+  max-height: 80px;
 }
 
 .si18n-chat-input:focus {
@@ -341,19 +385,42 @@
   border-color: var(--si18n-primary);
 }
 
-.si18n-chat-send {
-  padding: 10px 14px;
+.si18n-chat-send-btn {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 50%;
+  background: var(--si18n-primary);
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
   flex-shrink: 0;
+  transition: background 0.2s, transform 0.15s;
+  box-shadow: 0 2px 6px rgba(224, 122, 95, 0.3);
+}
+
+.si18n-chat-send-btn:hover {
+  background: var(--si18n-primary-hover);
+  transform: scale(1.05);
+  box-shadow: 0 3px 10px rgba(224, 122, 95, 0.4);
+}
+
+.si18n-chat-send-btn:active {
+  transform: scale(0.92);
 }
 
 /* Footer */
 .si18n-footer {
-  padding: 10px 20px;
+  padding: 8px 16px;
   border-top: 1px solid var(--si18n-border);
-  font-size: 11px;
+  font-size: 10px;
   color: var(--si18n-text-secondary);
   text-align: center;
   background: var(--si18n-surface);
+  border-radius: 0 0 16px 16px;
 }
 
 .si18n-footer a {
@@ -368,6 +435,300 @@
 .si18n-footer-sep {
   margin: 0 6px;
   opacity: 0.5;
+}
+
+/* ============================================================
+   YouTube Transcript Panel — Notion-style inline toggle
+   ============================================================ */
+.sb-transcript-panel {
+  margin-top: 8px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  color: var(--si18n-text, #1c1917);
+}
+
+/* Toggle header — looks like a Notion inline toggle block */
+.sb-transcript-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.1s;
+  user-select: none;
+}
+
+.sb-transcript-header:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* Triangle toggle arrow */
+.sb-transcript-arrow {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--si18n-text-secondary, #78716C);
+  transition: transform 0.15s ease;
+}
+
+.sb-transcript-panel.expanded .sb-transcript-arrow {
+  transform: rotate(90deg);
+}
+
+.sb-transcript-header-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--si18n-text, #1c1917);
+}
+
+.sb-transcript-header-meta {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sb-transcript-toggle-lang {
+  background: none;
+  border: 1px solid var(--si18n-border, #e7e5e4);
+  color: var(--si18n-text-secondary, #78716C);
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  line-height: 1.4;
+}
+
+.sb-transcript-toggle-lang:hover {
+  border-color: var(--si18n-text-secondary, #78716C);
+  color: var(--si18n-text, #1c1917);
+}
+
+/* Body — hidden by default (collapsed) */
+.sb-transcript-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.25s ease;
+}
+
+.sb-transcript-panel.expanded .sb-transcript-body {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.sb-transcript-body::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sb-transcript-body::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 4px;
+}
+
+.sb-transcript-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* Loading */
+.sb-transcript-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 16px;
+  color: var(--si18n-text-secondary, #78716C);
+  font-size: 13px;
+}
+
+/* Empty state */
+.sb-transcript-empty {
+  padding: 16px;
+  text-align: center;
+  color: var(--si18n-text-secondary, #78716C);
+  font-size: 13px;
+}
+
+/* Transcript lines */
+.sb-transcript-lines {
+  padding: 4px 0;
+  border-top: 1px solid var(--si18n-border, #e7e5e4);
+}
+
+.sb-transcript-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 5px 8px 5px 24px;
+  cursor: pointer;
+  transition: background 0.1s;
+  border-radius: 3px;
+  margin: 0 4px;
+}
+
+.sb-transcript-line:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.sb-transcript-line.active {
+  background: rgba(224, 122, 95, 0.07);
+}
+
+.sb-transcript-time {
+  flex-shrink: 0;
+  width: 34px;
+  font-size: 11px;
+  font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+  color: var(--si18n-primary, #E07A5F);
+  padding-top: 2px;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.sb-transcript-line:hover .sb-transcript-time {
+  opacity: 1;
+}
+
+.sb-transcript-text {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.55;
+  word-break: break-word;
+  color: var(--si18n-text, #1c1917);
+}
+
+/* ============================================================
+   Gemini Verification Spinner (per-element)
+   ============================================================ */
+.si18n-verify-spinner {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.si18n-verify-spinner .si18n-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--si18n-primary, #E07A5F);
+  animation: si18n-pulse 1.2s ease-in-out infinite;
+}
+
+.si18n-verify-spinner .si18n-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.si18n-verify-spinner .si18n-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes si18n-pulse {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1.1); }
+}
+
+/* Fade when Gemini updates text */
+.si18n-text-updated {
+  animation: si18n-fade-in 0.4s ease;
+}
+
+@keyframes si18n-fade-in {
+  from { opacity: 0.5; }
+  to { opacity: 1; }
+}
+
+/* ============================================================
+   Language Welcome Banner (first visit)
+   ============================================================ */
+#si18n-welcome-banner {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  z-index: 99998;
+  background: var(--si18n-surface, #fff);
+  border: 1px solid var(--si18n-border, #e7e5e4);
+  border-radius: 14px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  color: var(--si18n-text, #1c1917);
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  max-width: 520px;
+}
+
+#si18n-welcome-banner.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+#si18n-welcome-banner .si18n-banner-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+#si18n-welcome-banner .si18n-banner-text {
+  flex: 1;
+  line-height: 1.4;
+}
+
+#si18n-welcome-banner .si18n-banner-text strong {
+  color: var(--si18n-primary, #E07A5F);
+}
+
+#si18n-welcome-banner .si18n-banner-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+#si18n-welcome-banner .si18n-banner-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+#si18n-welcome-banner .si18n-banner-confirm {
+  background: var(--si18n-primary, #E07A5F);
+  color: white;
+}
+
+#si18n-welcome-banner .si18n-banner-confirm:hover {
+  background: var(--si18n-primary-hover, #C96A52);
+}
+
+#si18n-welcome-banner .si18n-banner-change {
+  background: transparent;
+  color: var(--si18n-text-secondary, #78716C);
+  border: 1px solid var(--si18n-border, #e7e5e4);
+}
+
+#si18n-welcome-banner .si18n-banner-change:hover {
+  background: rgba(0,0,0,0.03);
+}
+
+#si18n-welcome-banner select {
+  padding: 4px 8px;
+  border: 1px solid var(--si18n-border, #e7e5e4);
+  border-radius: 6px;
+  font-size: 13px;
+  background: white;
+  color: var(--si18n-text, #1c1917);
 }
 
 /* Scrollbar */

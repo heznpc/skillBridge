@@ -1,5 +1,5 @@
 /**
- * Skilljar i18n Assistant - Content Script
+ * SkillBridge for Anthropic Academy - Content Script
  * Injects translation UI and handles page content translation
  *
  * Respects copyright: only translates displayed text on-the-fly
@@ -9,9 +9,8 @@
 (function () {
   'use strict';
 
-  // Target ALL visible text elements directly — Skilljar pages
-  // don't use <main>/<article> wrappers around course content.
-  // Course cards are <a> > <h2> + <p> structure.
+  // Target ALL visible text elements — including Skilljar-specific
+  // Course cards use <div class="coursebox-text"> NOT h2/p!
   const TRANSLATABLE_SELECTOR = [
     'h1', 'h2', 'h3', 'h4', 'h5', 'h6',       // all headings
     'p',                                          // all paragraphs
@@ -23,45 +22,76 @@
     '.btn-text', '.nav-text',                     // button/nav text
     'blockquote',                                  // quotes
     'dt', 'dd',                                    // definition lists
+    // Skilljar-specific elements
+    '.coursebox-text',                             // course card titles
+    '.coursebox-text-description',                 // course card descriptions
+    '.sj-ribbon-text',                             // "Registered" / "Enrolled" badges
+    '.course-time',                                // course duration text
+    '.faq-title',                                  // FAQ question titles
+    '.faq-post p',                                 // FAQ answer paragraphs
+    'div.title',                                   // curriculum lesson titles
+    '.lesson-row div.title',                       // lesson row titles
+    '.focus-link-v2',                              // tab links (Curriculum, etc.)
+    '.section-title',                              // sidebar section headers
+    '.left-nav-return-text',                       // "Course Overview" link
+    '.sj-text-course-overview',                    // alt course overview text
+    '.lesson-top h2',                              // lesson page title
+    '.details-pane-description',                   // course description in detail pane
   ].join(', ');
 
   const EXCLUDE_SELECTOR = [
     'code', 'pre', 'script', 'style', 'noscript',
     '.code-block', '.syntax-highlight',
-    '.skilljar-i18n-sidebar',
-    '#skilljar-i18n-bridge',
-    '#skilljar-i18n-fab',
-    'nav',                                         // skip navigation
+    '.skillbridge-sidebar',
+    '#skillbridge-bridge',
+    '#skillbridge-fab',
+    '.sb-transcript-panel',
+    'header nav',                                  // skip top header nav only
+    '.site-header nav',                            // skip site header nav
+    'nav.navbar',                                  // skip main navbar
     'footer',                                      // skip footer
-    '[role="navigation"]',
   ].join(', ');
 
   // Greetings per language for AI Tutor
   const TUTOR_GREETINGS = {
-    'en': "Hi! I'm your AI learning assistant. Ask me anything about this course. Powered by GPT-4o-mini via Puter.js (free, no API key).",
-    'ko': "안녕하세요! AI 학습 도우미입니다. 이 과정에 대해 무엇이든 물어보세요. Puter.js + GPT-4o-mini 기반 (무료, API 키 불필요).",
-    'ja': "こんにちは！AI学習アシスタントです。このコースについて何でも聞いてください。Puter.js + GPT-4o-mini（無料、APIキー不要）。",
-    'zh-CN': "你好！我是你的AI学习助手。关于这门课程，有什么都可以问我。基于 Puter.js + GPT-4o-mini（免费，无需API密钥）。",
-    'zh-TW': "你好！我是你的AI學習助手。關於這門課程，有什麼都可以問我。基於 Puter.js + GPT-4o-mini（免費，無需API金鑰）。",
-    'es': "¡Hola! Soy tu asistente de aprendizaje con IA. Pregúntame lo que quieras sobre este curso. Powered by Puter.js + GPT-4o-mini (gratis, sin API key).",
-    'fr': "Bonjour ! Je suis votre assistant d'apprentissage IA. Posez-moi n'importe quelle question sur ce cours. Propulsé par Puter.js + GPT-4o-mini (gratuit, sans clé API).",
-    'de': "Hallo! Ich bin dein KI-Lernassistent. Frag mich alles über diesen Kurs. Powered by Puter.js + GPT-4o-mini (kostenlos, kein API-Schlüssel nötig).",
+    'en': "Hi! I'm your AI learning assistant. Ask me anything about this course.",
+    'ko': "안녕하세요! AI 학습 도우미입니다. 이 과정에 대해 무엇이든 물어보세요.",
+    'ja': "こんにちは！AI学習アシスタントです。このコースについて何でも聞いてください。",
+    'zh-CN': "你好！我是你的AI学习助手。关于这门课程，有什么都可以问我。",
+    'es': "¡Hola! Soy tu asistente de aprendizaje con IA. Pregúntame lo que quieras sobre este curso.",
+    'fr': "Bonjour ! Je suis votre assistant d'apprentissage IA. Posez-moi n'importe quelle question sur ce cours.",
+    'de': "Hallo! Ich bin dein KI-Lernassistent. Frag mich alles über diesen Kurs.",
+  };
+
+  // Input placeholder per language
+  const CHAT_PLACEHOLDERS = {
+    'en': "Ask about the course content...",
+    'ko': "강의 내용에 대해 질문하세요...",
+    'ja': "コースの内容について質問してください...",
+    'zh-CN': "关于课程内容，请提问...",
+    'es': "Pregunta sobre el contenido del curso...",
+    'fr': "Posez une question sur le cours...",
+    'de': "Frage zum Kursinhalt stellen...",
   };
 
   let translator = null;
+  let subtitleManager = null;
   let currentLang = 'en';
   let isTranslating = false;
   let isReady = false;
   let sidebarVisible = false;
-  let originalTexts = new Map();
+  let originalTexts = new Map();     // el → original innerHTML
+  let translatedTexts = new Map();   // originalText → [{ el }]
   let pendingActions = [];
+  let gtTranslateQueue = [];
+  let gtProcessing = false;
 
   // ============================================================
   // REGISTER MESSAGE LISTENER IMMEDIATELY (before async init)
   // ============================================================
 
   chrome.runtime.onMessage.addListener(handleMessage);
-  console.log('[Skilljar i18n] Message listener registered');
+  console.log('[SkillBridge] Message listener registered');
 
   function handleMessage(request, sender, sendResponse) {
     if (!isReady && request.action === 'translatePage') {
@@ -75,7 +105,7 @@
         translatePage(request.language).then(() => {
           sendResponse({ success: true });
         }).catch((err) => {
-          console.error('[Skilljar i18n] translatePage error:', err);
+          console.error('[SkillBridge] translatePage error:', err);
           sendResponse({ success: false, error: err.message });
         });
         return true;
@@ -116,155 +146,284 @@
 
   async function init() {
     try {
-      const stored = await chrome.storage.local.get(['targetLanguage', 'autoTranslate']);
+      const stored = await chrome.storage.local.get(['targetLanguage', 'autoTranslate', 'welcomeShown']);
       currentLang = stored.targetLanguage || 'en';
 
       translator = new SkilljarTranslator();
-      // Load static translations for current language
+
+      // Load static translations and apply INSTANTLY (no bridge needed)
       if (currentLang !== 'en') {
         await translator.loadStaticTranslations(currentLang);
-      }
-      const bridgeOk = await translator.initialize();
-
-      if (!bridgeOk) {
-        console.warn('[Skilljar i18n] Bridge failed to initialize, features limited');
+        if (stored.autoTranslate && Object.keys(translator.staticDict).length > 0) {
+          applyStaticTranslations(currentLang);
+        }
       }
 
       injectSidebar();
       injectFloatingButton();
+
       isReady = true;
+      console.log('[SkillBridge] Content script ready (static)');
 
-      console.log('[Skilljar i18n] Content script ready');
-
+      // Process any queued popup actions
       for (const { request } of pendingActions) {
         if (request.action === 'translatePage') {
-          await translatePage(request.language);
+          currentLang = request.language;
+          if (Object.keys(translator.staticDict).length === 0) {
+            await translator.loadStaticTranslations(request.language);
+          }
+          applyStaticTranslations(request.language);
         }
       }
       pendingActions = [];
 
-      if (stored.autoTranslate && currentLang !== 'en' && bridgeOk) {
-        await translatePage(currentLang);
+      // Start observing DOM for dynamically loaded content (e.g. course cards)
+      observeDOM();
+
+      // Re-apply after delays to catch late-loaded content (sidebar, dynamic sections)
+      if (stored.autoTranslate && currentLang !== 'en') {
+        setTimeout(() => applyStaticTranslations(currentLang), 300);
+        setTimeout(() => applyStaticTranslations(currentLang), 1000);
+        setTimeout(() => applyStaticTranslations(currentLang), 2500);
+        setTimeout(() => applyStaticTranslations(currentLang), 5000);
       }
 
-      observeDOM();
+      // Register Gemini callback — remove spinner, update text if improved
+      translator.onTranslationUpdate((originalText, finalTranslation, targetLang, wasImproved) => {
+        if (targetLang !== currentLang) return;
+        const entries = translatedTexts.get(originalText);
+        if (!entries) return;
+
+        for (const entry of entries) {
+          if (!entry.el || !entry.el.parentNode) continue;
+          // Remove verification spinner
+          removeVerifySpinner(entry.el);
+
+          if (wasImproved) {
+            // Update with improved translation + fade effect
+            entry.el.textContent = finalTranslation;
+            entry.el.classList.add('si18n-text-updated');
+            setTimeout(() => entry.el.classList.remove('si18n-text-updated'), 500);
+          }
+        }
+
+        if (wasImproved) {
+          console.log(`[SkillBridge] Gemini improved: "${originalText.substring(0, 40)}..."`);
+        }
+      });
+
+      // Initialize bridge in background (for AI Tutor chat + Gemini verification)
+      translator.initialize().then(ok => {
+        if (ok) console.log('[SkillBridge] Bridge ready (AI Tutor + Gemini available)');
+      });
+
+      // Initialize YouTube subtitle translation (non-blocking)
+      if (typeof YouTubeSubtitleManager !== 'undefined') {
+        subtitleManager = new YouTubeSubtitleManager(translator, currentLang);
+        subtitleManager.initialize().then(() => {
+          console.log('[SkillBridge] YouTube subtitle manager ready');
+        }).catch(err => {
+          console.warn('[SkillBridge] YouTube subtitle init failed:', err);
+        });
+      }
+
+      // First visit: auto-detect language and show welcome banner
+      if (!stored.welcomeShown && currentLang === 'en') {
+        const detected = detectBrowserLanguage();
+        if (detected && detected !== 'en') {
+          // Auto-detect found a supported language → show banner
+          setTimeout(() => showWelcomeBanner(detected), 1500);
+        }
+      } else if (!stored.welcomeShown && currentLang !== 'en') {
+        // Language was set (maybe from popup) but welcome not shown yet
+        chrome.storage.local.set({ welcomeShown: true });
+      }
     } catch (err) {
-      console.error('[Skilljar i18n] Init error:', err);
+      console.error('[SkillBridge] Init error:', err);
       isReady = true;
       injectSidebar();
       injectFloatingButton();
     }
   }
 
+  /**
+   * Apply translations: static dict first (instant), then queue
+   * remaining text for Google Translate + Gemini verification.
+   */
+  function applyStaticTranslations(targetLang) {
+    // Apply language-specific font class to body
+    updateLangClass(targetLang);
+
+    const elements = getTranslatableElements();
+    let staticCount = 0;
+    const gtCandidates = []; // Elements needing Google Translate
+
+    for (const el of elements) {
+      const fullText = el.textContent.trim();
+      if (!fullText || fullText.length < 2) continue;
+
+      // Skip non-English text (already translated or native)
+      if (!isLikelyEnglish(fullText)) continue;
+
+      // Store original
+      if (!originalTexts.has(el)) {
+        originalTexts.set(el, el.innerHTML);
+      }
+
+      // 1. Try static dictionary (element-level)
+      const elementMatch = translator.staticLookup(fullText);
+      if (elementMatch) {
+        el.textContent = elementMatch;
+        staticCount++;
+        continue;
+      }
+
+      // 2. Try text-node level match
+      let allNodesMatched = true;
+      const textNodes = getTextNodes(el);
+      for (const node of textNodes) {
+        const text = node.textContent.trim();
+        if (text.length < 2) continue;
+        const nodeMatch = translator.staticLookup(text);
+        if (nodeMatch) {
+          node.textContent = nodeMatch;
+          staticCount++;
+        } else if (text.length >= 4 && isLikelyEnglish(text)) {
+          allNodesMatched = false;
+        }
+      }
+
+      // 3. If no static match and text is substantial, queue for GT
+      if (!allNodesMatched && fullText.length >= 10) {
+        gtCandidates.push(el);
+      }
+    }
+    console.log(`[SkillBridge] Static: ${staticCount} translations, GT queue: ${gtCandidates.length}`);
+
+    // Queue candidates for Google Translate (non-blocking)
+    if (gtCandidates.length > 0 && targetLang !== 'en') {
+      queueForGoogleTranslate(gtCandidates, targetLang);
+    }
+  }
+
+  /**
+   * Quick heuristic: is the text likely English?
+   * Checks if most characters are Latin alphabet.
+   */
+  function isLikelyEnglish(text) {
+    const latin = text.replace(/[^a-zA-Z]/g, '').length;
+    const total = text.replace(/\s/g, '').length;
+    if (total === 0) return false;
+    return (latin / total) > 0.5;
+  }
+
+  /**
+   * Queue elements for Google Translate, process in batches.
+   */
+  function queueForGoogleTranslate(elements, targetLang) {
+    for (const el of elements) {
+      const text = el.textContent.trim();
+      if (!text || text.length < 4) continue;
+      gtTranslateQueue.push({ el, text, targetLang });
+    }
+    processGTQueue();
+  }
+
+  async function processGTQueue() {
+    if (gtProcessing || gtTranslateQueue.length === 0) return;
+    gtProcessing = true;
+
+    while (gtTranslateQueue.length > 0) {
+      // Batch 10 at a time for speed
+      const batch = gtTranslateQueue.splice(0, 10);
+      const targetLang = batch[0].targetLang;
+
+      // First check IndexedDB cache
+      const uncached = [];
+      for (const item of batch) {
+        const cached = await translator.cachedLookup(item.text, targetLang);
+        if (cached) {
+          if (item.el && item.el.parentNode) {
+            item.el.textContent = cached;
+            trackTranslatedElement(item.text, item.el);
+          }
+        } else {
+          uncached.push(item);
+        }
+      }
+
+      if (uncached.length === 0) continue;
+
+      // Batch Google Translate
+      const texts = uncached.map(i => i.text);
+      const translations = await translator.googleTranslateBatch(texts, targetLang);
+
+      for (let i = 0; i < uncached.length; i++) {
+        const item = uncached[i];
+        const translated = translations[i];
+        if (translated && translated !== item.text && item.el && item.el.parentNode) {
+          item.el.textContent = translated;
+          trackTranslatedElement(item.text, item.el);
+          // Queue Gemini check — only add spinner if actually queued
+          const queued = translator.queueGeminiVerify(item.text, translated, targetLang);
+          if (queued) {
+            addVerifySpinner(item.el);
+          }
+        }
+      }
+
+      // Minimal delay between batches
+      if (gtTranslateQueue.length > 0) {
+        await new Promise(r => setTimeout(r, 100));
+      }
+    }
+
+    gtProcessing = false;
+  }
+
+  /**
+   * Track translated elements so Gemini can update them later.
+   */
+  function trackTranslatedElement(originalText, el) {
+    if (!translatedTexts.has(originalText)) {
+      translatedTexts.set(originalText, []);
+    }
+    translatedTexts.get(originalText).push({ el });
+  }
+
+  /**
+   * Add a small pulsing dots spinner after an element (Gemini verification indicator).
+   */
+  function addVerifySpinner(el) {
+    // Don't add duplicate spinners
+    if (el.querySelector('.si18n-verify-spinner')) return;
+    const spinner = document.createElement('span');
+    spinner.className = 'si18n-verify-spinner';
+    spinner.innerHTML = '<span class="si18n-dot"></span><span class="si18n-dot"></span><span class="si18n-dot"></span>';
+    el.appendChild(spinner);
+  }
+
+  function removeVerifySpinner(el) {
+    const spinner = el.querySelector('.si18n-verify-spinner');
+    if (spinner) spinner.remove();
+  }
+
   // ============================================================
   // PAGE TRANSLATION
   // ============================================================
 
+  /**
+   * translatePage — kept for popup message compatibility.
+   * Delegates to applyStaticTranslations (instant, no LLM).
+   */
   async function translatePage(targetLang) {
-    if (isTranslating) return;
-    if (!translator) {
-      updateProgressText('Translator not loaded.');
-      showProgress(true);
-      setTimeout(() => showProgress(false), 3000);
-      return;
-    }
-
-    isTranslating = true;
+    if (isTranslating || !translator) return;
     currentLang = targetLang;
-
-    showProgress(true);
-    updateProgressText('Preparing translation...');
-
-    try {
-      // Load static translations if not yet loaded for this language
-      if (Object.keys(translator.staticDict).length === 0 && targetLang !== 'en') {
-        await translator.loadStaticTranslations(targetLang);
-      }
-
-      const elements = getTranslatableElements();
-
-      if (elements.length === 0) {
-        updateProgressText('No translatable content found.');
-        setTimeout(() => showProgress(false), 3000);
-        isTranslating = false;
-        return;
-      }
-
-      // Collect all text nodes
-      const nodeMap = [];
-      for (let i = 0; i < elements.length; i++) {
-        const el = elements[i];
-        if (!el.textContent.trim()) continue;
-
-        if (!originalTexts.has(el)) {
-          originalTexts.set(el, el.innerHTML);
-        }
-
-        const textNodes = getTextNodes(el);
-        for (const node of textNodes) {
-          const text = node.textContent.trim();
-          if (text.length < 2) continue;
-          if (isCodeContent(node)) continue;
-          nodeMap.push({ node, text });
-        }
-      }
-
-      if (nodeMap.length === 0) {
-        updateProgressText('No translatable text found.');
-        setTimeout(() => showProgress(false), 3000);
-        isTranslating = false;
-        return;
-      }
-
-      // Phase 1: Apply static translations (instant)
-      const needsLLM = [];
-      let staticCount = 0;
-
-      for (let i = 0; i < nodeMap.length; i++) {
-        const { node, text } = nodeMap[i];
-        const staticResult = translator.staticLookup(text);
-        if (staticResult) {
-          node.textContent = staticResult;
-          staticCount++;
-        } else {
-          needsLLM.push({ node, text, idx: i });
-        }
-      }
-
-      console.log(`[Skilljar i18n] Static: ${staticCount}/${nodeMap.length}, LLM needed: ${needsLLM.length}`);
-      updateProgressText(`Applied ${staticCount} instant translations`);
-      updateProgressBar(staticCount / nodeMap.length);
-
-      // Phase 2: LLM translate remaining (one by one, proven method)
-      if (needsLLM.length > 0 && translator.isReady) {
-        let llmDone = 0;
-        for (const item of needsLLM) {
-          try {
-            const translated = await translator.translate(item.text, targetLang);
-            if (translated && translated !== item.text) {
-              item.node.textContent = translated;
-            }
-          } catch (e) {
-            console.warn('[Skilljar i18n] LLM skip:', e.message);
-          }
-          llmDone++;
-          const totalDone = staticCount + llmDone;
-          const pct = Math.round((totalDone / nodeMap.length) * 100);
-          updateProgressText(`Translating... ${pct}%`);
-          updateProgressBar(totalDone / nodeMap.length);
-        }
-      }
-
-      updateProgressText('Translation complete!');
-      updateProgressBar(1);
-      setTimeout(() => showProgress(false), 2000);
-    } catch (err) {
-      console.error('[Skilljar i18n] Translation error:', err);
-      updateProgressText('Translation error: ' + err.message);
-      setTimeout(() => showProgress(false), 4000);
-    } finally {
-      isTranslating = false;
+    if (targetLang === 'en') { restoreOriginal(); return; }
+    if (Object.keys(translator.staticDict).length === 0) {
+      await translator.loadStaticTranslations(targetLang);
     }
+    applyStaticTranslations(targetLang);
   }
 
   function restoreOriginal() {
@@ -274,7 +433,27 @@
       }
     });
     originalTexts.clear();
+    translatedTexts.clear();
+    gtTranslateQueue = [];
     currentLang = 'en';
+    updateLangClass('en');
+  }
+
+  /**
+   * Apply/remove language-specific CSS class on body for font fallbacks.
+   * Classes like .si18n-lang-ko trigger Noto Sans KR, etc.
+   */
+  function updateLangClass(lang) {
+    const body = document.body;
+    if (!body) return;
+    // Remove all previous language classes
+    body.classList.forEach(cls => {
+      if (cls.startsWith('si18n-lang-')) body.classList.remove(cls);
+    });
+    // Add new language class (unless English)
+    if (lang && lang !== 'en') {
+      body.classList.add(`si18n-lang-${lang}`);
+    }
   }
 
   function getTranslatableElements() {
@@ -348,50 +527,72 @@
   function observeDOM() {
     const observer = new MutationObserver((mutations) => {
       if (currentLang === 'en' || isTranslating) return;
-      if (!translator || !translator.isReady) return;
+      if (!translator || Object.keys(translator.staticDict).length === 0) return;
 
       for (const mutation of mutations) {
         for (const node of mutation.addedNodes) {
           if (node.nodeType === Node.ELEMENT_NODE &&
-              !node.closest('.skilljar-i18n-sidebar') &&
-              !node.closest('#skilljar-i18n-bridge')) {
+              !node.closest('.skillbridge-sidebar') &&
+              !node.closest('#skillbridge-bridge') &&
+              !node.closest('.sb-transcript-panel')) {
             debounceTranslateNew(node);
           }
         }
       }
     });
 
-    observer.observe(document.body, { childList: true, subtree: true });
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
   }
 
   let translateTimeout;
   function debounceTranslateNew(node) {
     clearTimeout(translateTimeout);
-    translateTimeout = setTimeout(async () => {
+    translateTimeout = setTimeout(() => {
       if (currentLang !== 'en' && translator) {
-        const textNodes = getTextNodes(node);
-        for (const tn of textNodes) {
-          const original = tn.textContent.trim();
-          if (original.length >= 2 && !isCodeContent(tn)) {
-            // Static dict first (instant)
-            const staticResult = translator.staticLookup(original);
-            if (staticResult) {
-              tn.textContent = staticResult;
-              continue;
-            }
-            // LLM fallback
-            if (translator.isReady) {
-              try {
-                const translated = await translator.translate(original, currentLang);
-                if (translated && translated !== original) {
-                  tn.textContent = translated;
-                }
-              } catch (e) { /* skip */ }
-            }
+        const elements = node.matches?.(TRANSLATABLE_SELECTOR)
+          ? [node]
+          : Array.from(node.querySelectorAll?.(TRANSLATABLE_SELECTOR) || []);
+
+        const handledNodes = new Set();
+        const gtCandidates = [];
+
+        for (const el of elements) {
+          if (el.closest(EXCLUDE_SELECTOR)) continue;
+          const fullText = el.textContent.trim();
+          if (fullText.length < 2) continue;
+          if (!isLikelyEnglish(fullText)) continue;
+
+          // Static dictionary first
+          const match = translator.staticLookup(fullText);
+          if (match) {
+            if (!originalTexts.has(el)) originalTexts.set(el, el.innerHTML);
+            el.textContent = match;
+            getTextNodes(el).forEach(tn => handledNodes.add(tn));
+          } else if (fullText.length >= 10) {
+            gtCandidates.push(el);
           }
         }
+
+        // Text-node level for remaining (static only)
+        const textNodes = getTextNodes(node);
+        for (const tn of textNodes) {
+          if (handledNodes.has(tn)) continue;
+          const original = tn.textContent.trim();
+          if (original.length >= 2 && !isCodeContent(tn)) {
+            const staticResult = translator.staticLookup(original);
+            if (staticResult) tn.textContent = staticResult;
+          }
+        }
+
+        // Queue remaining for Google Translate
+        if (gtCandidates.length > 0) {
+          for (const el of gtCandidates) {
+            if (!originalTexts.has(el)) originalTexts.set(el, el.innerHTML);
+          }
+          queueForGoogleTranslate(gtCandidates, currentLang);
+        }
       }
-    }, 1000);
+    }, 300);
   }
 
   // ============================================================
@@ -399,16 +600,15 @@
   // ============================================================
 
   function injectFloatingButton() {
-    if (document.getElementById('skilljar-i18n-fab')) return;
+    if (document.getElementById('skillbridge-fab')) return;
     const btn = document.createElement('div');
-    btn.id = 'skilljar-i18n-fab';
+    btn.id = 'skillbridge-fab';
     btn.innerHTML = `
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/>
-        <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
       </svg>
     `;
-    btn.title = 'Skilljar i18n Assistant';
+    btn.title = 'AI Tutor';
     btn.addEventListener('click', toggleSidebar);
     document.body.appendChild(btn);
   }
@@ -418,10 +618,10 @@
   // ============================================================
 
   function injectSidebar() {
-    if (document.getElementById('skilljar-i18n-sidebar')) return;
+    if (document.getElementById('skillbridge-sidebar')) return;
     const sidebar = document.createElement('div');
-    sidebar.id = 'skilljar-i18n-sidebar';
-    sidebar.className = 'skilljar-i18n-sidebar';
+    sidebar.id = 'skillbridge-sidebar';
+    sidebar.className = 'skillbridge-sidebar';
     sidebar.innerHTML = getSidebarHTML();
     document.body.appendChild(sidebar);
     setTimeout(bindSidebarEvents, 100);
@@ -431,72 +631,70 @@
     return TUTOR_GREETINGS[currentLang] || TUTOR_GREETINGS['en'];
   }
 
+  // Premium languages (have static JSON dictionaries)
+  const PREMIUM_LANGUAGES = [
+    { code: 'ko', label: '한국어' },
+    { code: 'ja', label: '日本語' },
+    { code: 'zh-CN', label: '中文(简体)' },
+    { code: 'es', label: 'Español' },
+    { code: 'fr', label: 'Français' },
+    { code: 'de', label: 'Deutsch' },
+  ];
+
+  // All supported languages (premium + Google Translate only)
+  const AVAILABLE_LANGUAGES = [
+    { code: 'en', label: 'English' },
+    ...PREMIUM_LANGUAGES,
+    { code: 'zh-TW', label: '中文(繁體)' },
+    { code: 'pt-BR', label: 'Português (BR)' },
+    { code: 'pt', label: 'Português (PT)' },
+    { code: 'it', label: 'Italiano' },
+    { code: 'nl', label: 'Nederlands' },
+    { code: 'ru', label: 'Русский' },
+    { code: 'pl', label: 'Polski' },
+    { code: 'uk', label: 'Українська' },
+    { code: 'cs', label: 'Čeština' },
+    { code: 'sv', label: 'Svenska' },
+    { code: 'da', label: 'Dansk' },
+    { code: 'fi', label: 'Suomi' },
+    { code: 'no', label: 'Norsk' },
+    { code: 'tr', label: 'Türkçe' },
+    { code: 'ar', label: 'العربية' },
+    { code: 'hi', label: 'हिन्दी' },
+    { code: 'th', label: 'ภาษาไทย' },
+    { code: 'vi', label: 'Tiếng Việt' },
+    { code: 'id', label: 'Bahasa Indonesia' },
+    { code: 'ms', label: 'Bahasa Melayu' },
+    { code: 'tl', label: 'Filipino' },
+    { code: 'bn', label: 'বাংলা' },
+    { code: 'he', label: 'עברית' },
+    { code: 'ro', label: 'Română' },
+    { code: 'hu', label: 'Magyar' },
+    { code: 'el', label: 'Ελληνικά' },
+  ];
+
   function getSidebarHTML() {
+    const langOptions = AVAILABLE_LANGUAGES
+      .map(l => `<option value="${l.code}">${l.label}</option>`)
+      .join('');
+
     return `
       <div class="si18n-header">
-        <div class="si18n-logo">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        <div class="si18n-header-left">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
           </svg>
-          <span>Skilljar i18n</span>
+          <span>SkillBridge Tutor</span>
         </div>
-        <button class="si18n-close" id="si18n-close">&times;</button>
-      </div>
-
-      <div class="si18n-tabs">
-        <button class="si18n-tab active" data-tab="translate">Translate</button>
-        <button class="si18n-tab" data-tab="chat">AI Tutor</button>
-      </div>
-
-      <div class="si18n-panel" id="si18n-panel-translate">
-        <div class="si18n-section">
-          <label class="si18n-label">Target Language</label>
-          <select id="si18n-lang-select" class="si18n-select">
-            <option value="en">English (Original)</option>
-            <option value="ko">한국어</option>
-            <option value="ja">日本語</option>
-            <option value="zh-CN">中文(简体)</option>
-            <option value="zh-TW">中文(繁體)</option>
-            <option value="es">Español</option>
-            <option value="fr">Français</option>
-            <option value="de">Deutsch</option>
-            <option value="pt-BR">Português (BR)</option>
-            <option value="vi">Tiếng Việt</option>
-            <option value="th">ภาษาไทย</option>
-            <option value="id">Bahasa Indonesia</option>
-            <option value="ar">العربية</option>
-            <option value="hi">हिन्दी</option>
-            <option value="ru">Русский</option>
-            <option value="tr">Türkçe</option>
+        <div class="si18n-header-right">
+          <select id="si18n-lang-select" class="si18n-lang-chip" title="Page language">
+            ${langOptions}
           </select>
-        </div>
-
-        <div class="si18n-actions">
-          <button id="si18n-translate-btn" class="si18n-btn si18n-btn-primary">
-            Translate Page
-          </button>
-          <button id="si18n-restore-btn" class="si18n-btn si18n-btn-secondary">
-            Restore Original
-          </button>
-        </div>
-
-        <div class="si18n-toggle-row">
-          <label class="si18n-toggle-label">
-            <input type="checkbox" id="si18n-auto-translate" />
-            <span>Auto-translate on page load</span>
-          </label>
-        </div>
-
-        <div id="si18n-progress" class="si18n-progress" style="display:none">
-          <div class="si18n-progress-bar">
-            <div class="si18n-progress-fill" id="si18n-progress-fill"></div>
-          </div>
-          <div class="si18n-progress-text" id="si18n-progress-text">Preparing...</div>
+          <button class="si18n-close" id="si18n-close">&times;</button>
         </div>
       </div>
 
-      <div class="si18n-panel" id="si18n-panel-chat" style="display:none">
+      <div class="si18n-panel si18n-panel-chat" id="si18n-panel-chat">
         <div class="si18n-chat-messages" id="si18n-chat-messages">
           <div class="si18n-chat-msg si18n-chat-bot">
             <div class="si18n-chat-avatar">AI</div>
@@ -507,18 +705,17 @@
         </div>
         <div class="si18n-chat-input-wrap">
           <textarea id="si18n-chat-input" class="si18n-chat-input"
-            placeholder="Ask about the course content..."
-            rows="2"></textarea>
-          <button id="si18n-chat-send" class="si18n-btn si18n-btn-primary si18n-chat-send">
-            Send
+            rows="1"></textarea>
+          <button id="si18n-chat-send" class="si18n-chat-send-btn" title="Send">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+              <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94l18.04-8.25a.75.75 0 000-1.39L3.478 2.405z"/>
+            </svg>
           </button>
         </div>
       </div>
 
       <div class="si18n-footer">
-        <span>Powered by <a href="https://puter.com" target="_blank">Puter.js</a> + GPT-4o-mini</span>
-        <span class="si18n-footer-sep">|</span>
-        <a href="https://github.com" target="_blank">Open Source</a>
+        <span>Tutor: Claude Sonnet 4 | Verify: Gemini 2.0 Flash</span>
       </div>
     `;
   }
@@ -526,47 +723,28 @@
   function bindSidebarEvents() {
     document.getElementById('si18n-close')?.addEventListener('click', toggleSidebar);
 
-    document.querySelectorAll('.si18n-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.si18n-tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        document.querySelectorAll('.si18n-panel').forEach(p => p.style.display = 'none');
-        document.getElementById(`si18n-panel-${tab.dataset.tab}`).style.display = 'flex';
-      });
-    });
-
+    // Language selector in tutor header — changes page translation + tutor greeting
     const langSelect = document.getElementById('si18n-lang-select');
     if (langSelect) {
       langSelect.value = currentLang;
       langSelect.addEventListener('change', async (e) => {
-        currentLang = e.target.value;
-        chrome.storage.local.set({ targetLanguage: currentLang });
-        // Load static translations for new language
-        if (translator && currentLang !== 'en') {
-          await translator.loadStaticTranslations(currentLang);
+        const newLang = e.target.value;
+        chrome.storage.local.set({ targetLanguage: newLang, autoTranslate: newLang !== 'en' });
+        // Restore → reload dict → re-translate instantly
+        restoreOriginal();
+        currentLang = newLang;
+        if (newLang === 'en') {
+          updateTutorGreeting();
+          if (subtitleManager) subtitleManager.setLanguage('en');
+          return;
         }
+        await translator.loadStaticTranslations(newLang);
+        applyStaticTranslations(newLang);
         updateTutorGreeting();
+        // Update YouTube subtitle translations
+        if (subtitleManager) subtitleManager.setLanguage(newLang);
       });
     }
-
-    document.getElementById('si18n-translate-btn')?.addEventListener('click', async () => {
-      const lang = document.getElementById('si18n-lang-select').value;
-      if (lang === 'en') {
-        restoreOriginal();
-      } else {
-        await translatePage(lang);
-      }
-    });
-
-    document.getElementById('si18n-restore-btn')?.addEventListener('click', restoreOriginal);
-
-    const autoToggle = document.getElementById('si18n-auto-translate');
-    chrome.storage.local.get(['autoTranslate'], (result) => {
-      if (autoToggle) autoToggle.checked = result.autoTranslate || false;
-    });
-    autoToggle?.addEventListener('change', (e) => {
-      chrome.storage.local.set({ autoTranslate: e.target.checked });
-    });
 
     // Chat input — prevent IME double-send (Korean, Japanese, Chinese)
     const chatInput = document.getElementById('si18n-chat-input');
@@ -590,6 +768,11 @@
     const firstBubble = messagesEl.querySelector('.si18n-chat-bot .si18n-chat-bubble');
     if (firstBubble && messagesEl.children.length === 1) {
       firstBubble.textContent = getTutorGreeting();
+    }
+    // Update input placeholder
+    const chatInput = document.getElementById('si18n-chat-input');
+    if (chatInput) {
+      chatInput.placeholder = CHAT_PLACEHOLDERS[currentLang] || CHAT_PLACEHOLDERS['en'];
     }
   }
 
@@ -615,18 +798,48 @@
     messages.innerHTML += `
       <div class="si18n-chat-msg si18n-chat-bot" id="${loadingId}">
         <div class="si18n-chat-avatar">AI</div>
-        <div class="si18n-chat-bubble si18n-typing">Thinking...</div>
+        <div class="si18n-chat-bubble">
+          <span class="si18n-thinking-dots">
+            <span class="si18n-dot"></span>
+            <span class="si18n-dot"></span>
+            <span class="si18n-dot"></span>
+          </span>
+        </div>
       </div>
     `;
     messages.scrollTop = messages.scrollHeight;
 
     const context = getPageContext();
-    const response = await translator.chat(text, currentLang, context);
+    const bubble = document.querySelector(`#${loadingId} .si18n-chat-bubble`);
 
-    const loadingEl = document.getElementById(loadingId);
-    if (loadingEl) {
-      loadingEl.querySelector('.si18n-chat-bubble').innerHTML = formatResponse(response);
-      loadingEl.querySelector('.si18n-chat-bubble').classList.remove('si18n-typing');
+    try {
+      let started = false;
+      await translator.chatStream(text, currentLang, context, (chunk, fullText) => {
+        if (!started) {
+          // First chunk — clear thinking dots, start streaming
+          started = true;
+          if (bubble) {
+            bubble.innerHTML = '';
+            bubble.classList.add('si18n-streaming-cursor');
+          }
+        }
+        if (bubble) {
+          bubble.innerHTML = formatResponse(fullText);
+          messages.scrollTop = messages.scrollHeight;
+        }
+      });
+
+      // Stream complete — remove cursor
+      if (bubble) {
+        bubble.classList.remove('si18n-streaming-cursor');
+      }
+    } catch (err) {
+      if (bubble) {
+        bubble.innerHTML = currentLang === 'ko'
+          ? '죄송합니다. 응답 중 오류가 발생했습니다.'
+          : 'Sorry, an error occurred.';
+        bubble.classList.remove('si18n-streaming-cursor');
+      }
     }
     messages.scrollTop = messages.scrollHeight;
   }
@@ -646,34 +859,112 @@
   }
 
   // ============================================================
-  // PROGRESS UI
-  // ============================================================
-
-  function showProgress(show) {
-    const el = document.getElementById('si18n-progress');
-    if (el) el.style.display = show ? 'block' : 'none';
-  }
-
-  function updateProgressText(text) {
-    const el = document.getElementById('si18n-progress-text');
-    if (el) el.textContent = text;
-  }
-
-  function updateProgressBar(ratio) {
-    const el = document.getElementById('si18n-progress-fill');
-    if (el) el.style.width = `${Math.round(ratio * 100)}%`;
-  }
-
-  // ============================================================
   // SIDEBAR TOGGLE
   // ============================================================
 
   function toggleSidebar() {
-    const sidebar = document.getElementById('skilljar-i18n-sidebar');
-    const fab = document.getElementById('skilljar-i18n-fab');
+    const sidebar = document.getElementById('skillbridge-sidebar');
+    const fab = document.getElementById('skillbridge-fab');
     sidebarVisible = !sidebarVisible;
     if (sidebar) sidebar.classList.toggle('open', sidebarVisible);
     if (fab) fab.classList.toggle('hidden', sidebarVisible);
+  }
+
+  // ============================================================
+  // LANGUAGE AUTO-DETECT + WELCOME BANNER
+  // ============================================================
+
+  /**
+   * Detect user's preferred language from browser settings.
+   * Maps browser locale to our supported languages.
+   */
+  function detectBrowserLanguage() {
+    const browserLang = navigator.language || navigator.userLanguage || 'en';
+    const supported = AVAILABLE_LANGUAGES.map(l => l.code);
+
+    // Exact match first
+    if (supported.includes(browserLang)) return browserLang;
+
+    // Try base language (e.g. "ko-KR" → "ko")
+    const base = browserLang.split('-')[0];
+    if (supported.includes(base)) return base;
+
+    // Special: "zh" → "zh-CN"
+    if (base === 'zh') return 'zh-CN';
+
+    return null; // Not in our supported list
+  }
+
+  /**
+   * Show welcome banner on first visit if user's browser language is supported.
+   */
+  function showWelcomeBanner(detectedLang) {
+    if (!detectedLang || detectedLang === 'en') return;
+
+    const langLabel = AVAILABLE_LANGUAGES.find(l => l.code === detectedLang)?.label || detectedLang;
+    const langOptions = AVAILABLE_LANGUAGES
+      .filter(l => l.code !== 'en')
+      .map(l => `<option value="${l.code}" ${l.code === detectedLang ? 'selected' : ''}>${l.label}</option>`)
+      .join('');
+
+    const banner = document.createElement('div');
+    banner.id = 'si18n-welcome-banner';
+    banner.innerHTML = `
+      <span class="si18n-banner-icon">🌐</span>
+      <div class="si18n-banner-text">
+        이 페이지를 <strong>${langLabel}</strong>로 번역할까요?
+        <select id="si18n-banner-lang">${langOptions}</select>
+      </div>
+      <div class="si18n-banner-actions">
+        <button class="si18n-banner-btn si18n-banner-confirm" id="si18n-banner-yes">번역</button>
+        <button class="si18n-banner-btn si18n-banner-change" id="si18n-banner-no">닫기</button>
+      </div>
+    `;
+    document.body.appendChild(banner);
+
+    // Animate in
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => banner.classList.add('visible'));
+    });
+
+    // Confirm → translate
+    document.getElementById('si18n-banner-yes')?.addEventListener('click', async () => {
+      const selectedLang = document.getElementById('si18n-banner-lang')?.value || detectedLang;
+      banner.classList.remove('visible');
+      setTimeout(() => banner.remove(), 400);
+
+      // Save and apply
+      currentLang = selectedLang;
+      chrome.storage.local.set({
+        targetLanguage: selectedLang,
+        autoTranslate: true,
+        welcomeShown: true,
+      });
+      await translator.loadStaticTranslations(selectedLang);
+      applyStaticTranslations(selectedLang);
+
+      // Update tutor
+      const langSelect = document.getElementById('si18n-lang-select');
+      if (langSelect) langSelect.value = selectedLang;
+      updateTutorGreeting();
+
+      // Update YouTube subtitles
+      if (subtitleManager) subtitleManager.setLanguage(selectedLang);
+    });
+
+    // Dismiss
+    document.getElementById('si18n-banner-no')?.addEventListener('click', () => {
+      banner.classList.remove('visible');
+      setTimeout(() => banner.remove(), 400);
+      chrome.storage.local.set({ welcomeShown: true });
+    });
+
+    // Update banner text when language changes
+    document.getElementById('si18n-banner-lang')?.addEventListener('change', (e) => {
+      const newLabel = AVAILABLE_LANGUAGES.find(l => l.code === e.target.value)?.label || e.target.value;
+      const textEl = banner.querySelector('.si18n-banner-text strong');
+      if (textEl) textEl.textContent = newLabel;
+    });
   }
 
   // ============================================================

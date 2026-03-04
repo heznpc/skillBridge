@@ -1,0 +1,46 @@
+name: "🌍 Language Addition/Improvement"
+description: "Request a new language or improve existing translations"
+labels: ["i18n", "good first issue"]
+body:
+  - type: input
+    id: language
+    attributes:
+      label: Language
+      description: "Which language? (include language code if known, e.g., pt-BR for Portuguese Brazil)"
+      placeholder: "e.g., Portuguese (pt-BR), Thai (th), Vietnamese (vi)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: request-type
+    attributes:
+      label: Type of Request
+      description: "What kind of language work are we doing?"
+      options:
+        - "New standard language"
+        - "Promote to premium (with curated dictionary)"
+        - "Fix/improve existing translations"
+    validations:
+      required: true
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: "Provide context for your request"
+      placeholder: |
+        For new languages: Why is this language important? How many learners could benefit?
+        For promotion: What's the demand? Are you willing to help create a dictionary?
+        For improvements: What's currently wrong? Examples of incorrect translations?
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: I can help contribute
+      description: "How can you help make this happen?"
+      options:
+        - label: "I can provide translations"
+        - label: "I can review translations"
+        - label: "I'm a native speaker"
