@@ -347,13 +347,13 @@
     "Practical walkthrough of using Claude Code to accelerate your development workflow": "使用 Claude Code 加速开发工作流的实用演练"
   },
   "agentSkills": {
-    "Introduction to agent skills": "代理技能简介",
-    "What are skills?": "技能是什么？",
-    "Creating your first skill": "创建您的第一个技能",
-    "Configuration and multi-file skills": "配置和多文件技能",
-    "Skills vs. other Claude Code features": "技能与其他 Claude Code 功能",
-    "Sharing skills": "共享技能",
-    "Troubleshooting skills": "排查技能问题"
+    "Introduction to agent skills": "代理skill简介",
+    "What are skills?": "skill是什么？",
+    "Creating your first skill": "创建您的第一个skill",
+    "Configuration and multi-file skills": "配置和多文件skill",
+    "Skills vs. other Claude Code features": "skill与其他 Claude Code 功能",
+    "Sharing skills": "共享skill",
+    "Troubleshooting skills": "排查skill问题"
   },
   "aiFluency": {
     "AI Fluency: Framework & Foundations": "AI 流利度：框架与基础",
@@ -592,5 +592,68 @@
     "Plugins": "Plugins",
     "skill": "skill",
     "skills": "skills"
+  },
+  "_protected": {
+    "Claude Code": [
+      "克洛德代码"
+    ],
+    "Claude": [
+      "克洛德",
+      "克劳德"
+    ],
+    "Anthropic": [
+      "人类学",
+      "安特罗皮克"
+    ],
+    "Anthropic Academy": [
+      "Anthropic Academy"
+    ],
+    "Enterprise": [
+      "企业"
+    ],
+    "Personal": [
+      "个人"
+    ],
+    "Plugin": [
+      "插件"
+    ],
+    "Plugins": [
+      "插件"
+    ],
+    "skill": [
+      "技能"
+    ],
+    "skills": [
+      "技能"
+    ],
+    "Skills": [
+      "技能"
+    ],
+    "SKILL.md": [
+      "SKILL.md"
+    ],
+    "frontmatter": [
+      "前言"
+    ],
+    "CLAUDE.md": [
+      "CLAUDE.md"
+    ],
+    "YAML": [
+      "YAML"
+    ],
+    "slash command": [
+      "斜杠命令"
+    ],
+    "subagent": [
+      "子代理"
+    ],
+    "hook": [
+      "钩子",
+      "挂钩"
+    ],
+    "hooks": [
+      "钩子",
+      "挂钩"
+    ]
   }
 }

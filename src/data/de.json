@@ -347,13 +347,13 @@
     "Practical walkthrough of using Claude Code to accelerate your development workflow": "Praktische Anleitung zur Verwendung von Claude Code zur Beschleunigung Ihres Entwicklungs-Workflows"
   },
   "agentSkills": {
-    "Introduction to agent skills": "Einführung in Agent-Fähigkeiten",
-    "What are skills?": "Was sind Fähigkeiten?",
-    "Creating your first skill": "Erstellen Sie Ihre erste Fähigkeit",
-    "Configuration and multi-file skills": "Konfiguration und Multi-Datei-Fähigkeiten",
-    "Skills vs. other Claude Code features": "Fähigkeiten vs. andere Claude Code-Funktionen",
-    "Sharing skills": "Fähigkeiten teilen",
-    "Troubleshooting skills": "Fähigkeiten fehlerbeheben"
+    "Introduction to agent skills": "Einführung in Agent-skills",
+    "What are skills?": "Was sind skills?",
+    "Creating your first skill": "Erstellen Sie Ihre erste skill",
+    "Configuration and multi-file skills": "Konfiguration und Multi-Datei-skills",
+    "Skills vs. other Claude Code features": "skills vs. andere Claude Code-Funktionen",
+    "Sharing skills": "skills teilen",
+    "Troubleshooting skills": "skills fehlerbeheben"
   },
   "aiFluency": {
     "AI Fluency: Framework & Foundations": "KI-Flüssigkeit: Rahmenwerk und Grundlagen",
@@ -592,5 +592,64 @@
     "Plugins": "Plugins",
     "skill": "skill",
     "skills": "skills"
+  },
+  "_protected": {
+    "Claude Code": [
+      "Claude-Code"
+    ],
+    "Claude": [
+      "Claude"
+    ],
+    "Anthropic": [
+      "Anthropisch"
+    ],
+    "Anthropic Academy": [
+      "Anthropic Academy"
+    ],
+    "Enterprise": [
+      "Unternehmen"
+    ],
+    "Personal": [
+      "Persönlich"
+    ],
+    "Plugin": [
+      "Erweiterung"
+    ],
+    "Plugins": [
+      "Erweiterungen"
+    ],
+    "skill": [
+      "Fähigkeit"
+    ],
+    "skills": [
+      "Fähigkeiten"
+    ],
+    "Skills": [
+      "Fähigkeiten"
+    ],
+    "SKILL.md": [
+      "SKILL.md"
+    ],
+    "frontmatter": [
+      "Präambel"
+    ],
+    "CLAUDE.md": [
+      "CLAUDE.md"
+    ],
+    "YAML": [
+      "YAML"
+    ],
+    "slash command": [
+      "Schrägstrich-Befehl"
+    ],
+    "subagent": [
+      "Unter-Agent"
+    ],
+    "hook": [
+      "Haken"
+    ],
+    "hooks": [
+      "Haken"
+    ]
   }
 }

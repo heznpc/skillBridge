@@ -75,8 +75,14 @@ class SkilljarTranslator {
       const data = await resp.json();
 
       const flat = {};
+      this._protectedTerms = {};
       for (const [section, entries] of Object.entries(data)) {
         if (section === '_meta') continue;
+        if (section === '_protected') {
+          // Protected terms: { "correct English": ["wrong Korean form 1", ...] }
+          Object.assign(this._protectedTerms, entries);
+          continue;
+        }
         if (typeof entries === 'object') {
           for (const [key, value] of Object.entries(entries)) {
             flat[key] = value;
@@ -111,6 +117,10 @@ class SkilljarTranslator {
    * Look up text in static dictionary.
    * Tries: exact → typography-normalized → trimmed punctuation → normalized whitespace → case-insensitive
    */
+  getProtectedTerms() {
+    return this._protectedTerms || {};
+  }
+
   staticLookup(text) {
     if (!text) return null;
     const trimmed = text.trim();

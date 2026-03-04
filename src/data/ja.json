@@ -347,13 +347,13 @@
     "Practical walkthrough of using Claude Code to accelerate your development workflow": "Claude Codeを使用して開発ワークフローを加速させる実践的なガイド"
   },
   "agentSkills": {
-    "Introduction to agent skills": "エージェントスキルの紹介",
-    "What are skills?": "スキルとは何ですか？",
-    "Creating your first skill": "最初のスキルを作成する",
-    "Configuration and multi-file skills": "構成とマルチファイルスキル",
-    "Skills vs. other Claude Code features": "スキル vs.その他のClaude Code機能",
-    "Sharing skills": "スキルを共有する",
-    "Troubleshooting skills": "スキルのトラブルシューティング"
+    "Introduction to agent skills": "エージェントskillの紹介",
+    "What are skills?": "skillとは何ですか？",
+    "Creating your first skill": "最初のskillを作成する",
+    "Configuration and multi-file skills": "構成とマルチファイルskill",
+    "Skills vs. other Claude Code features": "skill vs.その他のClaude Code機能",
+    "Sharing skills": "skillを共有する",
+    "Troubleshooting skills": "skillのトラブルシューティング"
   },
   "aiFluency": {
     "AI Fluency: Framework & Foundations": "AI流暢性：フレームワークおよび基礎",
@@ -592,5 +592,64 @@
     "Plugins": "Plugins",
     "skill": "skill",
     "skills": "skills"
+  },
+  "_protected": {
+    "Claude Code": [
+      "クロードコード"
+    ],
+    "Claude": [
+      "クロード"
+    ],
+    "Anthropic": [
+      "アンスロピック"
+    ],
+    "Anthropic Academy": [
+      "Anthropic Academy"
+    ],
+    "Enterprise": [
+      "エンタープライズ"
+    ],
+    "Personal": [
+      "個人"
+    ],
+    "Plugin": [
+      "プラグイン"
+    ],
+    "Plugins": [
+      "プラグイン"
+    ],
+    "skill": [
+      "スキル"
+    ],
+    "skills": [
+      "スキル"
+    ],
+    "Skills": [
+      "スキル"
+    ],
+    "SKILL.md": [
+      "SKILL.md"
+    ],
+    "frontmatter": [
+      "フロントマター"
+    ],
+    "CLAUDE.md": [
+      "CLAUDE.md"
+    ],
+    "YAML": [
+      "YAML"
+    ],
+    "slash command": [
+      "スラッシュコマンド"
+    ],
+    "subagent": [
+      "サブエージェント"
+    ],
+    "hook": [
+      "フック"
+    ],
+    "hooks": [
+      "フック"
+    ]
   }
 }

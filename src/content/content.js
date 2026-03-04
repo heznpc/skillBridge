@@ -200,7 +200,7 @@
 
           if (wasImproved) {
             // Update with improved translation + fade effect
-            safeReplaceText(entry.el, finalTranslation);
+            safeReplaceText(entry.el, restoreProtectedTerms(finalTranslation));
             entry.el.classList.add('si18n-text-updated');
             setTimeout(() => entry.el.classList.remove('si18n-text-updated'), 500);
           }
@@ -250,6 +250,9 @@
    * remaining text for Google Translate + Gemini verification.
    */
   function applyStaticTranslations(targetLang) {
+    // Build protected terms map for GT post-processing
+    buildProtectedTermsMap(targetLang);
+
     // Apply language-specific font class to body
     updateLangClass(targetLang);
 
@@ -388,8 +391,10 @@
 
         for (let i = 0; i < gtItems.length; i++) {
           const item = gtItems[i];
-          const translated = translations[i];
+          let translated = translations[i];
           if (translated && translated !== item.text && item.el && item.el.parentNode) {
+            // Post-process: restore protected terms that GT mistranslated
+            translated = restoreProtectedTerms(translated);
             safeReplaceText(item.el, translated);
             trackTranslatedElement(item.text, item.el);
             // Queue Gemini verify for quality check
@@ -597,6 +602,64 @@
   }
 
   // ============================================================
+  // PROTECTED TERMS — must NOT be translated by GT
+  // These are restored after GT translation via regex replacement.
+  // Based on Anthropic's official Korean documentation conventions.
+  // ============================================================
+
+  /**
+   * Map of GT-corrupted terms → correct forms.
+   * Key: known Korean mistranslation by GT (or phonetic).
+   * Value: the correct English term to restore.
+   * Loaded per-language from the static dict's "_protected" section.
+   */
+  let PROTECTED_TERMS_MAP = {};
+
+  /**
+   * Build the protected terms map from the static dictionary.
+   * Called after translator loads static translations.
+   */
+  function buildProtectedTermsMap(targetLang) {
+    PROTECTED_TERMS_MAP = {};
+    const protectedEntries = translator.getProtectedTerms?.() || {};
+    for (const [correct, wrongForms] of Object.entries(protectedEntries)) {
+      if (Array.isArray(wrongForms)) {
+        for (const wrong of wrongForms) {
+          PROTECTED_TERMS_MAP[wrong] = correct;
+        }
+      }
+    }
+    // Also build from identity-mapped common terms
+    const dict = translator._dict || {};
+    for (const [key, val] of Object.entries(dict)) {
+      if (key === val && /^[A-Z]/.test(key)) {
+        // Identity-mapped term (e.g., "Enterprise" → "Enterprise")
+        // Don't auto-build — rely on explicit _protected section
+      }
+    }
+    console.log(`[SkillBridge] Protected terms map: ${Object.keys(PROTECTED_TERMS_MAP).length} entries`);
+  }
+
+  /**
+   * Post-process GT translation to restore protected terms.
+   * GT often translates "Claude Code" → "클로드 코드", "Enterprise" → "기업" etc.
+   * This function reverses those known mistranslations.
+   */
+  function restoreProtectedTerms(text) {
+    if (Object.keys(PROTECTED_TERMS_MAP).length === 0) return text;
+    let result = text;
+    // Sort by length descending so longer terms match first
+    const sorted = Object.entries(PROTECTED_TERMS_MAP)
+      .sort((a, b) => b[0].length - a[0].length);
+    for (const [wrong, correct] of sorted) {
+      if (result.includes(wrong)) {
+        result = result.split(wrong).join(correct);
+      }
+    }
+    return result;
+  }
+
+  // ============================================================
   // INLINE TAG PRESERVATION (Gemini-based block translation)
   // ============================================================
 
@@ -725,6 +788,12 @@
 
     const langName = translator.supportedLanguages[targetLang] || targetLang;
 
+    // Build protected terms list from dict
+    const protectedTerms = Object.keys(translator.getProtectedTerms());
+    const keepEnglish = protectedTerms.length > 0
+      ? protectedTerms.join(', ')
+      : 'API, SDK, Claude, Anthropic, Claude Code, Enterprise, Personal, Plugin, skill, SKILL.md, frontmatter';
+
     const prompt = `You are translating technical education content (Anthropic AI courses) to ${langName}.
 
 SOURCE (XML-tagged English):
@@ -736,7 +805,7 @@ RULES:
 - You may REORDER tags to match ${langName} grammar (e.g., SOV word order for Korean/Japanese)
 - Translate the TEXT INSIDE <xN>...</xN> tags
 - NEVER modify <cN/> tags (they are code identifiers — keep exactly as-is)
-- Keep technical terms in English: API, SDK, Claude, Anthropic, Claude Code
+- Keep these terms in English (DO NOT translate): ${keepEnglish}
 - Output ONLY the translated text with tags. No explanations.`;
 
     // Send to Gemini via the existing bridge

@@ -347,13 +347,13 @@
     "Practical walkthrough of using Claude Code to accelerate your development workflow": "Guide pratique d'utilisation de Claude Code pour accélérer votre flux de travail de développement"
   },
   "agentSkills": {
-    "Introduction to agent skills": "Introduction aux compétences d'agent",
-    "What are skills?": "Qu'est-ce que les compétences?",
-    "Creating your first skill": "Créer votre première compétence",
-    "Configuration and multi-file skills": "Configuration et compétences multi-fichiers",
-    "Skills vs. other Claude Code features": "Compétences vs. autres fonctionnalités de Claude Code",
-    "Sharing skills": "Partager des compétences",
-    "Troubleshooting skills": "Dépannage des compétences"
+    "Introduction to agent skills": "Introduction aux skills d'agent",
+    "What are skills?": "Qu'est-ce que les skills?",
+    "Creating your first skill": "Créer votre première skill",
+    "Configuration and multi-file skills": "Configuration et skills multi-fichiers",
+    "Skills vs. other Claude Code features": "skills vs. autres fonctionnalités de Claude Code",
+    "Sharing skills": "Partager des skills",
+    "Troubleshooting skills": "Dépannage des skills"
   },
   "aiFluency": {
     "AI Fluency: Framework & Foundations": "Fluidité de l'IA : Cadre et Fondements",
@@ -592,5 +592,64 @@
     "Plugins": "Plugins",
     "skill": "skill",
     "skills": "skills"
+  },
+  "_protected": {
+    "Claude Code": [
+      "Code Claude"
+    ],
+    "Claude": [
+      "Claude"
+    ],
+    "Anthropic": [
+      "Anthropique"
+    ],
+    "Anthropic Academy": [
+      "Anthropic Academy"
+    ],
+    "Enterprise": [
+      "Entreprise"
+    ],
+    "Personal": [
+      "Personnel"
+    ],
+    "Plugin": [
+      "extension"
+    ],
+    "Plugins": [
+      "extensions"
+    ],
+    "skill": [
+      "compétence"
+    ],
+    "skills": [
+      "compétences"
+    ],
+    "Skills": [
+      "Compétences"
+    ],
+    "SKILL.md": [
+      "SKILL.md"
+    ],
+    "frontmatter": [
+      "préambule"
+    ],
+    "CLAUDE.md": [
+      "CLAUDE.md"
+    ],
+    "YAML": [
+      "YAML"
+    ],
+    "slash command": [
+      "commande slash"
+    ],
+    "subagent": [
+      "sous-agent"
+    ],
+    "hook": [
+      "crochet"
+    ],
+    "hooks": [
+      "crochets"
+    ]
   }
 }
