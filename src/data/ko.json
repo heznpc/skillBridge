@@ -51,6 +51,7 @@
   },
   "catalog": {
     "Anthropic courses": "Anthropic 과정",
+    "Anthropic Courses": "Anthropic 과정",
     "Anthropic Academy / Courses": "Anthropic 아카데미 / 과정",
     "Claude Code in Action": "Claude Code 활용하기",
     "Integrate Claude Code into your development workflow": "Claude Code를 개발 워크플로우에 통합하는 방법을 학습합니다",
@@ -619,8 +620,8 @@
   "_protected": {
     "Claude Code": ["클로드 코드", "클로드 Code", "클로우드 코드", "클라우드 코드"],
     "Claude": ["클로드", "클로우드", "클라우드"],
-    "Anthropic Academy": ["앤스로픽 아카데미", "앤트로픽 아카데미", "안트로픽 아카데미"],
-    "Anthropic": ["앤스로픽", "앤트로픽", "안트로픽"],
+    "Anthropic Academy": ["앤스로픽 아카데미", "앤트로픽 아카데미", "안트로픽 아카데미", "인류학적 아카데미"],
+    "Anthropic": ["앤스로픽", "앤트로픽", "안트로픽", "인류학적"],
     "Enterprise > Personal > Project > Plugins": ["기업 > 개인 > 프로젝트 > 플러그인", "엔터프라이즈 > 개인 > 프로젝트 > 플러그인"],
     "Enterprise → Personal → Project → Plugins": ["기업 → 개인 → 프로젝트 → 플러그인", "엔터프라이즈 → 개인 → 프로젝트 → 플러그인"],
     "Enterprise": ["기업"],
