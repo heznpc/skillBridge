@@ -71,19 +71,19 @@ Become the global learning platform enablement layer:
 Your feedback directly shapes SkillBridge's future! Here's how to get involved:
 
 ### File a Feature Request
-Have an idea? Open a [feature request](https://github.com/anthropics/skilljar-i18n-assistant/issues/new?template=feature_request.yml) and describe the problem and your proposed solution.
+Have an idea? Open a [feature request](https://github.com/heznpc/skillbridge/issues/new?template=feature_request.yml) and describe the problem and your proposed solution.
 
 ### Vote on Existing Issues
 See an issue you care about? React with a 👍 to show support. High-engagement issues get prioritized.
 
 ### Request a Language
-Need translations in your native language? File a [language request](https://github.com/anthropics/skilljar-i18n-assistant/issues/new?template=language_request.yml) and let us know if you can contribute as a translator.
+Need translations in your native language? File a [language request](https://github.com/heznpc/skillbridge/issues/new?template=language_request.yml) and let us know if you can contribute as a translator.
 
 ### Contribute to the Code
-Interested in development? Check out our [Contributing Guide](CONTRIBUTING.md) and grab a ["good first issue"](https://github.com/anthropics/skilljar-i18n-assistant/issues?q=label%3A%22good+first+issue%22).
+Interested in development? Check out our [Contributing Guide](CONTRIBUTING.md) and grab a ["good first issue"](https://github.com/heznpc/skillbridge/issues?q=label%3A%22good+first+issue%22).
 
 ### Join Discussions
-Visit our [GitHub Discussions](https://github.com/anthropics/skilljar-i18n-assistant/discussions) to chat with the community about upcoming features and translation priorities.
+Visit our [GitHub Discussions](https://github.com/heznpc/skillbridge/discussions) to chat with the community about upcoming features and translation priorities.
 
 ---
 

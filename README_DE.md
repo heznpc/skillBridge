@@ -20,7 +20,7 @@
 
 </div>
 
-Die [Anthropic Academy](https://academy.anthropic.com/) bietet erstklassige kostenlose Schulungen zu Claude, Prompt Engineering und KI-Sicherheit — aber nur auf Englisch. **SkillBridge** ist eine von der Community entwickelte Chrome-Erweiterung, die das gesamte Lernerlebnis in über 30 Sprachen übersetzt, mit einem KI-Tutor, der Ihre Fragen in Echtzeit beantwortet.
+Die [Anthropic Academy](https://anthropic.skilljar.com/) bietet erstklassige kostenlose Schulungen zu Claude, Prompt Engineering und KI-Sicherheit — aber nur auf Englisch. **SkillBridge** ist eine von der Community entwickelte Chrome-Erweiterung, die das gesamte Lernerlebnis in über 30 Sprachen übersetzt, mit einem KI-Tutor, der Ihre Fragen in Echtzeit beantwortet.
 
 > Keine API-Schlüssel. Keine Kosten. Einfach installieren und lernen.
 

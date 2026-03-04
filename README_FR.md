@@ -20,7 +20,7 @@
 
 </div>
 
-Les [cours Anthropic Academy](https://academy.anthropic.com/) offrent une formation de premier ordre sur Claude, l'ingénierie de prompts et la sécurité de l'IA — mais uniquement en anglais. **SkillBridge** est une extension Chrome développée par la communauté qui traduit toute l'expérience d'apprentissage dans plus de 30 langues, avec un tuteur IA qui répond à vos questions en temps réel.
+Les [cours Anthropic Academy](https://anthropic.skilljar.com/) offrent une formation de premier ordre sur Claude, l'ingénierie de prompts et la sécurité de l'IA — mais uniquement en anglais. **SkillBridge** est une extension Chrome développée par la communauté qui traduit toute l'expérience d'apprentissage dans plus de 30 langues, avec un tuteur IA qui répond à vos questions en temps réel.
 
 > Pas de clés API. Pas de frais. Installez et apprenez.
 

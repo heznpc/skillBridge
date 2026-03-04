@@ -27,7 +27,7 @@ Thank you for your interest in contributing! SkillBridge makes Anthropic's educa
 ```bash
 # 1. Fork & clone
 git clone https://github.com/heznpc/skillbridge.git
-cd skillbridge-anthropic-academy
+cd skillbridge
 
 # 2. Load in Chrome
 #    → chrome://extensions
@@ -38,6 +38,8 @@ cd skillbridge-anthropic-academy
 #    → Open the extension popup → select a language
 #    → The page should translate automatically
 ```
+
+> **Note:** The extension activates on `anthropic.skilljar.com` (Anthropic Academy's learning platform powered by Skilljar).
 
 No build step. No npm install. It just works.
 
@@ -71,7 +73,7 @@ After editing any file, go to `chrome://extensions` and click the reload button 
 ## Project Structure
 
 ```
-skilljar-i18n-assistant/
+skillbridge/
 ├── manifest.json              # Extension manifest (Manifest V3)
 ├── _locales/                  # Chrome i18n (extension name/description)
 │   ├── en/ ko/ ja/ zh_CN/

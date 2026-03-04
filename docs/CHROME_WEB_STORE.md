@@ -13,7 +13,7 @@ Translate Anthropic Academy courses into 30+ languages with AI-powered translati
 Anthropic Academy offers free, world-class courses on Claude, prompt engineering, and AI safety — but only in English. SkillBridge translates the entire learning experience into 30+ languages so anyone in the world can learn.
 
 **How it works:**
-• Open any page on academy.anthropic.com
+• Open any page on anthropic.skilljar.com
 • Choose your language from the popup or sidebar
 • The page translates instantly — UI labels, course content, lesson descriptions
 • Embedded YouTube videos auto-enable translated subtitles

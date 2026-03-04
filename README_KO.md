@@ -20,7 +20,7 @@
 
 </div>
 
-[Anthropic Academy](https://academy.anthropic.com/)는 Claude, 프롬프트 엔지니어링, AI 안전성에 대한 최고 수준의 무료 교육을 제공합니다. 하지만 영어로만 제공되죠. **SkillBridge**는 커뮤니티가 만든 Chrome 확장 프로그램으로, 전체 학습 경험을 30개 이상의 언어로 번역하고, AI 튜터가 실시간으로 질문에 답합니다.
+[Anthropic Academy](https://anthropic.skilljar.com/)는 Claude, 프롬프트 엔지니어링, AI 안전성에 대한 최고 수준의 무료 교육을 제공합니다. 하지만 영어로만 제공되죠. **SkillBridge**는 커뮤니티가 만든 Chrome 확장 프로그램으로, 전체 학습 경험을 30개 이상의 언어로 번역하고, AI 튜터가 실시간으로 질문에 답합니다.
 
 > API 키 불필요. 비용 없음. 설치하고 바로 학습하세요.
 

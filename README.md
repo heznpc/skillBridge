@@ -26,7 +26,7 @@
 
 ## Why SkillBridge?
 
-[Anthropic Academy](https://academy.anthropic.com/) offers world-class courses on Claude, prompt engineering, and AI safety — **but only in English.**
+[Anthropic Academy](https://anthropic.skilljar.com/) offers world-class courses on Claude, prompt engineering, and AI safety — **but only in English.**
 
 You might think: *"I'll just use Google Translate."* Here's why that falls short:
 
@@ -110,7 +110,7 @@ git clone https://github.com/heznpc/skillbridge.git
 1. Open `chrome://extensions/` in Chrome
 2. Enable **Developer mode** (top-right toggle)
 3. Click **Load unpacked** → select the cloned folder
-4. Visit [academy.anthropic.com](https://academy.anthropic.com/) and start learning!
+4. Visit [anthropic.skilljar.com](https://anthropic.skilljar.com/) and start learning!
 
 ## Architecture
 

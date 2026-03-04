@@ -20,7 +20,7 @@
 
 </div>
 
-[Anthropic Academy](https://academy.anthropic.com/)提供关于Claude、提示工程和AI安全的顶级免费培训，但仅提供英语版本。**SkillBridge** 是社区开发的Chrome扩展程序，将整个学习体验翻译为30多种语言，AI导师实时回答您的问题。
+[Anthropic Academy](https://anthropic.skilljar.com/)提供关于Claude、提示工程和AI安全的顶级免费培训，但仅提供英语版本。**SkillBridge** 是社区开发的Chrome扩展程序，将整个学习体验翻译为30多种语言，AI导师实时回答您的问题。
 
 > 无需API密钥。完全免费。安装即可开始学习。
 
