@@ -894,6 +894,7 @@
     sidebar.innerHTML = getSidebarHTML();
     document.body.appendChild(sidebar);
     setTimeout(bindSidebarEvents, 100);
+    initAskTutorButton();
   }
 
   function getTutorGreeting() {
@@ -1055,13 +1056,25 @@
     const text = input.value.trim();
     if (!text) return;
 
+    // Check for attached quote
+    const quoteEl = document.querySelector('.si18n-chat-input-wrap .si18n-chat-quote');
+    const quotedText = quoteEl?.textContent?.replace('×', '').trim() || '';
+    if (quoteEl) quoteEl.remove();
+
+    // Build display: show quote + question together in user bubble
+    const displayHtml = quotedText
+      ? `<div class="si18n-chat-quote" style="margin-bottom:4px">${escapeHtml(quotedText)}</div>${escapeHtml(text)}`
+      : escapeHtml(text);
+
     messages.innerHTML += `
       <div class="si18n-chat-msg si18n-chat-user">
-        <div class="si18n-chat-bubble">${escapeHtml(text)}</div>
+        <div class="si18n-chat-bubble">${displayHtml}</div>
         <div class="si18n-chat-avatar">You</div>
       </div>
     `;
     input.value = '';
+    // Reset placeholder
+    input.placeholder = CHAT_PLACEHOLDERS[currentLang] || CHAT_PLACEHOLDERS['en'];
 
     const loadingId = 'loading-' + Date.now();
     messages.innerHTML += `
@@ -1078,12 +1091,16 @@
     `;
     messages.scrollTop = messages.scrollHeight;
 
+    // Prepend quoted text as context for the AI
+    const fullQuestion = quotedText
+      ? `[Regarding this text: "${quotedText}"]\n\n${text}`
+      : text;
     const context = getPageContext();
     const bubble = document.querySelector(`#${loadingId} .si18n-chat-bubble`);
 
     try {
       let started = false;
-      await translator.chatStream(text, currentLang, context, (chunk, fullText) => {
+      await translator.chatStream(fullQuestion, currentLang, context, (chunk, fullText) => {
         if (!started) {
           // First chunk — clear thinking dots, start streaming
           started = true;
@@ -1125,6 +1142,116 @@
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
       .replace(/`(.*?)`/g, '<code>$1</code>')
       .replace(/\n/g, '<br>');
+  }
+
+  // ============================================================
+  // DRAG-TO-ASK TUTOR
+  // ============================================================
+
+  let askTutorBtn = null;
+  let pendingQuote = null;
+
+  function initAskTutorButton() {
+    askTutorBtn = document.createElement('button');
+    askTutorBtn.className = 'si18n-ask-tutor-btn';
+    askTutorBtn.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      Ask Tutor
+    `;
+    document.body.appendChild(askTutorBtn);
+
+    askTutorBtn.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      handleAskTutor();
+    });
+
+    document.addEventListener('mouseup', onTextSelection);
+    document.addEventListener('mousedown', onDismissAskButton);
+  }
+
+  function onTextSelection(e) {
+    // Ignore selections inside the sidebar
+    if (e.target.closest?.('.skillbridge-sidebar')) return;
+    if (e.target.closest?.('.si18n-ask-tutor-btn')) return;
+
+    // Small delay to let browser finalize selection
+    setTimeout(() => {
+      const sel = window.getSelection();
+      const text = sel?.toString().trim();
+      if (!text || text.length < 3) {
+        hideAskButton();
+        return;
+      }
+
+      // Position the button near the end of selection
+      const range = sel.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      const scrollX = window.scrollX;
+      const scrollY = window.scrollY;
+
+      askTutorBtn.style.left = `${rect.right + scrollX - 30}px`;
+      askTutorBtn.style.top = `${rect.bottom + scrollY + 6}px`;
+      askTutorBtn.classList.add('visible');
+
+      pendingQuote = text.length > 200 ? text.slice(0, 200) + '…' : text;
+    }, 10);
+  }
+
+  function onDismissAskButton(e) {
+    if (e.target.closest?.('.si18n-ask-tutor-btn')) return;
+    hideAskButton();
+  }
+
+  function hideAskButton() {
+    if (askTutorBtn) askTutorBtn.classList.remove('visible');
+    pendingQuote = null;
+  }
+
+  function handleAskTutor() {
+    if (!pendingQuote) return;
+    const quote = pendingQuote;
+    hideAskButton();
+    window.getSelection()?.removeAllRanges();
+
+    // Open sidebar if closed
+    if (!sidebarVisible) toggleSidebar();
+
+    // Insert quote block above input
+    insertQuoteInChat(quote);
+  }
+
+  function insertQuoteInChat(quoteText) {
+    const inputWrap = document.querySelector('.si18n-chat-input-wrap');
+    if (!inputWrap) return;
+
+    // Remove existing quote if any
+    inputWrap.querySelector('.si18n-chat-quote')?.remove();
+
+    const quoteEl = document.createElement('div');
+    quoteEl.className = 'si18n-chat-quote';
+    quoteEl.innerHTML = `
+      <button class="si18n-chat-quote-dismiss" title="Remove quote">&times;</button>
+      ${escapeHtml(quoteText)}
+    `;
+    inputWrap.insertBefore(quoteEl, inputWrap.firstChild);
+
+    quoteEl.querySelector('.si18n-chat-quote-dismiss')?.addEventListener('click', () => {
+      quoteEl.remove();
+    });
+
+    // Focus input for the user to type their question
+    const input = document.getElementById('si18n-chat-input');
+    if (input) {
+      input.focus();
+      input.placeholder = currentLang === 'ko'
+        ? '선택한 텍스트에 대해 질문하세요...'
+        : currentLang === 'ja'
+        ? '選択したテキストについて質問...'
+        : 'Ask about this text...';
+    }
   }
 
   // ============================================================
