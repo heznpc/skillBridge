@@ -24,6 +24,16 @@
 
 ---
 
+<div align="center">
+
+<img src="assets/screenshots/skillbridge-demo.gif" alt="SkillBridge Demo — translating Anthropic Academy in real time" width="720" />
+
+*Install SkillBridge, visit Anthropic Academy, and the entire page is translated instantly.*
+
+</div>
+
+---
+
 ## Why SkillBridge?
 
 [Anthropic Academy](https://anthropic.skilljar.com/) offers world-class courses on Claude, prompt engineering, and AI safety — **but only in English.**
@@ -40,6 +50,62 @@ You might think: *"I'll just use Google Translate."* Here's why that falls short
 | Cost | Free | Free — no API keys needed |
 
 > **No API keys. No cost. Just install and learn.**
+
+### Protected Terms in Action
+
+Generic page translation tools often **mistranslate brand names and technical terms**. For example, Google Translate renders "Anthropic Courses" as "인류학적 과정" (anthropological courses) in Korean — completely wrong.
+
+SkillBridge's **Protected Terms** engine auto-corrects these errors after translation, keeping brand names like "Anthropic", "Claude", and technical terms intact:
+
+<div align="center">
+
+| Before (Google Translate alone) | After (SkillBridge Protected Terms) |
+|:---:|:---:|
+| ❌ 인류학적 과정 | ✅ Anthropic 과정 |
+| ❌ 클로드 | ✅ Claude |
+| ❌ 신속한 공학 | ✅ 프롬프트 엔지니어링 |
+
+</div>
+
+<div align="center">
+<img src="assets/screenshots/catalog-translated.png" alt="Anthropic Academy catalog page translated to Korean with correct terminology" width="720" />
+<br/>
+<em>Course catalog translated to Korean — brand names and AI terms stay accurate.</em>
+</div>
+
+## See It in Action
+
+### Full Page Translation
+
+Every text element on the page is translated, with AI-specific terminology handled correctly via curated dictionaries. Progress checkboxes, icons, and navigation all stay intact.
+
+<div align="center">
+<img src="assets/screenshots/01-lesson-translated.png" alt="Lesson page with curriculum fully translated" width="720" />
+<br/>
+<em>Course lesson with full curriculum translated — UI elements preserved.</em>
+</div>
+
+### AI Tutor
+
+A sidebar chatbot powered by **Claude Sonnet 4** via [Puter.js](https://docs.puter.com/). It knows which course and lesson you're on. Ask questions in your language, get streaming answers.
+
+<!-- TODO: ai-tutor.png 추가 후 주석 해제
+<div align="center">
+<img src="assets/screenshots/ai-tutor.png" alt="AI Tutor sidebar answering a question in Korean" width="720" />
+<br/>
+<em>Ask the AI Tutor about the lesson in your language — powered by Claude Sonnet 4.</em>
+</div>
+-->
+
+### Auto-Subtitles
+
+Course videos automatically activate translated subtitles when you play them — no manual toggle needed.
+
+<!-- <div align="center">
+<img src="assets/screenshots/subtitles.png" alt="YouTube video with auto-translated Korean subtitles" width="720" />
+<br/>
+<em>Video subtitles auto-translated to your language.</em>
+</div> -->
 
 ## How It Works
 
@@ -139,6 +205,9 @@ skillbridge/
 | Curated Dictionaries | Hand-tuned JSON (560+ × 6 languages) |
 | Translation Cache | IndexedDB |
 | CJK Font Rendering | Google Fonts Noto Sans |
+
+> **Built with [Claude Code](https://docs.anthropic.com/en/docs/claude-code).**
+> This project — from architecture design and feature implementation to CI/CD pipeline setup, unit tests, debugging, and even the demo GIF — was developed using Claude Code as an AI pair-programming partner.
 
 ## Translation Philosophy
 
