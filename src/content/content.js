@@ -62,6 +62,18 @@
     'de': "Hallo! Ich bin dein KI-Lernassistent. Frag mich alles über diesen Kurs.",
   };
 
+  // Send button label per language
+  const SEND_LABELS = {
+    'en': 'Send', 'ko': '전송', 'ja': '送信', 'zh-CN': '发送',
+    'es': 'Enviar', 'fr': 'Envoyer', 'de': 'Senden',
+  };
+
+  // Ask Tutor button label per language
+  const ASK_TUTOR_LABELS = {
+    'en': 'Ask Tutor', 'ko': '튜터에게 질문', 'ja': 'チューターに質問',
+    'zh-CN': '问导师', 'es': 'Preguntar', 'fr': 'Demander', 'de': 'Fragen',
+  };
+
   // Input placeholder per language
   const CHAT_PLACEHOLDERS = {
     'en': "Ask about the course content...",
@@ -71,6 +83,20 @@
     'es': "Pregunta sobre el contenido del curso...",
     'fr': "Posez une question sur le cours...",
     'de': "Frage zum Kursinhalt stellen...",
+  };
+
+  // Lookup helper: returns map entry for given lang (default: currentLang), falling back to 'en'
+  function t(map, lang) { return map[lang || currentLang] || map['en']; }
+
+  // Quote-mode input placeholder per language
+  const QUOTE_PLACEHOLDERS = {
+    'en': 'Ask about this text...',
+    'ko': '선택한 텍스트에 대해 질문하세요...',
+    'ja': '選択したテキストについて質問...',
+    'zh-CN': '关于这段文字提问...',
+    'es': 'Pregunta sobre este texto...',
+    'fr': 'Posez une question sur ce texte...',
+    'de': 'Frage zu diesem Text stellen...',
   };
 
   // Welcome banner UI strings per language
@@ -974,7 +1000,7 @@ RULES:
   }
 
   function getTutorGreeting() {
-    return TUTOR_GREETINGS[currentLang] || TUTOR_GREETINGS['en'];
+    return t(TUTOR_GREETINGS);
   }
 
   // Premium languages (have static JSON dictionaries)
@@ -1026,23 +1052,16 @@ RULES:
 
     return `
       <div class="si18n-header">
-        <div class="si18n-header-left">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        <button class="si18n-history-btn" id="si18n-history-btn" title="Chat history">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
           </svg>
-          <span>SkillBridge Tutor</span>
-        </div>
-        <div class="si18n-header-right">
-          <select id="si18n-lang-select" class="si18n-lang-chip" title="Page language">
-            ${langOptions}
-          </select>
-          <button class="si18n-history-btn" id="si18n-history-btn" title="Chat history">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-            </svg>
-          </button>
-          <button class="si18n-close" id="si18n-close">&times;</button>
-        </div>
+        </button>
+        <span class="si18n-header-title">SkillBridge Tutor</span>
+        <select id="si18n-lang-select" class="si18n-lang-chip" title="Page language">
+          ${langOptions}
+        </select>
+        <button class="si18n-close" id="si18n-close">&times;</button>
       </div>
 
       <div class="si18n-panel si18n-panel-chat" id="si18n-panel-chat">
@@ -1056,17 +1075,10 @@ RULES:
         </div>
         <div class="si18n-chat-input-wrap">
           <textarea id="si18n-chat-input" class="si18n-chat-input"
+            placeholder="${t(CHAT_PLACEHOLDERS)}"
             rows="1"></textarea>
-          <button id="si18n-chat-send" class="si18n-chat-send-btn" title="Send">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-              <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94l18.04-8.25a.75.75 0 000-1.39L3.478 2.405z"/>
-            </svg>
-          </button>
+          <button id="si18n-chat-send" class="si18n-chat-send-btn">${t(SEND_LABELS)}</button>
         </div>
-      </div>
-
-      <div class="si18n-footer">
-        <span>Tutor: Claude Sonnet 4 | Verify: Gemini 2.0 Flash</span>
       </div>
     `;
   }
@@ -1086,13 +1098,13 @@ RULES:
         restoreOriginal();
         currentLang = newLang;
         if (newLang === 'en') {
-          updateTutorGreeting();
+          updateLocalizedLabels();
           if (subtitleManager) subtitleManager.setLanguage('en');
           return;
         }
         await translator.loadStaticTranslations(newLang);
         applyStaticTranslations(newLang);
-        updateTutorGreeting();
+        updateLocalizedLabels();
         // Update YouTube subtitle translations
         if (subtitleManager) subtitleManager.setLanguage(newLang);
       });
@@ -1121,7 +1133,7 @@ RULES:
     });
   }
 
-  function updateTutorGreeting() {
+  function updateLocalizedLabels() {
     const messagesEl = document.getElementById('si18n-chat-messages');
     if (!messagesEl) return;
     const firstBubble = messagesEl.querySelector('.si18n-chat-bot .si18n-chat-bubble');
@@ -1131,7 +1143,17 @@ RULES:
     // Update input placeholder
     const chatInput = document.getElementById('si18n-chat-input');
     if (chatInput) {
-      chatInput.placeholder = CHAT_PLACEHOLDERS[currentLang] || CHAT_PLACEHOLDERS['en'];
+      chatInput.placeholder = t(CHAT_PLACEHOLDERS);
+    }
+    // Update send button label
+    const sendBtn = document.getElementById('si18n-chat-send');
+    if (sendBtn) {
+      sendBtn.textContent = t(SEND_LABELS);
+    }
+    // Update Ask Tutor button label
+    const askLabel = document.querySelector('.si18n-ask-tutor-label');
+    if (askLabel) {
+      askLabel.textContent = t(ASK_TUTOR_LABELS);
     }
   }
 
@@ -1163,7 +1185,7 @@ RULES:
     `;
     input.value = '';
     // Reset placeholder
-    input.placeholder = CHAT_PLACEHOLDERS[currentLang] || CHAT_PLACEHOLDERS['en'];
+    input.placeholder = t(CHAT_PLACEHOLDERS);
 
     const loadingId = 'loading-' + Date.now();
     messages.innerHTML += `
@@ -1320,7 +1342,7 @@ RULES:
     chatPanel._savedHTML = chatPanel.innerHTML;
     chatPanel.innerHTML = `
       <div class="si18n-history-header">
-        <button class="si18n-history-back" id="si18n-history-back">← Back</button>
+        <button class="si18n-history-back" id="si18n-history-back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
         <span class="si18n-history-title">${currentLang === 'ko' ? '대화 기록' : currentLang === 'ja' ? '会話履歴' : 'Chat History'}</span>
       </div>
       <div class="si18n-history-list" id="si18n-history-list">
@@ -1431,7 +1453,7 @@ RULES:
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
       </svg>
-      Ask Tutor
+      <span class="si18n-ask-tutor-label">${t(ASK_TUTOR_LABELS)}</span>
     `;
     document.body.appendChild(askTutorBtn);
 
@@ -1526,11 +1548,7 @@ RULES:
     const input = document.getElementById('si18n-chat-input');
     if (input) {
       input.focus();
-      input.placeholder = currentLang === 'ko'
-        ? '선택한 텍스트에 대해 질문하세요...'
-        : currentLang === 'ja'
-        ? '選択したテキストについて質問...'
-        : 'Ask about this text...';
+      input.placeholder = t(QUOTE_PLACEHOLDERS);
     }
   }
 
@@ -1585,7 +1603,7 @@ RULES:
 
     const banner = document.createElement('div');
     banner.id = 'si18n-welcome-banner';
-    const ui = BANNER_UI[detectedLang] || BANNER_UI['en'];
+    const ui = t(BANNER_UI, detectedLang);
     banner.innerHTML = `
       <span class="si18n-banner-icon">🌐</span>
       <div class="si18n-banner-text">
@@ -1623,7 +1641,7 @@ RULES:
       // Update tutor
       const langSelect = document.getElementById('si18n-lang-select');
       if (langSelect) langSelect.value = selectedLang;
-      updateTutorGreeting();
+      updateLocalizedLabels();
 
       // Update YouTube subtitles
       if (subtitleManager) subtitleManager.setLanguage(selectedLang);
