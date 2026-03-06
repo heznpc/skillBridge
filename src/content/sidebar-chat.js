@@ -11,6 +11,7 @@
   let historyDb = null;
   let historyPanelOpen = false;
   let scrollRAF = null;
+  let savedChatHTML = null;
 
   // ============================================================
   // FLOATING BUTTON
@@ -334,7 +335,7 @@
     }
 
     historyPanelOpen = true;
-    chatPanel._savedHTML = chatPanel.innerHTML;
+    savedChatHTML = chatPanel.innerHTML;
     chatPanel.innerHTML = `
       <div class="si18n-history-header">
         <button class="si18n-history-back" id="si18n-history-back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
@@ -351,9 +352,9 @@
 
   function closeHistoryPanel() {
     const chatPanel = document.getElementById('si18n-panel-chat');
-    if (!chatPanel || !chatPanel._savedHTML) return;
-    chatPanel.innerHTML = chatPanel._savedHTML;
-    delete chatPanel._savedHTML;
+    if (!chatPanel || !savedChatHTML) return;
+    chatPanel.innerHTML = savedChatHTML;
+    savedChatHTML = null;
     historyPanelOpen = false;
     bindChatInputEvents();
   }
@@ -413,11 +414,11 @@
         const listEl = document.getElementById('si18n-history-list');
         if (!listEl) return;
         const time = conv.timestamp ? new Date(conv.timestamp).toLocaleString() : '';
-        const lesson = conv.lessonTitle ? sb.escapeHtml(conv.lessonTitle) : '';
+        const chapter = conv.chapter ? sb.escapeHtml(conv.chapter) : '';
         let metaHtml = '';
-        if (lesson || time) {
+        if (chapter || time) {
           metaHtml = `<div class="si18n-history-detail-meta">`;
-          if (lesson) metaHtml += `<span class="si18n-detail-lesson">${lesson}</span>`;
+          if (chapter) metaHtml += `<span class="si18n-detail-lesson">${chapter}</span>`;
           if (time) metaHtml += `<span class="si18n-detail-time">${time}</span>`;
           metaHtml += `</div>`;
         }

@@ -54,9 +54,12 @@
   function t(map, lang) { return map[lang || currentLang] || map['en']; }
 
   function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   // ============================================================
@@ -344,10 +347,14 @@
   }
 
   function isLikelyEnglish(text) {
-    const latin = text.replace(/[^a-zA-Z]/g, '').length;
-    const total = text.replace(/\s/g, '').length;
-    if (total === 0) return false;
-    return (latin / total) > 0.5;
+    let latin = 0, total = 0;
+    for (let i = 0; i < text.length; i++) {
+      const c = text.charCodeAt(i);
+      if (c === 32 || c === 9 || c === 10 || c === 13) continue; // whitespace
+      total++;
+      if ((c >= 65 && c <= 90) || (c >= 97 && c <= 122)) latin++;
+    }
+    return total > 0 && (latin / total) > 0.5;
   }
 
   function queueForGoogleTranslate(elements, targetLang) {
@@ -737,12 +744,7 @@ RULES:
   }
 
   function isCodeContent(node) {
-    let parent = node.parentElement;
-    while (parent) {
-      if (['CODE', 'PRE', 'SCRIPT', 'STYLE'].includes(parent.tagName)) return true;
-      parent = parent.parentElement;
-    }
-    return false;
+    return !!node.parentElement?.closest('code, pre, script, style');
   }
 
   function getPageContext() {

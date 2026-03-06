@@ -87,12 +87,11 @@
 
   function detectBrowserLanguage() {
     const browserLang = navigator.language || 'en';
-    const supported = AVAILABLE_LANGUAGES.map(l => l.code);
 
-    if (supported.includes(browserLang)) return browserLang;
+    if (AVAILABLE_LANGUAGE_CODES.includes(browserLang)) return browserLang;
 
     const base = browserLang.split('-')[0];
-    if (supported.includes(base)) return base;
+    if (AVAILABLE_LANGUAGE_CODES.includes(base)) return base;
     if (base === 'zh') return 'zh-CN';
 
     return null;
