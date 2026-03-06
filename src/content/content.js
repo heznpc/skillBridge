@@ -221,33 +221,13 @@
 
       case 'setLanguage': {
         const newLang = request.language;
-        chrome.storage.local.set({ targetLanguage: newLang, autoTranslate: newLang !== 'en' });
-        // Mirror the sidebar language-change flow for full retranslation
-        restoreOriginal();
-        currentLang = newLang;
-        // Update sidebar dropdown to stay in sync
-        const langSel = document.getElementById('si18n-lang-select');
-        if (langSel) langSel.value = newLang;
-        if (newLang === 'en') {
-          updateLocalizedLabels();
-          if (subtitleManager) subtitleManager.setLanguage('en');
-          sendResponse({ success: true });
-          return false;
-        }
-        // Async retranslation — use return true for async sendResponse
-        (async () => {
-          try {
-            await translator.loadStaticTranslations(newLang);
-            applyStaticTranslations(newLang);
-            updateLocalizedLabels();
-            if (subtitleManager) subtitleManager.setLanguage(newLang);
-            sendResponse({ success: true });
-          } catch (err) {
-            console.error('[SkillBridge] setLanguage error:', err);
-            sendResponse({ success: false, error: err.message });
-          }
-        })();
-        return true;
+        switchLanguage(newLang, {
+          onDone: () => sendResponse({ success: true }),
+        }).catch(err => {
+          console.error('[SkillBridge] setLanguage error:', err);
+          sendResponse({ success: false, error: err.message });
+        });
+        return true; // async sendResponse
       }
 
       case 'ping':
@@ -266,7 +246,9 @@
 
   async function init() {
     try {
-      const stored = await chrome.storage.local.get(['targetLanguage', 'autoTranslate', 'welcomeShown']);
+      // Restore dark mode before any rendering to minimize flash
+      const stored = await chrome.storage.local.get(['targetLanguage', 'autoTranslate', 'welcomeShown', 'darkMode']);
+      if (stored.darkMode) document.documentElement.classList.add('si18n-dark');
       currentLang = stored.targetLanguage || 'en';
 
       translator = new SkilljarTranslator();
@@ -279,6 +261,8 @@
         }
       }
 
+      injectHeaderLanguageSelect();
+      injectDarkModeToggle();
       injectSidebar();
       injectFloatingButton();
 
@@ -630,6 +614,39 @@
     _protectedTermsLang = null;
     updateLangClass('en');
     hideTranslationProgress();
+  }
+
+  /**
+   * Shared language-switch flow used by the header selector, message handler,
+   * and welcome banner so the logic lives in one place.
+   *
+   * @param {string} newLang           Target language code
+   * @param {object} [opts]
+   * @param {boolean} [opts.skipRestore]   Skip restoreOriginal() (e.g. first-visit banner)
+   * @param {object}  [opts.extraStorage]  Extra keys to merge into chrome.storage.local.set
+   * @param {function} [opts.onDone]       Optional callback after translation completes
+   */
+  async function switchLanguage(newLang, opts = {}) {
+    const storageData = { targetLanguage: newLang, autoTranslate: newLang !== 'en', ...opts.extraStorage };
+    chrome.storage.local.set(storageData);
+
+    if (!opts.skipRestore) restoreOriginal();
+    currentLang = newLang;
+
+    try {
+      if (newLang === 'en') {
+        updateLocalizedLabels();
+        if (subtitleManager) subtitleManager.setLanguage('en');
+        return;
+      }
+
+      await translator.loadStaticTranslations(newLang);
+      applyStaticTranslations(newLang);
+      updateLocalizedLabels();
+      if (subtitleManager) subtitleManager.setLanguage(newLang);
+    } finally {
+      opts.onDone?.();
+    }
   }
 
   /**
@@ -1089,6 +1106,92 @@ RULES:
   }
 
   // ============================================================
+  // DARK MODE TOGGLE (Claude Docs inspired)
+  // ============================================================
+
+  const DARK_TOGGLE_ICONS = `
+    <svg class="si18n-icon-sun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="8" cy="8" r="3"/>
+      <path d="M8 1.5v1M8 13.5v1M3.4 3.4l.7.7M11.9 11.9l.7.7M1.5 8h1M13.5 8h1M3.4 12.6l.7-.7M11.9 4.1l.7-.7"/>
+    </svg>
+    <svg class="si18n-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>`;
+
+  function createDarkToggleButton() {
+    const btn = document.createElement('button');
+    btn.id = 'si18n-dark-toggle';
+    btn.className = 'si18n-dark-toggle-btn';
+    btn.setAttribute('aria-label', 'Toggle dark mode');
+    btn.setAttribute('title', 'Toggle dark mode');
+    btn.innerHTML = DARK_TOGGLE_ICONS;
+    btn.addEventListener('click', toggleDarkMode);
+    return btn;
+  }
+
+  function injectDarkModeToggle() {
+    if (document.getElementById('si18n-dark-toggle')) return;
+
+    // Primary: place inside the lang selector chip for tight grouping
+    const langChip = document.querySelector('#si18n-header-lang .si18n-header-lang-chip');
+    if (langChip) {
+      langChip.insertBefore(createDarkToggleButton(), langChip.firstChild);
+      return;
+    }
+
+    // Fallback: place in header-right if lang selector doesn't exist yet
+    const headerRight = document.getElementById('header-right');
+    const linksContainer = headerRight?.querySelector('.header-links-container');
+    if (!headerRight || !linksContainer) return;
+    headerRight.insertBefore(createDarkToggleButton(), linksContainer);
+  }
+
+  function toggleDarkMode() {
+    const html = document.documentElement;
+    const isDark = html.classList.toggle('si18n-dark');
+    chrome.storage.local.set({ darkMode: isDark });
+  }
+
+  // ============================================================
+  // HEADER LANGUAGE SELECTOR (Claude Docs style)
+  // ============================================================
+
+  function injectHeaderLanguageSelect() {
+    if (document.getElementById('si18n-header-lang')) return;
+
+    // Find the right insertion point in Skilljar header
+    // Structure: header > #header-right > [header-links-container, mobile-toggle, account-nav]
+    const headerRight = document.getElementById('header-right');
+    if (!headerRight) return;
+
+    // Target: insert before header-links-container (left side of nav)
+    const linksContainer = headerRight.querySelector('.header-links-container');
+    if (!linksContainer) return;
+
+    const wrapper = document.createElement('div');
+    wrapper.id = 'si18n-header-lang';
+    wrapper.className = 'headerheight align-vertical';
+
+    const options = AVAILABLE_LANGUAGES
+      .map(l => `<option value="${l.code}" ${l.code === currentLang ? 'selected' : ''}>${l.label}</option>`)
+      .join('');
+
+    wrapper.innerHTML = `
+      <div class="si18n-header-lang-chip">
+        <select id="si18n-header-lang-select">${options}</select>
+      </div>
+    `;
+
+    headerRight.insertBefore(wrapper, linksContainer);
+
+    const select = document.getElementById('si18n-header-lang-select');
+    select?.addEventListener('change', (e) => {
+      switchLanguage(e.target.value).catch(err =>
+        console.error('[SkillBridge] Header lang change error:', err));
+    });
+  }
+
+  // ============================================================
   // FLOATING BUTTON
   // ============================================================
 
@@ -1168,10 +1271,6 @@ RULES:
   ];
 
   function getSidebarHTML() {
-    const langOptions = AVAILABLE_LANGUAGES
-      .map(l => `<option value="${l.code}">${l.label}</option>`)
-      .join('');
-
     return `
       <div class="si18n-header">
         <button class="si18n-history-btn" id="si18n-history-btn" title="Chat history">
@@ -1180,9 +1279,6 @@ RULES:
           </svg>
         </button>
         <span class="si18n-header-title">SkillBridge Tutor</span>
-        <select id="si18n-lang-select" class="si18n-lang-chip" title="Page language">
-          ${langOptions}
-        </select>
         <button class="si18n-close" id="si18n-close">&times;</button>
       </div>
 
@@ -1208,30 +1304,6 @@ RULES:
   function bindSidebarEvents() {
     document.getElementById('si18n-close')?.addEventListener('click', toggleSidebar);
     document.getElementById('si18n-history-btn')?.addEventListener('click', toggleHistoryPanel);
-
-    // Language selector in tutor header — changes page translation + tutor greeting
-    const langSelect = document.getElementById('si18n-lang-select');
-    if (langSelect) {
-      langSelect.value = currentLang;
-      langSelect.addEventListener('change', async (e) => {
-        const newLang = e.target.value;
-        chrome.storage.local.set({ targetLanguage: newLang, autoTranslate: newLang !== 'en' });
-        // Restore → reload dict → re-translate instantly
-        restoreOriginal();
-        currentLang = newLang;
-        if (newLang === 'en') {
-          updateLocalizedLabels();
-          if (subtitleManager) subtitleManager.setLanguage('en');
-          return;
-        }
-        await translator.loadStaticTranslations(newLang);
-        applyStaticTranslations(newLang);
-        updateLocalizedLabels();
-        // Update YouTube subtitle translations
-        if (subtitleManager) subtitleManager.setLanguage(newLang);
-      });
-    }
-
     bindChatInputEvents();
   }
 
@@ -1256,6 +1328,10 @@ RULES:
   }
 
   function updateLocalizedLabels() {
+    // Sync header language selector
+    const headerLangSelect = document.getElementById('si18n-header-lang-select');
+    if (headerLangSelect) headerLangSelect.value = currentLang;
+
     const messagesEl = document.getElementById('si18n-chat-messages');
     if (!messagesEl) return;
     const firstBubble = messagesEl.querySelector('.si18n-chat-bot .si18n-chat-bubble');
@@ -1374,11 +1450,76 @@ RULES:
   function formatResponse(text) {
     // Escape HTML FIRST to prevent XSS from AI responses, then apply markdown formatting
     const escaped = escapeHtml(text);
-    return escaped
+
+    // Pre-process: insert newlines before markdown markers that are inline
+    // (stored text may lack newlines from streaming)
+    const normalized = escaped
+      .replace(/(?<!\n)(#{2,3}\s)/g, '\n$1')   // newline before ## headings
+      .replace(/(?<!\n)([-*]\s)/g, '\n$1')      // newline before - list items
+      .replace(/(?<!\n)(\d+[.)]\s)/g, '\n$1');  // newline before 1. ordered items
+
+    const lines = normalized.split('\n');
+    const out = [];
+    let listBuf = [];
+    let listOrdered = false;
+    let paraBuf = [];
+
+    const flushList = () => {
+      if (!listBuf.length) return;
+      const tag = listOrdered ? 'ol' : 'ul';
+      out.push(`<${tag}>${listBuf.map(t => `<li>${applyInline(t)}</li>`).join('')}</${tag}>`);
+      listBuf = [];
+    };
+    const flushPara = () => {
+      if (!paraBuf.length) return;
+      out.push(`<p>${applyInline(paraBuf.join('<br>'))}</p>`);
+      paraBuf = [];
+    };
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      // Empty line → flush current buffers
+      if (!trimmed) { flushList(); flushPara(); continue; }
+      // Heading (## or ###)
+      const hMatch = trimmed.match(/^(#{2,3})\s+(.+)/);
+      if (hMatch) {
+        flushList(); flushPara();
+        out.push(`<h3>${applyInline(hMatch[2])}</h3>`);
+        continue;
+      }
+      // Unordered list item (- or *)
+      const ulMatch = trimmed.match(/^[-*]\s+(.*)/);
+      if (ulMatch) {
+        if (listBuf.length && listOrdered) flushList();
+        listOrdered = false;
+        flushPara();
+        listBuf.push(ulMatch[1]);
+        continue;
+      }
+      // Ordered list item (1. or 1))
+      const olMatch = trimmed.match(/^\d+[.)]\s+(.*)/);
+      if (olMatch) {
+        if (listBuf.length && !listOrdered) flushList();
+        listOrdered = true;
+        flushPara();
+        listBuf.push(olMatch[1]);
+        continue;
+      }
+      // Regular text line → paragraph buffer
+      flushList();
+      paraBuf.push(trimmed);
+    }
+    flushList();
+    flushPara();
+
+    return out.join('');
+  }
+
+  function applyInline(text) {
+    return text
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/`(.*?)`/g, '<code>$1</code>')
-      .replace(/\n/g, '<br>');
+      .replace(/`(.*?)`/g, '<code>$1</code>');
   }
 
   // ============================================================
@@ -1545,14 +1686,22 @@ RULES:
         if (!conv) return;
         const listEl = document.getElementById('si18n-history-list');
         if (!listEl) return;
+        const time = conv.timestamp ? new Date(conv.timestamp).toLocaleString() : '';
+        const lesson = conv.lessonTitle ? escapeHtml(conv.lessonTitle) : '';
+        let metaHtml = '';
+        if (lesson || time) {
+          metaHtml = `<div class="si18n-history-detail-meta">`;
+          if (lesson) metaHtml += `<span class="si18n-detail-lesson">${lesson}</span>`;
+          if (time) metaHtml += `<span class="si18n-detail-time">${time}</span>`;
+          metaHtml += `</div>`;
+        }
         listEl.innerHTML = `
           <div class="si18n-history-detail">
+            ${metaHtml}
             <div class="si18n-chat-msg si18n-chat-user">
               <div class="si18n-chat-bubble">${escapeHtml(conv.question)}</div>
-              <div class="si18n-chat-avatar">You</div>
             </div>
             <div class="si18n-chat-msg si18n-chat-bot">
-              <div class="si18n-chat-avatar">AI</div>
               <div class="si18n-chat-bubble">${formatResponse(conv.answer)}</div>
             </div>
           </div>
@@ -1752,23 +1901,10 @@ RULES:
       banner.classList.remove('visible');
       setTimeout(() => banner.remove(), 400);
 
-      // Save and apply
-      currentLang = selectedLang;
-      chrome.storage.local.set({
-        targetLanguage: selectedLang,
-        autoTranslate: true,
-        welcomeShown: true,
-      });
-      await translator.loadStaticTranslations(selectedLang);
-      applyStaticTranslations(selectedLang);
-
-      // Update tutor
-      const langSelect = document.getElementById('si18n-lang-select');
-      if (langSelect) langSelect.value = selectedLang;
-      updateLocalizedLabels();
-
-      // Update YouTube subtitles
-      if (subtitleManager) subtitleManager.setLanguage(selectedLang);
+      await switchLanguage(selectedLang, {
+        skipRestore: true,
+        extraStorage: { autoTranslate: true, welcomeShown: true },
+      }).catch(err => console.error('[SkillBridge] Banner translate error:', err));
     });
 
     // Dismiss
