@@ -1132,10 +1132,11 @@ RULES:
   function injectDarkModeToggle() {
     if (document.getElementById('si18n-dark-toggle')) return;
 
-    // Primary: place inside the lang selector chip for tight grouping
-    const langChip = document.querySelector('#si18n-header-lang .si18n-header-lang-chip');
-    if (langChip) {
-      langChip.insertBefore(createDarkToggleButton(), langChip.firstChild);
+    // Place as a separate element before the lang selector in #si18n-header-lang
+    const headerLang = document.getElementById('si18n-header-lang');
+    if (headerLang) {
+      const btn = createDarkToggleButton();
+      headerLang.insertBefore(btn, headerLang.firstChild);
       return;
     }
 
@@ -1176,11 +1177,7 @@ RULES:
       .map(l => `<option value="${l.code}" ${l.code === currentLang ? 'selected' : ''}>${l.label}</option>`)
       .join('');
 
-    wrapper.innerHTML = `
-      <div class="si18n-header-lang-chip">
-        <select id="si18n-header-lang-select">${options}</select>
-      </div>
-    `;
+    wrapper.innerHTML = `<select id="si18n-header-lang-select">${options}</select>`;
 
     headerRight.insertBefore(wrapper, linksContainer);
 
