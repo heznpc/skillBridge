@@ -8,14 +8,12 @@
  */
 
 // Language code mapping for Google Translate API
-const GT_LANG_MAP = {
-  'zh-CN': 'zh-CN',
-  'zh-TW': 'zh-TW',
-  'pt-BR': 'pt',
-};
+// NOTE: Same map exists in constants.js (GT_LANG_MAP) for content scripts.
+// Service workers can't share globals with content scripts, so we duplicate here.
+const _BG_GT_LANG_MAP = { 'zh-CN': 'zh-CN', 'zh-TW': 'zh-TW', 'pt-BR': 'pt' };
 
 function gtLangCode(lang) {
-  return GT_LANG_MAP[lang] || lang;
+  return _BG_GT_LANG_MAP[lang] || lang;
 }
 
 function isYouTubeUrl(url) {

@@ -31,6 +31,13 @@ const SKILLBRIDGE_DELAYS = {
   DOM_DEBOUNCE: 300,
   VERIFY_QUEUE: 1000,
   LATE_CONTENT: 1500,
+  SIDEBAR_BIND: 100,
+  TEXT_SELECTION: 10,
+  BANNER_ANIMATION: 400,
+  PROGRESS_HIDE: 300,
+  PROGRESS_REMOVE: 400,
+  WELCOME_BANNER: 1500,
+  TEXT_UPDATE_FADE: 500,
 };
 
 // ==================== LIMITS ====================
@@ -122,3 +129,79 @@ const _YT_LANG_NAMES = {
 const YT_LANG_NAME_MAP = Object.fromEntries(
   AVAILABLE_LANGUAGES.filter(l => l.code !== 'en').map(l => [l.code, _YT_LANG_NAMES[l.code] || l.code])
 );
+
+// ==================== UI LABELS (i18n) ====================
+
+const TUTOR_GREETINGS = {
+  'en': "Hi! I'm your AI learning assistant. Ask me anything about this course.",
+  'ko': '안녕하세요! AI 학습 도우미입니다. 이 과정에 대해 무엇이든 물어보세요.',
+  'ja': 'こんにちは！AI学習アシスタントです。このコースについて何でも聞いてください。',
+  'zh-CN': '你好！我是你的AI学习助手。关于这门课程，有什么都可以问我。',
+  'es': '¡Hola! Soy tu asistente de aprendizaje con IA. Pregúntame lo que quieras sobre este curso.',
+  'fr': "Bonjour ! Je suis votre assistant d'apprentissage IA. Posez-moi n'importe quelle question sur ce cours.",
+  'de': 'Hallo! Ich bin dein KI-Lernassistent. Frag mich alles über diesen Kurs.',
+};
+
+const SEND_LABELS = {
+  'en': 'Send', 'ko': '전송', 'ja': '送信', 'zh-CN': '发送',
+  'es': 'Enviar', 'fr': 'Envoyer', 'de': 'Senden',
+};
+
+const ASK_TUTOR_LABELS = {
+  'en': 'Ask Tutor', 'ko': '튜터에게 질문', 'ja': 'チューターに質問',
+  'zh-CN': '问导师', 'es': 'Preguntar', 'fr': 'Demander', 'de': 'Fragen',
+};
+
+const CHAT_PLACEHOLDERS = {
+  'en': 'Ask about the course content...',
+  'ko': '강의 내용에 대해 질문하세요...',
+  'ja': 'コースの内容について質問してください...',
+  'zh-CN': '关于课程内容，请提问...',
+  'es': 'Pregunta sobre el contenido del curso...',
+  'fr': 'Posez une question sur le cours...',
+  'de': 'Frage zum Kursinhalt stellen...',
+};
+
+const QUOTE_PLACEHOLDERS = {
+  'en': 'Ask about this text...',
+  'ko': '선택한 텍스트에 대해 질문하세요...',
+  'ja': '選択したテキストについて質問...',
+  'zh-CN': '关于这段文字提问...',
+  'es': 'Pregunta sobre este texto...',
+  'fr': 'Posez une question sur ce texte...',
+  'de': 'Frage zu diesem Text stellen...',
+};
+
+const BANNER_UI = {
+  'en': { prompt: 'Translate this page to', confirm: 'Translate', dismiss: 'Close' },
+  'ko': { prompt: '이 페이지를 다음 언어로 번역할까요?', confirm: '번역', dismiss: '닫기' },
+  'ja': { prompt: 'このページを翻訳しますか？', confirm: '翻訳', dismiss: '閉じる' },
+  'zh-CN': { prompt: '将此页面翻译为', confirm: '翻译', dismiss: '关闭' },
+  'es': { prompt: '¿Traducir esta página a', confirm: 'Traducir', dismiss: 'Cerrar' },
+  'fr': { prompt: 'Traduire cette page en', confirm: 'Traduire', dismiss: 'Fermer' },
+  'de': { prompt: 'Diese Seite übersetzen auf', confirm: 'Übersetzen', dismiss: 'Schließen' },
+};
+
+const PROGRESS_LABELS = {
+  'en': 'Translating…', 'ko': '번역 중…', 'ja': '翻訳中…',
+  'zh-CN': '翻译中…', 'es': 'Traduciendo…', 'fr': 'Traduction…', 'de': 'Übersetzen…',
+};
+
+const CHAT_ERROR_LABELS = {
+  'en': 'Sorry, an error occurred.',
+  'ko': '죄송합니다. 응답 중 오류가 발생했습니다.',
+  'ja': '申し訳ありません。エラーが発生しました。',
+  'zh-CN': '抱歉，发生了错误。',
+  'es': 'Lo sentimos, se produjo un error.',
+  'fr': "Désolé, une erreur s'est produite.",
+  'de': 'Entschuldigung, ein Fehler ist aufgetreten.',
+};
+
+const HISTORY_LABELS = {
+  title: { 'en': 'Chat History', 'ko': '대화 기록', 'ja': '会話履歴', 'zh-CN': '聊天记录', 'es': 'Historial', 'fr': 'Historique', 'de': 'Verlauf' },
+  loading: { 'en': 'Loading...', 'ko': '불러오는 중...', 'ja': '読み込み中...', 'zh-CN': '加载中...', 'es': 'Cargando...', 'fr': 'Chargement...', 'de': 'Laden...' },
+  empty: { 'en': 'No conversations yet', 'ko': '대화 기록이 없습니다', 'ja': 'まだ会話がありません', 'zh-CN': '暂无对话', 'es': 'Sin conversaciones', 'fr': 'Aucune conversation', 'de': 'Noch keine Gespräche' },
+};
+
+const HISTORY_DB_NAME = 'skillbridge-tutor';
+const HISTORY_STORE = 'conversations';
