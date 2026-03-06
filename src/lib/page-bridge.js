@@ -10,8 +10,11 @@
   if (window.__SKILLBRIDGE_BRIDGE__) return;
   window.__SKILLBRIDGE_BRIDGE__ = true;
 
-  // Read nonce and local Puter.js URL from injecting script element
-  const _currentScript = document.currentScript;
+  // Read nonce and local Puter.js URL from injecting script element.
+  // document.currentScript may be null for dynamically injected scripts in some
+  // browsers/contexts, so fall back to getElementById with a known marker.
+  const _currentScript = document.currentScript
+    || document.getElementById('__skillbridge_loader__');
   const _bridgeNonce = _currentScript?.dataset?.nonce || '';
   const _puterUrl = _currentScript?.dataset?.puterUrl || '';
 
