@@ -121,6 +121,65 @@
   let pendingActions = [];
   let gtTranslateQueue = [];
   let gtProcessing = false;
+  let gtGeneration = 0;           // Incremented on restoreOriginal to cancel stale GT batches
+
+  // ============================================================
+  // TRANSLATION PROGRESS INDICATOR
+  // ============================================================
+
+  const PROGRESS_LABELS = {
+    'en': 'Translating…', 'ko': '번역 중…', 'ja': '翻訳中…',
+    'zh-CN': '翻译中…', 'es': 'Traduciendo…', 'fr': 'Traduction…', 'de': 'Übersetzen…',
+  };
+
+  function showTranslationProgress() {
+    // Progress bar at top — reuse existing or create new
+    let bar = document.getElementById('si18n-progress-bar');
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'si18n-progress-bar';
+      bar.innerHTML = '<div class="si18n-progress-fill" style="width: 15%"></div>';
+      document.body.appendChild(bar);
+    } else {
+      // Reset fill for re-use
+      const fill = bar.querySelector('.si18n-progress-fill');
+      if (fill) fill.style.width = '15%';
+    }
+    // Toast — reuse existing or create new
+    let toast = document.getElementById('si18n-progress-toast');
+    const label = PROGRESS_LABELS[currentLang] || PROGRESS_LABELS['en'];
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'si18n-progress-toast';
+      toast.innerHTML = `<div class="si18n-progress-spinner"></div><span>${label}</span>`;
+      document.body.appendChild(toast);
+    } else {
+      // Update label for new language
+      const span = toast.querySelector('span');
+      if (span) span.textContent = label;
+    }
+    requestAnimationFrame(() => {
+      bar.classList.add('active');
+      toast.classList.add('active');
+    });
+  }
+
+  function updateTranslationProgress(pct) {
+    const fill = document.querySelector('#si18n-progress-bar .si18n-progress-fill');
+    if (fill) fill.style.width = `${Math.min(pct, 95)}%`;
+  }
+
+  function hideTranslationProgress() {
+    const fill = document.querySelector('#si18n-progress-bar .si18n-progress-fill');
+    if (fill) fill.style.width = '100%';
+    setTimeout(() => {
+      const bar = document.getElementById('si18n-progress-bar');
+      const toast = document.getElementById('si18n-progress-toast');
+      bar?.classList.remove('active');
+      toast?.classList.remove('active');
+      setTimeout(() => { bar?.remove(); toast?.remove(); }, 400);
+    }, 300);
+  }
 
   // ============================================================
   // REGISTER MESSAGE LISTENER IMMEDIATELY (before async init)
@@ -160,11 +219,36 @@
         sendResponse({ context: getPageContext() });
         return false;
 
-      case 'setLanguage':
-        currentLang = request.language;
-        chrome.storage.local.set({ targetLanguage: request.language });
-        sendResponse({ success: true });
-        return false;
+      case 'setLanguage': {
+        const newLang = request.language;
+        chrome.storage.local.set({ targetLanguage: newLang, autoTranslate: newLang !== 'en' });
+        // Mirror the sidebar language-change flow for full retranslation
+        restoreOriginal();
+        currentLang = newLang;
+        // Update sidebar dropdown to stay in sync
+        const langSel = document.getElementById('si18n-lang-select');
+        if (langSel) langSel.value = newLang;
+        if (newLang === 'en') {
+          updateLocalizedLabels();
+          if (subtitleManager) subtitleManager.setLanguage('en');
+          sendResponse({ success: true });
+          return false;
+        }
+        // Async retranslation — use return true for async sendResponse
+        (async () => {
+          try {
+            await translator.loadStaticTranslations(newLang);
+            applyStaticTranslations(newLang);
+            updateLocalizedLabels();
+            if (subtitleManager) subtitleManager.setLanguage(newLang);
+            sendResponse({ success: true });
+          } catch (err) {
+            console.error('[SkillBridge] setLanguage error:', err);
+            sendResponse({ success: false, error: err.message });
+          }
+        })();
+        return true;
+      }
 
       case 'ping':
         sendResponse({ ready: isReady });
@@ -341,6 +425,8 @@
 
     // Queue candidates for Google Translate (non-blocking)
     if (gtCandidates.length > 0 && targetLang !== 'en') {
+      showTranslationProgress();
+      updateTranslationProgress(Math.round((staticCount / (staticCount + gtCandidates.length)) * 80));
       queueForGoogleTranslate(gtCandidates, targetLang);
     }
   }
@@ -376,11 +462,20 @@
   async function processGTQueue() {
     if (gtProcessing || gtTranslateQueue.length === 0) return;
     gtProcessing = true;
+    const myGeneration = gtGeneration;  // Snapshot to detect stale batches
+    const totalItems = gtTranslateQueue.length;
+    let processedItems = 0;
 
     // Collect elements needing Gemini 2nd pass
     const geminiQueue = [];
 
     while (gtTranslateQueue.length > 0) {
+      // Bail out if language was switched (restoreOriginal increments generation)
+      if (gtGeneration !== myGeneration) {
+        gtProcessing = false;
+        return;
+      }
+
       const batch = gtTranslateQueue.splice(0, 10);
       const targetLang = batch[0].targetLang;
 
@@ -388,14 +483,19 @@
       const cacheResults = await Promise.all(
         batch.map(item => translator.cachedLookup(item.text, targetLang))
       );
+
+      // Check again after await — language may have changed
+      if (gtGeneration !== myGeneration) {
+        gtProcessing = false;
+        return;
+      }
+
       const uncached = [];
       for (let i = 0; i < batch.length; i++) {
         if (cacheResults[i]) {
           const item = batch[i];
           if (item.el && item.el.parentNode) {
             if (item.needsGemini) {
-              // Inline-tag elements: skip text-only cache, queue Gemini directly
-              // (cache stores plain text but we need HTML-aware translation)
               uncached.push(item);
             } else {
               safeReplaceText(item.el, cacheResults[i]);
@@ -426,6 +526,12 @@
         const texts = gtItems.map(i => i.text);
         const translations = await translator.googleTranslateBatch(texts, targetLang);
 
+        // Check again after await
+        if (gtGeneration !== myGeneration) {
+          gtProcessing = false;
+          return;
+        }
+
         for (let i = 0; i < gtItems.length; i++) {
           const item = gtItems[i];
           let translated = translations[i];
@@ -443,6 +549,10 @@
         }
       }
 
+      // Update progress
+      processedItems += batch.length;
+      updateTranslationProgress(80 + Math.round((processedItems / totalItems) * 15));
+
       // Minimal delay between batches
       if (gtTranslateQueue.length > 0) {
         await new Promise(r => setTimeout(r, 100));
@@ -450,6 +560,7 @@
     }
 
     gtProcessing = false;
+    hideTranslationProgress();
 
     // 2nd pass: Queue Gemini block translations for inline-tag elements
     for (const { el, targetLang } of geminiQueue) {
@@ -513,9 +624,12 @@
     originalTexts.clear();
     translatedTexts.clear();
     gtTranslateQueue = [];
+    gtProcessing = false;        // Reset so new queue can process after language switch
+    gtGeneration++;              // Invalidate any in-flight GT batches
     currentLang = 'en';
     _protectedTermsLang = null;
     updateLangClass('en');
+    hideTranslationProgress();
   }
 
   /**
@@ -916,13 +1030,21 @@ RULES:
   }
 
   let translateTimeout;
+  let pendingNodes = [];
   function debounceTranslateNew(node) {
+    pendingNodes.push(node);
     clearTimeout(translateTimeout);
     translateTimeout = setTimeout(() => {
+      const nodes = pendingNodes.splice(0);
       if (currentLang !== 'en' && translator) {
-        const elements = node.matches?.(TRANSLATABLE_SELECTOR)
-          ? [node]
-          : Array.from(node.querySelectorAll?.(TRANSLATABLE_SELECTOR) || []);
+        const elements = [];
+        for (const n of nodes) {
+          if (n.matches?.(TRANSLATABLE_SELECTOR)) {
+            elements.push(n);
+          } else {
+            elements.push(...Array.from(n.querySelectorAll?.(TRANSLATABLE_SELECTOR) || []));
+          }
+        }
 
         const handledNodes = new Set();
         const gtCandidates = [];
@@ -945,8 +1067,8 @@ RULES:
         }
 
         // Text-node level for remaining (static only)
-        const textNodes = getTextNodes(node);
-        for (const tn of textNodes) {
+        const allTextNodes = nodes.flatMap(n => getTextNodes(n));
+        for (const tn of allTextNodes) {
           if (handledNodes.has(tn)) continue;
           const original = tn.textContent.trim();
           if (original.length >= 2 && !isCodeContent(tn)) {
@@ -1250,7 +1372,9 @@ RULES:
   }
 
   function formatResponse(text) {
-    return text
+    // Escape HTML FIRST to prevent XSS from AI responses, then apply markdown formatting
+    const escaped = escapeHtml(text);
+    return escaped
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
       .replace(/`(.*?)`/g, '<code>$1</code>')
@@ -1573,7 +1697,7 @@ RULES:
    * Maps browser locale to our supported languages.
    */
   function detectBrowserLanguage() {
-    const browserLang = navigator.language || navigator.userLanguage || 'en';
+    const browserLang = navigator.language || 'en';
     const supported = AVAILABLE_LANGUAGES.map(l => l.code);
 
     // Exact match first
