@@ -8,14 +8,21 @@
  */
 
 // Language code mapping for Google Translate API
-const GT_LANG_MAP = {
-  'zh-CN': 'zh-CN',
-  'zh-TW': 'zh-TW',
-  'pt-BR': 'pt',
-};
+// NOTE: Same map exists in constants.js (GT_LANG_MAP) for content scripts.
+// Service workers can't share globals with content scripts, so we duplicate here.
+const _BG_GT_LANG_MAP = { 'zh-CN': 'zh-CN', 'zh-TW': 'zh-TW', 'pt-BR': 'pt' };
 
 function gtLangCode(lang) {
-  return GT_LANG_MAP[lang] || lang;
+  return _BG_GT_LANG_MAP[lang] || lang;
+}
+
+function parseGTResponse(data, fallback) {
+  if (!data || !data[0]) return fallback;
+  let translated = '';
+  for (const seg of data[0]) {
+    if (seg[0]) translated += seg[0];
+  }
+  return translated || fallback;
 }
 
 function isYouTubeUrl(url) {
@@ -86,14 +93,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         return resp.json();
       })
       .then(data => {
-        // Google Translate returns [[["translated","original",...],...],...]
-        let translated = '';
-        if (data && data[0]) {
-          for (const seg of data[0]) {
-            if (seg[0]) translated += seg[0];
-          }
-        }
-        sendResponse({ ok: true, translated: translated || text });
+        sendResponse({ ok: true, translated: parseGTResponse(data, text) });
       })
       .catch(err => {
         console.warn('[SkillBridge] Google Translate error:', err.message);
@@ -112,14 +112,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
       return fetch(url)
         .then(resp => resp.ok ? resp.json() : null)
-        .then(data => {
-          if (!data || !data[0]) return text;
-          let translated = '';
-          for (const seg of data[0]) {
-            if (seg[0]) translated += seg[0];
-          }
-          return translated || text;
-        })
+        .then(data => parseGTResponse(data, text))
         .catch(() => text);
     }))
     .then(results => sendResponse({ ok: true, translations: results }))
