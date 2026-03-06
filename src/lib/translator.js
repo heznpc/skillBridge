@@ -566,6 +566,7 @@ RULES:
       const script = document.createElement('script');
       script.src = chrome.runtime.getURL('src/lib/page-bridge.js');
       script.dataset.nonce = this._bridgeNonce;
+      script.dataset.puterUrl = chrome.runtime.getURL('src/bridge/puter.js');
       script.onload = () => {
         console.log('[SkillBridge] page-bridge.js injected into page');
         script.remove();
