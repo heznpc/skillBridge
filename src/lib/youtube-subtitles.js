@@ -137,6 +137,11 @@ class YouTubeSubtitleManager {
   _onPlayerEvent(source) {
     if (!this.targetLang || this.targetLang === 'en') return;
 
+    // Re-register listener on each event to keep connection alive
+    for (const iframe of this._iframes) {
+      this._registerAsListener(iframe);
+    }
+
     for (const iframe of this._iframes) {
       try {
         if (iframe.contentWindow === source) {
@@ -175,15 +180,21 @@ class YouTubeSubtitleManager {
         console.log(`[SkillBridge] Updating iframe src (lang=${this.targetLang || 'en'})`);
         iframe.src = newSrc;
 
-        // Also send "listening" registration after load
+        // Register + send commands with aggressive retries after load
         iframe.addEventListener('load', () => {
           this._registerAsListener(iframe);
-          // Fallback: also try direct caption commands after delays
-          if (this.targetLang && this.targetLang !== 'en') {
-            setTimeout(() => this._sendCaptionCommands(iframe), 2000);
-            setTimeout(() => this._sendCaptionCommands(iframe), 4000);
+          // Multiple retries to ensure captions activate
+          const delays = [500, 1500, 3000, 5000, 8000];
+          for (const delay of delays) {
+            setTimeout(() => {
+              this._registerAsListener(iframe);
+              this._sendCaptionCommands(iframe);
+            }, delay);
           }
         }, { once: true });
+      } else {
+        // Src unchanged but language might have changed — re-send commands
+        this._sendCaptionCommands(iframe);
       }
     } catch (err) {
       console.warn('[SkillBridge] Failed to set iframe src:', err);
@@ -200,7 +211,6 @@ class YouTubeSubtitleManager {
         event: 'listening',
         id: 1
       }), '*');
-      console.log('[SkillBridge] Registered as YouTube API listener');
     } catch (e) {
       // Cross-origin might fail
     }
@@ -210,6 +220,7 @@ class YouTubeSubtitleManager {
    * Send commands to enable captions and set translation language.
    */
   _sendCaptionCommands(iframe) {
+    if (!this.targetLang || this.targetLang === 'en') return;
     const ytLang = this._ytLangCode(this.targetLang);
 
     try {
@@ -220,7 +231,7 @@ class YouTubeSubtitleManager {
         args: ['captions']
       }), '*');
 
-      // Step 2: After module loads, set caption track with translation
+      // Step 2: After module loads, set caption track + force show
       setTimeout(() => {
         try {
           // Set the caption track to English with auto-translation
@@ -236,11 +247,17 @@ class YouTubeSubtitleManager {
             }]
           }), '*');
 
-          // Also try setting fontSize to ensure visibility
+          // Force captions visible (fontSize > 0 = visible)
           iframe.contentWindow.postMessage(JSON.stringify({
             event: 'command',
             func: 'setOption',
             args: ['captions', 'fontSize', 1]
+          }), '*');
+
+          // Also try showCaptions command (undocumented but works on some embeds)
+          iframe.contentWindow.postMessage(JSON.stringify({
+            event: 'command',
+            func: 'showCaptions'
           }), '*');
 
           console.log(`[SkillBridge] Caption commands sent → ${ytLang}`);

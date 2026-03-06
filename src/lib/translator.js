@@ -487,6 +487,7 @@ RULES:
 
         window.postMessage({
           __skillbridge__: true,
+          __nonce__: this._bridgeNonce,
           type: 'CHAT_REQUEST',
           id,
           systemPrompt: prompt,
@@ -564,8 +565,11 @@ RULES:
       };
       window.addEventListener('message', onReady);
 
+      // Generate nonce for postMessage origin validation
+      this._bridgeNonce = crypto.randomUUID();
       const script = document.createElement('script');
       script.src = chrome.runtime.getURL('src/lib/page-bridge.js');
+      script.dataset.nonce = this._bridgeNonce;
       script.onload = () => {
         console.log('[SkillBridge] page-bridge.js injected into page');
         script.remove();
@@ -589,6 +593,7 @@ RULES:
       const id = ++this.requestId;
       message.id = id;
       message.__skillbridge__ = true;
+      message.__nonce__ = this._bridgeNonce;
 
       const timeout = setTimeout(() => {
         this.pendingCallbacks.delete(id);

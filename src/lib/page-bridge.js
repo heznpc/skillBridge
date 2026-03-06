@@ -10,6 +10,9 @@
   if (window.__SKILLBRIDGE_BRIDGE__) return;
   window.__SKILLBRIDGE_BRIDGE__ = true;
 
+  // Read nonce from injecting script element for message validation
+  const _bridgeNonce = document.currentScript?.dataset?.nonce || '';
+
   let puterReady = false;
   let puterLoadPromise = null;
 
@@ -76,6 +79,8 @@
     if (event.source !== window) return;
     const data = event.data;
     if (!data || !data.__skillbridge__) return;
+    // Validate nonce to prevent other page scripts from spoofing messages
+    if (_bridgeNonce && data.__nonce__ !== _bridgeNonce) return;
 
     // === TRANSLATE ===
     if (data.type === 'TRANSLATE_REQUEST') {
