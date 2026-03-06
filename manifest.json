@@ -25,7 +25,7 @@
   "content_scripts": [
     {
       "matches": ["https://*.skilljar.com/*"],
-      "js": ["src/lib/constants.js", "src/lib/translator.js", "src/lib/youtube-subtitles.js", "src/content/content.js"],
+      "js": ["src/lib/constants.js", "src/lib/translator.js", "src/lib/youtube-subtitles.js", "src/content/content.js", "src/content/header-controls.js", "src/content/text-selection.js", "src/content/sidebar-chat.js"],
       "css": ["src/content/content.css"],
       "run_at": "document_idle"
     }
@@ -40,7 +40,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["src/lib/page-bridge.js", "src/data/*", "src/bridge/*", "assets/*"],
+      "resources": ["src/lib/page-bridge.js", "src/data/*", "src/bridge/puter.js", "assets/*"],
       "matches": ["https://*.skilljar.com/*"]
     }
   ]
