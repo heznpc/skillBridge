@@ -564,6 +564,7 @@ RULES:
       // Generate nonce for postMessage origin validation
       this._bridgeNonce = crypto.randomUUID();
       const script = document.createElement('script');
+      script.id = '__skillbridge_loader__';
       script.src = chrome.runtime.getURL('src/lib/page-bridge.js');
       script.dataset.nonce = this._bridgeNonce;
       script.dataset.puterUrl = chrome.runtime.getURL('src/bridge/puter.js');
