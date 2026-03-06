@@ -91,6 +91,7 @@ const AVAILABLE_LANGUAGES = [
 ];
 
 const PREMIUM_LANGUAGE_CODES = PREMIUM_LANGUAGES.map(l => l.code);
+const AVAILABLE_LANGUAGE_CODES = AVAILABLE_LANGUAGES.map(l => l.code);
 
 /**
  * Build a { code: label } map from AVAILABLE_LANGUAGES.
