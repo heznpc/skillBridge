@@ -273,25 +273,11 @@ class YouTubeSubtitleManager {
   // ==================== LANGUAGE HELPERS ====================
 
   _ytLangCode(lang) {
-    const map = {
-      'zh-CN': 'zh-Hans', 'zh-TW': 'zh-Hant', 'pt-BR': 'pt',
-    };
-    return map[lang] || lang;
+    return YT_LANG_CODE_MAP[lang] || lang;
   }
 
   _ytLangName(lang) {
-    const names = {
-      'ko': 'Korean', 'ja': 'Japanese', 'zh-CN': 'Chinese (Simplified)',
-      'zh-TW': 'Chinese (Traditional)', 'es': 'Spanish', 'fr': 'French',
-      'de': 'German', 'pt-BR': 'Portuguese', 'pt': 'Portuguese',
-      'vi': 'Vietnamese', 'th': 'Thai', 'id': 'Indonesian', 'ar': 'Arabic',
-      'hi': 'Hindi', 'ru': 'Russian', 'tr': 'Turkish', 'it': 'Italian',
-      'nl': 'Dutch', 'pl': 'Polish', 'uk': 'Ukrainian', 'cs': 'Czech',
-      'sv': 'Swedish', 'da': 'Danish', 'fi': 'Finnish', 'no': 'Norwegian',
-      'ms': 'Malay', 'tl': 'Filipino', 'bn': 'Bengali', 'he': 'Hebrew',
-      'ro': 'Romanian', 'hu': 'Hungarian', 'el': 'Greek',
-    };
-    return names[lang] || lang;
+    return YT_LANG_NAME_MAP[lang] || lang;
   }
 }
 

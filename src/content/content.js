@@ -284,12 +284,10 @@
       // Start observing DOM for dynamically loaded content (e.g. course cards)
       observeDOM();
 
-      // Re-apply after delays to catch late-loaded content (sidebar, dynamic sections)
+      // Single delayed re-apply for initial late-loaded content;
+      // MutationObserver (observeDOM) handles subsequent dynamic content.
       if (stored.autoTranslate && currentLang !== 'en') {
-        setTimeout(() => applyStaticTranslations(currentLang), 300);
-        setTimeout(() => applyStaticTranslations(currentLang), 1000);
-        setTimeout(() => applyStaticTranslations(currentLang), 2500);
-        setTimeout(() => applyStaticTranslations(currentLang), 5000);
+        setTimeout(() => applyStaticTranslations(currentLang), SKILLBRIDGE_DELAYS.LATE_CONTENT);
       }
 
       // Register Gemini callback — remove spinner, update text if improved
@@ -460,7 +458,7 @@
         return;
       }
 
-      const batch = gtTranslateQueue.splice(0, 10);
+      const batch = gtTranslateQueue.splice(0, SKILLBRIDGE_THRESHOLDS.GT_BATCH_SIZE);
       const targetLang = batch[0].targetLang;
 
       // Check IndexedDB cache in parallel
@@ -539,7 +537,7 @@
 
       // Minimal delay between batches
       if (gtTranslateQueue.length > 0) {
-        await new Promise(r => setTimeout(r, 100));
+        await new Promise(r => setTimeout(r, SKILLBRIDGE_DELAYS.GT_BATCH));
       }
     }
 
@@ -978,7 +976,7 @@ RULES:
     translator._sendRequest({
       type: 'VERIFY_REQUEST',
       systemPrompt: prompt,
-      model: 'gemini-2.0-flash',
+      model: SKILLBRIDGE_MODELS.GEMINI,
     }).then(result => {
       if (!result) return;
       const trimmed = result.trim();
@@ -1030,7 +1028,7 @@ RULES:
   function observeDOM() {
     const observer = new MutationObserver((mutations) => {
       if (currentLang === 'en' || isTranslating) return;
-      if (!translator || Object.keys(translator.staticDict).length === 0) return;
+      if (!translator || !isReady) return;
 
       for (const mutation of mutations) {
         for (const node of mutation.addedNodes) {
@@ -1043,7 +1041,7 @@ RULES:
       }
     });
 
-    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    observer.observe(document.body, { childList: true, subtree: true });
   }
 
   let translateTimeout;
@@ -1102,7 +1100,7 @@ RULES:
           queueForGoogleTranslate(gtCandidates, currentLang);
         }
       }
-    }, 300);
+    }, SKILLBRIDGE_DELAYS.DOM_DEBOUNCE);
   }
 
   // ============================================================
@@ -1225,47 +1223,7 @@ RULES:
     return t(TUTOR_GREETINGS);
   }
 
-  // Premium languages (have static JSON dictionaries)
-  const PREMIUM_LANGUAGES = [
-    { code: 'ko', label: '한국어' },
-    { code: 'ja', label: '日本語' },
-    { code: 'zh-CN', label: '中文(简体)' },
-    { code: 'es', label: 'Español' },
-    { code: 'fr', label: 'Français' },
-    { code: 'de', label: 'Deutsch' },
-  ];
-
-  // All supported languages (premium + Google Translate only)
-  const AVAILABLE_LANGUAGES = [
-    { code: 'en', label: 'English' },
-    ...PREMIUM_LANGUAGES,
-    { code: 'zh-TW', label: '中文(繁體)' },
-    { code: 'pt-BR', label: 'Português (BR)' },
-    { code: 'pt', label: 'Português (PT)' },
-    { code: 'it', label: 'Italiano' },
-    { code: 'nl', label: 'Nederlands' },
-    { code: 'ru', label: 'Русский' },
-    { code: 'pl', label: 'Polski' },
-    { code: 'uk', label: 'Українська' },
-    { code: 'cs', label: 'Čeština' },
-    { code: 'sv', label: 'Svenska' },
-    { code: 'da', label: 'Dansk' },
-    { code: 'fi', label: 'Suomi' },
-    { code: 'no', label: 'Norsk' },
-    { code: 'tr', label: 'Türkçe' },
-    { code: 'ar', label: 'العربية' },
-    { code: 'hi', label: 'हिन्दी' },
-    { code: 'th', label: 'ภาษาไทย' },
-    { code: 'vi', label: 'Tiếng Việt' },
-    { code: 'id', label: 'Bahasa Indonesia' },
-    { code: 'ms', label: 'Bahasa Melayu' },
-    { code: 'tl', label: 'Filipino' },
-    { code: 'bn', label: 'বাংলা' },
-    { code: 'he', label: 'עברית' },
-    { code: 'ro', label: 'Română' },
-    { code: 'hu', label: 'Magyar' },
-    { code: 'el', label: 'Ελληνικά' },
-  ];
+  // PREMIUM_LANGUAGES and AVAILABLE_LANGUAGES are defined in constants.js
 
   function getSidebarHTML() {
     return `
@@ -1372,18 +1330,18 @@ RULES:
       ? `<div class="si18n-chat-quote" style="margin-bottom:4px">${escapeHtml(quotedText)}</div>${escapeHtml(text)}`
       : escapeHtml(text);
 
-    messages.innerHTML += `
+    messages.insertAdjacentHTML('beforeend', `
       <div class="si18n-chat-msg si18n-chat-user">
         <div class="si18n-chat-bubble">${displayHtml}</div>
         <div class="si18n-chat-avatar">You</div>
       </div>
-    `;
+    `);
     input.value = '';
     // Reset placeholder
     input.placeholder = t(CHAT_PLACEHOLDERS);
 
     const loadingId = 'loading-' + Date.now();
-    messages.innerHTML += `
+    messages.insertAdjacentHTML('beforeend', `
       <div class="si18n-chat-msg si18n-chat-bot" id="${loadingId}">
         <div class="si18n-chat-avatar">AI</div>
         <div class="si18n-chat-bubble">
@@ -1394,7 +1352,7 @@ RULES:
           </span>
         </div>
       </div>
-    `;
+    `);
     messages.scrollTop = messages.scrollHeight;
 
     // Prepend quoted text as context for the AI
@@ -1562,7 +1520,7 @@ RULES:
     }
   }
 
-  async function getConversations(limit = 50) {
+  async function getConversations(limit = SKILLBRIDGE_LIMITS.HISTORY) {
     try {
       const db = await openHistoryDb();
       return new Promise((resolve) => {
@@ -1651,8 +1609,8 @@ RULES:
     for (const [chapter, convs] of Object.entries(grouped)) {
       html += `<div class="si18n-history-chapter">${escapeHtml(chapter)}</div>`;
       for (const conv of convs) {
-        const preview = conv.question.length > 50
-          ? conv.question.slice(0, 50) + '…'
+        const preview = conv.question.length > SKILLBRIDGE_LIMITS.HISTORY_PREVIEW
+          ? conv.question.slice(0, SKILLBRIDGE_LIMITS.HISTORY_PREVIEW) + '…'
           : conv.question;
         const time = new Date(conv.timestamp).toLocaleDateString(undefined, {
           month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
@@ -1768,7 +1726,7 @@ RULES:
       askTutorBtn.style.top = `${rect.bottom + scrollY + 6}px`;
       askTutorBtn.classList.add('visible');
 
-      pendingQuote = text.length > 200 ? text.slice(0, 200) + '…' : text;
+      pendingQuote = text.length > SKILLBRIDGE_LIMITS.QUOTE_MAX ? text.slice(0, SKILLBRIDGE_LIMITS.QUOTE_MAX) + '…' : text;
     }, 10);
   }
 

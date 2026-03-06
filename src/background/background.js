@@ -18,6 +18,13 @@ function gtLangCode(lang) {
   return GT_LANG_MAP[lang] || lang;
 }
 
+function isYouTubeUrl(url) {
+  try {
+    const u = new URL(url);
+    return u.hostname === 'www.youtube.com' || u.hostname.endsWith('.youtube.com');
+  } catch { return false; }
+}
+
 // Install handler
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
@@ -34,7 +41,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === 'FETCH_URL') {
     const fetchOpts = {};
     const headers = {};
-    if (msg.url.includes('youtube.com')) {
+    if (isYouTubeUrl(msg.url)) {
       headers['Cookie'] = 'CONSENT=YES+cb; SOCS=CAESEwgDEgk2OTgxMTk0NTQaAmVuIAEaBgiA_LyaBg';
     }
     // Support POST requests (used for InnerTube API)
@@ -43,7 +50,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       fetchOpts.body = msg.body;
       headers['Content-Type'] = 'application/json';
       // InnerTube API needs origin + client headers
-      if (msg.url.includes('youtubei')) {
+      if (isYouTubeUrl(msg.url) && msg.url.includes('/youtubei/')) {
         headers['Origin'] = 'https://www.youtube.com';
         headers['Referer'] = 'https://www.youtube.com/';
         headers['X-Youtube-Client-Name'] = '1';
