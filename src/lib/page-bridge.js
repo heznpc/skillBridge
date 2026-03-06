@@ -1,6 +1,6 @@
 /**
  * Page Bridge - Injected into the HOST PAGE's main world (not extension context)
- * This script runs in skilljar.com's context, where external scripts CAN load.
+ * Loads bundled Puter.js from extension resources (no remote code — MV3 compliant).
  * Communicates with the content script via window.postMessage.
  */
 
@@ -10,8 +10,10 @@
   if (window.__SKILLBRIDGE_BRIDGE__) return;
   window.__SKILLBRIDGE_BRIDGE__ = true;
 
-  // Read nonce from injecting script element for message validation
-  const _bridgeNonce = document.currentScript?.dataset?.nonce || '';
+  // Read nonce and local Puter.js URL from injecting script element
+  const _currentScript = document.currentScript;
+  const _bridgeNonce = _currentScript?.dataset?.nonce || '';
+  const _puterUrl = _currentScript?.dataset?.puterUrl || '';
 
   let puterReady = false;
   let puterLoadPromise = null;
@@ -28,9 +30,13 @@
         resolve();
         return;
       }
-      log('Loading Puter.js from CDN...');
+      if (!_puterUrl) {
+        reject(new Error('No local Puter.js URL provided'));
+        return;
+      }
+      log('Loading Puter.js from extension bundle...');
       const script = document.createElement('script');
-      script.src = 'https://js.puter.com/v2/';
+      script.src = _puterUrl;
       script.onload = () => {
         let checks = 0;
         const interval = setInterval(() => {
