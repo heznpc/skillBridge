@@ -1346,7 +1346,7 @@ html.si18n-dark #si18n-progress-toast {
 }
 html.si18n-dark #si18n-progress-toast .si18n-progress-spinner {
   border-color: rgba(255,255,255,0.1) !important;
-  border-top-color: #E07A5F !important;
+  border-top-color: var(--si18n-primary) !important;
 }
 
 /* --- SkillBridge Tutor sidebar in dark mode --- */
@@ -1398,7 +1398,7 @@ html.si18n-dark .si18n-chat-input {
   border-color: rgba(255,255,255,0.1) !important;
 }
 html.si18n-dark .si18n-chat-input:focus {
-  border-color: #E07A5F !important;
+  border-color: var(--si18n-primary) !important;
 }
 html.si18n-dark .si18n-chat-input-wrap {
   border-top-color: rgba(255,255,255,0.06) !important;

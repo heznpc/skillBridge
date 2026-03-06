@@ -16,19 +16,22 @@ global.window = { addEventListener: () => {} };
 // Load the class by evaluating the source (it assigns to global scope via IIFE pattern)
 const fs = require('fs');
 const path = require('path');
+
+// Load shared constants first (translator.js depends on them)
+const constantsSrc = fs.readFileSync(
+  path.join(__dirname, '..', 'src', 'lib', 'constants.js'), 'utf8'
+);
 const src = fs.readFileSync(
   path.join(__dirname, '..', 'src', 'lib', 'translator.js'), 'utf8'
 );
 
-// The file defines `class SkilljarTranslator` — extract it
-// We eval in a function scope to capture the class
+// Combine constants + translator in a single eval so constants are in scope
 let SkilljarTranslator;
 try {
-  // The source file defines the class at top level (no IIFE wrapper)
-  const wrapped = `(function() { ${src}; return SkilljarTranslator; })()`;
-  SkilljarTranslator = eval(wrapped);
+  const combined = `(function() { ${constantsSrc}; ${src}; return SkilljarTranslator; })()`;
+  SkilljarTranslator = eval(combined);
 } catch (e) {
-  // If eval fails, try a simpler approach
+  eval(constantsSrc);
   eval(src);
   SkilljarTranslator = global.SkilljarTranslator;
 }

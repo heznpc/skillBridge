@@ -22,19 +22,9 @@ class SkilljarTranslator {
     this._isVerifying = false;
     this._onUpdateCallbacks = []; // Callbacks when Gemini improves a translation
     // Premium languages have static dictionaries; others use Google Translate only
-    this.premiumLanguages = ['ko', 'ja', 'zh-CN', 'es', 'fr', 'de'];
-    this.supportedLanguages = {
-      'ko': '한국어', 'ja': '日本語', 'zh-CN': '中文(简体)',
-      'es': 'Español', 'fr': 'Français', 'de': 'Deutsch',
-      'zh-TW': '中文(繁體)', 'pt-BR': 'Português (BR)', 'pt': 'Português (PT)',
-      'it': 'Italiano', 'nl': 'Nederlands', 'ru': 'Русский',
-      'pl': 'Polski', 'uk': 'Українська', 'cs': 'Čeština',
-      'sv': 'Svenska', 'da': 'Dansk', 'fi': 'Suomi', 'no': 'Norsk',
-      'tr': 'Türkçe', 'ar': 'العربية', 'hi': 'हिन्दी',
-      'th': 'ภาษาไทย', 'vi': 'Tiếng Việt', 'id': 'Bahasa Indonesia',
-      'ms': 'Bahasa Melayu', 'tl': 'Filipino', 'bn': 'বাংলা',
-      'he': 'עברית', 'ro': 'Română', 'hu': 'Magyar', 'el': 'Ελληνικά',
-    };
+    // Use shared constants from constants.js
+    this.premiumLanguages = PREMIUM_LANGUAGE_CODES;
+    this.supportedLanguages = SUPPORTED_LANGUAGE_MAP;
   }
 
   async initialize() {
@@ -274,11 +264,11 @@ class SkilljarTranslator {
     const text = originalText.trim();
 
     // Skip if too short — Google Translate handles these fine
-    if (text.length < 80) return false;
+    if (text.length < SKILLBRIDGE_THRESHOLDS.GEMINI_MIN_TEXT) return false;
 
     // Skip if mostly numbers/symbols (e.g. "6 minutes", "10-15 min")
     const alphaRatio = text.replace(/[^a-zA-Z]/g, '').length / text.length;
-    if (alphaRatio < 0.5) return false;
+    if (alphaRatio < SKILLBRIDGE_THRESHOLDS.GEMINI_ALPHA_RATIO) return false;
 
     // Skip simple patterns: time, dates, labels
     if (/^\d+[\s-]+\w+$/.test(text)) return false;                    // "6 minutes"
@@ -287,9 +277,15 @@ class SkilljarTranslator {
 
     // Only verify sentences with real prose (has periods, commas, or is long)
     const hasComplexity = text.includes('.') || text.includes(',') ||
-                          text.includes(':') || text.length > 120;
+                          text.includes(':') || text.length > SKILLBRIDGE_THRESHOLDS.MIN_COMPLEX_TEXT;
     if (!hasComplexity) return false;
 
+    // Cap queue size to prevent memory growth on large pages
+    if (this._verifyQueue.length >= SKILLBRIDGE_THRESHOLDS.VERIFY_QUEUE_MAX) {
+      const dropped = this._verifyQueue.shift();
+      // Cache the Google Translate result as-is so it's at least persisted
+      this._cacheTranslation(dropped.original, dropped.googleTranslation, dropped.targetLang);
+    }
     this._verifyQueue.push({
       original: text,
       googleTranslation,
@@ -297,7 +293,7 @@ class SkilljarTranslator {
     });
 
     if (!this._isVerifying) {
-      setTimeout(() => this._processVerifyQueue(), 1000);
+      setTimeout(() => this._processVerifyQueue(), SKILLBRIDGE_DELAYS.VERIFY_QUEUE);
     }
     return true;
   }
@@ -314,11 +310,11 @@ class SkilljarTranslator {
 
     // Process in small batches (3 at a time to avoid overwhelming Gemini)
     while (this._verifyQueue.length > 0) {
-      const batch = this._verifyQueue.splice(0, 3);
+      const batch = this._verifyQueue.splice(0, SKILLBRIDGE_THRESHOLDS.GEMINI_BATCH_SIZE);
       await Promise.all(batch.map(item => this._verifySingle(item)));
       // Small delay between batches
       if (this._verifyQueue.length > 0) {
-        await new Promise(r => setTimeout(r, 300));
+        await new Promise(r => setTimeout(r, SKILLBRIDGE_DELAYS.GEMINI_BATCH));
       }
     }
 
@@ -347,7 +343,7 @@ RULES:
       const result = await this._sendRequest({
         type: 'VERIFY_REQUEST',
         systemPrompt: prompt,
-        model: 'gemini-2.0-flash',
+        model: SKILLBRIDGE_MODELS.GEMINI,
       });
 
       if (!result) return;
@@ -492,7 +488,7 @@ RULES:
           id,
           systemPrompt: prompt,
           userMessage,
-          model: 'claude-sonnet-4',
+          model: SKILLBRIDGE_MODELS.CLAUDE,
           stream: true,
         }, '*');
       });
