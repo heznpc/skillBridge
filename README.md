@@ -20,7 +20,7 @@
 
 Break the language barrier on Anthropic's free AI courses.
 
-[Install from Chrome Web Store](#installation) · [Report Bug](../../issues) · [Request Feature](../../issues)
+[Install](#installation) · [Report Bug](https://github.com/heznpc/skillbridge/issues) · [Request Feature](https://github.com/heznpc/skillbridge/issues)
 
 </div>
 
@@ -34,6 +34,9 @@ Break the language barrier on Anthropic's free AI courses.
 
 </div>
 
+> [!IMPORTANT]
+> **Star this repo** to get notified of new features and language updates.
+
 ---
 
 ## The Problem
@@ -45,25 +48,36 @@ You might think: *"I'll just use Google Translate."* Here's why that falls short
 | | Google Translate (page) | SkillBridge |
 |---|---|---|
 | AI terminology | ❌ "Prompt" → "신속한" (wrong) | ✅ "Prompt" → "프롬프트" (correct) |
-| Technical accuracy | ❌ Generic machine translation | ✅ 560+ hand-curated terms per language + protected terms auto-fix + Gemini AI verification |
-| Context-aware help | ❌ None | ✅ AI tutor (Claude Sonnet 4) answers questions about the lesson |
-| Video subtitles | ❌ Separate manual toggle | ✅ Auto-translated subtitles in your language |
-| UI preservation | ❌ Breaks checkboxes, progress bars | ✅ Preserves all interactive elements |
+| Technical accuracy | ❌ Generic machine translation | ✅ 560+ curated terms + AI verification |
+| Context-aware help | ❌ None | ✅ AI tutor answers questions about the lesson |
+| Video subtitles | ❌ Separate manual toggle | ✅ Auto-translated subtitles |
+| UI preservation | ❌ Breaks checkboxes, progress bars | ✅ All interactive elements preserved |
 | Cost | Free | Free — no API keys needed |
 
 > **No API keys. No cost. Just install and learn.**
 
-## Quick Start
+## Installation
 
-1. Install the extension ([see below](#installation))
-2. Visit [Anthropic Academy](https://anthropic.skilljar.com/)
-3. SkillBridge translates the entire page automatically
+> Chrome Web Store listing coming soon — star this repo to be notified.
 
-That's it.
+**Manual install** (developer mode):
+
+```bash
+git clone https://github.com/heznpc/skillbridge.git
+```
+
+1. Open `chrome://extensions/` in Chrome
+2. Enable **Developer mode** (top-right toggle)
+3. Click **Load unpacked** → select the cloned folder
+4. Visit [anthropic.skilljar.com](https://anthropic.skilljar.com/) and start learning!
+
+Also works in Edge, Brave, Arc, and other Chromium-based browsers.
 
 ## Features
 
-**🌐 Full Page Translation** — Every text element on the page is translated, with AI-specific terms handled correctly via curated dictionaries. Progress checkboxes, icons, and navigation all stay intact.
+### 🌐 Full Page Translation
+
+Every text element on the page is translated, with AI-specific terms handled correctly via curated dictionaries. Progress checkboxes, icons, navigation, and CJK fonts all stay intact.
 
 <div align="center">
 <img src="assets/screenshots/01-lesson-translated.png" alt="Lesson page with curriculum fully translated" width="720" />
@@ -71,31 +85,25 @@ That's it.
 <em>Course lesson with full curriculum translated — UI elements preserved.</em>
 </div>
 
-**🤖 AI Tutor** — A sidebar chatbot powered by **Claude Sonnet 4** via [Puter.js](https://docs.puter.com/). It knows which course and lesson you're on. Ask questions in your language, get streaming answers.
+### 🤖 AI Tutor
 
-<!-- TODO: ai-tutor.png 추가 후 주석 해제
-<div align="center">
-<img src="assets/screenshots/ai-tutor.png" alt="AI Tutor sidebar answering a question in Korean" width="720" />
-<br/>
-<em>Ask the AI Tutor about the lesson in your language — powered by Claude Sonnet 4.</em>
-</div>
--->
+A sidebar chatbot powered by **Claude Sonnet 4** via [Puter.js](https://docs.puter.com/). It knows which course and lesson you're on. Ask questions in your language, get streaming answers.
 
-**🎬 Auto-Subtitles** — Course videos automatically activate translated subtitles when you play them — no manual toggle needed.
+### 🎬 Auto-Subtitles
 
-**🔍 Smart Detection** — Detects your browser language on first visit and offers to translate. No setup needed.
+Course videos automatically activate translated subtitles when you play them — no manual toggle needed.
 
-**✨ Faithful UI** — Progress checkboxes, icons, and navigation all stay intact. CJK fonts are matched to the original design.
+### 🔍 Smart Detection
 
-### Protected Terms in Action
+Detects your browser language on first visit and offers to translate. No setup needed.
 
-Generic page translation tools often **mistranslate brand names and technical terms**. For example, Google Translate renders "Anthropic Courses" as "인류학적 과정" (anthropological courses) in Korean — completely wrong.
+### 🛡️ Protected Terms
 
-SkillBridge's **Protected Terms** engine auto-corrects these errors after translation, keeping brand names like "Anthropic", "Claude", and technical terms intact:
+Generic translation tools often **mistranslate brand names and technical terms**. SkillBridge auto-corrects these errors after translation:
 
 <div align="center">
 
-| Before (Google Translate alone) | After (SkillBridge Protected Terms) |
+| Before (Google Translate) | After (SkillBridge) |
 |:---:|:---:|
 | ❌ 인류학적 과정 | ✅ Anthropic 과정 |
 | ❌ 클로드 | ✅ Claude |
@@ -130,9 +138,7 @@ Page text
        └─ Complex sentence? → Gemini 2.0 Flash verifies → corrects if needed
 ```
 
-**Protected Terms** — Each language defines known GT mistakes (e.g., GT translates "Claude" → "클로드" in Korean). After GT runs, the extension auto-corrects these back to the proper form. Brand names, technical terms, and product hierarchy stay in English — matching [Anthropic's official multilingual docs](https://docs.anthropic.com).
-
-All translation happens **in your browser** — nothing is stored or sent to third-party servers.
+Translation requests are sent to Google Translate and Gemini/Claude APIs via [Puter.js](https://docs.puter.com/) — no data is stored on our servers, and no account or API key is required.
 
 ## Supported Languages
 
@@ -152,21 +158,6 @@ All translation happens **in your browser** — nothing is stored or sent to thi
 🇹🇼 中文繁體 · 🇧🇷 Português (BR) · 🇵🇹 Português (PT) · 🇮🇹 Italiano · 🇳🇱 Nederlands · 🇷🇺 Русский · 🇵🇱 Polski · 🇺🇦 Українська · 🇨🇿 Čeština · 🇸🇪 Svenska · 🇩🇰 Dansk · 🇫🇮 Suomi · 🇳🇴 Norsk · 🇹🇷 Türkçe · 🇸🇦 العربية · 🇮🇳 हिन्दी · 🇹🇭 ภาษาไทย · 🇻🇳 Tiếng Việt · 🇮🇩 Bahasa Indonesia · 🇲🇾 Bahasa Melayu · 🇵🇭 Filipino · 🇧🇩 বাংলা · 🇮🇱 עברית · 🇷🇴 Română · 🇭🇺 Magyar · 🇬🇷 Ελληνικά
 
 > Want to add your language as Premium? Contribute a curated dictionary — see [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## Installation
-
-<!-- **Chrome Web Store** (recommended): [Install SkillBridge](https://chrome.google.com/webstore/) — coming soon -->
-
-**Manual install** (developer mode):
-
-```bash
-git clone https://github.com/heznpc/skillbridge.git
-```
-
-1. Open `chrome://extensions/` in Chrome
-2. Enable **Developer mode** (top-right toggle)
-3. Click **Load unpacked** → select the cloned folder
-4. Visit [anthropic.skilljar.com](https://anthropic.skilljar.com/) and start learning!
 
 ## Architecture
 
@@ -197,19 +188,19 @@ skillbridge/
 | CJK Font Rendering | Google Fonts Noto Sans |
 
 > **Built with [Claude Code](https://docs.anthropic.com/en/docs/claude-code).**
-> This project — from architecture design and feature implementation to CI/CD pipeline setup, unit tests, debugging, and even the demo GIF — was developed using Claude Code as an AI pair-programming partner.
+> This project — from architecture design and feature implementation to debugging and the demo GIF — was developed using Claude Code as an AI pair-programming partner.
 
 ## Translation Philosophy
 
-Each language's dictionary is curated to sound natural to native speakers. We currently align with [Anthropic's official multilingual docs](https://docs.anthropic.com) as a baseline, but community conventions matter too — if Korean developers say "프롬프트" instead of "prompt", that's what we use.
+Each language's dictionary is curated to sound natural to native speakers. We align with [Anthropic's official multilingual docs](https://docs.anthropic.com) as a baseline, but community conventions matter too — if Korean developers say "프롬프트" instead of "prompt", that's what we use.
 
-Disagree with a term choice? That's exactly the kind of PR we want — see [CONTRIBUTING.md](CONTRIBUTING.md) for how to improve your language's dictionary.
+Disagree with a term choice? That's exactly the kind of PR we want — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Contributing
 
 **Native speakers wanted!** The single most impactful way to contribute is improving the translation dictionary for your language — no code required, just edit a JSON file. Even fixing one bad translation helps every learner using that language.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide, [Good First Issues](../../issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) to get started, and [ROADMAP.md](docs/ROADMAP.md) for where this project is heading.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide, [Good First Issues](https://github.com/heznpc/skillbridge/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) to get started, and [ROADMAP.md](docs/ROADMAP.md) for where this project is heading.
 
 ## Disclaimer
 
