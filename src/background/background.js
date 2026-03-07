@@ -32,6 +32,41 @@ function isYouTubeUrl(url) {
   } catch { return false; }
 }
 
+// ==================== RATE LIMITER ====================
+
+const _rateLimiter = {
+  timestamps: [],
+  maxPerMin: 120, // will be overridden by constant from content script messages
+  check() {
+    const now = Date.now();
+    this.timestamps = this.timestamps.filter(t => now - t < 60000);
+    if (this.timestamps.length >= this.maxPerMin) return false;
+    this.timestamps.push(now);
+    return true;
+  }
+};
+
+// ==================== EXPONENTIAL BACKOFF FETCH ====================
+
+async function fetchWithRetry(url, opts = {}, maxRetries = 3, baseDelay = 500) {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const resp = await fetch(url, opts);
+      if (resp.ok) return resp;
+      // Don't retry client errors (4xx) except 429 (rate limit)
+      if (resp.status >= 400 && resp.status < 500 && resp.status !== 429) {
+        throw new Error(`HTTP ${resp.status}`);
+      }
+      // Retryable server error or rate limit
+      if (attempt === maxRetries) throw new Error(`HTTP ${resp.status}`);
+    } catch (err) {
+      if (attempt === maxRetries) throw err;
+    }
+    const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 200;
+    await new Promise(r => setTimeout(r, delay));
+  }
+}
+
 // Install handler
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
@@ -80,18 +115,19 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
   }
 
-  // Google Translate: single text
+  // Google Translate: single text (with rate limiting + exponential backoff)
   if (msg.type === 'GOOGLE_TRANSLATE') {
     const { text, targetLang, sourceLang } = msg;
+    if (!_rateLimiter.check()) {
+      sendResponse({ ok: false, error: 'Rate limit exceeded' });
+      return true;
+    }
     const sl = sourceLang || 'en';
     const tl = gtLangCode(targetLang);
     const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
 
-    fetch(url)
-      .then(resp => {
-        if (!resp.ok) throw new Error(`GT HTTP ${resp.status}`);
-        return resp.json();
-      })
+    fetchWithRetry(url)
+      .then(resp => resp.json())
       .then(data => {
         sendResponse({ ok: true, translated: parseGTResponse(data, text) });
       })
@@ -102,16 +138,17 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
   }
 
-  // Google Translate: batch (multiple texts at once)
+  // Google Translate: batch (with rate limiting + exponential backoff)
   if (msg.type === 'GOOGLE_TRANSLATE_BATCH') {
     const { texts, targetLang, sourceLang } = msg;
     const sl = sourceLang || 'en';
     const tl = gtLangCode(targetLang);
 
     Promise.all(texts.map(text => {
+      if (!_rateLimiter.check()) return text; // skip if rate limited
       const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
-      return fetch(url)
-        .then(resp => resp.ok ? resp.json() : null)
+      return fetchWithRetry(url)
+        .then(resp => resp.json())
         .then(data => parseGTResponse(data, text))
         .catch(err => {
           console.warn('[SkillBridge] GT batch item failed:', err.message);

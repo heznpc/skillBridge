@@ -14,6 +14,7 @@
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Chrome MV3](https://img.shields.io/badge/Chrome-Extension_MV3-blue.svg)](https://developer.chrome.com/docs/extensions/)
+[![Tests](https://img.shields.io/badge/Tests-66%20passed-brightgreen.svg)](tests/)
 [![GitHub stars](https://img.shields.io/github/stars/heznpc/skillbridge?style=social)](https://github.com/heznpc/skillbridge/stargazers)
 [![GitHub contributors](https://img.shields.io/github/contributors/heznpc/skillbridge)](https://github.com/heznpc/skillbridge/graphs/contributors)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
@@ -22,7 +23,7 @@
 
 Break the language barrier on Anthropic's free AI courses.
 
-[Install](#installation) · [Report Bug](https://github.com/heznpc/skillbridge/issues) · [Request Feature](https://github.com/heznpc/skillbridge/issues)
+[Install](#installation) · [Features](#features) · [Report Bug](https://github.com/heznpc/skillbridge/issues) · [Request Feature](https://github.com/heznpc/skillbridge/issues) · [Contributing](CONTRIBUTING.md)
 
 </div>
 
@@ -37,6 +38,20 @@ Break the language barrier on Anthropic's free AI courses.
 </div>
 
 ---
+
+## Table of Contents
+
+- [The Problem](#the-problem)
+- [Quick Start](#quick-start)
+- [Features](#features)
+- [Installation](#installation)
+- [How It Works](#how-it-works)
+- [Supported Languages](#supported-languages)
+- [Privacy & Security](#privacy--security)
+- [Tech Stack](#tech-stack)
+- [Contributing](#contributing)
+- [FAQ](#faq)
+- [License](#license)
 
 ## The Problem
 
@@ -166,21 +181,17 @@ Translation requests are sent to Google Translate and Gemini/Claude APIs via [Pu
 
 > Want to add your language as Premium? Contribute a curated dictionary — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Architecture
+## Privacy & Security
 
-```
-skillbridge/
-├── manifest.json              # Chrome MV3 manifest
-├── _locales/                  # Chrome i18n (en, ko, ja, zh_CN)
-├── src/
-│   ├── background/            # Google Translate API proxy
-│   ├── bridge/                # Puter.js AI bridge (Gemini, Claude)
-│   ├── content/               # DOM translation + sidebar UI + fonts
-│   ├── popup/                 # Extension popup UI
-│   ├── lib/                   # Translation engine, subtitles, constants
-│   └── data/                  # Curated dictionaries (6 languages × 570+)
-└── assets/icons/
-```
+SkillBridge is designed with privacy first:
+
+- **No data collection** — zero analytics, zero tracking, zero telemetry
+- **No servers** — all translation happens client-side or via public APIs (Google Translate, Puter.js)
+- **No accounts required** — works immediately after install
+- **No stored content** — only caches translated outputs (never originals) in your local IndexedDB
+- **Open source** — every line of code is auditable right here
+
+See our full [Privacy Policy](PRIVACY_POLICY.md).
 
 ## Tech Stack
 
@@ -198,20 +209,48 @@ skillbridge/
 > **Built with [Claude Code](https://docs.anthropic.com/en/docs/claude-code).**
 > This project — from architecture design and feature implementation to debugging and the demo GIF — was developed using Claude Code as an AI pair-programming partner.
 
-## Translation Philosophy
-
-Each language's dictionary is curated to sound natural to native speakers. We align with [Anthropic's official multilingual docs](https://docs.anthropic.com) as a baseline, but community conventions matter too — if Korean developers say "프롬프트" instead of "prompt", that's what we use.
-
-Disagree with a term choice? That's exactly the kind of PR we want — see [CONTRIBUTING.md](CONTRIBUTING.md).
+## Contributing
 
 > [!IMPORTANT]
 > **Star this repo** to get notified of new features and language updates.
 
-## Contributing
-
 **Native speakers wanted!** The single most impactful way to contribute is improving the translation dictionary for your language — no code required, just edit a JSON file. Even fixing one bad translation helps every learner using that language.
 
+Each language's dictionary is curated to sound natural to native speakers. We align with [Anthropic's official multilingual docs](https://docs.anthropic.com) as a baseline, but community conventions matter too — if Korean developers say "프롬프트" instead of "prompt", that's what we use. Disagree with a term choice? That's exactly the kind of PR we want.
+
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide, [Good First Issues](https://github.com/heznpc/skillbridge/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) to get started, and [ROADMAP.md](docs/ROADMAP.md) for where this project is heading.
+
+## FAQ
+
+<details>
+<summary><strong>Does it work on browsers other than Chrome?</strong></summary>
+
+Yes! SkillBridge works on any Chromium-based browser — Edge, Brave, Arc, Opera, and Vivaldi. Load it as an unpacked extension the same way.
+</details>
+
+<details>
+<summary><strong>Do I need an API key or account?</strong></summary>
+
+No. SkillBridge uses Google Translate (public API) and Puter.js (free tier) for AI features. Everything works out of the box.
+</details>
+
+<details>
+<summary><strong>Why does my language show as "Standard" instead of "Premium"?</strong></summary>
+
+Premium languages have a hand-curated dictionary (570+ entries) that catches AI/ML term mistranslations. Standard languages rely on Google Translate + Gemini verification, which is still quite good. Want to promote your language? Contribute a dictionary — see <a href="CONTRIBUTING.md">CONTRIBUTING.md</a>.
+</details>
+
+<details>
+<summary><strong>The translation looks wrong. How do I report it?</strong></summary>
+
+Open an <a href="https://github.com/heznpc/skillbridge/issues">issue</a> with the original English text, the bad translation, and your suggested correction. Or even better — submit a PR directly to the dictionary JSON file for your language.
+</details>
+
+<details>
+<summary><strong>Is this project affiliated with Anthropic?</strong></summary>
+
+No. SkillBridge is an unofficial community project. It is not affiliated with, endorsed by, or sponsored by Anthropic. "Anthropic", "Claude", and "Skilljar" are trademarks of their respective owners.
+</details>
 
 ## Disclaimer
 

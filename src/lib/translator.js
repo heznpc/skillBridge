@@ -167,7 +167,7 @@ class SkilljarTranslator {
       try {
         const tx = this._db.transaction('translations', 'readonly');
         const store = tx.objectStore('translations');
-        const id = `${targetLang}::${text.trim()}`;
+        const id = `${targetLang}\t${text.trim()}`;
         const req = store.get(id);
         req.onsuccess = () => {
           const entry = req.result;
@@ -196,7 +196,7 @@ class SkilljarTranslator {
       const tx = this._db.transaction('translations', 'readwrite');
       const store = tx.objectStore('translations');
       store.put({
-        id: `${targetLang}::${text.trim()}`,
+        id: `${targetLang}\t${text.trim()}`,
         lang: targetLang,
         original: text.trim(),
         translation,
@@ -461,7 +461,7 @@ RULES:
         const timeout = setTimeout(() => {
           cleanup();
           reject(new Error('Stream timed out'));
-        }, 60000);
+        }, SKILLBRIDGE_THRESHOLDS.CHAT_STREAM_TIMEOUT);
 
         const handler = (event) => {
           if (event.source !== window) return;

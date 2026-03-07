@@ -63,6 +63,15 @@ No build step. No npm install. It just works.
 
 After editing any file, go to `chrome://extensions` and click the reload button (🔄) on the SkillBridge card. Then refresh the Skilljar page.
 
+**Running Tests:**
+
+```bash
+npm install   # first time only
+npm test      # runs all 66 Jest tests
+```
+
+Tests cover the translation engine, dictionary loading, cache logic, and protected term replacement. **All tests must pass before submitting a PR.**
+
 **Useful DevTools Tips:**
 - Open DevTools (F12) → Console tab → filter by `[SkillBridge]` to see extension logs
 - The background service worker has its own console — click "service worker" link on the extensions page
@@ -258,9 +267,49 @@ The tutor lives in `src/content/sidebar-chat.js` (sidebar UI, chat, conversation
 1. **Fork** the repository and create your branch from `main`
 2. **Name your branch** descriptively: `fix/gemini-spinner-short-text`, `feat/add-portuguese`, `docs/update-readme-ko`
 3. **Make your changes** and test on `anthropic.skilljar.com`
-4. **Fill out the PR template** — describe what changed and why
-5. **One PR per concern** — don't mix a bug fix with a new feature
-6. **Screenshots welcome** — especially for UI changes
+4. **Run `npm test`** — all tests must pass
+5. **Fill out the PR template** — describe what changed and why
+6. **One PR per concern** — don't mix a bug fix with a new feature
+7. **Screenshots welcome** — especially for UI changes
+
+### PR Checklist
+
+Before submitting, make sure you can check all of these:
+
+- [ ] I tested my changes on `anthropic.skilljar.com`
+- [ ] `npm test` passes (all 66 tests)
+- [ ] No new console errors in DevTools
+- [ ] My branch is up to date with `main`
+- [ ] For translation PRs: I am a native speaker of the target language
+- [ ] For code PRs: I followed the [Code Guidelines](#code-guidelines) (vanilla JS, no build step, `[SkillBridge]` log prefix)
+
+### Your First PR — Step by Step
+
+New to this project? Here's a concrete walkthrough for fixing a translation:
+
+```bash
+# 1. Fork on GitHub, then clone your fork
+git clone https://github.com/YOUR_USERNAME/skillbridge.git
+cd skillbridge
+
+# 2. Create a branch
+git checkout -b fix/ko-prompt-translation
+
+# 3. Edit the dictionary (e.g., fix a Korean translation)
+#    Open src/data/ko.json in your editor and make your change
+
+# 4. Run tests
+npm install && npm test
+
+# 5. Load in Chrome → test on anthropic.skilljar.com
+
+# 6. Commit and push
+git add src/data/ko.json
+git commit -m "fix(ko): correct translation for 'system prompt'"
+git push origin fix/ko-prompt-translation
+
+# 7. Open a PR on GitHub — done!
+```
 
 ### Review Timeline
 
