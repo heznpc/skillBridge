@@ -681,9 +681,16 @@
 
   function getAttrsString(el) {
     const attrs = [];
-    for (const attr of el.attributes) attrs.push(`${attr.name}="${attr.value}"`);
+    for (const attr of el.attributes) {
+      attrs.push(`${attr.name}="${escapeHtml(attr.value)}"`);
+    }
     return attrs.length ? ' ' + attrs.join(' ') : '';
   }
+
+  // Tags allowed in Gemini block translation output — derived from existing sets + <br>
+  const SAFE_TAGS = new Set(
+    [...INLINE_TAGS, ...NO_TRANSLATE_TAGS, 'BR'].map(t => t.toLowerCase())
+  );
 
   function xmlToHtml(translatedXml, tagInfo) {
     let html = translatedXml;
@@ -696,8 +703,16 @@
         });
       }
     }
+    // Clean up unmatched placeholder tags
     html = html.replace(/<[xc]\d+\s*\/?>/g, '');
     html = html.replace(/<\/[xc]\d+>/g, '');
+    // Strip any HTML tags not in SAFE_TAGS whitelist (prevent XSS from AI output)
+    html = html.replace(/<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>/g, (match, tag) => {
+      if (!SAFE_TAGS.has(tag.toLowerCase())) return '';
+      // Strip event handler attributes (on*) and javascript: URLs from safe tags
+      return match.replace(/\s+on\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]*)/gi, '')
+                  .replace(/\s+href\s*=\s*"javascript:[^"]*"/gi, '');
+    });
     return html;
   }
 

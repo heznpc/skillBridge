@@ -108,8 +108,8 @@ class YouTubeSubtitleManager {
       // Only process messages from YouTube (strict hostname validation)
       let originHost;
       try { originHost = new URL(event.origin).hostname; } catch { return; }
-      if (!originHost.endsWith('youtube.com') &&
-          !originHost.endsWith('youtube-nocookie.com')) return;
+      if (!originHost.endsWith('.youtube.com') && originHost !== 'youtube.com' &&
+          !originHost.endsWith('.youtube-nocookie.com') && originHost !== 'youtube-nocookie.com') return;
 
       let data;
       try {
