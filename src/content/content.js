@@ -542,6 +542,8 @@
     // Collect first, then remove (safe iteration)
     const toRemove = [...body.classList].filter(cls => cls.startsWith('si18n-lang-'));
     for (const cls of toRemove) body.classList.remove(cls);
+    // Set html lang for screen readers and font selection
+    document.documentElement.lang = lang || 'en';
     if (lang && lang !== 'en') {
       body.classList.add(`si18n-lang-${lang}`);
       injectGoogleFonts();
