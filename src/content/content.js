@@ -251,8 +251,12 @@
         const entries = translatedTexts.get(originalText);
         if (!entries) return;
 
-        for (const entry of entries) {
-          if (!entry.el || !entry.el.parentNode) continue;
+        // Prune detached elements to prevent memory leak
+        const live = entries.filter(e => e.el?.parentNode);
+        if (live.length === 0) { translatedTexts.delete(originalText); return; }
+        if (live.length < entries.length) translatedTexts.set(originalText, live);
+
+        for (const entry of live) {
           removeVerifySpinner(entry.el);
           if (wasImproved) {
             safeReplaceText(entry.el, restoreProtectedTerms(finalTranslation));
@@ -421,20 +425,31 @@
       }
 
       if (gtItems.length > 0) {
-        const texts = gtItems.map(i => i.text);
-        const translations = await translator.googleTranslateBatch(texts, targetLang);
+        // Deduplicate texts — group elements by text to avoid redundant API calls
+        const textToItems = new Map();
+        for (const item of gtItems) {
+          if (!textToItems.has(item.text)) textToItems.set(item.text, []);
+          textToItems.get(item.text).push(item);
+        }
+        const uniqueTexts = [...textToItems.keys()];
+        const translations = await translator.googleTranslateBatch(uniqueTexts, targetLang);
 
         if (gtGeneration !== myGeneration) { gtProcessing = false; return; }
 
-        for (let i = 0; i < gtItems.length; i++) {
-          const item = gtItems[i];
+        for (let i = 0; i < uniqueTexts.length; i++) {
           let translated = translations[i];
-          if (translated && translated !== item.text && item.el && item.el.parentNode) {
-            translated = restoreProtectedTerms(translated);
+          if (!translated || translated === uniqueTexts[i]) continue;
+          translated = restoreProtectedTerms(translated);
+          const items = textToItems.get(uniqueTexts[i]);
+          let verifyQueued = false;
+          for (const item of items) {
+            if (!item.el?.parentNode) continue;
             safeReplaceText(item.el, translated);
             trackTranslatedElement(item.text, item.el);
-            const queued = translator.queueGeminiVerify(item.text, translated, targetLang);
-            if (queued) addVerifySpinner(item.el);
+            if (!verifyQueued) {
+              verifyQueued = !!translator.queueGeminiVerify(item.text, translated, targetLang);
+            }
+            if (verifyQueued) addVerifySpinner(item.el);
           }
         }
       }
