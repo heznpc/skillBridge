@@ -591,7 +591,8 @@
     "Plugin": "Plugin",
     "Plugins": "Plugins",
     "skill": "skill",
-    "skills": "skills"
+    "skills": "skills",
+    "Anthropic": "Anthropic"
   },
   "_protected": {
     "Claude Code": [
