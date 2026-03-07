@@ -206,3 +206,51 @@ const HISTORY_LABELS = {
 
 const HISTORY_DB_NAME = 'skillbridge-tutor';
 const HISTORY_STORE = 'conversations';
+
+// ==================== POPUP LABELS (i18n) ====================
+
+const POPUP_LABELS = {
+  targetLang: {
+    'en': 'Target Language', 'ko': '번역 언어', 'ja': '翻訳言語',
+    'zh-CN': '目标语言', 'es': 'Idioma destino', 'fr': 'Langue cible', 'de': 'Zielsprache',
+  },
+  premiumTier: {
+    'en': '\u2605 Premium (Static Dict + AI Verify)',
+    'ko': '\u2605 프리미엄 (정적 사전 + AI 검증)',
+    'ja': '\u2605 プレミアム（静的辞書＋AI検証）',
+    'zh-CN': '\u2605 高级（静态词典＋AI验证）',
+    'es': '\u2605 Premium (Diccionario + IA)',
+    'fr': '\u2605 Premium (Dictionnaire + IA)',
+    'de': '\u2605 Premium (Wörterbuch + KI)',
+  },
+  standardTier: {
+    'en': 'Google Translate + AI Verify',
+    'ko': 'Google 번역 + AI 검증',
+    'ja': 'Google翻訳＋AI検証',
+    'zh-CN': 'Google翻译＋AI验证',
+    'es': 'Google Translate + verificaci\u00f3n IA',
+    'fr': 'Google Traduction + v\u00e9rification IA',
+    'de': 'Google \u00dcbersetzer + KI-Pr\u00fcfung',
+  },
+  openSidebar: {
+    'en': 'Open AI Tutor Sidebar', 'ko': 'AI 튜터 사이드바 열기', 'ja': 'AI\u30c1\u30e5\u30fc\u30bf\u30fc\u3092\u958b\u304f',
+    'zh-CN': '\u6253\u5f00AI\u5bfc\u5e08\u4fa7\u680f', 'es': 'Abrir tutor IA', 'fr': 'Ouvrir le tuteur IA', 'de': 'KI-Tutor \u00f6ffnen',
+  },
+  autoTranslate: {
+    'en': 'Auto-translate on page load', 'ko': '\ud398\uc774\uc9c0 \ub85c\ub4dc \uc2dc \uc790\ub3d9 \ubc88\uc5ed', 'ja': '\u30da\u30fc\u30b8\u8aad\u307f\u8fbc\u307f\u6642\u306b\u81ea\u52d5\u7ffb\u8a33',
+    'zh-CN': '\u9875\u9762\u52a0\u8f7d\u65f6\u81ea\u52a8\u7ffb\u8bd1', 'es': 'Traducci\u00f3n autom\u00e1tica al cargar', 'fr': 'Traduction auto au chargement', 'de': 'Automatisch beim Laden \u00fcbersetzen',
+  },
+  englishOriginal: {
+    'en': 'English (Original)', 'ko': 'English (Original)', 'ja': 'English (Original)',
+    'zh-CN': 'English (Original)', 'es': 'English (Original)', 'fr': 'English (Original)', 'de': 'English (Original)',
+  },
+  refreshPage: {
+    'en': 'Please refresh the Skilljar page', 'ko': 'Skilljar \ud398\uc774\uc9c0\ub97c \uc0c8\ub85c\uace0\uce68\ud574\uc8fc\uc138\uc694', 'ja': 'Skilljar\u30da\u30fc\u30b8\u3092\u66f4\u65b0\u3057\u3066\u304f\u3060\u3055\u3044',
+    'zh-CN': '\u8bf7\u5237\u65b0Skilljar\u9875\u9762', 'es': 'Actualice la p\u00e1gina de Skilljar', 'fr': 'Veuillez actualiser la page Skilljar', 'de': 'Bitte Skilljar-Seite aktualisieren',
+  },
+};
+
+const SKILLBRIDGE_MODEL_LABELS = {
+  GEMINI: 'Gemini 2.0 Flash',
+  CLAUDE: 'Claude Sonnet 4',
+};

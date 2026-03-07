@@ -1,5 +1,6 @@
 /**
  * SkillBridge for Anthropic Academy - Popup Script
+ * Uses shared constants from constants.js (loaded via <script> in popup.html).
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -9,26 +10,39 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('main-content').style.display = isSkilljar ? 'block' : 'none';
   document.getElementById('not-skilljar').style.display = isSkilljar ? 'none' : 'block';
 
+  // Footer from model constants
+  document.getElementById('footer').innerHTML =
+    `Google Translate + ${SKILLBRIDGE_MODEL_LABELS.GEMINI}<br>AI Tutor: ${SKILLBRIDGE_MODEL_LABELS.CLAUDE}`;
+
   if (!isSkilljar) return;
 
-  // Load saved settings
   const stored = await chrome.storage.local.get(['targetLanguage', 'autoTranslate']);
+  const lang = stored.targetLanguage || 'en';
+
+  function t(map) { return map[lang] || map['en']; }
+
+  // Build language select dynamically from constants
   const langSelect = document.getElementById('lang-select');
+  buildLanguageOptions(langSelect, t);
+  langSelect.value = lang;
+
+  // Apply i18n labels
+  document.getElementById('lang-label').textContent = t(POPUP_LABELS.targetLang);
+  const sidebarBtn = document.getElementById('sidebar-btn');
+  sidebarBtn.textContent = t(POPUP_LABELS.openSidebar);
+  document.getElementById('auto-translate-label').textContent = t(POPUP_LABELS.autoTranslate);
+
   const autoTranslate = document.getElementById('auto-translate');
   const status = document.getElementById('status');
 
-  if (stored.targetLanguage) langSelect.value = stored.targetLanguage;
   if (stored.autoTranslate) autoTranslate.checked = true;
 
-  /**
-   * Safe message sender - handles "Receiving end does not exist" gracefully
-   */
   function safeSendMessage(tabId, message, callback) {
     try {
       chrome.tabs.sendMessage(tabId, message, (response) => {
         if (chrome.runtime.lastError) {
           console.warn('[Popup] Message failed:', chrome.runtime.lastError.message);
-          showStatus('Please refresh the Skilljar page first', 'error');
+          showStatus(t(POPUP_LABELS.refreshPage), 'error');
           if (callback) callback(null);
           return;
         }
@@ -36,46 +50,20 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     } catch (e) {
       console.warn('[Popup] sendMessage error:', e);
-      showStatus('Please refresh the Skilljar page first', 'error');
+      showStatus(t(POPUP_LABELS.refreshPage), 'error');
     }
   }
 
-  // Language change
+  // Language change → immediate translate (same behavior as header selector)
   langSelect.addEventListener('change', () => {
-    chrome.storage.local.set({ targetLanguage: langSelect.value });
-    safeSendMessage(tab.id, { action: 'setLanguage', language: langSelect.value });
-  });
-
-  // Translate button
-  document.getElementById('translate-btn').addEventListener('click', () => {
-    const lang = langSelect.value;
-    if (lang === 'en') {
-      safeSendMessage(tab.id, { action: 'restoreOriginal' }, () => {
-        showStatus('Restored to English', 'success');
-      });
-    } else {
-      showStatus('Translating...', '');
-      safeSendMessage(tab.id, { action: 'translatePage', language: lang }, (response) => {
-        if (response?.success) {
-          showStatus('Translation started!', 'success');
-        } else if (response === null) {
-          // Error already shown by safeSendMessage
-        } else {
-          showStatus('Translation error', 'error');
-        }
-      });
-    }
-  });
-
-  // Restore button
-  document.getElementById('restore-btn').addEventListener('click', () => {
-    safeSendMessage(tab.id, { action: 'restoreOriginal' }, () => {
-      showStatus('Restored to original', 'success');
-    });
+    const newLang = langSelect.value;
+    chrome.storage.local.set({ targetLanguage: newLang, autoTranslate: newLang !== 'en' });
+    safeSendMessage(tab.id, { action: 'setLanguage', language: newLang });
+    autoTranslate.checked = newLang !== 'en';
   });
 
   // Sidebar button
-  document.getElementById('sidebar-btn').addEventListener('click', () => {
+  sidebarBtn.addEventListener('click', () => {
     safeSendMessage(tab.id, { action: 'toggleSidebar' });
     window.close();
   });
@@ -91,3 +79,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (type) setTimeout(() => { status.textContent = ''; status.className = 'status'; }, 4000);
   }
 });
+
+function buildLanguageOptions(select, t) {
+  // English (always first, outside groups)
+  const enOpt = document.createElement('option');
+  enOpt.value = 'en';
+  enOpt.textContent = t(POPUP_LABELS.englishOriginal);
+  select.appendChild(enOpt);
+
+  // Premium tier
+  const premiumGroup = document.createElement('optgroup');
+  premiumGroup.label = t(POPUP_LABELS.premiumTier);
+  for (const lang of PREMIUM_LANGUAGES) {
+    const opt = document.createElement('option');
+    opt.value = lang.code;
+    opt.textContent = lang.label;
+    premiumGroup.appendChild(opt);
+  }
+  select.appendChild(premiumGroup);
+
+  // Standard tier (non-premium, non-English)
+  const standardGroup = document.createElement('optgroup');
+  standardGroup.label = t(POPUP_LABELS.standardTier);
+  for (const lang of AVAILABLE_LANGUAGES) {
+    if (lang.code === 'en' || PREMIUM_LANGUAGE_CODES.includes(lang.code)) continue;
+    const opt = document.createElement('option');
+    opt.value = lang.code;
+    opt.textContent = lang.label;
+    standardGroup.appendChild(opt);
+  }
+  select.appendChild(standardGroup);
+}
