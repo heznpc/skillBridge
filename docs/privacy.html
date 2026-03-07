@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — SkillBridge for Anthropic Academy</title>
+  <meta name="description" content="Privacy Policy for the SkillBridge Chrome extension.">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #FAFAF9; color: #1C1917; line-height: 1.7;
+      max-width: 720px; margin: 0 auto; padding: 40px 24px 80px;
+    }
+    h1 { font-size: 28px; margin-bottom: 8px; color: #3D405B; }
+    h2 { font-size: 20px; margin: 32px 0 12px; color: #3D405B; }
+    p, li { font-size: 15px; margin-bottom: 12px; color: #44403C; }
+    ul { padding-left: 24px; }
+    strong { color: #1C1917; }
+    a { color: #E07A5F; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #E7E5E4; font-size: 14px; }
+    th { background: #F5F5F4; font-weight: 600; }
+    code { background: #F5F5F4; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+    .updated { font-size: 14px; color: #78716C; margin-bottom: 32px; }
+    footer { margin-top: 48px; padding-top: 24px; border-top: 1px solid #E7E5E4; font-size: 13px; color: #78716C; }
+  </style>
+</head>
+<body>
+  <h1>Privacy Policy</h1>
+  <p class="updated"><strong>Last updated:</strong> March 7, 2026</p>
+
+  <h2>Overview</h2>
+  <p>SkillBridge is a browser extension that translates <a href="https://anthropic.skilljar.com/">Anthropic Academy</a> course pages into 30+ languages. It is designed with privacy as a core principle.</p>
+
+  <h2>Data Collection</h2>
+  <p><strong>SkillBridge does not collect, store, or transmit any personal data.</strong></p>
+
+  <h2>How Translation Works</h2>
+  <p>All translation processing happens <strong>entirely within your browser</strong>:</p>
+  <ul>
+    <li><strong>Google Translate API</strong> — Page text is sent to Google's public translation endpoint and the translated result is returned directly to your browser. No data passes through any SkillBridge-owned server.</li>
+    <li><strong>Gemini 2.0 Flash (via Puter.js)</strong> — Used for inline HTML tag preservation and quality verification of complex sentences. Requests are routed through <a href="https://docs.puter.com/">Puter.js</a>, a third-party client-side AI gateway. SkillBridge does not operate or control Puter.js servers.</li>
+    <li><strong>Claude Sonnet 4 (via Puter.js)</strong> — Powers the AI Tutor sidebar chatbot. Requests are routed through Puter.js. SkillBridge does not operate or control Puter.js servers.</li>
+    <li><strong>Curated dictionaries</strong> — 570+ hand-curated terms per premium language are stored locally within the extension package.</li>
+    <li><strong>Translation cache (IndexedDB)</strong> — Previously translated text is cached locally in your browser's IndexedDB to improve performance. This data never leaves your device.</li>
+    <li><strong>YouTube technical cookies</strong> — To enable auto-subtitles on YouTube-hosted course videos, the extension may set technical consent cookies (<code>CONSENT</code>, <code>SOCS</code>) required by YouTube's API. No personal browsing data is collected from YouTube.</li>
+  </ul>
+
+  <h2>Permissions</h2>
+  <table>
+    <tr><th>Permission</th><th>Purpose</th></tr>
+    <tr><td><code>storage</code></td><td>Save user preferences (selected language, settings)</td></tr>
+    <tr><td><code>activeTab</code></td><td>Access the current tab to translate page content</td></tr>
+    <tr><td><code>tabs</code></td><td>Detect navigation events for auto-translation</td></tr>
+    <tr><td><code>*.skilljar.com</code></td><td>Translate Anthropic Academy pages</td></tr>
+    <tr><td><code>*.youtube.com</code></td><td>Auto-activate translated subtitles on course videos</td></tr>
+    <tr><td><code>translate.googleapis.com</code></td><td>Send text to Google Translate API</td></tr>
+  </table>
+
+  <h2>Third-Party Services</h2>
+  <table>
+    <tr><th>Service</th><th>Purpose</th><th>Privacy Policy</th></tr>
+    <tr><td>Google Translate API</td><td>Page text translation</td><td><a href="https://policies.google.com/privacy">Google Privacy Policy</a></td></tr>
+    <tr><td>Puter.js</td><td>AI gateway for Gemini and Claude</td><td><a href="https://puter.com/privacy">Puter.js Privacy Policy</a></td></tr>
+  </table>
+
+  <h2>Data Retention</h2>
+  <ul>
+    <li><strong>No server-side storage.</strong> SkillBridge does not operate any servers.</li>
+    <li><strong>Local cache only.</strong> Translation cache is stored in your browser's IndexedDB and can be cleared at any time through your browser settings.</li>
+    <li><strong>No analytics or tracking.</strong> SkillBridge does not use any analytics, telemetry, or tracking tools.</li>
+  </ul>
+
+  <h2>GDPR and International Users</h2>
+  <p>SkillBridge does not collect or process personal data. Because no personal data is stored on any server, there is no data to access, rectify, or delete under the EU General Data Protection Regulation (GDPR) or similar privacy laws. Translation cache stored locally in your browser's IndexedDB can be cleared at any time through your browser settings (e.g., clearing site data for <code>*.skilljar.com</code>).</p>
+
+  <h2>Children's Privacy</h2>
+  <p>SkillBridge does not knowingly collect any information from children under 13.</p>
+
+  <h2>Changes to This Policy</h2>
+  <p>Any changes to this privacy policy will be posted on this page and reflected in the extension update.</p>
+
+  <h2>Contact</h2>
+  <p>For questions about this privacy policy, please open an issue on <a href="https://github.com/heznpc/skillbridge/issues">GitHub</a>.</p>
+
+  <footer>
+    <p>SkillBridge for Anthropic Academy is an unofficial community project. Not affiliated with, endorsed by, or sponsored by Anthropic.</p>
+  </footer>
+</body>
+</html>
