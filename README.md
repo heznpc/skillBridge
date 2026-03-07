@@ -55,9 +55,9 @@ Break the language barrier on Anthropic's free AI courses.
 
 ## The Problem
 
-[Anthropic Academy](https://anthropic.skilljar.com/) is the best place to learn Claude, prompt engineering, and AI safety — for free. SkillBridge makes these courses accessible to everyone, regardless of language.
+[Anthropic Academy](https://anthropic.skilljar.com/) is one of the best free resources for learning Claude, prompt engineering, and AI safety. Millions of developers worldwide want to take these courses — but they're **only available in English**.
 
-But the courses are **only available in English**, and generic translators fall short:
+Generic translators make it worse, not better:
 
 | | Google Translate (page) | SkillBridge |
 |---|---|---|
@@ -67,6 +67,8 @@ But the courses are **only available in English**, and generic translators fall 
 | Video subtitles | ❌ Separate manual toggle | ✅ Auto-translated subtitles |
 | UI preservation | ❌ Breaks checkboxes, progress bars | ✅ All interactive elements preserved |
 | Cost | Free | Free — no API keys needed |
+
+**SkillBridge exists to remove this barrier** — making AI education accessible worldwide.
 
 > **No API keys. No cost. Just install and learn.**
 
@@ -211,14 +213,11 @@ See our full [Privacy Policy](PRIVACY_POLICY.md).
 
 ## Contributing
 
-> [!IMPORTANT]
-> **Star this repo** to get notified of new features and language updates.
-
-**Native speakers wanted!** The single most impactful way to contribute is improving the translation dictionary for your language — no code required, just edit a JSON file. Even fixing one bad translation helps every learner using that language.
+SkillBridge is a community-driven project. The single most impactful way to contribute is improving the translation dictionary for your language — no code required, just edit a JSON file. Even fixing one bad translation helps every learner using that language.
 
 Each language's dictionary is curated to sound natural to native speakers. We align with [Anthropic's official multilingual docs](https://docs.anthropic.com) as a baseline, but community conventions matter too — if Korean developers say "프롬프트" instead of "prompt", that's what we use. Disagree with a term choice? That's exactly the kind of PR we want.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide, [Good First Issues](https://github.com/heznpc/skillbridge/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) to get started, and [ROADMAP.md](docs/ROADMAP.md) for where this project is heading.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide and [Good First Issues](https://github.com/heznpc/skillbridge/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) to get started.
 
 ## FAQ
 
@@ -252,6 +251,15 @@ Open an <a href="https://github.com/heznpc/skillbridge/issues">issue</a> with th
 No. SkillBridge is an unofficial community project. It is not affiliated with, endorsed by, or sponsored by Anthropic. "Anthropic", "Claude", and "Skilljar" are trademarks of their respective owners.
 </details>
 
+## Roadmap
+
+- Additional curated language dictionaries (community-driven)
+- Firefox and Edge Add-on support
+- Translation quality analytics and community review
+- Multi-LMS platform support beyond Skilljar
+
+See [ROADMAP.md](docs/ROADMAP.md) for the full plan.
+
 ## Disclaimer
 
 SkillBridge is a personal translation tool, similar to your browser's built-in translate feature. Text is translated on-the-fly in your browser — never stored or redistributed.
@@ -261,3 +269,7 @@ SkillBridge is a personal translation tool, similar to your browser's built-in t
 ## License
 
 [MIT](LICENSE)
+
+---
+
+If you find SkillBridge useful, consider [starring the repo](https://github.com/heznpc/skillbridge/stargazers). It helps more learners discover the project.
