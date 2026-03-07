@@ -113,7 +113,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       return fetch(url)
         .then(resp => resp.ok ? resp.json() : null)
         .then(data => parseGTResponse(data, text))
-        .catch(() => text);
+        .catch(err => {
+          console.warn('[SkillBridge] GT batch item failed:', err.message);
+          return text;
+        });
     }))
     .then(results => sendResponse({ ok: true, translations: results }))
     .catch(err => sendResponse({ ok: false, error: err.message }));
