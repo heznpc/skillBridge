@@ -45,6 +45,10 @@ All translation processing happens **entirely within your browser**:
 - **Local cache only.** Translation cache is stored in your browser's IndexedDB and can be cleared at any time through your browser settings.
 - **No analytics or tracking.** SkillBridge does not use any analytics, telemetry, or tracking tools.
 
+## GDPR and International Users
+
+SkillBridge does not collect or process personal data. Because no personal data is stored on any server, there is no data to access, rectify, or delete under the EU General Data Protection Regulation (GDPR) or similar privacy laws. Translation cache stored locally in your browser's IndexedDB can be cleared at any time through your browser settings (e.g., clearing site data for `*.skilljar.com`).
+
 ## Children's Privacy
 
 SkillBridge does not knowingly collect any information from children under 13.

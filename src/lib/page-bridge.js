@@ -22,7 +22,7 @@
   let puterLoadPromise = null;
 
   function log(...args) {
-    console.log('[SkillBridge PageBridge]', ...args);
+    console.warn('[SkillBridge PageBridge]', ...args);
   }
 
   function loadPuter() {
@@ -37,7 +37,6 @@
         reject(new Error('No local Puter.js URL provided'));
         return;
       }
-      log('Loading Puter.js from extension bundle...');
       const script = document.createElement('script');
       script.src = _puterUrl;
       script.onload = () => {
@@ -47,7 +46,6 @@
           if (typeof puter !== 'undefined' && puter.ai) {
             clearInterval(interval);
             puterReady = true;
-            log('Puter.js loaded and ready');
             resolve();
           } else if (checks > 50) {
             clearInterval(interval);

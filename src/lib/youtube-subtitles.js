@@ -124,7 +124,6 @@ class YouTubeSubtitleManager {
       if (data.event === 'onReady' ||
           data.event === 'initialDelivery' ||
           (data.event === 'onStateChange' && data.info === 1)) {
-        console.log(`[SkillBridge] YouTube event: ${data.event}${data.info !== undefined ? ' info=' + data.info : ''}`);
         // Find which iframe this came from and send caption commands
         this._onPlayerEvent(event.source);
       }
@@ -179,7 +178,6 @@ class YouTubeSubtitleManager {
 
       const newSrc = url.toString();
       if (iframe.src !== newSrc) {
-        console.log(`[SkillBridge] Updating iframe src (lang=${this.targetLang || 'en'})`);
         iframe.src = newSrc;
 
         // Register + send commands with aggressive retries after load
@@ -262,7 +260,6 @@ class YouTubeSubtitleManager {
             func: 'showCaptions'
           }), '*');
 
-          console.log(`[SkillBridge] Caption commands sent → ${ytLang}`);
         } catch (e) {
           // Silent
         }

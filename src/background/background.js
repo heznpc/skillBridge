@@ -74,7 +74,6 @@ chrome.runtime.onInstalled.addListener((details) => {
       targetLanguage: 'en',
       autoTranslate: false,
     });
-    console.log('[SkillBridge] Extension installed');
   }
 });
 
@@ -100,10 +99,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       }
     }
     fetchOpts.headers = headers;
-    console.log(`[SkillBridge BG] FETCH: ${msg.method || 'GET'} ${msg.url.substring(0, 80)}`);
     fetch(msg.url, fetchOpts)
       .then(resp => {
-        console.log(`[SkillBridge BG] ${resp.status} ${msg.url.substring(0, 60)}`);
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         return resp.text();
       })

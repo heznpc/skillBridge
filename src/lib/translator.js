@@ -32,7 +32,6 @@ class SkilljarTranslator {
       await this._openDB();
       this._setupMessageListener();
       await this._injectPageBridge();
-      console.log('[SkillBridge] Translator initialized (v3.0 two-phase)');
       return true;
     } catch (err) {
       console.error('[SkillBridge] Init failed:', err);
@@ -58,7 +57,6 @@ class SkilljarTranslator {
       const url = chrome.runtime.getURL(`src/data/${lang}.json`);
       const resp = await fetch(url);
       if (!resp.ok) {
-        console.log(`[SkillBridge] No static translations for ${lang}`);
         this.staticDict = {};
         return;
       }
@@ -84,7 +82,6 @@ class SkilljarTranslator {
       for (const [key, value] of Object.entries(flat)) {
         this._lowerDict[key.toLowerCase()] = value;
       }
-      console.log(`[SkillBridge] Loaded ${Object.keys(flat).length} static translations for ${lang}`);
     } catch (err) {
       console.warn('[SkillBridge] Failed to load static translations:', err);
       this.staticDict = {};
@@ -363,7 +360,6 @@ RULES:
       // If Gemini says "OK", the Google translation is good — cache it
       if (trimResult === 'OK' || trimResult === 'ok' || trimResult === '"OK"') {
         await this._cacheTranslation(original, googleTranslation, targetLang);
-        console.log(`[SkillBridge] Gemini verified OK: "${original.substring(0, 40)}"...`);
         this._notifyUpdate(original, googleTranslation, targetLang, false);
         return;
       }
@@ -376,8 +372,6 @@ RULES:
         this._notifyUpdate(original, googleTranslation, targetLang, false);
         return;
       }
-
-      console.log(`[SkillBridge] Gemini improved: "${original.substring(0, 40)}..." → "${trimResult.substring(0, 40)}..."`);
 
       // Cache the improved translation
       await this._cacheTranslation(original, trimResult, targetLang);
@@ -525,7 +519,6 @@ RULES:
       if (!data || !data.__skillbridge__) return;
 
       if (data.type === 'BRIDGE_READY') {
-        console.log('[SkillBridge] Page bridge ready');
         this.isReady = true;
         // Process any pending verify queue now that bridge is ready
         if (this._verifyQueue.length > 0) {
@@ -580,7 +573,6 @@ RULES:
       script.dataset.nonce = this._bridgeNonce;
       script.dataset.puterUrl = chrome.runtime.getURL('src/bridge/puter.js');
       script.onload = () => {
-        console.log('[SkillBridge] page-bridge.js injected into page');
         script.remove();
       };
       script.onerror = () => {
