@@ -179,6 +179,10 @@
 
       case 'setLanguage': {
         const newLang = request.language;
+        if (newLang !== 'en' && !SUPPORTED_LANGUAGE_MAP[newLang]) {
+          sendResponse({ success: false, error: 'Unsupported language' });
+          return false;
+        }
         switchLanguage(newLang, {
           onDone: () => sendResponse({ success: true }),
         }).catch(err => {
