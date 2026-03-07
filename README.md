@@ -8,7 +8,7 @@
 
 <div align="center">
 
-<img src="assets/icons/icon128.png" alt="SkillBridge" width="80" />
+<img src="assets/icons/icon128.png" alt="SkillBridge" width="90" />
 
 # SkillBridge for Anthropic Academy
 
@@ -16,7 +16,9 @@
 [![Chrome MV3](https://img.shields.io/badge/Chrome-Extension_MV3-blue.svg)](https://developer.chrome.com/docs/extensions/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-**Break the language barrier on Anthropic's free AI courses.**
+**Translate Anthropic Academy into your language — instantly.**
+
+Break the language barrier on Anthropic's free AI courses.
 
 [Install from Chrome Web Store](#installation) · [Report Bug](../../issues) · [Request Feature](../../issues)
 
@@ -34,7 +36,7 @@
 
 ---
 
-## Why SkillBridge?
+## The Problem
 
 [Anthropic Academy](https://anthropic.skilljar.com/) offers world-class courses on Claude, prompt engineering, and AI safety — **but only in English.**
 
@@ -50,6 +52,40 @@ You might think: *"I'll just use Google Translate."* Here's why that falls short
 | Cost | Free | Free — no API keys needed |
 
 > **No API keys. No cost. Just install and learn.**
+
+## Quick Start
+
+1. Install the extension ([see below](#installation))
+2. Visit [Anthropic Academy](https://anthropic.skilljar.com/)
+3. SkillBridge translates the entire page automatically
+
+That's it.
+
+## Features
+
+**🌐 Full Page Translation** — Every text element on the page is translated, with AI-specific terms handled correctly via curated dictionaries. Progress checkboxes, icons, and navigation all stay intact.
+
+<div align="center">
+<img src="assets/screenshots/01-lesson-translated.png" alt="Lesson page with curriculum fully translated" width="720" />
+<br/>
+<em>Course lesson with full curriculum translated — UI elements preserved.</em>
+</div>
+
+**🤖 AI Tutor** — A sidebar chatbot powered by **Claude Sonnet 4** via [Puter.js](https://docs.puter.com/). It knows which course and lesson you're on. Ask questions in your language, get streaming answers.
+
+<!-- TODO: ai-tutor.png 추가 후 주석 해제
+<div align="center">
+<img src="assets/screenshots/ai-tutor.png" alt="AI Tutor sidebar answering a question in Korean" width="720" />
+<br/>
+<em>Ask the AI Tutor about the lesson in your language — powered by Claude Sonnet 4.</em>
+</div>
+-->
+
+**🎬 Auto-Subtitles** — Course videos automatically activate translated subtitles when you play them — no manual toggle needed.
+
+**🔍 Smart Detection** — Detects your browser language on first visit and offers to translate. No setup needed.
+
+**✨ Faithful UI** — Progress checkboxes, icons, and navigation all stay intact. CJK fonts are matched to the original design.
 
 ### Protected Terms in Action
 
@@ -72,40 +108,6 @@ SkillBridge's **Protected Terms** engine auto-corrects these errors after transl
 <br/>
 <em>Course catalog translated to Korean — brand names and AI terms stay accurate.</em>
 </div>
-
-## See It in Action
-
-### Full Page Translation
-
-Every text element on the page is translated, with AI-specific terminology handled correctly via curated dictionaries. Progress checkboxes, icons, and navigation all stay intact.
-
-<div align="center">
-<img src="assets/screenshots/01-lesson-translated.png" alt="Lesson page with curriculum fully translated" width="720" />
-<br/>
-<em>Course lesson with full curriculum translated — UI elements preserved.</em>
-</div>
-
-### AI Tutor
-
-A sidebar chatbot powered by **Claude Sonnet 4** via [Puter.js](https://docs.puter.com/). It knows which course and lesson you're on. Ask questions in your language, get streaming answers.
-
-<!-- TODO: ai-tutor.png 추가 후 주석 해제
-<div align="center">
-<img src="assets/screenshots/ai-tutor.png" alt="AI Tutor sidebar answering a question in Korean" width="720" />
-<br/>
-<em>Ask the AI Tutor about the lesson in your language — powered by Claude Sonnet 4.</em>
-</div>
--->
-
-### Auto-Subtitles
-
-Course videos automatically activate translated subtitles when you play them — no manual toggle needed.
-
-<!-- <div align="center">
-<img src="assets/screenshots/subtitles.png" alt="YouTube video with auto-translated Korean subtitles" width="720" />
-<br/>
-<em>Video subtitles auto-translated to your language.</em>
-</div> -->
 
 ## How It Works
 
@@ -131,18 +133,6 @@ Page text
 **Protected Terms** — Each language defines known GT mistakes (e.g., GT translates "Claude" → "클로드" in Korean). After GT runs, the extension auto-corrects these back to the proper form. Brand names, technical terms, and product hierarchy stay in English — matching [Anthropic's official multilingual docs](https://docs.anthropic.com).
 
 All translation happens **in your browser** — nothing is stored or sent to third-party servers.
-
-## Features
-
-**🌐 Full Page Translation** — Every text element on the page is translated, with AI-specific terms handled correctly via curated dictionaries.
-
-**🤖 AI Tutor** — A sidebar chatbot powered by Claude Sonnet 4 via [Puter.js](https://docs.puter.com/). It knows which course and lesson you're on. Ask questions in your language, get streaming answers.
-
-**🎬 Auto-Subtitles** — Course videos automatically activate translated subtitles when you play them.
-
-**🔍 Smart Detection** — Detects your browser language on first visit and offers to translate. No setup needed.
-
-**✨ Faithful UI** — Progress checkboxes, icons, and navigation all stay intact. CJK fonts are matched to the original design.
 
 ## Supported Languages
 
