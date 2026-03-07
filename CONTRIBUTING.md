@@ -197,9 +197,10 @@ You don't need to translate everything at once. **Even 100 entries is a great st
 
 Standard languages use Google Translate + Gemini verification (no dictionary). To add one:
 1. Add the language code and name to `AVAILABLE_LANGUAGES` in `src/lib/constants.js`
-2. Add it to the Standard `<optgroup>` in `src/popup/popup.html`
-3. Add the language name to `_YT_LANG_NAMES` in `src/lib/constants.js`
-4. Test that Google Translate returns reasonable results for the content
+2. Add the language name to `_YT_LANG_NAMES` in `src/lib/constants.js`
+3. Test that Google Translate returns reasonable results for the content
+
+> The popup language selector is built dynamically from `constants.js` — no HTML changes needed.
 
 ### 2. Code Contributions
 
@@ -214,7 +215,7 @@ Static Dictionary → IndexedDB Cache → Google Translate + Gemini Verification
 Areas that need work:
 - **Gemini trigger heuristics** — the `queueGeminiVerify()` function decides which texts get AI-verified. Thresholds are in `SKILLBRIDGE_THRESHOLDS` (constants.js)
 - **Batch processing** — the Google Translate queue processes in batches of `GT_BATCH_SIZE`. Performance tuning is welcome
-- **Request deduplication** — duplicate page text (e.g., repeated "Learn More" buttons) currently sends redundant GT requests
+- **Cache eviction strategy** — IndexedDB cache entries expire after 30 days; smarter invalidation (e.g., per-dictionary-version) could improve freshness
 
 #### AI Tutor (Claude Sonnet 4)
 
