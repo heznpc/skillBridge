@@ -172,8 +172,8 @@ class SkilljarTranslator {
         req.onsuccess = () => {
           const entry = req.result;
           if (!entry?.translation) { resolve(null); return; }
-          // 30-day TTL — discard stale cache entries
-          if (entry.timestamp && Date.now() - entry.timestamp > 30 * 24 * 60 * 60 * 1000) {
+          // TTL — discard stale cache entries
+          if (entry.timestamp && Date.now() - entry.timestamp > SKILLBRIDGE_THRESHOLDS.CACHE_TTL_MS) {
             resolve(null); return;
           }
           resolve(entry.translation);

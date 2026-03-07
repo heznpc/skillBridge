@@ -783,8 +783,8 @@ RULES:
     domObserver.observe(document.body, { childList: true, subtree: true });
   }
 
-  // Cleanup on page unload
-  window.addEventListener('unload', () => {
+  // Cleanup on page hide (pagehide is preferred over unload — doesn't block bfcache)
+  window.addEventListener('pagehide', () => {
     domObserver?.disconnect();
     clearTimeout(translateTimeout);
     pendingNodes = [];
@@ -793,7 +793,7 @@ RULES:
   let translateTimeout;
   let pendingNodes = [];
   function debounceTranslateNew(node) {
-    if (pendingNodes.length >= 500) return; // prevent unbounded growth
+    if (pendingNodes.length >= SKILLBRIDGE_THRESHOLDS.PENDING_NODES_MAX) return;
     pendingNodes.push(node);
     clearTimeout(translateTimeout);
     translateTimeout = setTimeout(() => {
