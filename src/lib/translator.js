@@ -171,7 +171,9 @@ class SkilljarTranslator {
         const req = store.get(id);
         req.onsuccess = () => resolve(req.result?.translation || null);
         req.onerror = () => resolve(null);
-      } catch {
+      } catch (e) {
+        console.warn('[SkillBridge] Cache read failed:', e);
+        this._db = null;
         resolve(null);
       }
     });
@@ -354,10 +356,7 @@ RULES:
       if (trimResult === 'OK' || trimResult === 'ok' || trimResult === '"OK"') {
         await this._cacheTranslation(original, googleTranslation, targetLang);
         console.log(`[SkillBridge] Gemini verified OK: "${original.substring(0, 40)}"...`);
-        // Notify progress (no text change)
-        for (const cb of this._onUpdateCallbacks) {
-          try { cb(original, googleTranslation, targetLang, false); } catch (e) {}
-        }
+        this._notifyUpdate(original, googleTranslation, targetLang, false);
         return;
       }
 
@@ -366,6 +365,7 @@ RULES:
       if (trimResult.length > original.length * 5 || trimResult.includes('ORIGINAL') || trimResult.includes('GOOGLE TRANSLATE')) {
         // Likely returned the prompt format, ignore
         await this._cacheTranslation(original, googleTranslation, targetLang);
+        this._notifyUpdate(original, googleTranslation, targetLang, false);
         return;
       }
 
@@ -374,20 +374,23 @@ RULES:
       // Cache the improved translation
       await this._cacheTranslation(original, trimResult, targetLang);
 
-      // Notify content script to update DOM
-      for (const cb of this._onUpdateCallbacks) {
-        try {
-          cb(original, trimResult, targetLang, true);
-        } catch (e) {
-          console.warn('[SkillBridge] Update callback error:', e);
-        }
-      }
+      this._notifyUpdate(original, trimResult, targetLang, true);
     } catch (err) {
       console.warn(`[SkillBridge] Gemini verify failed for "${original.substring(0, 30)}...":`, err.message);
       await this._cacheTranslation(original, googleTranslation, targetLang);
-      // Notify progress even on error
-      for (const cb of this._onUpdateCallbacks) {
-        try { cb(original, googleTranslation, targetLang, false); } catch (e) {}
+      this._notifyUpdate(original, googleTranslation, targetLang, false);
+    }
+  }
+
+  /**
+   * Notify all registered update callbacks.
+   */
+  _notifyUpdate(original, translation, targetLang, wasImproved) {
+    for (const cb of this._onUpdateCallbacks) {
+      try {
+        cb(original, translation, targetLang, wasImproved);
+      } catch (e) {
+        console.warn('[SkillBridge] Update callback error:', e);
       }
     }
   }
