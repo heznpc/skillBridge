@@ -12,6 +12,7 @@
   let historyPanelOpen = false;
   let scrollRAF = null;
   let savedChatHTML = null;
+  let isSending = false;
 
   // ============================================================
   // FLOATING BUTTON
@@ -134,10 +135,12 @@
   }
 
   async function sendChatMessage() {
+    if (isSending) return;
     const input = document.getElementById('si18n-chat-input');
     const messages = document.getElementById('si18n-chat-messages');
     const text = input.value.trim();
     if (!text) return;
+    isSending = true;
 
     const quoteEl = document.querySelector('.si18n-chat-input-wrap .si18n-chat-quote');
     const quotedText = quoteEl?.textContent?.replace('\u00d7', '').trim() || '';
@@ -176,6 +179,8 @@
       : text;
     const context = sb.getPageContext();
     const bubble = document.querySelector(`#${loadingId} .si18n-chat-bubble`);
+    const sendBtn = document.getElementById('si18n-chat-send');
+    if (sendBtn) sendBtn.disabled = true;
 
     try {
       let started = false;
@@ -203,6 +208,9 @@
         bubble.innerHTML = sb.t(CHAT_ERROR_LABELS);
         bubble.classList.remove('si18n-streaming-cursor');
       }
+    } finally {
+      isSending = false;
+      if (sendBtn) sendBtn.disabled = false;
     }
     scrollToBottom(messages);
   }
