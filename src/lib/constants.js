@@ -21,6 +21,8 @@ const SKILLBRIDGE_THRESHOLDS = {
   GT_BATCH_SIZE: 10,
   GEMINI_BATCH_SIZE: 3,
   VERIFY_QUEUE_MAX: 200,
+  PENDING_NODES_MAX: 500,
+  CACHE_TTL_MS: 30 * 24 * 60 * 60 * 1000, // 30 days
 };
 
 // ==================== DELAYS (ms) ====================
