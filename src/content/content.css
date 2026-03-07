@@ -708,7 +708,7 @@ body.si18n-lang-ko,
 
 .si18n-ask-tutor-btn {
   position: absolute;
-  z-index: 2147483646;
+  z-index: 100001;
   display: flex;
   align-items: center;
   gap: 5px;
