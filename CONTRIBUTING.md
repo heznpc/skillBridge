@@ -79,19 +79,25 @@ skillbridge/
 │   ├── en/ ko/ ja/ zh_CN/
 ├── src/
 │   ├── content/
-│   │   ├── content.js         # Main content script — DOM translation + AI Tutor sidebar
+│   │   ├── content.js         # Main content script — DOM translation, init, GT queue
+│   │   ├── header-controls.js # Header language selector, dark mode, welcome banner
+│   │   ├── sidebar-chat.js    # AI Tutor sidebar, chat, conversation history
+│   │   ├── text-selection.js  # Text selection "Ask Tutor" button
 │   │   └── content.css        # All styles (sidebar, transcript panel, fonts)
 │   ├── background/
 │   │   └── background.js      # Service worker — Google Translate proxy + URL fetcher
+│   ├── bridge/
+│   │   └── puter.js           # Bundled Puter.js library (MV3 compliant)
 │   ├── popup/
 │   │   ├── popup.html         # Extension popup UI
 │   │   └── popup.js           # Popup logic
-│   └── lib/
-│       ├── translator.js      # Translation engine (Static → Cache → GT + Gemini)
-│       ├── youtube-subtitles.js  # YouTube auto-subtitle + transcript panel
-│       └── page-bridge.js     # Puter.js main-world bridge (for AI Tutor)
+│   ├── lib/
+│   │   ├── constants.js       # Shared constants, thresholds, i18n labels
+│   │   ├── translator.js      # Translation engine (Static → Cache → GT + Gemini)
+│   │   ├── youtube-subtitles.js  # YouTube auto-subtitle enabler
+│   │   └── page-bridge.js     # Puter.js main-world bridge (for AI Tutor)
 │   └── data/                  # Static JSON translation dictionaries
-│       ├── ko.json            # English → Korean (559 entries)
+│       ├── ko.json            # English → Korean (570+ entries)
 │       ├── ja.json            # English → Japanese
 │       ├── zh-CN.json         # English → Chinese Simplified
 │       ├── es.json            # English → Spanish
@@ -118,7 +124,7 @@ skillbridge/
 Each language has a JSON file (`src/data/{lang}.json`) organized into sections:
 
 ```
-src/data/ko.json (Korean example — 590+ entries)
+src/data/ko.json (Korean example — 570+ entries)
 ├── _meta          → version info (don't edit)
 ├── ui             → navigation: "Next", "Previous", "Courses"
 ├── catalog        → course titles and descriptions
@@ -181,7 +187,7 @@ Want to promote a standard language (GT-only) to premium? Create `src/data/{lang
 1. Copy `src/data/ko.json` as a template
 2. Translate all entries into your language
 3. Adapt the `_protected` section with GT mistakes specific to your language
-4. Add the language code to `premiumLanguages` in `src/lib/translator.js`
+4. Add the language code to `PREMIUM_LANGUAGES` in `src/lib/constants.js`
 5. Test on actual Anthropic Academy pages
 6. Submit a PR — native speaker review is required
 
@@ -190,36 +196,36 @@ You don't need to translate everything at once. **Even 100 entries is a great st
 #### e) Add a New Standard Language
 
 Standard languages use Google Translate + Gemini verification (no dictionary). To add one:
-1. Add the language code and name to `AVAILABLE_LANGUAGES` in `src/content/content.js`
+1. Add the language code and name to `AVAILABLE_LANGUAGES` in `src/lib/constants.js`
 2. Add it to the Standard `<optgroup>` in `src/popup/popup.html`
-3. Add the language mapping in `src/lib/youtube-subtitles.js` `_ytLangName()`
+3. Add the language name to `_YT_LANG_NAMES` in `src/lib/constants.js`
 4. Test that Google Translate returns reasonable results for the content
 
 ### 2. Code Contributions
 
 #### Translation Engine
 
-The 3-tier translation pipeline lives in `src/lib/translator.js`:
+The 3-tier translation pipeline lives in `src/lib/translator.js`, with thresholds configured in `src/lib/constants.js`:
 
 ```
 Static Dictionary → IndexedDB Cache → Google Translate + Gemini Verification
 ```
 
 Areas that need work:
-- **Gemini trigger heuristics** — the `queueGeminiVerify()` function decides which texts get AI-verified. The current heuristics (length > 80 chars, alpha ratio > 0.5, etc.) can be improved
-- **Batch processing** — the Google Translate queue processes in batches of 10. Performance tuning is welcome
-- **Cache invalidation** — currently cache entries never expire. A TTL strategy would help
+- **Gemini trigger heuristics** — the `queueGeminiVerify()` function decides which texts get AI-verified. Thresholds are in `SKILLBRIDGE_THRESHOLDS` (constants.js)
+- **Batch processing** — the Google Translate queue processes in batches of `GT_BATCH_SIZE`. Performance tuning is welcome
+- **Request deduplication** — duplicate page text (e.g., repeated "Learn More" buttons) currently sends redundant GT requests
 
 #### AI Tutor (Claude Sonnet 4)
 
-The tutor lives in `src/content/content.js` (sidebar creation) and uses `src/lib/page-bridge.js` to communicate with Puter.js in the main world.
+The tutor lives in `src/content/sidebar-chat.js` (sidebar UI, chat, conversation history) and uses `src/lib/page-bridge.js` to communicate with Puter.js in the main world. Text selection quoting is in `src/content/text-selection.js`.
 
 #### YouTube Features
 
 `src/lib/youtube-subtitles.js` handles:
 - Auto-enabling subtitles on embedded YouTube videos
-- Fetching captions via YouTube's timedtext API
-- Translating and displaying a transcript panel below videos
+- Setting caption language via YouTube's postMessage API
+- MutationObserver for lazily-loaded iframes
 
 ### 3. Documentation
 
@@ -288,7 +294,7 @@ Result cached in IndexedDB for future visits
 ### Key Design Decisions
 
 - **Why Google Translate + Gemini instead of just one?** Google Translate is fast and free. Gemini catches domain-specific errors (e.g., translating "Claude" as a person's name). Two-tier gives us speed AND quality.
-- **Why static dictionaries?** For the 559 most critical AI/ML terms, human-curated translations are simply better than any MT engine. These are the terms that matter most for comprehension.
+- **Why static dictionaries?** For the 570+ most critical AI/ML terms, human-curated translations are simply better than any MT engine. These are the terms that matter most for comprehension.
 - **Why Puter.js for the AI Tutor?** It provides free access to Claude Sonnet 4 without requiring users to have API keys. The "user-pays" model means the extension itself costs nothing.
 - **Why no build step?** Lower barrier to entry for contributors. Clone, load, done.
 
