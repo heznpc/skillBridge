@@ -591,7 +591,8 @@
     "Plugin": "Plugin",
     "Plugins": "Plugins",
     "skill": "skill",
-    "skills": "skills"
+    "skills": "skills",
+    "Anthropic": "Anthropic"
   },
   "_protected": {
     "Claude Code": [
@@ -602,8 +603,7 @@
       "克劳德"
     ],
     "Anthropic": [
-      "人类学",
-      "安特罗皮克"
+      "人类学", "安特罗皮克", "人为的", "人类的", "人为", "拟人"
     ],
     "Anthropic Academy": [
       "Anthropic Academy"

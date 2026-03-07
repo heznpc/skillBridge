@@ -615,13 +615,14 @@
     "Plugin": "Plugin",
     "Plugins": "Plugins",
     "skill": "skill",
-    "skills": "skills"
+    "skills": "skills",
+    "Anthropic": "Anthropic"
   },
   "_protected": {
     "Claude Code": ["클로드 코드", "클로드 Code", "클로우드 코드", "클라우드 코드"],
     "Claude": ["클로드", "클로우드", "클라우드"],
     "Anthropic Academy": ["앤스로픽 아카데미", "앤트로픽 아카데미", "안트로픽 아카데미", "인류학적 아카데미"],
-    "Anthropic": ["앤스로픽", "앤트로픽", "안트로픽", "인류학적"],
+    "Anthropic": ["앤스로픽", "앤트로픽", "안트로픽", "인류학적", "인간적인", "인류", "인간적"],
     "Enterprise > Personal > Project > Plugins": ["기업 > 개인 > 프로젝트 > 플러그인", "엔터프라이즈 > 개인 > 프로젝트 > 플러그인"],
     "Enterprise → Personal → Project → Plugins": ["기업 → 개인 → 프로젝트 → 플러그인", "엔터프라이즈 → 개인 → 프로젝트 → 플러그인"],
     "Enterprise": ["기업"],
