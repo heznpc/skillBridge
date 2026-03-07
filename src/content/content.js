@@ -9,6 +9,10 @@
 (function () {
   'use strict';
 
+  // Prevent duplicate initialization (content scripts can fire multiple times on SPA navigation)
+  if (window.__skillbridge_initialized__) return;
+  window.__skillbridge_initialized__ = true;
+
   // Target ALL visible text elements — including Skilljar-specific
   const TRANSLATABLE_SELECTOR = [
     'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
