@@ -8,17 +8,21 @@
 
 <div align="center">
 
-<img src="../../assets/icons/icon128.png" alt="SkillBridge" width="80" />
+<img src="../../assets/icons/icon128.png" alt="SkillBridge" width="90" />
 
 # SkillBridge for Anthropic Academy
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](../../LICENSE)
 [![Chrome MV3](https://img.shields.io/badge/Chrome-Extension_MV3-blue.svg)](https://developer.chrome.com/docs/extensions/)
+[![GitHub stars](https://img.shields.io/github/stars/heznpc/skillbridge?style=social)](https://github.com/heznpc/skillbridge/stargazers)
+[![GitHub contributors](https://img.shields.io/github/contributors/heznpc/skillbridge)](https://github.com/heznpc/skillbridge/graphs/contributors)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](../../CONTRIBUTING.md)
 
-**Anthropicの無料AIコースの言語の壁を取り払う。**
+**Anthropic Academy をあなたの言語に翻訳 — 即座に。**
 
-[インストール](#インストール) · [バグ報告](../../issues) · [機能リクエスト](../../issues)
+Anthropic の無料 AI コースの言語の壁を取り払う。
+
+[インストール](#インストール) · [バグ報告](https://github.com/heznpc/skillbridge/issues) · [機能リクエスト](https://github.com/heznpc/skillbridge/issues)
 
 </div>
 
@@ -28,144 +32,84 @@
 
 <img src="../../assets/screenshots/skillbridge-demo.gif" alt="SkillBridge デモ — Anthropic Academy をリアルタイムで翻訳" width="720" />
 
-*SkillBridgeをインストールし、Anthropic Academyにアクセスするだけで、ページ全体が即座に翻訳されます。*
+*SkillBridge をインストールし、Anthropic Academy にアクセスするだけで、ページ全体が即座に翻訳されます。*
 
 </div>
 
 ---
 
-## SkillBridge を選ぶ理由
+## 課題
 
-[Anthropic Academy](https://anthropic.skilljar.com/)は、Claude、プロンプトエンジニアリング、AI安全性に関する最高水準の無料トレーニングを提供しています。**しかし英語のみです。**
+[Anthropic Academy](https://anthropic.skilljar.com/) は Claude、プロンプトエンジニアリング、AI 安全性を学ぶための最高の無料教育プラットフォームです。SkillBridge は言語に関係なく、すべての人がこれらのコースにアクセスできるようにします。
 
-*「Google 翻訳を使えばいいのでは?」*と思うかもしれませんが、ここが限界です:
+しかしコースは**英語のみ**で提供されており、汎用翻訳ツールでは不十分です:
 
 | | Google 翻訳 (ページ) | SkillBridge |
 |---|---|---|
-| AI 用語 | ❌ "Prompt" → "プロンプト" (誤り) | ✅ "Prompt" → "プロンプト" (正確) |
-| 技術的正確性 | ❌ 汎用機械翻訳 | ✅ 言語ごと 560+ 手動キュレーション用語 + 保護用語自動修正 + Gemini AI 検証 |
-| コンテキスト認識ヘルプ | ❌ なし | ✅ AI チューター (Claude Sonnet 4) がレッスンについての質問に回答 |
-| 動画字幕 | ❌ 別途手動トグル | ✅ 選択した言語で自動翻訳字幕 |
-| UI 保存 | ❌ チェックボックス、プログレスバーが破損 | ✅ すべての対話要素を保存 |
+| AI 用語 | ❌ "Prompt" → "迅速な" (誤り) | ✅ "Prompt" → "プロンプト" (正確) |
+| 技術的正確性 | ❌ 汎用機械翻訳 | ✅ 570+ キュレーション用語 + AI 検証 |
+| コンテキスト認識ヘルプ | ❌ なし | ✅ AI チューターがレッスンについての質問に回答 |
+| 動画字幕 | ❌ 別途手動トグル | ✅ 自動翻訳字幕 |
+| UI 保持 | ❌ チェックボックス、プログレスバーが破損 | ✅ すべての対話要素を保持 |
 | コスト | 無料 | 無料 — API キー不要 |
 
 > **API キー不要。コスト無し。インストールして学習を始めましょう。**
 
-### 保護用語の実際の例
+## クイックスタート
 
-汎用ページ翻訳ツールはしばしば**ブランド名と技術用語を誤訳します**。たとえば、Google 翻訳は「Anthropic Courses」を「人道的コース」と翻訳します — 完全に間違っています。
+1. 拡張機能をインストール ([下記参照](#インストール))
+2. [Anthropic Academy](https://anthropic.skilljar.com/) にアクセス
+3. SkillBridge がページ全体を自動的に翻訳
 
-SkillBridge の**保護用語**エンジンは翻訳後にこれらのエラーを自動修正し、「Anthropic」「Claude」などのブランド名と技術用語を正確に保持します:
+それだけです。
 
-<div align="center">
+## 機能
 
-| 前 (Google 翻訳のみ) | 後 (SkillBridge 保護用語) |
-|:---:|:---:|
-| ❌ 人道的コース | ✅ Anthropic コース |
-| ❌ クロード | ✅ Claude |
-| ❌ 迅速な工学 | ✅ プロンプト エンジニアリング |
+### 🌐 フルページ翻訳
 
-</div>
-
-<div align="center">
-<img src="../../assets/screenshots/catalog-translated.png" alt="韓国語に翻訳されたAnthropicコースカタログページ（正しい用語）" width="720" />
-<br/>
-<em>韓国語に翻訳されたコースカタログ — ブランド名とAI用語が正確に保持されます。</em>
-</div>
-
-## 実際の動作を確認
-
-### 全ページ翻訳
-
-ページのすべてのテキスト要素が翻訳され、AI 固有の用語はキュレーション辞書を通じて正確に処理されます。進捗チェックボックス、アイコン、ナビゲーションはすべてそのまま保持されます。
+ページのすべてのテキスト要素が翻訳され、AI 固有の用語はキュレーション辞書を通じて正確に処理されます。進捗チェックボックス、アイコン、ナビゲーション、CJK フォントすべてがそのまま保持されます。
 
 <div align="center">
 <img src="../../assets/screenshots/01-lesson-translated.png" alt="カリキュラムが完全に翻訳されたレッスンページ" width="720" />
 <br/>
-<em>カリキュラムが完全に翻訳されたレッスンページ — UI要素が保持されます。</em>
+<em>カリキュラムが完全に翻訳されたレッスンページ — UI 要素が保持されます。</em>
 </div>
 
-### AI チューター
+### 🤖 AI チューター
 
-**Claude Sonnet 4** を搭載したサイドバーチャットボット ([Puter.js](https://docs.puter.com/) 経由)。現在のコースとレッスンを認識します。選択した言語で質問するとストリーミング回答を取得します。
+[Puter.js](https://docs.puter.com/) 経由で **Claude Sonnet 4** を搭載したサイドバーチャットボットです。現在のコースとレッスンを認識します。選択した言語で質問するとストリーミング回答を取得します。
 
-<!-- TODO: ai-tutor.png 追加後にコメント解除
+### 🎬 自動字幕
+
+コース動画を再生すると、翻訳字幕が自動的にアクティブになります — 手動トグルは不要です。
+
+### 🔍 スマート検出
+
+初回訪問時にブラウザ言語を検出し、翻訳を提案します。セットアップ不要です。
+
+### 🛡️ 保護用語
+
+汎用翻訳ツールはしばしば**ブランド名と技術用語を誤訳します**。SkillBridge は翻訳後にこれらのエラーを自動修正します:
+
 <div align="center">
-<img src="../../assets/screenshots/ai-tutor.png" alt="日本語の質問に答える AI チューターサイドバー" width="720" />
-<br/>
-<em>レッスンについて AI チューターに質問する — Claude Sonnet 4 搭載。</em>
+
+| 前 (Google 翻訳) | 後 (SkillBridge) |
+|:---:|:---:|
+| ❌ 人道的コース | ✅ Anthropic コース |
+| ❌ クロード | ✅ Claude |
+| ❌ 迅速な工学 | ✅ プロンプトエンジニアリング |
+
 </div>
--->
 
-### 自動字幕
-
-コース動画を再生すると、選択した言語の翻訳字幕が自動的にアクティブになります — 手動トグルは不要です。
-
-<!-- <div align="center">
-<img src="../../assets/screenshots/subtitles.png" alt="自動翻訳された日本語字幕付きの YouTube 動画" width="720" />
+<div align="center">
+<img src="../../assets/screenshots/catalog-translated.png" alt="韓国語に翻訳された Anthropic Academy コースカタログページ（正しい用語）" width="720" />
 <br/>
-<em>動画字幕が選択した言語に自動翻訳されます。</em>
-</div> -->
-
-## 仕組み
-
-SkillBridge は**5 段階の翻訳エンジン**を使用して、速度と精度を優先します:
-
-```
-ページテキスト
-  │
-  ├─ 560+ キュレーション用語辞書 ──→ 即時 (AI 用語正確翻訳)
-  │
-  ├─ ローカルキャッシュ (IndexedDB) ───────→ 即時 (以前検証)
-  │
-  ├─ インライン HTML タグあり? (<strong>, <a>, <code>...)
-  │     └─ はい → Gemini 2.0 Flash がタグ保存して翻訳
-  │
-  └─ プレーンテキスト → Google 翻訳 ─→ ~200ms
-       │
-       ├─ 保護用語自動修正 ─→ GT が誤訳したブランド/技術用語復元
-       │
-       └─ 複雑な文章? → Gemini 2.0 Flash 検証 → 必要に応じ修正
-```
-
-**保護用語** — 各言語は GT の既知のエラーを定義します (例: GT が「Claude」を日本語で「クロード」と翻訳)。GT 実行後、拡張機能が正しい形に自動修正します。ブランド名、技術用語、製品階層は英語のままです — [Anthropic の公式多言語ドキュメント](https://docs.anthropic.com)と一致します。
-
-すべての翻訳は**ブラウザ内で発生します** — サードパーティサーバーに保存または送信されません。
-
-## 機能
-
-**🌐 フルページ翻訳** — ページのすべてのテキスト要素が翻訳され、AI 固有の用語はキュレーション辞書で正確に処理されます。
-
-**🤖 AI チューター** — [Puter.js](https://docs.puter.com/) 経由の Claude Sonnet 4 搭載サイドバーチャットボット。現在のコースとレッスンを認識します。選択した言語で質問するとストリーミング回答を取得します。
-
-**🎬 自動字幕** — コース動画を再生すると、選択した言語の翻訳字幕が自動的にアクティブになります。
-
-**🔍 スマート検出** — 初回訪問時にブラウザ言語を検出し、翻訳を提案します。セットアップ不要です。
-
-**✨ 忠実な UI** — 進捗チェックボックス、アイコン、ナビゲーションはすべてそのまま保持されます。CJK フォントは元のデザインに合わせられます。
-
-## サポート言語
-
-### プレミアム — キュレーション辞書 + Google 翻訳 + AI 検証
-
-| 言語 | コード | 辞書 |
-|------|--------|------|
-| 🇰🇷 한국어 (Korean) | `ko` | 560+ 項目 |
-| 🇯🇵 日本語 (Japanese) | `ja` | 560+ 項目 |
-| 🇨🇳 中文简体 (Chinese Simplified) | `zh-CN` | 560+ 項目 |
-| 🇪🇸 Español (Spanish) | `es` | 560+ 項目 |
-| 🇫🇷 Français (French) | `fr` | 560+ 項目 |
-| 🇩🇪 Deutsch (German) | `de` | 560+ 項目 |
-
-### スタンダード — Google 翻訳 + AI 検証
-
-🇹🇼 中文繁體 · 🇧🇷 Português (BR) · 🇵🇹 Português (PT) · 🇮🇹 Italiano · 🇳🇱 Nederlands · 🇷🇺 Русский · 🇵🇱 Polski · 🇺🇦 Українська · 🇨🇿 Čeština · 🇸🇪 Svenska · 🇩🇰 Dansk · 🇫🇮 Suomi · 🇳🇴 Norsk · 🇹🇷 Türkçe · 🇸🇦 العربية · 🇮🇳 हिन्दी · 🇹🇭 ภาษาไทย · 🇻🇳 Tiếng Việt · 🇮🇩 Bahasa Indonesia · 🇲🇾 Bahasa Melayu · 🇵🇭 Filipino · 🇧🇩 বাংলা · 🇮🇱 עברית · 🇷🇴 Română · 🇭🇺 Magyar · 🇬🇷 Ελληνικά
-
-> 言語をプレミアムとして追加したいですか? キュレーション辞書を提供してください — [CONTRIBUTING.md](../../CONTRIBUTING.md) を参照してください。
+<em>韓国語に翻訳されたコースカタログ — ブランド名と AI 用語が正確に保持されます。</em>
+</div>
 
 ## インストール
 
-<!-- **Chrome ウェブストア** (推奨): [SkillBridge をインストール](https://chrome.google.com/webstore/) — 近日公開 -->
+> Chrome ウェブストア掲載準備中 — このリポジトリにスターを付けて通知を受け取りましょう。
 
 **手動インストール** (デベロッパーモード):
 
@@ -178,6 +122,50 @@ git clone https://github.com/heznpc/skillbridge.git
 3. **パッケージ化されていない拡張機能を読み込む** → クローンしたフォルダを選択
 4. [anthropic.skilljar.com](https://anthropic.skilljar.com/) にアクセスして学習を開始!
 
+Edge、Brave、Arc、その他の Chromium ベースのブラウザでも動作します。
+
+## 仕組み
+
+SkillBridge は**5 段階の翻訳エンジン**を使用して、速度と精度を優先します:
+
+```
+ページテキスト
+  │
+  ├─ 570+ キュレーション用語辞書 ──→ 即時 (AI 用語正確翻訳)
+  │
+  ├─ ローカルキャッシュ (IndexedDB) ───────→ 即時 (以前検証済み)
+  │
+  ├─ インライン HTML タグあり? (<strong>, <a>, <code>...)
+  │     └─ はい → Gemini 2.0 Flash がタグ保持して翻訳
+  │
+  └─ プレーンテキスト → Google 翻訳 ─→ ~200ms
+       │
+       ├─ 保護用語自動修正 ─→ GT が誤訳したブランド/技術用語復元
+       │
+       └─ 複雑な文章? → Gemini 2.0 Flash 検証 → 必要に応じ修正
+```
+
+翻訳リクエストは [Puter.js](https://docs.puter.com/) を通じて Google 翻訳および Gemini/Claude API に送信されます — 当方のサーバーにデータは保存されず、アカウントや API キーも不要です。
+
+## サポート言語
+
+### プレミアム — キュレーション辞書 + Google 翻訳 + AI 検証
+
+| 言語 | コード | 辞書 |
+|------|--------|------|
+| 🇰🇷 한국어 (Korean) | `ko` | 570+ 項目 |
+| 🇯🇵 日本語 (Japanese) | `ja` | 570+ 項目 |
+| 🇨🇳 中文简体 (Chinese Simplified) | `zh-CN` | 570+ 項目 |
+| 🇪🇸 Español (Spanish) | `es` | 570+ 項目 |
+| 🇫🇷 Français (French) | `fr` | 570+ 項目 |
+| 🇩🇪 Deutsch (German) | `de` | 570+ 項目 |
+
+### スタンダード — Google 翻訳 + AI 検証
+
+🇹🇼 中文繁體 · 🇧🇷 Português (BR) · 🇵🇹 Português (PT) · 🇮🇹 Italiano · 🇳🇱 Nederlands · 🇷🇺 Русский · 🇵🇱 Polski · 🇺🇦 Українська · 🇨🇿 Čeština · 🇸🇪 Svenska · 🇩🇰 Dansk · 🇫🇮 Suomi · 🇳🇴 Norsk · 🇹🇷 Türkçe · 🇸🇦 العربية · 🇮🇳 हिन्दी · 🇹🇭 ภาษาไทย · 🇻🇳 Tiếng Việt · 🇮🇩 Bahasa Indonesia · 🇲🇾 Bahasa Melayu · 🇵🇭 Filipino · 🇧🇩 বাংলা · 🇮🇱 עברית · 🇷🇴 Română · 🇭🇺 Magyar · 🇬🇷 Ελληνικά
+
+> 言語をプレミアムとして追加したいですか? キュレーション辞書を提供してください — [CONTRIBUTING.md](../../CONTRIBUTING.md) を参照してください。
+
 ## アーキテクチャ
 
 ```
@@ -186,10 +174,11 @@ skillbridge/
 ├── _locales/                  # Chrome i18n (en, ko, ja, zh_CN)
 ├── src/
 │   ├── background/            # Google Translate API プロキシ
+│   ├── bridge/                # Puter.js AI ブリッジ (Gemini, Claude)
 │   ├── content/               # DOM 翻訳 + サイドバー UI + フォント
 │   ├── popup/                 # 拡張機能ポップアップ UI
-│   ├── lib/                   # 翻訳エンジン、AI ブリッジ、字幕
-│   └── data/                  # キュレーション辞書 (6 言語 × 560+)
+│   ├── lib/                   # 翻訳エンジン、字幕、定数
+│   └── data/                  # キュレーション辞書 (6 言語 × 570+)
 └── assets/icons/
 ```
 
@@ -198,28 +187,31 @@ skillbridge/
 | コンポーネント | 技術 |
 |-------------|------|
 | ページ翻訳 | Google Translate API |
-| インラインタグ翻訳 | Gemini 2.0 Flash (`<strong>`、`<a>`、`<code>` を保存) |
+| インラインタグ翻訳 | Gemini 2.0 Flash (`<strong>`、`<a>`、`<code>` を保持) |
 | 品質検証 | [Puter.js](https://docs.puter.com/) 経由の Gemini 2.0 Flash |
 | 保護用語 | 言語ごとの GT ブランド/技術用語エラー自動修正 |
 | AI チューター | Puter.js 経由の Claude Sonnet 4 |
-| キュレーション辞書 | 手動調整 JSON (560+ × 6 言語) |
+| キュレーション辞書 | 手動調整 JSON (570+ × 6 言語) |
 | 翻訳キャッシュ | IndexedDB |
 | CJK フォントレンダリング | Google Fonts Noto Sans |
 
 > **[Claude Code](https://docs.anthropic.com/en/docs/claude-code) で開発されました。**
-> このプロジェクト — アーキテクチャ設計と機能実装から CI/CD パイプライン設定、ユニットテスト、デバッグ、さらにデモ GIF まで — Claude Code を AI ペアプログラミングパートナーとして使用して開発されました。
+> このプロジェクト — アーキテクチャ設計と機能実装からデバッグとデモ GIF まで — Claude Code を AI ペアプログラミングパートナーとして使用して開発されました。
 
 ## 翻訳哲学
 
-各言語の辞書は、ネイティブスピーカーに自然に聞こえるようにキュレーションされています。現在 [Anthropic の公式多言語ドキュメント](https://docs.anthropic.com)と合致することを目指していますが、コミュニティの慣例も重要です — 日本の開発者が「プロンプト」の代わりに「prompt」と言えば、それが私たちが使う表現です。
+各言語の辞書は、ネイティブスピーカーに自然に聞こえるようにキュレーションされています。[Anthropic の公式多言語ドキュメント](https://docs.anthropic.com)と合致することを目指していますが、コミュニティの慣例も重要です — 日本の開発者が「プロンプト」と言えば、それが私たちが使う表現です。
 
-用語の選択に同意しませんか? それは正確には私たちが望む種の PR です — [CONTRIBUTING.md](../../CONTRIBUTING.md) で言語辞書を改善する方法を参照してください。
+用語の選択に同意しませんか? それはまさに私たちが望む PR です — [CONTRIBUTING.md](../../CONTRIBUTING.md) を参照してください。
+
+> [!IMPORTANT]
+> **このリポジトリにスターを付けて**新機能と言語アップデートの通知を受け取りましょう。
 
 ## 貢献
 
-**ネイティブスピーカーが必要です!** 最も影響力のある貢献方法は、言語翻訳辞書を改善することです — コード不要、JSON ファイルを編集するだけです。1 つの誤った翻訳を修正することでも、その言語を使用するすべての学習者に役立ちます。
+**ネイティブスピーカー募集中!** 最も影響力のある貢献方法は、言語翻訳辞書を改善することです — コード不要、JSON ファイルを編集するだけです。1 つの誤った翻訳を修正することでも、その言語を使用するすべての学習者に役立ちます。
 
-完全なガイドは [CONTRIBUTING.md](../../CONTRIBUTING.md) を参照し、[Good First Issues](../../issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) で始め、プロジェクトの方向は [ROADMAP.md](../../docs/ROADMAP.md) を参照してください。
+完全なガイドは [CONTRIBUTING.md](../../CONTRIBUTING.md) を参照し、[Good First Issues](https://github.com/heznpc/skillbridge/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) で始め、プロジェクトの方向は [ROADMAP.md](../../docs/ROADMAP.md) を参照してください。
 
 ## 免責事項
 
