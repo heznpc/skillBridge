@@ -14,6 +14,8 @@
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Chrome MV3](https://img.shields.io/badge/Chrome-Extension_MV3-blue.svg)](https://developer.chrome.com/docs/extensions/)
+[![GitHub stars](https://img.shields.io/github/stars/heznpc/skillbridge?style=social)](https://github.com/heznpc/skillbridge/stargazers)
+[![GitHub contributors](https://img.shields.io/github/contributors/heznpc/skillbridge)](https://github.com/heznpc/skillbridge/graphs/contributors)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 **Translate Anthropic Academy into your language — instantly.**
@@ -34,21 +36,18 @@ Break the language barrier on Anthropic's free AI courses.
 
 </div>
 
-> [!IMPORTANT]
-> **Star this repo** to get notified of new features and language updates.
-
 ---
 
 ## The Problem
 
-[Anthropic Academy](https://anthropic.skilljar.com/) offers world-class courses on Claude, prompt engineering, and AI safety — **but only in English.**
+[Anthropic Academy](https://anthropic.skilljar.com/) is the best place to learn Claude, prompt engineering, and AI safety — for free. SkillBridge makes these courses accessible to everyone, regardless of language.
 
-You might think: *"I'll just use Google Translate."* Here's why that falls short:
+But the courses are **only available in English**, and generic translators fall short:
 
 | | Google Translate (page) | SkillBridge |
 |---|---|---|
 | AI terminology | ❌ "Prompt" → "신속한" (wrong) | ✅ "Prompt" → "프롬프트" (correct) |
-| Technical accuracy | ❌ Generic machine translation | ✅ 560+ curated terms + AI verification |
+| Technical accuracy | ❌ Generic machine translation | ✅ 570+ curated terms + AI verification |
 | Context-aware help | ❌ None | ✅ AI tutor answers questions about the lesson |
 | Video subtitles | ❌ Separate manual toggle | ✅ Auto-translated subtitles |
 | UI preservation | ❌ Breaks checkboxes, progress bars | ✅ All interactive elements preserved |
@@ -56,22 +55,13 @@ You might think: *"I'll just use Google Translate."* Here's why that falls short
 
 > **No API keys. No cost. Just install and learn.**
 
-## Installation
+## Quick Start
 
-> Chrome Web Store listing coming soon — star this repo to be notified.
+1. Install the extension ([see below](#installation))
+2. Visit [Anthropic Academy](https://anthropic.skilljar.com/)
+3. SkillBridge translates the entire page automatically
 
-**Manual install** (developer mode):
-
-```bash
-git clone https://github.com/heznpc/skillbridge.git
-```
-
-1. Open `chrome://extensions/` in Chrome
-2. Enable **Developer mode** (top-right toggle)
-3. Click **Load unpacked** → select the cloned folder
-4. Visit [anthropic.skilljar.com](https://anthropic.skilljar.com/) and start learning!
-
-Also works in Edge, Brave, Arc, and other Chromium-based browsers.
+That's it.
 
 ## Features
 
@@ -117,6 +107,23 @@ Generic translation tools often **mistranslate brand names and technical terms**
 <em>Course catalog translated to Korean — brand names and AI terms stay accurate.</em>
 </div>
 
+## Installation
+
+> Chrome Web Store listing coming soon — star this repo to be notified.
+
+**Manual install** (developer mode):
+
+```bash
+git clone https://github.com/heznpc/skillbridge.git
+```
+
+1. Open `chrome://extensions/` in Chrome
+2. Enable **Developer mode** (top-right toggle)
+3. Click **Load unpacked** → select the cloned folder
+4. Visit [anthropic.skilljar.com](https://anthropic.skilljar.com/) and start learning!
+
+Also works in Edge, Brave, Arc, and other Chromium-based browsers.
+
 ## How It Works
 
 SkillBridge uses a **five-tier translation engine** that prioritizes speed and accuracy:
@@ -124,7 +131,7 @@ SkillBridge uses a **five-tier translation engine** that prioritizes speed and a
 ```
 Page text
   │
-  ├─ 560+ curated term dictionary ──→ Instant (AI terms translated correctly)
+  ├─ 570+ curated term dictionary ──→ Instant (AI terms translated correctly)
   │
   ├─ Local cache (IndexedDB) ───────→ Instant (previously verified)
   │
@@ -146,12 +153,12 @@ Translation requests are sent to Google Translate and Gemini/Claude APIs via [Pu
 
 | Language | Code | Dictionary |
 |----------|------|------------|
-| 🇰🇷 한국어 (Korean) | `ko` | 560+ entries |
-| 🇯🇵 日本語 (Japanese) | `ja` | 560+ entries |
-| 🇨🇳 中文简体 (Chinese Simplified) | `zh-CN` | 560+ entries |
-| 🇪🇸 Español (Spanish) | `es` | 560+ entries |
-| 🇫🇷 Français (French) | `fr` | 560+ entries |
-| 🇩🇪 Deutsch (German) | `de` | 560+ entries |
+| 🇰🇷 한국어 (Korean) | `ko` | 570+ entries |
+| 🇯🇵 日本語 (Japanese) | `ja` | 570+ entries |
+| 🇨🇳 中文简体 (Chinese Simplified) | `zh-CN` | 570+ entries |
+| 🇪🇸 Español (Spanish) | `es` | 570+ entries |
+| 🇫🇷 Français (French) | `fr` | 570+ entries |
+| 🇩🇪 Deutsch (German) | `de` | 570+ entries |
 
 ### Standard — Google Translate + AI Verification
 
@@ -167,10 +174,11 @@ skillbridge/
 ├── _locales/                  # Chrome i18n (en, ko, ja, zh_CN)
 ├── src/
 │   ├── background/            # Google Translate API proxy
+│   ├── bridge/                # Puter.js AI bridge (Gemini, Claude)
 │   ├── content/               # DOM translation + sidebar UI + fonts
 │   ├── popup/                 # Extension popup UI
-│   ├── lib/                   # Translation engine, AI bridge, subtitles
-│   └── data/                  # Curated dictionaries (6 languages × 560+)
+│   ├── lib/                   # Translation engine, subtitles, constants
+│   └── data/                  # Curated dictionaries (6 languages × 570+)
 └── assets/icons/
 ```
 
@@ -183,7 +191,7 @@ skillbridge/
 | Quality Verification | Gemini 2.0 Flash via [Puter.js](https://docs.puter.com/) |
 | Protected Terms | Auto-correction of GT brand/tech term errors per language |
 | AI Tutor | Claude Sonnet 4 via Puter.js |
-| Curated Dictionaries | Hand-tuned JSON (560+ × 6 languages) |
+| Curated Dictionaries | Hand-tuned JSON (570+ × 6 languages) |
 | Translation Cache | IndexedDB |
 | CJK Font Rendering | Google Fonts Noto Sans |
 
@@ -195,6 +203,9 @@ skillbridge/
 Each language's dictionary is curated to sound natural to native speakers. We align with [Anthropic's official multilingual docs](https://docs.anthropic.com) as a baseline, but community conventions matter too — if Korean developers say "프롬프트" instead of "prompt", that's what we use.
 
 Disagree with a term choice? That's exactly the kind of PR we want — see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+> [!IMPORTANT]
+> **Star this repo** to get notified of new features and language updates.
 
 ## Contributing
 
