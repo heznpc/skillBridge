@@ -17,8 +17,9 @@ All translation processing happens **entirely within your browser**:
 - **Google Translate API** — Page text is sent to Google's public translation endpoint and the translated result is returned directly to your browser. No data passes through any SkillBridge-owned server.
 - **Gemini 2.0 Flash (via Puter.js)** — Used for inline HTML tag preservation and quality verification of complex sentences. Requests are routed through [Puter.js](https://docs.puter.com/), a third-party client-side AI gateway. SkillBridge does not operate or control Puter.js servers.
 - **Claude Sonnet 4 (via Puter.js)** — Powers the AI Tutor sidebar chatbot. Requests are routed through Puter.js. SkillBridge does not operate or control Puter.js servers.
-- **Curated dictionaries** — 560+ hand-curated terms per premium language are stored locally within the extension package.
+- **Curated dictionaries** — 570+ hand-curated terms per premium language are stored locally within the extension package.
 - **Translation cache (IndexedDB)** — Previously translated text is cached locally in your browser's IndexedDB to improve performance. This data never leaves your device.
+- **YouTube technical cookies** — To enable auto-subtitles on YouTube-hosted course videos, the extension may set technical consent cookies (`CONSENT`, `SOCS`) required by YouTube's API. No personal browsing data is collected from YouTube.
 
 ## Permissions
 

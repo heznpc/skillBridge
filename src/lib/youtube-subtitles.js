@@ -105,9 +105,11 @@ class YouTubeSubtitleManager {
     if (this._messageHandler) return;
 
     this._messageHandler = (event) => {
-      // Only process messages from YouTube
-      if (!event.origin.includes('youtube.com') &&
-          !event.origin.includes('youtube-nocookie.com')) return;
+      // Only process messages from YouTube (strict hostname validation)
+      let originHost;
+      try { originHost = new URL(event.origin).hostname; } catch { return; }
+      if (!originHost.endsWith('youtube.com') &&
+          !originHost.endsWith('youtube-nocookie.com')) return;
 
       let data;
       try {
