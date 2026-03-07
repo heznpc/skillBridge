@@ -732,7 +732,7 @@
       if (!SAFE_TAGS.has(tag.toLowerCase())) return '';
       // Strip event handler attributes (on*) and javascript: URLs from safe tags
       return match.replace(/\s+on\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]*)/gi, '')
-                  .replace(/\s+href\s*=\s*"javascript:[^"]*"/gi, '');
+                  .replace(/\s+href\s*=\s*(?:"javascript:[^"]*"|'javascript:[^']*'|javascript:[^\s>]*)/gi, '');
     });
     return html;
   }
