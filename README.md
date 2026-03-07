@@ -124,7 +124,7 @@ Generic translation tools often **mistranslate brand names and technical terms**
 
 ## Installation
 
-> Chrome Web Store listing coming soon — star this repo to be notified.
+> Install from the [Chrome Web Store](https://chromewebstore.google.com/) (search "SkillBridge for Anthropic Academy").
 
 **Manual install** (developer mode):
 

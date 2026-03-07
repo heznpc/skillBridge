@@ -2,7 +2,8 @@
   "name": "skillbridge",
   "private": true,
   "scripts": {
-    "test": "jest --verbose"
+    "test": "jest --verbose",
+    "build:zip": "rm -f store-assets/skillbridge.zip && zip -r store-assets/skillbridge.zip manifest.json _locales/ src/ assets/icons/ -x '*.DS_Store'"
   },
   "devDependencies": {
     "jest": "^30.2.0"

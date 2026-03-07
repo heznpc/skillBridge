@@ -148,7 +148,6 @@
   // ============================================================
 
   chrome.runtime.onMessage.addListener(handleMessage);
-  console.log('[SkillBridge] Message listener registered');
 
   function handleMessage(request, sender, sendResponse) {
     if (!isReady && request.action === 'translatePage') {
@@ -231,7 +230,6 @@
       window._sb.injectFloatingButton?.();
 
       isReady = true;
-      console.log('[SkillBridge] Content script ready (static)');
 
       for (const { request } of pendingActions) {
         if (request.action === 'translatePage') {
@@ -269,22 +267,15 @@
           }
         }
 
-        if (wasImproved) {
-          console.log(`[SkillBridge] Gemini improved: "${originalText.substring(0, 40)}..."`);
-        }
       });
 
-      translator.initialize().then(ok => {
-        if (ok) console.log('[SkillBridge] Bridge ready (AI Tutor + Gemini available)');
-      }).catch(err => {
+      translator.initialize().catch(err => {
         console.warn('[SkillBridge] Bridge init failed (AI features unavailable):', err);
       });
 
       if (typeof YouTubeSubtitleManager !== 'undefined') {
         subtitleManager = new YouTubeSubtitleManager(currentLang);
-        subtitleManager.initialize().then(() => {
-          console.log('[SkillBridge] YouTube subtitle manager ready');
-        }).catch(err => {
+        subtitleManager.initialize().catch(err => {
           console.warn('[SkillBridge] YouTube subtitle init failed:', err);
         });
       }
@@ -351,8 +342,6 @@
         gtCandidates.push(el);
       }
     }
-    console.log(`[SkillBridge] Static: ${staticCount} translations, GT queue: ${gtCandidates.length}`);
-
     if (gtCandidates.length > 0 && targetLang !== 'en') {
       showTranslationProgress();
       updateTranslationProgress(Math.round((staticCount / (staticCount + gtCandidates.length)) * 80));
@@ -552,7 +541,6 @@
     link.rel = 'stylesheet';
     link.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;700&family=Noto+Sans+Devanagari:wght@400;500;700&family=Noto+Sans+Thai:wght@400;500;700&display=swap';
     document.head.appendChild(link);
-    console.log('[SkillBridge] Google Fonts injected via <link>');
   }
 
   function updateLangClass(lang) {
@@ -651,7 +639,6 @@
     _protectedKeepEnglish = terms.length > 0
       ? terms.join(', ')
       : 'API, SDK, Claude, Anthropic, Claude Code, Enterprise, Personal, Plugin, skill, SKILL.md, frontmatter';
-    console.log(`[SkillBridge] Protected terms map: ${_protectedTermsSorted.length} entries`);
   }
 
   function restoreProtectedTerms(text) {
@@ -778,7 +765,6 @@ RULES:
       el.innerHTML = xmlToHtml(trimmed, tagInfo);
       el.classList.remove('si18n-verifying');
       translator._cacheTranslation(pureText, el.textContent.trim(), targetLang);
-      console.log(`[SkillBridge] Gemini block translation: "${pureText.substring(0, 40)}..." → "${el.textContent.substring(0, 40)}..."`);
     }).catch(err => {
       console.warn('[SkillBridge] Gemini block translation failed:', err.message);
       el.classList.remove('si18n-verifying');
