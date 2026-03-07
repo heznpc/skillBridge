@@ -169,7 +169,15 @@ class SkilljarTranslator {
         const store = tx.objectStore('translations');
         const id = `${targetLang}::${text.trim()}`;
         const req = store.get(id);
-        req.onsuccess = () => resolve(req.result?.translation || null);
+        req.onsuccess = () => {
+          const entry = req.result;
+          if (!entry?.translation) { resolve(null); return; }
+          // 30-day TTL — discard stale cache entries
+          if (entry.timestamp && Date.now() - entry.timestamp > 30 * 24 * 60 * 60 * 1000) {
+            resolve(null); return;
+          }
+          resolve(entry.translation);
+        };
         req.onerror = () => resolve(null);
       } catch {
         resolve(null);

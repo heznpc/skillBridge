@@ -176,6 +176,8 @@
       : text;
     const context = sb.getPageContext();
     const bubble = document.querySelector(`#${loadingId} .si18n-chat-bubble`);
+    const sendBtn = document.getElementById('si18n-chat-send');
+    if (sendBtn) sendBtn.disabled = true;
 
     try {
       let started = false;
@@ -203,6 +205,8 @@
         bubble.innerHTML = sb.t(CHAT_ERROR_LABELS);
         bubble.classList.remove('si18n-streaming-cursor');
       }
+    } finally {
+      if (sendBtn) sendBtn.disabled = false;
     }
     scrollToBottom(messages);
   }

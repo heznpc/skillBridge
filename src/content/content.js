@@ -264,6 +264,8 @@
 
       translator.initialize().then(ok => {
         if (ok) console.log('[SkillBridge] Bridge ready (AI Tutor + Gemini available)');
+      }).catch(err => {
+        console.warn('[SkillBridge] Bridge init failed (AI features unavailable):', err);
       });
 
       if (typeof YouTubeSubtitleManager !== 'undefined') {
@@ -489,6 +491,8 @@
     gtTranslateQueue = [];
     gtProcessing = false;
     gtGeneration++;
+    clearTimeout(translateTimeout);
+    pendingNodes = [];
     currentLang = 'en';
     _protectedTermsLang = null;
     updateLangClass('en');
@@ -779,12 +783,17 @@ RULES:
     domObserver.observe(document.body, { childList: true, subtree: true });
   }
 
-  // Cleanup observer on page unload
-  window.addEventListener('unload', () => domObserver?.disconnect());
+  // Cleanup on page unload
+  window.addEventListener('unload', () => {
+    domObserver?.disconnect();
+    clearTimeout(translateTimeout);
+    pendingNodes = [];
+  });
 
   let translateTimeout;
   let pendingNodes = [];
   function debounceTranslateNew(node) {
+    if (pendingNodes.length >= 500) return; // prevent unbounded growth
     pendingNodes.push(node);
     clearTimeout(translateTimeout);
     translateTimeout = setTimeout(() => {
