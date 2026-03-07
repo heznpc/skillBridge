@@ -222,10 +222,12 @@
   function formatResponse(text) {
     const escaped = sb.escapeHtml(text);
 
+    // Ensure markdown block elements start on new lines
+    // (avoid lookbehind for wider browser compatibility)
     const normalized = escaped
-      .replace(/(?<!\n)(#{2,3}\s)/g, '\n$1')
-      .replace(/(?<!\n)([-*]\s)/g, '\n$1')
-      .replace(/(?<!\n)(\d+[.)]\s)/g, '\n$1');
+      .replace(/([^\n])(#{2,3}\s)/g, '$1\n$2')
+      .replace(/([^\n])([-*]\s)/g, '$1\n$2')
+      .replace(/([^\n])(\d+[.)]\s)/g, '$1\n$2');
 
     const lines = normalized.split('\n');
     const out = [];

@@ -20,9 +20,13 @@ const SKILLBRIDGE_THRESHOLDS = {
   MIN_COMPLEX_TEXT: 120,
   GT_BATCH_SIZE: 10,
   GEMINI_BATCH_SIZE: 3,
-  VERIFY_QUEUE_MAX: 200,
+  VERIFY_QUEUE_MAX: 500,
   PENDING_NODES_MAX: 500,
   CACHE_TTL_MS: 30 * 24 * 60 * 60 * 1000, // 30 days
+  CHAT_STREAM_TIMEOUT: 60000, // 60s timeout for AI tutor streaming
+  GT_MAX_RETRIES: 3, // Max retries for Google Translate requests
+  GT_BASE_DELAY: 500, // Base delay (ms) for exponential backoff
+  GT_RATE_LIMIT_PER_MIN: 120, // Max Google Translate requests per minute
 };
 
 // ==================== DELAYS (ms) ====================
