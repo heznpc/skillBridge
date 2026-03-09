@@ -184,7 +184,9 @@
 
     try {
       let started = false;
+      let lastStreamedText = '';
       await sb.translator.chatStream(fullQuestion, sb.currentLang, context, (chunk, fullText) => {
+        lastStreamedText = fullText;
         if (!started) {
           started = true;
           if (bubble) {
@@ -200,7 +202,7 @@
 
       if (bubble) {
         bubble.classList.remove('si18n-streaming-cursor');
-        const answerText = bubble.textContent?.trim() || '';
+        const answerText = lastStreamedText?.trim() || bubble.textContent?.trim() || '';
         if (answerText) saveConversation(text, answerText, sb.currentLang);
       }
     } catch (err) {
