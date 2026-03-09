@@ -1325,12 +1325,20 @@ html.si18n-dark .curriculum-section {
 
 /* Tables */
 html.si18n-dark table {
+  background: #141414 !important;
   border-color: rgba(255,255,255,0.08) !important;
 }
 html.si18n-dark tr {
+  background: #141414 !important;
   border-color: rgba(255,255,255,0.06) !important;
 }
-html.si18n-dark thead {
+html.si18n-dark td,
+html.si18n-dark th {
+  background: #141414 !important;
+  border-color: rgba(255,255,255,0.08) !important;
+}
+html.si18n-dark thead,
+html.si18n-dark thead th {
   background: #1a1a1a !important;
 }
 
