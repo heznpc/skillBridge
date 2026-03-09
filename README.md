@@ -100,6 +100,10 @@ A sidebar chatbot powered by **Claude Sonnet 4** via [Puter.js](https://docs.put
 
 Course videos automatically activate translated subtitles when you play them — no manual toggle needed.
 
+### 🌙 Dark Mode (Beta)
+
+A full dark theme for the entire Academy site — header, sidebar, lesson content, and tutor. Toggle with one click. Currently in beta; some pages may have minor styling gaps.
+
 ### 🔍 Smart Detection
 
 Detects your browser language on first visit and offers to translate. No setup needed.
