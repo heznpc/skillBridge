@@ -331,10 +331,48 @@ body.si18n-lang-ko,
   max-width: 80%;
   padding: 10px 14px;
   border-radius: 12px;
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
   background: var(--si18n-surface);
   border: 1px solid var(--si18n-border);
+}
+
+.si18n-chat-bubble p,
+.si18n-chat-bubble h3,
+.si18n-chat-bubble ul,
+.si18n-chat-bubble ol,
+.si18n-chat-bubble li,
+.si18n-chat-bubble span,
+.si18n-chat-bubble strong,
+.si18n-chat-bubble em {
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.si18n-chat-bubble p {
+  margin-bottom: 6px !important;
+}
+
+.si18n-chat-bubble p:last-child {
+  margin-bottom: 0 !important;
+}
+
+.si18n-chat-bubble h3 {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  margin-bottom: 4px !important;
+}
+
+.si18n-chat-bubble ul,
+.si18n-chat-bubble ol {
+  padding-left: 18px !important;
+  margin-bottom: 6px !important;
+}
+
+.si18n-chat-bubble li {
+  margin-bottom: 2px !important;
 }
 
 .si18n-chat-user .si18n-chat-bubble {
@@ -347,7 +385,7 @@ body.si18n-lang-ko,
   background: rgba(0,0,0,0.08);
   padding: 1px 4px;
   border-radius: 3px;
-  font-size: 12px;
+  font-size: 12px !important;
 }
 
 /* Tutor streaming cursor */
