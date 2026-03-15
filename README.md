@@ -1,16 +1,10 @@
 <div align="center">
 
-🌐 **English** · [한국어](docs/i18n/README_KO.md) · [日本語](docs/i18n/README_JA.md) · [中文](docs/i18n/README_ZH-CN.md) · [Español](docs/i18n/README_ES.md) · [Français](docs/i18n/README_FR.md) · [Deutsch](docs/i18n/README_DE.md)
-
-</div>
-
----
-
-<div align="center">
-
 <img src="assets/icons/icon128.png" alt="SkillBridge" width="90" />
 
 # SkillBridge for Anthropic Academy
+
+> Available in multiple languages at the [project landing page](https://heznpc.github.io/skillbridge/).
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Chrome MV3](https://img.shields.io/badge/Chrome-Extension_MV3-blue.svg)](https://developer.chrome.com/docs/extensions/)
