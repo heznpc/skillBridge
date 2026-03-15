@@ -9,6 +9,8 @@
     "glossary": "node scripts/check-glossary.js",
     "validate": "node scripts/validate-translations.js",
     "build:zip": "rm -f store-assets/skillbridge.zip && zip -r store-assets/skillbridge.zip manifest.json _locales/ src/ assets/icons/ -x '*.DS_Store'",
+    "build:firefox": "node scripts/build-firefox.js",
+    "build:firefox:zip": "npm run build:firefox && cd dist/firefox && rm -f ../../store-assets/skillbridge-firefox.zip && zip -r ../../store-assets/skillbridge-firefox.zip . -x '*.DS_Store'",
     "check:selectors": "node scripts/check-selectors.js",
     "check:dicts": "node scripts/check-dicts.js"
   },
