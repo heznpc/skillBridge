@@ -215,6 +215,29 @@ See our full [Privacy Policy](PRIVACY_POLICY.md).
 > **Built with [Claude Code](https://docs.anthropic.com/en/docs/claude-code).**
 > This project — from architecture design and feature implementation to debugging and the demo GIF — was developed using Claude Code as an AI pair-programming partner.
 
+## Releasing
+
+Versions are kept in sync across `manifest.json` and `package.json`.
+
+```bash
+npm run version:bump -- patch   # 2.0.0 → 2.0.1
+npm run version:bump -- minor   # 2.0.0 → 2.1.0
+npm run version:bump -- major   # 2.0.0 → 3.0.0
+npm run release                 # bump patch + build zip
+```
+
+Publishing to the Chrome Web Store happens automatically when a GitHub Release is created (see `.github/workflows/publish.yml`). The workflow verifies that the manifest version matches the release tag.
+
+**Required GitHub Secrets for CWS publishing:**
+
+| Secret | Description |
+|--------|-------------|
+| `CWS_CLIENT_ID` | Google OAuth2 client ID for Chrome Web Store API |
+| `CWS_CLIENT_SECRET` | Google OAuth2 client secret |
+| `CWS_REFRESH_TOKEN` | OAuth2 refresh token for Chrome Web Store API |
+
+See [Chrome Web Store API docs](https://developer.chrome.com/docs/webstore/using-api/) for setup instructions.
+
 ## Contributing
 
 SkillBridge is a community-driven project. The single most impactful way to contribute is improving the translation dictionary for your language — no code required, just edit a JSON file. Even fixing one bad translation helps every learner using that language.

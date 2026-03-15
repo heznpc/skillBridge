@@ -1,9 +1,12 @@
 {
   "name": "skillbridge",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
     "test": "jest --verbose",
-    "build:zip": "rm -f store-assets/skillbridge.zip && zip -r store-assets/skillbridge.zip manifest.json _locales/ src/ assets/icons/ -x '*.DS_Store'"
+    "build:zip": "rm -f store-assets/skillbridge.zip && zip -r store-assets/skillbridge.zip manifest.json _locales/ src/ assets/icons/ -x '*.DS_Store'",
+    "version:bump": "node scripts/bump-version.js",
+    "release": "npm run version:bump -- patch && npm run build:zip"
   },
   "devDependencies": {
     "jest": "^30.2.0"

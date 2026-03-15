@@ -6,53 +6,51 @@ SkillBridge for Anthropic Academy aims to make Anthropic's educational content a
 
 ---
 
-## v3.0 (Current) ✅
+## v2.0 (Current) ✅
 
-The current stable release features a comprehensive, 3-tier translation architecture:
+Major release with certification support, cross-browser compatibility, security hardening, and accessibility overhaul:
 
-- **3-Tier Translation Engine**: Static curated translations → Cached translations → Google Translate with Gemini 2.0 Flash verification
-- **6 Premium Languages**: Korean (ko), Japanese (ja), Chinese - Simplified (zh-CN), Spanish (es), French (fr), German (de) with meticulously curated JSON dictionaries for technical accuracy
-- **27 Standard Languages**: All other languages powered by Google Translate for broad coverage
-- **AI Tutor**: Powered by Claude Sonnet 4, providing personalized explanations and learning support in the user's selected language
-- **Video Enhancements**:
-  - YouTube subtitle auto-translation with synchronized playback
-  - Video transcript panel with click-to-seek functionality for deep learning
-- **Architecture**: Manifest V3 compliant, modern Chrome extension standards
+- **Certification/Exam Page Support**: Full translation of assessment and certification pages with tutor safety guards (AI tutor refuses to answer exam questions directly)
+- **Firefox + Edge Support**: Cross-browser compatibility — works natively on Firefox and Microsoft Edge in addition to all Chromium browsers
+- **Security Hardening**: Passed 4 expert security audits; CSP compliance, input sanitization, secure message passing
+- **WCAG 2.1 AA Accessibility**: Accessibility grade improved from D to A- — keyboard navigation, ARIA labels, focus management, screen reader support
+- **content.js Modular Split**: Refactored monolithic content script from 885 lines to 405 lines with dedicated modules (header-controls, text-selection, sidebar-chat)
+- **98 Tests**: Expanded test suite from 66 to 98 tests covering translation, protected terms, accessibility, and security
+- **Maintenance Automation**: 5 scheduled CI/CD jobs for translation audits, dependency checks, and store deployment
+- **Selector Abstraction Layer**: Decoupled DOM selectors from logic for resilience against Skilljar UI changes
+- **Landing Page Redesign**: Modernized README and store listing with feature comparison tables and visual demos
+- **Dark Mode (Beta)**: Full dark theme for the Academy site
+- **Keyboard Shortcuts**: Intuitive keyboard navigation for the AI Tutor interface
+- **Performance Optimization**: Smart DOM batching and caching for pages with 500+ translatable elements
 
-### Current Status
-Fully functional and tested across the Skilljar platform. Ready for production use by global learners.
+### Previous: v1.x (Legacy)
+
+The original release featured the core 3-tier translation architecture:
+
+- 3-Tier Translation Engine: Static curated translations, cached translations, Google Translate with Gemini 2.0 Flash verification
+- 6 Premium Languages with curated JSON dictionaries
+- 27 Standard Languages via Google Translate
+- AI Tutor powered by Claude Sonnet 4
+- YouTube subtitle auto-translation
+- Manifest V3 compliant architecture
 
 ---
 
-## v3.1 (Next)
+## v2.1 (Next)
 
-Focus on community engagement and technical consistency:
+Focus on community engagement and remaining expansion:
 
 - [ ] **Translation Memory & Community Contributions**: Allow users to submit verified translations back to the system, building a community-driven translation database
-- [ ] **Glossary Consistency Checker**: Ensure technical AI terms (e.g., "prompt engineering," "fine-tuning," "embeddings") are consistently translated across all materials
-- [ ] **Keyboard Shortcuts**: Add intuitive keyboard navigation for the AI Tutor interface, improving accessibility and speed
-- [ ] **Dark Mode Support**: Implement a dark theme option, reducing eye strain for extended study sessions
-- [ ] **Performance Optimization**: Enhance handling of pages with 500+ translatable elements through smart DOM batching and caching strategies
+- [ ] **Glossary Consistency Checker**: Ensure technical AI terms are consistently translated across all materials
+- [ ] **Community Translation Portal**: A dedicated web-based tool for collaborative dictionary creation
+- [ ] **Additional Premium Languages**: Expand the premium tier based on community demand (Portuguese, Russian, Traditional Chinese, Vietnamese)
+- [ ] **Export as PDF**: Allow learners to download translated course materials as polished PDF documents for offline study
 
 **Estimated Timeline**: Q2-Q3 2026
 
 ---
 
-## v3.2 (Planned)
-
-Expansion of translation capabilities and multi-platform support:
-
-- [ ] **Community Translation Portal**: A dedicated web-based tool allowing native speakers to collaboratively create and refine language dictionaries
-- [ ] **Additional Premium Languages**: Expand the premium tier based on community demand (e.g., Portuguese, Russian, Mandarin Traditional, Vietnamese)
-- [ ] **Assessment Translation**: Full support for quizzes, assignments, and practice problem translations
-- [ ] **Export as PDF**: Allow learners to download translated course materials as polished PDF documents for offline study
-- [ ] **Cross-Browser Support**: Extend SkillBridge to Firefox and Microsoft Edge, reaching a broader user base
-
-**Estimated Timeline**: Q4 2026 - Q1 2027
-
----
-
-## v4.0 (Vision — Long Term)
+## v3.0 (Vision — Long Term)
 
 Become the global learning platform enablement layer:
 
@@ -91,10 +89,9 @@ Visit our [GitHub Discussions](https://github.com/heznpc/skillbridge/discussions
 
 | Version | Status | ETA |
 |---------|--------|-----|
-| v3.0 | ✅ Released | Now |
-| v3.1 | 🚧 In Progress | Q2-Q3 2026 |
-| v3.2 | 📋 Planned | Q4 2026 - Q1 2027 |
-| v4.0 | 🎯 Vision | 2027+ |
+| v2.0 | ✅ Released | Now |
+| v2.1 | 🚧 In Progress | Q2-Q3 2026 |
+| v3.0 | 🎯 Vision | 2027+ |
 
 ---
 
