@@ -114,6 +114,8 @@
     if (!toast) {
       toast = document.createElement('div');
       toast.id = 'si18n-progress-toast';
+      toast.setAttribute('role', 'status');
+      toast.setAttribute('aria-live', 'polite');
       toast.innerHTML = `<div class="si18n-progress-spinner"></div><span>${label}</span>`;
       document.body.appendChild(toast);
     } else {
