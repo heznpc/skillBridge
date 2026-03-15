@@ -1,364 +1,846 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SkillBridge — Learn Anthropic Courses in Your Language</title>
-  <meta name="description" content="Free Chrome extension to translate Anthropic Academy courses into 30+ languages with AI-powered tutoring. No API keys needed.">
+  <meta name="description" content="Free Chrome extension to translate Anthropic Academy courses into 31 languages with AI-powered tutoring. No API keys needed.">
   <meta property="og:title" content="SkillBridge for Anthropic Academy">
   <meta property="og:description" content="Learn Anthropic's free AI courses in your language. Powered by Gemini 2.0 Flash + Claude Sonnet 4.">
+  <meta property="og:image" content="../assets/icons/icon128.png">
   <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="SkillBridge for Anthropic Academy">
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/icons/icon32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../assets/icons/icon16.png">
+  <link rel="apple-touch-icon" sizes="128x128" href="../assets/icons/icon128.png">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    /* ==================== RESET & TOKENS ==================== */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
       --primary: #E07A5F;
+      --primary-dim: rgba(224,122,95,.15);
       --accent: #3D405B;
       --success: #81B29A;
-      --bg: #FAFAF9;
+      --success-dim: rgba(129,178,154,.15);
+      --bg: #F8F5F1;
+      --nav-bg: rgba(248,245,241,.55);
+      --nav-border: rgba(255,255,255,.5);
       --surface: #FFFFFF;
       --text: #1C1917;
       --text-sec: #78716C;
       --border: #E7E5E4;
+      --glass-bg: rgba(255,255,255,.38);
+      --glass-border: rgba(255,255,255,.65);
+      --glass-shadow: 0 4px 24px rgba(0,0,0,.06), 0 0 0 .5px rgba(255,255,255,.7), inset 0 .5px 0 rgba(255,255,255,.6), 0 0 24px rgba(255,255,255,.2);
+      --glass-hover: 0 20px 48px rgba(0,0,0,.1), 0 0 0 .5px rgba(255,255,255,.8), inset 0 .5px 0 rgba(255,255,255,.7), 0 0 32px rgba(255,255,255,.3);
+      --card-desc-opacity: .55;
+      --card-tag-border: rgba(255,255,255,.4);
+      --card-tag-opacity: .35;
+      --section-label: rgba(224,122,95,.9);
+      --step-bg: rgba(255,255,255,.4);
+      --step-border: rgba(255,255,255,.6);
+      --step-color: var(--primary);
+      --step-shadow: 0 2px 8px rgba(0,0,0,.05), inset 0 .5px 0 rgba(255,255,255,.7);
+      --hero-h1-bg: linear-gradient(180deg, #3D405B 30%, rgba(61,64,91,.45));
+      --pill-border: rgba(255,255,255,.4);
+      --pill-active-bg: rgba(255,255,255,.45);
+      --pill-active-border: rgba(255,255,255,.6);
+      --pill-active-shadow: 0 2px 8px rgba(0,0,0,.06), inset 0 .5px 0 rgba(255,255,255,.7);
+      --glass-fx-blur: blur(16px) saturate(200%) brightness(1.08);
+      --glass-tint: rgba(255,255,255,.35);
+      --glass-shine-shadow: inset 0 1px 1px rgba(255,255,255,.8), inset 0 -1px 1px rgba(255,255,255,.3), inset 0 0 32px rgba(255,255,255,.12);
+      --glass-shine-bg: linear-gradient(170deg, rgba(255,255,255,.4) 0%, rgba(255,255,255,.08) 25%, transparent 45%, transparent 80%, rgba(255,255,255,.12) 100%);
+      --tag-bg: rgba(224,122,95,.08);
+      --tag-color: rgba(224,122,95,.85);
+      --tag-border: rgba(224,122,95,.15);
+      --screenshot-shadow: 0 20px 60px rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,.04);
+      --footer-border: rgba(0,0,0,.06);
     }
 
+    [data-theme="dark"] {
+      --bg: #1A1714;
+      --nav-bg: rgba(26,23,20,.6);
+      --nav-border: rgba(255,255,255,.06);
+      --surface: #242119;
+      --text: #F5F0EB;
+      --text-sec: #A39890;
+      --border: rgba(255,255,255,.08);
+      --glass-bg: rgba(255,255,255,.04);
+      --glass-border: rgba(255,255,255,.12);
+      --glass-shadow: 0 4px 16px rgba(0,0,0,.25), 0 0 0 .5px rgba(255,255,255,.15), 0 0 15px rgba(255,255,255,.04);
+      --glass-hover: 0 16px 40px rgba(0,0,0,.35), 0 0 1px rgba(255,255,255,.2);
+      --card-desc-opacity: .4;
+      --card-tag-border: rgba(255,255,255,.06);
+      --card-tag-opacity: .25;
+      --section-label: rgba(224,122,95,.8);
+      --step-bg: rgba(255,255,255,.06);
+      --step-border: rgba(255,255,255,.1);
+      --step-color: var(--primary);
+      --step-shadow: none;
+      --hero-h1-bg: linear-gradient(180deg, #fff 30%, rgba(255,255,255,.45));
+      --pill-border: rgba(255,255,255,.08);
+      --pill-active-bg: rgba(255,255,255,.08);
+      --pill-active-border: rgba(255,255,255,.18);
+      --pill-active-shadow: none;
+      --glass-fx-blur: blur(3px) saturate(180%) brightness(1.1);
+      --glass-tint: rgba(255,255,255,.04);
+      --glass-shine-shadow: inset 0 1px 12px rgba(255,255,255,.06), inset 0 -1px 8px rgba(255,255,255,.02), inset 0 0 24px rgba(255,255,255,.02);
+      --glass-shine-bg: linear-gradient(170deg, rgba(255,255,255,.06) 0%, transparent 35%, transparent 85%, rgba(255,255,255,.015) 100%);
+      --tag-bg: rgba(224,122,95,.12);
+      --tag-color: rgba(224,122,95,.8);
+      --tag-border: rgba(224,122,95,.2);
+      --screenshot-shadow: 0 20px 60px rgba(0,0,0,.4), 0 0 0 1px rgba(255,255,255,.05);
+      --footer-border: rgba(255,255,255,.04);
+    }
+
+    /* ==================== BASE ==================== */
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.6;
+      transition: background .5s, color .5s;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; cursor: pointer; border: 0; background: none; }
+
+    /* ==================== AMBIENT ORBS ==================== */
+    .scene {
+      position: fixed; inset: 0; z-index: 0;
+      pointer-events: none; overflow: hidden;
+    }
+    .orb {
+      position: absolute; border-radius: 50%;
+      filter: blur(70px); will-change: transform;
+      animation: drift 24s ease-in-out infinite alternate;
+    }
+    .orb-a {
+      width: 700px; height: 700px; top: -10%; left: -8%;
+      background: radial-gradient(circle, rgba(224,122,95,.28), transparent 70%);
+    }
+    .orb-b {
+      width: 550px; height: 550px; top: 30%; right: -8%;
+      background: radial-gradient(circle, rgba(129,178,154,.24), transparent 70%);
+      animation-delay: -8s;
+    }
+    .orb-c {
+      width: 500px; height: 500px; bottom: -5%; left: 15%;
+      background: radial-gradient(circle, rgba(61,64,91,.18), transparent 70%);
+      animation-delay: -16s;
+    }
+    @keyframes drift { to { transform: translate(50px, -35px) scale(1.06); } }
+
+    /* ==================== NAV ==================== */
+    .glass-nav {
+      position: fixed; inset: 0 0 auto; z-index: 100; height: 56px;
+      background: var(--nav-bg);
+      backdrop-filter: blur(24px) saturate(1.7);
+      -webkit-backdrop-filter: blur(24px) saturate(1.7);
+      border-bottom: 1px solid var(--nav-border);
+      transition: background .5s, border-color .5s;
+    }
+    .nav-inner {
+      max-width: 1080px; margin: 0 auto; padding: 0 20px;
+      display: flex; align-items: center; justify-content: space-between; height: 100%;
+    }
+    .nav-brand {
+      display: flex; align-items: center; gap: 8px;
+      font-size: .88rem; font-weight: 600; opacity: .8; letter-spacing: -.01em;
+    }
+    .nav-brand img { width: 24px; height: 24px; border-radius: 4px; }
+    .nav-links { display: flex; align-items: center; gap: 24px; }
+    .nav-links a {
+      font-size: .85rem; opacity: .45; font-weight: 500;
+      transition: opacity .2s;
+    }
+    .nav-links a:hover { opacity: .9; }
+    .theme-toggle {
+      padding: 5px 14px; border-radius: 9999px;
+      font-size: .76rem; font-weight: 600;
+      opacity: .5; border: 1px solid var(--pill-border);
+      transition: all .25s;
+    }
+    .theme-toggle:hover { opacity: .8; }
+    .nav-mobile {
+      display: none; flex-direction: column; gap: 5px; padding: 6px;
+    }
+    .nav-mobile span {
+      display: block; width: 16px; height: 1.5px;
+      background: currentColor; border-radius: 1px; opacity: .7;
     }
 
-    .container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
-
-    /* Hero */
+    /* ==================== HERO ==================== */
     .hero {
+      position: relative; z-index: 1;
+      padding: calc(56px + 80px) 20px 60px;
       text-align: center;
-      padding: 80px 24px 60px;
-      background: linear-gradient(135deg, var(--accent) 0%, #2E3047 100%);
-      color: white;
     }
-
+    .hero-inner { max-width: 1080px; margin: 0 auto; }
     .hero-badge {
       display: inline-block;
-      background: rgba(255,255,255,0.15);
-      padding: 6px 16px;
-      border-radius: 20px;
-      font-size: 13px;
-      margin-bottom: 20px;
-      backdrop-filter: blur(4px);
+      padding: 6px 18px; border-radius: 9999px;
+      font-size: .78rem; font-weight: 600;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      opacity: .7;
     }
-
+    .hero-logo {
+      width: 140px; height: 140px;
+      margin: 28px auto 20px;
+      border-radius: 28px;
+      object-fit: contain;
+      filter: drop-shadow(0 8px 24px rgba(0,0,0,.1));
+    }
     .hero h1 {
-      font-size: clamp(32px, 5vw, 48px);
-      font-weight: 700;
-      margin-bottom: 16px;
-      line-height: 1.2;
+      font-size: clamp(2.6rem, 8vw, 4.8rem);
+      font-weight: 800; line-height: .98;
+      letter-spacing: -.03em;
+      background: var(--hero-h1-bg);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-tagline {
+      margin-top: 16px;
+      font-size: 1.15rem; font-weight: 500; opacity: .5;
+    }
+    .hero-sub {
+      margin-top: 10px;
+      font-size: .95rem; opacity: .3;
+      max-width: 50ch; margin-left: auto; margin-right: auto;
+      line-height: 1.6;
+    }
+    .hero-disclaimer {
+      margin-top: 8px;
+      font-size: .75rem; opacity: .25;
+    }
+    .hero-actions {
+      display: flex; gap: 12px; justify-content: center;
+      flex-wrap: wrap; margin-top: 32px;
     }
 
-    .hero p {
-      font-size: 18px;
-      opacity: 0.85;
-      max-width: 600px;
-      margin: 0 auto 32px;
-    }
-
-    .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-
+    /* ==================== BUTTONS ==================== */
     .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 14px 28px;
-      border-radius: 10px;
-      font-size: 15px;
-      font-weight: 600;
-      text-decoration: none;
-      transition: all 0.2s;
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 28px; border-radius: 14px;
+      font-size: .88rem; font-weight: 600;
+      transition: all .25s;
     }
-
-    .btn-primary {
+    .btn-cws {
       background: var(--primary);
-      color: white;
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(224,122,95,.3), inset 0 1px 0 rgba(255,255,255,.2);
     }
-    .btn-primary:hover { background: #C96A52; transform: translateY(-1px); }
-
-    .btn-secondary {
-      background: rgba(255,255,255,0.12);
-      color: white;
-      border: 1px solid rgba(255,255,255,0.25);
+    .btn-cws:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(224,122,95,.4), inset 0 1px 0 rgba(255,255,255,.25);
     }
-    .btn-secondary:hover { background: rgba(255,255,255,0.2); }
-
-    /* Languages */
-    .languages {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 8px;
-      margin-top: 40px;
+    .btn-glass {
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px) saturate(1.4);
+      -webkit-backdrop-filter: blur(12px) saturate(1.4);
+      border: 1px solid var(--glass-border);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.12);
     }
-
-    .lang-tag {
-      padding: 4px 12px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 6px;
-      font-size: 13px;
-      opacity: 0.8;
+    .btn-glass:hover {
+      transform: translateY(-2px);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 8px 24px rgba(0,0,0,.1);
     }
 
-    /* Features */
-    .features {
-      padding: 80px 0;
+    /* ==================== GLASS CARD SYSTEM ==================== */
+    .glass-card, .glass-stat {
+      position: relative; border-radius: 24px;
+      overflow: hidden;
+      box-shadow: var(--glass-shadow);
+      transition: transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s;
     }
-
-    .features h2 {
-      text-align: center;
-      font-size: 28px;
-      margin-bottom: 48px;
-      color: var(--accent);
+    .glass-stat { border-radius: 16px; }
+    .glass-fx {
+      position: absolute; inset: 0; z-index: 0;
+      border-radius: inherit;
+      backdrop-filter: var(--glass-fx-blur);
+      -webkit-backdrop-filter: var(--glass-fx-blur);
     }
-
-    .feature-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 24px;
+    .glass-tint {
+      position: absolute; inset: 0; z-index: 1;
+      border-radius: inherit;
+      background: var(--glass-tint);
     }
-
-    .feature-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
+    .glass-shine {
+      position: absolute; inset: 0; z-index: 2;
+      border-radius: inherit; pointer-events: none;
+      box-shadow: var(--glass-shine-shadow);
+      background: var(--glass-shine-bg);
+    }
+    .glass-content {
+      position: relative; z-index: 3;
+      display: flex; flex-direction: column;
       padding: 28px;
-      transition: transform 0.2s, box-shadow 0.2s;
     }
 
-    .feature-card:hover {
+    /* Hover sweep */
+    .glass-card::before {
+      content: ''; position: absolute; inset: 0; z-index: 4;
+      border-radius: inherit; pointer-events: none;
+      background: linear-gradient(115deg,
+        transparent 0%, transparent 20%,
+        rgba(255,255,255,.01) 28%, rgba(255,255,255,.04) 38%,
+        rgba(255,255,255,.06) 50%, rgba(255,255,255,.04) 62%,
+        rgba(255,255,255,.01) 72%, transparent 80%, transparent 100%
+      );
+      opacity: 0; transform: translateX(-140%); transition: none;
+    }
+    .glass-card:hover::before {
+      opacity: 1; transform: translateX(140%);
+      transition: transform 8s cubic-bezier(.08,.6,0,1), opacity .6s;
+    }
+    .glass-card:hover {
       transform: translateY(-4px);
-      box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+      box-shadow: var(--glass-hover);
     }
 
+    /* ==================== SECTION UTILITIES ==================== */
+    .section { position: relative; z-index: 1; }
+    .section-inner { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+    .section-label {
+      font-size: .75rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .1em; color: var(--section-label);
+    }
+    .section-title {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800; letter-spacing: -.03em;
+      margin-top: 8px;
+    }
+    .section-sub {
+      margin-top: 10px; font-size: .9rem; opacity: .35;
+      max-width: 48ch; margin-left: auto; margin-right: auto;
+    }
+
+    /* ==================== STATS ==================== */
+    .stats { padding: 0 0 60px; }
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 12px; max-width: 780px; margin: 0 auto;
+    }
+    .stat-value {
+      font-size: 1.6rem; font-weight: 800; letter-spacing: -.02em;
+      color: var(--primary);
+    }
+    .stat-label {
+      font-size: .75rem; opacity: .35; margin-top: 2px;
+    }
+
+    /* ==================== FEATURES ==================== */
+    .features { padding: 60px 0 80px; }
+    .features-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 16px; margin-top: 48px;
+    }
     .feature-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 16px;
-      font-size: 22px;
+      width: 48px; height: 48px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px; font-size: 24px;
+    }
+    .icon-translate { background: rgba(224,122,95,.12); }
+    .icon-ai { background: rgba(61,64,91,.1); }
+    .icon-free { background: rgba(129,178,154,.12); }
+    .icon-privacy { background: rgba(224,122,95,.08); }
+    .icon-terms { background: rgba(61,64,91,.08); }
+    .icon-video { background: rgba(129,178,154,.08); }
+    .card-title {
+      font-size: 1.05rem; font-weight: 700;
+      letter-spacing: -.01em; margin-bottom: 6px;
+    }
+    .card-desc {
+      font-size: .86rem; opacity: var(--card-desc-opacity);
+      line-height: 1.65; flex: 1;
     }
 
-    .feature-card h3 {
-      font-size: 17px;
-      margin-bottom: 8px;
-      color: var(--accent);
+    /* ==================== SCREENSHOTS ==================== */
+    .screenshots { padding: 60px 0 80px; }
+    .screenshot-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 24px; margin-top: 48px;
+    }
+    .screenshot-card {
+      border-radius: 20px; overflow: hidden;
+      box-shadow: var(--screenshot-shadow);
+      transition: transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s;
+    }
+    .screenshot-card:hover {
+      transform: translateY(-6px) scale(1.01);
+    }
+    .screenshot-card img {
+      display: block; width: 100%; height: auto;
+    }
+    .screenshot-label {
+      text-align: center; margin-top: 14px;
+      font-size: .82rem; font-weight: 600; opacity: .4;
     }
 
-    .feature-card p {
-      font-size: 14px;
-      color: var(--text-sec);
+    /* ==================== HOW IT WORKS ==================== */
+    .how { padding: 60px 0 80px; }
+    .steps-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 16px; margin-top: 48px;
+    }
+    .step-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 52px; height: 52px; border-radius: 50%;
+      font-size: 1.2rem; font-weight: 800;
+      background: var(--step-bg);
+      border: 1px solid var(--step-border);
+      color: var(--step-color);
+      box-shadow: var(--step-shadow);
+    }
+    .step-title {
+      font-size: .95rem; font-weight: 700;
+      margin-top: 14px; margin-bottom: 6px;
+    }
+    .step-desc {
+      font-size: .82rem; opacity: var(--card-desc-opacity);
       line-height: 1.6;
     }
 
-    .icon-translate { background: #FEF3C7; }
-    .icon-ai { background: #DBEAFE; }
-    .icon-free { background: #D1FAE5; }
-    .icon-privacy { background: #FEE2E2; }
-
-    /* How it works */
-    .how {
-      padding: 60px 0 80px;
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
+    /* ==================== LANGUAGES ==================== */
+    .languages { padding: 60px 0 80px; }
+    .lang-cloud {
+      display: flex; flex-wrap: wrap; justify-content: center;
+      gap: 10px; margin-top: 40px; max-width: 840px; margin-left: auto; margin-right: auto;
+    }
+    .lang-tag {
+      padding: 6px 16px; border-radius: 9999px;
+      font-size: .78rem; font-weight: 600;
+      background: var(--tag-bg);
+      color: var(--tag-color);
+      border: 1px solid var(--tag-border);
+      transition: all .25s;
+    }
+    .lang-tag:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(224,122,95,.12);
     }
 
-    .how h2 {
-      text-align: center;
-      font-size: 28px;
-      margin-bottom: 48px;
-      color: var(--accent);
-    }
-
-    .steps {
-      display: flex;
-      gap: 32px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .step {
-      flex: 1;
-      min-width: 200px;
-      max-width: 260px;
-      text-align: center;
-    }
-
-    .step-number {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: var(--primary);
-      color: white;
-      font-weight: 700;
-      font-size: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 14px;
-    }
-
-    .step h3 { font-size: 15px; margin-bottom: 6px; }
-    .step p { font-size: 13px; color: var(--text-sec); }
-
-    /* CTA */
+    /* ==================== CTA ==================== */
     .cta {
+      padding: 80px 20px;
       text-align: center;
-      padding: 80px 24px;
     }
 
-    .cta h2 {
-      font-size: 28px;
-      margin-bottom: 12px;
-      color: var(--accent);
-    }
-
-    .cta p {
-      font-size: 16px;
-      color: var(--text-sec);
-      margin-bottom: 32px;
-    }
-
-    /* Footer */
+    /* ==================== FOOTER ==================== */
     footer {
+      position: relative; z-index: 1;
+      padding: 24px 20px;
+      border-top: 1px solid var(--footer-border);
       text-align: center;
-      padding: 24px;
-      border-top: 1px solid var(--border);
-      font-size: 13px;
-      color: var(--text-sec);
+    }
+    .footer-inner {
+      max-width: 1080px; margin: 0 auto;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 10px;
+    }
+    .footer-brand {
+      display: flex; align-items: center; gap: 8px;
+      font-size: .85rem; font-weight: 600; opacity: .6;
+    }
+    .footer-brand img { width: 20px; height: 20px; border-radius: 4px; }
+    .footer-links {
+      display: flex; gap: 20px; font-size: .78rem; opacity: .3;
+    }
+    .footer-links a { transition: opacity .2s; }
+    .footer-links a:hover { opacity: .7; }
+    .footer-disclaimer {
+      font-size: .7rem; opacity: .18; margin-top: 2px;
     }
 
-    footer a { color: var(--primary); text-decoration: none; }
-    footer a:hover { text-decoration: underline; }
+    /* ==================== SCROLL REVEAL ==================== */
+    .reveal {
+      opacity: 0; transform: translateY(24px);
+      transition: opacity .8s cubic-bezier(.2,.8,.2,1), transform .8s cubic-bezier(.2,.8,.2,1);
+    }
+    .reveal.visible { opacity: 1; transform: none; }
 
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 900px) {
+      .features-grid { grid-template-columns: 1fr; }
+      .screenshot-grid { grid-template-columns: 1fr; max-width: 480px; margin-left: auto; margin-right: auto; }
+      .steps-grid { grid-template-columns: repeat(2, 1fr); }
+    }
     @media (max-width: 640px) {
-      .hero { padding: 48px 16px 40px; }
+      .nav-links { display: none; }
+      .nav-links.open {
+        display: flex; flex-direction: column;
+        position: absolute; top: 56px; left: 0; right: 0;
+        background: var(--nav-bg);
+        backdrop-filter: blur(24px);
+        padding: 20px; gap: 14px;
+        border-bottom: 1px solid var(--nav-border);
+      }
+      .nav-mobile { display: flex; }
+      .hero { padding-top: calc(56px + 48px); padding-bottom: 40px; }
+      .hero-logo { width: 100px; height: 100px; }
       .hero-actions { flex-direction: column; align-items: center; }
-      .features, .cta { padding: 48px 0; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .steps-grid { grid-template-columns: 1fr; max-width: 360px; margin-left: auto; margin-right: auto; }
+      .features, .screenshots, .how, .languages { padding: 40px 0 56px; }
     }
   </style>
 </head>
 <body>
-  <section class="hero">
-    <div class="container">
-      <div class="hero-badge">Open Source &middot; Free &middot; No API Key</div>
-      <h1>Learn Anthropic Courses<br>In Your Language</h1>
-      <p>A Chrome extension that translates Anthropic Academy courses into 30+ languages with an AI-powered learning assistant.</p>
-      <p style="font-size:13px;opacity:0.65;margin-top:-16px;">Not affiliated with, endorsed by, or sponsored by Anthropic.</p>
-      <div class="hero-actions">
-        <a href="https://github.com/heznpc/skillbridge" class="btn btn-primary">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Install Extension
+
+  <!-- Ambient orbs -->
+  <div class="scene" aria-hidden="true">
+    <div class="orb orb-a"></div>
+    <div class="orb orb-b"></div>
+    <div class="orb orb-c"></div>
+  </div>
+
+  <!-- Nav -->
+  <nav class="glass-nav">
+    <div class="nav-inner">
+      <a href="#" class="nav-brand">
+        <img src="../assets/icons/icon32.png" alt="">
+        SkillBridge
+      </a>
+      <div class="nav-links" id="navLinks">
+        <a href="#features">Features</a>
+        <a href="#screenshots">Demo</a>
+        <a href="#how">How It Works</a>
+        <a href="https://github.com/heznpc/skillbridge" target="_blank" rel="noopener">GitHub</a>
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+          <span class="theme-icon"></span>
+        </button>
+      </div>
+      <button class="nav-mobile" id="mobileToggle" aria-label="Menu">
+        <span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="hero-badge reveal">Open Source &middot; Free &middot; No API Key</div>
+      <img src="skillbridge-logo.png" alt="SkillBridge" class="hero-logo reveal" data-delay="40">
+      <h1 class="reveal" data-delay="80">SkillBridge</h1>
+      <p class="hero-tagline reveal" data-delay="120">Learn Anthropic Courses in Your Language</p>
+      <p class="hero-sub reveal" data-delay="150">A Chrome extension that translates Anthropic Academy courses into 31 languages with an AI-powered learning assistant. Completely free.</p>
+      <p class="hero-disclaimer reveal" data-delay="170">Not affiliated with, endorsed by, or sponsored by Anthropic.</p>
+      <div class="hero-actions reveal" data-delay="200">
+        <a href="https://chromewebstore.google.com/detail/skillbridge-for-anthropic/oancfldkbnajdadgekkjpdnhepjjcdln" target="_blank" rel="noopener" class="btn btn-cws">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 2a10 10 0 0 1 8.66 5h-5.66l-3-5z" fill="currentColor" opacity=".3"/><path d="M2 12a10 10 0 0 1 2.34-6.46l2.83 4.9L4.34 16A9.96 9.96 0 0 1 2 12z" fill="currentColor" opacity=".3"/></svg>
+          Add to Chrome
         </a>
-        <a href="https://github.com/heznpc/skillbridge" class="btn btn-secondary">
+        <a href="https://github.com/heznpc/skillbridge" target="_blank" rel="noopener" class="btn btn-glass">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
           View on GitHub
         </a>
       </div>
-      <div class="languages">
-        <span class="lang-tag">한국어</span>
-        <span class="lang-tag">日本語</span>
-        <span class="lang-tag">中文</span>
-        <span class="lang-tag">Español</span>
-        <span class="lang-tag">Français</span>
+    </div>
+  </header>
+
+  <!-- Stats -->
+  <section class="section stats">
+    <div class="section-inner">
+      <div class="stats-grid reveal" data-delay="240">
+        <div class="glass-stat">
+          <div class="glass-fx"></div><div class="glass-tint"></div>
+          <div class="glass-content" style="align-items:center;padding:20px 16px;">
+            <div class="stat-value">31</div>
+            <div class="stat-label">Languages</div>
+          </div>
+        </div>
+        <div class="glass-stat">
+          <div class="glass-fx"></div><div class="glass-tint"></div>
+          <div class="glass-content" style="align-items:center;padding:20px 16px;">
+            <div class="stat-value">570+</div>
+            <div class="stat-label">Terms</div>
+          </div>
+        </div>
+        <div class="glass-stat">
+          <div class="glass-fx"></div><div class="glass-tint"></div>
+          <div class="glass-content" style="align-items:center;padding:20px 16px;">
+            <div class="stat-value">13</div>
+            <div class="stat-label">Courses</div>
+          </div>
+        </div>
+        <div class="glass-stat">
+          <div class="glass-fx"></div><div class="glass-tint"></div>
+          <div class="glass-content" style="align-items:center;padding:20px 16px;">
+            <div class="stat-value" style="color:var(--success);">100%</div>
+            <div class="stat-label">Free</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="section features">
+    <div class="section-inner">
+      <div class="text-center" style="text-align:center;">
+        <p class="section-label reveal">Features</p>
+        <h2 class="section-title reveal" data-delay="40">Why SkillBridge?</h2>
+        <p class="section-sub reveal" data-delay="80">Everything you need to learn Anthropic Academy in your native language.</p>
+      </div>
+      <div class="features-grid">
+        <div class="glass-card reveal">
+          <div class="glass-fx"></div><div class="glass-tint"></div><div class="glass-shine"></div>
+          <div class="glass-content">
+            <div class="feature-icon icon-translate">&#127760;</div>
+            <div class="card-title">Real-time Translation</div>
+            <div class="card-desc">Translate entire course pages into your language with one click. Supports 31 languages including CJK, Arabic, Hindi, and more.</div>
+          </div>
+        </div>
+        <div class="glass-card reveal" data-delay="60">
+          <div class="glass-fx"></div><div class="glass-tint"></div><div class="glass-shine"></div>
+          <div class="glass-content">
+            <div class="feature-icon icon-ai">&#129302;</div>
+            <div class="card-title">AI Learning Tutor</div>
+            <div class="card-desc">Ask questions about course material in your language. Get explanations, summaries, and help understanding complex AI topics.</div>
+          </div>
+        </div>
+        <div class="glass-card reveal" data-delay="40">
+          <div class="glass-fx"></div><div class="glass-tint"></div><div class="glass-shine"></div>
+          <div class="glass-content">
+            <div class="feature-icon icon-terms">&#128218;</div>
+            <div class="card-title">Protected Terms</div>
+            <div class="card-desc">Technical terms like "prompt", "token", and "fine-tuning" stay in English so you learn the correct vocabulary used in the industry.</div>
+          </div>
+        </div>
+        <div class="glass-card reveal" data-delay="100">
+          <div class="glass-fx"></div><div class="glass-tint"></div><div class="glass-shine"></div>
+          <div class="glass-content">
+            <div class="feature-icon icon-video">&#127909;</div>
+            <div class="card-title">Video Subtitles</div>
+            <div class="card-desc">YouTube course videos get translated subtitles automatically. Learn visually in your own language.</div>
+          </div>
+        </div>
+        <div class="glass-card reveal" data-delay="80">
+          <div class="glass-fx"></div><div class="glass-tint"></div><div class="glass-shine"></div>
+          <div class="glass-content">
+            <div class="feature-icon icon-free">&#128154;</div>
+            <div class="card-title">100% Free</div>
+            <div class="card-desc">Powered by Gemini 2.0 Flash + Claude Sonnet 4 via Puter.js. No API keys, no sign-up, no subscription. Just install and learn.</div>
+          </div>
+        </div>
+        <div class="glass-card reveal" data-delay="140">
+          <div class="glass-fx"></div><div class="glass-tint"></div><div class="glass-shine"></div>
+          <div class="glass-content">
+            <div class="feature-icon icon-privacy">&#128274;</div>
+            <div class="card-title">Copyright-Safe &amp; Private</div>
+            <div class="card-desc">Translates on-the-fly in your browser only. Never stores, caches, or redistributes original course content. Your data stays local.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screenshots -->
+  <section id="screenshots" class="section screenshots">
+    <div class="section-inner">
+      <div style="text-align:center;">
+        <p class="section-label reveal">In Action</p>
+        <h2 class="section-title reveal" data-delay="40">See SkillBridge at Work</h2>
+        <p class="section-sub reveal" data-delay="80">Real screenshots from an Anthropic Academy course translated to Korean.</p>
+      </div>
+      <div class="screenshot-grid">
+        <div class="reveal" data-delay="100">
+          <div class="screenshot-card">
+            <img src="../assets/screenshots/01-lesson-translated.png" alt="A lesson page translated to Korean" loading="lazy">
+          </div>
+          <div class="screenshot-label">Lesson page translated</div>
+        </div>
+        <div class="reveal" data-delay="160">
+          <div class="screenshot-card">
+            <img src="../assets/screenshots/catalog-translated.png" alt="Course catalog translated to Korean" loading="lazy">
+          </div>
+          <div class="screenshot-label">Course catalog translated</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section id="how" class="section how">
+    <div class="section-inner">
+      <div style="text-align:center;">
+        <p class="section-label reveal">Getting Started</p>
+        <h2 class="section-title reveal" data-delay="40">How It Works</h2>
+        <p class="section-sub reveal" data-delay="80">From install to learning in under a minute.</p>
+      </div>
+      <div class="steps-grid">
+        <div class="glass-card reveal" data-delay="60">
+          <div class="glass-fx"></div><div class="glass-tint"></div><div class="glass-shine"></div>
+          <div class="glass-content" style="align-items:center;text-align:center;padding:32px 24px;">
+            <div class="step-num">1</div>
+            <div class="step-title">Install</div>
+            <div class="step-desc">Add SkillBridge from the Chrome Web Store. One click, no config.</div>
+          </div>
+        </div>
+        <div class="glass-card reveal" data-delay="120">
+          <div class="glass-fx"></div><div class="glass-tint"></div><div class="glass-shine"></div>
+          <div class="glass-content" style="align-items:center;text-align:center;padding:32px 24px;">
+            <div class="step-num">2</div>
+            <div class="step-title">Visit Anthropic Academy</div>
+            <div class="step-desc">Go to anthropic.skilljar.com and open any course.</div>
+          </div>
+        </div>
+        <div class="glass-card reveal" data-delay="180">
+          <div class="glass-fx"></div><div class="glass-tint"></div><div class="glass-shine"></div>
+          <div class="glass-content" style="align-items:center;text-align:center;padding:32px 24px;">
+            <div class="step-num">3</div>
+            <div class="step-title">Select Language</div>
+            <div class="step-desc">Click the globe icon and pick your preferred language.</div>
+          </div>
+        </div>
+        <div class="glass-card reveal" data-delay="240">
+          <div class="glass-fx"></div><div class="glass-tint"></div><div class="glass-shine"></div>
+          <div class="glass-content" style="align-items:center;text-align:center;padding:32px 24px;">
+            <div class="step-num">4</div>
+            <div class="step-title">Learn!</div>
+            <div class="step-desc">Read translated content and chat with the AI tutor in your language.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Supported Languages -->
+  <section class="section languages">
+    <div class="section-inner">
+      <div style="text-align:center;">
+        <p class="section-label reveal">Global</p>
+        <h2 class="section-title reveal" data-delay="40">31 Languages Supported</h2>
+        <p class="section-sub reveal" data-delay="80">From Korean to Greek, we have you covered.</p>
+      </div>
+      <div class="lang-cloud reveal" data-delay="120">
+        <span class="lang-tag">&#54620;&#44397;&#50612;</span>
+        <span class="lang-tag">&#26085;&#26412;&#35486;</span>
+        <span class="lang-tag">&#20013;&#25991;(&#31616;&#20307;)</span>
+        <span class="lang-tag">&#20013;&#25991;(&#32321;&#39636;)</span>
+        <span class="lang-tag">Espa&ntilde;ol</span>
+        <span class="lang-tag">Fran&ccedil;ais</span>
         <span class="lang-tag">Deutsch</span>
-        <span class="lang-tag">Português</span>
-        <span class="lang-tag">Tiếng Việt</span>
-        <span class="lang-tag">ภาษาไทย</span>
-        <span class="lang-tag">العربية</span>
-        <span class="lang-tag">हिन्दी</span>
-        <span class="lang-tag">Русский</span>
-        <span class="lang-tag">Türkçe</span>
-        <span class="lang-tag">Bahasa</span>
-        <span class="lang-tag">+ more</span>
+        <span class="lang-tag">Portugu&ecirc;s (BR)</span>
+        <span class="lang-tag">Portugu&ecirc;s (PT)</span>
+        <span class="lang-tag">Italiano</span>
+        <span class="lang-tag">Nederlands</span>
+        <span class="lang-tag">&#1056;&#1091;&#1089;&#1089;&#1082;&#1080;&#1081;</span>
+        <span class="lang-tag">Polski</span>
+        <span class="lang-tag">&#1059;&#1082;&#1088;&#1072;&#1111;&#1085;&#1089;&#1100;&#1082;&#1072;</span>
+        <span class="lang-tag">&#268;e&#353;tina</span>
+        <span class="lang-tag">Svenska</span>
+        <span class="lang-tag">Dansk</span>
+        <span class="lang-tag">Suomi</span>
+        <span class="lang-tag">Norsk</span>
+        <span class="lang-tag">T&uuml;rk&ccedil;e</span>
+        <span class="lang-tag">&#1575;&#1604;&#1593;&#1585;&#1576;&#1610;&#1577;</span>
+        <span class="lang-tag">&#2361;&#2367;&#2344;&#2381;&#2342;&#2368;</span>
+        <span class="lang-tag">&#3616;&#3634;&#3625;&#3634;&#3652;&#3607;&#3618;</span>
+        <span class="lang-tag">Ti&#7871;ng Vi&#7879;t</span>
+        <span class="lang-tag">Bahasa Indonesia</span>
+        <span class="lang-tag">Bahasa Melayu</span>
+        <span class="lang-tag">Filipino</span>
+        <span class="lang-tag">&#2476;&#2494;&#2434;&#2482;&#2494;</span>
+        <span class="lang-tag">&#1506;&#1489;&#1512;&#1497;&#1514;</span>
+        <span class="lang-tag">Rom&acirc;n&#259;</span>
+        <span class="lang-tag">Magyar</span>
+        <span class="lang-tag">&#917;&#955;&#955;&#951;&#957;&#953;&#954;&#940;</span>
       </div>
     </div>
   </section>
 
-  <section class="features">
-    <div class="container">
-      <h2>Why SkillBridge?</h2>
-      <div class="feature-grid">
-        <div class="feature-card">
-          <div class="feature-icon icon-translate">🌐</div>
-          <h3>Real-time Translation</h3>
-          <p>Translate entire course pages into your language with one click. Supports 30+ languages including CJK, Arabic, and more.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon icon-ai">🤖</div>
-          <h3>AI Learning Tutor</h3>
-          <p>Ask questions about course material in your language. Get explanations, summaries, and help understanding complex topics.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon icon-free">💚</div>
-          <h3>100% Free</h3>
-          <p>Powered by Gemini 2.0 Flash + Claude Sonnet 4 via Puter.js. No API keys, no sign-up, no subscription. Just install and start learning.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon icon-privacy">🔒</div>
-          <h3>Copyright-Safe</h3>
-          <p>Translates on-the-fly in your browser only. Never stores, caches, or redistributes original course content.</p>
-        </div>
+  <!-- CTA -->
+  <section class="section cta">
+    <div class="section-inner" style="max-width:600px;">
+      <h2 class="section-title reveal" style="text-align:center;">Start Learning in Your Language</h2>
+      <p class="section-sub reveal" data-delay="40" style="text-align:center;">Join the global community learning Anthropic's AI courses &mdash; completely free.</p>
+      <div style="text-align:center;margin-top:32px;" class="reveal" data-delay="80">
+        <a href="https://chromewebstore.google.com/detail/skillbridge-for-anthropic/oancfldkbnajdadgekkjpdnhepjjcdln" target="_blank" rel="noopener" class="btn btn-cws">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 2a10 10 0 0 1 8.66 5h-5.66l-3-5z" fill="currentColor" opacity=".3"/><path d="M2 12a10 10 0 0 1 2.34-6.46l2.83 4.9L4.34 16A9.96 9.96 0 0 1 2 12z" fill="currentColor" opacity=".3"/></svg>
+          Add to Chrome &mdash; It's Free
+        </a>
       </div>
     </div>
   </section>
 
-  <section class="how">
-    <div class="container">
-      <h2>How It Works</h2>
-      <div class="steps">
-        <div class="step">
-          <div class="step-number">1</div>
-          <h3>Install</h3>
-          <p>Download from GitHub and load as an unpacked Chrome extension.</p>
-        </div>
-        <div class="step">
-          <div class="step-number">2</div>
-          <h3>Visit Skilljar</h3>
-          <p>Go to anthropic.skilljar.com and open any course.</p>
-        </div>
-        <div class="step">
-          <div class="step-number">3</div>
-          <h3>Select Language</h3>
-          <p>Click the globe icon and pick your preferred language.</p>
-        </div>
-        <div class="step">
-          <div class="step-number">4</div>
-          <h3>Learn!</h3>
-          <p>Read translated content and chat with the AI tutor.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="cta">
-    <div class="container">
-      <h2>Start Learning in Your Language</h2>
-      <p>Join the global community learning Anthropic's AI courses.</p>
-      <a href="https://github.com/heznpc/skillbridge" class="btn btn-primary">Get Started — It's Free</a>
-    </div>
-  </section>
-
+  <!-- Footer -->
   <footer>
-    <p>
-      Made with care for the global AI learning community.
-      <br>
-      <a href="https://github.com/heznpc/skillbridge">GitHub</a> &middot;
-      <a href="privacy.html">Privacy Policy</a> &middot;
-      <a href="LICENSE">MIT License</a> &middot;
-      Not affiliated with Anthropic.
-    </p>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <img src="../assets/icons/icon32.png" alt="">
+        SkillBridge
+      </div>
+      <div class="footer-links">
+        <a href="https://chromewebstore.google.com/detail/skillbridge-for-anthropic/oancfldkbnajdadgekkjpdnhepjjcdln" target="_blank" rel="noopener">Chrome Web Store</a>
+        <a href="https://github.com/heznpc/skillbridge" target="_blank" rel="noopener">GitHub</a>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="https://github.com/heznpc/skillbridge/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
+      </div>
+      <p class="footer-disclaimer">Not affiliated with, endorsed by, or sponsored by Anthropic.</p>
+    </div>
   </footer>
+
+  <script>
+    /* === Theme toggle === */
+    const THEME_KEY = 'skillbridge-theme';
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = themeToggle.querySelector('.theme-icon');
+
+    function setTheme(t) {
+      document.documentElement.setAttribute('data-theme', t);
+      themeIcon.textContent = t === 'dark' ? '\u2600' : '\u263E';
+      localStorage.setItem(THEME_KEY, t);
+    }
+    /* Default to light; respect user preference */
+    const savedTheme = localStorage.getItem(THEME_KEY);
+    if (savedTheme) {
+      setTheme(savedTheme);
+    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      setTheme('dark');
+    } else {
+      setTheme('light');
+    }
+    themeToggle.addEventListener('click', () => {
+      setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+    });
+
+    /* === Mobile nav === */
+    const mobileToggle = document.getElementById('mobileToggle');
+    const navLinks = document.getElementById('navLinks');
+    mobileToggle.addEventListener('click', () => navLinks.classList.toggle('open'));
+    navLinks.querySelectorAll('a').forEach(a =>
+      a.addEventListener('click', () => navLinks.classList.remove('open'))
+    );
+
+    /* === Scroll reveal with stagger === */
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const delay = parseInt(entry.target.dataset.delay || '0', 10);
+        setTimeout(() => entry.target.classList.add('visible'), delay);
+        io.unobserve(entry.target);
+      });
+    }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+    /* === Smooth scroll for anchor links === */
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  </script>
 </body>
 </html>
