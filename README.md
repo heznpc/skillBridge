@@ -6,9 +6,9 @@
 
 > Available in multiple languages at the [project landing page](https://heznpc.github.io/skillbridge/).
 
+[![CI](https://github.com/heznpc/skillBridge/actions/workflows/ci.yml/badge.svg)](https://github.com/heznpc/skillBridge/actions/workflows/ci.yml)
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Chrome MV3](https://img.shields.io/badge/Chrome-Extension_MV3-blue.svg)](https://developer.chrome.com/docs/extensions/)
-[![Tests](https://img.shields.io/badge/Tests-66%20passed-brightgreen.svg)](tests/)
 [![GitHub stars](https://img.shields.io/github/stars/heznpc/skillbridge?style=social)](https://github.com/heznpc/skillbridge/stargazers)
 [![GitHub contributors](https://img.shields.io/github/contributors/heznpc/skillbridge)](https://github.com/heznpc/skillbridge/graphs/contributors)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
@@ -94,9 +94,9 @@ A sidebar chatbot powered by **Claude Sonnet 4** via [Puter.js](https://docs.put
 
 Course videos automatically activate translated subtitles when you play them — no manual toggle needed.
 
-### 🌙 Dark Mode (Beta)
+### 🌙 Dark Mode
 
-A full dark theme for the entire Academy site — header, sidebar, lesson content, and tutor. Toggle with one click. Currently in beta; some pages may have minor styling gaps.
+A full dark theme for the entire Academy site — header, sidebar, lesson content, and tutor. Toggle with one click.
 
 ### 🔍 Smart Detection
 
