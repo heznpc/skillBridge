@@ -44,6 +44,7 @@
   let translator = null;
   let subtitleManager = null;
   let currentLang = 'en';
+  let currentPageType = PAGE_TYPES.UNKNOWN;
   let isReady = false;
   let sidebarVisible = false;
   let originalTexts = new Map();
@@ -71,12 +72,34 @@
   // (header-controls.js, text-selection.js, sidebar-chat.js)
   // ============================================================
 
+  // ============================================================
+  // PAGE TYPE DETECTION
+  // ============================================================
+
+  function detectPageType() {
+    const url = location.href;
+    for (const pattern of EXAM_PAGE_INDICATORS.urlPatterns) {
+      if (pattern.test(url)) return PAGE_TYPES.EXAM;
+    }
+    for (const selector of EXAM_PAGE_INDICATORS.domSelectors) {
+      if (document.querySelector(selector)) return PAGE_TYPES.EXAM;
+    }
+    if (url.includes('/catalog') || url.includes('/series')) return PAGE_TYPES.CATALOG;
+    return PAGE_TYPES.COURSE;
+  }
+
+  function isExamPage() {
+    return currentPageType === PAGE_TYPES.EXAM || currentPageType === PAGE_TYPES.QUIZ;
+  }
+
   window._sb = {
     get currentLang() { return currentLang; },
     set currentLang(v) { currentLang = v; },
     get sidebarVisible() { return sidebarVisible; },
     set sidebarVisible(v) { sidebarVisible = v; },
     get translator() { return translator; },
+    get currentPageType() { return currentPageType; },
+    isExamPage,
     t,
     escapeHtml,
     switchLanguage,
@@ -214,6 +237,7 @@
       const stored = await chrome.storage.local.get(['targetLanguage', 'autoTranslate', 'welcomeShown', 'darkMode']);
       if (stored.darkMode) document.documentElement.classList.add('si18n-dark');
       currentLang = stored.targetLanguage || 'en';
+      currentPageType = detectPageType();
 
       translator = new SkilljarTranslator();
 
@@ -558,8 +582,10 @@
   }
 
   function getTranslatableElements() {
+    const examSkip = isExamPage() ? EXAM_SKIP_SELECTORS.join(', ') : null;
     return Array.from(document.querySelectorAll(TRANSLATABLE_SELECTOR)).filter(el => {
       if (el.closest(EXCLUDE_SELECTOR)) return false;
+      if (examSkip && el.matches(examSkip)) return false;
       const parent = el.parentElement;
       if (parent && parent.matches && parent.matches(TRANSLATABLE_SELECTOR) &&
           !parent.closest(EXCLUDE_SELECTOR)) {
@@ -783,6 +809,10 @@ RULES:
       .map(h => h.textContent.trim())
       .slice(0, 5)
       .join(', ');
+    const pageType = currentPageType;
+    if (pageType === PAGE_TYPES.EXAM) {
+      return `Certification Exam: ${title}. Page type: exam/assessment.`;
+    }
     const lessonBody = document.querySelector('#lesson-main, .lesson-content, .course-content, main');
     const bodyText = lessonBody
       ? lessonBody.innerText.replace(/\s+/g, ' ').trim().slice(0, 2000)

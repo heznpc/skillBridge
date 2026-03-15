@@ -17,6 +17,7 @@
 - [ ] Extension loads without errors
 - [ ] No console errors in DevTools
 - [ ] Tested in target language (if i18n change)
+- [ ] Reviewed by a native speaker (if translation PR)
 
 ## Screenshots (if UI change)
 

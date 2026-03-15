@@ -12,6 +12,48 @@ const SKILLBRIDGE_MODELS = {
   CLAUDE: 'claude-sonnet-4',
 };
 
+// ==================== PAGE TYPES ====================
+
+const PAGE_TYPES = {
+  COURSE: 'course',
+  EXAM: 'exam',
+  QUIZ: 'quiz',
+  CATALOG: 'catalog',
+  UNKNOWN: 'unknown',
+};
+
+// URL patterns and DOM selectors that indicate exam/quiz pages
+const EXAM_PAGE_INDICATORS = {
+  urlPatterns: [
+    /\/certification\b/i,
+    /\/exam\b/i,
+    /\/assessment\b/i,
+    /\/quiz\b/i,
+    /\/test\b/i,
+  ],
+  domSelectors: [
+    '.quiz-container',
+    '.assessment-container',
+    '.exam-content',
+    '[data-quiz]',
+    '[data-assessment]',
+    'form.quiz-form',
+    '.question-container',
+  ],
+};
+
+// Elements that should NEVER be translated on exam pages (form inputs, answer choices)
+const EXAM_SKIP_SELECTORS = [
+  'input[type="radio"] + label',
+  'input[type="checkbox"] + label',
+  '.answer-option label',
+  '.quiz-timer',
+  '.exam-timer',
+  '.assessment-progress',
+  '.question-number',
+  'button[type="submit"]',
+];
+
 // ==================== DEFAULTS ====================
 
 const DEFAULT_PROTECTED_TERMS = 'API, SDK, Claude, Anthropic, Claude Code, Enterprise, Personal, Plugin, skill, SKILL.md, frontmatter';
@@ -266,4 +308,16 @@ const POPUP_LABELS = {
 const SKILLBRIDGE_MODEL_LABELS = {
   GEMINI: 'Gemini 2.0 Flash',
   CLAUDE: 'Claude Sonnet 4',
+};
+
+// ==================== EXAM/CERTIFICATION LABELS ====================
+
+const TUTOR_DISABLED_LABELS = {
+  'en': 'AI Tutor is disabled during exams and assessments.',
+  'ko': '시험 및 평가 중에는 AI 튜터가 비활성화됩니다.',
+  'ja': '試験・評価中はAIチューターが無効になっています。',
+  'zh-CN': '考试和评估期间AI导师已禁用。',
+  'es': 'El tutor IA está desactivado durante exámenes y evaluaciones.',
+  'fr': "Le tuteur IA est désactivé pendant les examens et évaluations.",
+  'de': 'Der KI-Tutor ist während Prüfungen und Bewertungen deaktiviert.',
 };

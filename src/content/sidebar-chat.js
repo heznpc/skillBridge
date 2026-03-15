@@ -20,6 +20,7 @@
 
   function injectFloatingButton() {
     if (document.getElementById('skillbridge-fab')) return;
+    if (sb.isExamPage()) return; // Disable tutor on exam pages
     const btn = document.createElement('div');
     btn.id = 'skillbridge-fab';
     btn.innerHTML = `
@@ -38,6 +39,7 @@
 
   function injectSidebar() {
     if (document.getElementById('skillbridge-sidebar')) return;
+    if (sb.isExamPage()) return; // Disable tutor on exam pages
     const sidebar = document.createElement('div');
     sidebar.id = 'skillbridge-sidebar';
     sidebar.className = 'skillbridge-sidebar';
@@ -305,6 +307,7 @@
       const tx = db.transaction(HISTORY_STORE, 'readwrite');
       tx.objectStore(HISTORY_STORE).add({
         question, answer, lang, chapter,
+        pageType: sb.currentPageType,
         timestamp: Date.now(),
         url: location.href,
       });
