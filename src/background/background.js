@@ -32,6 +32,16 @@ function isYouTubeUrl(url) {
   } catch { return false; }
 }
 
+// URL allowlist for FETCH_URL — only permit known trusted domains
+const _ALLOWED_FETCH_DOMAINS = ['www.youtube.com', 'youtube.com', 'm.youtube.com', 'translate.googleapis.com'];
+
+function isAllowedFetchUrl(url) {
+  try {
+    const u = new URL(url);
+    return _ALLOWED_FETCH_DOMAINS.some(d => u.hostname === d || u.hostname.endsWith('.' + d));
+  } catch { return false; }
+}
+
 // ==================== RATE LIMITER ====================
 
 const _rateLimiter = {
@@ -80,6 +90,10 @@ chrome.runtime.onInstalled.addListener((details) => {
 // Message handlers
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === 'FETCH_URL') {
+    if (!isAllowedFetchUrl(msg.url)) {
+      sendResponse({ ok: false, error: 'URL not in allowlist' });
+      return true;
+    }
     const fetchOpts = {};
     const headers = {};
     if (isYouTubeUrl(msg.url)) {
