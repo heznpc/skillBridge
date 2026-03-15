@@ -14,17 +14,18 @@
   window.__skillbridge_initialized__ = true;
 
   // Target ALL visible text elements — including Skilljar-specific
+  // Skilljar selectors are centralized in src/lib/selectors.js
   const TRANSLATABLE_SELECTOR = [
     'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
     'p', 'li', 'td', 'th', 'label', 'figcaption',
     'span', '.btn-text', '.nav-text', 'blockquote', 'dt', 'dd',
-    '.coursebox-text', '.coursebox-text-description',
-    '.sj-ribbon-text', '.course-time',
-    '.faq-title', '.faq-post p',
-    'div.title', '.lesson-row div.title',
-    '.focus-link-v2', '.section-title',
-    '.left-nav-return-text', '.sj-text-course-overview',
-    '.lesson-top h2', '.details-pane-description',
+    SKILLJAR_SELECTORS.courseBox, SKILLJAR_SELECTORS.courseBoxDesc,
+    SKILLJAR_SELECTORS.ribbonText, SKILLJAR_SELECTORS.courseTime,
+    SKILLJAR_SELECTORS.faqTitle, `${SKILLJAR_SELECTORS.faqPost} p`,
+    'div.title', `${SKILLJAR_SELECTORS.lessonRow} div.title`,
+    SKILLJAR_SELECTORS.focusLink, SKILLJAR_SELECTORS.sectionTitle,
+    SKILLJAR_SELECTORS.leftNavReturn, SKILLJAR_SELECTORS.courseOverview,
+    `${SKILLJAR_SELECTORS.lessonTop} h2`, SKILLJAR_SELECTORS.detailsPane,
   ].join(', ');
 
   const EXCLUDE_SELECTOR = [
@@ -778,7 +779,7 @@ RULES:
   }
 
   function getPageContext() {
-    const title = document.querySelector('h1, h2, .course-title')?.textContent || document.title || '';
+    const title = document.querySelector(`h1, h2, ${SKILLJAR_SELECTORS.courseTitle}`)?.textContent || document.title || '';
     const headings = Array.from(document.querySelectorAll('h1, h2, h3, h4'))
       .map(h => h.textContent.trim())
       .slice(0, 5)
