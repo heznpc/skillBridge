@@ -391,8 +391,13 @@
     let idx = 0;
     let staticCount = prevStatic;
     const gtCandidates = [];
+    // Capture generation to detect language switches during processing
+    const myGeneration = gtGeneration;
 
     function processChunk(deadline) {
+      // Abort if language was switched (restoreOriginal increments gtGeneration)
+      if (gtGeneration !== myGeneration) return;
+
       const hasDeadline = typeof deadline !== 'undefined' && typeof deadline.timeRemaining === 'function';
       const chunkEnd = Math.min(idx + SKILLBRIDGE_THRESHOLDS.VIEWPORT_CHUNK_SIZE, elements.length);
 
@@ -410,7 +415,7 @@
         } else {
           setTimeout(processChunk, 0);
         }
-      } else {
+      } else if (gtGeneration === myGeneration) {
         // All offscreen elements processed — queue GT candidates
         if (gtCandidates.length > 0 && targetLang !== 'en') {
           if (prevGt === 0) showTranslationProgress();

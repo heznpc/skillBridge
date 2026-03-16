@@ -48,7 +48,8 @@
     }
 
     // Ctrl/Cmd + Shift + / → Shortcuts help
-    if (ctrl && e.shiftKey && e.key === '/') {
+    // Use e.code because Shift+/ produces '?' on US keyboards (e.key unreliable)
+    if (ctrl && e.shiftKey && e.code === 'Slash') {
       e.preventDefault();
       toggleHelpOverlay();
       return;
