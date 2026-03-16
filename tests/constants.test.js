@@ -18,12 +18,14 @@ const constants = new Function(`${constantsSrc}; return {
   PREMIUM_LANGUAGES, AVAILABLE_LANGUAGES, AVAILABLE_LANGUAGE_CODES,
   SUPPORTED_LANGUAGE_MAP, POPUP_LABELS, DEFAULT_PROTECTED_TERMS,
   YOUTUBE_CLIENT_VERSION, SKILLBRIDGE_MODEL_LABELS,
+  SHORTCUT_LABELS, SHORTCUT_DESCRIPTIONS,
 };`)();
 
 const {
   SKILLBRIDGE_MODELS, SKILLBRIDGE_THRESHOLDS, SKILLBRIDGE_DELAYS,
   PREMIUM_LANGUAGES, AVAILABLE_LANGUAGES,
   POPUP_LABELS, DEFAULT_PROTECTED_TERMS,
+  SHORTCUT_LABELS, SHORTCUT_DESCRIPTIONS,
 } = constants;
 
 describe('SKILLBRIDGE_MODELS', () => {
@@ -130,5 +132,54 @@ describe('DEFAULT_PROTECTED_TERMS', () => {
     expect(DEFAULT_PROTECTED_TERMS).toContain('Claude');
     expect(DEFAULT_PROTECTED_TERMS).toContain('Anthropic');
     expect(DEFAULT_PROTECTED_TERMS).toContain('API');
+  });
+});
+
+describe('SHORTCUT_LABELS', () => {
+  test('title has English fallback', () => {
+    expect(SHORTCUT_LABELS.title.en).toBeDefined();
+    expect(typeof SHORTCUT_LABELS.title.en).toBe('string');
+  });
+
+  test('title has all premium language entries', () => {
+    for (const { code } of PREMIUM_LANGUAGES) {
+      expect(SHORTCUT_LABELS.title[code]).toBeDefined();
+    }
+  });
+});
+
+describe('SHORTCUT_DESCRIPTIONS', () => {
+  const EXPECTED_KEYS = ['toggleSidebar', 'toggleDarkMode', 'showHelp', 'close', 'focusChat'];
+
+  test('has all expected shortcut descriptions', () => {
+    for (const key of EXPECTED_KEYS) {
+      expect(SHORTCUT_DESCRIPTIONS[key]).toBeDefined();
+    }
+  });
+
+  test('each description has English fallback', () => {
+    for (const key of EXPECTED_KEYS) {
+      expect(SHORTCUT_DESCRIPTIONS[key].en).toBeDefined();
+      expect(typeof SHORTCUT_DESCRIPTIONS[key].en).toBe('string');
+    }
+  });
+
+  test('each description has premium language entries', () => {
+    for (const key of EXPECTED_KEYS) {
+      for (const { code } of PREMIUM_LANGUAGES) {
+        expect(SHORTCUT_DESCRIPTIONS[key][code]).toBeDefined();
+      }
+    }
+  });
+});
+
+describe('Performance thresholds', () => {
+  test('VIEWPORT_CHUNK_SIZE is defined and reasonable', () => {
+    expect(SKILLBRIDGE_THRESHOLDS.VIEWPORT_CHUNK_SIZE).toBeGreaterThan(0);
+    expect(SKILLBRIDGE_THRESHOLDS.VIEWPORT_CHUNK_SIZE).toBeLessThanOrEqual(200);
+  });
+
+  test('IDLE_TIMEOUT is defined', () => {
+    expect(SKILLBRIDGE_DELAYS.IDLE_TIMEOUT).toBeGreaterThan(0);
   });
 });

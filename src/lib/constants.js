@@ -29,12 +29,15 @@ const SKILLBRIDGE_THRESHOLDS = {
   GEMINI_BATCH_SIZE: 3,
   VERIFY_QUEUE_MAX: 500,
   PENDING_NODES_MAX: 500,
+  VIEWPORT_CHUNK_SIZE: 50,  // Elements per idle-callback chunk
   CACHE_TTL_MS: 30 * 24 * 60 * 60 * 1000, // 30 days
   CHAT_STREAM_TIMEOUT: 60000, // 60s timeout for AI tutor streaming
   GT_MAX_RETRIES: 3, // Max retries for Google Translate requests
   GT_BASE_DELAY: 500, // Base delay (ms) for exponential backoff
   GT_RATE_LIMIT_PER_MIN: 120, // Max Google Translate requests per minute
   GT_QUEUE_MAX: 200, // Max items in the Google Translate queue
+  BRIDGE_READY_TIMEOUT: 20000, // 20s timeout waiting for Puter.js bridge
+  REQUEST_TIMEOUT: 30000, // 30s timeout for individual AI requests
 };
 
 // ==================== DELAYS (ms) ====================
@@ -44,6 +47,8 @@ const SKILLBRIDGE_DELAYS = {
   GEMINI_BATCH: 300,
   DOM_DEBOUNCE: 300,
   VERIFY_QUEUE: 1000,
+  VERIFY_QUEUE_RETRY: 2000,
+  BRIDGE_READY_VERIFY: 500,
   LATE_CONTENT: 1500,
   SIDEBAR_BIND: 100,
   TEXT_SELECTION: 10,
@@ -52,6 +57,7 @@ const SKILLBRIDGE_DELAYS = {
   PROGRESS_REMOVE: 400,
   WELCOME_BANNER: 1500,
   TEXT_UPDATE_FADE: 500,
+  IDLE_TIMEOUT: 200,        // requestIdleCallback timeout (ms) for offscreen work
 };
 
 // ==================== LIMITS ====================
@@ -269,4 +275,36 @@ const POPUP_LABELS = {
 const SKILLBRIDGE_MODEL_LABELS = {
   GEMINI: 'Gemini 2.0 Flash',
   CLAUDE: 'Claude Sonnet 4',
+};
+
+// ==================== KEYBOARD SHORTCUTS (i18n) ====================
+
+const SHORTCUT_LABELS = {
+  title: {
+    'en': 'Keyboard Shortcuts', 'ko': '키보드 단축키', 'ja': 'キーボードショートカット',
+    'zh-CN': '键盘快捷键', 'es': 'Atajos de teclado', 'fr': 'Raccourcis clavier', 'de': 'Tastaturkürzel',
+  },
+};
+
+const SHORTCUT_DESCRIPTIONS = {
+  toggleSidebar: {
+    'en': 'Toggle AI Tutor', 'ko': 'AI 튜터 열기/닫기', 'ja': 'AIチューター切替',
+    'zh-CN': '切换AI导师', 'es': 'Abrir/cerrar tutor IA', 'fr': 'Ouvrir/fermer tuteur IA', 'de': 'KI-Tutor umschalten',
+  },
+  toggleDarkMode: {
+    'en': 'Toggle dark mode', 'ko': '다크 모드 전환', 'ja': 'ダークモード切替',
+    'zh-CN': '切换暗色模式', 'es': 'Modo oscuro', 'fr': 'Mode sombre', 'de': 'Dunkelmodus',
+  },
+  showHelp: {
+    'en': 'Show shortcuts', 'ko': '단축키 도움말', 'ja': 'ショートカット表示',
+    'zh-CN': '显示快捷键', 'es': 'Ver atajos', 'fr': 'Afficher raccourcis', 'de': 'Tastaturkürzel anzeigen',
+  },
+  close: {
+    'en': 'Close panel', 'ko': '패널 닫기', 'ja': 'パネルを閉じる',
+    'zh-CN': '关闭面板', 'es': 'Cerrar panel', 'fr': 'Fermer le panneau', 'de': 'Panel schließen',
+  },
+  focusChat: {
+    'en': 'Focus chat input', 'ko': '채팅 입력 포커스', 'ja': 'チャット入力にフォーカス',
+    'zh-CN': '聚焦聊天输入', 'es': 'Enfocar chat', 'fr': 'Focus sur le chat', 'de': 'Chat-Eingabe fokussieren',
+  },
 };

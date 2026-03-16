@@ -1,69 +1,33 @@
 /**
  * Unit tests for chat response formatting (markdown → HTML).
- * Extracts formatResponse and applyInline from sidebar-chat.js logic.
+ * Extracts formatResponse and applyInline directly from sidebar-chat.js source.
  */
 
 /* global describe, test, expect */
 
-// Re-implement the pure functions from sidebar-chat.js for testability
-function applyInline(text) {
-  return text
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/`(.*?)`/g, '<code>$1</code>');
-}
+const fs = require('fs');
+const path = require('path');
 
-function formatResponse(text) {
-  const escaped = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+// --- Extract escapeHtml from content.js (the production implementation) ---
+const contentSrc = fs.readFileSync(
+  path.join(__dirname, '..', 'src', 'content', 'content.js'), 'utf8'
+);
+const escapeHtmlBody = contentSrc.match(
+  /function escapeHtml\(text\)\s*\{([\s\S]*?)\n  \}/
+);
+const escapeHtml = new Function('text', escapeHtmlBody[1]);
 
-  const normalized = escaped
-    .replace(/([^\n])(#{2,3}\s)/g, '$1\n$2')
-    .replace(/([^\n])([-*]\s)/g, '$1\n$2')
-    .replace(/([^\n])(\d+[.)]\s)/g, '$1\n$2');
-
-  const lines = normalized.split('\n');
-  const out = [];
-  let listBuf = [];
-  let listOrdered = false;
-  let paraBuf = [];
-
-  const flushList = () => {
-    if (!listBuf.length) return;
-    const tag = listOrdered ? 'ol' : 'ul';
-    out.push(`<${tag}>${listBuf.map(t => `<li>${applyInline(t)}</li>`).join('')}</${tag}>`);
-    listBuf = [];
-  };
-  const flushPara = () => {
-    if (!paraBuf.length) return;
-    out.push(`<p>${applyInline(paraBuf.join('<br>'))}</p>`);
-    paraBuf = [];
-  };
-
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed) { flushList(); flushPara(); continue; }
-    const hMatch = trimmed.match(/^(#{2,3})\s+(.+)/);
-    if (hMatch) { flushList(); flushPara(); out.push(`<h3>${applyInline(hMatch[2])}</h3>`); continue; }
-    const ulMatch = trimmed.match(/^[-*]\s+(.*)/);
-    if (ulMatch) {
-      if (listBuf.length && listOrdered) flushList();
-      listOrdered = false; flushPara(); listBuf.push(ulMatch[1]); continue;
-    }
-    const olMatch = trimmed.match(/^\d+[.)]\s+(.*)/);
-    if (olMatch) {
-      if (listBuf.length && !listOrdered) flushList();
-      listOrdered = true; flushPara(); listBuf.push(olMatch[1]); continue;
-    }
-    flushList(); paraBuf.push(trimmed);
-  }
-  flushList(); flushPara();
-  return out.join('');
-}
+// --- Extract formatResponse + applyInline from sidebar-chat.js ---
+const sidebarSrc = fs.readFileSync(
+  path.join(__dirname, '..', 'src', 'content', 'sidebar-chat.js'), 'utf8'
+);
+const fmtBlock = sidebarSrc.match(
+  /function formatResponse\(text\)\s*\{[\s\S]*?\n  \}\n\n  function applyInline[\s\S]*?\n  \}/
+);
+const { formatResponse, applyInline } = new Function(
+  'sb',
+  `${fmtBlock[0]}\n  return { formatResponse, applyInline };`
+)({ escapeHtml });
 
 describe('applyInline', () => {
   test('converts bold markdown', () => {
@@ -131,16 +95,31 @@ describe('formatResponse', () => {
   });
 
   test('applies inline formatting within paragraphs', () => {
-    // ** gets split by the normalize step when preceded by non-newline before *
     const result = formatResponse('Use **bold** here');
-    expect(result).toContain('bold');
+    expect(result).toContain('<strong>bold</strong>');
   });
 
-  test('applies inline formatting in pre-split list items', () => {
-    // Items already on separate lines work correctly
-    const result = formatResponse('- first item\n- second item');
-    expect(result).toContain('<li>first item</li>');
-    expect(result).toContain('<li>second item</li>');
+  test('applies inline formatting in list items', () => {
+    const result = formatResponse('- **bold** item\n- *italic* item');
+    expect(result).toContain('<li><strong>bold</strong> item</li>');
+    expect(result).toContain('<li><em>italic</em> item</li>');
+  });
+
+  test('converts ### headings to h3', () => {
+    expect(formatResponse('### Sub Heading')).toBe('<h3>Sub Heading</h3>');
+  });
+
+  test('converts ordered list with ) delimiter', () => {
+    const result = formatResponse('1) first\n2) second');
+    expect(result).toContain('<ol>');
+    expect(result).toContain('<li>first</li>');
+    expect(result).toContain('<li>second</li>');
+  });
+
+  test('switches from unordered to ordered list', () => {
+    const result = formatResponse('- bullet\n\n1. numbered');
+    expect(result).toContain('<ul><li>bullet</li></ul>');
+    expect(result).toContain('<ol><li>numbered</li></ol>');
   });
 
   test('handles empty input', () => {

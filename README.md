@@ -141,7 +141,7 @@ Also works in Edge, Brave, Arc, and other Chromium-based browsers.
 
 ## How It Works
 
-SkillBridge uses a **five-tier translation engine** that prioritizes speed and accuracy:
+SkillBridge uses a **multi-stage translation engine** that prioritizes speed and accuracy:
 
 ```
 Page text
@@ -160,7 +160,7 @@ Page text
        └─ Complex sentence? → Gemini 2.0 Flash verifies → corrects if needed
 ```
 
-Translation requests are sent to Google Translate and Gemini/Claude APIs via [Puter.js](https://docs.puter.com/) — no data is stored on our servers, and no account or API key is required.
+Translation requests are sent to Google Translate and Gemini/Claude APIs via [Puter.js](https://docs.puter.com/). SkillBridge does not operate any servers — but text is transmitted to these third-party services for translation and AI features. No account or API key is required. See our [Privacy Policy](PRIVACY_POLICY.md) for full details.
 
 ## Supported Languages
 
@@ -186,9 +186,9 @@ Translation requests are sent to Google Translate and Gemini/Claude APIs via [Pu
 SkillBridge is designed with privacy first:
 
 - **No data collection** — zero analytics, zero tracking, zero telemetry
-- **No servers** — all translation happens client-side or via public APIs (Google Translate, Puter.js)
+- **No SkillBridge servers** — we do not operate any servers. Translation and AI requests are sent to third-party services (Google Translate, Puter.js → Gemini/Claude)
 - **No accounts required** — works immediately after install
-- **No stored content** — only caches translated outputs (never originals) in your local IndexedDB
+- **Local storage only** — translation cache (30-day TTL) and chat history are stored in your browser's IndexedDB. This data never leaves your device
 - **Open source** — every line of code is auditable right here
 
 See our full [Privacy Policy](PRIVACY_POLICY.md).

@@ -194,6 +194,9 @@ chrome.runtime.onInstalled.addListener((details) => {
 
 // Message handlers
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  // Verify sender is this extension
+  if (sender.id !== chrome.runtime.id) return;
+
   if (msg.type === 'FETCH_URL') {
     if (!isAllowedFetchUrl(msg.url)) {
       sendResponse({ ok: false, error: 'URL not in allowlist' });
@@ -201,9 +204,6 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     }
     const fetchOpts = {};
     const headers = {};
-    if (isYouTubeUrl(msg.url)) {
-      headers['Cookie'] = 'CONSENT=YES+cb; SOCS=CAESEwgDEgk2OTgxMTk0NTQaAmVuIAEaBgiA_LyaBg';
-    }
     // Support POST requests (used for InnerTube API)
     if (msg.method === 'POST' && msg.body) {
       fetchOpts.method = 'POST';

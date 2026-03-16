@@ -2,8 +2,8 @@
  * SkillBridge for Anthropic Academy - Content Script
  * Injects translation UI and handles page content translation
  *
- * Respects copyright: only translates displayed text on-the-fly
- * Never stores, caches permanently, or redistributes original content
+ * Translates displayed text on-the-fly in the user's browser.
+ * Translations are cached locally (IndexedDB, 30-day TTL). Original content is not redistributed.
  */
 
 (function () {
@@ -300,55 +300,129 @@
   }
 
   // ============================================================
-  // STATIC TRANSLATIONS + GT QUEUE
+  // STATIC TRANSLATIONS + GT QUEUE (viewport-first, chunked)
   // ============================================================
+
+  function isInViewport(el) {
+    const rect = el.getBoundingClientRect();
+    return rect.bottom > 0 && rect.top < window.innerHeight;
+  }
+
+  /**
+   * Process a single element: try static dict, then return category.
+   * Returns 'static' | 'gt' | null.
+   */
+  function processOneElement(el, targetLang) {
+    const fullText = el.textContent.trim();
+    if (!fullText || fullText.length < 2) return null;
+    if (!isLikelyEnglish(fullText)) return null;
+
+    if (!originalTexts.has(el)) {
+      originalTexts.set(el, el.innerHTML);
+    }
+
+    const elementMatch = translator.staticLookup(fullText);
+    if (elementMatch) {
+      safeReplaceText(el, elementMatch);
+      return 'static';
+    }
+
+    let allNodesMatched = true;
+    let matchCount = 0;
+    const textNodes = getTextNodes(el);
+    for (const node of textNodes) {
+      const text = node.textContent.trim();
+      if (text.length < 2) continue;
+      const nodeMatch = translator.staticLookup(text);
+      if (nodeMatch) {
+        node.textContent = nodeMatch;
+        matchCount++;
+      } else if (text.length >= 4 && isLikelyEnglish(text)) {
+        allNodesMatched = false;
+      }
+    }
+
+    if (!allNodesMatched && fullText.length >= 10) return 'gt';
+    return matchCount > 0 ? 'static' : null;
+  }
 
   function applyStaticTranslations(targetLang) {
     buildProtectedTermsMap(targetLang);
     updateLangClass(targetLang);
 
     const elements = getTranslatableElements();
+    if (elements.length === 0) return;
+
+    // Split into viewport (visible) and offscreen for prioritized processing
+    const visible = [];
+    const offscreen = [];
+    for (const el of elements) {
+      (isInViewport(el) ? visible : offscreen).push(el);
+    }
+
+    // Phase 1 — Process visible elements immediately (no jank for above-fold)
     let staticCount = 0;
     const gtCandidates = [];
 
-    for (const el of elements) {
-      const fullText = el.textContent.trim();
-      if (!fullText || fullText.length < 2) continue;
-      if (!isLikelyEnglish(fullText)) continue;
-
-      if (!originalTexts.has(el)) {
-        originalTexts.set(el, el.innerHTML);
-      }
-
-      const elementMatch = translator.staticLookup(fullText);
-      if (elementMatch) {
-        safeReplaceText(el, elementMatch);
-        staticCount++;
-        continue;
-      }
-
-      let allNodesMatched = true;
-      const textNodes = getTextNodes(el);
-      for (const node of textNodes) {
-        const text = node.textContent.trim();
-        if (text.length < 2) continue;
-        const nodeMatch = translator.staticLookup(text);
-        if (nodeMatch) {
-          node.textContent = nodeMatch;
-          staticCount++;
-        } else if (text.length >= 4 && isLikelyEnglish(text)) {
-          allNodesMatched = false;
-        }
-      }
-
-      if (!allNodesMatched && fullText.length >= 10) {
-        gtCandidates.push(el);
-      }
+    for (const el of visible) {
+      const result = processOneElement(el, targetLang);
+      if (result === 'static') staticCount++;
+      else if (result === 'gt') gtCandidates.push(el);
     }
+
+    // Start GT for visible elements right away
     if (gtCandidates.length > 0 && targetLang !== 'en') {
       showTranslationProgress();
-      updateTranslationProgress(Math.round((staticCount / (staticCount + gtCandidates.length)) * 80));
+      updateTranslationProgress(Math.round((staticCount / (staticCount + gtCandidates.length + offscreen.length)) * 80));
       queueForGoogleTranslate(gtCandidates, targetLang);
+    }
+
+    // Phase 2 — Process offscreen elements in idle-time chunks
+    if (offscreen.length > 0) {
+      processOffscreenChunked(offscreen, targetLang, staticCount, gtCandidates.length);
+    }
+  }
+
+  /**
+   * Process offscreen elements in small chunks during idle time,
+   * preventing main-thread blocking on pages with 500+ elements.
+   */
+  function processOffscreenChunked(elements, targetLang, prevStatic, prevGt) {
+    let idx = 0;
+    let staticCount = prevStatic;
+    const gtCandidates = [];
+
+    function processChunk(deadline) {
+      const hasDeadline = typeof deadline !== 'undefined' && typeof deadline.timeRemaining === 'function';
+      const chunkEnd = Math.min(idx + SKILLBRIDGE_THRESHOLDS.VIEWPORT_CHUNK_SIZE, elements.length);
+
+      while (idx < chunkEnd && (!hasDeadline || deadline.timeRemaining() > 1)) {
+        const el = elements[idx++];
+        const result = processOneElement(el, targetLang);
+        if (result === 'static') staticCount++;
+        else if (result === 'gt') gtCandidates.push(el);
+      }
+
+      if (idx < elements.length) {
+        // Yield and continue in next idle period
+        if (typeof requestIdleCallback !== 'undefined') {
+          requestIdleCallback(processChunk, { timeout: SKILLBRIDGE_DELAYS.IDLE_TIMEOUT });
+        } else {
+          setTimeout(processChunk, 0);
+        }
+      } else {
+        // All offscreen elements processed — queue GT candidates
+        if (gtCandidates.length > 0 && targetLang !== 'en') {
+          if (prevGt === 0) showTranslationProgress();
+          queueForGoogleTranslate(gtCandidates, targetLang);
+        }
+      }
+    }
+
+    if (typeof requestIdleCallback !== 'undefined') {
+      requestIdleCallback(processChunk, { timeout: SKILLBRIDGE_DELAYS.IDLE_TIMEOUT });
+    } else {
+      setTimeout(processChunk, 0);
     }
   }
 
@@ -364,13 +438,21 @@
   }
 
   function queueForGoogleTranslate(elements, targetLang) {
+    // Separate visible and offscreen for priority ordering
+    const visibleItems = [];
+    const offscreenItems = [];
+
     for (const el of elements) {
       if (gtTranslateQueue.length >= SKILLBRIDGE_THRESHOLDS.GT_QUEUE_MAX) break;
       const text = el.textContent.trim();
       if (!text || text.length < 4) continue;
       const needsGemini = hasInlineTags(el);
-      gtTranslateQueue.push({ el, text, targetLang, needsGemini });
+      const item = { el, text, targetLang, needsGemini };
+      (isInViewport(el) ? visibleItems : offscreenItems).push(item);
     }
+
+    // Visible elements go first in the queue
+    gtTranslateQueue.push(...visibleItems, ...offscreenItems);
     processGTQueue();
   }
 
