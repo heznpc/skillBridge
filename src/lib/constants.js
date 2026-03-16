@@ -57,7 +57,8 @@ const SKILLBRIDGE_DELAYS = {
   PROGRESS_REMOVE: 400,
   WELCOME_BANNER: 1500,
   TEXT_UPDATE_FADE: 500,
-  IDLE_TIMEOUT: 200,        // requestIdleCallback timeout (ms) for offscreen work
+  IDLE_TIMEOUT: 1000,       // requestIdleCallback timeout (ms) for offscreen work
+  OVERLAY_REMOVE: 200,      // delay before removing overlay element after fade-out
 };
 
 // ==================== LIMITS ====================

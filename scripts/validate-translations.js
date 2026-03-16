@@ -28,6 +28,8 @@ for (const filePath of targetFiles) {
   const file = path.basename(filePath);
   let data;
 
+  const errorsBefore = errors;
+
   // 1. Valid JSON
   try {
     data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
@@ -110,7 +112,9 @@ for (const filePath of targetFiles) {
     warnings++;
   }
 
-  console.log(`  ✓ ${file}`);
+  // Only show checkmark if this file had no errors
+  const fileErrors = errors - errorsBefore;
+  if (fileErrors === 0) console.log(`  ✓ ${file}`);
 }
 
 // Summary

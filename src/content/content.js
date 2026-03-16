@@ -370,11 +370,11 @@
       else if (result === 'gt') gtCandidates.push(el);
     }
 
-    // Start GT for visible elements right away
+    // Start GT for visible elements right away (skip redundant viewport check)
     if (gtCandidates.length > 0 && targetLang !== 'en') {
       showTranslationProgress();
       updateTranslationProgress(Math.round((staticCount / (staticCount + gtCandidates.length + offscreen.length)) * 80));
-      queueForGoogleTranslate(gtCandidates, targetLang);
+      queueForGoogleTranslate(gtCandidates, targetLang, true);
     }
 
     // Phase 2 — Process offscreen elements in idle-time chunks
@@ -400,12 +400,15 @@
 
       const hasDeadline = typeof deadline !== 'undefined' && typeof deadline.timeRemaining === 'function';
       const chunkEnd = Math.min(idx + SKILLBRIDGE_THRESHOLDS.VIEWPORT_CHUNK_SIZE, elements.length);
+      let processed = 0;
 
-      while (idx < chunkEnd && (!hasDeadline || deadline.timeRemaining() > 1)) {
+      // Always process at least 1 element per callback to guarantee forward progress
+      while (idx < chunkEnd && (processed === 0 || !hasDeadline || deadline.timeRemaining() > 1)) {
         const el = elements[idx++];
         const result = processOneElement(el, targetLang);
         if (result === 'static') staticCount++;
         else if (result === 'gt') gtCandidates.push(el);
+        processed++;
       }
 
       if (idx < elements.length) {
@@ -442,22 +445,29 @@
     return total > 0 && (latin / total) > 0.5;
   }
 
-  function queueForGoogleTranslate(elements, targetLang) {
-    // Separate visible and offscreen for priority ordering
-    const visibleItems = [];
-    const offscreenItems = [];
-
-    for (const el of elements) {
-      if (gtTranslateQueue.length >= SKILLBRIDGE_THRESHOLDS.GT_QUEUE_MAX) break;
-      const text = el.textContent.trim();
-      if (!text || text.length < 4) continue;
-      const needsGemini = hasInlineTags(el);
-      const item = { el, text, targetLang, needsGemini };
-      (isInViewport(el) ? visibleItems : offscreenItems).push(item);
+  /**
+   * @param {boolean} [alreadyVisible] — if true, skip viewport re-check (caller already classified)
+   */
+  function queueForGoogleTranslate(elements, targetLang, alreadyVisible) {
+    if (alreadyVisible) {
+      for (const el of elements) {
+        if (gtTranslateQueue.length >= SKILLBRIDGE_THRESHOLDS.GT_QUEUE_MAX) break;
+        const text = el.textContent.trim();
+        if (!text || text.length < 4) continue;
+        gtTranslateQueue.push({ el, text, targetLang, needsGemini: hasInlineTags(el) });
+      }
+    } else {
+      const visibleItems = [];
+      const offscreenItems = [];
+      for (const el of elements) {
+        if (gtTranslateQueue.length + visibleItems.length + offscreenItems.length >= SKILLBRIDGE_THRESHOLDS.GT_QUEUE_MAX) break;
+        const text = el.textContent.trim();
+        if (!text || text.length < 4) continue;
+        const item = { el, text, targetLang, needsGemini: hasInlineTags(el) };
+        (isInViewport(el) ? visibleItems : offscreenItems).push(item);
+      }
+      gtTranslateQueue.push(...visibleItems, ...offscreenItems);
     }
-
-    // Visible elements go first in the queue
-    gtTranslateQueue.push(...visibleItems, ...offscreenItems);
     processGTQueue();
   }
 
@@ -804,7 +814,7 @@
 
   // Tags allowed in Gemini block translation output — derived from existing sets + <br>
   const SAFE_TAGS = new Set(
-    [...INLINE_TAGS, ...NO_TRANSLATE_TAGS, 'BR'].map(t => t.toLowerCase())
+    [...INLINE_TAGS, ...NO_TRANSLATE_TAGS, 'BR'].map(tag => tag.toLowerCase())
   );
 
   function xmlToHtml(translatedXml, tagInfo) {
@@ -969,39 +979,15 @@ RULES:
           }
         }
 
-        const handledNodes = new Set();
         const gtCandidates = [];
 
         for (const el of elements) {
           if (el.closest(EXCLUDE_SELECTOR)) continue;
-          const fullText = el.textContent.trim();
-          if (fullText.length < 2) continue;
-          if (!isLikelyEnglish(fullText)) continue;
-
-          const match = translator.staticLookup(fullText);
-          if (match) {
-            if (!originalTexts.has(el)) originalTexts.set(el, el.innerHTML);
-            safeReplaceText(el, match);
-            getTextNodes(el).forEach(tn => handledNodes.add(tn));
-          } else if (fullText.length >= 10) {
-            gtCandidates.push(el);
-          }
-        }
-
-        const allTextNodes = nodes.flatMap(n => getTextNodes(n));
-        for (const tn of allTextNodes) {
-          if (handledNodes.has(tn)) continue;
-          const original = tn.textContent.trim();
-          if (original.length >= 2 && !isCodeContent(tn)) {
-            const staticResult = translator.staticLookup(original);
-            if (staticResult) tn.textContent = staticResult;
-          }
+          const result = processOneElement(el, currentLang);
+          if (result === 'gt') gtCandidates.push(el);
         }
 
         if (gtCandidates.length > 0) {
-          for (const el of gtCandidates) {
-            if (!originalTexts.has(el)) originalTexts.set(el, el.innerHTML);
-          }
           queueForGoogleTranslate(gtCandidates, currentLang);
         }
       }

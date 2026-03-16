@@ -7,21 +7,21 @@
   'use strict';
 
   const sb = window._sb;
-  let helpOverlayVisible = false;
+  let removeTimer = null;
 
   const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
   const MOD_LABEL = isMac ? '\u2318' : 'Ctrl';
 
   const SHORTCUTS = [
-    { key: 's', ctrl: true, shift: true, action: 'toggleSidebar',
+    { key: 's', ctrl: true, shift: true,
       label: SHORTCUT_DESCRIPTIONS.toggleSidebar },
-    { key: 'l', ctrl: true, shift: true, action: 'toggleDarkMode',
+    { key: 'l', ctrl: true, shift: true,
       label: SHORTCUT_DESCRIPTIONS.toggleDarkMode },
-    { key: '/', ctrl: true, shift: true, action: 'showHelp',
+    { key: '/', ctrl: true, shift: true,
       label: SHORTCUT_DESCRIPTIONS.showHelp },
-    { key: 'Escape', action: 'close',
+    { key: 'Escape',
       label: SHORTCUT_DESCRIPTIONS.close },
-    { key: '/', action: 'focusChat',
+    { key: '/',
       label: SHORTCUT_DESCRIPTIONS.focusChat },
   ];
 
@@ -43,7 +43,7 @@
     // Ctrl/Cmd + Shift + L → Toggle dark mode
     if (ctrl && e.shiftKey && e.key.toLowerCase() === 'l') {
       e.preventDefault();
-      document.getElementById('si18n-dark-toggle')?.click();
+      sb.toggleDarkMode?.();
       return;
     }
 
@@ -57,7 +57,7 @@
 
     // Escape → Close help overlay or sidebar
     if (e.key === 'Escape') {
-      if (helpOverlayVisible) { hideHelpOverlay(); return; }
+      if (isHelpVisible()) { hideHelpOverlay(); return; }
       if (sb.sidebarVisible) { sb.toggleSidebar?.(); return; }
       return;
     }
@@ -75,26 +75,31 @@
   // HELP OVERLAY
   // ============================================================
 
+  function isHelpVisible() {
+    return !!document.getElementById('si18n-shortcuts-overlay');
+  }
+
   function toggleHelpOverlay() {
-    helpOverlayVisible ? hideHelpOverlay() : showHelpOverlay();
+    isHelpVisible() ? hideHelpOverlay() : showHelpOverlay();
   }
 
   function showHelpOverlay() {
-    if (document.getElementById('si18n-shortcuts-overlay')) return;
-    helpOverlayVisible = true;
+    // Cancel pending removal and clear stale overlay
+    if (removeTimer) { clearTimeout(removeTimer); removeTimer = null; }
+    document.getElementById('si18n-shortcuts-overlay')?.remove();
 
     const overlay = document.createElement('div');
     overlay.id = 'si18n-shortcuts-overlay';
     overlay.innerHTML = `
       <div class="si18n-shortcuts-panel">
         <div class="si18n-shortcuts-header">
-          <span>${sb.t(SHORTCUT_LABELS.title)}</span>
+          <span>${sb.escapeHtml(sb.t(SHORTCUT_LABELS.title))}</span>
           <button class="si18n-shortcuts-close">&times;</button>
         </div>
         <div class="si18n-shortcuts-body">
           ${SHORTCUTS.map(s => `
             <div class="si18n-shortcut-row">
-              <span class="si18n-shortcut-desc">${sb.t(s.label)}</span>
+              <span class="si18n-shortcut-desc">${sb.escapeHtml(sb.t(s.label))}</span>
               <kbd class="si18n-shortcut-key">${formatKey(s)}</kbd>
             </div>
           `).join('')}
@@ -114,9 +119,9 @@
   function hideHelpOverlay() {
     const overlay = document.getElementById('si18n-shortcuts-overlay');
     if (!overlay) return;
-    helpOverlayVisible = false;
     overlay.classList.remove('visible');
-    setTimeout(() => overlay.remove(), 200);
+    if (removeTimer) clearTimeout(removeTimer);
+    removeTimer = setTimeout(() => { overlay.remove(); removeTimer = null; }, SKILLBRIDGE_DELAYS.OVERLAY_REMOVE);
   }
 
   function formatKey(shortcut) {
