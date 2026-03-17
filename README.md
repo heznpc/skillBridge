@@ -9,6 +9,8 @@
 [![CI](https://github.com/heznpc/skillBridge/actions/workflows/ci.yml/badge.svg)](https://github.com/heznpc/skillBridge/actions/workflows/ci.yml)
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Chrome MV3](https://img.shields.io/badge/Chrome-Extension_MV3-blue.svg)](https://developer.chrome.com/docs/extensions/)
+[![Firefox MV3](https://img.shields.io/badge/Firefox-Add--on_MV3-orange.svg)](https://extensionworkshop.com/)
+[![Edge MV3](https://img.shields.io/badge/Edge-Extension_MV3-blue.svg)](https://microsoftedge.microsoft.com/addons/)
 [![GitHub stars](https://img.shields.io/github/stars/heznpc/skillbridge?style=social)](https://github.com/heznpc/skillbridge/stargazers)
 [![GitHub contributors](https://img.shields.io/github/contributors/heznpc/skillbridge)](https://github.com/heznpc/skillbridge/graphs/contributors)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
@@ -124,6 +126,8 @@ Generic translation tools often **mistranslate brand names and technical terms**
 
 ## Installation
 
+### Chrome / Edge / Chromium browsers
+
 > Install from the [Chrome Web Store](https://chromewebstore.google.com/) (search "SkillBridge for Anthropic Academy").
 
 **Manual install** (developer mode):
@@ -132,12 +136,27 @@ Generic translation tools often **mistranslate brand names and technical terms**
 git clone https://github.com/heznpc/skillbridge.git
 ```
 
-1. Open `chrome://extensions/` in Chrome
+1. Open `chrome://extensions/` (Chrome) or `edge://extensions/` (Edge)
 2. Enable **Developer mode** (top-right toggle)
 3. Click **Load unpacked** → select the cloned folder
 4. Visit [anthropic.skilljar.com](https://anthropic.skilljar.com/) and start learning!
 
-Also works in Edge, Brave, Arc, and other Chromium-based browsers.
+Also works in Brave, Arc, Opera, Vivaldi, and other Chromium-based browsers.
+
+### Firefox
+
+```bash
+git clone https://github.com/heznpc/skillbridge.git
+cd skillbridge
+npm run build:firefox
+```
+
+1. Open `about:debugging#/runtime/this-firefox` in Firefox
+2. Click **Load Temporary Add-on**
+3. Navigate to `dist/firefox/` and select `manifest.json`
+4. Visit [anthropic.skilljar.com](https://anthropic.skilljar.com/) and start learning!
+
+> **Note:** Temporary add-ons are removed when Firefox restarts. For permanent installation, use a signed `.xpi` from [Firefox Add-ons](https://addons.mozilla.org/) (coming soon).
 
 ## How It Works
 
@@ -222,7 +241,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide and [Good First Issues
 <details>
 <summary><strong>Does it work on browsers other than Chrome?</strong></summary>
 
-Yes! SkillBridge works on any Chromium-based browser — Edge, Brave, Arc, Opera, and Vivaldi. Load it as an unpacked extension the same way.
+Yes! SkillBridge supports **Chrome**, **Firefox**, and **Edge** (plus Brave, Arc, Opera, and Vivaldi). For Chrome/Edge, load the extension directly. For Firefox, run `npm run build:firefox` to generate a compatible build. See [Installation](#installation) for detailed instructions.
 </details>
 
 <details>
@@ -252,7 +271,7 @@ No. SkillBridge is an unofficial community project. It is not affiliated with, e
 ## Roadmap
 
 - Additional curated language dictionaries (community-driven)
-- Firefox and Edge Add-on support
+- ~~Firefox and Edge Add-on support~~ (done)
 - Translation quality analytics and community review
 - Multi-LMS platform support beyond Skilljar
 

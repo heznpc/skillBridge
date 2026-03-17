@@ -49,20 +49,26 @@ No build step. No npm install. It just works.
 ## Development Setup
 
 **Requirements:**
-- Google Chrome (latest)
+- Google Chrome, Firefox, or Edge (latest)
 - A text editor (VS Code recommended)
 - A free [Puter.js](https://puter.com) account (for AI Tutor testing — optional)
 
 **Loading the Extension:**
 
-1. Open `chrome://extensions`
+Chrome / Edge:
+1. Open `chrome://extensions` (Chrome) or `edge://extensions` (Edge)
 2. Enable **Developer Mode** (toggle in top-right)
 3. Click **Load unpacked** and select the project root folder
 4. The SkillBridge icon should appear in your toolbar
 
+Firefox:
+1. Run `npm run build:firefox` to generate the Firefox-compatible build
+2. Open `about:debugging#/runtime/this-firefox`
+3. Click **Load Temporary Add-on** and select `dist/firefox/manifest.json`
+
 **Testing Changes:**
 
-After editing any file, go to `chrome://extensions` and click the reload button (🔄) on the SkillBridge card. Then refresh the Skilljar page.
+After editing any file, go to `chrome://extensions` and click the reload button on the SkillBridge card. Then refresh the Skilljar page. For Firefox, re-run `npm run build:firefox` and reload the temporary add-on.
 
 **Running Tests:**
 
@@ -108,6 +114,7 @@ skillbridge/
 │   │   ├── popup.html         # Extension popup UI
 │   │   └── popup.js           # Popup logic
 │   ├── lib/
+│   │   ├── browser-polyfill.js   # Cross-browser API compatibility shim
 │   │   ├── constants.js       # Shared constants, thresholds, i18n labels
 │   │   ├── translator.js      # Translation engine (Static → Cache → GT + Gemini)
 │   │   ├── youtube-subtitles.js  # YouTube auto-subtitle enabler
@@ -120,6 +127,9 @@ skillbridge/
 │       ├── fr.json            # English → French
 │       └── de.json            # English → German
 ├── assets/icons/              # Extension icons
+├── scripts/
+│   ├── build-firefox.js       # Generates Firefox-compatible build in dist/firefox/
+│   └── audit-translations.js  # Translation audit utility
 ├── docs/                      # Roadmap, i18n READMEs, CWS listing
 │   ├── i18n/                  # Translated READMEs (KO, JA, ZH-CN, ES, FR, DE)
 │   ├── ROADMAP.md             # Project roadmap
@@ -270,7 +280,8 @@ The tutor lives in `src/content/sidebar-chat.js` (sidebar UI, chat, conversation
 
 - **Vanilla JavaScript** — no frameworks, no build step, no transpilation
 - **No external npm dependencies** — the extension must work without `npm install`
-- **Chrome Manifest V3** — respect the strict CSP. No inline scripts, no eval()
+- **Manifest V3** — respect the strict CSP. No inline scripts, no eval()
+- **Cross-browser compatibility** — use `chrome.*` APIs (the polyfill handles Firefox). Do not use Firefox-only `browser.*` APIs directly. Avoid Chrome-only features not supported by Firefox MV3 (e.g., `chrome.offscreen`). When in doubt, check [MDN's browser compatibility tables](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Browser_support_for_JavaScript_APIs)
 - **Naming conventions:**
   - CSS classes: `si18n-*` (sidebar/UI) or `sb-transcript-*` (transcript panel)
   - HTML IDs: `skillbridge-*`
