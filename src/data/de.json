@@ -653,5 +653,23 @@
     "hooks": [
       "Haken"
     ]
+  },
+  "exam_ui": {
+    "Pass": "Bestanden",
+    "Fail": "Nicht bestanden",
+    "Passing score": "Mindestpunktzahl",
+    "Your score": "Ihre Punktzahl",
+    "Retake": "Erneut versuchen",
+    "Attempt": "Versuch",
+    "Attempts remaining": "Verbleibende Versuche",
+    "Time remaining": "Verbleibende Zeit",
+    "Next question": "Nächste Frage",
+    "Previous question": "Vorherige Frage",
+    "Review answers": "Antworten überprüfen",
+    "Submit exam": "Prüfung abgeben",
+    "Exam complete": "Prüfung abgeschlossen",
+    "You passed!": "Herzlichen Glückwunsch, Sie haben bestanden!",
+    "You did not pass": "Sie haben nicht bestanden",
+    "Question": "Frage"
   }
 }

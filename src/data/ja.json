@@ -653,5 +653,23 @@
     "hooks": [
       "フック"
     ]
+  },
+  "exam_ui": {
+    "Pass": "合格",
+    "Fail": "不合格",
+    "Passing score": "合格点",
+    "Your score": "あなたのスコア",
+    "Retake": "再受験",
+    "Attempt": "受験回",
+    "Attempts remaining": "残りの受験回数",
+    "Time remaining": "残り時間",
+    "Next question": "次の問題",
+    "Previous question": "前の問題",
+    "Review answers": "解答を確認",
+    "Submit exam": "試験を提出",
+    "Exam complete": "試験完了",
+    "You passed!": "おめでとうございます、合格です！",
+    "You did not pass": "不合格です",
+    "Question": "問題"
   }
 }

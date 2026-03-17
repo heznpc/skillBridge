@@ -8,17 +8,22 @@
 const fs = require('fs');
 const path = require('path');
 
+const selectorsSrc = fs.readFileSync(
+  path.join(__dirname, '..', 'src', 'lib', 'selectors.js'), 'utf8'
+);
 const constantsSrc = fs.readFileSync(
   path.join(__dirname, '..', 'src', 'lib', 'constants.js'), 'utf8'
 );
 
-// Eval constants into a returned object so they're accessible in test scope
-const constants = new Function(`${constantsSrc}; return {
+// Eval selectors first (constants.js references SKILLJAR_SELECTORS), then constants
+const constants = new Function(`${selectorsSrc}\n${constantsSrc}; return {
   SKILLBRIDGE_MODELS, SKILLBRIDGE_THRESHOLDS, SKILLBRIDGE_DELAYS, SKILLBRIDGE_LIMITS,
   PREMIUM_LANGUAGES, AVAILABLE_LANGUAGES, AVAILABLE_LANGUAGE_CODES,
   SUPPORTED_LANGUAGE_MAP, POPUP_LABELS, DEFAULT_PROTECTED_TERMS,
   YOUTUBE_CLIENT_VERSION, SKILLBRIDGE_MODEL_LABELS,
   SHORTCUT_LABELS, SHORTCUT_DESCRIPTIONS,
+  EXAM_URL_PATTERNS, EXAM_SKIP_SELECTORS, EXAM_BANNER_LABELS, TUTOR_EXAM_LABELS,
+  SKILLJAR_SELECTORS,
 };`)();
 
 const {

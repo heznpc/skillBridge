@@ -656,5 +656,23 @@
       "钩子",
       "挂钩"
     ]
+  },
+  "exam_ui": {
+    "Pass": "通过",
+    "Fail": "未通过",
+    "Passing score": "及格分数",
+    "Your score": "您的分数",
+    "Retake": "重新考试",
+    "Attempt": "尝试",
+    "Attempts remaining": "剩余尝试次数",
+    "Time remaining": "剩余时间",
+    "Next question": "下一题",
+    "Previous question": "上一题",
+    "Review answers": "查看答案",
+    "Submit exam": "提交考试",
+    "Exam complete": "考试完成",
+    "You passed!": "恭喜您，考试通过！",
+    "You did not pass": "您未通过考试",
+    "Question": "题目"
   }
 }
