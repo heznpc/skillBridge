@@ -638,7 +638,7 @@
     const terms = Object.keys(protectedEntries);
     _protectedKeepEnglish = terms.length > 0
       ? terms.join(', ')
-      : 'API, SDK, Claude, Anthropic, Claude Code, Enterprise, Personal, Plugin, skill, SKILL.md, frontmatter';
+      : DEFAULT_PROTECTED_TERMS;
   }
 
   function restoreProtectedTerms(text) {
@@ -783,7 +783,11 @@ RULES:
       .map(h => h.textContent.trim())
       .slice(0, 5)
       .join(', ');
-    return `Course: ${title}. Sections: ${headings}`;
+    const lessonBody = document.querySelector('#lesson-main, .lesson-content, .course-content, main');
+    const bodyText = lessonBody
+      ? lessonBody.innerText.replace(/\s+/g, ' ').trim().slice(0, 2000)
+      : '';
+    return `Course: ${title}. Sections: ${headings}${bodyText ? `\n\nLesson content:\n${bodyText}` : ''}`;
   }
 
   // ============================================================

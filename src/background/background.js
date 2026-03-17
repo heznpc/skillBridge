@@ -12,6 +12,10 @@
 // Service workers can't share globals with content scripts, so we duplicate here.
 const _BG_GT_LANG_MAP = { 'zh-CN': 'zh-CN', 'zh-TW': 'zh-TW', 'pt-BR': 'pt' };
 
+// YouTube InnerTube client version
+// NOTE: Same value exists in constants.js (YOUTUBE_CLIENT_VERSION) for content scripts.
+const _BG_YT_CLIENT_VERSION = '2.20240101.00.00';
+
 function gtLangCode(lang) {
   return _BG_GT_LANG_MAP[lang] || lang;
 }
@@ -95,7 +99,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         headers['Origin'] = 'https://www.youtube.com';
         headers['Referer'] = 'https://www.youtube.com/';
         headers['X-Youtube-Client-Name'] = '1';
-        headers['X-Youtube-Client-Version'] = '2.20240101.00.00';
+        headers['X-Youtube-Client-Version'] = _BG_YT_CLIENT_VERSION;
       }
     }
     fetchOpts.headers = headers;
