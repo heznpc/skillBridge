@@ -41,8 +41,8 @@
       return;
     }
 
-    const headerRight = document.getElementById('header-right');
-    const linksContainer = headerRight?.querySelector('.header-links-container');
+    const headerRight = document.querySelector(SKILLJAR_SELECTORS.headerRight);
+    const linksContainer = headerRight?.querySelector(SKILLJAR_SELECTORS.headerLinks);
     if (!headerRight || !linksContainer) return;
     headerRight.insertBefore(createDarkToggleButton(), linksContainer);
   }
@@ -59,9 +59,9 @@
   function injectHeaderLanguageSelect() {
     if (document.getElementById('si18n-header-lang')) return;
 
-    const headerRight = document.getElementById('header-right');
+    const headerRight = document.querySelector(SKILLJAR_SELECTORS.headerRight);
     if (!headerRight) return;
-    const linksContainer = headerRight.querySelector('.header-links-container');
+    const linksContainer = headerRight.querySelector(SKILLJAR_SELECTORS.headerLinks);
     if (!linksContainer) return;
 
     const wrapper = document.createElement('div');
