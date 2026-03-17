@@ -1,8 +1,13 @@
 {
   "name": "skillbridge",
+  "version": "1.0.1",
   "private": true,
   "scripts": {
     "test": "jest --verbose",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "glossary": "node scripts/check-glossary.js",
+    "validate": "node scripts/validate-translations.js",
     "build:zip": "rm -f store-assets/skillbridge.zip && zip -r store-assets/skillbridge.zip manifest.json _locales/ src/ assets/icons/ -x '*.DS_Store'",
     "check:selectors": "node scripts/check-selectors.js",
     "check:dicts": "node scripts/check-dicts.js"

@@ -64,7 +64,7 @@
    */
   async function callAI(prompt, model) {
     const response = await puter.ai.chat(prompt, {
-      model: model || 'gpt-4o-mini',
+      model: model || 'gemini-2.0-flash',
       stream: false,
     });
     if (typeof response === 'string') return response;

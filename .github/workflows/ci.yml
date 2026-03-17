@@ -32,42 +32,11 @@ jobs:
           done
           exit $status
 
-      - name: Check for common JSON issues
-        run: |
-          node -e "
-            const fs = require('fs');
-            const files = fs.readdirSync('src/data').filter(f => f.endsWith('.json'));
-            let ok = true;
-            for (const file of files) {
-              const data = JSON.parse(fs.readFileSync('src/data/' + file, 'utf8'));
-              // Every lang file must have _meta section
-              if (!data._meta) {
-                console.log('✗ src/data/' + file + ' — missing _meta section');
-                ok = false;
-              }
-              // Every lang file should have _protected section
-              if (!data._protected) {
-                console.log('⚠ src/data/' + file + ' — missing _protected section (recommended)');
-              }
-              // Check for empty string values
-              let emptyCount = 0;
-              const check = (obj, path) => {
-                for (const [k, v] of Object.entries(obj)) {
-                  if (typeof v === 'string' && v === '' && k !== '') {
-                    emptyCount++;
-                  } else if (typeof v === 'object' && v !== null && !Array.isArray(v)) {
-                    check(v, path + '.' + k);
-                  }
-                }
-              };
-              check(data, file);
-              if (emptyCount > 0) {
-                console.log('⚠ src/data/' + file + ' — ' + emptyCount + ' empty string values');
-              }
-            }
-            if (!ok) process.exit(1);
-            console.log('✓ All language files pass structural checks');
-          "
+      - name: Validate translation files
+        run: node scripts/validate-translations.js
+
+      - name: Check glossary consistency
+        run: node scripts/check-glossary.js
 
       - name: Lint JavaScript (warnings only)
         run: |

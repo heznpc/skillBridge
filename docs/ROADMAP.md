@@ -24,17 +24,17 @@ Fully functional and tested across the Skilljar platform. Ready for production u
 
 ---
 
-## v3.1 (Next)
+## v3.1 (Next) ✅
 
 Focus on community engagement and technical consistency:
 
-- [ ] **Translation Memory & Community Contributions**: Allow users to submit verified translations back to the system, building a community-driven translation database
-- [ ] **Glossary Consistency Checker**: Ensure technical AI terms (e.g., "prompt engineering," "fine-tuning," "embeddings") are consistently translated across all materials
-- [ ] **Keyboard Shortcuts**: Add intuitive keyboard navigation for the AI Tutor interface, improving accessibility and speed
-- [ ] **Dark Mode Support**: Implement a dark theme option, reducing eye strain for extended study sessions
-- [ ] **Performance Optimization**: Enhance handling of pages with 500+ translatable elements through smart DOM batching and caching strategies
+- [x] **Translation Memory & Community Contributions**: GitHub Issue templates for translation submissions, validation scripts (`npm run validate`, `npm run glossary`), CI integration for translation PRs
+- [x] **Glossary Consistency Checker**: Cross-language consistency validation — protected terms structure, section/key coverage, untranslated entry detection
+- [x] **Keyboard Shortcuts**: `Ctrl+Shift+S` (toggle sidebar), `Ctrl+Shift+L` (dark mode), `Ctrl+Shift+/` (help), `Escape` (close), `/` (focus chat)
+- [x] **Dark Mode Support**: ~~Implement a dark theme option, reducing eye strain for extended study sessions~~ ✅ Shipped in v3.0
+- [x] **Performance Optimization**: Viewport-first translation with `IntersectionObserver` priority, `requestIdleCallback` chunking for offscreen elements, GT queue viewport ordering
 
-**Estimated Timeline**: Q2-Q3 2026
+**Status**: Shipped
 
 ---
 
@@ -92,7 +92,7 @@ Visit our [GitHub Discussions](https://github.com/heznpc/skillbridge/discussions
 | Version | Status | ETA |
 |---------|--------|-----|
 | v3.0 | ✅ Released | Now |
-| v3.1 | 🚧 In Progress | Q2-Q3 2026 |
+| v3.1 | ✅ Released | Q1 2026 |
 | v3.2 | 📋 Planned | Q4 2026 - Q1 2027 |
 | v4.0 | 🎯 Vision | 2027+ |
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Privacy Policy — SkillBridge for Anthropic Academy</title>
+  <title>Privacy Policy — SkillBridge</title>
   <meta name="description" content="Privacy Policy for the SkillBridge Chrome extension.">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -29,29 +29,56 @@
 </head>
 <body>
   <h1>Privacy Policy</h1>
-  <p class="updated"><strong>Last updated:</strong> March 7, 2026</p>
+  <p class="updated"><strong>Last updated:</strong> March 16, 2026</p>
 
   <h2>Overview</h2>
-  <p>SkillBridge is a browser extension that translates <a href="https://anthropic.skilljar.com/">Anthropic Academy</a> course pages into 30+ languages. It is designed with privacy as a core principle.</p>
+  <p>SkillBridge is a browser extension that translates <a href="https://anthropic.skilljar.com/">Anthropic Academy</a> course pages into 30+ languages and provides an AI-powered learning assistant. It is designed with privacy in mind — SkillBridge does not operate any servers, does not require accounts, and does not use analytics or tracking.</p>
 
-  <h2>Data Collection</h2>
-  <p><strong>SkillBridge does not collect, store, or transmit any personal data.</strong></p>
-
-  <h2>How Translation Works</h2>
-  <p>All translation processing happens <strong>entirely within your browser</strong>:</p>
+  <h2>Data Stored Locally (Never Leaves Your Device)</h2>
   <ul>
-    <li><strong>Google Translate API</strong> — Page text is sent to Google's public translation endpoint and the translated result is returned directly to your browser. No data passes through any SkillBridge-owned server.</li>
-    <li><strong>Gemini 2.0 Flash (via Puter.js)</strong> — Used for inline HTML tag preservation and quality verification of complex sentences. Requests are routed through <a href="https://docs.puter.com/">Puter.js</a>, a third-party client-side AI gateway. SkillBridge does not operate or control Puter.js servers.</li>
-    <li><strong>Claude Sonnet 4 (via Puter.js)</strong> — Powers the AI Tutor sidebar chatbot. Requests are routed through Puter.js. SkillBridge does not operate or control Puter.js servers.</li>
-    <li><strong>Curated dictionaries</strong> — 570+ hand-curated terms per premium language are stored locally within the extension package.</li>
-    <li><strong>Translation cache (IndexedDB)</strong> — Previously translated text is cached locally in your browser's IndexedDB to improve performance. This data never leaves your device.</li>
-    <li><strong>YouTube technical cookies</strong> — To enable auto-subtitles on YouTube-hosted course videos, the extension may set technical consent cookies (<code>CONSENT</code>, <code>SOCS</code>) required by YouTube's API. No personal browsing data is collected from YouTube.</li>
+    <li><strong>User preferences</strong> — Selected language, dark mode, auto-translate settings are saved in <code>chrome.storage.local</code>.</li>
+    <li><strong>Translation cache</strong> — Previously translated text is cached in your browser's IndexedDB (<code>skillbridge-cache</code>) for up to 30 days to improve performance. This data never leaves your device.</li>
+    <li><strong>Conversation history</strong> — AI Tutor chat history is stored in IndexedDB (<code>skillbridge-tutor</code>) on your device. This data never leaves your device.</li>
+    <li><strong>Curated dictionaries</strong> — 570+ hand-curated translation entries per premium language are bundled within the extension package itself.</li>
+  </ul>
+
+  <h2>Data Sent to Third-Party Services</h2>
+  <p>To provide translation and AI features, SkillBridge sends data to the following third-party services. <strong>SkillBridge does not operate or control any of these services.</strong></p>
+  <table>
+    <tr><th>Service</th><th>What is sent</th><th>Purpose</th><th>Privacy Policy</th></tr>
+    <tr>
+      <td>Google Translate API</td>
+      <td>Page text to be translated</td>
+      <td>Primary translation for plain text</td>
+      <td><a href="https://policies.google.com/privacy">Google Privacy Policy</a></td>
+    </tr>
+    <tr>
+      <td>Gemini 2.0 Flash<br><small>(via Puter.js)</small></td>
+      <td>Text with inline HTML tags; original + translated text pairs for quality verification</td>
+      <td>Tag-preserving translation of complex HTML; background quality checks on translations</td>
+      <td><a href="https://puter.com/privacy">Puter.js Privacy Policy</a></td>
+    </tr>
+    <tr>
+      <td>Claude Sonnet 4<br><small>(via Puter.js)</small></td>
+      <td>User's chat message + lesson context (page title, headings, and up to 2,000 characters of lesson body)</td>
+      <td>AI Tutor sidebar chatbot</td>
+      <td><a href="https://puter.com/privacy">Puter.js Privacy Policy</a></td>
+    </tr>
+  </table>
+  <p>All requests to Gemini and Claude are routed through <a href="https://docs.puter.com/">Puter.js</a>, a third-party client-side AI gateway. Puter.js handles authentication and API routing. Please review Puter's privacy policy for details on how they process data.</p>
+
+  <h2>Data NOT Collected</h2>
+  <ul>
+    <li>No personal information (name, email, etc.)</li>
+    <li>No browsing history outside of Anthropic Academy pages</li>
+    <li>No analytics, telemetry, or tracking of any kind</li>
+    <li>No advertising or marketing data</li>
   </ul>
 
   <h2>Permissions</h2>
   <table>
     <tr><th>Permission</th><th>Purpose</th></tr>
-    <tr><td><code>storage</code></td><td>Save user preferences (selected language, settings)</td></tr>
+    <tr><td><code>storage</code></td><td>Save user preferences (selected language, dark mode, auto-translate)</td></tr>
     <tr><td><code>activeTab</code></td><td>Access the current tab to translate page content</td></tr>
     <tr><td><code>tabs</code></td><td>Detect navigation events for auto-translation</td></tr>
     <tr><td><code>*.skilljar.com</code></td><td>Translate Anthropic Academy pages</td></tr>
@@ -59,22 +86,16 @@
     <tr><td><code>translate.googleapis.com</code></td><td>Send text to Google Translate API</td></tr>
   </table>
 
-  <h2>Third-Party Services</h2>
-  <table>
-    <tr><th>Service</th><th>Purpose</th><th>Privacy Policy</th></tr>
-    <tr><td>Google Translate API</td><td>Page text translation</td><td><a href="https://policies.google.com/privacy">Google Privacy Policy</a></td></tr>
-    <tr><td>Puter.js</td><td>AI gateway for Gemini and Claude</td><td><a href="https://puter.com/privacy">Puter.js Privacy Policy</a></td></tr>
-  </table>
-
   <h2>Data Retention</h2>
   <ul>
-    <li><strong>No server-side storage.</strong> SkillBridge does not operate any servers.</li>
-    <li><strong>Local cache only.</strong> Translation cache is stored in your browser's IndexedDB and can be cleared at any time through your browser settings.</li>
-    <li><strong>No analytics or tracking.</strong> SkillBridge does not use any analytics, telemetry, or tracking tools.</li>
+    <li><strong>Translation cache:</strong> Stored locally for 30 days, then automatically expired. Can be cleared anytime via browser settings.</li>
+    <li><strong>Conversation history:</strong> Stored locally with no automatic expiration. Can be cleared via browser settings (clear site data for <code>*.skilljar.com</code>).</li>
+    <li><strong>Third-party services:</strong> SkillBridge does not control data retention by Google, Puter.js, or their upstream AI providers. Please review their respective privacy policies.</li>
   </ul>
 
   <h2>GDPR and International Users</h2>
-  <p>SkillBridge does not collect or process personal data. Because no personal data is stored on any server, there is no data to access, rectify, or delete under the EU General Data Protection Regulation (GDPR) or similar privacy laws. Translation cache stored locally in your browser's IndexedDB can be cleared at any time through your browser settings (e.g., clearing site data for <code>*.skilljar.com</code>).</p>
+  <p>SkillBridge does not operate servers or maintain user databases. All user-generated data (cache, chat history, preferences) is stored exclusively on your local device and can be deleted at any time through your browser settings.</p>
+  <p>However, by using SkillBridge's translation and AI features, page text and chat messages are transmitted to third-party services (Google, Puter.js) as described above. These services may process data in jurisdictions outside your country. Please review their privacy policies for GDPR-specific information.</p>
 
   <h2>Children's Privacy</h2>
   <p>SkillBridge does not knowingly collect any information from children under 13.</p>
@@ -86,7 +107,7 @@
   <p>For questions about this privacy policy, please open an issue on <a href="https://github.com/heznpc/skillbridge/issues">GitHub</a>.</p>
 
   <footer>
-    <p>SkillBridge for Anthropic Academy is an unofficial community project. Not affiliated with, endorsed by, or sponsored by Anthropic.</p>
+    <p>SkillBridge is an unofficial community project. Not affiliated with, endorsed by, or sponsored by Anthropic.</p>
   </footer>
 </body>
 </html>
