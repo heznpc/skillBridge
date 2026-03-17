@@ -18,6 +18,7 @@ Thank you for your interest in contributing! SkillBridge makes Anthropic's educa
 - [Code Guidelines](#code-guidelines)
 - [Pull Request Process](#pull-request-process)
 - [Understanding the Architecture](#understanding-the-architecture)
+- [Testing & Debugging](TESTING.md) — full guide
 - [Copyright & Disclaimer](#copyright--disclaimer)
 
 ---
@@ -66,16 +67,22 @@ After editing any file, go to `chrome://extensions` and click the reload button 
 **Running Tests:**
 
 ```bash
-npm install   # first time only
-npm test      # runs all 66 Jest tests
+npm install                              # first time only
+npm test                                 # runs all ~700 Jest tests
+npx jest tests/translator.test.js        # single file
+npx jest --watch                         # re-run on file changes
+npx jest --coverage                      # generate coverage report
 ```
 
-Tests cover the translation engine, dictionary loading, cache logic, and protected term replacement. **All tests must pass before submitting a PR.**
+Tests cover the translation engine, dictionary loading, cache logic, protected term replacement, and markdown formatting. **All tests must pass before submitting a PR.**
 
-**Useful DevTools Tips:**
+**Debugging:**
 - Open DevTools (F12) → Console tab → filter by `[SkillBridge]` to see extension logs
 - The background service worker has its own console — click "service worker" link on the extensions page
 - Network tab → filter `translate.googleapis.com` to inspect translation API calls
+- Application tab → IndexedDB → `skillbridge-cache` / `skillbridge-tutor` to inspect stored data
+
+> For the full testing and debugging guide (breakpoints, troubleshooting, data flow, IndexedDB schema), see **[TESTING.md](TESTING.md)**.
 
 ---
 
@@ -116,7 +123,7 @@ skillbridge/
 ├── docs/                      # Roadmap, i18n READMEs, CWS listing
 │   ├── i18n/                  # Translated READMEs (KO, JA, ZH-CN, ES, FR, DE)
 │   ├── ROADMAP.md             # Project roadmap
-│   └── CHROME_WEB_STORE.md   # Chrome Web Store listing copy
+│   └── ROADMAP.md             # Product roadmap
 └── README.md                  # Main readme
 ```
 
@@ -162,6 +169,8 @@ Found a bad translation? Just edit the value:
 
 Submit a PR with: the original English text, your correction, and a brief reason why.
 
+> **Prefer not to edit JSON directly?** Use our [Translation Submission](../../issues/new?template=translation-submission.yml) issue template — paste your translations and a maintainer will integrate them.
+
 #### b) Add Missing Entries — ⏱️ 10 minutes
 
 The most effective way to improve quality: browse any Anthropic Academy course page with SkillBridge active, spot an awkward translation, and add the correct version to the dictionary.
@@ -202,6 +211,17 @@ Want to promote a standard language (GT-only) to premium? Create `src/data/{lang
 
 You don't need to translate everything at once. **Even 100 entries is a great start** — especially if they cover the `ui`, `common`, and `_protected` sections.
 
+#### Validating Your Translations Locally
+
+Before submitting a PR, run the validation scripts to catch structural issues:
+
+```bash
+npm run validate    # checks JSON structure, _meta, value types
+npm run glossary    # checks protected terms, cross-language consistency
+```
+
+These checks also run automatically in CI on every PR.
+
 #### e) Add a New Standard Language
 
 Standard languages use Google Translate + Gemini verification (no dictionary). To add one:
@@ -215,7 +235,7 @@ Standard languages use Google Translate + Gemini verification (no dictionary). T
 
 #### Translation Engine
 
-The 3-tier translation pipeline lives in `src/lib/translator.js`, with thresholds configured in `src/lib/constants.js`:
+The translation pipeline lives in `src/lib/translator.js`, with thresholds configured in `src/lib/constants.js`:
 
 ```
 Static Dictionary → IndexedDB Cache → Google Translate + Gemini Verification
@@ -277,7 +297,7 @@ The tutor lives in `src/content/sidebar-chat.js` (sidebar UI, chat, conversation
 Before submitting, make sure you can check all of these:
 
 - [ ] I tested my changes on `anthropic.skilljar.com`
-- [ ] `npm test` passes (all 66 tests)
+- [ ] `npm test` passes (all tests)
 - [ ] No new console errors in DevTools
 - [ ] My branch is up to date with `main`
 - [ ] For translation PRs: I am a native speaker of the target language

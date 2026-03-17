@@ -6,9 +6,9 @@
 
 > Available in multiple languages at the [project landing page](https://heznpc.github.io/skillbridge/).
 
+[![CI](https://github.com/heznpc/skillBridge/actions/workflows/ci.yml/badge.svg)](https://github.com/heznpc/skillBridge/actions/workflows/ci.yml)
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Chrome MV3](https://img.shields.io/badge/Chrome-Extension_MV3-blue.svg)](https://developer.chrome.com/docs/extensions/)
-[![Tests](https://img.shields.io/badge/Tests-66%20passed-brightgreen.svg)](tests/)
 [![GitHub stars](https://img.shields.io/github/stars/heznpc/skillbridge?style=social)](https://github.com/heznpc/skillbridge/stargazers)
 [![GitHub contributors](https://img.shields.io/github/contributors/heznpc/skillbridge)](https://github.com/heznpc/skillbridge/graphs/contributors)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
@@ -94,9 +94,9 @@ A sidebar chatbot powered by **Claude Sonnet 4** via [Puter.js](https://docs.put
 
 Course videos automatically activate translated subtitles when you play them — no manual toggle needed.
 
-### 🌙 Dark Mode (Beta)
+### 🌙 Dark Mode
 
-A full dark theme for the entire Academy site — header, sidebar, lesson content, and tutor. Toggle with one click. Currently in beta; some pages may have minor styling gaps.
+A full dark theme for the entire Academy site — header, sidebar, lesson content, and tutor. Toggle with one click.
 
 ### 🔍 Smart Detection
 
@@ -141,7 +141,7 @@ Also works in Edge, Brave, Arc, and other Chromium-based browsers.
 
 ## How It Works
 
-SkillBridge uses a **five-tier translation engine** that prioritizes speed and accuracy:
+SkillBridge uses a **multi-stage translation engine** that prioritizes speed and accuracy:
 
 ```
 Page text
@@ -160,7 +160,7 @@ Page text
        └─ Complex sentence? → Gemini 2.0 Flash verifies → corrects if needed
 ```
 
-Translation requests are sent to Google Translate and Gemini/Claude APIs via [Puter.js](https://docs.puter.com/) — no data is stored on our servers, and no account or API key is required.
+Translation requests are sent to Google Translate and Gemini/Claude APIs via [Puter.js](https://docs.puter.com/). SkillBridge does not operate any servers — but text is transmitted to these third-party services for translation and AI features. No account or API key is required. See our [Privacy Policy](PRIVACY_POLICY.md) for full details.
 
 ## Supported Languages
 
@@ -186,9 +186,9 @@ Translation requests are sent to Google Translate and Gemini/Claude APIs via [Pu
 SkillBridge is designed with privacy first:
 
 - **No data collection** — zero analytics, zero tracking, zero telemetry
-- **No servers** — all translation happens client-side or via public APIs (Google Translate, Puter.js)
+- **No SkillBridge servers** — we do not operate any servers. Translation and AI requests are sent to third-party services (Google Translate, Puter.js → Gemini/Claude)
 - **No accounts required** — works immediately after install
-- **No stored content** — only caches translated outputs (never originals) in your local IndexedDB
+- **Local storage only** — translation cache (30-day TTL) and chat history are stored in your browser's IndexedDB. This data never leaves your device
 - **Open source** — every line of code is auditable right here
 
 See our full [Privacy Policy](PRIVACY_POLICY.md).

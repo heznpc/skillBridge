@@ -155,6 +155,7 @@
 
   // Export to shared namespace
   sb.injectDarkModeToggle = injectDarkModeToggle;
+  sb.toggleDarkMode = toggleDarkMode;
   sb.injectHeaderLanguageSelect = injectHeaderLanguageSelect;
   sb.detectBrowserLanguage = detectBrowserLanguage;
   sb.showWelcomeBanner = showWelcomeBanner;

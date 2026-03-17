@@ -228,42 +228,6 @@ body.si18n-lang-ko,
   line-height: 44px;
 }
 
-/* Compact language selector chip in header */
-.si18n-lang-chip {
-  padding: 0 18px 0 8px;
-  height: 24px;
-  line-height: 22px;
-  max-width: 90px;
-  border: none;
-  border-radius: 4px;
-  background-color: rgba(255,255,255,0.15);
-  color: rgba(255,255,255,0.9);
-  font-size: 11px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.15s;
-  -webkit-appearance: none;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.6)' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 5px center;
-  flex-shrink: 0;
-  box-sizing: border-box;
-}
-
-.si18n-lang-chip:hover {
-  background-color: rgba(255,255,255,0.22);
-}
-
-.si18n-lang-chip:focus {
-  outline: none;
-  background-color: rgba(255,255,255,0.22);
-}
-
-.si18n-lang-chip option {
-  color: var(--si18n-text);
-  background: var(--si18n-surface);
-}
 
 .si18n-close {
   background: none;
@@ -399,11 +363,6 @@ body.si18n-lang-ko,
 }
 
 /* Tutor streaming cursor */
-.si18n-typing {
-  opacity: 0.7;
-  font-style: italic;
-}
-
 .si18n-streaming-cursor::after {
   content: '▊';
   animation: si18n-blink 0.8s step-end infinite;
@@ -489,7 +448,11 @@ body.si18n-lang-ko,
   transform: scale(0.95);
 }
 
-/* Footer — removed (no longer rendered) */
+/* Gemini verification in-progress indicator */
+.si18n-verifying {
+  opacity: 0.85;
+  transition: opacity 0.3s;
+}
 
 /* ============================================================
    Gemini Verification Spinner (per-element)
@@ -1436,17 +1399,9 @@ html.si18n-dark .skillbridge-sidebar {
   box-shadow: 0 12px 40px rgba(0,0,0,0.5) !important;
   color: #9e9e9e !important;
 }
-html.si18n-dark #si18n-sidebar {
-  background: #141414 !important;
-  border-color: rgba(255,255,255,0.08) !important;
-}
 html.si18n-dark .si18n-header {
   background: #1a1a1a !important;
   border-bottom-color: rgba(255,255,255,0.06) !important;
-}
-html.si18n-dark .si18n-sidebar-header {
-  background: #1a1a1a !important;
-  border-color: rgba(255,255,255,0.06) !important;
 }
 /* Chat panel bg */
 html.si18n-dark .si18n-panel-chat {
@@ -1507,10 +1462,6 @@ html.si18n-dark .si18n-chat-user .si18n-chat-avatar {
   background: #D97757 !important;
   color: white !important;
 }
-/* History panel in dark */
-html.si18n-dark .si18n-history-panel {
-  background: #141414 !important;
-}
 html.si18n-dark .si18n-history-item {
   background: #1a1a1a !important;
   border-color: rgba(255,255,255,0.06) !important;
@@ -1546,16 +1497,6 @@ html.si18n-dark .si18n-history-detail .si18n-chat-bubble code {
   background: rgba(255,255,255,0.08) !important;
   color: #e0e0e0 !important;
 }
-/* Sidebar close / tab buttons */
-html.si18n-dark .si18n-close-btn,
-html.si18n-dark .si18n-tab-btn {
-  color: #9e9e9e !important;
-}
-html.si18n-dark .si18n-close-btn:hover,
-html.si18n-dark .si18n-tab-btn:hover {
-  color: #dedede !important;
-}
-
 /* Floating button in dark mode */
 html.si18n-dark #skillbridge-fab {
   background: #1a1a1a !important;
@@ -1961,12 +1902,12 @@ html.si18n-dark .modal-footer {
 }
 
 /* Welcome banner in dark */
-html.si18n-dark .si18n-welcome-banner {
+html.si18n-dark #si18n-welcome-banner {
   background: #1a1a1a !important;
   border-color: rgba(255,255,255,0.08) !important;
   color: #dedede !important;
 }
-html.si18n-dark .si18n-welcome-banner p {
+html.si18n-dark #si18n-welcome-banner p {
   color: #9e9e9e !important;
 }
 
@@ -1975,4 +1916,131 @@ html.si18n-dark .si18n-ask-tutor-btn {
   background: #D97757 !important;
   color: #fff !important;
   box-shadow: 0 2px 8px rgba(0,0,0,0.4) !important;
+}
+
+/* ============================================================
+   Keyboard Shortcuts Help Overlay
+   ============================================================ */
+
+#si18n-shortcuts-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 200000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+#si18n-shortcuts-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.si18n-shortcuts-panel {
+  background: var(--si18n-surface);
+  border-radius: 12px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+  width: 380px;
+  max-width: 90vw;
+  overflow: hidden;
+  transform: scale(0.95);
+  transition: transform 0.2s ease;
+}
+
+#si18n-shortcuts-overlay.visible .si18n-shortcuts-panel {
+  transform: scale(1);
+}
+
+.si18n-shortcuts-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--si18n-border);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--si18n-text);
+}
+
+.si18n-shortcuts-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--si18n-text-secondary);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.si18n-shortcuts-close:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.si18n-shortcuts-body {
+  padding: 12px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.si18n-shortcut-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+
+.si18n-shortcut-desc {
+  font-size: 13px;
+  color: var(--si18n-text);
+}
+
+.si18n-shortcut-key {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', monospace;
+  font-size: 11px;
+  padding: 3px 8px;
+  background: var(--si18n-bg);
+  border: 1px solid var(--si18n-border);
+  border-radius: 5px;
+  color: var(--si18n-text-secondary);
+  white-space: nowrap;
+  box-shadow: 0 1px 0 var(--si18n-border);
+}
+
+/* --- Shortcuts overlay in dark mode --- */
+html.si18n-dark .si18n-shortcuts-panel {
+  background: #1e1e1e;
+}
+
+html.si18n-dark .si18n-shortcuts-header {
+  border-bottom-color: #333;
+  color: #e0e0e0;
+}
+
+html.si18n-dark .si18n-shortcuts-close {
+  color: #999;
+}
+
+html.si18n-dark .si18n-shortcuts-close:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+html.si18n-dark .si18n-shortcut-desc {
+  color: #d0d0d0;
+}
+
+html.si18n-dark .si18n-shortcut-key {
+  background: #2a2a2a;
+  border-color: #444;
+  color: #aaa;
+  box-shadow: 0 1px 0 #333;
 }
