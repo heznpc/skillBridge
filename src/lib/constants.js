@@ -216,6 +216,8 @@ const HISTORY_LABELS = {
   title: { 'en': 'Chat History', 'ko': '대화 기록', 'ja': '会話履歴', 'zh-CN': '聊天记录', 'es': 'Historial', 'fr': 'Historique', 'de': 'Verlauf' },
   loading: { 'en': 'Loading...', 'ko': '불러오는 중...', 'ja': '読み込み中...', 'zh-CN': '加载中...', 'es': 'Cargando...', 'fr': 'Chargement...', 'de': 'Laden...' },
   empty: { 'en': 'No conversations yet', 'ko': '대화 기록이 없습니다', 'ja': 'まだ会話がありません', 'zh-CN': '暂无对话', 'es': 'Sin conversaciones', 'fr': 'Aucune conversation', 'de': 'Noch keine Gespräche' },
+  clearHistory: { 'en': 'Clear History', 'ko': '기록 삭제', 'ja': '履歴を削除', 'zh-CN': '清除记录', 'es': 'Borrar historial', 'fr': "Effacer l'historique", 'de': 'Verlauf löschen' },
+  historyCleared: { 'en': 'History cleared', 'ko': '기록이 삭제되었습니다', 'ja': '履歴を削除しました', 'zh-CN': '记录已清除', 'es': 'Historial borrado', 'fr': 'Historique effacé', 'de': 'Verlauf gelöscht' },
 };
 
 const HISTORY_DB_NAME = 'skillbridge-tutor';
