@@ -142,7 +142,7 @@
     if (!text) return;
     isSending = true;
 
-    const quoteEl = document.querySelector('.si18n-chat-input-wrap .si18n-chat-quote');
+    const quoteEl = document.querySelector('.si18n-chat-quote');
     const quotedText = quoteEl?.textContent?.replace('\u00d7', '').trim() || '';
     if (quoteEl) quoteEl.remove();
 

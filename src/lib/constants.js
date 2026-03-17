@@ -12,6 +12,13 @@ const SKILLBRIDGE_MODELS = {
   CLAUDE: 'claude-sonnet-4',
 };
 
+// ==================== DEFAULTS ====================
+
+const DEFAULT_PROTECTED_TERMS = 'API, SDK, Claude, Anthropic, Claude Code, Enterprise, Personal, Plugin, skill, SKILL.md, frontmatter';
+
+// YouTube InnerTube client version — update periodically as needed
+const YOUTUBE_CLIENT_VERSION = '2.20240101.00.00';
+
 // ==================== THRESHOLDS ====================
 
 const SKILLBRIDGE_THRESHOLDS = {
