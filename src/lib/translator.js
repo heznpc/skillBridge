@@ -338,7 +338,7 @@ class SkilljarTranslator {
     if (this._isVerifying || this._verifyQueue.length === 0) return;
     if (!this.isReady) {
       // Retry later when bridge is ready
-      setTimeout(() => this._processVerifyQueue(), 2000);
+      setTimeout(() => this._processVerifyQueue(), SKILLBRIDGE_DELAYS.VERIFY_QUEUE_RETRY);
       return;
     }
 
@@ -455,14 +455,6 @@ RULES:
     return { text, source: 'original' };
   }
 
-  /**
-   * Legacy translate API (returns just text string).
-   */
-  async translateText(text, targetLang) {
-    const result = await this.translate(text, targetLang);
-    return result.text;
-  }
-
   // ==================== AI TUTOR CHAT ====================
 
   /**
@@ -534,11 +526,6 @@ RULES:
     }
   }
 
-  /** Non-streaming chat fallback */
-  async chat(userMessage, targetLang, courseContext = '') {
-    return this.chatStream(userMessage, targetLang, courseContext, null);
-  }
-
   // ==================== INTERNAL ====================
 
   _setupMessageListener() {
@@ -551,7 +538,7 @@ RULES:
         this.isReady = true;
         // Process any pending verify queue now that bridge is ready
         if (this._verifyQueue.length > 0) {
-          setTimeout(() => this._processVerifyQueue(), 500);
+          setTimeout(() => this._processVerifyQueue(), SKILLBRIDGE_DELAYS.BRIDGE_READY_VERIFY);
         }
       }
 
@@ -576,7 +563,7 @@ RULES:
       const timeout = setTimeout(() => {
         console.warn('[SkillBridge] Bridge ready timeout - resolving anyway');
         resolve();
-      }, 20000);
+      }, SKILLBRIDGE_THRESHOLDS.BRIDGE_READY_TIMEOUT);
 
       const onReady = (event) => {
         if (event.source !== window) return;
@@ -628,7 +615,7 @@ RULES:
       const timeout = setTimeout(() => {
         this.pendingCallbacks.delete(id);
         reject(new Error('Request timed out'));
-      }, 30000);
+      }, SKILLBRIDGE_THRESHOLDS.REQUEST_TIMEOUT);
 
       this.pendingCallbacks.set(id, (response) => {
         clearTimeout(timeout);

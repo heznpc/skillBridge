@@ -1,0 +1,66 @@
+name: "📝 Translation Submission"
+description: "Submit new or improved translations for a language"
+labels: ["i18n", "translation", "community"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for contributing translations! Please follow the [Translation Guide](../../CONTRIBUTING.md#-contributing-translations) for formatting instructions.
+
+  - type: input
+    id: language
+    attributes:
+      label: Language
+      description: "Which language are you submitting translations for? Include the language code."
+      placeholder: "e.g., Korean (ko), Japanese (ja), Spanish (es)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: submission-type
+    attributes:
+      label: Type
+      description: "What kind of translation contribution is this?"
+      options:
+        - "New translations (adding missing entries)"
+        - "Fix incorrect translations"
+        - "Improve translation quality/fluency"
+        - "Add protected terms"
+        - "New language file"
+    validations:
+      required: true
+
+  - type: textarea
+    id: translations
+    attributes:
+      label: Translations
+      description: "Paste the JSON entries you want to add or change. Use the format from existing files in `src/data/`."
+      placeholder: |
+        {
+          "section": {
+            "English text": "Translated text",
+            "Another English text": "Another translation"
+          }
+        }
+      render: json
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: "Any context for reviewers — why these translations are better, what was wrong before, etc."
+      placeholder: "These translations improve the catalog section by using more natural phrasing for..."
+
+  - type: checkboxes
+    id: verification
+    attributes:
+      label: Verification
+      description: "Please confirm the following:"
+      options:
+        - label: "I am a native or fluent speaker of this language"
+          required: true
+        - label: "I have tested these translations in context (or reviewed existing translations on the page)"
+        - label: "Technical terms (API, SDK, Claude, etc.) are kept in English as specified in _protected"
+          required: true
