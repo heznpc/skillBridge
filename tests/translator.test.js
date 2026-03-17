@@ -17,7 +17,10 @@ global.window = { addEventListener: () => {} };
 const fs = require('fs');
 const path = require('path');
 
-// Load shared constants first (translator.js depends on them)
+// Load selectors + constants first (constants.js depends on selectors, translator.js depends on constants)
+const selectorsSrc = fs.readFileSync(
+  path.join(__dirname, '..', 'src', 'lib', 'selectors.js'), 'utf8'
+);
 const constantsSrc = fs.readFileSync(
   path.join(__dirname, '..', 'src', 'lib', 'constants.js'), 'utf8'
 );
@@ -25,12 +28,13 @@ const src = fs.readFileSync(
   path.join(__dirname, '..', 'src', 'lib', 'translator.js'), 'utf8'
 );
 
-// Combine constants + translator in a single eval so constants are in scope
+// Combine selectors + constants + translator in a single eval so all are in scope
 let SkilljarTranslator;
 try {
-  const combined = `(function() { ${constantsSrc}; ${src}; return SkilljarTranslator; })()`;
+  const combined = `(function() { ${selectorsSrc}; ${constantsSrc}; ${src}; return SkilljarTranslator; })()`;
   SkilljarTranslator = eval(combined);
 } catch (e) {
+  eval(selectorsSrc);
   eval(constantsSrc);
   eval(src);
   SkilljarTranslator = global.SkilljarTranslator;
