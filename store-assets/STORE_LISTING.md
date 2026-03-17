@@ -33,6 +33,12 @@ Select any text on the page and click "Ask Tutor" to get an explanation in your 
 💬 CONVERSATION HISTORY
 Chat history is saved locally in your browser (IndexedDB), grouped by chapter. Review past Q&A across sessions.
 
+🎓 EXAM MODE
+Automatically detects certification exam pages. Answer choices are NOT translated to preserve accuracy and academic integrity. The AI Tutor switches to exam-safe mode.
+
+⌨️ KEYBOARD SHORTCUTS
+Ctrl+Shift+S (toggle tutor), Ctrl+Shift+L (dark mode), Ctrl+Shift+/ (help), Escape (close), / (focus chat).
+
 🌙 DARK MODE
 Full dark theme for the entire Academy site — header, sidebar, lesson content, and tutor. Toggle with one click.
 

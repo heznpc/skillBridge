@@ -100,6 +100,14 @@ Course videos automatically activate translated subtitles when you play them —
 
 A full dark theme for the entire Academy site — header, sidebar, lesson content, and tutor. Toggle with one click.
 
+### 🎓 Exam Mode
+
+Automatically detects certification exam pages and protects answer choices from translation. The AI Tutor also switches to exam-safe mode, refusing to help with answers directly.
+
+### ⌨️ Keyboard Shortcuts
+
+`Ctrl+Shift+S` toggle sidebar, `Ctrl+Shift+L` dark mode, `Ctrl+Shift+/` help overlay, `Escape` close, `/` focus chat.
+
 ### 🔍 Smart Detection
 
 Detects your browser language on first visit and offers to translate. No setup needed.
@@ -271,7 +279,8 @@ No. SkillBridge is an unofficial community project. It is not affiliated with, e
 ## Roadmap
 
 - Additional curated language dictionaries (community-driven)
-- ~~Firefox and Edge Add-on support~~ (done)
+- ~~Firefox and Edge Add-on support~~ (shipped in v2.0.0)
+- ~~Exam mode — answer choice protection~~ (shipped in v2.0.0)
 - Translation quality analytics and community review
 - Multi-LMS platform support beyond Skilljar
 

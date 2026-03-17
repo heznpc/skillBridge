@@ -38,15 +38,28 @@ Focus on community engagement and technical consistency:
 
 ---
 
-## v3.2 (Planned)
+## v2.0.0 (Current) ✅
+
+Major release with exam support and cross-browser compatibility:
+
+- [x] **Exam Mode**: Auto-detect certification/quiz/assessment pages, skip answer choice translation, AI Tutor exam-safe mode with academic integrity warnings
+- [x] **Cross-Browser Support**: Firefox and Edge via `npm run build:firefox`, browser polyfill for API compatibility
+- [x] **Security Hardening**: DOM-based XSS sanitizer with attribute allowlist, FETCH_URL domain allowlist, nonce-based postMessage validation
+- [x] **Accessibility**: WCAG 2.1 AA compliance — ARIA roles, keyboard navigation, focus management
+- [x] **Maintenance Automation**: Chrome Alarms for cache cleanup (24h) and version check (7d)
+
+**Status**: Shipped (March 2026)
+
+---
+
+## v2.1 (Planned)
 
 Expansion of translation capabilities and multi-platform support:
 
 - [ ] **Community Translation Portal**: A dedicated web-based tool allowing native speakers to collaboratively create and refine language dictionaries
 - [ ] **Additional Premium Languages**: Expand the premium tier based on community demand (e.g., Portuguese, Russian, Mandarin Traditional, Vietnamese)
-- [ ] **Assessment Translation**: Full support for quizzes, assignments, and practice problem translations
+- [ ] **Full Assessment Translation**: Expand exam mode with question text translation, dynamic counter handling (Question X of Y), score/result page translations
 - [ ] **Export as PDF**: Allow learners to download translated course materials as polished PDF documents for offline study
-- [ ] **Cross-Browser Support**: Extend SkillBridge to Firefox and Microsoft Edge, reaching a broader user base
 
 **Estimated Timeline**: Q4 2026 - Q1 2027
 
@@ -91,9 +104,10 @@ Visit our [GitHub Discussions](https://github.com/heznpc/skillbridge/discussions
 
 | Version | Status | ETA |
 |---------|--------|-----|
-| v3.0 | ✅ Released | Now |
+| v3.0 | ✅ Released | — |
 | v3.1 | ✅ Released | Q1 2026 |
-| v3.2 | 📋 Planned | Q4 2026 - Q1 2027 |
+| v2.0.0 | ✅ Released | March 2026 |
+| v2.1 | 📋 Planned | Q4 2026 - Q1 2027 |
 | v4.0 | 🎯 Vision | 2027+ |
 
 ---

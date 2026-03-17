@@ -116,6 +116,7 @@ skillbridge/
 │   ├── lib/
 │   │   ├── browser-polyfill.js   # Cross-browser API compatibility shim
 │   │   ├── constants.js       # Shared constants, thresholds, i18n labels
+│   │   ├── selectors.js       # Centralized Skilljar DOM selectors (exam, content, catalog)
 │   │   ├── translator.js      # Translation engine (Static → Cache → GT + Gemini)
 │   │   ├── youtube-subtitles.js  # YouTube auto-subtitle enabler
 │   │   └── page-bridge.js     # Puter.js main-world bridge (for AI Tutor)
