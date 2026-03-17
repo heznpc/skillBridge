@@ -149,6 +149,18 @@
     const messages = document.getElementById('si18n-chat-messages');
     const text = input.value.trim();
     if (!text) return;
+
+    // Exam mode guard — warn user, add system instruction to prevent answer leaking
+    if (sb.isExamPage) {
+      const warningMsg = sb.t(TUTOR_EXAM_LABELS);
+      messages.insertAdjacentHTML('beforeend', `
+        <div class="si18n-chat-msg si18n-chat-bot">
+          <div class="si18n-chat-avatar">AI</div>
+          <div class="si18n-chat-bubble si18n-exam-warning">${sb.escapeHtml(warningMsg)}</div>
+        </div>
+      `);
+    }
+
     isSending = true;
 
     const quoteEl = document.querySelector('.si18n-chat-quote');

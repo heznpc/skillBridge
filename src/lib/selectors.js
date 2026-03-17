@@ -39,4 +39,11 @@ const SKILLJAR_SELECTORS = {
   // FAQ
   faqTitle: '.faq-title',
   faqPost: '.faq-post',
+
+  // Quiz / Assessment / Certification
+  quizForm: '.quiz-form, .assessment-form, form[class*="quiz"], form[class*="assessment"]',
+  answerOption: '.answer-option, .answer-choice, .quiz-option, .assessment-option',
+  answerLabel: 'label[class*="answer"], label[class*="option"], label[class*="choice"]',
+  quizResult: '.quiz-result, .assessment-result, .quiz-score, .score-display',
+  certificateSection: '.certificate-section, .certificate-panel, .certificate-container',
 };

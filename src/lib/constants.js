@@ -19,6 +19,49 @@ const DEFAULT_PROTECTED_TERMS = 'API, SDK, Claude, Anthropic, Claude Code, Enter
 // YouTube InnerTube client version — update periodically as needed
 const YOUTUBE_CLIENT_VERSION = '2.20240101.00.00';
 
+// ==================== EXAM / ASSESSMENT ====================
+
+const EXAM_URL_PATTERNS = [
+  /\/quiz\b/i,
+  /\/exam\b/i,
+  /\/assessment\b/i,
+  /\/certification\b/i,
+  /[?&]type=quiz/i,
+  /[?&]type=exam/i,
+];
+
+// Elements whose text should NOT be translated on exam pages
+// (answer choices, form inputs — translating these could alter meaning)
+const EXAM_SKIP_SELECTORS = [
+  'input[type="radio"] + label',
+  'input[type="checkbox"] + label',
+  `${SKILLJAR_SELECTORS.answerOption}`,
+  `${SKILLJAR_SELECTORS.answerLabel}`,
+  `${SKILLJAR_SELECTORS.quizForm} label`,
+  `${SKILLJAR_SELECTORS.quizForm} .option`,
+  `${SKILLJAR_SELECTORS.quizForm} li`,
+];
+
+const EXAM_BANNER_LABELS = {
+  'en': 'Exam mode — answer choices are not translated to preserve accuracy.',
+  'ko': '시험 모드 — 정확성을 위해 답안 선택지는 번역되지 않습니다.',
+  'ja': '試験モード — 正確性のため、回答選択肢は翻訳されません。',
+  'zh-CN': '考试模式 — 为确保准确性，答案选项不会被翻译。',
+  'es': 'Modo examen — las opciones de respuesta no se traducen para mayor precisión.',
+  'fr': 'Mode examen — les choix de réponse ne sont pas traduits pour préserver la précision.',
+  'de': 'Prüfungsmodus — Antwortmöglichkeiten werden nicht übersetzt, um die Genauigkeit zu wahren.',
+};
+
+const TUTOR_EXAM_LABELS = {
+  'en': "I can't help with exam answers directly, but I can explain concepts after you submit.",
+  'ko': '시험 답안은 직접 도와드릴 수 없지만, 제출 후 개념 설명은 가능합니다.',
+  'ja': '試験の回答は直接お手伝いできませんが、提出後にコンセプトを説明できます。',
+  'zh-CN': '我不能直接帮助回答考试题目，但提交后可以解释相关概念。',
+  'es': 'No puedo ayudar directamente con las respuestas del examen, pero puedo explicar conceptos después de enviar.',
+  'fr': "Je ne peux pas aider directement avec les réponses d'examen, mais je peux expliquer les concepts après soumission.",
+  'de': 'Ich kann nicht direkt bei Prüfungsantworten helfen, aber nach der Abgabe kann ich Konzepte erklären.',
+};
+
 // ==================== THRESHOLDS ====================
 
 const SKILLBRIDGE_THRESHOLDS = {

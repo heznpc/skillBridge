@@ -653,5 +653,23 @@
     "hooks": [
       "ganchos"
     ]
+  },
+  "exam_ui": {
+    "Pass": "Aprobado",
+    "Fail": "Reprobado",
+    "Passing score": "Puntuación para aprobar",
+    "Your score": "Tu puntuación",
+    "Retake": "Volver a intentar",
+    "Attempt": "Intento",
+    "Attempts remaining": "Intentos restantes",
+    "Time remaining": "Tiempo restante",
+    "Next question": "Siguiente pregunta",
+    "Previous question": "Pregunta anterior",
+    "Review answers": "Revisar respuestas",
+    "Submit exam": "Enviar examen",
+    "Exam complete": "Examen completado",
+    "You passed!": "¡Felicidades, aprobaste!",
+    "You did not pass": "No aprobaste",
+    "Question": "Pregunta"
   }
 }
