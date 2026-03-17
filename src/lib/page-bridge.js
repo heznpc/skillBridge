@@ -100,6 +100,7 @@
 
         window.postMessage({
           __skillbridge__: true,
+          __nonce__: _bridgeNonce,
           type: 'TRANSLATE_RESPONSE',
           id: data.id,
           success: true,
@@ -110,6 +111,7 @@
         log('Translate error:', errMsg);
         window.postMessage({
           __skillbridge__: true,
+          __nonce__: _bridgeNonce,
           type: 'TRANSLATE_RESPONSE',
           id: data.id,
           success: false,
@@ -128,6 +130,7 @@
 
         window.postMessage({
           __skillbridge__: true,
+          __nonce__: _bridgeNonce,
           type: 'VERIFY_RESPONSE',
           id: data.id,
           success: true,
@@ -138,6 +141,7 @@
         log('Verify error:', errMsg);
         window.postMessage({
           __skillbridge__: true,
+          __nonce__: _bridgeNonce,
           type: 'VERIFY_RESPONSE',
           id: data.id,
           success: false,
@@ -165,6 +169,7 @@
             if (text) {
               window.postMessage({
                 __skillbridge__: true,
+                __nonce__: _bridgeNonce,
                 type: 'CHAT_STREAM_CHUNK',
                 id: data.id,
                 text,
@@ -173,6 +178,7 @@
           }
           window.postMessage({
             __skillbridge__: true,
+            __nonce__: _bridgeNonce,
             type: 'CHAT_STREAM_END',
             id: data.id,
             success: true,
@@ -182,6 +188,7 @@
           const result = await callAI(prompt, data.model);
           window.postMessage({
             __skillbridge__: true,
+            __nonce__: _bridgeNonce,
             type: 'CHAT_RESPONSE',
             id: data.id,
             success: true,
@@ -204,7 +211,7 @@
   });
 
   loadPuter().then(() => {
-    window.postMessage({ __skillbridge__: true, type: 'BRIDGE_READY' }, '*');
+    window.postMessage({ __skillbridge__: true, __nonce__: _bridgeNonce, type: 'BRIDGE_READY' }, '*');
   }).catch((err) => {
     log('Auto-load failed:', err.message);
     window.postMessage({ __skillbridge__: true, type: 'BRIDGE_ERROR', error: err.message }, '*');

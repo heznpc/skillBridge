@@ -16,7 +16,6 @@ class SkilljarTranslator {
     this.staticDict = {};       // Merged flat dictionary from JSON
     this.isReady = false;       // Bridge ready (for Gemini + AI Tutor)
     this.pendingCallbacks = new Map();
-    this.requestId = 0;
     this._db = null;            // IndexedDB for verified translation cache
     this._verifyQueue = [];     // Queue of texts awaiting Gemini verification
     this._isVerifying = false;
@@ -460,17 +459,20 @@ RULES:
   /**
    * Streaming chat — calls onChunk(text) for each token, returns full text.
    */
-  async chatStream(userMessage, targetLang, courseContext = '', onChunk) {
+  async chatStream(userMessage, targetLang, courseContext = '', onChunk, opts = {}) {
     try {
       const langName = this.supportedLanguages[targetLang] || 'English';
-      const prompt = `You are a helpful AI learning assistant for Anthropic's training courses on Skilljar. Respond in ${langName}. Help students understand course material. Keep technical terms in English. Be encouraging.\n${courseContext ? `Current course context: ${courseContext}` : ''}\n\nUser: ${userMessage}`;
+      const examGuard = opts.isExamPage
+        ? '\nCRITICAL: The user is on a certification exam page. You MUST NOT provide answers, solutions, or hints to exam questions under any circumstances. Only explain general concepts. If the user asks for specific exam answers, politely decline.'
+        : '';
+      const prompt = `You are a helpful AI learning assistant for Anthropic's training courses on Skilljar. Respond in ${langName}. Help students understand course material. Keep technical terms in English. Be encouraging.${examGuard}\n${courseContext ? `Current course context: ${courseContext}` : ''}\n\nUser: ${userMessage}`;
 
       if (!this.isReady) {
         throw new Error('Bridge not ready');
       }
 
       return new Promise((resolve, reject) => {
-        const id = ++this.requestId;
+        const id = crypto.randomUUID();
         let fullText = '';
 
         const timeout = setTimeout(() => {
@@ -482,6 +484,7 @@ RULES:
           if (event.source !== window) return;
           const data = event.data;
           if (!data || !data.__skillbridge__) return;
+          if (this._bridgeNonce && data.__nonce__ !== this._bridgeNonce) return;
           if (data.id !== id) return;
 
           if (data.type === 'CHAT_STREAM_CHUNK') {
@@ -533,6 +536,9 @@ RULES:
       if (event.source !== window) return;
       const data = event.data;
       if (!data || !data.__skillbridge__) return;
+
+      // Validate nonce on all bridge messages to prevent spoofing
+      if (this._bridgeNonce && data.__nonce__ !== this._bridgeNonce) return;
 
       if (data.type === 'BRIDGE_READY') {
         this.isReady = true;
@@ -607,7 +613,7 @@ RULES:
         return;
       }
 
-      const id = ++this.requestId;
+      const id = crypto.randomUUID();
       message.id = id;
       message.__skillbridge__ = true;
       message.__nonce__ = this._bridgeNonce;
