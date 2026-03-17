@@ -219,7 +219,7 @@
           bubble.innerHTML = formatResponse(fullText);
           scrollToBottom(messages);
         }
-      });
+      }, { isExamPage: sb.isExamPage });
 
       if (bubble) {
         bubble.classList.remove('si18n-streaming-cursor');
