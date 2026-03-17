@@ -87,7 +87,7 @@
     const inputWrap = document.querySelector('.si18n-chat-input-wrap');
     if (!inputWrap) return;
 
-    inputWrap.querySelector('.si18n-chat-quote')?.remove();
+    inputWrap.parentNode.querySelector('.si18n-chat-quote')?.remove();
 
     const quoteEl = document.createElement('div');
     quoteEl.className = 'si18n-chat-quote';
@@ -95,7 +95,7 @@
       <button class="si18n-chat-quote-dismiss" title="Remove quote">&times;</button>
       ${sb.escapeHtml(quoteText)}
     `;
-    inputWrap.insertBefore(quoteEl, inputWrap.firstChild);
+    inputWrap.parentNode.insertBefore(quoteEl, inputWrap);
 
     quoteEl.querySelector('.si18n-chat-quote-dismiss')?.addEventListener('click', () => {
       quoteEl.remove();
