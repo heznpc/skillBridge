@@ -44,7 +44,7 @@ HOW IT WORKS
 4. Plain text → Google Translate (~200ms)
 5. Protected Terms auto-fix → restores brand/tech terms
 
-All translation happens in your browser. No data is stored or sent to third-party servers.
+No data is stored on SkillBridge servers. Translation uses Google Translate and Puter.js — see our Privacy Policy for details.
 
 ━━━━━━━━━━━━━━━━━━━
 
