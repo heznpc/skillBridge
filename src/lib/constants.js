@@ -34,6 +34,7 @@ const SKILLBRIDGE_THRESHOLDS = {
   GT_MAX_RETRIES: 3, // Max retries for Google Translate requests
   GT_BASE_DELAY: 500, // Base delay (ms) for exponential backoff
   GT_RATE_LIMIT_PER_MIN: 120, // Max Google Translate requests per minute
+  GT_QUEUE_MAX: 200, // Max items in the Google Translate queue
 };
 
 // ==================== DELAYS (ms) ====================
