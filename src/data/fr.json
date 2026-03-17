@@ -653,5 +653,23 @@
     "hooks": [
       "crochets"
     ]
+  },
+  "exam_ui": {
+    "Pass": "Réussi",
+    "Fail": "Échoué",
+    "Passing score": "Note de passage",
+    "Your score": "Votre score",
+    "Retake": "Repasser",
+    "Attempt": "Tentative",
+    "Attempts remaining": "Tentatives restantes",
+    "Time remaining": "Temps restant",
+    "Next question": "Question suivante",
+    "Previous question": "Question précédente",
+    "Review answers": "Réviser les réponses",
+    "Submit exam": "Soumettre l'examen",
+    "Exam complete": "Examen terminé",
+    "You passed!": "Félicitations, vous avez réussi !",
+    "You did not pass": "Vous n'avez pas réussi",
+    "Question": "Question"
   }
 }

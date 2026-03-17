@@ -643,5 +643,23 @@
     "subagent": ["하위 에이전트", "서브에이전트"],
     "hook": ["후크"],
     "hooks": ["후크들", "후크"]
+  },
+  "exam_ui": {
+    "Pass": "합격",
+    "Fail": "불합격",
+    "Passing score": "합격 점수",
+    "Your score": "내 점수",
+    "Retake": "재응시",
+    "Attempt": "시도",
+    "Attempts remaining": "남은 시도 횟수",
+    "Time remaining": "남은 시간",
+    "Next question": "다음 문제",
+    "Previous question": "이전 문제",
+    "Review answers": "답안 검토",
+    "Submit exam": "시험 제출",
+    "Exam complete": "시험 완료",
+    "You passed!": "축하합니다, 합격하셨습니다!",
+    "You did not pass": "불합격하셨습니다",
+    "Question": "문제"
   }
 }

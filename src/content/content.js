@@ -45,6 +45,7 @@
   let translator = null;
   let subtitleManager = null;
   let currentLang = 'en';
+  let isExamPage = false;
   let isReady = false;
   let sidebarVisible = false;
   let originalTexts = new Map();
@@ -72,12 +73,37 @@
   // (header-controls.js, text-selection.js, sidebar-chat.js)
   // ============================================================
 
+  // ============================================================
+  // EXAM PAGE DETECTION
+  // ============================================================
+
+  function detectExamPage() {
+    const url = location.href;
+    if (EXAM_URL_PATTERNS.some(p => p.test(url))) return true;
+    // DOM-based detection: check for quiz forms or answer option containers
+    if (document.querySelector(SKILLJAR_SELECTORS.quizForm)) return true;
+    if (document.querySelector(SKILLJAR_SELECTORS.answerOption)) return true;
+    return false;
+  }
+
+  function showExamBanner() {
+    if (document.getElementById('si18n-exam-banner')) return;
+    const banner = document.createElement('div');
+    banner.id = 'si18n-exam-banner';
+    banner.className = 'si18n-exam-banner';
+    banner.setAttribute('role', 'alert');
+    banner.textContent = t(EXAM_BANNER_LABELS);
+    document.body.appendChild(banner);
+    requestAnimationFrame(() => banner.classList.add('visible'));
+  }
+
   window._sb = {
     get currentLang() { return currentLang; },
     set currentLang(v) { currentLang = v; },
     get sidebarVisible() { return sidebarVisible; },
     set sidebarVisible(v) { sidebarVisible = v; },
     get translator() { return translator; },
+    get isExamPage() { return isExamPage; },
     t,
     escapeHtml,
     switchLanguage,
@@ -217,6 +243,7 @@
       const stored = await chrome.storage.local.get(['targetLanguage', 'autoTranslate', 'welcomeShown', 'darkMode']);
       if (stored.darkMode) document.documentElement.classList.add('si18n-dark');
       currentLang = stored.targetLanguage || 'en';
+      isExamPage = detectExamPage();
 
       translator = new SkilljarTranslator();
 
@@ -349,6 +376,9 @@
   function applyStaticTranslations(targetLang) {
     buildProtectedTermsMap(targetLang);
     updateLangClass(targetLang);
+    // Re-detect exam page (DOM may have loaded since init)
+    if (!isExamPage) isExamPage = detectExamPage();
+    if (isExamPage && targetLang !== 'en') showExamBanner();
 
     const elements = getTranslatableElements();
     if (elements.length === 0) return;
@@ -671,8 +701,12 @@
   }
 
   function getTranslatableElements() {
+    const examSkip = isExamPage ? EXAM_SKIP_SELECTORS.join(', ') : null;
     return Array.from(document.querySelectorAll(TRANSLATABLE_SELECTOR)).filter(el => {
       if (el.closest(EXCLUDE_SELECTOR)) return false;
+      // On exam pages, skip answer choice elements
+      if (examSkip && el.matches(examSkip)) return false;
+      if (examSkip && el.closest(examSkip)) return false;
       const parent = el.parentElement;
       if (parent && parent.matches && parent.matches(TRANSLATABLE_SELECTOR) &&
           !parent.closest(EXCLUDE_SELECTOR)) {
@@ -925,6 +959,9 @@ RULES:
 
   function getPageContext() {
     const title = document.querySelector(`h1, h2, ${SKILLJAR_SELECTORS.courseTitle}`)?.textContent || document.title || '';
+    if (isExamPage) {
+      return `Certification Exam: ${title}. Page type: exam/assessment. DO NOT help with answers.`;
+    }
     const headings = Array.from(document.querySelectorAll('h1, h2, h3, h4'))
       .map(h => h.textContent.trim())
       .slice(0, 5)
