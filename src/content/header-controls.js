@@ -27,6 +27,7 @@
     btn.className = 'si18n-dark-toggle-btn';
     btn.setAttribute('aria-label', 'Toggle dark mode');
     btn.setAttribute('title', 'Toggle dark mode');
+    btn.setAttribute('aria-pressed', document.documentElement.classList.contains('si18n-dark') ? 'true' : 'false');
     btn.innerHTML = DARK_TOGGLE_ICONS;
     btn.addEventListener('click', toggleDarkMode);
     return btn;
@@ -49,6 +50,8 @@
 
   function toggleDarkMode() {
     const isDark = document.documentElement.classList.toggle('si18n-dark');
+    const toggleBtn = document.getElementById('si18n-dark-toggle');
+    if (toggleBtn) toggleBtn.setAttribute('aria-pressed', isDark ? 'true' : 'false');
     chrome.storage.local.set({ darkMode: isDark });
   }
 

@@ -20,8 +20,11 @@
 
   function injectFloatingButton() {
     if (document.getElementById('skillbridge-fab')) return;
-    const btn = document.createElement('div');
+    const btn = document.createElement('button');
     btn.id = 'skillbridge-fab';
+    btn.setAttribute('role', 'button');
+    btn.setAttribute('tabindex', '0');
+    btn.setAttribute('aria-label', 'Open AI Tutor');
     btn.innerHTML = `
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
@@ -29,6 +32,12 @@
     `;
     btn.title = 'AI Tutor';
     btn.addEventListener('click', toggleSidebar);
+    btn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleSidebar();
+      }
+    });
     document.body.appendChild(btn);
   }
 
@@ -54,17 +63,17 @@
   function getSidebarHTML() {
     return `
       <div class="si18n-header">
-        <button class="si18n-history-btn" id="si18n-history-btn" title="Chat history">
+        <button class="si18n-history-btn" id="si18n-history-btn" title="Chat history" aria-label="Chat history">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
           </svg>
         </button>
         <span class="si18n-header-title">SkillBridge Tutor</span>
-        <button class="si18n-close" id="si18n-close">&times;</button>
+        <button class="si18n-close" id="si18n-close" aria-label="Close sidebar">&times;</button>
       </div>
 
       <div class="si18n-panel si18n-panel-chat" id="si18n-panel-chat">
-        <div class="si18n-chat-messages" id="si18n-chat-messages">
+        <div class="si18n-chat-messages" id="si18n-chat-messages" role="log" aria-live="polite">
           <div class="si18n-chat-msg si18n-chat-bot">
             <div class="si18n-chat-avatar">AI</div>
             <div class="si18n-chat-bubble">
@@ -164,7 +173,7 @@
       <div class="si18n-chat-msg si18n-chat-bot" id="${loadingId}">
         <div class="si18n-chat-avatar">AI</div>
         <div class="si18n-chat-bubble">
-          <span class="si18n-thinking-dots">
+          <span class="si18n-thinking-dots" role="status" aria-label="Loading">
             <span class="si18n-dot"></span>
             <span class="si18n-dot"></span>
             <span class="si18n-dot"></span>
@@ -366,7 +375,7 @@
     savedChatHTML = chatPanel.innerHTML;
     chatPanel.innerHTML = `
       <div class="si18n-history-header">
-        <button class="si18n-history-back" id="si18n-history-back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <button class="si18n-history-back" id="si18n-history-back" aria-label="Back to chat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
         <span class="si18n-history-title">${sb.t(HISTORY_LABELS.title)}</span>
         <button class="si18n-history-clear" id="si18n-history-clear" title="${sb.t(HISTORY_LABELS.clearHistory)}">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
@@ -482,7 +491,57 @@
     sb.sidebarVisible = !sb.sidebarVisible;
     if (sidebar) sidebar.classList.toggle('open', sb.sidebarVisible);
     if (fab) fab.classList.toggle('hidden', sb.sidebarVisible);
+
+    if (sb.sidebarVisible) {
+      // Focus the chat input when sidebar opens
+      setTimeout(() => {
+        const chatInput = document.getElementById('si18n-chat-input');
+        if (chatInput) chatInput.focus();
+      }, SKILLBRIDGE_DELAYS.SIDEBAR_BIND);
+
+      // Add focus trap
+      if (sidebar) sidebar.addEventListener('keydown', trapFocus);
+    } else {
+      // Return focus to FAB when sidebar closes
+      if (fab) fab.focus();
+
+      // Remove focus trap
+      if (sidebar) sidebar.removeEventListener('keydown', trapFocus);
+    }
   }
+
+  function trapFocus(e) {
+    if (e.key !== 'Tab') return;
+    const sidebar = document.getElementById('skillbridge-sidebar');
+    if (!sidebar) return;
+
+    const focusable = sidebar.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    if (focusable.length === 0) return;
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    if (e.shiftKey) {
+      if (document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else {
+      if (document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  }
+
+  // Close sidebar on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && sb.sidebarVisible) {
+      toggleSidebar();
+    }
+  });
 
   // Export to shared namespace
   sb.injectSidebar = injectSidebar;

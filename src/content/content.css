@@ -104,6 +104,14 @@ body.si18n-lang-ko,
   text-align: right;
 }
 
+/* ---- Hebrew (RTL support) ---- */
+
+.si18n-lang-he {
+  font-family: "Noto Sans Hebrew", "Segoe UI", "Arial", sans-serif !important;
+  direction: rtl;
+  text-align: right;
+}
+
 /* ---- Hindi/Devanagari ---- */
 
 .si18n-lang-hi {
@@ -1369,7 +1377,7 @@ html.si18n-dark input, html.si18n-dark textarea, html.si18n-dark select {
 /* Breadcrumbs */
 html.si18n-dark .breadcrumb,
 html.si18n-dark .breadcrumb a {
-  color: #666 !important;
+  color: #999 !important;
   text-decoration: none !important;
 }
 html.si18n-dark .breadcrumb a:hover {
@@ -1379,7 +1387,7 @@ html.si18n-dark .breadcrumb a:hover {
 /* Footer */
 html.si18n-dark footer {
   background: #0a0a0a !important;
-  color: #666 !important;
+  color: #999 !important;
 }
 
 /* Skilljar-specific: course sidebar / outline */
@@ -1514,11 +1522,11 @@ html.si18n-dark .si18n-history-item-q {
   color: #dedede !important;
 }
 html.si18n-dark .si18n-history-item-time {
-  color: #666 !important;
+  color: #999 !important;
 }
 html.si18n-dark .si18n-history-empty,
 html.si18n-dark .si18n-history-loading {
-  color: #666 !important;
+  color: #999 !important;
 }
 html.si18n-dark .si18n-history-detail-meta {
   border-color: rgba(255,255,255,0.08) !important;
@@ -1527,7 +1535,7 @@ html.si18n-dark .si18n-detail-lesson {
   color: #dedede !important;
 }
 html.si18n-dark .si18n-detail-time {
-  color: #666 !important;
+  color: #999 !important;
 }
 html.si18n-dark .si18n-history-detail .si18n-chat-bot .si18n-chat-bubble {
   background: #1a1a1a !important;
@@ -1639,7 +1647,7 @@ html.si18n-dark .lesson-section.expand {
 }
 html.si18n-dark .lesson-section .fa-caret-down,
 html.si18n-dark .lesson-section .fa-caret-right {
-  color: #666 !important;
+  color: #999 !important;
 }
 html.si18n-dark .lesson-section .fa-check {
   color: #81B29A !important;
@@ -1671,7 +1679,7 @@ html.si18n-dark .lesson-row .description,
 html.si18n-dark .lesson-row .duration,
 html.si18n-dark .sj-lesson-time,
 html.si18n-dark .sj-course-time {
-  color: #666 !important;
+  color: #999 !important;
 }
 
 /* Lesson completion checkmarks */
@@ -1689,7 +1697,7 @@ html.si18n-dark .lesson-modular .bullet {
 
 /* Type icons (video, text, quiz icons) */
 html.si18n-dark .type-icon {
-  color: #666 !important;
+  color: #999 !important;
 }
 
 /* Section headers in curriculum */
