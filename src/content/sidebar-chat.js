@@ -337,6 +337,22 @@
     }
   }
 
+  async function clearAllHistory() {
+    try {
+      const db = await openHistoryDb();
+      const tx = db.transaction(HISTORY_STORE, 'readwrite');
+      tx.objectStore(HISTORY_STORE).clear();
+      tx.oncomplete = () => {
+        const listEl = document.getElementById('si18n-history-list');
+        if (listEl) {
+          listEl.innerHTML = `<div class="si18n-history-empty">${sb.t(HISTORY_LABELS.historyCleared)}</div>`;
+        }
+      };
+    } catch (e) {
+      console.warn('[SkillBridge] Failed to clear history:', e);
+    }
+  }
+
   function toggleHistoryPanel() {
     const chatPanel = document.getElementById('si18n-panel-chat');
     if (!chatPanel) return;
@@ -352,6 +368,10 @@
       <div class="si18n-history-header">
         <button class="si18n-history-back" id="si18n-history-back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
         <span class="si18n-history-title">${sb.t(HISTORY_LABELS.title)}</span>
+        <button class="si18n-history-clear" id="si18n-history-clear" title="${sb.t(HISTORY_LABELS.clearHistory)}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          <span>${sb.t(HISTORY_LABELS.clearHistory)}</span>
+        </button>
       </div>
       <div class="si18n-history-list" id="si18n-history-list">
         <div class="si18n-history-loading">${sb.t(HISTORY_LABELS.loading)}</div>
@@ -359,6 +379,7 @@
     `;
 
     document.getElementById('si18n-history-back')?.addEventListener('click', closeHistoryPanel);
+    document.getElementById('si18n-history-clear')?.addEventListener('click', clearAllHistory);
     loadHistoryList();
   }
 

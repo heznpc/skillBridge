@@ -719,27 +719,55 @@
   );
 
   function xmlToHtml(translatedXml, tagInfo) {
-    let html = translatedXml;
+    // Step 1: Restore placeholder tags to real HTML using tagInfo
+    let rawHtml = translatedXml;
     for (const [id, info] of Object.entries(tagInfo)) {
       if (id.startsWith('c')) {
-        html = html.replace(new RegExp(`<${id}\\s*/>`, 'g'), info.original);
+        rawHtml = rawHtml.replace(new RegExp(`<${id}\\s*/>`, 'g'), info.original);
       } else {
-        html = html.replace(new RegExp(`<${id}>([\\s\\S]*?)</${id}>`, 'g'), (_, content) => {
+        rawHtml = rawHtml.replace(new RegExp(`<${id}>([\\s\\S]*?)</${id}>`, 'g'), (_, content) => {
           return `<${info.tag}${info.attrs}>${content}</${info.tag}>`;
         });
       }
     }
     // Clean up unmatched placeholder tags
-    html = html.replace(/<[xc]\d+\s*\/?>/g, '');
-    html = html.replace(/<\/[xc]\d+>/g, '');
-    // Strip any HTML tags not in SAFE_TAGS whitelist (prevent XSS from AI output)
-    html = html.replace(/<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>/g, (match, tag) => {
-      if (!SAFE_TAGS.has(tag.toLowerCase())) return '';
-      // Strip event handler attributes (on*) and javascript: URLs from safe tags
-      return match.replace(/\s+on\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]*)/gi, '')
-                  .replace(/\s+href\s*=\s*(?:"javascript:[^"]*"|'javascript:[^']*'|javascript:[^\s>]*)/gi, '');
-    });
-    return html;
+    rawHtml = rawHtml.replace(/<[xc]\d+\s*\/?>/g, '');
+    rawHtml = rawHtml.replace(/<\/[xc]\d+>/g, '');
+
+    // Step 2: DOM-based sanitization — parse and walk the tree,
+    // keeping only SAFE_TAGS and stripping dangerous attributes
+    const doc = new DOMParser().parseFromString(rawHtml, 'text/html');
+
+    function sanitizeNode(node) {
+      const fragment = document.createDocumentFragment();
+      for (const child of Array.from(node.childNodes)) {
+        if (child.nodeType === Node.TEXT_NODE) {
+          fragment.appendChild(document.createTextNode(child.textContent));
+        } else if (child.nodeType === Node.ELEMENT_NODE) {
+          if (SAFE_TAGS.has(child.tagName.toLowerCase())) {
+            const clean = document.createElement(child.tagName.toLowerCase());
+            // Copy only safe attributes — skip on* handlers and javascript: URLs
+            for (const attr of Array.from(child.attributes)) {
+              const name = attr.name.toLowerCase();
+              if (name.startsWith('on')) continue;
+              if (attr.value.replace(/\s/g, '').toLowerCase().startsWith('javascript:')) continue;
+              clean.setAttribute(attr.name, attr.value);
+            }
+            clean.appendChild(sanitizeNode(child));
+            fragment.appendChild(clean);
+          } else {
+            // Unsafe tag — keep its text children but drop the element
+            fragment.appendChild(sanitizeNode(child));
+          }
+        }
+      }
+      return fragment;
+    }
+
+    const sanitized = sanitizeNode(doc.body);
+    const wrapper = document.createElement('div');
+    wrapper.appendChild(sanitized);
+    return wrapper.innerHTML;
   }
 
   function queueGeminiBlockTranslation(el, targetLang) {

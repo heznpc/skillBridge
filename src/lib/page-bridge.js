@@ -15,7 +15,7 @@
   // browsers/contexts, so fall back to getElementById with a known marker.
   const _currentScript = document.currentScript
     || document.getElementById('__skillbridge_loader__');
-  const _bridgeNonce = _currentScript?.dataset?.nonce || '';
+  const _bridgeNonce = _currentScript?.dataset?.nonce || crypto.randomUUID();
   const _puterUrl = _currentScript?.dataset?.puterUrl || '';
 
   let puterReady = false;
@@ -87,7 +87,8 @@
     const data = event.data;
     if (!data || !data.__skillbridge__) return;
     // Validate nonce to prevent other page scripts from spoofing messages
-    if (_bridgeNonce && data.__nonce__ !== _bridgeNonce) return;
+    // Always enforce — nonce is never empty (crypto.randomUUID fallback above)
+    if (data.__nonce__ !== _bridgeNonce) return;
 
     // === TRANSLATE ===
     if (data.type === 'TRANSLATE_REQUEST') {
