@@ -1,0 +1,227 @@
+name: Maintenance
+
+on:
+  schedule:
+    # Job 1: DOM Health Check — every Monday at 9:00 UTC
+    - cron: '0 9 * * 1'
+    # Job 2: Dictionary Freshness — 1st of each month at 9:00 UTC
+    - cron: '0 9 1 * *'
+    # Job 3: Dependency Audit — every Wednesday at 9:00 UTC
+    - cron: '0 9 * * 3'
+  workflow_dispatch:
+    inputs:
+      job:
+        description: 'Which job to run (dom-health, dict-freshness, dep-audit, or all)'
+        required: false
+        default: 'all'
+
+jobs:
+  # ─── Job 1: Skilljar DOM Health Check (weekly, Monday) ────────
+  dom-health-check:
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+        (github.event.inputs.job == 'dom-health' || github.event.inputs.job == 'all')
+      || github.event.schedule == '0 9 * * 1'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Check Skilljar DOM selectors
+        id: dom-check
+        run: node scripts/check-selectors.js
+        env:
+          CI: 'true'
+
+      - name: Open issue if selectors missing
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let body = 'The weekly DOM health check found missing selectors.\n\n';
+            try {
+              const report = fs.readFileSync('dom-check-report.txt', 'utf8');
+              body += report;
+            } catch {
+              body += 'Could not read report file. Check the workflow logs for details.';
+            }
+            body += '\n\n---\n_Opened automatically by the Maintenance workflow._';
+
+            // Avoid duplicate issues
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'maintenance,dom-health',
+            });
+            if (existing.data.length > 0) {
+              console.log('Open DOM health issue already exists, skipping.');
+              return;
+            }
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'DOM Health Check: selector missing',
+              body,
+              labels: ['maintenance', 'dom-health'],
+            });
+
+  # ─── Job 2: Dictionary Freshness Check (monthly, 1st) ────────
+  dict-freshness-check:
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+        (github.event.inputs.job == 'dict-freshness' || github.event.inputs.job == 'all')
+      || github.event.schedule == '0 9 1 * *'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Check dictionary freshness
+        id: dict-check
+        run: node scripts/check-dicts.js
+        env:
+          CI: 'true'
+
+      - name: Open issue if dictionaries stale
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let body = 'The monthly dictionary freshness check found stale dictionaries.\n\n';
+            try {
+              const report = fs.readFileSync('dict-check-report.txt', 'utf8');
+              body += report;
+            } catch {
+              body += 'Could not read report file. Check the workflow logs for details.';
+            }
+            body += '\n\n---\n_Opened automatically by the Maintenance workflow._';
+
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'maintenance,dict-freshness',
+            });
+            if (existing.data.length > 0) {
+              console.log('Open dict freshness issue already exists, skipping.');
+              return;
+            }
+
+            // Collect stale languages for the title
+            let staleLangs = '';
+            try {
+              const lines = fs.readFileSync('dict-check-report.txt', 'utf8').split('\n');
+              const langs = lines
+                .filter(l => l.includes('STALE'))
+                .map(l => l.match(/(\S+\.json)/)?.[1]?.replace('.json', ''))
+                .filter(Boolean);
+              if (langs.length) staleLangs = ': ' + langs.join(', ');
+            } catch {}
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Dictionary update needed${staleLangs}`,
+              body,
+              labels: ['maintenance', 'dict-freshness'],
+            });
+
+  # ─── Job 3: Dependency Audit (weekly, Wednesday) ──────────────
+  dependency-audit:
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+        (github.event.inputs.job == 'dep-audit' || github.event.inputs.job == 'all')
+      || github.event.schedule == '0 9 * * 3'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm install
+
+      - name: Run npm audit
+        id: npm-audit
+        run: |
+          set +e
+          npm audit --production 2>&1 | tee npm-audit-report.txt
+          echo "audit_exit=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Check puter.js integrity
+        id: puter-check
+        run: |
+          PUTER_HASH=$(sha256sum src/bridge/puter.js | awk '{print $1}')
+          echo "Current puter.js SHA-256: $PUTER_HASH"
+
+          if [ -f THIRD_PARTY_NOTICES.md ]; then
+            if grep -q "$PUTER_HASH" THIRD_PARTY_NOTICES.md; then
+              echo "puter_match=true" >> "$GITHUB_OUTPUT"
+              echo "Hash matches THIRD_PARTY_NOTICES.md"
+            else
+              echo "puter_match=false" >> "$GITHUB_OUTPUT"
+              echo "::warning::puter.js hash does NOT match THIRD_PARTY_NOTICES.md"
+            fi
+          else
+            echo "puter_match=skip" >> "$GITHUB_OUTPUT"
+            echo "THIRD_PARTY_NOTICES.md not found, skipping hash check"
+          fi
+
+      - name: Open issue if audit findings
+        if: steps.npm-audit.outputs.audit_exit != '0' || steps.puter-check.outputs.puter_match == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let body = 'The weekly dependency audit found issues.\n\n';
+
+            const auditExit = '${{ steps.npm-audit.outputs.audit_exit }}';
+            const puterMatch = '${{ steps.puter-check.outputs.puter_match }}';
+
+            if (auditExit !== '0') {
+              body += '### npm audit\n\n';
+              try {
+                const report = fs.readFileSync('npm-audit-report.txt', 'utf8');
+                body += '```\n' + report.substring(0, 3000) + '\n```\n\n';
+              } catch {
+                body += 'See workflow logs for npm audit output.\n\n';
+              }
+            }
+
+            if (puterMatch === 'false') {
+              body += '### puter.js hash mismatch\n\n';
+              body += 'The SHA-256 hash of `src/bridge/puter.js` does not match the hash recorded in `THIRD_PARTY_NOTICES.md`.\n';
+              body += 'The file may have been updated without updating the notice, or vice versa.\n\n';
+            }
+
+            body += '---\n_Opened automatically by the Maintenance workflow._';
+
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'maintenance,dependency-audit',
+            });
+            if (existing.data.length > 0) {
+              console.log('Open dependency audit issue already exists, skipping.');
+              return;
+            }
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'Dependency audit: findings detected',
+              body,
+              labels: ['maintenance', 'dependency-audit'],
+            });

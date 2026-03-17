@@ -5,6 +5,7 @@
  * 1. Google Translate API proxy (fast initial translation)
  * 2. General CORS proxy for YouTube
  * 3. Badge management
+ * 4. Periodic maintenance via Chrome Alarms (cache cleanup, version check)
  */
 
 // Language code mapping for Google Translate API
@@ -81,8 +82,108 @@ async function fetchWithRetry(url, opts = {}, maxRetries = 3, baseDelay = 500) {
   }
 }
 
+// ==================== CHROME ALARMS (MAINTENANCE) ====================
+
+const _ALARM_CACHE_CLEANUP = 'cache-cleanup';
+const _ALARM_VERSION_CHECK = 'version-check';
+const _GITHUB_REPO = 'heznpc/skillbridge';
+
+/**
+ * Register maintenance alarms on install/update.
+ * - cache-cleanup: fires every 24 hours (1440 min)
+ * - version-check: fires every 7 days (10080 min)
+ */
+function registerAlarms() {
+  chrome.alarms.create(_ALARM_CACHE_CLEANUP, { periodInMinutes: 1440 });
+  chrome.alarms.create(_ALARM_VERSION_CHECK, { periodInMinutes: 10080 });
+}
+
+/**
+ * Cache cleanup — purge expired IndexedDB entries.
+ * Sends a message to any active Skilljar tabs; if none are open,
+ * the cleanup will happen naturally on next page load.
+ */
+async function handleCacheCleanup() {
+  try {
+    const tabs = await chrome.tabs.query({ url: 'https://*.skilljar.com/*' });
+    for (const tab of tabs) {
+      chrome.tabs.sendMessage(tab.id, { type: 'CACHE_CLEANUP' }).catch(() => {
+        // Tab may not have content script loaded — that is fine
+      });
+    }
+    console.log(`[SkillBridge] Cache cleanup alarm: notified ${tabs.length} tab(s)`);
+  } catch (err) {
+    console.warn('[SkillBridge] Cache cleanup error:', err.message);
+  }
+}
+
+/**
+ * Version check — compare local version with latest GitHub release.
+ * If a newer version exists, set badge text to "!" as a notification.
+ */
+async function handleVersionCheck() {
+  try {
+    const manifest = chrome.runtime.getManifest();
+    const localVersion = manifest.version;
+
+    const resp = await fetch(
+      `https://api.github.com/repos/${_GITHUB_REPO}/releases/latest`,
+      { headers: { 'Accept': 'application/vnd.github.v3+json' } }
+    );
+    if (!resp.ok) {
+      console.warn(`[SkillBridge] Version check: GitHub API returned ${resp.status}`);
+      return;
+    }
+    const release = await resp.json();
+    const remoteVersion = (release.tag_name || '').replace(/^v/, '');
+
+    if (remoteVersion && remoteVersion !== localVersion && isNewerVersion(remoteVersion, localVersion)) {
+      console.log(`[SkillBridge] New version available: ${remoteVersion} (current: ${localVersion})`);
+      chrome.action.setBadgeText({ text: '!' });
+      chrome.action.setBadgeBackgroundColor({ color: '#E07A5F' });
+    } else {
+      console.log(`[SkillBridge] Version check: up to date (${localVersion})`);
+    }
+  } catch (err) {
+    console.warn('[SkillBridge] Version check error:', err.message);
+  }
+}
+
+/**
+ * Simple semver comparison: returns true if a > b.
+ * Handles x.y.z format; falls back to string comparison for non-numeric.
+ */
+function isNewerVersion(a, b) {
+  const pa = a.split('.').map(Number);
+  const pb = b.split('.').map(Number);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const na = pa[i] || 0;
+    const nb = pb[i] || 0;
+    if (na > nb) return true;
+    if (na < nb) return false;
+  }
+  return false;
+}
+
+// Alarm listener
+chrome.alarms.onAlarm.addListener((alarm) => {
+  switch (alarm.name) {
+    case _ALARM_CACHE_CLEANUP:
+      handleCacheCleanup();
+      break;
+    case _ALARM_VERSION_CHECK:
+      handleVersionCheck();
+      break;
+    default:
+      console.warn(`[SkillBridge] Unknown alarm: ${alarm.name}`);
+  }
+});
+
 // Install handler
 chrome.runtime.onInstalled.addListener((details) => {
+  // Register maintenance alarms on install or update
+  registerAlarms();
+
   if (details.reason === 'install') {
     chrome.storage.local.set({
       targetLanguage: 'en',
