@@ -151,7 +151,7 @@ git clone https://github.com/heznpc/skillbridge.git
 
 Also works in Brave, Arc, Opera, Vivaldi, and other Chromium-based browsers.
 
-### Firefox
+### Firefox (Beta)
 
 ```bash
 git clone https://github.com/heznpc/skillbridge.git

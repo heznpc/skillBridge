@@ -1,0 +1,118 @@
+name: QA Test Report
+description: Report results from manual QA testing
+title: "QA: [browser] [version] — [summary]"
+labels: ["qa", "testing"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for testing SkillBridge! Fill out the checklist below.
+        See [TESTING.md](../../TESTING.md#manual-qa-checklist) for details.
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser & Version
+      placeholder: "Chrome 124 / Firefox 128 / Edge 124"
+    validations:
+      required: true
+
+  - type: input
+    id: extension-version
+    attributes:
+      label: Extension Version
+      placeholder: "2.0.0"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      placeholder: "macOS 15.2 / Windows 11 / Ubuntu 24.04"
+    validations:
+      required: true
+
+  - type: input
+    id: language
+    attributes:
+      label: Language Tested
+      placeholder: "ko / ja / zh-CN / es / fr / de / other"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: core-translation
+    attributes:
+      label: Core Translation
+      options:
+        - label: Page translates after selecting language
+        - label: Progress bar appears and completes
+        - label: Switch to English restores original text
+        - label: Protected terms stay in English
+        - label: Navigation triggers auto-translate
+        - label: Cached translations load instantly on refresh
+
+  - type: checkboxes
+    id: ai-tutor
+    attributes:
+      label: AI Tutor
+      options:
+        - label: Sidebar opens via floating button
+        - label: Streaming response renders correctly
+        - label: Markdown formatting works (bold, lists, code)
+        - label: Text selection "Ask Tutor" works
+        - label: Chat history loads and displays
+
+  - type: checkboxes
+    id: keyboard-shortcuts
+    attributes:
+      label: Keyboard Shortcuts
+      options:
+        - label: "Ctrl+Shift+S toggles sidebar"
+        - label: "Ctrl+Shift+L toggles dark mode"
+        - label: "Ctrl+Shift+/ shows help overlay"
+        - label: "Escape closes overlay/sidebar"
+        - label: "/ focuses chat input (sidebar open)"
+
+  - type: checkboxes
+    id: exam-mode
+    attributes:
+      label: Exam Mode
+      options:
+        - label: Exam banner appears on quiz pages
+        - label: Answer choices are NOT translated
+        - label: AI Tutor shows integrity warning
+        - label: AI Tutor refuses direct exam answers
+
+  - type: checkboxes
+    id: dark-mode
+    attributes:
+      label: Dark Mode
+      options:
+        - label: Full dark theme applies correctly
+        - label: Dark mode persists after refresh
+        - label: All UI elements styled (banner, overlay, sidebar)
+
+  - type: checkboxes
+    id: youtube
+    attributes:
+      label: YouTube Subtitles
+      options:
+        - label: Translated subtitles auto-activate on video play
+        - label: Subtitle language matches selected language
+
+  - type: textarea
+    id: issues
+    attributes:
+      label: Issues Found
+      description: Describe any bugs, visual glitches, or unexpected behavior.
+      placeholder: |
+        1. [Feature] — Description of issue
+        2. [Feature] — Description of issue
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots (optional)
+      description: Paste screenshots of any issues found.

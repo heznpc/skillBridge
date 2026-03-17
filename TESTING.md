@@ -10,7 +10,7 @@ This guide covers how to run tests, debug the extension, and troubleshoot common
 
 ```bash
 npm install   # first time only
-npm test      # runs all ~700 Jest tests
+npm test      # runs all Jest tests
 ```
 
 ### Single test file
@@ -68,6 +68,7 @@ tests/protected-terms.test.js → re-implements logic (legacy pattern)
 | `protected-terms.test.js` | ~50 | Protected term map building, term replacement, per-language dictionaries |
 | `constants.test.js` | ~20 | Value validation, threshold ranges, language list integrity, i18n label coverage |
 | `format-response.test.js` | ~18 | Markdown-to-HTML conversion, XSS escaping, heading/list/inline formatting |
+| `glossary-checker.test.js` | ~10 | Cross-language glossary consistency, protected terms validation |
 
 ### What is NOT tested (known gaps)
 
@@ -281,3 +282,107 @@ The CI workflow (`.github/workflows/ci.yml`) runs on every push to `main` and on
 3. **Test** — runs all Jest tests
 
 The CD workflow (`.github/workflows/cd.yml`) triggers on push to `main` when `src/**`, `_locales/**`, or `manifest.json` change — it builds a zip and uploads to Chrome Web Store.
+
+---
+
+## Manual QA Checklist
+
+Use this checklist before releases or when reviewing PRs that touch core functionality. Copy into your PR description and check off items as you verify them.
+
+### Core Translation
+
+- [ ] Visit `anthropic.skilljar.com` → select a non-English language → page translates
+- [ ] Progress bar appears and completes
+- [ ] Switch back to English → original text restores correctly
+- [ ] Protected terms (Claude, Anthropic, API, SDK) remain in English after translation
+- [ ] Navigate to a different lesson → auto-translate triggers if enabled
+- [ ] Refresh page → cached translations load instantly (check Network tab — no GT calls for cached text)
+
+### AI Tutor
+
+- [ ] Click floating button → sidebar opens
+- [ ] Type a question → streaming response appears
+- [ ] Response renders markdown (bold, lists, code blocks) correctly
+- [ ] Select text on page → "Ask Tutor" button appears → clicking sends quoted text to chat
+- [ ] Chat history: click clock icon → history panel shows past conversations
+- [ ] Close and reopen sidebar → chat state preserved
+
+### Keyboard Shortcuts
+
+- [ ] `Ctrl+Shift+S` (or `Cmd+Shift+S` on Mac) → toggles sidebar
+- [ ] `Ctrl+Shift+L` → toggles dark mode
+- [ ] `Ctrl+Shift+/` → shows shortcut help overlay
+- [ ] `Escape` → closes help overlay or sidebar
+- [ ] `/` (with sidebar open, not in input field) → focuses chat input
+- [ ] Shortcuts do NOT fire when typing in textarea/input fields
+
+### Exam Mode
+
+- [ ] Navigate to a quiz/assessment page → exam banner appears at top
+- [ ] Answer choices (radio/checkbox labels) are NOT translated
+- [ ] Question text and page headings ARE translated
+- [ ] AI Tutor shows integrity warning before sending message on exam page
+- [ ] AI Tutor refuses to provide direct exam answers
+
+### Dark Mode
+
+- [ ] Toggle dark mode → entire page goes dark (header, content, sidebar, footer)
+- [ ] Refresh page → dark mode persists
+- [ ] Exam banner renders correctly in dark mode
+- [ ] Shortcut help overlay renders correctly in dark mode
+
+### YouTube Subtitles
+
+- [ ] Page with embedded YouTube video → play video → translated subtitles activate
+- [ ] Subtitle language matches selected translation language
+
+### Cross-Browser (Beta)
+
+- [ ] **Chrome**: load unpacked → all features work
+- [ ] **Firefox**: `npm run build:firefox` → load temporary add-on from `dist/firefox/` → extension loads without errors
+- [ ] **Firefox**: basic translation works (select language, page translates)
+- [ ] **Edge**: load unpacked → all features work
+
+### Security Spot-Check
+
+- [ ] Open DevTools Console → no errors containing `[SkillBridge]`
+- [ ] Network tab → no requests to unexpected domains (only `translate.googleapis.com`, `youtube.com`, `puter.com`)
+- [ ] Application tab → IndexedDB → `skillbridge-cache` entries have timestamps (TTL working)
+
+---
+
+## Firefox Testing Guide (Beta)
+
+Firefox support is currently in **beta**. Use this guide to test.
+
+### Setup
+
+```bash
+npm run build:firefox          # generates dist/firefox/
+```
+
+### Load in Firefox
+
+1. Open `about:debugging#/runtime/this-firefox`
+2. Click **Load Temporary Add-on**
+3. Navigate to `dist/firefox/manifest.json`
+
+> Temporary add-ons are removed when Firefox restarts.
+
+### What to Test
+
+| Feature | Expected | Known Issues |
+|---------|----------|-------------|
+| Page translation | Works (GT + static dict) | None known |
+| AI Tutor | Should work (Puter.js) | Untested |
+| Dark mode | Should work (CSS-only) | Untested |
+| Keyboard shortcuts | Should work | Untested |
+| YouTube subtitles | May not work | iframe postMessage differences |
+| Exam mode | Should work | Untested |
+
+### Reporting Firefox Issues
+
+File a bug with:
+- Firefox version (`about:support` → Application Basics → Version)
+- Console errors (F12 → Console → filter `[SkillBridge]`)
+- Steps to reproduce
