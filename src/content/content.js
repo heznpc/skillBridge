@@ -845,11 +845,16 @@
         } else if (child.nodeType === Node.ELEMENT_NODE) {
           if (SAFE_TAGS.has(child.tagName.toLowerCase())) {
             const clean = document.createElement(child.tagName.toLowerCase());
-            // Copy only safe attributes — skip on* handlers and javascript: URLs
+            // Copy only safe attributes — allowlist approach
             for (const attr of Array.from(child.attributes)) {
               const name = attr.name.toLowerCase();
-              if (name.startsWith('on')) continue;
-              if (attr.value.replace(/\s/g, '').toLowerCase().startsWith('javascript:')) continue;
+              if (name.startsWith('on')) continue;  // event handlers
+              if (name === 'style') continue;       // CSS injection
+              if (name === 'href') {
+                // Only allow http(s) and anchor links
+                const raw = attr.value.replace(/[\x00-\x1f\s]/g, '');
+                if (!/^https?:\/\//i.test(raw) && !raw.startsWith('#')) continue;
+              }
               clean.setAttribute(attr.name, attr.value);
             }
             clean.appendChild(sanitizeNode(child));
