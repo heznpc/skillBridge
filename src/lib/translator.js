@@ -30,12 +30,41 @@ class SkilljarTranslator {
   async initialize() {
     try {
       await this._openDB();
+      this._cleanupExpiredCache();
       this._setupMessageListener();
       await this._injectPageBridge();
       return true;
     } catch (err) {
       console.error('[SkillBridge] Init failed:', err);
       return false;
+    }
+  }
+
+  /**
+   * Delete cache entries older than CACHE_TTL_MS (30 days).
+   * Called once during initialization — not on every lookup.
+   */
+  _cleanupExpiredCache() {
+    if (!this._db) return;
+    try {
+      const tx = this._db.transaction('translations', 'readwrite');
+      const store = tx.objectStore('translations');
+      const req = store.openCursor();
+      const now = Date.now();
+      req.onsuccess = (e) => {
+        const cursor = e.target.result;
+        if (!cursor) return;
+        const entry = cursor.value;
+        if (entry.timestamp && now - entry.timestamp > SKILLBRIDGE_THRESHOLDS.CACHE_TTL_MS) {
+          cursor.delete();
+        }
+        cursor.continue();
+      };
+      req.onerror = () => {
+        console.warn('[SkillBridge] Cache cleanup cursor failed');
+      };
+    } catch (err) {
+      console.warn('[SkillBridge] Cache cleanup failed:', err);
     }
   }
 

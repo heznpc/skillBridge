@@ -362,6 +362,7 @@
 
   function queueForGoogleTranslate(elements, targetLang) {
     for (const el of elements) {
+      if (gtTranslateQueue.length >= SKILLBRIDGE_THRESHOLDS.GT_QUEUE_MAX) break;
       const text = el.textContent.trim();
       if (!text || text.length < 4) continue;
       const needsGemini = hasInlineTags(el);
@@ -457,6 +458,7 @@
 
     gtProcessing = false;
     hideTranslationProgress();
+    pruneOriginalTexts();
 
     for (const { el, targetLang } of geminiQueue) {
       if (el && el.parentNode) queueGeminiBlockTranslation(el, targetLang);
@@ -466,6 +468,17 @@
   function trackTranslatedElement(originalText, el) {
     if (!translatedTexts.has(originalText)) translatedTexts.set(originalText, []);
     translatedTexts.get(originalText).push({ el });
+  }
+
+  /**
+   * Prune originalTexts Map by removing entries where the element
+   * is no longer attached to the DOM (el.parentNode is null).
+   * Called after each GT batch processing completes.
+   */
+  function pruneOriginalTexts() {
+    for (const [el] of originalTexts) {
+      if (!el.parentNode) originalTexts.delete(el);
+    }
   }
 
   function addVerifySpinner(el) {
