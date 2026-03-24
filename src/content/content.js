@@ -13,6 +13,14 @@
   if (window.__skillbridge_initialized__) return;
   window.__skillbridge_initialized__ = true;
 
+  // ── Certification exam kill-switch ──────────────────────────
+  // Proctored exams (CCA-F etc.): disable extension entirely so it
+  // cannot be mistaken for a cheating tool.
+  if (CERT_DISABLE_PATTERNS.some(p => p.test(location.href))) {
+    console.info('[SkillBridge] Certification exam page detected — extension disabled.');
+    return;
+  }
+
   // Target ALL visible text elements — including Skilljar-specific
   // Skilljar selectors are centralized in src/lib/selectors.js
   const TRANSLATABLE_SELECTOR = [
@@ -310,13 +318,15 @@
         });
       }
 
-      if (!stored.welcomeShown && currentLang === 'en') {
-        const detected = window._sb.detectBrowserLanguage?.();
-        if (detected && detected !== 'en') {
+      if (!stored.welcomeShown) {
+        if (currentLang !== 'en') {
+          // Already has a language set — skip banner
+          chrome.storage.local.set({ welcomeShown: true });
+        } else {
+          // Show onboarding: detected language for non-English, null for English
+          const detected = window._sb.detectBrowserLanguage?.();
           setTimeout(() => window._sb.showWelcomeBanner?.(detected), SKILLBRIDGE_DELAYS.WELCOME_BANNER);
         }
-      } else if (!stored.welcomeShown && currentLang !== 'en') {
-        chrome.storage.local.set({ welcomeShown: true });
       }
     } catch (err) {
       console.error('[SkillBridge] Init error:', err);
@@ -1035,6 +1045,50 @@ RULES:
       }
     }, SKILLBRIDGE_DELAYS.DOM_DEBOUNCE);
   }
+
+  // ============================================================
+  // SPA NAVIGATION — re-evaluate on route change
+  // ============================================================
+
+  let _lastHref = location.href;
+
+  function onRouteChange() {
+    const href = location.href;
+    if (href === _lastHref) return;
+    _lastHref = href;
+
+    // If user navigated to a certification exam page, tear down
+    if (CERT_DISABLE_PATTERNS.some(p => p.test(href))) {
+      domObserver?.disconnect();
+      restoreOriginal();
+      document.getElementById('si18n-exam-banner')?.remove();
+      console.info('[SkillBridge] Navigated to certification page — extension disabled.');
+      return;
+    }
+
+    // Re-detect exam mode for the new page
+    isExamPage = detectExamPage();
+
+    // Re-apply translations for new content
+    if (currentLang !== 'en' && translator && isReady) {
+      setTimeout(() => applyStaticTranslations(currentLang), SKILLBRIDGE_DELAYS.LATE_CONTENT);
+    }
+  }
+
+  window.addEventListener('popstate', onRouteChange);
+  window.addEventListener('hashchange', onRouteChange);
+
+  // Catch pushState/replaceState (Skilljar SPA uses these)
+  const _origPushState = history.pushState;
+  const _origReplaceState = history.replaceState;
+  history.pushState = function (...args) {
+    _origPushState.apply(this, args);
+    onRouteChange();
+  };
+  history.replaceState = function (...args) {
+    _origReplaceState.apply(this, args);
+    onRouteChange();
+  };
 
   // ============================================================
   // BOOT

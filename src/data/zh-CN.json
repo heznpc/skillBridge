@@ -91,7 +91,11 @@
     "AI Fluency for nonprofits": "非营利组织的 AI 素养",
     "This course empowers nonprofit professionals to develop AI fluency in order to increase organizational impact and efficiency while staying true to their mission and values.": "本课程使非营利组织专业人员能够培养 AI 素养，以增加组织影响力和效率，同时坚持其使命和价值观。",
     "Introduction to agent skills": "代理技能简介",
-    "Learn how to build, configure, and share Skills in Claude Code — reusable markdown instructions that Claude automatically applies to the right tasks at the right time. This course takes you from creating your first Skill to distributing them across teams and troubleshooting common issues.": "学习如何在 Claude Code 中构建、配置和共享技能 - Claude 在正确的时间自动应用于正确任务的可重用 markdown 指令。本课程将引导您从创建第一个技能到在团队间分发并排查常见问题。"
+    "Learn how to build, configure, and share Skills in Claude Code — reusable markdown instructions that Claude automatically applies to the right tasks at the right time. This course takes you from creating your first Skill to distributing them across teams and troubleshooting common issues.": "学习如何在 Claude Code 中构建、配置和共享技能 - Claude 在正确的时间自动应用于正确任务的可重用 markdown 指令。本课程将引导您从创建第一个技能到在团队间分发并排查常见问题。",
+    "Introduction to Claude Cowork": "Claude Cowork 简介",
+    "This hands-on course covers the Cowork task loop, plugins and skills, file and research workflows, and how to steer multi-step work responsibly — so you're productive in your first week.": "本实践课程涵盖 Cowork 任务循环、插件和技能、文件和研究工作流，以及如何负责任地引导多步骤工作。",
+    "Introduction to subagents": "subagents 简介",
+    "Learn how to use and create sub-agents in Claude Code to manage context, delegate tasks, and build specialized workflows that keep your main conversation clean and focused.": "学习如何在 Claude Code 中使用和创建 sub-agent 来管理上下文、委托任务，并构建保持主对话简洁专注的专业工作流。"
   },
   "faq": {
     "Data and Privacy": "数据和隐私",
@@ -593,7 +597,14 @@
     "Plugins": "Plugins",
     "skill": "skill",
     "skills": "skills",
-    "Anthropic": "Anthropic"
+    "Anthropic": "Anthropic",
+    "Cowork": "Cowork",
+    "Dispatch": "Dispatch",
+    "Computer Use": "Computer Use",
+    "Subagent": "Subagent",
+    "Subagents": "Subagents",
+    "task loop": "任务循环",
+    "progressive disclosure": "渐进式公开"
   },
   "_protected": {
     "Claude Code": [
@@ -655,7 +666,10 @@
     "hooks": [
       "钩子",
       "挂钩"
-    ]
+    ],
+    "Cowork": ["协作", "共同工作"],
+    "Dispatch": ["调度", "分派"],
+    "Computer Use": ["电脑使用", "计算机使用"]
   },
   "exam_ui": {
     "Pass": "通过",

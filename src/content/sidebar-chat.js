@@ -24,21 +24,33 @@
     btn.id = 'skillbridge-fab';
     btn.setAttribute('role', 'button');
     btn.setAttribute('tabindex', '0');
-    btn.setAttribute('aria-label', 'Open AI Tutor');
+    btn.setAttribute('aria-label', sb.t(A11Y_LABELS.openTutor));
     btn.innerHTML = `
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
       </svg>
     `;
-    btn.title = 'AI Tutor';
-    btn.addEventListener('click', toggleSidebar);
+    btn.title = sb.t(A11Y_LABELS.openTutor);
+    btn.addEventListener('click', () => {
+      btn.classList.remove('si18n-fab-pulse');
+      toggleSidebar();
+    });
     btn.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
+        btn.classList.remove('si18n-fab-pulse');
         toggleSidebar();
       }
     });
     document.body.appendChild(btn);
+
+    // Pulse animation on first visit to draw attention
+    chrome.storage.local.get(['fabSeen'], (result) => {
+      if (!result.fabSeen) {
+        btn.classList.add('si18n-fab-pulse');
+        chrome.storage.local.set({ fabSeen: true });
+      }
+    });
   }
 
   // ============================================================
@@ -60,16 +72,23 @@
     return sb.t(TUTOR_GREETINGS);
   }
 
+  function getExampleQuestionsHTML() {
+    const questions = sb.t(EXAMPLE_QUESTIONS) || EXAMPLE_QUESTIONS['en'];
+    return questions.map(q =>
+      `<button class="si18n-example-q" data-question="${sb.escapeHtml(q)}">${sb.escapeHtml(q)}</button>`
+    ).join('');
+  }
+
   function getSidebarHTML() {
     return `
       <div class="si18n-header">
-        <button class="si18n-history-btn" id="si18n-history-btn" title="Chat history" aria-label="Chat history">
+        <button class="si18n-history-btn" id="si18n-history-btn" title="${sb.t(A11Y_LABELS.chatHistory)}" aria-label="${sb.t(A11Y_LABELS.chatHistory)}">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
           </svg>
         </button>
         <span class="si18n-header-title">SkillBridge Tutor</span>
-        <button class="si18n-close" id="si18n-close" aria-label="Close sidebar">&times;</button>
+        <button class="si18n-close" id="si18n-close" aria-label="${sb.t(A11Y_LABELS.closeSidebar)}">&times;</button>
       </div>
 
       <div class="si18n-panel si18n-panel-chat" id="si18n-panel-chat">
@@ -79,6 +98,9 @@
             <div class="si18n-chat-bubble">
               ${getTutorGreeting()}
             </div>
+          </div>
+          <div class="si18n-example-questions" id="si18n-example-questions">
+            ${getExampleQuestionsHTML()}
           </div>
         </div>
         <div class="si18n-chat-input-wrap">
@@ -95,6 +117,22 @@
     document.getElementById('si18n-close')?.addEventListener('click', toggleSidebar);
     document.getElementById('si18n-history-btn')?.addEventListener('click', toggleHistoryPanel);
     bindChatInputEvents();
+    bindExampleQuestions();
+  }
+
+  function bindExampleQuestions() {
+    const container = document.getElementById('si18n-example-questions');
+    if (!container) return;
+    container.addEventListener('click', (e) => {
+      const btn = e.target.closest('.si18n-example-q');
+      if (!btn) return;
+      const input = document.getElementById('si18n-chat-input');
+      if (input) {
+        input.value = btn.dataset.question;
+        container.remove();
+        sendChatMessage();
+      }
+    });
   }
 
   function bindChatInputEvents() {
@@ -149,17 +187,6 @@
     const messages = document.getElementById('si18n-chat-messages');
     const text = input.value.trim();
     if (!text) return;
-
-    // Exam mode guard — warn user, add system instruction to prevent answer leaking
-    if (sb.isExamPage) {
-      const warningMsg = sb.t(TUTOR_EXAM_LABELS);
-      messages.insertAdjacentHTML('beforeend', `
-        <div class="si18n-chat-msg si18n-chat-bot">
-          <div class="si18n-chat-avatar">AI</div>
-          <div class="si18n-chat-bubble si18n-exam-warning">${sb.escapeHtml(warningMsg)}</div>
-        </div>
-      `);
-    }
 
     isSending = true;
 
@@ -228,8 +255,18 @@
       }
     } catch (err) {
       if (bubble) {
-        bubble.innerHTML = sb.t(CHAT_ERROR_LABELS);
         bubble.classList.remove('si18n-streaming-cursor');
+        bubble.textContent = sb.t(CHAT_ERROR_LABELS) + ' ';
+        const retryBtn = document.createElement('button');
+        retryBtn.className = 'si18n-retry-btn';
+        retryBtn.textContent = '\u21bb';
+        retryBtn.title = sb.t(A11Y_LABELS.retry);
+        retryBtn.addEventListener('click', () => {
+          bubble.closest('.si18n-chat-msg')?.remove();
+          const inp = document.getElementById('si18n-chat-input');
+          if (inp) { inp.value = text; sendChatMessage(); }
+        });
+        bubble.appendChild(retryBtn);
       }
     } finally {
       isSending = false;
@@ -400,7 +437,9 @@
     `;
 
     document.getElementById('si18n-history-back')?.addEventListener('click', closeHistoryPanel);
-    document.getElementById('si18n-history-clear')?.addEventListener('click', clearAllHistory);
+    document.getElementById('si18n-history-clear')?.addEventListener('click', () => {
+      if (confirm(sb.t(HISTORY_LABELS.clearHistory) + '?')) clearAllHistory();
+    });
     loadHistoryList();
   }
 
@@ -505,6 +544,19 @@
     if (fab) fab.classList.toggle('hidden', sb.sidebarVisible);
 
     if (sb.sidebarVisible) {
+      // Show exam warning immediately when sidebar opens on exam page
+      if (sb.isExamPage) {
+        const messages = document.getElementById('si18n-chat-messages');
+        if (messages && !messages.querySelector('.si18n-exam-warning')) {
+          messages.insertAdjacentHTML('beforeend', `
+            <div class="si18n-chat-msg si18n-chat-bot">
+              <div class="si18n-chat-avatar">AI</div>
+              <div class="si18n-chat-bubble si18n-exam-warning">${sb.escapeHtml(sb.t(TUTOR_EXAM_LABELS))}</div>
+            </div>
+          `);
+        }
+      }
+
       // Focus the chat input when sidebar opens
       setTimeout(() => {
         const chatInput = document.getElementById('si18n-chat-input');

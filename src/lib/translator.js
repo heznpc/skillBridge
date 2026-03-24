@@ -197,8 +197,12 @@ class SkilljarTranslator {
         req.onsuccess = () => {
           const entry = req.result;
           if (!entry?.translation) { resolve(null); return; }
-          // TTL — discard stale cache entries
+          // TTL — delete stale cache entries from IndexedDB
           if (entry.timestamp && Date.now() - entry.timestamp > SKILLBRIDGE_THRESHOLDS.CACHE_TTL_MS) {
+            try {
+              const delTx = this._db.transaction('translations', 'readwrite');
+              delTx.objectStore('translations').delete(id);
+            } catch (_) { /* best-effort cleanup */ }
             resolve(null); return;
           }
           resolve(entry.translation);

@@ -25,8 +25,8 @@
     const btn = document.createElement('button');
     btn.id = 'si18n-dark-toggle';
     btn.className = 'si18n-dark-toggle-btn';
-    btn.setAttribute('aria-label', 'Toggle dark mode');
-    btn.setAttribute('title', 'Toggle dark mode');
+    btn.setAttribute('aria-label', sb.t(A11Y_LABELS.toggleDark));
+    btn.setAttribute('title', sb.t(A11Y_LABELS.toggleDark));
     btn.setAttribute('aria-pressed', document.documentElement.classList.contains('si18n-dark') ? 'true' : 'false');
     btn.innerHTML = DARK_TOGGLE_ICONS;
     btn.addEventListener('click', toggleDarkMode);
@@ -101,30 +101,50 @@
   }
 
   function showWelcomeBanner(detectedLang) {
-    if (!detectedLang || detectedLang === 'en') return;
+    // Show onboarding for ALL first-time visitors — including English speakers
+    const isNonEnglish = detectedLang && detectedLang !== 'en';
 
-    const langLabel = AVAILABLE_LANGUAGES.find(l => l.code === detectedLang)?.label || detectedLang;
     const langOptions = AVAILABLE_LANGUAGES
       .filter(l => l.code !== 'en')
-      .map(l => `<option value="${l.code}" ${l.code === detectedLang ? 'selected' : ''}>${l.label}</option>`)
+      .map(l => `<option value="${l.code}" ${l.code === (detectedLang || '') ? 'selected' : ''}>${l.label}</option>`)
       .join('');
 
     const banner = document.createElement('div');
     banner.id = 'si18n-welcome-banner';
-    const ui = sb.t(BANNER_UI, detectedLang);
-    banner.innerHTML = `
-      <span class="si18n-banner-icon">\u{1F310}</span>
-      <div class="si18n-banner-text">
-        ${ui.prompt} <strong>${langLabel}</strong>
-        <select id="si18n-banner-lang">${langOptions}</select>
-      </div>
-      <div class="si18n-banner-actions">
-        <button class="si18n-banner-btn si18n-banner-confirm" id="si18n-banner-yes">${ui.confirm}</button>
-        <button class="si18n-banner-btn si18n-banner-change" id="si18n-banner-no">${ui.dismiss}</button>
-      </div>
-    `;
-    document.body.appendChild(banner);
 
+    if (isNonEnglish) {
+      // Non-English: existing translate prompt
+      const langLabel = AVAILABLE_LANGUAGES.find(l => l.code === detectedLang)?.label || detectedLang;
+      const ui = sb.t(BANNER_UI, detectedLang);
+      banner.innerHTML = `
+        <span class="si18n-banner-icon">\u{1F310}</span>
+        <div class="si18n-banner-text">
+          ${ui.prompt} <strong>${langLabel}</strong>
+          <select id="si18n-banner-lang">${langOptions}</select>
+        </div>
+        <div class="si18n-banner-actions">
+          <button class="si18n-banner-btn si18n-banner-confirm" id="si18n-banner-yes">${ui.confirm}</button>
+          <button class="si18n-banner-btn si18n-banner-change" id="si18n-banner-no">${ui.dismiss}</button>
+        </div>
+      `;
+    } else {
+      // English speakers: intro banner explaining what SkillBridge does
+      const ui = sb.t(ONBOARDING_LABELS, 'en');
+      banner.innerHTML = `
+        <span class="si18n-banner-icon">\u{1F310}</span>
+        <div class="si18n-banner-text">
+          <strong>${ui.title}</strong><br/>
+          ${ui.body}
+          <select id="si18n-banner-lang" style="margin-left:8px">${langOptions}</select>
+        </div>
+        <div class="si18n-banner-actions">
+          <button class="si18n-banner-btn si18n-banner-confirm" id="si18n-banner-yes">${ui.cta}</button>
+          <button class="si18n-banner-btn si18n-banner-change" id="si18n-banner-no">${ui.dismiss}</button>
+        </div>
+      `;
+    }
+
+    document.body.appendChild(banner);
     requestAnimationFrame(() => {
       requestAnimationFrame(() => banner.classList.add('visible'));
     });
@@ -134,10 +154,14 @@
       banner.classList.remove('visible');
       setTimeout(() => banner.remove(), SKILLBRIDGE_DELAYS.BANNER_ANIMATION);
 
-      await sb.switchLanguage(selectedLang, {
-        skipRestore: true,
-        extraStorage: { autoTranslate: true, welcomeShown: true },
-      }).catch(err => console.error('[SkillBridge] Banner translate error:', err));
+      if (selectedLang && selectedLang !== 'en') {
+        await sb.switchLanguage(selectedLang, {
+          skipRestore: true,
+          extraStorage: { autoTranslate: true, welcomeShown: true },
+        }).catch(err => console.error('[SkillBridge] Banner translate error:', err));
+      } else {
+        chrome.storage.local.set({ welcomeShown: true });
+      }
     });
 
     document.getElementById('si18n-banner-no')?.addEventListener('click', () => {
