@@ -14,18 +14,31 @@ const SKILLBRIDGE_MODELS = {
 
 // ==================== DEFAULTS ====================
 
-const DEFAULT_PROTECTED_TERMS = 'API, SDK, Claude, Anthropic, Claude Code, Enterprise, Personal, Plugin, skill, SKILL.md, frontmatter';
+const DEFAULT_PROTECTED_TERMS = 'API, SDK, Claude, Anthropic, Claude Code, Cowork, Dispatch, Computer Use, Subagent, Enterprise, Personal, Plugin, skill, SKILL.md, frontmatter';
 
 // YouTube InnerTube client version — update periodically as needed
 const YOUTUBE_CLIENT_VERSION = '2.20240101.00.00';
 
-// ==================== EXAM / ASSESSMENT ====================
+// ==================== CERTIFICATION EXAM (full disable) ====================
+// Proctored certification exams — extension must NOT run at all.
+// The extension could be flagged as a cheating tool during proctored exams.
+
+const CERT_DISABLE_PATTERNS = [
+  /\/claude-certified/i,
+  /\/certified-architect/i,
+  /\/certification-exam/i,
+  /\/certified.*access-request/i,
+  /[?&]type=certification/i,
+  /\/proctored\b/i,
+];
+
+// ==================== COURSE QUIZ / ASSESSMENT (exam mode) ====================
+// Lightweight course-completion quizzes — translate question text, skip answers.
 
 const EXAM_URL_PATTERNS = [
   /\/quiz\b/i,
   /\/exam\b/i,
   /\/assessment\b/i,
-  /\/certification\b/i,
   /[?&]type=quiz/i,
   /[?&]type=exam/i,
 ];
@@ -245,6 +258,85 @@ const BANNER_UI = {
   'es': { prompt: '¿Traducir esta página a', confirm: 'Traducir', dismiss: 'Cerrar' },
   'fr': { prompt: 'Traduire cette page en', confirm: 'Traduire', dismiss: 'Fermer' },
   'de': { prompt: 'Diese Seite übersetzen auf', confirm: 'Übersetzen', dismiss: 'Schließen' },
+};
+
+// Onboarding banner for ALL first-time visitors (including English speakers)
+const ONBOARDING_LABELS = {
+  'en': {
+    title: 'SkillBridge is ready',
+    body: 'Translate this page into 30+ languages and get AI-powered help as you learn.',
+    cta: 'Choose Language',
+    dismiss: 'Got it',
+  },
+  'ko': {
+    title: 'SkillBridge 준비 완료',
+    body: '이 페이지를 30개 이상의 언어로 번역하고, AI 튜터의 도움을 받으세요.',
+    cta: '언어 선택',
+    dismiss: '확인',
+  },
+  'ja': {
+    title: 'SkillBridge準備完了',
+    body: 'このページを30以上の言語に翻訳し、AIチューターのサポートを受けましょう。',
+    cta: '言語を選択',
+    dismiss: 'OK',
+  },
+  'zh-CN': {
+    title: 'SkillBridge 已就绪',
+    body: '将此页面翻译成30多种语言，并获得AI辅导帮助。',
+    cta: '选择语言',
+    dismiss: '知道了',
+  },
+  'es': {
+    title: 'SkillBridge está listo',
+    body: 'Traduce esta página a más de 30 idiomas y obtén ayuda con IA mientras aprendes.',
+    cta: 'Elegir idioma',
+    dismiss: 'Entendido',
+  },
+  'fr': {
+    title: 'SkillBridge est prêt',
+    body: 'Traduisez cette page dans plus de 30 langues et obtenez de l\'aide IA pendant votre apprentissage.',
+    cta: 'Choisir la langue',
+    dismiss: 'Compris',
+  },
+  'de': {
+    title: 'SkillBridge ist bereit',
+    body: 'Übersetzen Sie diese Seite in über 30 Sprachen und erhalten Sie KI-gestützte Hilfe beim Lernen.',
+    cta: 'Sprache wählen',
+    dismiss: 'Verstanden',
+  },
+};
+
+const EXAMPLE_QUESTIONS = {
+  'en': ['Explain this concept simply', 'What are the key takeaways?', 'Give me a practical example'],
+  'ko': ['이 개념을 쉽게 설명해줘', '핵심 포인트가 뭐야?', '실제 예시를 들어줘'],
+  'ja': ['この概念を簡単に説明して', '重要なポイントは？', '実例を教えて'],
+  'zh-CN': ['简单解释一下这个概念', '关键要点是什么？', '给我一个实际例子'],
+  'es': ['Explica este concepto de forma simple', '¿Cuáles son los puntos clave?', 'Dame un ejemplo práctico'],
+  'fr': ['Explique ce concept simplement', 'Quels sont les points clés ?', 'Donne-moi un exemple pratique'],
+  'de': ['Erkläre dieses Konzept einfach', 'Was sind die wichtigsten Punkte?', 'Gib mir ein praktisches Beispiel'],
+};
+
+const A11Y_LABELS = {
+  toggleDark: {
+    'en': 'Toggle dark mode', 'ko': '다크 모드 전환', 'ja': 'ダークモード切替',
+    'zh-CN': '切换暗色模式', 'es': 'Modo oscuro', 'fr': 'Mode sombre', 'de': 'Dunkelmodus',
+  },
+  chatHistory: {
+    'en': 'Chat history', 'ko': '대화 기록', 'ja': '会話履歴',
+    'zh-CN': '聊天记录', 'es': 'Historial', 'fr': 'Historique', 'de': 'Verlauf',
+  },
+  closeSidebar: {
+    'en': 'Close sidebar', 'ko': '사이드바 닫기', 'ja': 'サイドバーを閉じる',
+    'zh-CN': '关闭侧栏', 'es': 'Cerrar panel', 'fr': 'Fermer le panneau', 'de': 'Panel schließen',
+  },
+  openTutor: {
+    'en': 'Open AI Tutor', 'ko': 'AI 튜터 열기', 'ja': 'AIチューターを開く',
+    'zh-CN': '打开AI导师', 'es': 'Abrir tutor IA', 'fr': 'Ouvrir le tuteur IA', 'de': 'KI-Tutor öffnen',
+  },
+  retry: {
+    'en': 'Retry', 'ko': '재시도', 'ja': '再試行',
+    'zh-CN': '重试', 'es': 'Reintentar', 'fr': 'Réessayer', 'de': 'Erneut versuchen',
+  },
 };
 
 const PROGRESS_LABELS = {

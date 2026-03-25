@@ -91,7 +91,11 @@
     "AI Fluency for nonprofits": "KI-Kompetenz für gemeinnützige Organisationen",
     "This course empowers nonprofit professionals to develop AI fluency in order to increase organizational impact and efficiency while staying true to their mission and values.": "Dieser Kurs befähigt Fachleute von gemeinnützigen Organisationen, KI-Kompetenz zu entwickeln, um die organisatorische Wirkung und Effizienz zu erhöhen, während sie ihrer Mission und ihren Werten treu bleiben.",
     "Introduction to agent skills": "Einführung in Agent-Fähigkeiten",
-    "Learn how to build, configure, and share Skills in Claude Code — reusable markdown instructions that Claude automatically applies to the right tasks at the right time. This course takes you from creating your first Skill to distributing them across teams and troubleshooting common issues.": "Erfahren Sie, wie Sie Fähigkeiten in Claude Code erstellen, konfigurieren und teilen – wiederverwendbare Markdown-Anweisungen, die Claude automatisch zur richtigen Zeit auf die richtigen Aufgaben anwendet. Dieser Kurs führt Sie von der Erstellung Ihrer ersten Fähigkeit über die Verteilung in Teams bis zur Behebung häufiger Probleme."
+    "Learn how to build, configure, and share Skills in Claude Code — reusable markdown instructions that Claude automatically applies to the right tasks at the right time. This course takes you from creating your first Skill to distributing them across teams and troubleshooting common issues.": "Erfahren Sie, wie Sie Fähigkeiten in Claude Code erstellen, konfigurieren und teilen – wiederverwendbare Markdown-Anweisungen, die Claude automatisch zur richtigen Zeit auf die richtigen Aufgaben anwendet. Dieser Kurs führt Sie von der Erstellung Ihrer ersten Fähigkeit über die Verteilung in Teams bis zur Behebung häufiger Probleme.",
+    "Introduction to Claude Cowork": "Einführung in Claude Cowork",
+    "This hands-on course covers the Cowork task loop, plugins and skills, file and research workflows, and how to steer multi-step work responsibly — so you're productive in your first week.": "Dieser praktische Kurs behandelt die Cowork-Aufgabenschleife, Plugins und Fähigkeiten, Datei- und Recherche-Workflows sowie die verantwortungsvolle Steuerung mehrstufiger Arbeit.",
+    "Introduction to subagents": "Einführung in Subagents",
+    "Learn how to use and create sub-agents in Claude Code to manage context, delegate tasks, and build specialized workflows that keep your main conversation clean and focused.": "Lernen Sie, wie Sie Sub-Agents in Claude Code verwenden und erstellen, um Kontext zu verwalten, Aufgaben zu delegieren und spezialisierte Workflows zu erstellen, die Ihre Hauptkonversation sauber und fokussiert halten."
   },
   "faq": {
     "Data and Privacy": "Daten und Datenschutz",
@@ -593,7 +597,14 @@
     "Plugins": "Plugins",
     "skill": "skill",
     "skills": "skills",
-    "Anthropic": "Anthropic"
+    "Anthropic": "Anthropic",
+    "Cowork": "Cowork",
+    "Dispatch": "Dispatch",
+    "Computer Use": "Computer Use",
+    "Subagent": "Subagent",
+    "Subagents": "Subagents",
+    "task loop": "Aufgabenschleife",
+    "progressive disclosure": "schrittweise Offenlegung"
   },
   "_protected": {
     "Claude Code": [
@@ -652,7 +663,10 @@
     ],
     "hooks": [
       "Haken"
-    ]
+    ],
+    "Cowork": ["Zusammenarbeit", "Koarbeit"],
+    "Dispatch": ["Versand", "Absendung"],
+    "Computer Use": ["Computernutzung", "Computerverwendung"]
   },
   "exam_ui": {
     "Pass": "Bestanden",

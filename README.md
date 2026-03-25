@@ -100,9 +100,11 @@ Course videos automatically activate translated subtitles when you play them —
 
 A full dark theme for the entire Academy site — header, sidebar, lesson content, and tutor. Toggle with one click.
 
-### 🎓 Exam Mode
+### 🎓 Exam Mode & Certification Safety
 
-Automatically detects certification exam pages and protects answer choices from translation. The AI Tutor also switches to exam-safe mode, refusing to help with answers directly.
+**Course quizzes** (e.g., Claude 101 completion quiz) — answer choices are protected from translation to preserve accuracy; the AI Tutor switches to exam-safe mode.
+
+**Proctored certification exams** (e.g., Claude Certified Architect) — the extension **disables itself entirely** so it cannot be mistaken for a cheating tool. No translation, no UI injection, nothing.
 
 ### ⌨️ Keyboard Shortcuts
 
@@ -110,7 +112,7 @@ Automatically detects certification exam pages and protects answer choices from 
 
 ### 🔍 Smart Detection
 
-Detects your browser language on first visit and offers to translate. No setup needed.
+Detects your browser language on first visit and offers to translate. Handles SPA navigation — when you move between lessons, the new page is translated automatically without a reload.
 
 ### 🛡️ Protected Terms
 
@@ -227,7 +229,7 @@ See our full [Privacy Policy](PRIVACY_POLICY.md).
 | Page Translation | Google Translate API |
 | Inline Tag Translation | Gemini 2.0 Flash (preserves `<strong>`, `<a>`, `<code>`) |
 | Quality Verification | Gemini 2.0 Flash via [Puter.js](https://docs.puter.com/) |
-| Protected Terms | Auto-correction of GT brand/tech term errors per language |
+| Protected Terms | Auto-correction of GT brand/tech term errors per language (Cowork, Dispatch, Computer Use, Subagent, etc.) |
 | AI Tutor | Claude Sonnet 4 via Puter.js |
 | Curated Dictionaries | Hand-tuned JSON (570+ × 6 languages) |
 | Translation Cache | IndexedDB |
@@ -278,9 +280,12 @@ No. SkillBridge is an unofficial community project. It is not affiliated with, e
 
 ## Roadmap
 
-- Additional curated language dictionaries (community-driven)
 - ~~Firefox and Edge Add-on support~~ (shipped in v2.0.0)
 - ~~Exam mode — answer choice protection~~ (shipped in v2.0.0)
+- ~~Certification exam kill-switch~~ (shipped in v2.1.0)
+- ~~SPA navigation handling~~ (shipped in v2.1.0)
+- ~~New course support: Cowork, subagents, MCP Advanced Topics~~ (shipped in v2.1.0)
+- Additional curated language dictionaries (community-driven)
 - Translation quality analytics and community review
 - Multi-LMS platform support beyond Skilljar
 

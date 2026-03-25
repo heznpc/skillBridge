@@ -6,9 +6,9 @@ SkillBridge for Anthropic Academy aims to make Anthropic's educational content a
 
 ---
 
-## v3.0 (Current) ✅
+## v1.0.0 ✅
 
-The current stable release features a comprehensive, 3-tier translation architecture:
+The initial release with comprehensive translation capabilities:
 
 - **3-Tier Translation Engine**: Static curated translations → Cached translations → Google Translate with Gemini 2.0 Flash verification
 - **6 Premium Languages**: Korean (ko), Japanese (ja), Chinese - Simplified (zh-CN), Spanish (es), French (fr), German (de) with meticulously curated JSON dictionaries for technical accuracy
@@ -18,31 +18,19 @@ The current stable release features a comprehensive, 3-tier translation architec
   - YouTube subtitle auto-translation with synchronized playback
   - Video transcript panel with click-to-seek functionality for deep learning
 - **Architecture**: Manifest V3 compliant, modern Chrome extension standards
-
-### Current Status
-Fully functional and tested across the Skilljar platform. Ready for production use by global learners.
-
----
-
-## v3.1 (Next) ✅
-
-Focus on community engagement and technical consistency:
-
-- [x] **Translation Memory & Community Contributions**: GitHub Issue templates for translation submissions, validation scripts (`npm run validate`, `npm run glossary`), CI integration for translation PRs
-- [x] **Glossary Consistency Checker**: Cross-language consistency validation — protected terms structure, section/key coverage, untranslated entry detection
-- [x] **Keyboard Shortcuts**: `Ctrl+Shift+S` (toggle sidebar), `Ctrl+Shift+L` (dark mode), `Ctrl+Shift+/` (help), `Escape` (close), `/` (focus chat)
-- [x] **Dark Mode Support**: ~~Implement a dark theme option, reducing eye strain for extended study sessions~~ ✅ Shipped in v3.0
-- [x] **Performance Optimization**: Viewport-first translation with `IntersectionObserver` priority, `requestIdleCallback` chunking for offscreen elements, GT queue viewport ordering
-
-**Status**: Shipped
+- **Translation Memory & Community Contributions**: GitHub Issue templates, validation scripts, CI integration
+- **Glossary Consistency Checker**: Cross-language consistency validation
+- **Keyboard Shortcuts**: `Ctrl+Shift+S` (toggle sidebar), `Ctrl+Shift+L` (dark mode), `Ctrl+Shift+/` (help), `Escape` (close), `/` (focus chat)
+- **Dark Mode Support**: Full dark theme for the entire Academy site
+- **Performance Optimization**: Viewport-first translation with `IntersectionObserver`, `requestIdleCallback` chunking
 
 ---
 
-## v2.0.0 (Current) ✅
+## v2.0.0 ✅
 
 Major release with exam support and cross-browser compatibility:
 
-- [x] **Exam Mode**: Auto-detect certification/quiz/assessment pages, skip answer choice translation, AI Tutor exam-safe mode with academic integrity warnings
+- [x] **Exam Mode**: Auto-detect quiz/assessment pages, skip answer choice translation, AI Tutor exam-safe mode with academic integrity warnings
 - [x] **Cross-Browser Support**: Firefox and Edge via `npm run build:firefox`, browser polyfill for API compatibility
 - [x] **Security Hardening**: DOM-based XSS sanitizer with attribute allowlist, FETCH_URL domain allowlist, nonce-based postMessage validation
 - [x] **Accessibility**: WCAG 2.1 AA compliance — ARIA roles, keyboard navigation, focus management
@@ -52,7 +40,23 @@ Major release with exam support and cross-browser compatibility:
 
 ---
 
-## v2.1 (Planned)
+## v2.1.0 (Current) ✅
+
+Anthropic Academy platform updates (new courses, CCA-F certification) and robustness improvements:
+
+- [x] **Certification Exam Kill-Switch**: Proctored exams (CCA-F etc.) fully disable the extension — no translation, no UI, no AI tutor — to prevent being flagged as a cheating tool
+- [x] **Course Quiz / Certification Separation**: Course-completion quizzes retain exam mode (answer protection), while proctored certification exams get full disable
+- [x] **New Course Support**: Added translations for "Introduction to Claude Cowork", "Introduction to subagents", "MCP Advanced Topics" across all 6 premium languages
+- [x] **New Protected Terms**: Cowork, Dispatch, Computer Use, Subagent added to dictionaries and auto-correction
+- [x] **SPA Navigation Handling**: `popstate`, `hashchange`, `pushState`/`replaceState` detection — translations re-apply on route change without reload
+- [x] **Cache Cleanup**: Expired IndexedDB entries are now deleted on access (not just skipped)
+- [x] **Test Coverage**: Added CERT_DISABLE_PATTERNS tests with certification vs course URL separation validation
+
+**Status**: Shipped (March 2026)
+
+---
+
+## v2.2 (Planned)
 
 Expansion of translation capabilities and multi-platform support:
 
@@ -65,7 +69,7 @@ Expansion of translation capabilities and multi-platform support:
 
 ---
 
-## v4.0 (Vision — Long Term)
+## v3.0 (Vision — Long Term)
 
 Become the global learning platform enablement layer:
 
@@ -102,13 +106,13 @@ Visit our [GitHub Discussions](https://github.com/heznpc/skillbridge/discussions
 
 ## Release Schedule
 
-| Version | Status | ETA |
-|---------|--------|-----|
-| v3.0 | ✅ Released | — |
-| v3.1 | ✅ Released | Q1 2026 |
+| Version | Status | Date |
+|---------|--------|------|
+| v1.0.0 | ✅ Released | Q1 2026 |
 | v2.0.0 | ✅ Released | March 2026 |
-| v2.1 | 📋 Planned | Q4 2026 - Q1 2027 |
-| v4.0 | 🎯 Vision | 2027+ |
+| v2.1.0 | ✅ Released | March 2026 |
+| v2.2 | 📋 Planned | Q4 2026 - Q1 2027 |
+| v3.0 | 🎯 Vision | 2027+ |
 
 ---
 
