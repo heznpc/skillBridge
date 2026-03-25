@@ -94,7 +94,11 @@
     "AI Fluency for nonprofits": "비영리 단체를 위한 AI 활용 역량",
     "This course empowers nonprofit professionals to develop AI fluency in order to increase organizational impact and efficiency while staying true to their mission and values.": "이 과정은 비영리 전문가들이 AI 활용 역량을 개발하여 조직의 사명과 가치를 유지하면서 조직의 영향력과 효율성을 높일 수 있도록 역량을 강화합니다.",
     "Introduction to agent skills": "agent skills 소개",
-    "Learn how to build, configure, and share Skills in Claude Code — reusable markdown instructions that Claude automatically applies to the right tasks at the right time. This course takes you from creating your first Skill to distributing them across teams and troubleshooting common issues.": "Claude Code에서 skill을 빌드, 구성 및 공유하는 방법을 학습하세요. Claude가 올바른 작업에 자동으로 적용하는 재사용 가능한 마크다운 지침입니다. 이 과정은 첫 번째 skill 생성부터 팀 전체에 분배하고 일반적인 문제 해결까지 안내합니다."
+    "Learn how to build, configure, and share Skills in Claude Code — reusable markdown instructions that Claude automatically applies to the right tasks at the right time. This course takes you from creating your first Skill to distributing them across teams and troubleshooting common issues.": "Claude Code에서 skill을 빌드, 구성 및 공유하는 방법을 학습하세요. Claude가 올바른 작업에 자동으로 적용하는 재사용 가능한 마크다운 지침입니다. 이 과정은 첫 번째 skill 생성부터 팀 전체에 분배하고 일반적인 문제 해결까지 안내합니다.",
+    "Introduction to Claude Cowork": "Claude Cowork 소개",
+    "This hands-on course covers the Cowork task loop, plugins and skills, file and research workflows, and how to steer multi-step work responsibly — so you're productive in your first week.": "이 실습 과정에서는 Cowork 작업 루프, plugin과 skill, 파일 및 리서치 워크플로, 그리고 다단계 작업을 책임감 있게 수행하는 방법을 다룹니다.",
+    "Introduction to subagents": "subagents 소개",
+    "Learn how to use and create sub-agents in Claude Code to manage context, delegate tasks, and build specialized workflows that keep your main conversation clean and focused.": "Claude Code에서 sub-agent를 사용하고 생성하여 컨텍스트를 관리하고, 작업을 위임하고, 메인 대화를 깔끔하게 유지하는 전문화된 워크플로를 구축하는 방법을 학습합니다."
   },
   "faq": {
     "Data and Privacy": "데이터 및 개인 정보 보호",
@@ -619,7 +623,14 @@
     "Plugins": "Plugins",
     "skill": "skill",
     "skills": "skills",
-    "Anthropic": "Anthropic"
+    "Anthropic": "Anthropic",
+    "Cowork": "Cowork",
+    "Dispatch": "Dispatch",
+    "Computer Use": "Computer Use",
+    "Subagent": "Subagent",
+    "Subagents": "Subagents",
+    "task loop": "작업 루프",
+    "progressive disclosure": "점진적 공개"
   },
   "_protected": {
     "Claude Code": ["클로드 코드", "클로드 Code", "클로우드 코드", "클라우드 코드"],
@@ -642,7 +653,10 @@
     "slash command": ["슬래시 명령"],
     "subagent": ["하위 에이전트", "서브에이전트"],
     "hook": ["후크"],
-    "hooks": ["후크들", "후크"]
+    "hooks": ["후크들", "후크"],
+    "Cowork": ["코워크", "공동작업", "협업"],
+    "Dispatch": ["디스패치", "발송"],
+    "Computer Use": ["컴퓨터 사용", "컴퓨터 유즈"]
   },
   "exam_ui": {
     "Pass": "합격",

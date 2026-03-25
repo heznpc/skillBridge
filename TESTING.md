@@ -140,7 +140,7 @@ To clear the cache:
 chrome.storage.local.get(null, data => console.log(data));
 ```
 
-Stored keys: `targetLanguage`, `autoTranslate`, `darkMode`, `dismissedBanner`
+Stored keys: `targetLanguage`, `autoTranslate`, `darkMode`, `welcomeShown`, `fabSeen`
 
 ---
 
@@ -306,6 +306,8 @@ Use this checklist before releases or when reviewing PRs that touch core functio
 - [ ] Select text on page → "Ask Tutor" button appears → clicking sends quoted text to chat
 - [ ] Chat history: click clock icon → history panel shows past conversations
 - [ ] Close and reopen sidebar → chat state preserved
+- [ ] Error during response → retry button (↻) appears → clicking retries the message
+- [ ] Clear history → confirmation dialog appears before deletion
 
 ### Keyboard Shortcuts
 
@@ -316,13 +318,35 @@ Use this checklist before releases or when reviewing PRs that touch core functio
 - [ ] `/` (with sidebar open, not in input field) → focuses chat input
 - [ ] Shortcuts do NOT fire when typing in textarea/input fields
 
-### Exam Mode
+### Exam Mode (Course Quizzes)
 
 - [ ] Navigate to a quiz/assessment page → exam banner appears at top
 - [ ] Answer choices (radio/checkbox labels) are NOT translated
 - [ ] Question text and page headings ARE translated
-- [ ] AI Tutor shows integrity warning before sending message on exam page
+- [ ] AI Tutor shows integrity warning immediately when sidebar opens on exam page
 - [ ] AI Tutor refuses to provide direct exam answers
+
+### Certification Exam Kill-Switch
+
+- [ ] Navigate to a certification URL (e.g., `/claude-certified-architect-foundations`) → extension does NOT inject anything (no FAB, no header controls, no sidebar)
+- [ ] Console shows `[SkillBridge] Certification exam page detected — extension disabled.`
+- [ ] SPA navigation to a certification page → extension tears down (translations restored, observer disconnected)
+- [ ] SPA navigation back from certification page to a course → translations re-apply
+
+### Onboarding (First Visit)
+
+- [ ] Clear extension storage → visit Anthropic Academy → onboarding banner appears
+- [ ] **English browser**: banner shows "SkillBridge is ready" with language selector and "Choose Language" / "Got it" buttons
+- [ ] **Non-English browser**: banner shows translate prompt in detected language
+- [ ] Click "Got it" / dismiss → banner doesn't reappear on refresh
+- [ ] FAB button pulses on first visit (3 cycles), stops on click
+- [ ] Sidebar first open → example question chips appear below greeting
+- [ ] Click an example question → question is sent, chips disappear
+
+### SPA Navigation
+
+- [ ] Navigate between lessons without full page reload → new content translates automatically
+- [ ] URL changes (pushState) are detected → exam mode re-evaluated
 
 ### Dark Mode
 
