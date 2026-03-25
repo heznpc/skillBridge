@@ -22,10 +22,10 @@ A sidebar chatbot that knows which course and lesson you're on. Ask questions in
 Course videos automatically activate translated subtitles when you play them. No manual toggle needed.
 
 🔍 SMART DETECTION
-Detects your browser language on first visit and offers to translate. Zero setup.
+Detects your browser language on first visit and offers to translate — including an onboarding guide for English-speaking users. Handles SPA navigation: when you move between lessons, the new page translates automatically without a reload.
 
 ✨ PROTECTED TERMS
-570+ curated entries per premium language. Brand names (Anthropic, Claude) and technical AI terms stay correct. Auto-corrects known mistranslations per language.
+570+ curated entries per premium language. Brand names (Anthropic, Claude, Cowork, Dispatch, Computer Use, Subagent) and technical AI terms stay correct. Auto-corrects known mistranslations per language.
 
 📝 TEXT SELECTION → ASK TUTOR
 Select any text on the page and click "Ask Tutor" to get an explanation in your language. The AI tutor sees the full lesson context.
@@ -33,14 +33,22 @@ Select any text on the page and click "Ask Tutor" to get an explanation in your 
 💬 CONVERSATION HISTORY
 Chat history is saved locally in your browser (IndexedDB), grouped by chapter. Review past Q&A across sessions.
 
-🎓 EXAM MODE
-Automatically detects certification exam pages. Answer choices are NOT translated to preserve accuracy and academic integrity. The AI Tutor switches to exam-safe mode.
+🎓 EXAM MODE & CERTIFICATION SAFETY
+Course quizzes (e.g., Claude 101 completion quiz): answer choices are NOT translated to preserve accuracy. The AI Tutor switches to exam-safe mode.
+
+Proctored certification exams (e.g., Claude Certified Architect): the extension disables itself entirely — no translation, no UI, no AI tutor — so it cannot be mistaken for a cheating tool.
 
 ⌨️ KEYBOARD SHORTCUTS
 Ctrl+Shift+S (toggle tutor), Ctrl+Shift+L (dark mode), Ctrl+Shift+/ (help), Escape (close), / (focus chat).
 
 🌙 DARK MODE
 Full dark theme for the entire Academy site — header, sidebar, lesson content, and tutor. Toggle with one click.
+
+📱 MOBILE FRIENDLY
+Sidebar adapts to small screens with full-width layout on mobile devices.
+
+💡 ONBOARDING
+First-time visitors see a welcome banner with quick setup. The AI Tutor shows example questions to get you started.
 
 ━━━━━━━━━━━━━━━━━━━
 
