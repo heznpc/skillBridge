@@ -135,7 +135,7 @@
         <div class="si18n-banner-text">
           <strong>${ui.title}</strong><br/>
           ${ui.body}
-          <select id="si18n-banner-lang" style="margin-left:8px">${langOptions}</select>
+          <select id="si18n-banner-lang" class="si18n-banner-lang-inline">${langOptions}</select>
         </div>
         <div class="si18n-banner-actions">
           <button class="si18n-banner-btn si18n-banner-confirm" id="si18n-banner-yes">${ui.cta}</button>

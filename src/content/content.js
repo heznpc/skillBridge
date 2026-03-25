@@ -1066,6 +1066,13 @@ RULES:
       return;
     }
 
+    // Re-enable observer if it was disconnected (e.g., after visiting a cert page)
+    if (!domObserver || !document.body) {
+      observeDOM();
+    } else {
+      try { domObserver.observe(document.body, { childList: true, subtree: true }); } catch (_) {}
+    }
+
     // Re-detect exam mode for the new page
     isExamPage = detectExamPage();
 

@@ -158,7 +158,7 @@
     const messagesEl = document.getElementById('si18n-chat-messages');
     if (!messagesEl) return;
     const firstBubble = messagesEl.querySelector('.si18n-chat-bot .si18n-chat-bubble');
-    if (firstBubble && messagesEl.children.length === 1) {
+    if (firstBubble && messagesEl.children.length <= 2) {
       firstBubble.textContent = getTutorGreeting();
     }
     const chatInput = document.getElementById('si18n-chat-input');

@@ -640,6 +640,9 @@ html.si18n-dark .si18n-example-q:hover {
   background: white;
   color: var(--si18n-text, #1c1917);
 }
+#si18n-welcome-banner select.si18n-banner-lang-inline {
+  margin-left: 8px;
+}
 
 /* ============================================================
    Header Language Selector (Claude Docs style — minimal text)
