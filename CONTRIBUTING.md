@@ -115,8 +115,8 @@ skillbridge/
 │   │   └── popup.js           # Popup logic
 │   ├── lib/
 │   │   ├── browser-polyfill.js   # Cross-browser API compatibility shim
-│   │   ├── constants.js       # Shared constants, thresholds, i18n labels
-│   │   ├── selectors.js       # Centralized Skilljar DOM selectors (exam, content, catalog)
+│   │   ├── constants.js       # Shared constants, thresholds, i18n labels, URL patterns
+│   │   ├── selectors.js       # Centralized Skilljar DOM selectors (quiz, content, catalog)
 │   │   ├── translator.js      # Translation engine (Static → Cache → GT + Gemini)
 │   │   ├── youtube-subtitles.js  # YouTube auto-subtitle enabler
 │   │   └── page-bridge.js     # Puter.js main-world bridge (for AI Tutor)
@@ -154,14 +154,14 @@ Each language has a JSON file (`src/data/{lang}.json`) organized into sections:
 src/data/ko.json (Korean example — 570+ entries)
 ├── _meta          → version info (don't edit)
 ├── ui             → navigation: "Next", "Previous", "Courses"
-├── catalog        → course titles and descriptions
+├── catalog        → course titles and descriptions (incl. Cowork, subagents, MCP Advanced)
 ├── claude101      → Claude 101 course content
 ├── claudeCode     → Claude Code course content
 ├── agentSkills    → Agent Skills course content
 ├── aiFluency      → AI Fluency course content
 ├── faq            → FAQ page content
-├── common         → shared terms: "Overview", "Submit", etc.
-└── _protected     → terms GT mistranslates (see below)
+├── common         → shared terms: "Overview", "Submit", Cowork, Dispatch, etc.
+└── _protected     → terms GT mistranslates (incl. Cowork, Computer Use, Subagent)
 ```
 
 > **How matching works:** The extension tries to match the **exact English text** of each element on the page against dictionary keys. If found, the curated translation is used instantly — no Google Translate, no delay. For text not in the dictionary, the system falls back to Google Translate → Gemini AI verification.
@@ -251,6 +251,13 @@ The translation pipeline lives in `src/lib/translator.js`, with thresholds confi
 ```
 Static Dictionary → IndexedDB Cache → Google Translate + Gemini Verification
 ```
+
+Key constants in `constants.js` (v2.1.0+):
+- **`CERT_DISABLE_PATTERNS`** — URL patterns for proctored certification exams. Extension fully disables on match.
+- **`EXAM_URL_PATTERNS`** — URL patterns for course quizzes. Triggers exam mode (answer protection) but extension stays active.
+- **`ONBOARDING_LABELS`** / **`EXAMPLE_QUESTIONS`** — First-visit onboarding UI strings (7 languages).
+- **`A11Y_LABELS`** — Localized aria-labels for FAB, sidebar, dark toggle (7 languages).
+- **`DEFAULT_PROTECTED_TERMS`** — Fallback list of terms to keep in English (Cowork, Dispatch, Computer Use, Subagent, etc.).
 
 Areas that need work:
 - **Gemini trigger heuristics** — the `queueGeminiVerify()` function decides which texts get AI-verified. Thresholds are in `SKILLBRIDGE_THRESHOLDS` (constants.js)
