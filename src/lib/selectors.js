@@ -40,7 +40,7 @@ const SKILLJAR_SELECTORS = {
   faqTitle: '.faq-title',
   faqPost: '.faq-post',
 
-  // Quiz / Assessment / Certification
+  // Quiz / Assessment (course-completion quizzes only; certification exams are fully disabled)
   quizForm: '.quiz-form, .assessment-form, form[class*="quiz"], form[class*="assessment"]',
   answerOption: '.answer-option, .answer-choice, .quiz-option, .assessment-option',
   answerLabel: 'label[class*="answer"], label[class*="option"], label[class*="choice"]',

@@ -23,6 +23,7 @@ const constants = new Function(`${selectorsSrc}\n${constantsSrc}; return {
   YOUTUBE_CLIENT_VERSION, SKILLBRIDGE_MODEL_LABELS,
   SHORTCUT_LABELS, SHORTCUT_DESCRIPTIONS,
   EXAM_URL_PATTERNS, EXAM_SKIP_SELECTORS, EXAM_BANNER_LABELS, TUTOR_EXAM_LABELS,
+  CERT_DISABLE_PATTERNS,
   SKILLJAR_SELECTORS,
 };`)();
 
@@ -174,6 +175,63 @@ describe('SHORTCUT_DESCRIPTIONS', () => {
       for (const { code } of PREMIUM_LANGUAGES) {
         expect(SHORTCUT_DESCRIPTIONS[key][code]).toBeDefined();
       }
+    }
+  });
+});
+
+describe('CERT_DISABLE_PATTERNS', () => {
+  const { CERT_DISABLE_PATTERNS, EXAM_URL_PATTERNS } = constants;
+
+  const certUrls = [
+    'https://anthropic.skilljar.com/claude-certified-architect-foundations',
+    'https://anthropic.skilljar.com/certified-architect/exam',
+    'https://anthropic.skilljar.com/certification-exam/start',
+    'https://anthropic.skilljar.com/certified-developer-access-request',
+    'https://anthropic.skilljar.com/page?type=certification',
+    'https://anthropic.skilljar.com/proctored/session',
+  ];
+
+  const courseUrls = [
+    'https://anthropic.skilljar.com/claude-101',
+    'https://anthropic.skilljar.com/introduction-to-claude-cowork',
+    'https://anthropic.skilljar.com/introduction-to-subagents',
+    'https://anthropic.skilljar.com/ai-fluency-framework-foundations',
+    'https://anthropic.skilljar.com/building-with-the-claude-api',
+    'https://anthropic.skilljar.com/page?type=course',
+  ];
+
+  test('matches certification exam URLs', () => {
+    for (const url of certUrls) {
+      expect(CERT_DISABLE_PATTERNS.some(p => p.test(url))).toBe(true);
+    }
+  });
+
+  test('does NOT match regular course URLs', () => {
+    for (const url of courseUrls) {
+      expect(CERT_DISABLE_PATTERNS.some(p => p.test(url))).toBe(false);
+    }
+  });
+
+  test('does NOT match course quiz URLs (those use EXAM_URL_PATTERNS)', () => {
+    const quizUrls = [
+      'https://anthropic.skilljar.com/claude-101/quiz',
+      'https://anthropic.skilljar.com/lesson/assessment',
+      'https://anthropic.skilljar.com/page?type=quiz',
+    ];
+    for (const url of quizUrls) {
+      expect(CERT_DISABLE_PATTERNS.some(p => p.test(url))).toBe(false);
+      expect(EXAM_URL_PATTERNS.some(p => p.test(url))).toBe(true);
+    }
+  });
+
+  test('certification URLs do NOT trigger exam mode patterns', () => {
+    // Certification-only URLs should not match EXAM_URL_PATTERNS
+    const certOnly = [
+      'https://anthropic.skilljar.com/claude-certified-architect-foundations',
+      'https://anthropic.skilljar.com/certified-developer-access-request',
+    ];
+    for (const url of certOnly) {
+      expect(EXAM_URL_PATTERNS.some(p => p.test(url))).toBe(false);
     }
   });
 });
