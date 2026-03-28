@@ -330,9 +330,56 @@
 
   function applyInline(text) {
     return text
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/`(.*?)`/g, '<code>$1</code>');
+      .replace(/\*\*(.*?)\*\*/g, (_, g) => '<strong>' + sb.escapeHtml(g) + '</strong>')
+      .replace(/\*(.*?)\*/g, (_, g) => '<em>' + sb.escapeHtml(g) + '</em>')
+      .replace(/`(.*?)`/g, (_, g) => '<code>' + sb.escapeHtml(g) + '</code>');
+  }
+
+  // ============================================================
+  // SIMPLE HTML SANITIZER (no external dependency)
+  // ============================================================
+
+  /**
+   * Strip dangerous tags and attributes from trusted-structure HTML.
+   * Keeps only the tags used by our own formatResponse / history rendering.
+   */
+  function sanitizeHtml(html) {
+    const ALLOWED_TAGS = new Set([
+      'div', 'span', 'p', 'h3', 'ul', 'ol', 'li', 'strong', 'em', 'code',
+      'br', 'button', 'svg', 'polyline', 'path', 'circle',
+    ]);
+    const ALLOWED_ATTRS = new Set([
+      'class', 'id', 'data-id', 'data-question', 'style', 'title',
+      'aria-label', 'role',
+      // SVG presentational attributes
+      'width', 'height', 'viewBox', 'fill', 'stroke', 'stroke-width',
+      'stroke-linecap', 'stroke-linejoin', 'cx', 'cy', 'r', 'd', 'points',
+    ]);
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+
+    function walk(node) {
+      const children = Array.from(node.childNodes);
+      for (const child of children) {
+        if (child.nodeType === Node.ELEMENT_NODE) {
+          const tag = child.tagName.toLowerCase();
+          if (!ALLOWED_TAGS.has(tag)) {
+            child.remove();
+            continue;
+          }
+          // Strip disallowed attributes (including event handlers)
+          for (const attr of Array.from(child.attributes)) {
+            if (!ALLOWED_ATTRS.has(attr.name) || attr.name.startsWith('on')) {
+              child.removeAttribute(attr.name);
+            }
+          }
+          walk(child);
+        }
+      }
+    }
+
+    walk(doc.body);
+    return doc.body.innerHTML;
   }
 
   // ============================================================
@@ -487,7 +534,7 @@
         `;
       }
     }
-    listEl.innerHTML = html;
+    listEl.innerHTML = sanitizeHtml(html);
 
     // Event delegation instead of per-item listeners
     listEl.addEventListener('click', (e) => {
@@ -515,7 +562,7 @@
           if (time) metaHtml += `<span class="si18n-detail-time">${time}</span>`;
           metaHtml += `</div>`;
         }
-        listEl.innerHTML = `
+        listEl.innerHTML = sanitizeHtml(`
           <div class="si18n-history-detail">
             ${metaHtml}
             <div class="si18n-chat-msg si18n-chat-user">
@@ -525,7 +572,7 @@
               <div class="si18n-chat-bubble">${formatResponse(conv.answer)}</div>
             </div>
           </div>
-        `;
+        `);
       };
     } catch (e) {
       console.warn('[SkillBridge] Failed to load conversation:', e);
