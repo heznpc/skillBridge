@@ -105,7 +105,7 @@
           id: data.id,
           success: true,
           result: result || data.text,
-        }, '*');
+        }, window.location.origin);
       } catch (err) {
         const errMsg = err?.error || err?.message || String(err);
         log('Translate error:', errMsg);
@@ -117,7 +117,7 @@
           success: false,
           error: errMsg,
           result: data.text,
-        }, '*');
+        }, window.location.origin);
       }
     }
 
@@ -135,7 +135,7 @@
           id: data.id,
           success: true,
           result: result || '',
-        }, '*');
+        }, window.location.origin);
       } catch (err) {
         const errMsg = err?.error || err?.message || String(err);
         log('Verify error:', errMsg);
@@ -147,7 +147,7 @@
           success: false,
           error: errMsg,
           result: '',
-        }, '*');
+        }, window.location.origin);
       }
     }
 
@@ -173,7 +173,7 @@
                 type: 'CHAT_STREAM_CHUNK',
                 id: data.id,
                 text,
-              }, '*');
+              }, window.location.origin);
             }
           }
           window.postMessage({
@@ -182,7 +182,7 @@
             type: 'CHAT_STREAM_END',
             id: data.id,
             success: true,
-          }, '*');
+          }, window.location.origin);
         } else {
           // Non-streaming fallback
           const result = await callAI(prompt, data.model);
@@ -193,27 +193,28 @@
             id: data.id,
             success: true,
             result: result || 'No response',
-          }, '*');
+          }, window.location.origin);
         }
       } catch (err) {
         const errMsg = err?.error || err?.message || String(err);
         log('Chat error:', errMsg);
         window.postMessage({
           __skillbridge__: true,
+          __nonce__: _bridgeNonce,
           type: 'CHAT_RESPONSE',
           id: data.id,
           success: false,
           error: errMsg,
           result: 'Error: ' + errMsg,
-        }, '*');
+        }, window.location.origin);
       }
     }
   });
 
   loadPuter().then(() => {
-    window.postMessage({ __skillbridge__: true, __nonce__: _bridgeNonce, type: 'BRIDGE_READY' }, '*');
+    window.postMessage({ __skillbridge__: true, __nonce__: _bridgeNonce, type: 'BRIDGE_READY' }, window.location.origin);
   }).catch((err) => {
     log('Auto-load failed:', err.message);
-    window.postMessage({ __skillbridge__: true, type: 'BRIDGE_ERROR', error: err.message }, '*');
+    window.postMessage({ __skillbridge__: true, __nonce__: _bridgeNonce, type: 'BRIDGE_ERROR', error: err.message }, window.location.origin);
   });
 })();

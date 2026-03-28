@@ -44,7 +44,7 @@ describe('queueGeminiVerify', () => {
   beforeEach(() => {
     translator = new SkilljarTranslator();
     // Prevent actual verification processing
-    translator._processVerifyQueue = jest.fn();
+    translator._runVerifyQueue = jest.fn().mockResolvedValue(undefined);
   });
 
   test('rejects empty or null input', () => {
