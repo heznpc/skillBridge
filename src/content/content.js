@@ -58,6 +58,7 @@
   let sidebarVisible = false;
   let originalTexts = new Map();
   let translatedTexts = new Map();
+  const MAP_SIZE_CAP = 5000;
   let pendingActions = [];
   let gtTranslateQueue = [];
   let gtProcessing = false;
@@ -598,7 +599,7 @@
 
     gtProcessing = false;
     hideTranslationProgress();
-    pruneOriginalTexts();
+    pruneDetachedEntries();
 
     for (const { el, targetLang } of geminiQueue) {
       if (el && el.parentNode) queueGeminiBlockTranslation(el, targetLang);
@@ -610,14 +611,30 @@
     translatedTexts.get(originalText).push({ el });
   }
 
-  /**
-   * Prune originalTexts Map by removing entries where the element
-   * is no longer attached to the DOM (el.parentNode is null).
-   * Called after each GT batch processing completes.
-   */
-  function pruneOriginalTexts() {
+  function pruneDetachedEntries() {
     for (const [el] of originalTexts) {
       if (!el.parentNode) originalTexts.delete(el);
+    }
+    for (const [text, entries] of translatedTexts) {
+      const live = entries.filter(e => e.el?.parentNode);
+      if (live.length === 0) translatedTexts.delete(text);
+      else if (live.length < entries.length) translatedTexts.set(text, live);
+    }
+    if (originalTexts.size > MAP_SIZE_CAP) {
+      const excess = originalTexts.size - MAP_SIZE_CAP;
+      const iter = originalTexts.keys();
+      for (let i = 0; i < excess; i++) {
+        const key = iter.next().value;
+        originalTexts.delete(key);
+      }
+    }
+    if (translatedTexts.size > MAP_SIZE_CAP) {
+      const excess = translatedTexts.size - MAP_SIZE_CAP;
+      const iter = translatedTexts.keys();
+      for (let i = 0; i < excess; i++) {
+        const key = iter.next().value;
+        translatedTexts.delete(key);
+      }
     }
   }
 
@@ -952,12 +969,14 @@ RULES:
       const trimmed = result.trim();
       if (trimmed.length > xml.length * 3 || trimmed.includes('SOURCE') || trimmed.includes('RULES:')) return;
 
-      el.innerHTML = xmlToHtml(trimmed, tagInfo);
-      el.classList.remove('si18n-verifying');
+      if (el?.parentNode) {
+        el.innerHTML = xmlToHtml(trimmed, tagInfo);
+        el.classList.remove('si18n-verifying');
+      }
       translator._cacheTranslation(pureText, el.textContent.trim(), targetLang);
     }).catch(err => {
       console.warn('[SkillBridge] Gemini block translation failed:', err.message);
-      el.classList.remove('si18n-verifying');
+      if (el?.parentNode) el.classList.remove('si18n-verifying');
     });
 
     el.classList.add('si18n-verifying');
@@ -987,12 +1006,23 @@ RULES:
   // DOM OBSERVER (with cleanup)
   // ============================================================
 
+  let _pruneScheduled = false;
+  function schedulePrune() {
+    if (_pruneScheduled) return;
+    _pruneScheduled = true;
+    requestAnimationFrame(() => {
+      _pruneScheduled = false;
+      pruneDetachedEntries();
+    });
+  }
+
   function observeDOM() {
     domObserver = new MutationObserver((mutations) => {
-      if (currentLang === 'en') return;
-      if (!translator || !isReady) return;
-
+      let hasRemovals = false;
       for (const mutation of mutations) {
+        if (mutation.removedNodes.length > 0) hasRemovals = true;
+
+        if (currentLang === 'en' || !translator || !isReady) continue;
         for (const node of mutation.addedNodes) {
           if (node.nodeType === Node.ELEMENT_NODE &&
               !node.closest('.skillbridge-sidebar') &&
@@ -1000,6 +1030,9 @@ RULES:
             debounceTranslateNew(node);
           }
         }
+      }
+      if (hasRemovals && (originalTexts.size > 0 || translatedTexts.size > 0)) {
+        schedulePrune();
       }
     });
 

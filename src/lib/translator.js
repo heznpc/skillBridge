@@ -18,7 +18,7 @@ class SkilljarTranslator {
     this.pendingCallbacks = new Map();
     this._db = null;            // IndexedDB for verified translation cache
     this._verifyQueue = [];     // Queue of texts awaiting Gemini verification
-    this._isVerifying = false;
+    this._verifyLock = null;    // Promise-based lock for verify queue processing
     this._onUpdateCallbacks = []; // Callbacks when Gemini improves a translation
     // Premium languages have static dictionaries; others use Google Translate only
     // Use shared constants from constants.js
@@ -50,18 +50,23 @@ class SkilljarTranslator {
       const store = tx.objectStore('translations');
       const req = store.openCursor();
       const now = Date.now();
-      req.onsuccess = (e) => {
-        const cursor = e.target.result;
-        if (!cursor) return;
-        const entry = cursor.value;
-        if (entry.timestamp && now - entry.timestamp > SKILLBRIDGE_THRESHOLDS.CACHE_TTL_MS) {
-          cursor.delete();
-        }
-        cursor.continue();
-      };
-      req.onerror = () => {
-        console.warn('[SkillBridge] Cache cleanup cursor failed');
-      };
+
+      return new Promise((resolve, reject) => {
+        req.onsuccess = (e) => {
+          const cursor = e.target.result;
+          if (!cursor) return;
+          const entry = cursor.value;
+          if (entry.timestamp && now - entry.timestamp > SKILLBRIDGE_THRESHOLDS.CACHE_TTL_MS) {
+            cursor.delete();
+          }
+          cursor.continue();
+        };
+        req.onerror = () => {
+          console.warn('[SkillBridge] Cache cleanup cursor failed');
+        };
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
     } catch (err) {
       console.warn('[SkillBridge] Cache cleanup failed:', err);
     }
@@ -331,33 +336,32 @@ class SkilljarTranslator {
       targetLang,
     });
 
-    if (!this._isVerifying) {
-      setTimeout(() => this._processVerifyQueue(), SKILLBRIDGE_DELAYS.VERIFY_QUEUE);
+    if (!this._verifyLock) {
+      this._verifyLock = new Promise(resolve => {
+        setTimeout(() => {
+          this._runVerifyQueue().finally(() => {
+            this._verifyLock = null;
+            resolve();
+          });
+        }, SKILLBRIDGE_DELAYS.VERIFY_QUEUE);
+      });
     }
     return true;
   }
 
-  async _processVerifyQueue() {
-    if (this._isVerifying || this._verifyQueue.length === 0) return;
+  async _runVerifyQueue() {
     if (!this.isReady) {
-      // Retry later when bridge is ready
-      setTimeout(() => this._processVerifyQueue(), SKILLBRIDGE_DELAYS.VERIFY_QUEUE_RETRY);
-      return;
+      await new Promise(r => setTimeout(r, SKILLBRIDGE_DELAYS.VERIFY_QUEUE_RETRY));
+      if (!this.isReady) return;
     }
 
-    this._isVerifying = true;
-
-    // Process in small batches (3 at a time to avoid overwhelming Gemini)
     while (this._verifyQueue.length > 0) {
       const batch = this._verifyQueue.splice(0, SKILLBRIDGE_THRESHOLDS.GEMINI_BATCH_SIZE);
       await Promise.all(batch.map(item => this._verifySingle(item)));
-      // Small delay between batches
       if (this._verifyQueue.length > 0) {
         await new Promise(r => setTimeout(r, SKILLBRIDGE_DELAYS.GEMINI_BATCH));
       }
     }
-
-    this._isVerifying = false;
   }
 
   async _verifySingle({ original, googleTranslation, targetLang }) {
@@ -548,7 +552,16 @@ RULES:
         this.isReady = true;
         // Process any pending verify queue now that bridge is ready
         if (this._verifyQueue.length > 0) {
-          setTimeout(() => this._processVerifyQueue(), SKILLBRIDGE_DELAYS.BRIDGE_READY_VERIFY);
+          if (!this._verifyLock) {
+            this._verifyLock = new Promise(resolve => {
+              setTimeout(() => {
+                this._runVerifyQueue().finally(() => {
+                  this._verifyLock = null;
+                  resolve();
+                });
+              }, SKILLBRIDGE_DELAYS.BRIDGE_READY_VERIFY);
+            });
+          }
         }
       }
 
