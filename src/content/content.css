@@ -145,6 +145,24 @@ body.si18n-lang-ko,
   --si18n-sidebar-width: 380px;
 }
 
+/* Global focus styles for all SkillBridge interactive elements */
+#skillbridge-fab:focus-visible,
+.si18n-close:focus-visible,
+.si18n-history-btn:focus-visible,
+.si18n-history-back:focus-visible,
+.si18n-history-clear:focus-visible,
+.si18n-retry-btn:focus-visible,
+.si18n-chat-send-btn:focus-visible,
+.si18n-banner-btn:focus-visible,
+.si18n-shortcuts-close:focus-visible,
+.si18n-example-q:focus-visible,
+.si18n-ask-tutor-btn:focus-visible,
+.si18n-chat-quote-dismiss:focus-visible,
+.si18n-dark-toggle-btn:focus-visible {
+  outline: 2px solid var(--si18n-primary);
+  outline-offset: 2px;
+}
+
 /* Floating Action Button */
 #skillbridge-fab {
   position: fixed;
@@ -432,7 +450,7 @@ body.si18n-lang-ko,
 html.si18n-dark .si18n-example-q {
   background: #1a1a1a;
   border-color: rgba(255,255,255,0.1);
-  color: #ccc;
+  color: #d0d0d0;
 }
 html.si18n-dark .si18n-example-q:hover {
   background: #252525;
@@ -477,7 +495,8 @@ html.si18n-dark .si18n-example-q:hover {
 }
 
 .si18n-chat-input:focus {
-  outline: none;
+  outline: 2px solid var(--si18n-primary);
+  outline-offset: -2px;
   border-color: var(--si18n-primary);
 }
 
@@ -666,7 +685,6 @@ html.si18n-dark .si18n-example-q:hover {
   cursor: pointer;
   margin: 0 !important;
   padding: 6px 28px 6px 12px !important;
-  outline: none;
   transition: border-color 0.15s, color 0.15s;
   width: auto !important;
   max-width: 120px;
@@ -684,8 +702,9 @@ html.si18n-dark .si18n-example-q:hover {
   border-color: #a3a3a3 !important;
 }
 #si18n-header-lang-select:focus {
-  outline: none !important;
-  border-color: #a3a3a3 !important;
+  outline: 2px solid var(--si18n-primary) !important;
+  outline-offset: -2px;
+  border-color: var(--si18n-primary) !important;
 }
 
 /* ============================================================
@@ -1113,7 +1132,7 @@ html.si18n-dark .si18n-example-q:hover {
 .si18n-dark-toggle-btn:hover {
   color: #505050;
 }
-html.si18n-dark .si18n-dark-toggle-btn       { color: #9e9e9e; }
+html.si18n-dark .si18n-dark-toggle-btn       { color: #b0b0b0; }
 html.si18n-dark .si18n-dark-toggle-btn:hover { color: #dedede; }
 .si18n-dark-toggle-btn svg {
   width: 16px;
@@ -1131,7 +1150,7 @@ html.si18n-dark {
 }
 html.si18n-dark body {
   background: #0e0e0e !important;
-  color: #9e9e9e !important;
+  color: #b0b0b0 !important;
 }
 html.si18n-dark header,
 html.si18n-dark #header,
@@ -1221,7 +1240,7 @@ html.si18n-dark h3, html.si18n-dark h4 {
 html.si18n-dark p, html.si18n-dark li,
 html.si18n-dark td, html.si18n-dark th,
 html.si18n-dark span, html.si18n-dark label {
-  color: #9e9e9e !important;
+  color: #b0b0b0 !important;
 }
 
 /* Links — Docs style: muted, underlined, not bright blue */
@@ -1493,6 +1512,8 @@ html.si18n-dark .si18n-chat-input {
   border-color: rgba(255,255,255,0.1) !important;
 }
 html.si18n-dark .si18n-chat-input:focus {
+  outline: 2px solid var(--si18n-primary) !important;
+  outline-offset: -2px;
   border-color: var(--si18n-primary) !important;
 }
 html.si18n-dark .si18n-chat-input-wrap {
@@ -1561,7 +1582,7 @@ html.si18n-dark .si18n-history-detail .si18n-chat-bubble code {
 html.si18n-dark #skillbridge-fab {
   background: #1a1a1a !important;
   border-color: rgba(255,255,255,0.1) !important;
-  color: #9e9e9e !important;
+  color: #b0b0b0 !important;
 }
 html.si18n-dark #skillbridge-fab:hover {
   background: #252525 !important;
@@ -2142,8 +2163,220 @@ html.si18n-dark .si18n-exam-banner {
 }
 
 /* ============================================================
+   FLASHCARD MODE
+   ============================================================ */
+
+.si18n-flashcard-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 12px;
+  gap: 14px;
+  height: calc(100% - 44px);
+  overflow-y: auto;
+}
+
+.si18n-flashcard-card {
+  perspective: 800px;
+  width: 100%;
+  min-height: 180px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.si18n-flashcard-inner {
+  position: relative;
+  width: 100%;
+  min-height: 180px;
+  transition: transform 0.5s ease;
+  transform-style: preserve-3d;
+}
+
+.si18n-card-flipped .si18n-flashcard-inner {
+  transform: rotateY(180deg);
+}
+
+.si18n-flashcard-front,
+.si18n-flashcard-back {
+  position: absolute;
+  width: 100%;
+  min-height: 180px;
+  backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  text-align: center;
+  border-radius: 12px;
+  border: 1px solid var(--si18n-border, #E7E5E4);
+  background: var(--si18n-surface, #FAFAF9);
+  font-size: 15px;
+  line-height: 1.5;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.si18n-flashcard-front {
+  color: var(--si18n-text, #1C1917);
+  font-weight: 500;
+}
+
+.si18n-flashcard-back {
+  transform: rotateY(180deg);
+  color: var(--si18n-accent, #E07A5F);
+  font-weight: 600;
+}
+
+.si18n-flashcard-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.si18n-fc-btn {
+  padding: 6px 16px;
+  border: 1px solid var(--si18n-border, #E7E5E4);
+  border-radius: 8px;
+  background: var(--si18n-surface, #FAFAF9);
+  color: var(--si18n-text, #1C1917);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.si18n-fc-btn:hover:not(:disabled) {
+  background: var(--si18n-border, #E7E5E4);
+}
+
+.si18n-fc-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.si18n-flashcard-progress {
+  font-size: 12px;
+  color: var(--si18n-text-secondary, #78716C);
+  min-width: 60px;
+  text-align: center;
+}
+
+.si18n-fc-box-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.si18n-fc-box-btn {
+  width: 40px;
+  height: 40px;
+  border: 2px solid;
+  border-radius: 50%;
+  background: transparent;
+  font-size: 18px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.si18n-fc-box-btn:hover {
+  background: rgba(0,0,0,0.05);
+}
+
+.si18n-fc-box-label {
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 70px;
+  text-align: center;
+}
+
+.si18n-fc-new { color: #E07A5F; border-color: #E07A5F; }
+.si18n-fc-learning { color: #F2CC8F; border-color: #F2CC8F; }
+.si18n-fc-done { color: #81B29A; border-color: #81B29A; }
+
+.si18n-fc-stats {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  font-size: 11px;
+  width: 100%;
+  padding-top: 4px;
+}
+
+/* Dark mode flashcards */
+html.si18n-dark .si18n-flashcard-front {
+  background: #2A2A2A !important;
+  border-color: rgba(255,255,255,0.1) !important;
+  color: #E5E5E5 !important;
+}
+
+html.si18n-dark .si18n-flashcard-back {
+  background: #2A2A2A !important;
+  border-color: rgba(255,255,255,0.1) !important;
+}
+
+html.si18n-dark .si18n-fc-btn {
+  background: #333 !important;
+  border-color: rgba(255,255,255,0.1) !important;
+  color: #CCC !important;
+}
+
+/* ============================================================
+   REDUCED MOTION — respect user preference
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  #skillbridge-fab,
+  .skillbridge-sidebar,
+  .skillbridge-sidebar.open,
+  #si18n-welcome-banner,
+  #si18n-progress-toast,
+  .si18n-ask-tutor-btn,
+  .si18n-exam-banner,
+  #si18n-shortcuts-overlay,
+  .si18n-shortcuts-panel,
+  .si18n-verifying,
+  .si18n-text-updated {
+    transition-duration: 0.01ms !important;
+  }
+
+  #skillbridge-fab.si18n-fab-pulse,
+  .si18n-streaming-cursor::after,
+  .si18n-thinking-dots .si18n-dot,
+  .si18n-verify-spinner .si18n-dot,
+  #si18n-progress-bar .si18n-progress-fill,
+  #si18n-progress-toast .si18n-progress-spinner {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* ============================================================
    MOBILE / RESPONSIVE
    ============================================================ */
+
+@media (max-width: 1024px) {
+  .skillbridge-sidebar {
+    width: 340px;
+    height: 520px;
+  }
+}
+
+@media (max-width: 768px) {
+  .skillbridge-sidebar {
+    bottom: 0;
+    right: 0;
+    left: 0;
+    width: 100%;
+    height: 65vh;
+    max-height: 65vh;
+    border-radius: 16px 16px 0 0;
+  }
+  .skillbridge-sidebar.open {
+    transform: translateY(0);
+  }
+}
 
 @media (max-width: 600px) {
   .skillbridge-sidebar {
