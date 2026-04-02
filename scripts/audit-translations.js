@@ -100,12 +100,12 @@ function audit() {
       const langKeySet = new Set(langKeys[section]);
       const refKeySet = new Set(keys);
 
-      const missing = keys.filter(k => !langKeySet.has(k));
-      const extra = langKeys[section].filter(k => !refKeySet.has(k));
+      const missing = keys.filter((k) => !langKeySet.has(k));
+      const extra = langKeys[section].filter((k) => !refKeySet.has(k));
 
       if (missing.length > 0) {
         console.log(`  ⚠️  ${lang}/${section}: Missing ${missing.length} keys:`);
-        missing.forEach(k => console.log(`      - "${k.substring(0, 60)}${k.length > 60 ? '...' : ''}"`));
+        missing.forEach((k) => console.log(`      - "${k.substring(0, 60)}${k.length > 60 ? '...' : ''}"`));
         hasErrors = true;
       }
       if (extra.length > 0) {

@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "__MSG_extName__",
   "description": "__MSG_extDescription__",
-  "version": "2.1.0",
+  "version": "3.4.0",
   "minimum_chrome_version": "120",
   "author": "SkillBridge Contributors",
   "homepage_url": "https://github.com/heznpc/skillbridge",
@@ -29,7 +29,7 @@
   "content_scripts": [
     {
       "matches": ["https://*.skilljar.com/*"],
-      "js": ["src/lib/browser-polyfill.js", "src/lib/constants.js", "src/lib/selectors.js", "src/lib/translator.js", "src/lib/youtube-subtitles.js", "src/content/content.js", "src/content/header-controls.js", "src/content/text-selection.js", "src/content/sidebar-chat.js", "src/content/keyboard-shortcuts.js"],
+      "js": ["src/lib/browser-polyfill.js", "src/lib/constants.js", "src/lib/selectors.js", "src/lib/translator.js", "src/lib/youtube-subtitles.js", "src/lib/protected-terms.js", "src/lib/gemini-block.js", "src/content/content.js", "src/content/code-comments.js", "src/content/header-controls.js", "src/content/text-selection.js", "src/content/sidebar-chat.js", "src/content/keyboard-shortcuts.js"],
       "css": ["src/content/content.css"],
       "run_at": "document_idle"
     }
@@ -44,7 +44,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["src/lib/page-bridge.js", "src/data/*", "src/bridge/puter.js", "assets/*"],
+      "resources": ["src/lib/page-bridge.js", "src/data/*", "src/bridge/puter.js", "assets/icons/*", "src/shared/constants.json"],
       "matches": ["https://*.skilljar.com/*"]
     }
   ]

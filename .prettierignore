@@ -1,0 +1,8 @@
+dist/
+node_modules/
+src/bridge/puter.js
+src/data/
+store-assets/
+*.mp4
+*.gif
+*.png

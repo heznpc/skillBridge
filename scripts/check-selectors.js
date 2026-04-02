@@ -27,7 +27,7 @@ async function fetchPage(url) {
   const resp = await fetch(url, {
     headers: {
       'User-Agent': 'SkillBridge-HealthCheck/1.0',
-      'Accept': 'text/html',
+      Accept: 'text/html',
     },
     redirect: 'follow',
   });
@@ -75,8 +75,7 @@ async function main() {
   } catch (err) {
     console.error(`Failed to fetch page: ${err.message}`);
     if (process.env.CI) {
-      fs.writeFileSync('dom-check-report.txt',
-        `Failed to fetch ${TARGET_URL}: ${err.message}\n`);
+      fs.writeFileSync('dom-check-report.txt', `Failed to fetch ${TARGET_URL}: ${err.message}\n`);
     }
     process.exit(1);
   }
@@ -97,18 +96,18 @@ async function main() {
   if (allOk) {
     console.log('All selectors found.');
   } else {
-    const missing = results.filter(r => r.status === 'MISSING');
+    const missing = results.filter((r) => r.status === 'MISSING');
     console.log(`${missing.length} selector(s) missing!`);
 
     if (process.env.CI) {
       const report = [
         '### Missing selectors\n',
-        ...missing.map(r => `- \`${r.selector}\``),
+        ...missing.map((r) => `- \`${r.selector}\``),
         '',
         '### All results\n',
         '| Selector | Status |',
         '|----------|--------|',
-        ...results.map(r => `| \`${r.selector}\` | ${r.status} |`),
+        ...results.map((r) => `| \`${r.selector}\` | ${r.status} |`),
       ].join('\n');
       fs.writeFileSync('dom-check-report.txt', report);
     }

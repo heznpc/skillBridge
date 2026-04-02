@@ -23,7 +23,7 @@ function main() {
 
   let files;
   try {
-    files = fs.readdirSync(DATA_DIR).filter(f => f.endsWith('.json'));
+    files = fs.readdirSync(DATA_DIR).filter((f) => f.endsWith('.json'));
   } catch (err) {
     console.error(`Cannot read data directory: ${err.message}`);
     process.exit(1);
@@ -83,20 +83,22 @@ function main() {
     return;
   }
 
-  const stale = results.filter(r => r.status === 'STALE');
+  const stale = results.filter((r) => r.status === 'STALE');
   console.log(`${stale.length} dictionary/dictionaries are stale (>${STALE_THRESHOLD_DAYS} days old).`);
 
   if (process.env.CI) {
     const report = [
       '### Stale dictionaries\n',
-      ...stale.map(r => `- **${r.file}** (\`${r.lang}\`): last updated ${r.lastUpdated} (${r.daysSince} days ago) — STALE`),
+      ...stale.map(
+        (r) => `- **${r.file}** (\`${r.lang}\`): last updated ${r.lastUpdated} (${r.daysSince} days ago) — STALE`,
+      ),
       '',
       '### All dictionaries\n',
       '| File | Language | Last Updated | Days Ago | Status |',
       '|------|----------|-------------|----------|--------|',
       ...results
-        .filter(r => r.lastUpdated)
-        .map(r => `| ${r.file} | ${r.lang} | ${r.lastUpdated} | ${r.daysSince} | ${r.status} |`),
+        .filter((r) => r.lastUpdated)
+        .map((r) => `| ${r.file} | ${r.lang} | ${r.lastUpdated} | ${r.daysSince} | ${r.status} |`),
     ].join('\n');
     fs.writeFileSync('dict-check-report.txt', report);
   }

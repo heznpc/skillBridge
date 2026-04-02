@@ -18,15 +18,9 @@ const fs = require('fs');
 const path = require('path');
 
 // Load selectors + constants first (constants.js depends on selectors, translator.js depends on constants)
-const selectorsSrc = fs.readFileSync(
-  path.join(__dirname, '..', 'src', 'lib', 'selectors.js'), 'utf8'
-);
-const constantsSrc = fs.readFileSync(
-  path.join(__dirname, '..', 'src', 'lib', 'constants.js'), 'utf8'
-);
-const src = fs.readFileSync(
-  path.join(__dirname, '..', 'src', 'lib', 'translator.js'), 'utf8'
-);
+const selectorsSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'selectors.js'), 'utf8');
+const constantsSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'constants.js'), 'utf8');
+const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'translator.js'), 'utf8');
 
 // Combine selectors + constants + translator in a single eval so all are in scope
 let SkilljarTranslator;
@@ -60,8 +54,8 @@ describe('SkilljarTranslator', () => {
       expect(translator.premiumLanguages).toContain('zh-CN');
     });
 
-    test('has all 6 premium languages', () => {
-      expect(translator.premiumLanguages).toHaveLength(6);
+    test('has all 10 premium languages', () => {
+      expect(translator.premiumLanguages).toHaveLength(10);
     });
 
     test('supportedLanguages includes 30+ languages', () => {
@@ -98,7 +92,7 @@ describe('SkilljarTranslator', () => {
   describe('staticLookup', () => {
     beforeEach(() => {
       translator.staticDict = {
-        'Hello': '안녕하세요',
+        Hello: '안녕하세요',
         'prompt engineering': '프롬프트 엔지니어링',
         'Claude is an AI assistant': 'Claude는 AI 어시스턴트입니다',
       };
@@ -158,8 +152,8 @@ describe('SkilljarTranslator', () => {
 
     test('returns stored protected terms', () => {
       translator._protectedTerms = {
-        'Claude': ['클로드'],
-        'skill': ['스킬', '기술'],
+        Claude: ['클로드'],
+        skill: ['스킬', '기술'],
       };
       const terms = translator.getProtectedTerms();
       expect(terms['Claude']).toEqual(['클로드']);
@@ -170,7 +164,8 @@ describe('SkilljarTranslator', () => {
   describe('queueGeminiVerify heuristics', () => {
     test('isPremium returns true for premium languages', () => {
       expect(translator.premiumLanguages.includes('ko')).toBe(true);
-      expect(translator.premiumLanguages.includes('pt-BR')).toBe(false);
+      expect(translator.premiumLanguages.includes('pt-BR')).toBe(true);
+      expect(translator.premiumLanguages.includes('it')).toBe(false);
     });
   });
 });
@@ -180,7 +175,7 @@ describe('Language JSON files', () => {
 
   let files;
   try {
-    files = fs.readdirSync(dataDir).filter(f => f.endsWith('.json'));
+    files = fs.readdirSync(dataDir).filter((f) => f.endsWith('.json'));
   } catch {
     files = [];
   }
