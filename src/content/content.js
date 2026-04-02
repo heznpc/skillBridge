@@ -64,6 +64,8 @@
   let gtProcessing = false;
   let gtGeneration = 0;
   let domObserver = null;
+  let commentTranslateEnabled = false;
+  let originalComments = new Map(); // el → original innerHTML for code elements
 
   // Lookup helper: returns map entry for given lang, falling back to 'en'
   function t(map, lang) { return map[lang || currentLang] || map['en']; }
@@ -237,6 +239,20 @@
         sendResponse({ ready: isReady });
         return false;
 
+      case 'toggleCommentTranslation':
+        commentTranslateEnabled = request.enabled;
+        chrome.storage.local.set({ commentTranslate: request.enabled });
+        if (request.enabled && currentLang !== 'en') {
+          translateCodeComments(currentLang);
+        } else {
+          originalComments.forEach((html, el) => {
+            if (el && el.parentNode) el.innerHTML = html;
+          });
+          originalComments.clear();
+        }
+        sendResponse({ success: true });
+        return false;
+
       default:
         sendResponse({ success: false, error: 'Unknown action' });
         return false;
@@ -249,8 +265,9 @@
 
   async function init() {
     try {
-      const stored = await chrome.storage.local.get(['targetLanguage', 'autoTranslate', 'welcomeShown', 'darkMode']);
+      const stored = await chrome.storage.local.get(['targetLanguage', 'autoTranslate', 'welcomeShown', 'darkMode', 'commentTranslate']);
       if (stored.darkMode) document.documentElement.classList.add('si18n-dark');
+      commentTranslateEnabled = !!stored.commentTranslate;
       currentLang = stored.targetLanguage || 'en';
       isExamPage = detectExamPage();
 
@@ -421,6 +438,10 @@
     // Phase 2 — Process offscreen elements in idle-time chunks
     if (offscreen.length > 0) {
       processOffscreenChunked(offscreen, targetLang, staticCount, gtCandidates.length);
+    }
+
+    if (commentTranslateEnabled) {
+      translateCodeComments(targetLang);
     }
   }
 
@@ -679,6 +700,103 @@
     _protectedTermsLang = null;
     updateLangClass('en');
     hideTranslationProgress();
+    originalComments.forEach((html, el) => {
+      if (el && el.parentNode) el.innerHTML = html;
+    });
+    originalComments.clear();
+  }
+
+  // ============================================================
+  // CODE COMMENT TRANSLATION
+  // ============================================================
+
+  /**
+   * Detect programming language from code element class names.
+   */
+  function detectCodeLanguage(el) {
+    const cls = (el.className || '') + ' ' + (el.parentElement?.className || '');
+    if (/\b(language-|lang-|hljs-)?(python|py)\b/i.test(cls)) return 'python';
+    if (/\b(language-|lang-|hljs-)?(javascript|js|typescript|ts)\b/i.test(cls)) return 'js';
+    if (/\b(language-|lang-|hljs-)?(html|xml|svg)\b/i.test(cls)) return 'html';
+    if (/\b(language-|lang-|hljs-)?(bash|sh|shell|zsh)\b/i.test(cls)) return 'bash';
+    if (/\b(language-|lang-|hljs-)?(ruby|rb)\b/i.test(cls)) return 'ruby';
+    if (/\b(language-|lang-|hljs-)?(yaml|yml)\b/i.test(cls)) return 'yaml';
+    if (/\b(language-|lang-|hljs-)?(java|kotlin|swift|go|rust|c|cpp|csharp|cs)\b/i.test(cls)) return 'js';
+    // Heuristic fallback
+    const text = el.textContent || '';
+    if (/^\s*(def |import |class |from )/m.test(text)) return 'python';
+    if (/^\s*(function |const |let |var |import |export )/m.test(text)) return 'js';
+    return 'js'; // default to // style
+  }
+
+  /**
+   * Translate only comment text inside code blocks.
+   */
+  function _getCommentPattern(lang) {
+    if (lang === 'python' || lang === 'bash' || lang === 'ruby' || lang === 'yaml') return CODE_COMMENT_PATTERNS[1];
+    if (lang === 'html') return CODE_COMMENT_PATTERNS[2];
+    return CODE_COMMENT_PATTERNS[0];
+  }
+
+  async function _translateOneCodeBlock(el, targetLang) {
+    if (originalComments.has(el)) return;
+    const text = el.textContent;
+    if (!text || text.length < 10) return;
+
+    const pattern = _getCommentPattern(detectCodeLanguage(el));
+    originalComments.set(el, el.innerHTML);
+
+    let html = el.innerHTML;
+    let hasTranslation = false;
+
+    // Collect all comments, translate in batch, then apply
+    const replacements = [];
+
+    if (pattern.line) {
+      for (const match of [...html.matchAll(pattern.line)]) {
+        const ct = match[1]?.trim();
+        if (ct && ct.length >= 4 && isLikelyEnglish(ct)) replacements.push({ match, type: 'line' });
+      }
+    }
+    if (pattern.block) {
+      for (const match of [...html.matchAll(pattern.block)]) {
+        const ct = match[1]?.trim();
+        if (ct && ct.length >= 4 && isLikelyEnglish(ct)) replacements.push({ match, type: 'block' });
+      }
+    }
+
+    if (replacements.length === 0) { originalComments.delete(el); return; }
+
+    const translations = await Promise.all(
+      replacements.map(r => translator.translate(r.match[1].trim(), targetLang))
+    );
+
+    // Apply in reverse order to preserve indices
+    for (let i = replacements.length - 1; i >= 0; i--) {
+      const { match, type } = replacements[i];
+      const result = translations[i];
+      if (result.text === match[1].trim() || result.source === 'original') continue;
+      hasTranslation = true;
+
+      let replacement;
+      if (type === 'line') {
+        replacement = match[0].replace(match[1], result.text);
+      } else {
+        const opening = match[0].substring(0, match[0].indexOf(match[1]));
+        const closing = match[0].substring(match[0].indexOf(match[1]) + match[1].length);
+        replacement = `${opening}${result.text}${closing}`;
+      }
+      html = html.substring(0, match.index) + replacement + html.substring(match.index + match[0].length);
+    }
+
+    if (hasTranslation) { el.innerHTML = html; }
+    else { originalComments.delete(el); }
+  }
+
+  async function translateCodeComments(targetLang) {
+    if (!translator || targetLang === 'en') return;
+    const codeEls = document.querySelectorAll('pre code, pre.code, .code-block code');
+    await Promise.all(Array.from(codeEls).map(el => _translateOneCodeBlock(el, targetLang)));
   }
 
   async function switchLanguage(newLang, opts = {}) {
@@ -704,12 +822,29 @@
     }
   }
 
-  function injectGoogleFonts() {
+  // Language → Google Fonts family (load only what's needed)
+  const _LANG_FONT_MAP = {
+    'ko': 'Noto+Sans+KR', 'ja': 'Noto+Sans+JP',
+    'zh-CN': 'Noto+Sans+SC', 'zh-TW': 'Noto+Sans+TC',
+    'ar': 'Noto+Sans+Arabic', 'hi': 'Noto+Sans+Devanagari',
+    'bn': 'Noto+Sans+Bengali', 'th': 'Noto+Sans+Thai',
+    'he': 'Noto+Sans+Hebrew',
+  };
+
+  function injectGoogleFonts(lang) {
     if (document.getElementById('sb-google-fonts')) return;
+    const family = _LANG_FONT_MAP[lang];
+    if (!family) return; // Latin-script languages use system fonts
+
     const link = document.createElement('link');
     link.id = 'sb-google-fonts';
     link.rel = 'stylesheet';
-    link.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;700&family=Noto+Sans+Devanagari:wght@400;500;700&family=Noto+Sans+Thai:wght@400;500;700&display=swap';
+    link.href = `https://fonts.googleapis.com/css2?family=${family}:wght@400;500;700&display=swap`;
+    link.onerror = () => {
+      // Graceful fallback — system fonts will be used via CSS font-family stack
+      console.debug('[SkillBridge] Google Fonts unavailable, using system fonts');
+      link.remove();
+    };
     document.head.appendChild(link);
   }
 
@@ -723,7 +858,7 @@
     document.documentElement.lang = lang || 'en';
     if (lang && lang !== 'en') {
       body.classList.add(`si18n-lang-${lang}`);
-      injectGoogleFonts();
+      injectGoogleFonts(lang);
     }
   }
 

@@ -73,6 +73,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     chrome.storage.local.set({ autoTranslate: autoTranslate.checked });
   });
 
+  // Code comment translation toggle
+  const commentTranslate = document.getElementById('comment-translate');
+  const commentLabel = document.getElementById('comment-translate-label');
+  if (commentLabel) commentLabel.textContent = t(COMMENT_TRANSLATE_LABELS);
+
+  chrome.storage.local.get(['commentTranslate'], (result) => {
+    if (result.commentTranslate) commentTranslate.checked = true;
+  });
+
+  commentTranslate.addEventListener('change', () => {
+    chrome.storage.local.set({ commentTranslate: commentTranslate.checked });
+    safeSendMessage(tab.id, { action: 'toggleCommentTranslation', enabled: commentTranslate.checked });
+  });
+
   function showStatus(text, type) {
     status.textContent = text;
     status.className = `status ${type}`;

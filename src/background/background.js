@@ -15,7 +15,7 @@ const _BG_GT_LANG_MAP = { 'zh-CN': 'zh-CN', 'zh-TW': 'zh-TW', 'pt-BR': 'pt' };
 
 // YouTube InnerTube client version
 // NOTE: Same value exists in constants.js (YOUTUBE_CLIENT_VERSION) for content scripts.
-const _BG_YT_CLIENT_VERSION = '2.20240101.00.00';
+const _BG_YT_CLIENT_VERSION = '2.20260401.00.00';
 
 function gtLangCode(lang) {
   return _BG_GT_LANG_MAP[lang] || lang;
@@ -111,7 +111,7 @@ async function handleCacheCleanup() {
         // Tab may not have content script loaded — that is fine
       });
     }
-    console.log(`[SkillBridge] Cache cleanup alarm: notified ${tabs.length} tab(s)`);
+    console.debug(`[SkillBridge] Cache cleanup alarm: notified ${tabs.length} tab(s)`);
   } catch (err) {
     console.warn('[SkillBridge] Cache cleanup error:', err.message);
   }
@@ -138,11 +138,11 @@ async function handleVersionCheck() {
     const remoteVersion = (release.tag_name || '').replace(/^v/, '');
 
     if (remoteVersion && remoteVersion !== localVersion && isNewerVersion(remoteVersion, localVersion)) {
-      console.log(`[SkillBridge] New version available: ${remoteVersion} (current: ${localVersion})`);
+      console.debug(`[SkillBridge] New version available: ${remoteVersion} (current: ${localVersion})`);
       chrome.action.setBadgeText({ text: '!' });
       chrome.action.setBadgeBackgroundColor({ color: '#E07A5F' });
     } else {
-      console.log(`[SkillBridge] Version check: up to date (${localVersion})`);
+      console.debug(`[SkillBridge] Version check: up to date (${localVersion})`);
     }
   } catch (err) {
     console.warn('[SkillBridge] Version check error:', err.message);

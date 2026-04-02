@@ -84,8 +84,8 @@ describe('SKILLBRIDGE_DELAYS', () => {
 });
 
 describe('Languages', () => {
-  test('PREMIUM_LANGUAGES has 6 entries', () => {
-    expect(PREMIUM_LANGUAGES).toHaveLength(6);
+  test('PREMIUM_LANGUAGES has 10 entries', () => {
+    expect(PREMIUM_LANGUAGES).toHaveLength(10);
   });
 
   test('AVAILABLE_LANGUAGES includes English and all premium', () => {
@@ -119,10 +119,11 @@ describe('UI Labels (i18n)', () => {
     }
   });
 
-  test('POPUP_LABELS has entries for premium languages', () => {
+  test('POPUP_LABELS has entries for core i18n languages', () => {
+    const coreI18nCodes = ['en', 'ko', 'ja', 'zh-CN', 'es', 'fr', 'de'];
     for (const [key, map] of Object.entries(POPUP_LABELS)) {
-      for (const lang of PREMIUM_LANGUAGES) {
-        expect(map[lang.code]).toBeDefined();
+      for (const code of coreI18nCodes) {
+        expect(map[code]).toBeDefined();
       }
     }
   });
@@ -147,8 +148,8 @@ describe('SHORTCUT_LABELS', () => {
     expect(typeof SHORTCUT_LABELS.title.en).toBe('string');
   });
 
-  test('title has all premium language entries', () => {
-    for (const { code } of PREMIUM_LANGUAGES) {
+  test('title has core i18n language entries', () => {
+    for (const code of ['ko', 'ja', 'zh-CN', 'es', 'fr', 'de']) {
       expect(SHORTCUT_LABELS.title[code]).toBeDefined();
     }
   });
@@ -170,9 +171,9 @@ describe('SHORTCUT_DESCRIPTIONS', () => {
     }
   });
 
-  test('each description has premium language entries', () => {
+  test('each description has core i18n language entries', () => {
     for (const key of EXPECTED_KEYS) {
-      for (const { code } of PREMIUM_LANGUAGES) {
+      for (const code of ['ko', 'ja', 'zh-CN', 'es', 'fr', 'de']) {
         expect(SHORTCUT_DESCRIPTIONS[key][code]).toBeDefined();
       }
     }

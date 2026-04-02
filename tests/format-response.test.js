@@ -131,4 +131,28 @@ describe('formatResponse', () => {
     const result = formatResponse(input);
     expect(result).toBe('<p>First paragraph.</p><p>Second paragraph.</p>');
   });
+
+  test('does not double-escape HTML entities in bold', () => {
+    const result = formatResponse('**A & B**');
+    expect(result).toBe('<p><strong>A &amp; B</strong></p>');
+    expect(result).not.toContain('&amp;amp;');
+  });
+
+  test('does not double-escape HTML entities in italic', () => {
+    const result = formatResponse('*x < y*');
+    expect(result).toBe('<p><em>x &lt; y</em></p>');
+    expect(result).not.toContain('&amp;lt;');
+  });
+
+  test('does not double-escape HTML entities in inline code', () => {
+    const result = formatResponse('use `a<b && c>d`');
+    expect(result).toContain('<code>a&lt;b &amp;&amp; c&gt;d</code>');
+    expect(result).not.toContain('&amp;amp;');
+  });
+
+  test('does not double-escape quotes in bold', () => {
+    const result = formatResponse('**say "hello"**');
+    expect(result).toBe('<p><strong>say &quot;hello&quot;</strong></p>');
+    expect(result).not.toContain('&amp;quot;');
+  });
 });

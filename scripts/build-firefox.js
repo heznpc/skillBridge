@@ -57,11 +57,16 @@ delete firefoxManifest.minimum_chrome_version;
 
 // ── Write Firefox manifest ───────────────────────────────────
 
+// Clean previous build to prevent recursive nesting
+if (fs.existsSync(DIST_DIR)) {
+  fs.rmSync(DIST_DIR, { recursive: true, force: true });
+}
+
 // Create dist/firefox directory
 fs.mkdirSync(DIST_DIR, { recursive: true });
 
 // Copy all extension files (excluding dist/, .git/, node_modules/)
-const EXCLUDE = new Set(['dist', '.git', 'node_modules', '.DS_Store', '.claude']);
+const EXCLUDE = new Set(['dist', '.git', 'node_modules', '.DS_Store', '.claude', '.idea', 'store-assets', '.github']);
 
 function copyDir(src, dest) {
   fs.mkdirSync(dest, { recursive: true });
