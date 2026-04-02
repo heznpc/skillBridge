@@ -8,14 +8,9 @@
  * 4. Periodic maintenance via Chrome Alarms (cache cleanup, version check)
  */
 
-// Language code mapping for Google Translate API
-// NOTE: Same map exists in constants.js (GT_LANG_MAP) for content scripts.
-// Service workers can't share globals with content scripts, so we duplicate here.
+// Shared constants — kept in sync with src/shared/constants.json via scripts/check-bg-sync.js
 const _BG_GT_LANG_MAP = { 'zh-CN': 'zh-CN', 'zh-TW': 'zh-TW', 'pt-BR': 'pt' };
-
-// YouTube InnerTube client version
-// NOTE: Same value exists in constants.js (YOUTUBE_CLIENT_VERSION) for content scripts.
-const _BG_YT_CLIENT_VERSION = '2.20240101.00.00';
+const _BG_YT_CLIENT_VERSION = '2.20260401.00.00';
 
 function gtLangCode(lang) {
   return _BG_GT_LANG_MAP[lang] || lang;
@@ -34,7 +29,9 @@ function isYouTubeUrl(url) {
   try {
     const u = new URL(url);
     return u.hostname === 'www.youtube.com' || u.hostname.endsWith('.youtube.com');
-  } catch { return false; }
+  } catch {
+    return false;
+  }
 }
 
 // URL allowlist for FETCH_URL — only permit known trusted domains
@@ -43,8 +40,10 @@ const _ALLOWED_FETCH_DOMAINS = ['www.youtube.com', 'youtube.com', 'm.youtube.com
 function isAllowedFetchUrl(url) {
   try {
     const u = new URL(url);
-    return _ALLOWED_FETCH_DOMAINS.some(d => u.hostname === d || u.hostname.endsWith('.' + d));
-  } catch { return false; }
+    return _ALLOWED_FETCH_DOMAINS.some((d) => u.hostname === d || u.hostname.endsWith('.' + d));
+  } catch {
+    return false;
+  }
 }
 
 // ==================== RATE LIMITER ====================
@@ -54,11 +53,11 @@ const _rateLimiter = {
   maxPerMin: 120, // will be overridden by constant from content script messages
   check() {
     const now = Date.now();
-    this.timestamps = this.timestamps.filter(t => now - t < 60000);
+    this.timestamps = this.timestamps.filter((t) => now - t < 60000);
     if (this.timestamps.length >= this.maxPerMin) return false;
     this.timestamps.push(now);
     return true;
-  }
+  },
 };
 
 // ==================== EXPONENTIAL BACKOFF FETCH ====================
@@ -78,7 +77,7 @@ async function fetchWithRetry(url, opts = {}, maxRetries = 3, baseDelay = 500) {
       if (attempt === maxRetries) throw err;
     }
     const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 200;
-    await new Promise(r => setTimeout(r, delay));
+    await new Promise((r) => setTimeout(r, delay));
   }
 }
 
@@ -111,7 +110,7 @@ async function handleCacheCleanup() {
         // Tab may not have content script loaded — that is fine
       });
     }
-    console.log(`[SkillBridge] Cache cleanup alarm: notified ${tabs.length} tab(s)`);
+    console.debug(`[SkillBridge] Cache cleanup alarm: notified ${tabs.length} tab(s)`);
   } catch (err) {
     console.warn('[SkillBridge] Cache cleanup error:', err.message);
   }
@@ -126,10 +125,9 @@ async function handleVersionCheck() {
     const manifest = chrome.runtime.getManifest();
     const localVersion = manifest.version;
 
-    const resp = await fetch(
-      `https://api.github.com/repos/${_GITHUB_REPO}/releases/latest`,
-      { headers: { 'Accept': 'application/vnd.github.v3+json' } }
-    );
+    const resp = await fetch(`https://api.github.com/repos/${_GITHUB_REPO}/releases/latest`, {
+      headers: { Accept: 'application/vnd.github.v3+json' },
+    });
     if (!resp.ok) {
       console.warn(`[SkillBridge] Version check: GitHub API returned ${resp.status}`);
       return;
@@ -138,11 +136,11 @@ async function handleVersionCheck() {
     const remoteVersion = (release.tag_name || '').replace(/^v/, '');
 
     if (remoteVersion && remoteVersion !== localVersion && isNewerVersion(remoteVersion, localVersion)) {
-      console.log(`[SkillBridge] New version available: ${remoteVersion} (current: ${localVersion})`);
+      console.debug(`[SkillBridge] New version available: ${remoteVersion} (current: ${localVersion})`);
       chrome.action.setBadgeText({ text: '!' });
       chrome.action.setBadgeBackgroundColor({ color: '#E07A5F' });
     } else {
-      console.log(`[SkillBridge] Version check: up to date (${localVersion})`);
+      console.debug(`[SkillBridge] Version check: up to date (${localVersion})`);
     }
   } catch (err) {
     console.warn('[SkillBridge] Version check error:', err.message);
@@ -219,12 +217,12 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     }
     fetchOpts.headers = headers;
     fetch(msg.url, fetchOpts)
-      .then(resp => {
+      .then((resp) => {
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         return resp.text();
       })
-      .then(text => sendResponse({ ok: true, data: text }))
-      .catch(err => {
+      .then((text) => sendResponse({ ok: true, data: text }))
+      .catch((err) => {
         console.error(`[SkillBridge BG] Error: ${err.message}`);
         sendResponse({ ok: false, error: err.message });
       });
@@ -243,11 +241,11 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
 
     fetchWithRetry(url)
-      .then(resp => resp.json())
-      .then(data => {
+      .then((resp) => resp.json())
+      .then((data) => {
         sendResponse({ ok: true, translated: parseGTResponse(data, text) });
       })
-      .catch(err => {
+      .catch((err) => {
         console.warn('[SkillBridge] Google Translate error:', err.message);
         sendResponse({ ok: false, error: err.message });
       });
@@ -260,19 +258,21 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     const sl = sourceLang || 'en';
     const tl = gtLangCode(targetLang);
 
-    Promise.all(texts.map(text => {
-      if (!_rateLimiter.check()) return text; // skip if rate limited
-      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
-      return fetchWithRetry(url)
-        .then(resp => resp.json())
-        .then(data => parseGTResponse(data, text))
-        .catch(err => {
-          console.warn('[SkillBridge] GT batch item failed:', err.message);
-          return text;
-        });
-    }))
-    .then(results => sendResponse({ ok: true, translations: results }))
-    .catch(err => sendResponse({ ok: false, error: err.message }));
+    Promise.all(
+      texts.map((text) => {
+        if (!_rateLimiter.check()) return text; // skip if rate limited
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
+        return fetchWithRetry(url)
+          .then((resp) => resp.json())
+          .then((data) => parseGTResponse(data, text))
+          .catch((err) => {
+            console.warn('[SkillBridge] GT batch item failed:', err.message);
+            return text;
+          });
+      }),
+    )
+      .then((results) => sendResponse({ ok: true, translations: results }))
+      .catch((err) => sendResponse({ ok: false, error: err.message }));
     return true;
   }
 });

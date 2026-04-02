@@ -15,7 +15,7 @@
     askTutorBtn = document.createElement('button');
     askTutorBtn.className = 'si18n-ask-tutor-btn';
     askTutorBtn.innerHTML = `
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
       </svg>
       <span class="si18n-ask-tutor-label">${sb.t(ASK_TUTOR_LABELS)}</span>
@@ -59,7 +59,8 @@
       askTutorBtn.style.top = `${rect.bottom + scrollY + 6}px`;
       askTutorBtn.classList.add('visible');
 
-      pendingQuote = text.length > SKILLBRIDGE_LIMITS.QUOTE_MAX ? text.slice(0, SKILLBRIDGE_LIMITS.QUOTE_MAX) + '\u2026' : text;
+      pendingQuote =
+        text.length > SKILLBRIDGE_LIMITS.QUOTE_MAX ? text.slice(0, SKILLBRIDGE_LIMITS.QUOTE_MAX) + '\u2026' : text;
     }, SKILLBRIDGE_DELAYS.TEXT_SELECTION);
   }
 
@@ -92,7 +93,7 @@
     const quoteEl = document.createElement('div');
     quoteEl.className = 'si18n-chat-quote';
     quoteEl.innerHTML = `
-      <button class="si18n-chat-quote-dismiss" title="Remove quote">&times;</button>
+      <button class="si18n-chat-quote-dismiss" title="${sb.t(A11Y_LABELS.removeQuote)}">&times;</button>
       ${sb.escapeHtml(quoteText)}
     `;
     inputWrap.parentNode.insertBefore(quoteEl, inputWrap);

@@ -1,174 +1,222 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SkillBridge — AI Course Translator</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SkillBridge — AI Course Translator</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-    body {
-      width: 340px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #FAFAF9;
-      color: #1C1917;
-    }
+      body {
+        width: 340px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: #fafaf9;
+        color: #1c1917;
+      }
 
-    .popup-header {
-      background: #3D405B;
-      color: white;
-      padding: 16px 20px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+      .popup-header {
+        background: #3d405b;
+        color: white;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
 
-    .popup-header svg { flex-shrink: 0; }
+      .popup-header svg {
+        flex-shrink: 0;
+      }
 
-    .popup-header h1 {
-      font-size: 15px;
-      font-weight: 600;
-    }
+      .popup-header h1 {
+        font-size: 15px;
+        font-weight: 600;
+      }
 
-    .popup-header p {
-      font-size: 11px;
-      opacity: 0.8;
-      margin-top: 2px;
-    }
+      .popup-header p {
+        font-size: 11px;
+        opacity: 0.8;
+        margin-top: 2px;
+      }
 
-    .popup-body { padding: 16px 20px; }
+      .popup-body {
+        padding: 16px 20px;
+      }
 
-    .field { margin-bottom: 14px; }
+      .field {
+        margin-bottom: 14px;
+      }
 
-    .field label {
-      display: block;
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: #6B6560;
-      margin-bottom: 6px;
-    }
+      .field label {
+        display: block;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #6b6560;
+        margin-bottom: 6px;
+      }
 
-    .field select {
-      width: 100%;
-      padding: 9px 12px;
-      border: 1px solid #E7E5E4;
-      border-radius: 8px;
-      font-size: 13px;
-      background: white;
-      color: #1C1917;
-    }
+      .field select {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid #e7e5e4;
+        border-radius: 8px;
+        font-size: 13px;
+        background: white;
+        color: #1c1917;
+      }
 
-    .field select:focus {
-      outline: none;
-      border-color: #E07A5F;
-    }
+      .field select:focus {
+        outline: 2px solid #e07a5f;
+        outline-offset: -2px;
+        border-color: #e07a5f;
+      }
 
-    .btn-sidebar {
-      width: 100%;
-      padding: 10px;
-      background: #3D405B;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-bottom: 14px;
-    }
-    .btn-sidebar:hover { background: #2E3047; }
+      .btn-sidebar {
+        width: 100%;
+        padding: 10px;
+        background: #3d405b;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-bottom: 14px;
+      }
+      .btn-sidebar:hover {
+        background: #2e3047;
+      }
 
-    .toggle-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      color: #6B6560;
-      margin-bottom: 12px;
-    }
+      .toggle-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: #6b6560;
+        margin-bottom: 12px;
+      }
 
-    .toggle-row input { accent-color: #E07A5F; }
+      .toggle-row input {
+        accent-color: #e07a5f;
+      }
 
-    .status {
-      font-size: 12px;
-      color: #6B6560;
-      text-align: center;
-      padding: 8px;
-      min-height: 20px;
-    }
+      .status {
+        font-size: 12px;
+        color: #6b6560;
+        text-align: center;
+        padding: 8px;
+        min-height: 20px;
+      }
 
-    .status.success { color: #81B29A; }
-    .status.error { color: #E07A5F; }
+      .status.success {
+        color: #81b29a;
+      }
+      .status.error {
+        color: #e07a5f;
+      }
 
-    .footer {
-      text-align: center;
-      padding: 10px 20px 14px;
-      font-size: 10px;
-      color: #A8A29E;
-      border-top: 1px solid #E7E5E4;
-    }
+      .footer {
+        text-align: center;
+        padding: 10px 20px 14px;
+        font-size: 10px;
+        color: #a8a29e;
+        border-top: 1px solid #e7e5e4;
+      }
 
-    .footer a {
-      color: #E07A5F;
-      text-decoration: none;
-    }
+      .footer a {
+        color: #e07a5f;
+        text-decoration: none;
+      }
 
-    .not-skilljar {
-      padding: 30px 20px;
-      text-align: center;
-      color: #6B6560;
-    }
+      .not-skilljar {
+        padding: 30px 20px;
+        text-align: center;
+        color: #6b6560;
+      }
 
-    .not-skilljar svg {
-      margin-bottom: 12px;
-      opacity: 0.4;
-    }
+      .not-skilljar svg {
+        margin-bottom: 12px;
+        opacity: 0.4;
+      }
 
-    .not-skilljar p { font-size: 13px; line-height: 1.5; }
-    .not-skilljar a { color: #E07A5F; }
-  </style>
-</head>
-<body>
-  <div class="popup-header">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="12" cy="12" r="10"/>
-      <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-    </svg>
-    <div>
-      <h1>SkillBridge</h1>
-      <p>AI Course Translator</p>
+      .not-skilljar p {
+        font-size: 13px;
+        line-height: 1.5;
+      }
+      .not-skilljar a {
+        color: #e07a5f;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="popup-header">
+      <svg
+        width="22"
+        height="22"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        aria-hidden="true"
+      >
+        <circle cx="12" cy="12" r="10" />
+        <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+      </svg>
+      <div>
+        <h1>SkillBridge</h1>
+        <p>AI Course Translator</p>
+      </div>
     </div>
-  </div>
 
-  <div id="main-content" class="popup-body" style="display:none">
-    <div class="field">
-      <label id="lang-label"></label>
-      <select id="lang-select"></select>
+    <div id="main-content" class="popup-body" style="display: none">
+      <div class="field">
+        <label id="lang-label"></label>
+        <select id="lang-select"></select>
+      </div>
+
+      <button class="btn-sidebar" id="sidebar-btn"></button>
+
+      <label class="toggle-row">
+        <input type="checkbox" id="auto-translate" />
+        <span id="auto-translate-label"></span>
+      </label>
+
+      <label class="toggle-row">
+        <input type="checkbox" id="comment-translate" />
+        <span id="comment-translate-label"></span>
+      </label>
+
+      <div id="status" class="status"></div>
     </div>
 
-    <button class="btn-sidebar" id="sidebar-btn"></button>
+    <div id="not-skilljar" class="not-skilljar" style="display: none">
+      <svg
+        width="40"
+        height="40"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        aria-hidden="true"
+      >
+        <circle cx="12" cy="12" r="10" />
+        <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+      </svg>
+      <p>
+        Navigate to <a href="https://anthropic.skilljar.com" target="_blank">anthropic.skilljar.com</a> to start
+        learning.
+      </p>
+    </div>
 
-    <label class="toggle-row">
-      <input type="checkbox" id="auto-translate" />
-      <span id="auto-translate-label"></span>
-    </label>
+    <div class="footer" id="footer"></div>
 
-    <div id="status" class="status"></div>
-  </div>
-
-  <div id="not-skilljar" class="not-skilljar" style="display:none">
-    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-      <circle cx="12" cy="12" r="10"/>
-      <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-    </svg>
-    <p>Navigate to <a href="https://anthropic.skilljar.com" target="_blank">anthropic.skilljar.com</a> to start learning.</p>
-  </div>
-
-  <div class="footer" id="footer"></div>
-
-  <script src="../lib/browser-polyfill.js"></script>
-  <script src="../lib/constants.js"></script>
-  <script src="popup.js"></script>
-</body>
+    <script src="../lib/browser-polyfill.js"></script>
+    <script src="../lib/constants.js"></script>
+    <script src="popup.js"></script>
+  </body>
 </html>

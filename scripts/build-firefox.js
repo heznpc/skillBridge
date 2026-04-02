@@ -26,9 +26,7 @@ const DIST_DIR = path.join(ROOT, 'dist', 'firefox');
 
 // ── Read Chrome manifest ──────────────────────────────────────
 
-const chromeManifest = JSON.parse(
-  fs.readFileSync(path.join(ROOT, 'manifest.json'), 'utf8')
-);
+const chromeManifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'manifest.json'), 'utf8'));
 
 // ── Transform to Firefox manifest ────────────────────────────
 
@@ -57,11 +55,16 @@ delete firefoxManifest.minimum_chrome_version;
 
 // ── Write Firefox manifest ───────────────────────────────────
 
+// Clean previous build to prevent recursive nesting
+if (fs.existsSync(DIST_DIR)) {
+  fs.rmSync(DIST_DIR, { recursive: true, force: true });
+}
+
 // Create dist/firefox directory
 fs.mkdirSync(DIST_DIR, { recursive: true });
 
 // Copy all extension files (excluding dist/, .git/, node_modules/)
-const EXCLUDE = new Set(['dist', '.git', 'node_modules', '.DS_Store', '.claude']);
+const EXCLUDE = new Set(['dist', '.git', 'node_modules', '.DS_Store', '.claude', '.idea', 'store-assets', '.github']);
 
 function copyDir(src, dest) {
   fs.mkdirSync(dest, { recursive: true });
@@ -86,10 +89,7 @@ function copyDir(src, dest) {
 copyDir(ROOT, DIST_DIR);
 
 // Write the Firefox-specific manifest
-fs.writeFileSync(
-  path.join(DIST_DIR, 'manifest.json'),
-  JSON.stringify(firefoxManifest, null, 2) + '\n'
-);
+fs.writeFileSync(path.join(DIST_DIR, 'manifest.json'), JSON.stringify(firefoxManifest, null, 2) + '\n');
 
 console.log('Firefox build complete: dist/firefox/');
 console.log('');

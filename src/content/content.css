@@ -33,116 +33,158 @@
 /* ---- Korean ---- */
 
 /* Base — all text uses Noto Sans KR */
-[lang="ko"] body,
+[lang='ko'] body,
 body.si18n-lang-ko,
 .si18n-lang-ko {
-  font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif !important;
+  font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif !important;
 }
 
 /* Page titles (h1) — Copernicus is LIGHT and elegant at h1 level.
    Use 400 (regular) to match that airy, editorial feel. */
 .si18n-lang-ko h1 {
-  font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif !important;
+  font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif !important;
   font-weight: 400 !important;
   letter-spacing: -0.02em;
 }
 
 /* Section headings (h2) — Copernicus is medium-bold here. Use 700. */
 .si18n-lang-ko h2 {
-  font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif !important;
+  font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif !important;
   font-weight: 700 !important;
   letter-spacing: -0.02em;
 }
 
 /* Sub-headings (h3–h6) — medium weight */
-.si18n-lang-ko h3, .si18n-lang-ko h4,
-.si18n-lang-ko h5, .si18n-lang-ko h6 {
-  font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif !important;
+.si18n-lang-ko h3,
+.si18n-lang-ko h4,
+.si18n-lang-ko h5,
+.si18n-lang-ko h6 {
+  font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif !important;
   font-weight: 500 !important;
   letter-spacing: -0.01em;
 }
 
 /* Bold text — don't over-bold, keep it natural */
-.si18n-lang-ko strong, .si18n-lang-ko b {
-  font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif !important;
+.si18n-lang-ko strong,
+.si18n-lang-ko b {
+  font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif !important;
 }
 
 /* Nav, links, buttons, UI — matches Open Sans / Styrene B feel */
-.si18n-lang-ko a, .si18n-lang-ko button {
-  font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif !important;
+.si18n-lang-ko a,
+.si18n-lang-ko button {
+  font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif !important;
 }
 
 /* ---- Japanese ---- */
 
 .si18n-lang-ja {
-  font-family: "Noto Sans JP", "Hiragino Kaku Gothic Pro", "Yu Gothic", "Meiryo", sans-serif !important;
+  font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic Pro', 'Yu Gothic', 'Meiryo', sans-serif !important;
 }
-.si18n-lang-ja h1 { font-weight: 400 !important; }
-.si18n-lang-ja h2 { font-weight: 700 !important; }
+.si18n-lang-ja h1 {
+  font-weight: 400 !important;
+}
+.si18n-lang-ja h2 {
+  font-weight: 700 !important;
+}
 
 /* ---- Chinese Simplified ---- */
 
 .si18n-lang-zh-CN {
-  font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif !important;
+  font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif !important;
 }
-.si18n-lang-zh-CN h1 { font-weight: 400 !important; }
-.si18n-lang-zh-CN h2 { font-weight: 700 !important; }
+.si18n-lang-zh-CN h1 {
+  font-weight: 400 !important;
+}
+.si18n-lang-zh-CN h2 {
+  font-weight: 700 !important;
+}
 
 /* ---- Chinese Traditional ---- */
 
 .si18n-lang-zh-TW {
-  font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif !important;
+  font-family: 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif !important;
 }
-.si18n-lang-zh-TW h1 { font-weight: 400 !important; }
-.si18n-lang-zh-TW h2 { font-weight: 700 !important; }
+.si18n-lang-zh-TW h1 {
+  font-weight: 400 !important;
+}
+.si18n-lang-zh-TW h2 {
+  font-weight: 700 !important;
+}
 
-/* ---- Arabic (RTL support) ---- */
+/* ---- Arabic ---- */
 
 .si18n-lang-ar {
-  font-family: "Noto Sans Arabic", "Segoe UI", "Tahoma", sans-serif !important;
-  direction: rtl;
-  text-align: right;
+  font-family: 'Noto Sans Arabic', 'Segoe UI', 'Tahoma', sans-serif !important;
+}
+.si18n-lang-ar h1 {
+  font-weight: 400 !important;
+}
+.si18n-lang-ar h2 {
+  font-weight: 700 !important;
 }
 
-/* ---- Hebrew (RTL support) ---- */
+/* ---- Hebrew ---- */
 
 .si18n-lang-he {
-  font-family: "Noto Sans Hebrew", "Segoe UI", "Arial", sans-serif !important;
-  direction: rtl;
-  text-align: right;
+  font-family: 'Noto Sans Hebrew', 'Segoe UI', 'Arial', sans-serif !important;
+}
+.si18n-lang-he h1 {
+  font-weight: 400 !important;
+}
+.si18n-lang-he h2 {
+  font-weight: 700 !important;
 }
 
 /* ---- Hindi/Devanagari ---- */
 
 .si18n-lang-hi {
-  font-family: "Noto Sans Devanagari", "Mangal", sans-serif !important;
+  font-family: 'Noto Sans Devanagari', 'Mangal', sans-serif !important;
 }
 
 /* ---- Thai ---- */
 
 .si18n-lang-th {
-  font-family: "Noto Sans Thai", "Tahoma", "Leelawadee", sans-serif !important;
+  font-family: 'Noto Sans Thai', 'Tahoma', 'Leelawadee', sans-serif !important;
 }
 
 /* ---- Vietnamese — Latin extended, system fonts fine ---- */
 
 .si18n-lang-vi {
-  font-family: "Segoe UI", "Roboto", "Arial", sans-serif !important;
+  font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif !important;
 }
 
 :root {
-  --si18n-primary: #E07A5F;
-  --si18n-primary-hover: #C96A52;
-  --si18n-bg: #FAFAF9;
-  --si18n-surface: #FFFFFF;
-  --si18n-text: #1C1917;
-  --si18n-text-secondary: #78716C;
-  --si18n-border: #E7E5E4;
-  --si18n-accent: #3D405B;
-  --si18n-success: #81B29A;
+  --si18n-primary: #e07a5f;
+  --si18n-primary-hover: #c96a52;
+  --si18n-bg: #fafaf9;
+  --si18n-surface: #ffffff;
+  --si18n-text: #1c1917;
+  --si18n-text-secondary: #78716c;
+  --si18n-border: #e7e5e4;
+  --si18n-accent: #3d405b;
+  --si18n-success: #81b29a;
   --si18n-radius: 12px;
   --si18n-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
   --si18n-sidebar-width: 380px;
+}
+
+/* Global focus styles for all SkillBridge interactive elements */
+#skillbridge-fab:focus-visible,
+.si18n-close:focus-visible,
+.si18n-history-btn:focus-visible,
+.si18n-history-back:focus-visible,
+.si18n-history-clear:focus-visible,
+.si18n-retry-btn:focus-visible,
+.si18n-chat-send-btn:focus-visible,
+.si18n-banner-btn:focus-visible,
+.si18n-shortcuts-close:focus-visible,
+.si18n-example-q:focus-visible,
+.si18n-ask-tutor-btn:focus-visible,
+.si18n-chat-quote-dismiss:focus-visible,
+.si18n-dark-toggle-btn:focus-visible {
+  outline: 2px solid var(--si18n-primary);
+  outline-offset: 2px;
 }
 
 /* Floating Action Button */
@@ -181,8 +223,15 @@ body.si18n-lang-ko,
   animation: si18n-fab-pulse 2s ease-in-out 3;
 }
 @keyframes si18n-fab-pulse {
-  0%, 100% { box-shadow: 0 4px 16px rgba(61, 64, 91, 0.35); }
-  50% { box-shadow: 0 4px 24px rgba(61, 64, 91, 0.55), 0 0 0 8px rgba(61, 64, 91, 0.1); }
+  0%,
+  100% {
+    box-shadow: 0 4px 16px rgba(61, 64, 91, 0.35);
+  }
+  50% {
+    box-shadow:
+      0 4px 24px rgba(61, 64, 91, 0.55),
+      0 0 0 8px rgba(61, 64, 91, 0.1);
+  }
 }
 
 /* Chatbot widget — bottom-right popup */
@@ -237,7 +286,6 @@ body.si18n-lang-ko,
   line-height: 44px;
 }
 
-
 .si18n-close {
   background: none;
   border: none;
@@ -245,7 +293,7 @@ body.si18n-lang-ko,
   padding: 0;
   font-size: 18px;
   cursor: pointer;
-  color: rgba(255,255,255,0.8);
+  color: rgba(255, 255, 255, 0.8);
   width: 28px;
   height: 28px;
   display: flex;
@@ -256,7 +304,7 @@ body.si18n-lang-ko,
 }
 
 .si18n-close:hover {
-  background: rgba(255,255,255,0.12);
+  background: rgba(255, 255, 255, 0.12);
   color: white;
 }
 
@@ -365,7 +413,7 @@ body.si18n-lang-ko,
 }
 
 .si18n-chat-bubble code {
-  background: rgba(0,0,0,0.08);
+  background: rgba(0, 0, 0, 0.08);
   padding: 1px 4px;
   border-radius: 3px;
   font-size: 12px !important;
@@ -380,8 +428,13 @@ body.si18n-lang-ko,
 }
 
 @keyframes si18n-blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
 }
 
 .si18n-thinking-dots {
@@ -422,7 +475,9 @@ body.si18n-lang-ko,
   font-size: 12px;
   color: var(--si18n-text);
   cursor: pointer;
-  transition: background 0.2s, border-color 0.2s;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
   line-height: 1.3;
 }
 .si18n-example-q:hover {
@@ -431,12 +486,12 @@ body.si18n-lang-ko,
 }
 html.si18n-dark .si18n-example-q {
   background: #1a1a1a;
-  border-color: rgba(255,255,255,0.1);
-  color: #ccc;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #d0d0d0;
 }
 html.si18n-dark .si18n-example-q:hover {
   background: #252525;
-  border-color: rgba(255,255,255,0.2);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 /* Retry button on error messages */
@@ -477,7 +532,8 @@ html.si18n-dark .si18n-example-q:hover {
 }
 
 .si18n-chat-input:focus {
-  outline: none;
+  outline: 2px solid var(--si18n-primary);
+  outline-offset: -2px;
   border-color: var(--si18n-primary);
 }
 
@@ -494,7 +550,9 @@ html.si18n-dark .si18n-example-q:hover {
   cursor: pointer;
   flex-shrink: 0;
   white-space: nowrap;
-  transition: background 0.2s, transform 0.15s;
+  transition:
+    background 0.2s,
+    transform 0.15s;
 }
 
 .si18n-chat-send-btn:hover {
@@ -526,7 +584,7 @@ html.si18n-dark .si18n-example-q:hover {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: var(--si18n-primary, #E07A5F);
+  background: var(--si18n-primary, #e07a5f);
   animation: si18n-pulse 1.2s ease-in-out infinite;
 }
 
@@ -539,8 +597,16 @@ html.si18n-dark .si18n-example-q:hover {
 }
 
 @keyframes si18n-pulse {
-  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
-  40% { opacity: 1; transform: scale(1.1); }
+  0%,
+  80%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
 }
 
 /* Fade when Gemini updates text */
@@ -549,8 +615,12 @@ html.si18n-dark .si18n-example-q:hover {
 }
 
 @keyframes si18n-fade-in {
-  from { opacity: 0.5; }
-  to { opacity: 1; }
+  from {
+    opacity: 0.5;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* ============================================================
@@ -565,7 +635,7 @@ html.si18n-dark .si18n-example-q:hover {
   background: var(--si18n-surface, #fff);
   border: 1px solid var(--si18n-border, #e7e5e4);
   border-radius: 14px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
   padding: 14px 20px;
   display: flex;
   align-items: center;
@@ -594,7 +664,7 @@ html.si18n-dark .si18n-example-q:hover {
 }
 
 #si18n-welcome-banner .si18n-banner-text strong {
-  color: var(--si18n-primary, #E07A5F);
+  color: var(--si18n-primary, #e07a5f);
 }
 
 #si18n-welcome-banner .si18n-banner-actions {
@@ -614,22 +684,22 @@ html.si18n-dark .si18n-example-q:hover {
 }
 
 #si18n-welcome-banner .si18n-banner-confirm {
-  background: var(--si18n-primary, #E07A5F);
+  background: var(--si18n-primary, #e07a5f);
   color: white;
 }
 
 #si18n-welcome-banner .si18n-banner-confirm:hover {
-  background: var(--si18n-primary-hover, #C96A52);
+  background: var(--si18n-primary-hover, #c96a52);
 }
 
 #si18n-welcome-banner .si18n-banner-change {
   background: transparent;
-  color: var(--si18n-text-secondary, #78716C);
+  color: var(--si18n-text-secondary, #78716c);
   border: 1px solid var(--si18n-border, #e7e5e4);
 }
 
 #si18n-welcome-banner .si18n-banner-change:hover {
-  background: rgba(0,0,0,0.03);
+  background: rgba(0, 0, 0, 0.03);
 }
 
 #si18n-welcome-banner select {
@@ -666,8 +736,9 @@ html.si18n-dark .si18n-example-q:hover {
   cursor: pointer;
   margin: 0 !important;
   padding: 6px 28px 6px 12px !important;
-  outline: none;
-  transition: border-color 0.15s, color 0.15s;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
   width: auto !important;
   max-width: 120px;
   text-overflow: ellipsis;
@@ -684,8 +755,9 @@ html.si18n-dark .si18n-example-q:hover {
   border-color: #a3a3a3 !important;
 }
 #si18n-header-lang-select:focus {
-  outline: none !important;
-  border-color: #a3a3a3 !important;
+  outline: 2px solid var(--si18n-primary) !important;
+  outline-offset: -2px;
+  border-color: var(--si18n-primary) !important;
 }
 
 /* ============================================================
@@ -709,7 +781,7 @@ html.si18n-dark .si18n-example-q:hover {
 
 #si18n-progress-bar .si18n-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--si18n-primary, #E07A5F), #F2CC8F, var(--si18n-primary, #E07A5F));
+  background: linear-gradient(90deg, var(--si18n-primary, #e07a5f), #f2cc8f, var(--si18n-primary, #e07a5f));
   background-size: 200% 100%;
   animation: si18n-progress-sweep 1.5s ease-in-out infinite;
   border-radius: 0 2px 2px 0;
@@ -717,8 +789,12 @@ html.si18n-dark .si18n-example-q:hover {
 }
 
 @keyframes si18n-progress-sweep {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 #si18n-progress-toast {
@@ -729,11 +805,11 @@ html.si18n-dark .si18n-example-q:hover {
   background: var(--si18n-surface, #fff);
   border: 1px solid var(--si18n-border, #e7e5e4);
   border-radius: 10px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   padding: 8px 14px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 12px;
-  color: var(--si18n-text-secondary, #78716C);
+  color: var(--si18n-text-secondary, #78716c);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -752,13 +828,15 @@ html.si18n-dark .si18n-example-q:hover {
   width: 14px;
   height: 14px;
   border: 2px solid var(--si18n-border, #e7e5e4);
-  border-top-color: var(--si18n-primary, #E07A5F);
+  border-top-color: var(--si18n-primary, #e07a5f);
   border-radius: 50%;
   animation: si18n-spin 0.8s linear infinite;
 }
 
 @keyframes si18n-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Scrollbar */
@@ -784,7 +862,7 @@ html.si18n-dark .si18n-example-q:hover {
   align-items: center;
   gap: 5px;
   padding: 5px 10px;
-  background: var(--si18n-primary, #D97757);
+  background: var(--si18n-primary, #d97757);
   color: white;
   border: none;
   border-radius: 16px;
@@ -792,8 +870,10 @@ html.si18n-dark .si18n-example-q:hover {
   font-weight: 600;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  transition: opacity 0.15s, transform 0.15s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition:
+    opacity 0.15s,
+    transform 0.15s;
   opacity: 0;
   transform: translateY(4px);
   pointer-events: none;
@@ -807,7 +887,7 @@ html.si18n-dark .si18n-example-q:hover {
 }
 
 .si18n-ask-tutor-btn:hover {
-  background: var(--si18n-primary-hover, #C96A52);
+  background: var(--si18n-primary-hover, #c96a52);
 }
 
 .si18n-ask-tutor-btn svg {
@@ -817,12 +897,12 @@ html.si18n-dark .si18n-example-q:hover {
 /* Quote block in chat input */
 .si18n-chat-quote {
   background: var(--si18n-bg-secondary, #f5f5f4);
-  border-left: 3px solid var(--si18n-primary, #D97757);
+  border-left: 3px solid var(--si18n-primary, #d97757);
   padding: 6px 10px;
   margin-bottom: 6px;
   border-radius: 0 6px 6px 0;
   font-size: 12px;
-  color: var(--si18n-text-secondary, #78716C);
+  color: var(--si18n-text-secondary, #78716c);
   line-height: 1.4;
   max-height: 60px;
   overflow: hidden;
@@ -835,7 +915,7 @@ html.si18n-dark .si18n-example-q:hover {
   right: 4px;
   background: none;
   border: none;
-  color: var(--si18n-text-secondary, #78716C);
+  color: var(--si18n-text-secondary, #78716c);
   cursor: pointer;
   font-size: 14px;
   padding: 0 4px;
@@ -865,12 +945,14 @@ html.si18n-dark .si18n-example-q:hover {
   justify-content: center;
   flex-shrink: 0;
   border-radius: 6px;
-  transition: opacity 0.15s, background 0.15s;
+  transition:
+    opacity 0.15s,
+    background 0.15s;
 }
 
 .si18n-history-btn:hover {
   opacity: 1;
-  background: rgba(255,255,255,0.12);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .si18n-history-header {
@@ -893,10 +975,12 @@ html.si18n-dark .si18n-example-q:hover {
   width: 28px;
   height: 28px;
   cursor: pointer;
-  color: var(--si18n-text-secondary, #78716C);
+  color: var(--si18n-text-secondary, #78716c);
   flex-shrink: 0;
   border-radius: 6px;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .si18n-history-back svg {
@@ -925,7 +1009,7 @@ html.si18n-dark .si18n-example-q:hover {
   padding: 8px 12px 4px;
   font-size: 11px;
   font-weight: 700;
-  color: var(--si18n-text-secondary, #78716C);
+  color: var(--si18n-text-secondary, #78716c);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -949,7 +1033,7 @@ html.si18n-dark .si18n-example-q:hover {
 
 .si18n-history-item-time {
   font-size: 11px;
-  color: var(--si18n-text-secondary, #78716C);
+  color: var(--si18n-text-secondary, #78716c);
   margin-top: 2px;
 }
 
@@ -958,7 +1042,7 @@ html.si18n-dark .si18n-example-q:hover {
   padding: 24px 12px;
   text-align: center;
   font-size: 13px;
-  color: var(--si18n-text-secondary, #78716C);
+  color: var(--si18n-text-secondary, #78716c);
 }
 
 .si18n-history-detail {
@@ -1028,7 +1112,7 @@ html.si18n-dark .si18n-example-q:hover {
   line-height: 1.5 !important;
 }
 .si18n-history-detail .si18n-chat-bubble code {
-  background: rgba(0,0,0,0.06);
+  background: rgba(0, 0, 0, 0.06);
   padding: 2px 5px;
   border-radius: 4px;
   font-size: 12px !important;
@@ -1066,12 +1150,12 @@ html.si18n-dark .si18n-example-q:hover {
 }
 .si18n-detail-time {
   font-size: 11px;
-  color: var(--si18n-text-secondary, #78716C);
+  color: var(--si18n-text-secondary, #78716c);
 }
 
 /* Detail view: user message label */
 .si18n-history-detail .si18n-chat-user .si18n-chat-bubble {
-  background: var(--si18n-accent, #D97757);
+  background: var(--si18n-accent, #d97757);
   color: white;
   border: none;
   font-weight: 500;
@@ -1084,7 +1168,7 @@ html.si18n-dark .si18n-example-q:hover {
 .si18n-history-detail .si18n-chat-msg::before {
   font-size: 11px;
   font-weight: 600;
-  color: var(--si18n-text-secondary, #78716C);
+  color: var(--si18n-text-secondary, #78716c);
   letter-spacing: 0.3px;
   text-transform: uppercase;
   display: none;
@@ -1113,17 +1197,29 @@ html.si18n-dark .si18n-example-q:hover {
 .si18n-dark-toggle-btn:hover {
   color: #505050;
 }
-html.si18n-dark .si18n-dark-toggle-btn       { color: #9e9e9e; }
-html.si18n-dark .si18n-dark-toggle-btn:hover { color: #dedede; }
+html.si18n-dark .si18n-dark-toggle-btn {
+  color: #b0b0b0;
+}
+html.si18n-dark .si18n-dark-toggle-btn:hover {
+  color: #dedede;
+}
 .si18n-dark-toggle-btn svg {
   width: 16px;
   height: 16px;
 }
 /* Sun shown in light mode, moon in dark */
-.si18n-icon-sun  { display: block; }
-.si18n-icon-moon { display: none; }
-html.si18n-dark .si18n-icon-sun  { display: none; }
-html.si18n-dark .si18n-icon-moon { display: block; }
+.si18n-icon-sun {
+  display: block;
+}
+.si18n-icon-moon {
+  display: none;
+}
+html.si18n-dark .si18n-icon-sun {
+  display: none;
+}
+html.si18n-dark .si18n-icon-moon {
+  display: block;
+}
 
 /* --- Page-level overrides -------------------------------- */
 html.si18n-dark {
@@ -1131,13 +1227,13 @@ html.si18n-dark {
 }
 html.si18n-dark body {
   background: #0e0e0e !important;
-  color: #9e9e9e !important;
+  color: #b0b0b0 !important;
 }
 html.si18n-dark header,
 html.si18n-dark #header,
 html.si18n-dark #header-drop {
   background: #0e0e0e !important;
-  border-bottom-color: rgba(255,255,255,0.06) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.06) !important;
 }
 html.si18n-dark header a,
 html.si18n-dark header .header-link,
@@ -1192,10 +1288,10 @@ html.si18n-dark .clp__meta {
 /* Social share buttons */
 html.si18n-dark .clp__social a,
 html.si18n-dark .social-share-btn,
-html.si18n-dark [class*="share-btn"] {
+html.si18n-dark [class*='share-btn'] {
   background: #1a1a1a !important;
   color: #9e9e9e !important;
-  border-color: rgba(255,255,255,0.1) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 /* Enroll button — invert to light-on-dark */
@@ -1212,28 +1308,33 @@ html.si18n-dark .clp__price {
 }
 
 /* Headings */
-html.si18n-dark h1, html.si18n-dark h2,
-html.si18n-dark h3, html.si18n-dark h4 {
+html.si18n-dark h1,
+html.si18n-dark h2,
+html.si18n-dark h3,
+html.si18n-dark h4 {
   color: #dedede !important;
 }
 
 /* Paragraphs and body text */
-html.si18n-dark p, html.si18n-dark li,
-html.si18n-dark td, html.si18n-dark th,
-html.si18n-dark span, html.si18n-dark label {
-  color: #9e9e9e !important;
+html.si18n-dark p,
+html.si18n-dark li,
+html.si18n-dark td,
+html.si18n-dark th,
+html.si18n-dark span,
+html.si18n-dark label {
+  color: #b0b0b0 !important;
 }
 
 /* Links — Docs style: muted, underlined, not bright blue */
 html.si18n-dark a {
   color: #b0b0b0 !important;
   text-decoration: underline !important;
-  text-decoration-color: rgba(255,255,255,0.2) !important;
+  text-decoration-color: rgba(255, 255, 255, 0.2) !important;
   text-underline-offset: 2px !important;
 }
 html.si18n-dark a:hover {
   color: #dedede !important;
-  text-decoration-color: rgba(255,255,255,0.4) !important;
+  text-decoration-color: rgba(255, 255, 255, 0.4) !important;
 }
 /* Header + nav links — no underline */
 html.si18n-dark header a,
@@ -1255,18 +1356,24 @@ html.si18n-dark a.coursebox-container {
 html.si18n-dark .card,
 html.si18n-dark .course-card,
 html.si18n-dark .course-tile,
-html.si18n-dark [class*="tile"],
+html.si18n-dark [class*='tile'],
 html.si18n-dark .series-card,
 html.si18n-dark .coursebox-container,
 html.si18n-dark .course-listing .coursebox-container {
   background: #161616 !important;
-  border-color: rgba(255,255,255,0.06) !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.04) !important;
-  transition: background 0.15s, box-shadow 0.15s !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.04) !important;
+  transition:
+    background 0.15s,
+    box-shadow 0.15s !important;
 }
 html.si18n-dark .coursebox-container:hover {
   background: #1c1c1c !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06) !important;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.06) !important;
 }
 
 /* Coursebox inner elements */
@@ -1305,7 +1412,7 @@ html.si18n-dark .catalog-sidebar,
 html.si18n-dark .catalog-filter,
 html.si18n-dark .search-wrapper {
   background: #141414 !important;
-  border-color: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 html.si18n-dark .tile-counter-container {
   background: #1a1a1a !important;
@@ -1332,11 +1439,11 @@ html.si18n-dark .coursebox-image img {
   opacity: 1;
   border-radius: 6px;
   filter: brightness(1.8);
-  background: rgba(255,255,255,0.06);
+  background: rgba(255, 255, 255, 0.06);
   padding: 4px;
 }
 html.si18n-dark .coursebox-image {
-  background: rgba(255,255,255,0.04);
+  background: rgba(255, 255, 255, 0.04);
   border-radius: 8px;
 }
 
@@ -1357,16 +1464,16 @@ html.si18n-dark .curriculum-section {
 /* Tables */
 html.si18n-dark table {
   background: #141414 !important;
-  border-color: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 html.si18n-dark tr {
   background: #141414 !important;
-  border-color: rgba(255,255,255,0.06) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
 }
 html.si18n-dark td,
 html.si18n-dark th {
   background: #141414 !important;
-  border-color: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 html.si18n-dark thead,
 html.si18n-dark thead th {
@@ -1375,7 +1482,7 @@ html.si18n-dark thead th {
 
 /* Code blocks */
 html.si18n-dark code {
-  background: rgba(255,255,255,0.05) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
   color: #fde047 !important;
 }
 html.si18n-dark pre {
@@ -1385,16 +1492,18 @@ html.si18n-dark pre {
 /* Buttons */
 html.si18n-dark .btn-primary,
 html.si18n-dark .enroll-button,
-html.si18n-dark [class*="enroll"] {
+html.si18n-dark [class*='enroll'] {
   background: #dedede !important;
   color: #0e0e0e !important;
 }
 
 /* Form inputs */
-html.si18n-dark input, html.si18n-dark textarea, html.si18n-dark select {
+html.si18n-dark input,
+html.si18n-dark textarea,
+html.si18n-dark select {
   background: #1a1a1a !important;
   color: #dedede !important;
-  border-color: rgba(255,255,255,0.1) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 /* Breadcrumbs */
@@ -1418,13 +1527,13 @@ html.si18n-dark .sidebar-toc,
 html.si18n-dark .course-outline,
 html.si18n-dark .lesson-sidebar {
   background: #141414 !important;
-  border-color: rgba(255,255,255,0.06) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
 }
 
 /* Misc borders and dividers */
 html.si18n-dark hr,
 html.si18n-dark .divider {
-  border-color: rgba(255,255,255,0.06) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
 }
 
 /* Status badges */
@@ -1432,7 +1541,7 @@ html.si18n-dark .badge,
 html.si18n-dark .tag {
   background: #1a1a1a !important;
   color: #9e9e9e !important;
-  border-color: rgba(255,255,255,0.1) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 /* Images — slightly dim to reduce glare, except logos */
@@ -1443,25 +1552,25 @@ html.si18n-dark img:not(.header-center-img) {
 /* --- Progress toast & spinner in dark mode --- */
 html.si18n-dark #si18n-progress-toast {
   background: #1a1a1a !important;
-  border-color: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
   color: #9e9e9e !important;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.4) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
 }
 html.si18n-dark #si18n-progress-toast .si18n-progress-spinner {
-  border-color: rgba(255,255,255,0.1) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
   border-top-color: var(--si18n-primary) !important;
 }
 
 /* --- SkillBridge Tutor sidebar in dark mode --- */
 html.si18n-dark .skillbridge-sidebar {
   background: #141414 !important;
-  border-color: rgba(255,255,255,0.08) !important;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.5) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5) !important;
   color: #9e9e9e !important;
 }
 html.si18n-dark .si18n-header {
   background: #1a1a1a !important;
-  border-bottom-color: rgba(255,255,255,0.06) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.06) !important;
 }
 /* Chat panel bg */
 html.si18n-dark .si18n-panel-chat {
@@ -1470,7 +1579,7 @@ html.si18n-dark .si18n-panel-chat {
 /* Chat bubbles */
 html.si18n-dark .si18n-chat-bubble {
   background: #1e1e1e !important;
-  border-color: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
   color: #dedede !important;
 }
 html.si18n-dark .si18n-chat-user .si18n-chat-bubble {
@@ -1479,7 +1588,7 @@ html.si18n-dark .si18n-chat-user .si18n-chat-bubble {
   color: #dedede !important;
 }
 html.si18n-dark .si18n-chat-bubble code {
-  background: rgba(255,255,255,0.08) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
   color: #fde047 !important;
 }
 /* Chat messages area */
@@ -1490,23 +1599,25 @@ html.si18n-dark .si18n-chat-messages {
 html.si18n-dark .si18n-chat-input {
   background: #1a1a1a !important;
   color: #dedede !important;
-  border-color: rgba(255,255,255,0.1) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
 }
 html.si18n-dark .si18n-chat-input:focus {
+  outline: 2px solid var(--si18n-primary) !important;
+  outline-offset: -2px;
   border-color: var(--si18n-primary) !important;
 }
 html.si18n-dark .si18n-chat-input-wrap {
-  border-top-color: rgba(255,255,255,0.06) !important;
+  border-top-color: rgba(255, 255, 255, 0.06) !important;
 }
 /* Chat quote block */
 html.si18n-dark .si18n-chat-quote {
   background: #1a1a1a !important;
-  border-color: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
   color: #9e9e9e !important;
 }
 /* Send button — keep primary color but slightly muted */
 html.si18n-dark .si18n-chat-send-btn {
-  background: #D97757 !important;
+  background: #d97757 !important;
   color: #fff !important;
 }
 /* Thinking dots in dark */
@@ -1519,12 +1630,12 @@ html.si18n-dark .si18n-chat-avatar {
   color: #9e9e9e !important;
 }
 html.si18n-dark .si18n-chat-user .si18n-chat-avatar {
-  background: #D97757 !important;
+  background: #d97757 !important;
   color: white !important;
 }
 html.si18n-dark .si18n-history-item {
   background: #1a1a1a !important;
-  border-color: rgba(255,255,255,0.06) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
 }
 html.si18n-dark .si18n-history-item:hover {
   background: #222 !important;
@@ -1540,7 +1651,7 @@ html.si18n-dark .si18n-history-loading {
   color: #999 !important;
 }
 html.si18n-dark .si18n-history-detail-meta {
-  border-color: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 html.si18n-dark .si18n-detail-lesson {
   color: #dedede !important;
@@ -1550,18 +1661,18 @@ html.si18n-dark .si18n-detail-time {
 }
 html.si18n-dark .si18n-history-detail .si18n-chat-bot .si18n-chat-bubble {
   background: #1a1a1a !important;
-  border-color: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
   color: #dedede !important;
 }
 html.si18n-dark .si18n-history-detail .si18n-chat-bubble code {
-  background: rgba(255,255,255,0.08) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
   color: #e0e0e0 !important;
 }
 /* Floating button in dark mode */
 html.si18n-dark #skillbridge-fab {
   background: #1a1a1a !important;
-  border-color: rgba(255,255,255,0.1) !important;
-  color: #9e9e9e !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #b0b0b0 !important;
 }
 html.si18n-dark #skillbridge-fab:hover {
   background: #252525 !important;
@@ -1613,14 +1724,14 @@ html.si18n-dark .section-container p.title.focus-link-v2,
 html.si18n-dark .tabs-wrapper-v2 p.title.focus-link-v2 {
   background: #0e0e0e !important;
   color: #dedede !important;
-  border-bottom-color: rgba(255,255,255,0.1) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.1) !important;
 }
 html.si18n-dark .focus-links,
 html.si18n-dark .focus-links-v2,
 html.si18n-dark .tab-links,
 html.si18n-dark .nav-tabs {
   background: #0e0e0e !important;
-  border-color: rgba(255,255,255,0.06) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
 }
 html.si18n-dark .focus-link-v2,
 html.si18n-dark .focus-link-v2 a,
@@ -1644,21 +1755,21 @@ html.si18n-dark .lesson-section,
 html.si18n-dark .lesson-section.expand {
   background: transparent !important;
   color: #dedede !important;
-  border-color: rgba(255,255,255,0.06) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
 }
 html.si18n-dark .lesson-section .fa-caret-down,
 html.si18n-dark .lesson-section .fa-caret-right {
   color: #999 !important;
 }
 html.si18n-dark .lesson-section .fa-check {
-  color: #81B29A !important;
+  color: #81b29a !important;
 }
 
 /* Lesson rows — individual lesson links */
 html.si18n-dark .lesson-modular,
 html.si18n-dark a.lesson-modular {
   background: transparent !important;
-  border-color: rgba(255,255,255,0.04) !important;
+  border-color: rgba(255, 255, 255, 0.04) !important;
 }
 html.si18n-dark .lesson-modular:hover,
 html.si18n-dark a.lesson-modular:hover {
@@ -1666,7 +1777,7 @@ html.si18n-dark a.lesson-modular:hover {
 }
 html.si18n-dark .lesson-row {
   background: transparent !important;
-  border-color: rgba(255,255,255,0.06) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
 }
 html.si18n-dark .lesson-row:hover {
   background: #1c1c1c !important;
@@ -1686,14 +1797,14 @@ html.si18n-dark .sj-course-time {
 /* Lesson completion checkmarks */
 html.si18n-dark .lesson-modular .fa-check-circle,
 html.si18n-dark .lesson-complete .fa-check-circle {
-  color: #81B29A !important;
+  color: #81b29a !important;
 }
 html.si18n-dark .lesson-modular .fa-circle-o,
 html.si18n-dark .lesson-modular .fa-circle {
   color: #444 !important;
 }
 html.si18n-dark .lesson-modular .bullet {
-  color: #81B29A !important;
+  color: #81b29a !important;
 }
 
 /* Type icons (video, text, quiz icons) */
@@ -1707,7 +1818,7 @@ html.si18n-dark .section-header,
 html.si18n-dark .clp__section-header {
   background: #1a1a1a !important;
   color: #dedede !important;
-  border-color: rgba(255,255,255,0.06) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
 }
 
 /* Progress bars — Skilljar specific classes */
@@ -1715,11 +1826,11 @@ html.si18n-dark .progress-bar.button-border-color,
 html.si18n-dark .cp-summary-wrapper .progress-bar.button-border-color,
 html.si18n-dark div.progress-bar.button-border-color {
   background: #2a2a2a !important;
-  border-color: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 html.si18n-dark .progress-bar-inner.button-background,
 html.si18n-dark .progress-bar-inner {
-  background: #D97757 !important;
+  background: #d97757 !important;
 }
 html.si18n-dark .progress,
 html.si18n-dark .progress-bar-container {
@@ -1734,9 +1845,9 @@ html.si18n-dark .cp-lessons {
 /* Completion status icons / checkmarks */
 html.si18n-dark .lesson-status,
 html.si18n-dark .lesson-complete,
-html.si18n-dark [class*="status-icon"],
+html.si18n-dark [class*='status-icon'],
 html.si18n-dark .check-circle {
-  color: #81B29A !important;
+  color: #81b29a !important;
 }
 
 /* Resume / Start button on enrolled course */
@@ -1744,23 +1855,23 @@ html.si18n-dark .resume-button,
 html.si18n-dark a.resume-button,
 html.si18n-dark .resume-btn,
 html.si18n-dark .start-btn,
-html.si18n-dark [class*="continue-btn"],
+html.si18n-dark [class*='continue-btn'],
 html.si18n-dark .btn-primary {
   background: #dedede !important;
   color: #0e0e0e !important;
 }
 /* Bookmark icon button */
 html.si18n-dark .bookmark-button,
-html.si18n-dark [class*="bookmark"] {
+html.si18n-dark [class*='bookmark'] {
   background: transparent !important;
-  border-color: rgba(255,255,255,0.15) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
   color: #9e9e9e !important;
 }
 
 /* Alert box (error messages etc.) */
 html.si18n-dark .alert-box {
   background: #1a1a1a !important;
-  border-color: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
   color: #9e9e9e !important;
 }
 
@@ -1779,7 +1890,7 @@ html.si18n-dark .course-detail-sidebar,
 html.si18n-dark .detail-sidebar,
 html.si18n-dark .details-pane {
   background: #141414 !important;
-  border-color: rgba(255,255,255,0.06) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
 }
 html.si18n-dark .details-pane-description {
   color: #9e9e9e !important;
@@ -1790,7 +1901,7 @@ html.si18n-dark .left-nav,
 html.si18n-dark .left-nav-container,
 html.si18n-dark .lesson-nav {
   background: #141414 !important;
-  border-color: rgba(255,255,255,0.06) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
 }
 html.si18n-dark .left-nav a,
 html.si18n-dark .left-nav-item,
@@ -1813,7 +1924,7 @@ html.si18n-dark .left-nav-item.active {
 html.si18n-dark #lp-left-nav,
 html.si18n-dark .lp-left-nav {
   background: #141414 !important;
-  border-color: rgba(255,255,255,0.06) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
 }
 html.si18n-dark #lp-left-nav a,
 html.si18n-dark .lp-left-nav a {
@@ -1841,7 +1952,7 @@ html.si18n-dark #lp-content {
   background: #0e0e0e !important;
 }
 html.si18n-dark #lpLeftNavBackground {
-  background: rgba(0,0,0,0.6) !important;
+  background: rgba(0, 0, 0, 0.6) !important;
 }
 html.si18n-dark .lesson-top,
 html.si18n-dark .lesson-wrapper,
@@ -1868,12 +1979,12 @@ html.si18n-dark #lesson-main blockquote {
   color: #dedede !important;
 }
 html.si18n-dark #lesson-main a {
-  color: #D97757 !important;
+  color: #d97757 !important;
 }
 /* Lesson page bottom nav (Previous / Next) */
 html.si18n-dark #lp-footer {
   background: #0a0a0a !important;
-  border-top-color: rgba(255,255,255,0.06) !important;
+  border-top-color: rgba(255, 255, 255, 0.06) !important;
 }
 html.si18n-dark .next-lesson-button,
 html.si18n-dark .prev-lesson-button {
@@ -1883,7 +1994,7 @@ html.si18n-dark .next-lesson-link,
 html.si18n-dark .prev-lesson-link {
   background: #1a1a1a !important;
   color: #dedede !important;
-  border-color: rgba(255,255,255,0.1) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 /* Footer container in course pages */
@@ -1896,17 +2007,17 @@ html.si18n-dark .u-container-full {
 html.si18n-dark .sj-grey-bg-v2,
 html.si18n-dark .row.sj-grey-bg-v2 {
   background: #161616 !important;
-  border-color: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 html.si18n-dark .input-wrapper {
   background: #1a1a1a !important;
-  border-color: rgba(255,255,255,0.1) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
 }
 html.si18n-dark .input-wrapper input,
 html.si18n-dark .input-wrapper select {
   background: #1a1a1a !important;
   color: #dedede !important;
-  border-color: rgba(255,255,255,0.1) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
 }
 html.si18n-dark .input-wrapper label,
 html.si18n-dark .sj-form label {
@@ -1916,24 +2027,24 @@ html.si18n-dark .sj-form label {
 html.si18n-dark #profile-course-table,
 html.si18n-dark .sj-table-v2 {
   background: #141414 !important;
-  border-color: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 html.si18n-dark .sj-table-v2 th,
 html.si18n-dark #profile-course-table th {
   background: #1a1a1a !important;
   color: #9e9e9e !important;
-  border-color: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 html.si18n-dark .sj-table-v2 td,
 html.si18n-dark #profile-course-table td {
   background: #141414 !important;
   color: #9e9e9e !important;
-  border-color: rgba(255,255,255,0.06) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
 }
 html.si18n-dark .sj-table-v2 tr,
 html.si18n-dark #profile-course-table tr {
   background: #141414 !important;
-  border-color: rgba(255,255,255,0.06) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
 }
 html.si18n-dark .profile-avatar,
 html.si18n-dark .avatar-wrapper {
@@ -1949,22 +2060,22 @@ html.si18n-dark .accounts-profile h2 {
 /* --- Generic catch-all for remaining white containers --- */
 html.si18n-dark .container,
 html.si18n-dark .wrapper,
-html.si18n-dark [class*="panel"],
+html.si18n-dark [class*='panel'],
 html.si18n-dark .modal-content,
 html.si18n-dark .dropdown-menu {
   background: #141414 !important;
-  border-color: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
   color: #9e9e9e !important;
 }
 html.si18n-dark .modal-header,
 html.si18n-dark .modal-footer {
-  border-color: rgba(255,255,255,0.06) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
 }
 
 /* Welcome banner in dark */
 html.si18n-dark #si18n-welcome-banner {
   background: #1a1a1a !important;
-  border-color: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
   color: #dedede !important;
 }
 html.si18n-dark #si18n-welcome-banner p {
@@ -1973,9 +2084,9 @@ html.si18n-dark #si18n-welcome-banner p {
 
 /* --- Ask Tutor floating button in dark --- */
 html.si18n-dark .si18n-ask-tutor-btn {
-  background: #D97757 !important;
+  background: #d97757 !important;
   color: #fff !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.4) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
 }
 
 /* ============================================================
@@ -2115,13 +2226,13 @@ html.si18n-dark .si18n-shortcut-key {
   left: 0;
   right: 0;
   z-index: 10001;
-  background: #FFF3CD;
+  background: #fff3cd;
   color: #856404;
   text-align: center;
   padding: 8px 16px;
   font-size: 13px;
   font-weight: 500;
-  border-bottom: 1px solid #FFEEBA;
+  border-bottom: 1px solid #ffeeba;
   transform: translateY(-100%);
   transition: transform 0.3s ease;
 }
@@ -2131,19 +2242,446 @@ html.si18n-dark .si18n-shortcut-key {
 }
 
 html.si18n-dark .si18n-exam-banner {
-  background: #3D3200;
-  color: #FFD54F;
-  border-bottom-color: #5C4B00;
+  background: #3d3200;
+  color: #ffd54f;
+  border-bottom-color: #5c4b00;
 }
 
 .si18n-exam-warning {
-  border-left: 3px solid #FFC107 !important;
+  border-left: 3px solid #ffc107 !important;
   background: rgba(255, 193, 7, 0.08) !important;
+}
+
+/* ============================================================
+   FLASHCARD MODE
+   ============================================================ */
+
+.si18n-flashcard-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 12px;
+  gap: 14px;
+  height: calc(100% - 44px);
+  overflow-y: auto;
+}
+
+.si18n-flashcard-card {
+  perspective: 800px;
+  width: 100%;
+  min-height: 180px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.si18n-flashcard-inner {
+  position: relative;
+  width: 100%;
+  min-height: 180px;
+  transition: transform 0.5s ease;
+  transform-style: preserve-3d;
+}
+
+.si18n-card-flipped .si18n-flashcard-inner {
+  transform: rotateY(180deg);
+}
+
+.si18n-flashcard-front,
+.si18n-flashcard-back {
+  position: absolute;
+  width: 100%;
+  min-height: 180px;
+  backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  text-align: center;
+  border-radius: 12px;
+  border: 1px solid var(--si18n-border, #e7e5e4);
+  background: var(--si18n-surface, #fafaf9);
+  font-size: 15px;
+  line-height: 1.5;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.si18n-flashcard-front {
+  color: var(--si18n-text, #1c1917);
+  font-weight: 500;
+}
+
+.si18n-flashcard-back {
+  transform: rotateY(180deg);
+  color: var(--si18n-accent, #e07a5f);
+  font-weight: 600;
+}
+
+.si18n-flashcard-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.si18n-fc-btn {
+  padding: 6px 16px;
+  border: 1px solid var(--si18n-border, #e7e5e4);
+  border-radius: 8px;
+  background: var(--si18n-surface, #fafaf9);
+  color: var(--si18n-text, #1c1917);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.si18n-fc-btn:hover:not(:disabled) {
+  background: var(--si18n-border, #e7e5e4);
+}
+
+.si18n-fc-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.si18n-flashcard-progress {
+  font-size: 12px;
+  color: var(--si18n-text-secondary, #78716c);
+  min-width: 60px;
+  text-align: center;
+}
+
+.si18n-fc-box-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.si18n-fc-box-btn {
+  width: 40px;
+  height: 40px;
+  border: 2px solid;
+  border-radius: 50%;
+  background: transparent;
+  font-size: 18px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.si18n-fc-box-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.si18n-fc-box-label {
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 70px;
+  text-align: center;
+}
+
+.si18n-fc-new {
+  color: #e07a5f;
+  border-color: #e07a5f;
+}
+.si18n-fc-learning {
+  color: #f2cc8f;
+  border-color: #f2cc8f;
+}
+.si18n-fc-done {
+  color: #81b29a;
+  border-color: #81b29a;
+}
+
+.si18n-fc-stats {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  font-size: 11px;
+  width: 100%;
+  padding-top: 4px;
+}
+
+/* Dark mode flashcards */
+html.si18n-dark .si18n-flashcard-front {
+  background: #2a2a2a !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #e5e5e5 !important;
+}
+
+html.si18n-dark .si18n-flashcard-back {
+  background: #2a2a2a !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+html.si18n-dark .si18n-fc-btn {
+  background: #333 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #ccc !important;
+}
+
+/* ============================================================
+   RTL SUPPORT (Arabic, Hebrew)
+   Sets direction on body and mirrors all SkillBridge UI
+   components so the layout is natural for RTL readers.
+   Uses :is() for brevity (Chrome 88+, well within our target).
+   ============================================================ */
+
+/* Page-level direction */
+body:is(.si18n-lang-ar, .si18n-lang-he) {
+  direction: rtl;
+  text-align: right;
+}
+
+/* Chatbot widget — anchored bottom-left instead of bottom-right */
+body:is(.si18n-lang-ar, .si18n-lang-he) .skillbridge-sidebar {
+  right: auto;
+  left: 24px;
+}
+
+/* FAB button — bottom-left */
+body:is(.si18n-lang-ar, .si18n-lang-he) #skillbridge-fab {
+  right: auto;
+  left: 24px;
+}
+
+/* Header — keep flex layout but switch direction */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-header {
+  direction: rtl;
+}
+
+/* Close button — push to left end (start edge in RTL) */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-close {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+/* Chat input area */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-chat-input-wrap {
+  direction: rtl;
+}
+
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-chat-input {
+  text-align: right;
+}
+
+/* Chat bubble lists (ul/ol) — swap padding side */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-chat-bubble ul,
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-chat-bubble ol {
+  padding-left: 0 !important;
+  padding-right: 18px !important;
+}
+
+/* History detail view lists */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-history-detail .si18n-chat-bubble ul,
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-history-detail .si18n-chat-bubble ol {
+  padding-left: 0 !important;
+  padding-right: 18px !important;
+}
+
+/* User message row — already uses flex row-reverse; keep it natural */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-chat-user {
+  flex-direction: row-reverse;
+}
+
+/* Chat quote block — flip border side */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-chat-quote {
+  border-left: none;
+  border-right: 3px solid var(--si18n-primary, #d97757);
+  border-radius: 6px 0 0 6px;
+}
+
+/* Quote dismiss — flip to left */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-chat-quote-dismiss {
+  right: auto;
+  left: 4px;
+}
+
+/* Retry button — flip margin */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-retry-btn {
+  margin-left: 0;
+  margin-right: 8px;
+}
+
+/* Verify spinner — flip margin */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-verify-spinner {
+  margin-left: 0;
+  margin-right: 6px;
+}
+
+/* Progress toast — anchor left instead of right */
+body:is(.si18n-lang-ar, .si18n-lang-he) #si18n-progress-toast {
+  right: auto;
+  left: 16px;
+  direction: rtl;
+}
+
+/* Progress bar fill — grow from right */
+body:is(.si18n-lang-ar, .si18n-lang-he) #si18n-progress-bar .si18n-progress-fill {
+  float: right;
+  border-radius: 2px 0 0 2px;
+}
+
+/* Exam mode banner */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-exam-banner {
+  direction: rtl;
+  text-align: right;
+}
+
+/* Exam warning — flip border */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-exam-warning {
+  border-left: none !important;
+  border-right: 3px solid #ffc107 !important;
+}
+
+/* History panel items */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-history-item {
+  text-align: right;
+}
+
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-history-header {
+  direction: rtl;
+}
+
+/* History back arrow — visually flip */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-history-back svg {
+  transform: scaleX(-1);
+}
+
+/* Ask tutor floating button */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-ask-tutor-btn {
+  direction: rtl;
+}
+
+/* Welcome banner */
+body:is(.si18n-lang-ar, .si18n-lang-he) #si18n-welcome-banner {
+  direction: rtl;
+  text-align: right;
+}
+
+/* Welcome banner inline lang selector — flip margin */
+body:is(.si18n-lang-ar, .si18n-lang-he) #si18n-welcome-banner select.si18n-banner-lang-inline {
+  margin-left: 0;
+  margin-right: 8px;
+}
+
+/* Header language selector — flip padding and chevron */
+body:is(.si18n-lang-ar, .si18n-lang-he) #si18n-header-lang {
+  padding-right: 0;
+  padding-left: 16px;
+}
+
+body:is(.si18n-lang-ar, .si18n-lang-he) #si18n-header-lang-select {
+  padding: 6px 12px 6px 28px !important;
+  background-position: left 10px center !important;
+}
+
+/* Keyboard shortcuts overlay */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-shortcuts-panel {
+  direction: rtl;
+  text-align: right;
+}
+
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-shortcut-row {
+  direction: rtl;
+}
+
+/* Flashcard controls */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-flashcard-nav {
+  direction: rtl;
+}
+
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-fc-stats {
+  direction: rtl;
+}
+
+/* Example question chips */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-example-questions {
+  direction: rtl;
+}
+
+/* Dark-mode toggle — flip margin */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-dark-toggle-btn {
+  margin: 0 0 0 6px;
+}
+
+/* --- RTL overrides for mobile breakpoints --- */
+
+@media (max-width: 768px) {
+  body:is(.si18n-lang-ar, .si18n-lang-he) .skillbridge-sidebar {
+    /* Full-width bottom sheet — same for LTR and RTL */
+    left: 0;
+    right: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  body:is(.si18n-lang-ar, .si18n-lang-he) .skillbridge-sidebar {
+    left: 0;
+    right: 0;
+  }
+  body:is(.si18n-lang-ar, .si18n-lang-he) #skillbridge-fab {
+    left: 16px;
+    right: auto;
+  }
+}
+
+/* ============================================================
+   REDUCED MOTION — respect user preference
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  #skillbridge-fab,
+  .skillbridge-sidebar,
+  .skillbridge-sidebar.open,
+  #si18n-welcome-banner,
+  #si18n-progress-toast,
+  .si18n-ask-tutor-btn,
+  .si18n-exam-banner,
+  #si18n-shortcuts-overlay,
+  .si18n-shortcuts-panel,
+  .si18n-verifying,
+  .si18n-text-updated {
+    transition-duration: 0.01ms !important;
+  }
+
+  #skillbridge-fab.si18n-fab-pulse,
+  .si18n-streaming-cursor::after,
+  .si18n-thinking-dots .si18n-dot,
+  .si18n-verify-spinner .si18n-dot,
+  #si18n-progress-bar .si18n-progress-fill,
+  #si18n-progress-toast .si18n-progress-spinner {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
 
 /* ============================================================
    MOBILE / RESPONSIVE
    ============================================================ */
+
+@media (max-width: 1024px) {
+  .skillbridge-sidebar {
+    width: 340px;
+    height: 520px;
+  }
+}
+
+@media (max-width: 768px) {
+  .skillbridge-sidebar {
+    bottom: 0;
+    right: 0;
+    left: 0;
+    width: 100%;
+    height: 65vh;
+    max-height: 65vh;
+    border-radius: 16px 16px 0 0;
+  }
+  .skillbridge-sidebar.open {
+    transform: translateY(0);
+  }
+}
 
 @media (max-width: 600px) {
   .skillbridge-sidebar {
@@ -2170,4 +2708,27 @@ html.si18n-dark .si18n-exam-banner {
     width: calc(100vw - 32px) !important;
     max-width: none !important;
   }
+}
+
+/* ============================================================
+   Offline Banner
+   ============================================================ */
+
+.si18n-offline-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10001;
+  padding: 8px 16px;
+  background: #f59e0b;
+  color: #1a1a1a;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  transform: translateY(-100%);
+  transition: transform 0.3s ease;
+}
+.si18n-offline-banner.visible {
+  transform: translateY(0);
 }

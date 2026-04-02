@@ -13,19 +13,27 @@
 
 class SkilljarTranslator {
   constructor() {
-    this.staticDict = {};       // Merged flat dictionary from JSON
-    this.isReady = false;       // Bridge ready (for Gemini + AI Tutor)
+    /** @type {Record<string, string>} Merged flat dictionary from JSON */
+    this.staticDict = {};
+    /** @type {boolean} True once the page bridge is ready (Gemini + AI Tutor) */
+    this.isReady = false;
+    /** @type {Map<string, function>} Pending request callbacks keyed by ID */
     this.pendingCallbacks = new Map();
-    this._db = null;            // IndexedDB for verified translation cache
-    this._verifyQueue = [];     // Queue of texts awaiting Gemini verification
-    this._isVerifying = false;
-    this._onUpdateCallbacks = []; // Callbacks when Gemini improves a translation
-    // Premium languages have static dictionaries; others use Google Translate only
-    // Use shared constants from constants.js
+    /** @type {IDBDatabase|null} IndexedDB handle for verified translation cache */
+    this._db = null;
+    /** @type {Array<{original: string, googleTranslation: string, targetLang: string}>} */
+    this._verifyQueue = [];
+    /** @type {Promise|null} Lock for verify queue processing */
+    this._verifyLock = null;
+    /** @type {Array<function>} Callbacks when Gemini improves a translation */
+    this._onUpdateCallbacks = [];
+    /** @type {string[]} ISO codes with static dictionaries */
     this.premiumLanguages = PREMIUM_LANGUAGE_CODES;
+    /** @type {Record<string, string>} ISO code to language name */
     this.supportedLanguages = SUPPORTED_LANGUAGE_MAP;
   }
 
+  /** @returns {Promise<boolean>} true if initialization succeeded */
   async initialize() {
     try {
       await this._openDB();
@@ -50,18 +58,23 @@ class SkilljarTranslator {
       const store = tx.objectStore('translations');
       const req = store.openCursor();
       const now = Date.now();
-      req.onsuccess = (e) => {
-        const cursor = e.target.result;
-        if (!cursor) return;
-        const entry = cursor.value;
-        if (entry.timestamp && now - entry.timestamp > SKILLBRIDGE_THRESHOLDS.CACHE_TTL_MS) {
-          cursor.delete();
-        }
-        cursor.continue();
-      };
-      req.onerror = () => {
-        console.warn('[SkillBridge] Cache cleanup cursor failed');
-      };
+
+      return new Promise((resolve, reject) => {
+        req.onsuccess = (e) => {
+          const cursor = e.target.result;
+          if (!cursor) return;
+          const entry = cursor.value;
+          if (entry.timestamp && now - entry.timestamp > SKILLBRIDGE_THRESHOLDS.CACHE_TTL_MS) {
+            cursor.delete();
+          }
+          cursor.continue();
+        };
+        req.onerror = () => {
+          console.warn('[SkillBridge] Cache cleanup cursor failed');
+        };
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
     } catch (err) {
       console.warn('[SkillBridge] Cache cleanup failed:', err);
     }
@@ -69,7 +82,7 @@ class SkilljarTranslator {
 
   /**
    * Register a callback for when Gemini finishes verifying a translation.
-   * Callback receives (originalText, finalTranslation, targetLang, wasImproved).
+   * @param {(originalText: string, finalTranslation: string, targetLang: string, wasImproved: boolean) => void} callback
    */
   onTranslationUpdate(callback) {
     this._onUpdateCallbacks.push(callback);
@@ -79,6 +92,9 @@ class SkilljarTranslator {
 
   /**
    * Load static translation JSON for a given language.
+   * Populates {@link staticDict} and internal protected-terms map.
+   * @param {string} lang — ISO 639-1 language code (e.g. 'ko', 'ja')
+   * @returns {Promise<void>}
    */
   async loadStaticTranslations(lang) {
     try {
@@ -136,6 +152,7 @@ class SkilljarTranslator {
     return this._protectedTerms || {};
   }
 
+  /** @param {string} text @returns {string|null} */
   staticLookup(text) {
     if (!text) return null;
     const trimmed = text.trim();
@@ -185,6 +202,9 @@ class SkilljarTranslator {
 
   /**
    * Look up a cached Gemini-verified translation.
+   * @param {string} text — original English text
+   * @param {string} targetLang — ISO 639-1
+   * @returns {Promise<string|null>}
    */
   async cachedLookup(text, targetLang) {
     if (!this._db) return null;
@@ -196,14 +216,20 @@ class SkilljarTranslator {
         const req = store.get(id);
         req.onsuccess = () => {
           const entry = req.result;
-          if (!entry?.translation) { resolve(null); return; }
+          if (!entry?.translation) {
+            resolve(null);
+            return;
+          }
           // TTL — delete stale cache entries from IndexedDB
           if (entry.timestamp && Date.now() - entry.timestamp > SKILLBRIDGE_THRESHOLDS.CACHE_TTL_MS) {
             try {
               const delTx = this._db.transaction('translations', 'readwrite');
               delTx.objectStore('translations').delete(id);
-            } catch (_) { /* best-effort cleanup */ }
-            resolve(null); return;
+            } catch (_) {
+              /* best-effort cleanup */
+            }
+            resolve(null);
+            return;
           }
           resolve(entry.translation);
         };
@@ -240,7 +266,9 @@ class SkilljarTranslator {
 
   /**
    * Fast Google Translate via background service worker.
-   * Returns translated text or null on failure.
+   * @param {string} text — English source text
+   * @param {string} targetLang — ISO 639-1
+   * @returns {Promise<string|null>} translated text, or null on failure
    */
   async googleTranslate(text, targetLang) {
     try {
@@ -262,12 +290,15 @@ class SkilljarTranslator {
 
   /**
    * Batch Google Translate for multiple texts at once.
+   * @param {string[]} texts — English source texts
+   * @param {string} targetLang — ISO 639-1
+   * @returns {Promise<string[]>} translated texts (originals on failure)
    */
   async googleTranslateBatch(texts, targetLang) {
     try {
       const response = await chrome.runtime.sendMessage({
         type: 'GOOGLE_TRANSLATE_BATCH',
-        texts: texts.map(t => t.trim()),
+        texts: texts.map((t) => t.trim()),
         targetLang,
         sourceLang: 'en',
       });
@@ -285,18 +316,11 @@ class SkilljarTranslator {
 
   /**
    * Queue a text for background Gemini verification.
-   * After Google Translate shows the initial result, Gemini checks quality.
-   */
-  /**
-   * Smart Gemini verification — only for content where Google Translate
-   * quality is likely insufficient.
-   *
-   * SKIP: short UI labels, numbers, time strings, simple phrases
-   * VERIFY: long paragraphs, technical content, complex sentences
-   */
-  /**
-   * Returns true if the text was actually queued for verification,
-   * false if it was filtered out (too short, simple, etc.).
+   * Skips short/simple strings where Google Translate is sufficient.
+   * @param {string} originalText — English source
+   * @param {string} googleTranslation — Google Translate output
+   * @param {string} targetLang — ISO 639-1
+   * @returns {boolean} true if queued, false if filtered out
    */
   queueGeminiVerify(originalText, googleTranslation, targetLang) {
     if (!originalText || !googleTranslation) return false;
@@ -310,13 +334,16 @@ class SkilljarTranslator {
     if (alphaRatio < SKILLBRIDGE_THRESHOLDS.GEMINI_ALPHA_RATIO) return false;
 
     // Skip simple patterns: time, dates, labels
-    if (/^\d+[\s-]+\w+$/.test(text)) return false;                    // "6 minutes"
+    if (/^\d+[\s-]+\w+$/.test(text)) return false; // "6 minutes"
     if (/^(estimated|about|approx)/i.test(text) && text.length < 60) return false;
     if (/^(module|lesson|chapter|section|part)\s+\d/i.test(text)) return false;
 
     // Only verify sentences with real prose (has periods, commas, or is long)
-    const hasComplexity = text.includes('.') || text.includes(',') ||
-                          text.includes(':') || text.length > SKILLBRIDGE_THRESHOLDS.MIN_COMPLEX_TEXT;
+    const hasComplexity =
+      text.includes('.') ||
+      text.includes(',') ||
+      text.includes(':') ||
+      text.length > SKILLBRIDGE_THRESHOLDS.MIN_COMPLEX_TEXT;
     if (!hasComplexity) return false;
 
     // Cap queue size to prevent memory growth on large pages
@@ -331,33 +358,32 @@ class SkilljarTranslator {
       targetLang,
     });
 
-    if (!this._isVerifying) {
-      setTimeout(() => this._processVerifyQueue(), SKILLBRIDGE_DELAYS.VERIFY_QUEUE);
+    if (!this._verifyLock) {
+      this._verifyLock = new Promise((resolve) => {
+        setTimeout(() => {
+          this._runVerifyQueue().finally(() => {
+            this._verifyLock = null;
+            resolve();
+          });
+        }, SKILLBRIDGE_DELAYS.VERIFY_QUEUE);
+      });
     }
     return true;
   }
 
-  async _processVerifyQueue() {
-    if (this._isVerifying || this._verifyQueue.length === 0) return;
+  async _runVerifyQueue() {
     if (!this.isReady) {
-      // Retry later when bridge is ready
-      setTimeout(() => this._processVerifyQueue(), SKILLBRIDGE_DELAYS.VERIFY_QUEUE_RETRY);
-      return;
+      await new Promise((r) => setTimeout(r, SKILLBRIDGE_DELAYS.VERIFY_QUEUE_RETRY));
+      if (!this.isReady) return;
     }
 
-    this._isVerifying = true;
-
-    // Process in small batches (3 at a time to avoid overwhelming Gemini)
     while (this._verifyQueue.length > 0) {
       const batch = this._verifyQueue.splice(0, SKILLBRIDGE_THRESHOLDS.GEMINI_BATCH_SIZE);
-      await Promise.all(batch.map(item => this._verifySingle(item)));
-      // Small delay between batches
+      await Promise.all(batch.map((item) => this._verifySingle(item)));
       if (this._verifyQueue.length > 0) {
-        await new Promise(r => setTimeout(r, SKILLBRIDGE_DELAYS.GEMINI_BATCH));
+        await new Promise((r) => setTimeout(r, SKILLBRIDGE_DELAYS.GEMINI_BATCH));
       }
     }
-
-    this._isVerifying = false;
   }
 
   async _verifySingle({ original, googleTranslation, targetLang }) {
@@ -398,7 +424,11 @@ RULES:
 
       // Gemini provided an improved translation
       // Sanity check: result should be similar length (not an explanation)
-      if (trimResult.length > original.length * 5 || trimResult.includes('ORIGINAL') || trimResult.includes('GOOGLE TRANSLATE')) {
+      if (
+        trimResult.length > original.length * 5 ||
+        trimResult.includes('ORIGINAL') ||
+        trimResult.includes('GOOGLE TRANSLATE')
+      ) {
         // Likely returned the prompt format, ignore
         await this._cacheTranslation(original, googleTranslation, targetLang);
         this._notifyUpdate(original, googleTranslation, targetLang, false);
@@ -432,8 +462,10 @@ RULES:
   // ==================== MAIN TRANSLATE API ====================
 
   /**
-   * Translate text. Priority: static dict → cache → Google Translate + Gemini verify.
-   * Returns { text, source } where source is 'static'|'cache'|'google'|'original'.
+   * Translate text. Priority: static dict -> cache -> Google Translate + Gemini verify.
+   * @param {string} text — English source text
+   * @param {string} targetLang — ISO 639-1
+   * @returns {Promise<{text: string, source: 'static'|'cache'|'google'|'original'}>}
    */
   async translate(text, targetLang) {
     if (!text || !text.trim()) return { text, source: 'original' };
@@ -461,7 +493,13 @@ RULES:
   // ==================== AI TUTOR CHAT ====================
 
   /**
-   * Streaming chat — calls onChunk(text) for each token, returns full text.
+   * Streaming AI tutor chat. Calls onChunk for each token, returns full response.
+   * @param {string} userMessage
+   * @param {string} targetLang — ISO 639-1
+   * @param {string} [courseContext=''] — current course/page context
+   * @param {(chunk: string, fullText: string) => void} onChunk — streaming callback
+   * @param {{isExamPage?: boolean}} [opts={}]
+   * @returns {Promise<string>} complete response text
    */
   async chatStream(userMessage, targetLang, courseContext = '', onChunk, opts = {}) {
     try {
@@ -514,22 +552,26 @@ RULES:
 
         window.addEventListener('message', handler);
 
-        window.postMessage({
-          __skillbridge__: true,
-          __nonce__: this._bridgeNonce,
-          type: 'CHAT_REQUEST',
-          id,
-          systemPrompt: prompt,
-          userMessage,
-          model: SKILLBRIDGE_MODELS.CLAUDE,
-          stream: true,
-        }, '*');
+        window.postMessage(
+          {
+            __skillbridge__: true,
+            __nonce__: this._bridgeNonce,
+            type: 'CHAT_REQUEST',
+            id,
+            systemPrompt: prompt,
+            userMessage,
+            model: SKILLBRIDGE_MODELS.CLAUDE,
+            stream: true,
+          },
+          window.location.origin,
+        );
       });
     } catch (err) {
       console.error('[SkillBridge] Chat stream error:', err);
-      return targetLang === 'ko'
-        ? '죄송합니다. 응답을 생성하지 못했습니다. 잠시 후 다시 시도해주세요.'
-        : 'Sorry, I could not generate a response. Please try again.';
+      return (
+        (typeof CHAT_ERROR_LABELS !== 'undefined' && CHAT_ERROR_LABELS[targetLang]) ||
+        'Sorry, I could not generate a response. Please try again.'
+      );
     }
   }
 
@@ -548,7 +590,16 @@ RULES:
         this.isReady = true;
         // Process any pending verify queue now that bridge is ready
         if (this._verifyQueue.length > 0) {
-          setTimeout(() => this._processVerifyQueue(), SKILLBRIDGE_DELAYS.BRIDGE_READY_VERIFY);
+          if (!this._verifyLock) {
+            this._verifyLock = new Promise((resolve) => {
+              setTimeout(() => {
+                this._runVerifyQueue().finally(() => {
+                  this._verifyLock = null;
+                  resolve();
+                });
+              }, SKILLBRIDGE_DELAYS.BRIDGE_READY_VERIFY);
+            });
+          }
         }
       }
 
@@ -556,9 +607,7 @@ RULES:
         console.error('[SkillBridge] Bridge error:', data.error);
       }
 
-      if (data.type === 'TRANSLATE_RESPONSE' ||
-          data.type === 'CHAT_RESPONSE' ||
-          data.type === 'VERIFY_RESPONSE') {
+      if (data.type === 'TRANSLATE_RESPONSE' || data.type === 'CHAT_RESPONSE' || data.type === 'VERIFY_RESPONSE') {
         const cb = this.pendingCallbacks.get(data.id);
         if (cb) {
           this.pendingCallbacks.delete(data.id);
@@ -636,7 +685,7 @@ RULES:
         }
       });
 
-      window.postMessage(message, '*');
+      window.postMessage(message, window.location.origin);
     });
   }
 }
