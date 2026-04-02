@@ -1,6 +1,6 @@
 {
   "name": "skillbridge",
-  "version": "2.1.0",
+  "version": "3.4.0",
   "private": true,
   "scripts": {
     "test": "jest --verbose",
@@ -12,12 +12,28 @@
     "build:firefox": "node scripts/build-firefox.js",
     "build:firefox:zip": "npm run build:firefox && cd dist/firefox && rm -f ../../store-assets/skillbridge-firefox.zip && zip -r ../../store-assets/skillbridge-firefox.zip . -x '*.DS_Store'",
     "check:selectors": "node scripts/check-selectors.js",
-    "check:dicts": "node scripts/check-dicts.js"
+    "check:dicts": "node scripts/check-dicts.js",
+    "check:sync": "node scripts/check-bg-sync.js",
+    "docs": "node scripts/generate-docs.js",
+    "lint": "eslint src/ tests/ scripts/",
+    "lint:fix": "eslint src/ tests/ scripts/ --fix",
+    "format": "prettier --write 'src/**/*.{js,css,html}' 'tests/**/*.js' 'scripts/**/*.js'",
+    "format:check": "prettier --check 'src/**/*.{js,css,html}' 'tests/**/*.js' 'scripts/**/*.js'",
+    "build:bundle": "node scripts/build-bundle.js",
+    "build:bundle:zip": "npm run build:bundle && cd dist/bundled && rm -f ../../store-assets/skillbridge-bundled.zip && zip -r ../../store-assets/skillbridge-bundled.zip . -x '*.DS_Store'"
   },
   "jest": {
-    "testPathIgnorePatterns": ["/node_modules/", "/dist/"]
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/dist/"
+    ]
   },
   "devDependencies": {
-    "jest": "^30.2.0"
+    "@eslint/js": "^10.0.1",
+    "esbuild": "^0.27.5",
+    "eslint": "^10.1.0",
+    "eslint-config-prettier": "^10.1.8",
+    "jest": "^30.2.0",
+    "prettier": "^3.8.1"
   }
 }

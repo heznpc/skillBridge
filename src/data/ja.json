@@ -497,6 +497,36 @@
     "(5 minutes)": "（5分）",
     "(2 minutes)": "（2分）"
   },
+  "claudeCowork": {
+    "Introduction to Claude Cowork": "Claude Coworkの紹介",
+    "What is Claude Cowork?": "Claude Coworkとは何ですか？",
+    "Claude Cowork is a collaborative coding environment": "Claude Coworkは協調コーディング環境です",
+    "Getting started with Cowork": "Coworkの始め方",
+    "Real-time collaboration with Claude": "Claudeとのリアルタイム協業",
+    "Cowork sessions": "Coworkセッション",
+    "Starting a Cowork session": "Coworkセッションの開始",
+    "Sharing context in Cowork": "Coworkでのコンテキスト共有",
+    "Best practices for Cowork": "Coworkのベストプラクティス",
+    "Cowork vs Claude Code": "Cowork vs Claude Code",
+    "When to use Cowork": "Coworkを使用すべき場面",
+    "Collaborative development": "協調開発",
+    "Working alongside Claude in your IDE": "IDEでClaudeと一緒に作業する"
+  },
+  "subagents": {
+    "Introduction to Subagents": "Subagentsの紹介",
+    "What are subagents?": "Subagentsとは何ですか？",
+    "Subagents are specialized child agents": "Subagentsは専門化された子エージェントです",
+    "Creating subagents": "Subagentsの作成",
+    "Delegating tasks to subagents": "Subagentsへのタスク委任",
+    "Subagent communication patterns": "Subagentの通信パターン",
+    "Parallel subagent execution": "Subagentの並列実行",
+    "Subagent isolation and safety": "Subagentの分離と安全性",
+    "When to use subagents": "Subagentsを使用すべき場面",
+    "Subagent best practices": "Subagentのベストプラクティス",
+    "Orchestrating multiple subagents": "複数のSubagentsのオーケストレーション",
+    "Subagent resource management": "Subagentのリソース管理",
+    "Building complex workflows with subagents": "Subagentsを活用した複雑なワークフローの構築"
+  },
   "aiFluency": {
     "AI Fluency: Framework & Foundations": "AI流暢性：フレームワークおよび基礎",
     "Build a strong foundation in AI concepts and practical applications": "AI概念と実践的応用の強力な基礎を構築します",

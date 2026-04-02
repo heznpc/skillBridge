@@ -497,6 +497,36 @@
     "(5 minutes)": "(5 минут)",
     "(2 minutes)": "(2 минуты)"
   },
+  "claudeCowork": {
+    "Introduction to Claude Cowork": "Введение в Claude Cowork",
+    "What is Claude Cowork?": "Что такое Claude Cowork?",
+    "Claude Cowork is a collaborative coding environment": "Claude Cowork — это среда совместного написания кода",
+    "Getting started with Cowork": "Начало работы с Cowork",
+    "Real-time collaboration with Claude": "Совместная работа с Claude в реальном времени",
+    "Cowork sessions": "Сеансы Cowork",
+    "Starting a Cowork session": "Запуск сеанса Cowork",
+    "Sharing context in Cowork": "Обмен контекстом в Cowork",
+    "Best practices for Cowork": "Лучшие практики для Cowork",
+    "Cowork vs Claude Code": "Cowork и Claude Code",
+    "When to use Cowork": "Когда использовать Cowork",
+    "Collaborative development": "Совместная разработка",
+    "Working alongside Claude in your IDE": "Работа вместе с Claude в вашей IDE"
+  },
+  "subagents": {
+    "Introduction to Subagents": "Введение в Subagents",
+    "What are subagents?": "Что такое Subagents?",
+    "Subagents are specialized child agents": "Subagents — это специализированные дочерние агенты",
+    "Creating subagents": "Создание Subagents",
+    "Delegating tasks to subagents": "Делегирование задач Subagents",
+    "Subagent communication patterns": "Шаблоны коммуникации Subagent",
+    "Parallel subagent execution": "Параллельное выполнение Subagents",
+    "Subagent isolation and safety": "Изоляция и безопасность Subagent",
+    "When to use subagents": "Когда использовать Subagents",
+    "Subagent best practices": "Лучшие практики Subagent",
+    "Orchestrating multiple subagents": "Оркестрация нескольких Subagents",
+    "Subagent resource management": "Управление ресурсами Subagent",
+    "Building complex workflows with subagents": "Построение сложных рабочих процессов с помощью Subagents"
+  },
   "aiFluency": {
     "AI Fluency: Framework & Foundations": "Владение ИИ: концепция и основы",
     "Build a strong foundation in AI concepts and practical applications": "Создайте прочную основу в концепциях ИИ и практических применениях",

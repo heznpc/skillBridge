@@ -8,17 +8,27 @@
  * 4. MutationObserver catches lazily-loaded iframes
  */
 
+/**
+ * Manages auto-enabling of translated subtitles on embedded YouTube players.
+ * Patches iframe src params and uses postMessage API to load captions.
+ */
 class YouTubeSubtitleManager {
   static EMBED_SELECTOR = 'iframe[src*="youtube.com/embed"], iframe[src*="youtube-nocookie.com/embed"]';
   static EMBED_DOMAINS = ['youtube.com/embed', 'youtube-nocookie.com/embed'];
 
+  /** @param {string} targetLang — ISO 639-1 language code */
   constructor(targetLang) {
+    /** @type {string} */
     this.targetLang = targetLang;
+    /** @type {Set<HTMLIFrameElement>} */
     this._iframes = new Set();
+    /** @type {MutationObserver|null} */
     this._domObserver = null;
+    /** @type {((event: MessageEvent) => void)|null} */
     this._messageHandler = null;
   }
 
+  /** Discover existing iframes, start DOM observer, and begin listening for player events. @returns {Promise<void>} */
   async initialize() {
     // Start listening for YouTube player messages FIRST
     this._startMessageListener();
@@ -34,6 +44,7 @@ class YouTubeSubtitleManager {
     setTimeout(() => this._processExistingIframes(), 5000);
   }
 
+  /** @param {string} newLang — ISO 639-1 code to switch subtitles to */
   setLanguage(newLang) {
     this.targetLang = newLang;
     for (const iframe of this._iframes) {
@@ -41,6 +52,7 @@ class YouTubeSubtitleManager {
     }
   }
 
+  /** Disconnect observers, remove event listeners, and release tracked iframes. */
   destroy() {
     if (this._domObserver) {
       this._domObserver.disconnect();

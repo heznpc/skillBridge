@@ -96,21 +96,21 @@ body.si18n-lang-ko,
 .si18n-lang-zh-TW h1 { font-weight: 400 !important; }
 .si18n-lang-zh-TW h2 { font-weight: 700 !important; }
 
-/* ---- Arabic (RTL support) ---- */
+/* ---- Arabic ---- */
 
 .si18n-lang-ar {
   font-family: "Noto Sans Arabic", "Segoe UI", "Tahoma", sans-serif !important;
-  direction: rtl;
-  text-align: right;
 }
+.si18n-lang-ar h1 { font-weight: 400 !important; }
+.si18n-lang-ar h2 { font-weight: 700 !important; }
 
-/* ---- Hebrew (RTL support) ---- */
+/* ---- Hebrew ---- */
 
 .si18n-lang-he {
   font-family: "Noto Sans Hebrew", "Segoe UI", "Arial", sans-serif !important;
-  direction: rtl;
-  text-align: right;
 }
+.si18n-lang-he h1 { font-weight: 400 !important; }
+.si18n-lang-he h2 { font-weight: 700 !important; }
 
 /* ---- Hindi/Devanagari ---- */
 
@@ -2323,6 +2323,212 @@ html.si18n-dark .si18n-fc-btn {
 }
 
 /* ============================================================
+   RTL SUPPORT (Arabic, Hebrew)
+   Sets direction on body and mirrors all SkillBridge UI
+   components so the layout is natural for RTL readers.
+   Uses :is() for brevity (Chrome 88+, well within our target).
+   ============================================================ */
+
+/* Page-level direction */
+body:is(.si18n-lang-ar, .si18n-lang-he) {
+  direction: rtl;
+  text-align: right;
+}
+
+/* Chatbot widget — anchored bottom-left instead of bottom-right */
+body:is(.si18n-lang-ar, .si18n-lang-he) .skillbridge-sidebar {
+  right: auto;
+  left: 24px;
+}
+
+/* FAB button — bottom-left */
+body:is(.si18n-lang-ar, .si18n-lang-he) #skillbridge-fab {
+  right: auto;
+  left: 24px;
+}
+
+/* Header — keep flex layout but switch direction */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-header {
+  direction: rtl;
+}
+
+/* Close button — push to left end (start edge in RTL) */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-close {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+/* Chat input area */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-chat-input-wrap {
+  direction: rtl;
+}
+
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-chat-input {
+  text-align: right;
+}
+
+/* Chat bubble lists (ul/ol) — swap padding side */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-chat-bubble ul,
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-chat-bubble ol {
+  padding-left: 0 !important;
+  padding-right: 18px !important;
+}
+
+/* History detail view lists */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-history-detail .si18n-chat-bubble ul,
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-history-detail .si18n-chat-bubble ol {
+  padding-left: 0 !important;
+  padding-right: 18px !important;
+}
+
+/* User message row — already uses flex row-reverse; keep it natural */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-chat-user {
+  flex-direction: row-reverse;
+}
+
+/* Chat quote block — flip border side */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-chat-quote {
+  border-left: none;
+  border-right: 3px solid var(--si18n-primary, #D97757);
+  border-radius: 6px 0 0 6px;
+}
+
+/* Quote dismiss — flip to left */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-chat-quote-dismiss {
+  right: auto;
+  left: 4px;
+}
+
+/* Retry button — flip margin */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-retry-btn {
+  margin-left: 0;
+  margin-right: 8px;
+}
+
+/* Verify spinner — flip margin */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-verify-spinner {
+  margin-left: 0;
+  margin-right: 6px;
+}
+
+/* Progress toast — anchor left instead of right */
+body:is(.si18n-lang-ar, .si18n-lang-he) #si18n-progress-toast {
+  right: auto;
+  left: 16px;
+  direction: rtl;
+}
+
+/* Progress bar fill — grow from right */
+body:is(.si18n-lang-ar, .si18n-lang-he) #si18n-progress-bar .si18n-progress-fill {
+  float: right;
+  border-radius: 2px 0 0 2px;
+}
+
+/* Exam mode banner */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-exam-banner {
+  direction: rtl;
+  text-align: right;
+}
+
+/* Exam warning — flip border */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-exam-warning {
+  border-left: none !important;
+  border-right: 3px solid #FFC107 !important;
+}
+
+/* History panel items */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-history-item {
+  text-align: right;
+}
+
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-history-header {
+  direction: rtl;
+}
+
+/* History back arrow — visually flip */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-history-back svg {
+  transform: scaleX(-1);
+}
+
+/* Ask tutor floating button */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-ask-tutor-btn {
+  direction: rtl;
+}
+
+/* Welcome banner */
+body:is(.si18n-lang-ar, .si18n-lang-he) #si18n-welcome-banner {
+  direction: rtl;
+  text-align: right;
+}
+
+/* Welcome banner inline lang selector — flip margin */
+body:is(.si18n-lang-ar, .si18n-lang-he) #si18n-welcome-banner select.si18n-banner-lang-inline {
+  margin-left: 0;
+  margin-right: 8px;
+}
+
+/* Header language selector — flip padding and chevron */
+body:is(.si18n-lang-ar, .si18n-lang-he) #si18n-header-lang {
+  padding-right: 0;
+  padding-left: 16px;
+}
+
+body:is(.si18n-lang-ar, .si18n-lang-he) #si18n-header-lang-select {
+  padding: 6px 12px 6px 28px !important;
+  background-position: left 10px center !important;
+}
+
+/* Keyboard shortcuts overlay */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-shortcuts-panel {
+  direction: rtl;
+  text-align: right;
+}
+
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-shortcut-row {
+  direction: rtl;
+}
+
+/* Flashcard controls */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-flashcard-nav {
+  direction: rtl;
+}
+
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-fc-stats {
+  direction: rtl;
+}
+
+/* Example question chips */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-example-questions {
+  direction: rtl;
+}
+
+/* Dark-mode toggle — flip margin */
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-dark-toggle-btn {
+  margin: 0 0 0 6px;
+}
+
+/* --- RTL overrides for mobile breakpoints --- */
+
+@media (max-width: 768px) {
+  body:is(.si18n-lang-ar, .si18n-lang-he) .skillbridge-sidebar {
+    /* Full-width bottom sheet — same for LTR and RTL */
+    left: 0;
+    right: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  body:is(.si18n-lang-ar, .si18n-lang-he) .skillbridge-sidebar {
+    left: 0;
+    right: 0;
+  }
+  body:is(.si18n-lang-ar, .si18n-lang-he) #skillbridge-fab {
+    left: 16px;
+    right: auto;
+  }
+}
+
+/* ============================================================
    REDUCED MOTION — respect user preference
    ============================================================ */
 
@@ -2403,4 +2609,27 @@ html.si18n-dark .si18n-fc-btn {
     width: calc(100vw - 32px) !important;
     max-width: none !important;
   }
+}
+
+/* ============================================================
+   Offline Banner
+   ============================================================ */
+
+.si18n-offline-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10001;
+  padding: 8px 16px;
+  background: #f59e0b;
+  color: #1a1a1a;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  transform: translateY(-100%);
+  transition: transform 0.3s ease;
+}
+.si18n-offline-banner.visible {
+  transform: translateY(0);
 }

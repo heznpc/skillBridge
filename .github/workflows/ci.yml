@@ -38,14 +38,14 @@ jobs:
       - name: Check glossary consistency
         run: node scripts/check-glossary.js
 
-      - name: Lint JavaScript (warnings only)
-        run: |
-          npx eslint@8 src/ \
-            --no-eslintrc \
-            --env browser,es2021,webextensions \
-            --parser-options=ecmaVersion:2022 \
-            --rule '{"no-undef":"off","no-unused-vars":"warn","no-redeclare":"error","no-dupe-keys":"error"}' \
-            --max-warnings 50 || true
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint JavaScript
+        run: npx eslint src/ tests/ scripts/
+
+      - name: Check formatting
+        run: npx prettier --check 'src/**/*.{js,css,html}' 'tests/**/*.js' 'scripts/**/*.js'
 
   test:
     runs-on: ubuntu-latest
@@ -56,8 +56,8 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install test dependencies
-        run: npm install --save-dev jest
+      - name: Install dependencies
+        run: npm ci
 
       - name: Run tests
         run: npx jest --passWithNoTests

@@ -8,12 +8,12 @@
 const fs = require('fs');
 const path = require('path');
 
-// --- Extract escapeHtml from content.js (the production implementation) ---
-const contentSrc = fs.readFileSync(
-  path.join(__dirname, '..', 'src', 'content', 'content.js'), 'utf8'
+// --- Extract escapeHtml from gemini-block.js (the canonical implementation) ---
+const geminiBlockSrc = fs.readFileSync(
+  path.join(__dirname, '..', 'src', 'lib', 'gemini-block.js'), 'utf8'
 );
-const escapeHtmlBody = contentSrc.match(
-  /function escapeHtml\(text\)\s*\{([\s\S]*?)\n  \}/
+const escapeHtmlBody = geminiBlockSrc.match(
+  /function escapeHtml\(text\)\s*\{([\s\S]*?)\n {2}\}/
 );
 const escapeHtml = new Function('text', escapeHtmlBody[1]);
 
@@ -22,7 +22,7 @@ const sidebarSrc = fs.readFileSync(
   path.join(__dirname, '..', 'src', 'content', 'sidebar-chat.js'), 'utf8'
 );
 const fmtBlock = sidebarSrc.match(
-  /function formatResponse\(text\)\s*\{[\s\S]*?\n  \}\n\n  function applyInline[\s\S]*?\n  \}/
+  /function formatResponse\(text\)\s*\{[\s\S]*?\n {2}\}\n\n {2}function applyInline[\s\S]*?\n {2}\}/
 );
 const { formatResponse, applyInline } = new Function(
   'sb',

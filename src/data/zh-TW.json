@@ -497,6 +497,36 @@
     "(5 minutes)": "（5 分鐘）",
     "(2 minutes)": "（2 分鐘）"
   },
+  "claudeCowork": {
+    "Introduction to Claude Cowork": "Claude Cowork 簡介",
+    "What is Claude Cowork?": "什麼是 Claude Cowork？",
+    "Claude Cowork is a collaborative coding environment": "Claude Cowork 是一個協作程式碼編寫環境",
+    "Getting started with Cowork": "開始使用 Cowork",
+    "Real-time collaboration with Claude": "與 Claude 即時協作",
+    "Cowork sessions": "Cowork 工作階段",
+    "Starting a Cowork session": "啟動 Cowork 工作階段",
+    "Sharing context in Cowork": "在 Cowork 中共享上下文",
+    "Best practices for Cowork": "Cowork 最佳實踐",
+    "Cowork vs Claude Code": "Cowork 與 Claude Code",
+    "When to use Cowork": "何時使用 Cowork",
+    "Collaborative development": "協作開發",
+    "Working alongside Claude in your IDE": "在 IDE 中與 Claude 協同工作"
+  },
+  "subagents": {
+    "Introduction to Subagents": "Subagents 簡介",
+    "What are subagents?": "什麼是 Subagents？",
+    "Subagents are specialized child agents": "Subagents 是專門化的子代理",
+    "Creating subagents": "建立 Subagents",
+    "Delegating tasks to subagents": "將任務委派給 Subagents",
+    "Subagent communication patterns": "Subagent 通訊模式",
+    "Parallel subagent execution": "Subagent 並行執行",
+    "Subagent isolation and safety": "Subagent 隔離與安全",
+    "When to use subagents": "何時使用 Subagents",
+    "Subagent best practices": "Subagent 最佳實踐",
+    "Orchestrating multiple subagents": "協調多個 Subagents",
+    "Subagent resource management": "Subagent 資源管理",
+    "Building complex workflows with subagents": "使用 Subagents 建構複雜工作流程"
+  },
   "aiFluency": {
     "AI Fluency: Framework & Foundations": "AI 流利度：架構與基礎",
     "Build a strong foundation in AI concepts and practical applications": "在 AI 概念和實務應用中建立紮實的基礎",

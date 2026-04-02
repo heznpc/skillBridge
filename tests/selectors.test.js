@@ -74,7 +74,7 @@ describe('SKILLJAR_SELECTORS', () => {
         // or contain attribute selectors ([...)
         const parts = value.split(',').map(s => s.trim());
         for (const part of parts) {
-          const valid = /^[.#a-zA-Z\[]/.test(part);
+          const valid = /^[.#a-zA-Z[]/.test(part);
           expect(valid).toBe(true);
         }
       }
