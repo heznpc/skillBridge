@@ -527,7 +527,7 @@ RULES:
           userMessage,
           model: SKILLBRIDGE_MODELS.CLAUDE,
           stream: true,
-        }, '*');
+        }, window.location.origin);
       });
     } catch (err) {
       console.error('[SkillBridge] Chat stream error:', err);
@@ -649,7 +649,7 @@ RULES:
         }
       });
 
-      window.postMessage(message, '*');
+      window.postMessage(message, window.location.origin);
     });
   }
 }

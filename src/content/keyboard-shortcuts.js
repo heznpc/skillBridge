@@ -15,6 +15,8 @@
   const SHORTCUTS = [
     { key: 's', ctrl: true, shift: true,
       label: SHORTCUT_DESCRIPTIONS.toggleSidebar },
+    { key: 'f', ctrl: true, shift: true,
+      label: SHORTCUT_DESCRIPTIONS.toggleFlashcards },
     { key: 'l', ctrl: true, shift: true,
       label: SHORTCUT_DESCRIPTIONS.toggleDarkMode },
     { key: '/', ctrl: true, shift: true,
@@ -44,6 +46,14 @@
     if (ctrl && e.shiftKey && e.key.toLowerCase() === 'l') {
       e.preventDefault();
       sb.toggleDarkMode?.();
+      return;
+    }
+
+    // Ctrl/Cmd + Shift + F → Toggle flashcard panel
+    if (ctrl && e.shiftKey && e.key.toLowerCase() === 'f') {
+      e.preventDefault();
+      if (!sb.sidebarVisible) sb.toggleSidebar?.();
+      sb.toggleFlashcardPanel?.();
       return;
     }
 

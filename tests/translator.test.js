@@ -60,8 +60,8 @@ describe('SkilljarTranslator', () => {
       expect(translator.premiumLanguages).toContain('zh-CN');
     });
 
-    test('has all 6 premium languages', () => {
-      expect(translator.premiumLanguages).toHaveLength(6);
+    test('has all 10 premium languages', () => {
+      expect(translator.premiumLanguages).toHaveLength(10);
     });
 
     test('supportedLanguages includes 30+ languages', () => {
@@ -170,7 +170,8 @@ describe('SkilljarTranslator', () => {
   describe('queueGeminiVerify heuristics', () => {
     test('isPremium returns true for premium languages', () => {
       expect(translator.premiumLanguages.includes('ko')).toBe(true);
-      expect(translator.premiumLanguages.includes('pt-BR')).toBe(false);
+      expect(translator.premiumLanguages.includes('pt-BR')).toBe(true);
+      expect(translator.premiumLanguages.includes('it')).toBe(false);
     });
   });
 });

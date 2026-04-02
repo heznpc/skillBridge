@@ -26,7 +26,7 @@
     btn.setAttribute('tabindex', '0');
     btn.setAttribute('aria-label', sb.t(A11Y_LABELS.openTutor));
     btn.innerHTML = `
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
       </svg>
     `;
@@ -62,6 +62,9 @@
     const sidebar = document.createElement('div');
     sidebar.id = 'skillbridge-sidebar';
     sidebar.className = 'skillbridge-sidebar';
+    sidebar.setAttribute('role', 'dialog');
+    sidebar.setAttribute('aria-modal', 'true');
+    sidebar.setAttribute('aria-label', 'SkillBridge Tutor');
     sidebar.innerHTML = getSidebarHTML();
     document.body.appendChild(sidebar);
     setTimeout(bindSidebarEvents, SKILLBRIDGE_DELAYS.SIDEBAR_BIND);
@@ -83,8 +86,13 @@
     return `
       <div class="si18n-header">
         <button class="si18n-history-btn" id="si18n-history-btn" title="${sb.t(A11Y_LABELS.chatHistory)}" aria-label="${sb.t(A11Y_LABELS.chatHistory)}">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </button>
+        <button class="si18n-history-btn" id="si18n-fc-btn" title="${sb.t(FLASHCARD_LABELS.openFlashcards)}" aria-label="${sb.t(FLASHCARD_LABELS.openFlashcards)}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
           </svg>
         </button>
         <span class="si18n-header-title">SkillBridge Tutor</span>
@@ -116,6 +124,7 @@
   function bindSidebarEvents() {
     document.getElementById('si18n-close')?.addEventListener('click', toggleSidebar);
     document.getElementById('si18n-history-btn')?.addEventListener('click', toggleHistoryPanel);
+    document.getElementById('si18n-fc-btn')?.addEventListener('click', toggleFlashcardPanel);
     bindChatInputEvents();
     bindExampleQuestions();
   }
@@ -212,7 +221,7 @@
       <div class="si18n-chat-msg si18n-chat-bot" id="${loadingId}">
         <div class="si18n-chat-avatar">AI</div>
         <div class="si18n-chat-bubble">
-          <span class="si18n-thinking-dots" role="status" aria-label="Loading">
+          <span class="si18n-thinking-dots" role="status" aria-label="${sb.t(A11Y_LABELS.loading)}">
             <span class="si18n-dot"></span>
             <span class="si18n-dot"></span>
             <span class="si18n-dot"></span>
@@ -256,6 +265,7 @@
     } catch (err) {
       if (bubble) {
         bubble.classList.remove('si18n-streaming-cursor');
+        bubble.setAttribute('role', 'alert');
         bubble.textContent = sb.t(CHAT_ERROR_LABELS) + ' ';
         const retryBtn = document.createElement('button');
         retryBtn.className = 'si18n-retry-btn';
@@ -329,10 +339,11 @@
   }
 
   function applyInline(text) {
+    // Input is already HTML-escaped by formatResponse — do NOT re-escape captured groups
     return text
-      .replace(/\*\*(.*?)\*\*/g, (_, g) => '<strong>' + sb.escapeHtml(g) + '</strong>')
-      .replace(/\*(.*?)\*/g, (_, g) => '<em>' + sb.escapeHtml(g) + '</em>')
-      .replace(/`(.*?)`/g, (_, g) => '<code>' + sb.escapeHtml(g) + '</code>');
+      .replace(/\*\*(.*?)\*\*/g, (_, g) => '<strong>' + g + '</strong>')
+      .replace(/\*(.*?)\*/g, (_, g) => '<em>' + g + '</em>')
+      .replace(/`(.*?)`/g, (_, g) => '<code>' + g + '</code>');
   }
 
   // ============================================================
@@ -463,15 +474,16 @@
     if (!chatPanel) return;
 
     if (historyPanelOpen) {
-      closeHistoryPanel();
+      closeSubPanel();
       return;
     }
+    if (flashcardPanelOpen) closeSubPanel();
 
     historyPanelOpen = true;
     savedChatHTML = chatPanel.innerHTML;
     chatPanel.innerHTML = `
       <div class="si18n-history-header">
-        <button class="si18n-history-back" id="si18n-history-back" aria-label="Back to chat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <button class="si18n-history-back" id="si18n-history-back" aria-label="${sb.t(A11Y_LABELS.backToChat)}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
         <span class="si18n-history-title">${sb.t(HISTORY_LABELS.title)}</span>
         <button class="si18n-history-clear" id="si18n-history-clear" title="${sb.t(HISTORY_LABELS.clearHistory)}">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
@@ -490,14 +502,17 @@
     loadHistoryList();
   }
 
-  function closeHistoryPanel() {
+  function closeSubPanel() {
     const chatPanel = document.getElementById('si18n-panel-chat');
     if (!chatPanel || !savedChatHTML) return;
     chatPanel.innerHTML = savedChatHTML;
     savedChatHTML = null;
     historyPanelOpen = false;
+    flashcardPanelOpen = false;
     bindChatInputEvents();
   }
+
+  function closeHistoryPanel() { closeSubPanel(); }
 
   async function loadHistoryList() {
     const listEl = document.getElementById('si18n-history-list');
@@ -647,12 +662,155 @@
     }
   }
 
-  // Close sidebar on Escape key
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && sb.sidebarVisible) {
-      toggleSidebar();
+  // ============================================================
+  // FLASHCARD MODE (Vocabulary Cards for Exam Prep)
+  // ============================================================
+
+  let flashcardPanelOpen = false;
+  let flashcardCards = [];
+  let flashcardIndex = 0;
+  let flashcardBoxes = {};
+
+  function toggleFlashcardPanel() {
+    const chatPanel = document.getElementById('si18n-panel-chat');
+    if (!chatPanel) return;
+
+    if (flashcardPanelOpen) {
+      closeFlashcardPanel();
+      return;
     }
-  });
+    // Close history if open
+    if (historyPanelOpen) closeHistoryPanel();
+
+    flashcardPanelOpen = true;
+    savedChatHTML = chatPanel.innerHTML;
+
+    flashcardCards = loadFlashcardsForCourse();
+    flashcardIndex = 0;
+    loadFlashcardProgress();
+
+    chatPanel.innerHTML = `
+      <div class="si18n-flashcard-header">
+        <button class="si18n-history-back" id="si18n-fc-back" aria-label="${sb.t(A11Y_LABELS.backToChat)}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <span class="si18n-history-title">${sb.t(FLASHCARD_LABELS.title)}</span>
+        <button class="si18n-history-clear" id="si18n-fc-reset" title="${sb.t(FLASHCARD_LABELS.reset)}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+        </button>
+      </div>
+      <div class="si18n-flashcard-container" id="si18n-fc-container">
+        ${flashcardCards.length === 0
+          ? `<div class="si18n-history-empty">${sb.t(FLASHCARD_LABELS.empty)}</div>`
+          : renderFlashcard()}
+      </div>
+    `;
+
+    document.getElementById('si18n-fc-back')?.addEventListener('click', closeFlashcardPanel);
+    document.getElementById('si18n-fc-reset')?.addEventListener('click', () => {
+      flashcardBoxes = {};
+      flashcardIndex = 0;
+      saveFlashcardProgress();
+      refreshFlashcard();
+    });
+    bindFlashcardEvents();
+  }
+
+  function loadFlashcardsForCourse() {
+    const dict = sb.translator?.staticDict;
+    if (!dict || Object.keys(dict).length === 0) return [];
+    // staticDict is flattened across all sections; return all meaningful entries
+    return Object.entries(dict)
+      .filter(([k, v]) => k !== v && k.length >= 6 && v.length >= 2)
+      .map(([en, tr]) => ({ en, tr }));
+  }
+
+  function renderFlashcard() {
+    if (flashcardCards.length === 0) return '';
+    const card = flashcardCards[flashcardIndex];
+    const box = flashcardBoxes[flashcardIndex] || 0;
+    const boxLabelKeys = [FLASHCARD_LABELS.boxNew, FLASHCARD_LABELS.boxLearning, FLASHCARD_LABELS.mastered];
+    const boxClasses = ['si18n-fc-new', 'si18n-fc-learning', 'si18n-fc-done'];
+    const countByBox = [0, 0, 0];
+    for (let i = 0; i < flashcardCards.length; i++) countByBox[flashcardBoxes[i] || 0]++;
+    return `
+      <div class="si18n-flashcard-card" id="si18n-fc-card" role="button" tabindex="0" aria-label="${sb.t(FLASHCARD_LABELS.flip)}">
+        <div class="si18n-flashcard-inner">
+          <div class="si18n-flashcard-front">${sb.escapeHtml(card.en)}</div>
+          <div class="si18n-flashcard-back">${sb.escapeHtml(card.tr)}</div>
+        </div>
+      </div>
+      <div class="si18n-flashcard-nav">
+        <button class="si18n-fc-btn" id="si18n-fc-prev" ${flashcardIndex === 0 ? 'disabled' : ''}>${sb.t(FLASHCARD_LABELS.prev)}</button>
+        <span class="si18n-flashcard-progress">${flashcardIndex + 1} / ${flashcardCards.length}</span>
+        <button class="si18n-fc-btn" id="si18n-fc-next" ${flashcardIndex >= flashcardCards.length - 1 ? 'disabled' : ''}>${sb.t(FLASHCARD_LABELS.next)}</button>
+      </div>
+      <div class="si18n-fc-box-controls">
+        <button class="si18n-fc-box-btn si18n-fc-new" id="si18n-fc-box-down">✗</button>
+        <span class="si18n-fc-box-label ${boxClasses[box]}">${sb.t(boxLabelKeys[box])}</span>
+        <button class="si18n-fc-box-btn si18n-fc-done" id="si18n-fc-box-up">✓</button>
+      </div>
+      <div class="si18n-fc-stats">
+        <span class="si18n-fc-new">${sb.t(FLASHCARD_LABELS.boxNew)}: ${countByBox[0]}</span>
+        <span class="si18n-fc-learning">${sb.t(FLASHCARD_LABELS.boxLearning)}: ${countByBox[1]}</span>
+        <span class="si18n-fc-done">${sb.t(FLASHCARD_LABELS.mastered)}: ${countByBox[2]}</span>
+      </div>
+    `;
+  }
+
+  function refreshFlashcard() {
+    const container = document.getElementById('si18n-fc-container');
+    if (!container) return;
+    container.innerHTML = flashcardCards.length === 0
+      ? `<div class="si18n-history-empty">${sb.t(FLASHCARD_LABELS.empty)}</div>`
+      : renderFlashcard();
+    bindFlashcardEvents();
+  }
+
+  function bindFlashcardEvents() {
+    const card = document.getElementById('si18n-fc-card');
+    card?.addEventListener('click', () => card.classList.toggle('si18n-card-flipped'));
+    card?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.classList.toggle('si18n-card-flipped'); }
+    });
+    document.getElementById('si18n-fc-prev')?.addEventListener('click', () => {
+      if (flashcardIndex > 0) { flashcardIndex--; refreshFlashcard(); }
+    });
+    document.getElementById('si18n-fc-next')?.addEventListener('click', () => {
+      if (flashcardIndex < flashcardCards.length - 1) { flashcardIndex++; refreshFlashcard(); }
+    });
+    document.getElementById('si18n-fc-box-up')?.addEventListener('click', () => {
+      const cur = flashcardBoxes[flashcardIndex] || 0;
+      flashcardBoxes[flashcardIndex] = Math.min(cur + 1, 2);
+      saveFlashcardProgress();
+      // Auto-advance to next card after marking
+      if (flashcardIndex < flashcardCards.length - 1) flashcardIndex++;
+      refreshFlashcard();
+    });
+    document.getElementById('si18n-fc-box-down')?.addEventListener('click', () => {
+      flashcardBoxes[flashcardIndex] = 0;
+      saveFlashcardProgress();
+      if (flashcardIndex < flashcardCards.length - 1) flashcardIndex++;
+      refreshFlashcard();
+    });
+  }
+
+  function saveFlashcardProgress() {
+    const key = `fc_${sb.currentLang}`;
+    const data = {};
+    data[key] = flashcardBoxes;
+    chrome.storage.local.set(data);
+  }
+
+  function loadFlashcardProgress() {
+    const key = `fc_${sb.currentLang}`;
+    chrome.storage.local.get([key], (result) => {
+      flashcardBoxes = result[key] || {};
+      refreshFlashcard();
+    });
+  }
+
+  function closeFlashcardPanel() { closeSubPanel(); }
 
   // Export to shared namespace
   sb.injectSidebar = injectSidebar;
@@ -660,4 +818,5 @@
   sb.toggleSidebar = toggleSidebar;
   sb.updateLocalizedLabels = updateLocalizedLabels;
   sb.formatResponse = formatResponse;
+  sb.toggleFlashcardPanel = toggleFlashcardPanel;
 })();

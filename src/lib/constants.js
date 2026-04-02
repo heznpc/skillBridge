@@ -17,7 +17,7 @@ const SKILLBRIDGE_MODELS = {
 const DEFAULT_PROTECTED_TERMS = 'API, SDK, Claude, Anthropic, Claude Code, Cowork, Dispatch, Computer Use, Subagent, Enterprise, Personal, Plugin, skill, SKILL.md, frontmatter';
 
 // YouTube InnerTube client version — update periodically as needed
-const YOUTUBE_CLIENT_VERSION = '2.20240101.00.00';
+const YOUTUBE_CLIENT_VERSION = '2.20260401.00.00';
 
 // ==================== CERTIFICATION EXAM (full disable) ====================
 // Proctored certification exams — extension must NOT run at all.
@@ -131,20 +131,21 @@ const PREMIUM_LANGUAGES = [
   { code: 'ko', label: '\ud55c\uad6d\uc5b4' },
   { code: 'ja', label: '\u65e5\u672c\u8a9e' },
   { code: 'zh-CN', label: '\u4e2d\u6587(\u7b80\u4f53)' },
+  { code: 'zh-TW', label: '\u4e2d\u6587(\u7e41\u9ad4)' },
   { code: 'es', label: 'Espa\u00f1ol' },
   { code: 'fr', label: 'Fran\u00e7ais' },
   { code: 'de', label: 'Deutsch' },
+  { code: 'pt-BR', label: 'Portugu\u00eas (BR)' },
+  { code: 'ru', label: '\u0420\u0443\u0441\u0441\u043a\u0438\u0439' },
+  { code: 'vi', label: 'Ti\u1ebfng Vi\u1ec7t' },
 ];
 
 const AVAILABLE_LANGUAGES = [
   { code: 'en', label: 'English' },
   ...PREMIUM_LANGUAGES,
-  { code: 'zh-TW', label: '\u4e2d\u6587(\u7e41\u9ad4)' },
-  { code: 'pt-BR', label: 'Portugu\u00eas (BR)' },
   { code: 'pt', label: 'Portugu\u00eas (PT)' },
   { code: 'it', label: 'Italiano' },
   { code: 'nl', label: 'Nederlands' },
-  { code: 'ru', label: '\u0420\u0443\u0441\u0441\u043a\u0438\u0439' },
   { code: 'pl', label: 'Polski' },
   { code: 'uk', label: '\u0423\u043a\u0440\u0430\u0457\u043d\u0441\u044c\u043a\u0430' },
   { code: 'cs', label: '\u010ce\u0161tina' },
@@ -156,7 +157,6 @@ const AVAILABLE_LANGUAGES = [
   { code: 'ar', label: '\u0627\u0644\u0639\u0631\u0628\u064a\u0629' },
   { code: 'hi', label: '\u0939\u093f\u0928\u094d\u0926\u0940' },
   { code: 'th', label: '\u0e20\u0e32\u0e29\u0e32\u0e44\u0e17\u0e22' },
-  { code: 'vi', label: 'Ti\u1ebfng Vi\u1ec7t' },
   { code: 'id', label: 'Bahasa Indonesia' },
   { code: 'ms', label: 'Bahasa Melayu' },
   { code: 'tl', label: 'Filipino' },
@@ -337,6 +337,18 @@ const A11Y_LABELS = {
     'en': 'Retry', 'ko': '재시도', 'ja': '再試行',
     'zh-CN': '重试', 'es': 'Reintentar', 'fr': 'Réessayer', 'de': 'Erneut versuchen',
   },
+  loading: {
+    'en': 'Loading', 'ko': '로딩 중', 'ja': '読み込み中',
+    'zh-CN': '加载中', 'es': 'Cargando', 'fr': 'Chargement', 'de': 'Laden',
+  },
+  backToChat: {
+    'en': 'Back to chat', 'ko': '채팅으로 돌아가기', 'ja': 'チャットに戻る',
+    'zh-CN': '返回聊天', 'es': 'Volver al chat', 'fr': 'Retour au chat', 'de': 'Zurück zum Chat',
+  },
+  removeQuote: {
+    'en': 'Remove quote', 'ko': '인용 제거', 'ja': '引用を削除',
+    'zh-CN': '移除引用', 'es': 'Eliminar cita', 'fr': 'Supprimer la citation', 'de': 'Zitat entfernen',
+  },
 };
 
 const PROGRESS_LABELS = {
@@ -427,6 +439,10 @@ const SHORTCUT_DESCRIPTIONS = {
     'en': 'Toggle AI Tutor', 'ko': 'AI 튜터 열기/닫기', 'ja': 'AIチューター切替',
     'zh-CN': '切换AI导师', 'es': 'Abrir/cerrar tutor IA', 'fr': 'Ouvrir/fermer tuteur IA', 'de': 'KI-Tutor umschalten',
   },
+  toggleFlashcards: {
+    'en': 'Vocabulary cards', 'ko': '어휘 카드', 'ja': '語彙カード',
+    'zh-CN': '词汇卡片', 'es': 'Tarjetas de vocabulario', 'fr': 'Cartes de vocabulaire', 'de': 'Vokabelkarten',
+  },
   toggleDarkMode: {
     'en': 'Toggle dark mode', 'ko': '다크 모드 전환', 'ja': 'ダークモード切替',
     'zh-CN': '切换暗色模式', 'es': 'Modo oscuro', 'fr': 'Mode sombre', 'de': 'Dunkelmodus',
@@ -443,4 +459,92 @@ const SHORTCUT_DESCRIPTIONS = {
     'en': 'Focus chat input', 'ko': '채팅 입력 포커스', 'ja': 'チャット入力にフォーカス',
     'zh-CN': '聚焦聊天输入', 'es': 'Enfocar chat', 'fr': 'Focus sur le chat', 'de': 'Chat-Eingabe fokussieren',
   },
+};
+
+// ==================== FLASHCARD MODE (i18n) ====================
+
+const FLASHCARD_LABELS = {
+  title: {
+    'en': 'Vocabulary Cards', 'ko': '어휘 카드', 'ja': '語彙カード',
+    'zh-CN': '词汇卡片', 'es': 'Tarjetas de vocabulario', 'fr': 'Cartes de vocabulaire', 'de': 'Vokabelkarten',
+  },
+  flip: {
+    'en': 'Flip', 'ko': '뒤집기', 'ja': 'めくる',
+    'zh-CN': '翻转', 'es': 'Voltear', 'fr': 'Retourner', 'de': 'Umdrehen',
+  },
+  next: {
+    'en': 'Next', 'ko': '다음', 'ja': '次へ',
+    'zh-CN': '下一个', 'es': 'Siguiente', 'fr': 'Suivant', 'de': 'Weiter',
+  },
+  prev: {
+    'en': 'Previous', 'ko': '이전', 'ja': '前へ',
+    'zh-CN': '上一个', 'es': 'Anterior', 'fr': 'Précédent', 'de': 'Zurück',
+  },
+  boxNew: {
+    'en': 'New', 'ko': '새로운', 'ja': '新規',
+    'zh-CN': '新', 'es': 'Nuevo', 'fr': 'Nouveau', 'de': 'Neu',
+  },
+  boxLearning: {
+    'en': 'Learning', 'ko': '학습 중', 'ja': '学習中',
+    'zh-CN': '学习中', 'es': 'Aprendiendo', 'fr': 'En cours', 'de': 'Lernend',
+  },
+  mastered: {
+    'en': 'Mastered', 'ko': '숙지 완료', 'ja': '習得済み',
+    'zh-CN': '已掌握', 'es': 'Dominado', 'fr': 'Maîtrisé', 'de': 'Gelernt',
+  },
+  reset: {
+    'en': 'Reset Progress', 'ko': '진행 초기화', 'ja': '進捗リセット',
+    'zh-CN': '重置进度', 'es': 'Reiniciar progreso', 'fr': 'Réinitialiser', 'de': 'Fortschritt zurücksetzen',
+  },
+  empty: {
+    'en': 'No vocabulary for this page', 'ko': '이 페이지의 어휘가 없습니다', 'ja': 'このページの語彙はありません',
+    'zh-CN': '此页面没有词汇', 'es': 'Sin vocabulario para esta página', 'fr': 'Aucun vocabulaire pour cette page', 'de': 'Kein Vokabular für diese Seite',
+  },
+  openFlashcards: {
+    'en': 'Vocabulary flashcards', 'ko': '어휘 플래시카드', 'ja': '語彙フラッシュカード',
+    'zh-CN': '词汇闪卡', 'es': 'Tarjetas de vocabulario', 'fr': 'Cartes mémoire', 'de': 'Vokabel-Lernkarten',
+  },
+};
+
+/**
+ * Map URL slug patterns to dictionary section names for flashcard loading.
+ */
+const FLASHCARD_COURSE_MAP = {
+  'claude-101': ['claude101'],
+  'claude-code': ['claudeCode'],
+  'ai-fluency': ['aiFluency'],
+  'agent-skills': ['agentSkills'],
+  'model-context-protocol': ['mcpIntro', 'mcpAdvanced'],
+  'mcp-advanced': ['mcpAdvanced'],
+  'ai-capabilities': ['aiCapabilities'],
+  'claude-api': ['claudeAPI'],
+  'claude-with-the-anthropic-api': ['claudeAPI'],
+  'ai-fluency-for-educators': ['aiFluencyEdu'],
+  'ai-fluency-for-students': ['aiFluencyStudent'],
+  'ai-fluency-for-nonprofits': ['aiFluencyNonprofit'],
+  'amazon-bedrock': ['cloudDeployment'],
+  'google-vertex': ['cloudDeployment'],
+  'extended-thinking': ['extendedThinking'],
+  'teaching-ai-fluency': ['teachingAI'],
+};
+
+// ==================== CODE COMMENT TRANSLATION ====================
+
+const CODE_COMMENT_PATTERNS = [
+  // JavaScript, TypeScript, Java, C, C++, Go, Rust, Swift, Kotlin
+  { line: /\/\/\s*(.+)$/gm, block: /\/\*\s*([\s\S]*?)\s*\*\//g },
+  // Python, Ruby, Bash, YAML — hash comments
+  { line: /#\s*(.+)$/gm, block: null },
+  // HTML, XML — angle-bracket comments
+  { line: null, block: /<!--\s*([\s\S]*?)\s*-->/g },
+];
+
+const COMMENT_TRANSLATE_LABELS = {
+  'en': 'Translate code comments',
+  'ko': '코드 주석 번역',
+  'ja': 'コードコメントを翻訳',
+  'zh-CN': '翻译代码注释',
+  'es': 'Traducir comentarios de código',
+  'fr': 'Traduire les commentaires',
+  'de': 'Code-Kommentare übersetzen',
 };

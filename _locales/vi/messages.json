@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "SkillBridge — Trợ lý dịch khóa học AI",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "Trợ lý học tập đa ngôn ngữ cho các khóa học Anthropic trên Skilljar. Dịch khóa học và học với gia sư AI — không cần API key.",
+    "description": "Extension description"
+  }
+}

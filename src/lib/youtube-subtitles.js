@@ -150,7 +150,7 @@ class YouTubeSubtitleManager {
           return;
         }
       } catch (e) {
-        // Cross-origin — can't compare contentWindow, send to all
+        console.debug('[SkillBridge] Cross-origin iframe compare:', e.message);
       }
     }
 
@@ -212,7 +212,7 @@ class YouTubeSubtitleManager {
         id: 1
       }), '*');
     } catch (e) {
-      // Cross-origin might fail
+      console.debug('[SkillBridge] Cross-origin postMessage:', e.message);
     }
   }
 
@@ -261,11 +261,11 @@ class YouTubeSubtitleManager {
           }), '*');
 
         } catch (e) {
-          // Silent
+          console.debug('[SkillBridge] Caption command failed:', e.message);
         }
       }, 800);
     } catch (e) {
-      // Silent
+      console.debug('[SkillBridge] Caption module load failed:', e.message);
     }
   }
 

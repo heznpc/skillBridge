@@ -58,14 +58,29 @@ Anthropic Academy platform updates (new courses, CCA-F certification) and robust
 
 ## v2.2 (Planned)
 
-Expansion of translation capabilities and multi-platform support:
+Pain-point-driven features based on real user complaints across JP/KR/ES communities (researched 2026-03-30):
 
-- [ ] **Community Translation Portal**: A dedicated web-based tool allowing native speakers to collaboratively create and refine language dictionaries
-- [ ] **Additional Premium Languages**: Expand the premium tier based on community demand (e.g., Portuguese, Russian, Mandarin Traditional, Vietnamese)
-- [ ] **Full Assessment Translation**: Expand exam mode with question text translation, dynamic counter handling (Question X of Y), score/result page translations
-- [ ] **Export as PDF**: Allow learners to download translated course materials as polished PDF documents for offline study
+### Exam Prep — "시험 중 번역 차단" 대응
+> Anthropic 공식: "Our proctor tooling does not permit any built in browser features while taking the exam."
+> 비영어권 유저가 시험 전에 용어를 익힐 수단이 없음.
 
-**Estimated Timeline**: Q4 2026 - Q1 2027
+- [ ] **Exam Vocab Flashcard Mode**: 시험 대비 AI/Claude 핵심 용어를 모국어↔영어 플래시카드로 학습. 강좌별 용어셋 자동 생성, 스페이스드 리피티션 기반
+- [ ] **Per-Lesson Term Preview**: 레슨 진입 시 "이 레슨의 핵심 용어 10개" 프리뷰 팝업. 정적 사전 + 페이지 스캔 결합
+
+### Translation Quality — "全コース英語です" 대응
+> 일본 유저들이 Felo字幕 등 서드파티 도구를 별도 설치해서 사용 중.
+
+- [ ] **Community Translation Portal**: 네이티브 스피커가 용어 사전을 협업 편집하는 웹 도구
+- [ ] **Additional Premium Languages**: 커뮤니티 수요 기반 확장 (Portuguese, Russian, zh-TW, Vietnamese)
+- [ ] **Full Assessment Translation**: 시험 모드에서 문제 텍스트 번역 + "Question X of Y" 카운터 + 결과 페이지 번역
+
+### Resilience — Skilljar 장애 대응
+> 2026-03-17, 03-25 Skilljar 디스플레이 장애 발생 (status.skilljar.com)
+
+- [ ] **Offline Translation Cache**: IndexedDB 캐시 강화 — Skilljar 장애 시에도 이전 번역 결과로 읽기 가능
+- [ ] **Export as PDF**: 번역된 강좌 자료를 PDF로 다운로드 — 오프라인 학습용
+
+**Estimated Timeline**: Q2–Q3 2026
 
 ---
 
@@ -111,7 +126,7 @@ Visit our [GitHub Discussions](https://github.com/heznpc/skillbridge/discussions
 | v1.0.0 | ✅ Released | Q1 2026 |
 | v2.0.0 | ✅ Released | March 2026 |
 | v2.1.0 | ✅ Released | March 2026 |
-| v2.2 | 📋 Planned | Q4 2026 - Q1 2027 |
+| v2.2 | 📋 Planned | Q2–Q3 2026 |
 | v3.0 | 🎯 Vision | 2027+ |
 
 ---
