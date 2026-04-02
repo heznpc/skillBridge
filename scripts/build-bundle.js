@@ -17,7 +17,7 @@ async function build() {
   const contentScripts = manifest.content_scripts[0].js;
   // Create a combined entry that loads all content scripts in order
   const contentEntry = contentScripts
-    .map(f => `// --- ${f} ---\n` + fs.readFileSync(path.join(ROOT, f), 'utf8'))
+    .map((f) => `// --- ${f} ---\n` + fs.readFileSync(path.join(ROOT, f), 'utf8'))
     .join('\n\n');
 
   const contentEntryPath = path.join(DIST, '_content-entry.js');
@@ -80,10 +80,16 @@ async function build() {
 
   // Report sizes
   const origSize = contentScripts.reduce((sum, f) => {
-    try { return sum + fs.statSync(path.join(ROOT, f)).size; } catch { return sum; }
+    try {
+      return sum + fs.statSync(path.join(ROOT, f)).size;
+    } catch {
+      return sum;
+    }
   }, 0);
   const bundleSize = fs.statSync(path.join(DIST, 'content.bundle.js')).size;
-  console.log(`Content scripts: ${(origSize / 1024).toFixed(1)} KB → ${(bundleSize / 1024).toFixed(1)} KB (${Math.round((1 - bundleSize / origSize) * 100)}% reduction)`);
+  console.log(
+    `Content scripts: ${(origSize / 1024).toFixed(1)} KB → ${(bundleSize / 1024).toFixed(1)} KB (${Math.round((1 - bundleSize / origSize) * 100)}% reduction)`,
+  );
 
   const bgOrigSize = fs.statSync(path.join(ROOT, 'src/background/background.js')).size;
   const bgBundleSize = fs.statSync(path.join(DIST, 'background.bundle.js')).size;
@@ -105,7 +111,7 @@ function copyDir(src, dest) {
   }
 }
 
-build().catch(err => {
+build().catch((err) => {
   console.error('Build failed:', err);
   process.exit(1);
 });

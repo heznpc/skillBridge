@@ -13,14 +13,16 @@ const ROOT = path.join(__dirname, '..');
 describe('scripts/validate-translations.js', () => {
   test('exits 0 on valid files', () => {
     const result = execSync('node scripts/validate-translations.js', {
-      cwd: ROOT, encoding: 'utf8',
+      cwd: ROOT,
+      encoding: 'utf8',
     });
     expect(result).toContain('Errors:   0');
   });
 
   test('validates all 6 premium language files', () => {
     const result = execSync('node scripts/validate-translations.js', {
-      cwd: ROOT, encoding: 'utf8',
+      cwd: ROOT,
+      encoding: 'utf8',
     });
     expect(result).toContain('ko.json');
     expect(result).toContain('ja.json');
@@ -34,7 +36,8 @@ describe('scripts/validate-translations.js', () => {
 describe('scripts/check-glossary.js', () => {
   test('exits 0 (passes) on current data files', () => {
     const result = execSync('node scripts/check-glossary.js', {
-      cwd: ROOT, encoding: 'utf8',
+      cwd: ROOT,
+      encoding: 'utf8',
     });
     expect(result).toContain('PASSED');
     expect(result).toContain('Errors:   0');
@@ -42,7 +45,8 @@ describe('scripts/check-glossary.js', () => {
 
   test('reports all 6 languages', () => {
     const result = execSync('node scripts/check-glossary.js', {
-      cwd: ROOT, encoding: 'utf8',
+      cwd: ROOT,
+      encoding: 'utf8',
     });
     expect(result).toContain('de');
     expect(result).toContain('es');
@@ -54,14 +58,16 @@ describe('scripts/check-glossary.js', () => {
 
   test('checks section coverage', () => {
     const result = execSync('node scripts/check-glossary.js', {
-      cwd: ROOT, encoding: 'utf8',
+      cwd: ROOT,
+      encoding: 'utf8',
     });
     expect(result).toContain('Check 3: Section coverage');
   });
 
   test('checks key coverage', () => {
     const result = execSync('node scripts/check-glossary.js', {
-      cwd: ROOT, encoding: 'utf8',
+      cwd: ROOT,
+      encoding: 'utf8',
     });
     expect(result).toContain('Check 4: Key coverage');
   });

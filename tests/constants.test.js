@@ -8,12 +8,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const selectorsSrc = fs.readFileSync(
-  path.join(__dirname, '..', 'src', 'lib', 'selectors.js'), 'utf8'
-);
-const constantsSrc = fs.readFileSync(
-  path.join(__dirname, '..', 'src', 'lib', 'constants.js'), 'utf8'
-);
+const selectorsSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'selectors.js'), 'utf8');
+const constantsSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'constants.js'), 'utf8');
 
 // Eval selectors first (constants.js references SKILLJAR_SELECTORS), then constants
 const constants = new Function(`${selectorsSrc}\n${constantsSrc}; return {
@@ -28,10 +24,15 @@ const constants = new Function(`${selectorsSrc}\n${constantsSrc}; return {
 };`)();
 
 const {
-  SKILLBRIDGE_MODELS, SKILLBRIDGE_THRESHOLDS, SKILLBRIDGE_DELAYS,
-  PREMIUM_LANGUAGES, AVAILABLE_LANGUAGES,
-  POPUP_LABELS, DEFAULT_PROTECTED_TERMS,
-  SHORTCUT_LABELS, SHORTCUT_DESCRIPTIONS,
+  SKILLBRIDGE_MODELS,
+  SKILLBRIDGE_THRESHOLDS,
+  SKILLBRIDGE_DELAYS,
+  PREMIUM_LANGUAGES,
+  AVAILABLE_LANGUAGES,
+  POPUP_LABELS,
+  DEFAULT_PROTECTED_TERMS,
+  SHORTCUT_LABELS,
+  SHORTCUT_DESCRIPTIONS,
 } = constants;
 
 describe('SKILLBRIDGE_MODELS', () => {
@@ -89,7 +90,7 @@ describe('Languages', () => {
   });
 
   test('AVAILABLE_LANGUAGES includes English and all premium', () => {
-    const codes = AVAILABLE_LANGUAGES.map(l => l.code);
+    const codes = AVAILABLE_LANGUAGES.map((l) => l.code);
     expect(codes).toContain('en');
     for (const lang of PREMIUM_LANGUAGES) {
       expect(codes).toContain(lang.code);
@@ -203,13 +204,13 @@ describe('CERT_DISABLE_PATTERNS', () => {
 
   test('matches certification exam URLs', () => {
     for (const url of certUrls) {
-      expect(CERT_DISABLE_PATTERNS.some(p => p.test(url))).toBe(true);
+      expect(CERT_DISABLE_PATTERNS.some((p) => p.test(url))).toBe(true);
     }
   });
 
   test('does NOT match regular course URLs', () => {
     for (const url of courseUrls) {
-      expect(CERT_DISABLE_PATTERNS.some(p => p.test(url))).toBe(false);
+      expect(CERT_DISABLE_PATTERNS.some((p) => p.test(url))).toBe(false);
     }
   });
 
@@ -220,8 +221,8 @@ describe('CERT_DISABLE_PATTERNS', () => {
       'https://anthropic.skilljar.com/page?type=quiz',
     ];
     for (const url of quizUrls) {
-      expect(CERT_DISABLE_PATTERNS.some(p => p.test(url))).toBe(false);
-      expect(EXAM_URL_PATTERNS.some(p => p.test(url))).toBe(true);
+      expect(CERT_DISABLE_PATTERNS.some((p) => p.test(url))).toBe(false);
+      expect(EXAM_URL_PATTERNS.some((p) => p.test(url))).toBe(true);
     }
   });
 
@@ -232,7 +233,7 @@ describe('CERT_DISABLE_PATTERNS', () => {
       'https://anthropic.skilljar.com/certified-developer-access-request',
     ];
     for (const url of certOnly) {
-      expect(EXAM_URL_PATTERNS.some(p => p.test(url))).toBe(false);
+      expect(EXAM_URL_PATTERNS.some((p) => p.test(url))).toBe(false);
     }
   });
 });

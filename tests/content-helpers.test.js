@@ -30,9 +30,7 @@ describe('escapeHtml', () => {
   });
 
   test('escapes angle brackets', () => {
-    expect(escapeHtml('<script>alert("xss")</script>')).toBe(
-      '&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;'
-    );
+    expect(escapeHtml('<script>alert("xss")</script>')).toBe('&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;');
   });
 
   test('escapes double quotes', () => {
@@ -53,7 +51,7 @@ describe('escapeHtml', () => {
 
   test('escapes all special characters in one string', () => {
     expect(escapeHtml('<a href="test">it\'s & more</a>')).toBe(
-      '&lt;a href=&quot;test&quot;&gt;it&#39;s &amp; more&lt;/a&gt;'
+      '&lt;a href=&quot;test&quot;&gt;it&#39;s &amp; more&lt;/a&gt;',
     );
   });
 });

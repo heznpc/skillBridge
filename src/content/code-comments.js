@@ -78,10 +78,13 @@
       }
     }
 
-    if (replacements.length === 0) { originalComments.delete(el); return; }
+    if (replacements.length === 0) {
+      originalComments.delete(el);
+      return;
+    }
 
     const translations = await Promise.all(
-      replacements.map(r => translator.translate(r.match[1].trim(), targetLang))
+      replacements.map((r) => translator.translate(r.match[1].trim(), targetLang)),
     );
 
     // Apply in reverse order to preserve indices
@@ -102,8 +105,11 @@
       html = html.substring(0, match.index) + replacement + html.substring(match.index + match[0].length);
     }
 
-    if (hasTranslation) { el.innerHTML = html; }
-    else { originalComments.delete(el); }
+    if (hasTranslation) {
+      el.innerHTML = html;
+    } else {
+      originalComments.delete(el);
+    }
   }
 
   /**
@@ -113,7 +119,7 @@
   async function translateCodeComments(targetLang) {
     if (!sb.translator || targetLang === 'en') return;
     const codeEls = document.querySelectorAll('pre code, pre.code, .code-block code');
-    await Promise.all(Array.from(codeEls).map(el => _translateOneCodeBlock(el, targetLang)));
+    await Promise.all(Array.from(codeEls).map((el) => _translateOneCodeBlock(el, targetLang)));
   }
 
   // Register into _sb namespace

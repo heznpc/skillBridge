@@ -14,7 +14,7 @@
   let savedChatHTML = null;
   let isSending = false;
   let _rawSectionsCache = null; // Cached raw JSON for section-specific flashcards
-  let _rawSectionsLang = null;  // Language of the cached data
+  let _rawSectionsLang = null; // Language of the cached data
 
   // ============================================================
   // FLOATING BUTTON
@@ -79,9 +79,9 @@
 
   function getExampleQuestionsHTML() {
     const questions = sb.t(EXAMPLE_QUESTIONS) || EXAMPLE_QUESTIONS['en'];
-    return questions.map(q =>
-      `<button class="si18n-example-q" data-question="${sb.escapeHtml(q)}">${sb.escapeHtml(q)}</button>`
-    ).join('');
+    return questions
+      .map((q) => `<button class="si18n-example-q" data-question="${sb.escapeHtml(q)}">${sb.escapeHtml(q)}</button>`)
+      .join('');
   }
 
   function getSidebarHTML() {
@@ -150,8 +150,12 @@
     const chatInput = document.getElementById('si18n-chat-input');
     let isComposing = false;
 
-    chatInput?.addEventListener('compositionstart', () => { isComposing = true; });
-    chatInput?.addEventListener('compositionend', () => { isComposing = false; });
+    chatInput?.addEventListener('compositionstart', () => {
+      isComposing = true;
+    });
+    chatInput?.addEventListener('compositionend', () => {
+      isComposing = false;
+    });
 
     document.getElementById('si18n-chat-send')?.addEventListener('click', sendChatMessage);
     chatInput?.addEventListener('keydown', (e) => {
@@ -204,12 +208,15 @@
     // Offline guard — show localized message instead of hitting the network
     if (sb.isOffline) {
       const messages = document.getElementById('si18n-chat-messages');
-      messages.insertAdjacentHTML('beforeend', `
+      messages.insertAdjacentHTML(
+        'beforeend',
+        `
         <div class="si18n-chat-msg si18n-chat-bot">
           <div class="si18n-chat-avatar">AI</div>
           <div class="si18n-chat-bubble" role="alert">${sb.escapeHtml(sb.t(TUTOR_OFFLINE_LABELS))}</div>
         </div>
-      `);
+      `,
+      );
       scrollToBottom(messages);
       isSending = false;
       return;
@@ -223,17 +230,22 @@
       ? `<div class="si18n-chat-quote" style="margin-bottom:4px">${sb.escapeHtml(quotedText)}</div>${sb.escapeHtml(text)}`
       : sb.escapeHtml(text);
 
-    messages.insertAdjacentHTML('beforeend', `
+    messages.insertAdjacentHTML(
+      'beforeend',
+      `
       <div class="si18n-chat-msg si18n-chat-user">
         <div class="si18n-chat-bubble">${displayHtml}</div>
         <div class="si18n-chat-avatar">You</div>
       </div>
-    `);
+    `,
+    );
     input.value = '';
     input.placeholder = sb.t(CHAT_PLACEHOLDERS);
 
     const loadingId = 'loading-' + Date.now();
-    messages.insertAdjacentHTML('beforeend', `
+    messages.insertAdjacentHTML(
+      'beforeend',
+      `
       <div class="si18n-chat-msg si18n-chat-bot" id="${loadingId}">
         <div class="si18n-chat-avatar">AI</div>
         <div class="si18n-chat-bubble">
@@ -244,12 +256,11 @@
           </span>
         </div>
       </div>
-    `);
+    `,
+    );
     scrollToBottom(messages);
 
-    const fullQuestion = quotedText
-      ? `[Regarding this text: "${quotedText}"]\n\n${text}`
-      : text;
+    const fullQuestion = quotedText ? `[Regarding this text: "${quotedText}"]\n\n${text}` : text;
     const context = sb.getPageContext();
     const bubble = document.querySelector(`#${loadingId} .si18n-chat-bubble`);
     const sendBtn = document.getElementById('si18n-chat-send');
@@ -258,20 +269,26 @@
     try {
       let started = false;
       let lastStreamedText = '';
-      await sb.translator.chatStream(fullQuestion, sb.currentLang, context, (chunk, fullText) => {
-        lastStreamedText = fullText;
-        if (!started) {
-          started = true;
-          if (bubble) {
-            bubble.innerHTML = '';
-            bubble.classList.add('si18n-streaming-cursor');
+      await sb.translator.chatStream(
+        fullQuestion,
+        sb.currentLang,
+        context,
+        (chunk, fullText) => {
+          lastStreamedText = fullText;
+          if (!started) {
+            started = true;
+            if (bubble) {
+              bubble.innerHTML = '';
+              bubble.classList.add('si18n-streaming-cursor');
+            }
           }
-        }
-        if (bubble) {
-          bubble.innerHTML = formatResponse(fullText);
-          scrollToBottom(messages);
-        }
-      }, { isExamPage: sb.isExamPage });
+          if (bubble) {
+            bubble.innerHTML = formatResponse(fullText);
+            scrollToBottom(messages);
+          }
+        },
+        { isExamPage: sb.isExamPage },
+      );
 
       if (bubble) {
         bubble.classList.remove('si18n-streaming-cursor');
@@ -290,7 +307,10 @@
         retryBtn.addEventListener('click', () => {
           bubble.closest('.si18n-chat-msg')?.remove();
           const inp = document.getElementById('si18n-chat-input');
-          if (inp) { inp.value = text; sendChatMessage(); }
+          if (inp) {
+            inp.value = text;
+            sendChatMessage();
+          }
         });
         bubble.appendChild(retryBtn);
       }
@@ -324,7 +344,7 @@
     const flushList = () => {
       if (!listBuf.length) return;
       const tag = listOrdered ? 'ol' : 'ul';
-      out.push(`<${tag}>${listBuf.map(t => `<li>${applyInline(t)}</li>`).join('')}</${tag}>`);
+      out.push(`<${tag}>${listBuf.map((t) => `<li>${applyInline(t)}</li>`).join('')}</${tag}>`);
       listBuf = [];
     };
     const flushPara = () => {
@@ -335,22 +355,39 @@
 
     for (const line of lines) {
       const trimmed = line.trim();
-      if (!trimmed) { flushList(); flushPara(); continue; }
+      if (!trimmed) {
+        flushList();
+        flushPara();
+        continue;
+      }
       const hMatch = trimmed.match(/^(#{2,3})\s+(.+)/);
-      if (hMatch) { flushList(); flushPara(); out.push(`<h3>${applyInline(hMatch[2])}</h3>`); continue; }
+      if (hMatch) {
+        flushList();
+        flushPara();
+        out.push(`<h3>${applyInline(hMatch[2])}</h3>`);
+        continue;
+      }
       const ulMatch = trimmed.match(/^[-*]\s+(.*)/);
       if (ulMatch) {
         if (listBuf.length && listOrdered) flushList();
-        listOrdered = false; flushPara(); listBuf.push(ulMatch[1]); continue;
+        listOrdered = false;
+        flushPara();
+        listBuf.push(ulMatch[1]);
+        continue;
       }
       const olMatch = trimmed.match(/^\d+[.)]\s+(.*)/);
       if (olMatch) {
         if (listBuf.length && !listOrdered) flushList();
-        listOrdered = true; flushPara(); listBuf.push(olMatch[1]); continue;
+        listOrdered = true;
+        flushPara();
+        listBuf.push(olMatch[1]);
+        continue;
       }
-      flushList(); paraBuf.push(trimmed);
+      flushList();
+      paraBuf.push(trimmed);
     }
-    flushList(); flushPara();
+    flushList();
+    flushPara();
     return out.join('');
   }
 
@@ -372,15 +409,46 @@
    */
   function sanitizeHtml(html) {
     const ALLOWED_TAGS = new Set([
-      'div', 'span', 'p', 'h3', 'ul', 'ol', 'li', 'strong', 'em', 'code',
-      'br', 'button', 'svg', 'polyline', 'path', 'circle',
+      'div',
+      'span',
+      'p',
+      'h3',
+      'ul',
+      'ol',
+      'li',
+      'strong',
+      'em',
+      'code',
+      'br',
+      'button',
+      'svg',
+      'polyline',
+      'path',
+      'circle',
     ]);
     const ALLOWED_ATTRS = new Set([
-      'class', 'id', 'data-id', 'data-question', 'style', 'title',
-      'aria-label', 'role',
+      'class',
+      'id',
+      'data-id',
+      'data-question',
+      'style',
+      'title',
+      'aria-label',
+      'role',
       // SVG presentational attributes
-      'width', 'height', 'viewBox', 'fill', 'stroke', 'stroke-width',
-      'stroke-linecap', 'stroke-linejoin', 'cx', 'cy', 'r', 'd', 'points',
+      'width',
+      'height',
+      'viewBox',
+      'fill',
+      'stroke',
+      'stroke-width',
+      'stroke-linecap',
+      'stroke-linejoin',
+      'cx',
+      'cy',
+      'r',
+      'd',
+      'points',
     ]);
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
@@ -425,7 +493,10 @@
           store.createIndex('chapter', 'chapter');
         }
       };
-      req.onsuccess = (e) => { historyDb = e.target.result; resolve(historyDb); };
+      req.onsuccess = (e) => {
+        historyDb = e.target.result;
+        resolve(historyDb);
+      };
       req.onerror = () => reject(req.error);
     });
   }
@@ -436,7 +507,10 @@
       const chapter = document.querySelector('h1')?.textContent?.trim() || 'Unknown';
       const tx = db.transaction(HISTORY_STORE, 'readwrite');
       tx.objectStore(HISTORY_STORE).add({
-        question, answer, lang, chapter,
+        question,
+        answer,
+        lang,
+        chapter,
         timestamp: Date.now(),
         url: location.href,
       });
@@ -528,7 +602,9 @@
     bindChatInputEvents();
   }
 
-  function closeHistoryPanel() { closeSubPanel(); }
+  function closeHistoryPanel() {
+    closeSubPanel();
+  }
 
   async function loadHistoryList() {
     const listEl = document.getElementById('si18n-history-list');
@@ -551,11 +627,15 @@
     for (const [chapter, convs] of Object.entries(grouped)) {
       html += `<div class="si18n-history-chapter">${sb.escapeHtml(chapter)}</div>`;
       for (const conv of convs) {
-        const preview = conv.question.length > SKILLBRIDGE_LIMITS.HISTORY_PREVIEW
-          ? conv.question.slice(0, SKILLBRIDGE_LIMITS.HISTORY_PREVIEW) + '\u2026'
-          : conv.question;
+        const preview =
+          conv.question.length > SKILLBRIDGE_LIMITS.HISTORY_PREVIEW
+            ? conv.question.slice(0, SKILLBRIDGE_LIMITS.HISTORY_PREVIEW) + '\u2026'
+            : conv.question;
         const time = new Date(conv.timestamp).toLocaleDateString(undefined, {
-          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
         });
         html += `
           <div class="si18n-history-item" data-id="${conv.id}">
@@ -626,12 +706,15 @@
       if (sb.isExamPage) {
         const messages = document.getElementById('si18n-chat-messages');
         if (messages && !messages.querySelector('.si18n-exam-warning')) {
-          messages.insertAdjacentHTML('beforeend', `
+          messages.insertAdjacentHTML(
+            'beforeend',
+            `
             <div class="si18n-chat-msg si18n-chat-bot">
               <div class="si18n-chat-avatar">AI</div>
               <div class="si18n-chat-bubble si18n-exam-warning">${sb.escapeHtml(sb.t(TUTOR_EXAM_LABELS))}</div>
             </div>
-          `);
+          `,
+          );
         }
       }
 
@@ -658,7 +741,7 @@
     if (!sidebar) return;
 
     const focusable = sidebar.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
     if (focusable.length === 0) return;
 
@@ -716,9 +799,11 @@
         </button>
       </div>
       <div class="si18n-flashcard-container" id="si18n-fc-container">
-        ${flashcardCards.length === 0
-          ? `<div class="si18n-history-empty">${sb.t(FLASHCARD_LABELS.empty)}</div>`
-          : renderFlashcard()}
+        ${
+          flashcardCards.length === 0
+            ? `<div class="si18n-history-empty">${sb.t(FLASHCARD_LABELS.empty)}</div>`
+            : renderFlashcard()
+        }
       </div>
     `;
 
@@ -741,8 +826,7 @@
     // (e.g., 'ai-fluency' must not match 'ai-fluency-for-educators')
     const url = location.pathname.toLowerCase();
     let sections = null;
-    const sortedSlugs = Object.entries(FLASHCARD_COURSE_MAP)
-      .sort((a, b) => b[0].length - a[0].length);
+    const sortedSlugs = Object.entries(FLASHCARD_COURSE_MAP).sort((a, b) => b[0].length - a[0].length);
     for (const [slug, sects] of sortedSlugs) {
       if (url.includes(slug)) {
         sections = sects;
@@ -764,16 +848,19 @@
           }
           if (!_rawSectionsCache) {
             // Trigger async load and fall back to all entries for now
-            fetch(jsonUrl).then(r => r.json()).then(data => {
-              _rawSectionsCache = data;
-              _rawSectionsLang = lang;
-              // Re-run with warm cache and update panel
-              if (flashcardPanelOpen) {
-                flashcardCards = loadFlashcardsForCourse();
-                flashcardIndex = 0;
-                refreshFlashcard();
-              }
-            }).catch(() => {});
+            fetch(jsonUrl)
+              .then((r) => r.json())
+              .then((data) => {
+                _rawSectionsCache = data;
+                _rawSectionsLang = lang;
+                // Re-run with warm cache and update panel
+                if (flashcardPanelOpen) {
+                  flashcardCards = loadFlashcardsForCourse();
+                  flashcardIndex = 0;
+                  refreshFlashcard();
+                }
+              })
+              .catch(() => {});
           } else {
             const data = _rawSectionsCache;
             const sectionEntries = [];
@@ -788,7 +875,9 @@
             }
             if (sectionEntries.length > 0) return sectionEntries;
           }
-        } catch (_) { /* fall through to all entries */ }
+        } catch (_) {
+          /* fall through to all entries */
+        }
       }
     }
 
@@ -834,9 +923,10 @@
   function refreshFlashcard() {
     const container = document.getElementById('si18n-fc-container');
     if (!container) return;
-    container.innerHTML = flashcardCards.length === 0
-      ? `<div class="si18n-history-empty">${sb.t(FLASHCARD_LABELS.empty)}</div>`
-      : renderFlashcard();
+    container.innerHTML =
+      flashcardCards.length === 0
+        ? `<div class="si18n-history-empty">${sb.t(FLASHCARD_LABELS.empty)}</div>`
+        : renderFlashcard();
     bindFlashcardEvents();
   }
 
@@ -844,13 +934,22 @@
     const card = document.getElementById('si18n-fc-card');
     card?.addEventListener('click', () => card.classList.toggle('si18n-card-flipped'));
     card?.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.classList.toggle('si18n-card-flipped'); }
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        card.classList.toggle('si18n-card-flipped');
+      }
     });
     document.getElementById('si18n-fc-prev')?.addEventListener('click', () => {
-      if (flashcardIndex > 0) { flashcardIndex--; refreshFlashcard(); }
+      if (flashcardIndex > 0) {
+        flashcardIndex--;
+        refreshFlashcard();
+      }
     });
     document.getElementById('si18n-fc-next')?.addEventListener('click', () => {
-      if (flashcardIndex < flashcardCards.length - 1) { flashcardIndex++; refreshFlashcard(); }
+      if (flashcardIndex < flashcardCards.length - 1) {
+        flashcardIndex++;
+        refreshFlashcard();
+      }
     });
     document.getElementById('si18n-fc-box-up')?.addEventListener('click', () => {
       const cur = flashcardBoxes[flashcardIndex] || 0;
@@ -883,7 +982,9 @@
     });
   }
 
-  function closeFlashcardPanel() { closeSubPanel(); }
+  function closeFlashcardPanel() {
+    closeSubPanel();
+  }
 
   // Export to shared namespace
   sb.injectSidebar = injectSidebar;

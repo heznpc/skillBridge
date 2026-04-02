@@ -15,19 +15,16 @@ global.document = {
   body: { observe: () => {} },
 };
 global.window = { addEventListener: () => {}, location: { origin: 'https://test.com' } };
-global.MutationObserver = class { observe() {} disconnect() {} };
+global.MutationObserver = class {
+  observe() {}
+  disconnect() {}
+};
 global.Node = { ELEMENT_NODE: 1 };
 
 // Load constants first (youtube-subtitles.js may reference them)
-const selectorsSrc = fs.readFileSync(
-  path.join(__dirname, '..', 'src', 'lib', 'selectors.js'), 'utf8'
-);
-const constantsSrc = fs.readFileSync(
-  path.join(__dirname, '..', 'src', 'lib', 'constants.js'), 'utf8'
-);
-const src = fs.readFileSync(
-  path.join(__dirname, '..', 'src', 'lib', 'youtube-subtitles.js'), 'utf8'
-);
+const selectorsSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'selectors.js'), 'utf8');
+const constantsSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'constants.js'), 'utf8');
+const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'youtube-subtitles.js'), 'utf8');
 
 let YouTubeSubtitleManager;
 try {

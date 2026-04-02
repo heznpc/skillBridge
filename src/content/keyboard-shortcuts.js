@@ -13,18 +13,12 @@
   const MOD_LABEL = isMac ? '\u2318' : 'Ctrl';
 
   const SHORTCUTS = [
-    { key: 's', ctrl: true, shift: true,
-      label: SHORTCUT_DESCRIPTIONS.toggleSidebar },
-    { key: 'f', ctrl: true, shift: true,
-      label: SHORTCUT_DESCRIPTIONS.toggleFlashcards },
-    { key: 'l', ctrl: true, shift: true,
-      label: SHORTCUT_DESCRIPTIONS.toggleDarkMode },
-    { key: '/', ctrl: true, shift: true,
-      label: SHORTCUT_DESCRIPTIONS.showHelp },
-    { key: 'Escape',
-      label: SHORTCUT_DESCRIPTIONS.close },
-    { key: '/',
-      label: SHORTCUT_DESCRIPTIONS.focusChat },
+    { key: 's', ctrl: true, shift: true, label: SHORTCUT_DESCRIPTIONS.toggleSidebar },
+    { key: 'f', ctrl: true, shift: true, label: SHORTCUT_DESCRIPTIONS.toggleFlashcards },
+    { key: 'l', ctrl: true, shift: true, label: SHORTCUT_DESCRIPTIONS.toggleDarkMode },
+    { key: '/', ctrl: true, shift: true, label: SHORTCUT_DESCRIPTIONS.showHelp },
+    { key: 'Escape', label: SHORTCUT_DESCRIPTIONS.close },
+    { key: '/', label: SHORTCUT_DESCRIPTIONS.focusChat },
   ];
 
   // ============================================================
@@ -67,8 +61,14 @@
 
     // Escape → Close help overlay or sidebar
     if (e.key === 'Escape') {
-      if (isHelpVisible()) { hideHelpOverlay(); return; }
-      if (sb.sidebarVisible) { sb.toggleSidebar?.(); return; }
+      if (isHelpVisible()) {
+        hideHelpOverlay();
+        return;
+      }
+      if (sb.sidebarVisible) {
+        sb.toggleSidebar?.();
+        return;
+      }
       return;
     }
 
@@ -95,7 +95,10 @@
 
   function showHelpOverlay() {
     // Cancel pending removal and clear stale overlay
-    if (removeTimer) { clearTimeout(removeTimer); removeTimer = null; }
+    if (removeTimer) {
+      clearTimeout(removeTimer);
+      removeTimer = null;
+    }
     document.getElementById('si18n-shortcuts-overlay')?.remove();
 
     const overlay = document.createElement('div');
@@ -107,12 +110,14 @@
           <button class="si18n-shortcuts-close">&times;</button>
         </div>
         <div class="si18n-shortcuts-body">
-          ${SHORTCUTS.map(s => `
+          ${SHORTCUTS.map(
+            (s) => `
             <div class="si18n-shortcut-row">
               <span class="si18n-shortcut-desc">${sb.escapeHtml(sb.t(s.label))}</span>
               <kbd class="si18n-shortcut-key">${formatKey(s)}</kbd>
             </div>
-          `).join('')}
+          `,
+          ).join('')}
         </div>
       </div>
     `;
@@ -131,16 +136,17 @@
     if (!overlay) return;
     overlay.classList.remove('visible');
     if (removeTimer) clearTimeout(removeTimer);
-    removeTimer = setTimeout(() => { overlay.remove(); removeTimer = null; }, SKILLBRIDGE_DELAYS.OVERLAY_REMOVE);
+    removeTimer = setTimeout(() => {
+      overlay.remove();
+      removeTimer = null;
+    }, SKILLBRIDGE_DELAYS.OVERLAY_REMOVE);
   }
 
   function formatKey(shortcut) {
     const parts = [];
     if (shortcut.ctrl) parts.push(MOD_LABEL);
     if (shortcut.shift) parts.push('Shift');
-    const display = shortcut.key === 'Escape' ? 'Esc' :
-                    shortcut.key === '/' ? '/' :
-                    shortcut.key.toUpperCase();
+    const display = shortcut.key === 'Escape' ? 'Esc' : shortcut.key === '/' ? '/' : shortcut.key.toUpperCase();
     parts.push(display);
     return parts.join(' + ');
   }

@@ -16,7 +16,7 @@
   // ── Certification exam kill-switch ──────────────────────────
   // Proctored exams (CCA-F etc.): disable extension entirely so it
   // cannot be mistaken for a cheating tool.
-  if (CERT_DISABLE_PATTERNS.some(p => p.test(location.href))) {
+  if (CERT_DISABLE_PATTERNS.some((p) => p.test(location.href))) {
     console.info('[SkillBridge] Certification exam page detected — extension disabled.');
     return;
   }
@@ -24,23 +24,55 @@
   // Target ALL visible text elements — including Skilljar-specific
   // Skilljar selectors are centralized in src/lib/selectors.js
   const TRANSLATABLE_SELECTOR = [
-    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-    'p', 'li', 'td', 'th', 'label', 'figcaption',
-    'span', '.btn-text', '.nav-text', 'blockquote', 'dt', 'dd',
-    SKILLJAR_SELECTORS.courseBox, SKILLJAR_SELECTORS.courseBoxDesc,
-    SKILLJAR_SELECTORS.ribbonText, SKILLJAR_SELECTORS.courseTime,
-    SKILLJAR_SELECTORS.faqTitle, `${SKILLJAR_SELECTORS.faqPost} p`,
-    'div.title', `${SKILLJAR_SELECTORS.lessonRow} div.title`,
-    SKILLJAR_SELECTORS.focusLink, SKILLJAR_SELECTORS.sectionTitle,
-    SKILLJAR_SELECTORS.leftNavReturn, SKILLJAR_SELECTORS.courseOverview,
-    `${SKILLJAR_SELECTORS.lessonTop} h2`, SKILLJAR_SELECTORS.detailsPane,
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'p',
+    'li',
+    'td',
+    'th',
+    'label',
+    'figcaption',
+    'span',
+    '.btn-text',
+    '.nav-text',
+    'blockquote',
+    'dt',
+    'dd',
+    SKILLJAR_SELECTORS.courseBox,
+    SKILLJAR_SELECTORS.courseBoxDesc,
+    SKILLJAR_SELECTORS.ribbonText,
+    SKILLJAR_SELECTORS.courseTime,
+    SKILLJAR_SELECTORS.faqTitle,
+    `${SKILLJAR_SELECTORS.faqPost} p`,
+    'div.title',
+    `${SKILLJAR_SELECTORS.lessonRow} div.title`,
+    SKILLJAR_SELECTORS.focusLink,
+    SKILLJAR_SELECTORS.sectionTitle,
+    SKILLJAR_SELECTORS.leftNavReturn,
+    SKILLJAR_SELECTORS.courseOverview,
+    `${SKILLJAR_SELECTORS.lessonTop} h2`,
+    SKILLJAR_SELECTORS.detailsPane,
   ].join(', ');
 
   const EXCLUDE_SELECTOR = [
-    'code', 'pre', 'script', 'style', 'noscript',
-    '.code-block', '.syntax-highlight',
-    '.skillbridge-sidebar', '#skillbridge-bridge', '#skillbridge-fab',
-    'header nav', '.site-header nav', 'nav.navbar', 'footer',
+    'code',
+    'pre',
+    'script',
+    'style',
+    'noscript',
+    '.code-block',
+    '.syntax-highlight',
+    '.skillbridge-sidebar',
+    '#skillbridge-bridge',
+    '#skillbridge-fab',
+    'header nav',
+    '.site-header nav',
+    'nav.navbar',
+    'footer',
   ].join(', ');
 
   let translator = null;
@@ -96,7 +128,9 @@
   }
 
   // Lookup helper: returns map entry for given lang, falling back to 'en'
-  function t(map, lang) { return map[lang || currentLang] || map['en']; }
+  function t(map, lang) {
+    return map[lang || currentLang] || map['en'];
+  }
 
   // escapeHtml is defined in gemini-block.js (loaded first) — reuse it
   const escapeHtml = window._geminiBlock.escapeHtml;
@@ -112,7 +146,7 @@
 
   function detectExamPage() {
     const url = location.href;
-    if (EXAM_URL_PATTERNS.some(p => p.test(url))) return true;
+    if (EXAM_URL_PATTERNS.some((p) => p.test(url))) return true;
     // DOM-based detection: check for quiz forms or answer option containers
     if (document.querySelector(SKILLJAR_SELECTORS.quizForm)) return true;
     if (document.querySelector(SKILLJAR_SELECTORS.answerOption)) return true;
@@ -131,17 +165,39 @@
   }
 
   window._sb = {
-    get currentLang() { return currentLang; },
-    set currentLang(v) { currentLang = v; },
-    get sidebarVisible() { return sidebarVisible; },
-    set sidebarVisible(v) { sidebarVisible = v; },
-    get translator() { return translator; },
-    get isExamPage() { return isExamPage; },
-    get originalTexts() { return originalTexts; },
-    get translatedTexts() { return translatedTexts; },
-    get originalComments() { return originalComments; },
-    get gtGeneration() { return gtGeneration; },
-    get isOffline() { return isOffline; },
+    get currentLang() {
+      return currentLang;
+    },
+    set currentLang(v) {
+      currentLang = v;
+    },
+    get sidebarVisible() {
+      return sidebarVisible;
+    },
+    set sidebarVisible(v) {
+      sidebarVisible = v;
+    },
+    get translator() {
+      return translator;
+    },
+    get isExamPage() {
+      return isExamPage;
+    },
+    get originalTexts() {
+      return originalTexts;
+    },
+    get translatedTexts() {
+      return translatedTexts;
+    },
+    get originalComments() {
+      return originalComments;
+    },
+    get gtGeneration() {
+      return gtGeneration;
+    },
+    get isOffline() {
+      return isOffline;
+    },
     t,
     escapeHtml,
     isLikelyEnglish,
@@ -208,7 +264,10 @@
       const toast = document.getElementById('si18n-progress-toast');
       bar?.classList.remove('active');
       toast?.classList.remove('active');
-      setTimeout(() => { bar?.remove(); toast?.remove(); }, SKILLBRIDGE_DELAYS.PROGRESS_REMOVE);
+      setTimeout(() => {
+        bar?.remove();
+        toast?.remove();
+      }, SKILLBRIDGE_DELAYS.PROGRESS_REMOVE);
     }, SKILLBRIDGE_DELAYS.PROGRESS_HIDE);
   }
 
@@ -227,12 +286,14 @@
 
     switch (request.action) {
       case 'translatePage':
-        translatePage(request.language).then(() => {
-          sendResponse({ success: true });
-        }).catch((err) => {
-          console.error('[SkillBridge] translatePage error:', err);
-          sendResponse({ success: false, error: err.message });
-        });
+        translatePage(request.language)
+          .then(() => {
+            sendResponse({ success: true });
+          })
+          .catch((err) => {
+            console.error('[SkillBridge] translatePage error:', err);
+            sendResponse({ success: false, error: err.message });
+          });
         return true;
 
       case 'restoreOriginal':
@@ -257,7 +318,7 @@
         }
         switchLanguage(newLang, {
           onDone: () => sendResponse({ success: true }),
-        }).catch(err => {
+        }).catch((err) => {
           console.error('[SkillBridge] setLanguage error:', err);
           sendResponse({ success: false, error: err.message });
         });
@@ -294,7 +355,13 @@
 
   async function init() {
     try {
-      const stored = await chrome.storage.local.get(['targetLanguage', 'autoTranslate', 'welcomeShown', 'darkMode', 'commentTranslate']);
+      const stored = await chrome.storage.local.get([
+        'targetLanguage',
+        'autoTranslate',
+        'welcomeShown',
+        'darkMode',
+        'commentTranslate',
+      ]);
       if (stored.darkMode) document.documentElement.classList.add('si18n-dark');
       commentTranslateEnabled = !!stored.commentTranslate;
       currentLang = stored.targetLanguage || 'en';
@@ -339,8 +406,11 @@
         if (!entries) return;
 
         // Prune detached elements to prevent memory leak
-        const live = entries.filter(e => e.el?.parentNode);
-        if (live.length === 0) { translatedTexts.delete(originalText); return; }
+        const live = entries.filter((e) => e.el?.parentNode);
+        if (live.length === 0) {
+          translatedTexts.delete(originalText);
+          return;
+        }
         if (live.length < entries.length) translatedTexts.set(originalText, live);
 
         for (const entry of live) {
@@ -351,16 +421,15 @@
             setTimeout(() => entry.el.classList.remove('si18n-text-updated'), SKILLBRIDGE_DELAYS.TEXT_UPDATE_FADE);
           }
         }
-
       });
 
-      translator.initialize().catch(err => {
+      translator.initialize().catch((err) => {
         console.warn('[SkillBridge] Bridge init failed (AI features unavailable):', err);
       });
 
       if (typeof YouTubeSubtitleManager !== 'undefined') {
         subtitleManager = new YouTubeSubtitleManager(currentLang);
-        subtitleManager.initialize().catch(err => {
+        subtitleManager.initialize().catch((err) => {
           console.warn('[SkillBridge] YouTube subtitle init failed:', err);
         });
       }
@@ -460,7 +529,9 @@
     // Start GT for visible elements right away (skip redundant viewport check)
     if (gtCandidates.length > 0 && targetLang !== 'en') {
       showTranslationProgress();
-      updateTranslationProgress(Math.round((staticCount / (staticCount + gtCandidates.length + offscreen.length)) * 80));
+      updateTranslationProgress(
+        Math.round((staticCount / (staticCount + gtCandidates.length + offscreen.length)) * 80),
+      );
       queueForGoogleTranslate(gtCandidates, targetLang, true);
     }
 
@@ -526,14 +597,15 @@
   }
 
   function isLikelyEnglish(text) {
-    let latin = 0, total = 0;
+    let latin = 0,
+      total = 0;
     for (let i = 0; i < text.length; i++) {
       const c = text.charCodeAt(i);
       if (c === 32 || c === 9 || c === 10 || c === 13) continue; // whitespace
       total++;
       if ((c >= 65 && c <= 90) || (c >= 97 && c <= 122)) latin++;
     }
-    return total > 0 && (latin / total) > 0.5;
+    return total > 0 && latin / total > 0.5;
   }
 
   /**
@@ -552,7 +624,11 @@
       const visibleItems = [];
       const offscreenItems = [];
       for (const el of elements) {
-        if (gtTranslateQueue.length + visibleItems.length + offscreenItems.length >= SKILLBRIDGE_THRESHOLDS.GT_QUEUE_MAX) break;
+        if (
+          gtTranslateQueue.length + visibleItems.length + offscreenItems.length >=
+          SKILLBRIDGE_THRESHOLDS.GT_QUEUE_MAX
+        )
+          break;
         const text = el.textContent.trim();
         if (!text || text.length < 4) continue;
         const item = { el, text, targetLang, needsGemini: _hasInlineTags(el) };
@@ -572,16 +648,20 @@
     const geminiQueue = [];
 
     while (gtTranslateQueue.length > 0) {
-      if (gtGeneration !== myGeneration) { gtProcessing = false; return; }
+      if (gtGeneration !== myGeneration) {
+        gtProcessing = false;
+        return;
+      }
 
       const batch = gtTranslateQueue.splice(0, SKILLBRIDGE_THRESHOLDS.GT_BATCH_SIZE);
       const targetLang = batch[0].targetLang;
 
-      const cacheResults = await Promise.all(
-        batch.map(item => translator.cachedLookup(item.text, targetLang))
-      );
+      const cacheResults = await Promise.all(batch.map((item) => translator.cachedLookup(item.text, targetLang)));
 
-      if (gtGeneration !== myGeneration) { gtProcessing = false; return; }
+      if (gtGeneration !== myGeneration) {
+        gtProcessing = false;
+        return;
+      }
 
       const uncached = [];
       for (let i = 0; i < batch.length; i++) {
@@ -600,8 +680,8 @@
         }
       }
 
-      const gtItems = uncached.filter(item => !item.needsGemini);
-      const geminiItems = uncached.filter(item => item.needsGemini);
+      const gtItems = uncached.filter((item) => !item.needsGemini);
+      const geminiItems = uncached.filter((item) => item.needsGemini);
 
       for (const item of geminiItems) {
         if (item.el && item.el.parentNode) {
@@ -620,7 +700,10 @@
         const uniqueTexts = [...textToItems.keys()];
         const translations = await translator.googleTranslateBatch(uniqueTexts, targetLang);
 
-        if (gtGeneration !== myGeneration) { gtProcessing = false; return; }
+        if (gtGeneration !== myGeneration) {
+          gtProcessing = false;
+          return;
+        }
 
         for (let i = 0; i < uniqueTexts.length; i++) {
           let translated = translations[i];
@@ -644,7 +727,7 @@
       updateTranslationProgress(80 + Math.round((processedItems / totalItems) * 15));
 
       if (gtTranslateQueue.length > 0) {
-        await new Promise(r => setTimeout(r, SKILLBRIDGE_DELAYS.GT_BATCH));
+        await new Promise((r) => setTimeout(r, SKILLBRIDGE_DELAYS.GT_BATCH));
       }
     }
 
@@ -655,7 +738,9 @@
     for (const { el, targetLang } of geminiQueue) {
       if (el && el.parentNode) {
         window._geminiBlock.queueGeminiBlockTranslation(el, targetLang, {
-          translator, originalTexts, isLikelyEnglish,
+          translator,
+          originalTexts,
+          isLikelyEnglish,
         });
       }
     }
@@ -671,7 +756,7 @@
       if (!el.parentNode) originalTexts.delete(el);
     }
     for (const [text, entries] of translatedTexts) {
-      const live = entries.filter(e => e.el?.parentNode);
+      const live = entries.filter((e) => e.el?.parentNode);
       if (live.length === 0) translatedTexts.delete(text);
       else if (live.length < entries.length) translatedTexts.set(text, live);
     }
@@ -721,7 +806,10 @@
   async function translatePage(targetLang) {
     if (!translator) return;
     currentLang = targetLang;
-    if (targetLang === 'en') { restoreOriginal(); return; }
+    if (targetLang === 'en') {
+      restoreOriginal();
+      return;
+    }
     if (Object.keys(translator.staticDict).length === 0) {
       await translator.loadStaticTranslations(targetLang);
     }
@@ -774,11 +862,15 @@
 
   // Language → Google Fonts family (load only what's needed)
   const _LANG_FONT_MAP = {
-    'ko': 'Noto+Sans+KR', 'ja': 'Noto+Sans+JP',
-    'zh-CN': 'Noto+Sans+SC', 'zh-TW': 'Noto+Sans+TC',
-    'ar': 'Noto+Sans+Arabic', 'hi': 'Noto+Sans+Devanagari',
-    'bn': 'Noto+Sans+Bengali', 'th': 'Noto+Sans+Thai',
-    'he': 'Noto+Sans+Hebrew',
+    ko: 'Noto+Sans+KR',
+    ja: 'Noto+Sans+JP',
+    'zh-CN': 'Noto+Sans+SC',
+    'zh-TW': 'Noto+Sans+TC',
+    ar: 'Noto+Sans+Arabic',
+    hi: 'Noto+Sans+Devanagari',
+    bn: 'Noto+Sans+Bengali',
+    th: 'Noto+Sans+Thai',
+    he: 'Noto+Sans+Hebrew',
   };
 
   function injectGoogleFonts(lang) {
@@ -802,7 +894,7 @@
     const body = document.body;
     if (!body) return;
     // Collect first, then remove (safe iteration)
-    const toRemove = [...body.classList].filter(cls => cls.startsWith('si18n-lang-'));
+    const toRemove = [...body.classList].filter((cls) => cls.startsWith('si18n-lang-'));
     for (const cls of toRemove) body.classList.remove(cls);
     // Set html lang for screen readers and font selection
     document.documentElement.lang = lang || 'en';
@@ -817,14 +909,13 @@
 
   function getTranslatableElements() {
     const examSkip = isExamPage ? EXAM_SKIP_SELECTORS.join(', ') : null;
-    return Array.from(document.querySelectorAll(TRANSLATABLE_SELECTOR)).filter(el => {
+    return Array.from(document.querySelectorAll(TRANSLATABLE_SELECTOR)).filter((el) => {
       if (el.closest(EXCLUDE_SELECTOR)) return false;
       // On exam pages, skip answer choice elements
       if (examSkip && el.matches(examSkip)) return false;
       if (examSkip && el.closest(examSkip)) return false;
       const parent = el.parentElement;
-      if (parent && parent.matches && parent.matches(TRANSLATABLE_SELECTOR) &&
-          !parent.closest(EXCLUDE_SELECTOR)) {
+      if (parent && parent.matches && parent.matches(TRANSLATABLE_SELECTOR) && !parent.closest(EXCLUDE_SELECTOR)) {
         if (['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI', 'TD', 'TH', 'BLOCKQUOTE'].includes(parent.tagName)) {
           return false;
         }
@@ -844,7 +935,7 @@
         if (node.textContent.trim().length < 2) return NodeFilter.FILTER_REJECT;
         if (node.parentElement?.closest('code, pre, script, style')) return NodeFilter.FILTER_REJECT;
         return NodeFilter.FILTER_ACCEPT;
-      }
+      },
     });
     const nodes = [];
     while (walker.nextNode()) nodes.push(walker.currentNode);
@@ -852,7 +943,10 @@
   }
 
   function safeReplaceText(el, newText) {
-    if (el.children.length === 0) { el.textContent = newText; return; }
+    if (el.children.length === 0) {
+      el.textContent = newText;
+      return;
+    }
 
     const textNodes = [];
     for (const node of el.childNodes) {
@@ -878,18 +972,17 @@
   }
 
   function getPageContext() {
-    const title = document.querySelector(`h1, h2, ${SKILLJAR_SELECTORS.courseTitle}`)?.textContent || document.title || '';
+    const title =
+      document.querySelector(`h1, h2, ${SKILLJAR_SELECTORS.courseTitle}`)?.textContent || document.title || '';
     if (isExamPage) {
       return `Certification Exam: ${title}. Page type: exam/assessment. DO NOT help with answers.`;
     }
     const headings = Array.from(document.querySelectorAll('h1, h2, h3, h4'))
-      .map(h => h.textContent.trim())
+      .map((h) => h.textContent.trim())
       .slice(0, 5)
       .join(', ');
     const lessonBody = document.querySelector('#lesson-main, .lesson-content, .course-content, main');
-    const bodyText = lessonBody
-      ? lessonBody.innerText.replace(/\s+/g, ' ').trim().slice(0, 2000)
-      : '';
+    const bodyText = lessonBody ? lessonBody.innerText.replace(/\s+/g, ' ').trim().slice(0, 2000) : '';
     return `Course: ${title}. Sections: ${headings}${bodyText ? `\n\nLesson content:\n${bodyText}` : ''}`;
   }
 
@@ -915,9 +1008,11 @@
 
         if (currentLang === 'en' || !translator || !isReady) continue;
         for (const node of mutation.addedNodes) {
-          if (node.nodeType === Node.ELEMENT_NODE &&
-              !node.closest('.skillbridge-sidebar') &&
-              !node.closest('#skillbridge-bridge')) {
+          if (
+            node.nodeType === Node.ELEMENT_NODE &&
+            !node.closest('.skillbridge-sidebar') &&
+            !node.closest('#skillbridge-bridge')
+          ) {
             debounceTranslateNew(node);
           }
         }
@@ -982,7 +1077,7 @@
     _lastHref = href;
 
     // If user navigated to a certification exam page, tear down
-    if (CERT_DISABLE_PATTERNS.some(p => p.test(href))) {
+    if (CERT_DISABLE_PATTERNS.some((p) => p.test(href))) {
       domObserver?.disconnect();
       restoreOriginal();
       document.getElementById('si18n-exam-banner')?.remove();
@@ -994,7 +1089,11 @@
     if (!domObserver || !document.body) {
       observeDOM();
     } else {
-      try { domObserver.observe(document.body, { childList: true, subtree: true }); } catch (_) { /* observer already active */ }
+      try {
+        domObserver.observe(document.body, { childList: true, subtree: true });
+      } catch (_) {
+        /* observer already active */
+      }
     }
 
     // Re-detect exam mode for the new page
