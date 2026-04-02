@@ -25,8 +25,7 @@ function buildProtectedTermsMap(targetLang, protectedEntries) {
       }
     }
   }
-  PROTECTED_TERMS_SORTED = Object.entries(map)
-    .sort((a, b) => b[0].length - a[0].length);
+  PROTECTED_TERMS_SORTED = Object.entries(map).sort((a, b) => b[0].length - a[0].length);
 }
 
 function restoreProtectedTerms(text) {
@@ -50,13 +49,13 @@ function resetState() {
 describe('Protected Terms System', () => {
   const koProtected = {
     'Claude Code': ['클로드 코드', '클로드 Code', '클라우드 코드'],
-    'Claude': ['클로드', '클라우드'],
-    'Anthropic': ['앤스로픽', '앤트로픽', '안트로픽'],
-    'Enterprise': ['기업'],
-    'skill': ['기술', '스킬'],
-    'skills': ['기술들', '스킬들', '기술'],
+    Claude: ['클로드', '클라우드'],
+    Anthropic: ['앤스로픽', '앤트로픽', '안트로픽'],
+    Enterprise: ['기업'],
+    skill: ['기술', '스킬'],
+    skills: ['기술들', '스킬들', '기술'],
     'SKILL.md': ['스킬.md', '기술.md'],
-    'frontmatter': ['프론트매터', '앞부분', '서문'],
+    frontmatter: ['프론트매터', '앞부분', '서문'],
   };
 
   beforeEach(() => {
@@ -79,15 +78,14 @@ describe('Protected Terms System', () => {
     test('rebuilds for different language', () => {
       buildProtectedTermsMap('ko', koProtected);
       const koBuild = [...PROTECTED_TERMS_SORTED];
-      buildProtectedTermsMap('ja', { 'Claude': ['クロード'] });
+      buildProtectedTermsMap('ja', { Claude: ['クロード'] });
       expect(PROTECTED_TERMS_SORTED).not.toEqual(koBuild);
     });
 
     test('sorts by length descending (longer matches first)', () => {
       buildProtectedTermsMap('ko', koProtected);
       for (let i = 1; i < PROTECTED_TERMS_SORTED.length; i++) {
-        expect(PROTECTED_TERMS_SORTED[i - 1][0].length)
-          .toBeGreaterThanOrEqual(PROTECTED_TERMS_SORTED[i][0].length);
+        expect(PROTECTED_TERMS_SORTED[i - 1][0].length).toBeGreaterThanOrEqual(PROTECTED_TERMS_SORTED[i][0].length);
       }
     });
   });
@@ -102,8 +100,7 @@ describe('Protected Terms System', () => {
     });
 
     test('fixes single mistranslation', () => {
-      expect(restoreProtectedTerms('클로드는 AI입니다'))
-        .toBe('Claude는 AI입니다');
+      expect(restoreProtectedTerms('클로드는 AI입니다')).toBe('Claude는 AI입니다');
     });
 
     test('fixes multiple mistranslations in one string', () => {
@@ -120,18 +117,15 @@ describe('Protected Terms System', () => {
     });
 
     test('fixes Enterprise term', () => {
-      expect(restoreProtectedTerms('기업 플랜을 사용하세요'))
-        .toBe('Enterprise 플랜을 사용하세요');
+      expect(restoreProtectedTerms('기업 플랜을 사용하세요')).toBe('Enterprise 플랜을 사용하세요');
     });
 
     test('fixes frontmatter term', () => {
-      expect(restoreProtectedTerms('프론트매터를 작성하세요'))
-        .toBe('frontmatter를 작성하세요');
+      expect(restoreProtectedTerms('프론트매터를 작성하세요')).toBe('frontmatter를 작성하세요');
     });
 
     test('fixes SKILL.md term', () => {
-      expect(restoreProtectedTerms('스킬.md 파일을 만드세요'))
-        .toBe('SKILL.md 파일을 만드세요');
+      expect(restoreProtectedTerms('스킬.md 파일을 만드세요')).toBe('SKILL.md 파일을 만드세요');
     });
 
     test('handles empty string', () => {

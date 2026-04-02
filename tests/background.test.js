@@ -20,9 +20,7 @@ global.chrome = {
 global.chrome.runtime.onInstalled = { addListener: () => {} };
 global.chrome.runtime.onMessage = { addListener: () => {} };
 
-const src = fs.readFileSync(
-  path.join(__dirname, '..', 'src', 'background', 'background.js'), 'utf8'
-);
+const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'background', 'background.js'), 'utf8');
 
 // Extract pure functions via eval
 const fns = new Function(`
@@ -56,7 +54,12 @@ describe('gtLangCode', () => {
 
 describe('parseGTResponse', () => {
   test('extracts translated text from GT response format', () => {
-    const data = [[['안녕하세요', 'Hello'], ['세계', 'World']]];
+    const data = [
+      [
+        ['안녕하세요', 'Hello'],
+        ['세계', 'World'],
+      ],
+    ];
     expect(parseGTResponse(data, 'fallback')).toBe('안녕하세요세계');
   });
 
@@ -73,7 +76,12 @@ describe('parseGTResponse', () => {
   });
 
   test('handles segments with null first element', () => {
-    const data = [[[null, 'Hello'], ['test', 'Test']]];
+    const data = [
+      [
+        [null, 'Hello'],
+        ['test', 'Test'],
+      ],
+    ];
     expect(parseGTResponse(data, 'fallback')).toBe('test');
   });
 

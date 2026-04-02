@@ -19,7 +19,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const stored = await chrome.storage.local.get(['targetLanguage', 'autoTranslate']);
   const lang = stored.targetLanguage || 'en';
 
-  function t(map) { return map[lang] || map['en']; }
+  function t(map) {
+    return map[lang] || map['en'];
+  }
 
   // Build language select dynamically from constants
   const langSelect = document.getElementById('lang-select');
@@ -90,7 +92,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   function showStatus(text, type) {
     status.textContent = text;
     status.className = `status ${type}`;
-    if (type) setTimeout(() => { status.textContent = ''; status.className = 'status'; }, 4000);
+    if (type)
+      setTimeout(() => {
+        status.textContent = '';
+        status.className = 'status';
+      }, 4000);
   }
 });
 

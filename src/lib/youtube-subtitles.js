@@ -103,7 +103,7 @@ class YouTubeSubtitleManager {
 
   _isYouTubeEmbed(iframe) {
     const src = iframe.src || '';
-    return YouTubeSubtitleManager.EMBED_DOMAINS.some(d => src.includes(d));
+    return YouTubeSubtitleManager.EMBED_DOMAINS.some((d) => src.includes(d));
   }
 
   // ==================== MESSAGE LISTENER ====================
@@ -119,9 +119,18 @@ class YouTubeSubtitleManager {
     this._messageHandler = (event) => {
       // Only process messages from YouTube (strict hostname validation)
       let originHost;
-      try { originHost = new URL(event.origin).hostname; } catch { return; }
-      if (!originHost.endsWith('.youtube.com') && originHost !== 'youtube.com' &&
-          !originHost.endsWith('.youtube-nocookie.com') && originHost !== 'youtube-nocookie.com') return;
+      try {
+        originHost = new URL(event.origin).hostname;
+      } catch {
+        return;
+      }
+      if (
+        !originHost.endsWith('.youtube.com') &&
+        originHost !== 'youtube.com' &&
+        !originHost.endsWith('.youtube-nocookie.com') &&
+        originHost !== 'youtube-nocookie.com'
+      )
+        return;
 
       let data;
       try {
@@ -133,9 +142,11 @@ class YouTubeSubtitleManager {
       if (!data || !data.event) return;
 
       // React to player ready or state change (1 = playing)
-      if (data.event === 'onReady' ||
-          data.event === 'initialDelivery' ||
-          (data.event === 'onStateChange' && data.info === 1)) {
+      if (
+        data.event === 'onReady' ||
+        data.event === 'initialDelivery' ||
+        (data.event === 'onStateChange' && data.info === 1)
+      ) {
         // Find which iframe this came from and send caption commands
         this._onPlayerEvent(event.source);
       }
@@ -193,17 +204,21 @@ class YouTubeSubtitleManager {
         iframe.src = newSrc;
 
         // Register + send commands with aggressive retries after load
-        iframe.addEventListener('load', () => {
-          this._registerAsListener(iframe);
-          // Multiple retries to ensure captions activate
-          const delays = [500, 1500, 3000, 5000, 8000];
-          for (const delay of delays) {
-            setTimeout(() => {
-              this._registerAsListener(iframe);
-              this._sendCaptionCommands(iframe);
-            }, delay);
-          }
-        }, { once: true });
+        iframe.addEventListener(
+          'load',
+          () => {
+            this._registerAsListener(iframe);
+            // Multiple retries to ensure captions activate
+            const delays = [500, 1500, 3000, 5000, 8000];
+            for (const delay of delays) {
+              setTimeout(() => {
+                this._registerAsListener(iframe);
+                this._sendCaptionCommands(iframe);
+              }, delay);
+            }
+          },
+          { once: true },
+        );
       } else {
         // Src unchanged but language might have changed — re-send commands
         this._sendCaptionCommands(iframe);
@@ -219,10 +234,13 @@ class YouTubeSubtitleManager {
    */
   _registerAsListener(iframe) {
     try {
-      iframe.contentWindow.postMessage(JSON.stringify({
-        event: 'listening',
-        id: 1
-      }), '*');
+      iframe.contentWindow.postMessage(
+        JSON.stringify({
+          event: 'listening',
+          id: 1,
+        }),
+        '*',
+      );
     } catch (e) {
       console.debug('[SkillBridge] Cross-origin postMessage:', e.message);
     }
@@ -237,41 +255,56 @@ class YouTubeSubtitleManager {
 
     try {
       // Step 1: Load captions module
-      iframe.contentWindow.postMessage(JSON.stringify({
-        event: 'command',
-        func: 'loadModule',
-        args: ['captions']
-      }), '*');
+      iframe.contentWindow.postMessage(
+        JSON.stringify({
+          event: 'command',
+          func: 'loadModule',
+          args: ['captions'],
+        }),
+        '*',
+      );
 
       // Step 2: After module loads, set caption track + force show
       setTimeout(() => {
         try {
           // Set the caption track to English with auto-translation
-          iframe.contentWindow.postMessage(JSON.stringify({
-            event: 'command',
-            func: 'setOption',
-            args: ['captions', 'track', {
-              languageCode: 'en',
-              translationLanguage: {
-                languageCode: ytLang,
-                languageName: this._ytLangName(this.targetLang)
-              }
-            }]
-          }), '*');
+          iframe.contentWindow.postMessage(
+            JSON.stringify({
+              event: 'command',
+              func: 'setOption',
+              args: [
+                'captions',
+                'track',
+                {
+                  languageCode: 'en',
+                  translationLanguage: {
+                    languageCode: ytLang,
+                    languageName: this._ytLangName(this.targetLang),
+                  },
+                },
+              ],
+            }),
+            '*',
+          );
 
           // Force captions visible (fontSize > 0 = visible)
-          iframe.contentWindow.postMessage(JSON.stringify({
-            event: 'command',
-            func: 'setOption',
-            args: ['captions', 'fontSize', 1]
-          }), '*');
+          iframe.contentWindow.postMessage(
+            JSON.stringify({
+              event: 'command',
+              func: 'setOption',
+              args: ['captions', 'fontSize', 1],
+            }),
+            '*',
+          );
 
           // Also try showCaptions command (undocumented but works on some embeds)
-          iframe.contentWindow.postMessage(JSON.stringify({
-            event: 'command',
-            func: 'showCaptions'
-          }), '*');
-
+          iframe.contentWindow.postMessage(
+            JSON.stringify({
+              event: 'command',
+              func: 'showCaptions',
+            }),
+            '*',
+          );
         } catch (e) {
           console.debug('[SkillBridge] Caption command failed:', e.message);
         }

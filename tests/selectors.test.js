@@ -10,9 +10,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const selectorsSrc = fs.readFileSync(
-  path.join(__dirname, '..', 'src', 'lib', 'selectors.js'), 'utf8'
-);
+const selectorsSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'selectors.js'), 'utf8');
 
 const SKILLJAR_SELECTORS = new Function(`${selectorsSrc}; return SKILLJAR_SELECTORS;`)();
 
@@ -72,7 +70,7 @@ describe('SKILLJAR_SELECTORS', () => {
       for (const [key, value] of Object.entries(SKILLJAR_SELECTORS)) {
         // Each comma-separated selector should start with #, ., or a letter (tag name),
         // or contain attribute selectors ([...)
-        const parts = value.split(',').map(s => s.trim());
+        const parts = value.split(',').map((s) => s.trim());
         for (const part of parts) {
           const valid = /^[.#a-zA-Z[]/.test(part);
           expect(valid).toBe(true);

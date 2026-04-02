@@ -46,9 +46,11 @@ if (!constMapMatch) {
   fail('Could not find GT_LANG_MAP in constants.js');
 } else {
   const entries = [...constMapMatch[1].matchAll(/'([^']+)'\s*:\s*'([^']+)'/g)];
-  const constMap = Object.fromEntries(entries.map(m => [m[1], m[2]]));
+  const constMap = Object.fromEntries(entries.map((m) => [m[1], m[2]]));
   if (JSON.stringify(constMap) !== JSON.stringify(jsonMap)) {
-    fail(`GT_LANG_MAP in constants.js differs from constants.json\n  constants.js:   ${JSON.stringify(constMap)}\n  constants.json: ${JSON.stringify(jsonMap)}`);
+    fail(
+      `GT_LANG_MAP in constants.js differs from constants.json\n  constants.js:   ${JSON.stringify(constMap)}\n  constants.json: ${JSON.stringify(jsonMap)}`,
+    );
   }
 }
 
@@ -57,7 +59,9 @@ const constVerMatch = constSrc.match(/const\s+YOUTUBE_CLIENT_VERSION\s*=\s*'([^'
 if (!constVerMatch) {
   fail('Could not find YOUTUBE_CLIENT_VERSION in constants.js');
 } else if (constVerMatch[1] !== jsonVersion) {
-  fail(`YOUTUBE_CLIENT_VERSION in constants.js differs from constants.json\n  constants.js:   ${constVerMatch[1]}\n  constants.json: ${jsonVersion}`);
+  fail(
+    `YOUTUBE_CLIENT_VERSION in constants.js differs from constants.json\n  constants.js:   ${constVerMatch[1]}\n  constants.json: ${jsonVersion}`,
+  );
 }
 
 // --------------- 3. Extract fallback values from background.js ---------------
@@ -70,9 +74,11 @@ if (!bgMapMatch) {
   fail('Could not find _BG_GT_LANG_MAP in background.js');
 } else {
   const entries = [...bgMapMatch[1].matchAll(/'([^']+)'\s*:\s*'([^']+)'/g)];
-  const bgMap = Object.fromEntries(entries.map(m => [m[1], m[2]]));
+  const bgMap = Object.fromEntries(entries.map((m) => [m[1], m[2]]));
   if (JSON.stringify(bgMap) !== JSON.stringify(jsonMap)) {
-    fail(`_BG_GT_LANG_MAP fallback in background.js differs from constants.json\n  background.js:  ${JSON.stringify(bgMap)}\n  constants.json: ${JSON.stringify(jsonMap)}`);
+    fail(
+      `_BG_GT_LANG_MAP fallback in background.js differs from constants.json\n  background.js:  ${JSON.stringify(bgMap)}\n  constants.json: ${JSON.stringify(jsonMap)}`,
+    );
   }
 }
 
@@ -81,7 +87,9 @@ const bgVerMatch = bgSrc.match(/let\s+_BG_YT_CLIENT_VERSION\s*=\s*'([^']+)'/);
 if (!bgVerMatch) {
   fail('Could not find _BG_YT_CLIENT_VERSION in background.js');
 } else if (bgVerMatch[1] !== jsonVersion) {
-  fail(`_BG_YT_CLIENT_VERSION fallback in background.js differs from constants.json\n  background.js:  ${bgVerMatch[1]}\n  constants.json: ${jsonVersion}`);
+  fail(
+    `_BG_YT_CLIENT_VERSION fallback in background.js differs from constants.json\n  background.js:  ${bgVerMatch[1]}\n  constants.json: ${jsonVersion}`,
+  );
 }
 
 // --------------- Result ---------------

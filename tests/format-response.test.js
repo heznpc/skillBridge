@@ -9,25 +9,18 @@ const fs = require('fs');
 const path = require('path');
 
 // --- Extract escapeHtml from gemini-block.js (the canonical implementation) ---
-const geminiBlockSrc = fs.readFileSync(
-  path.join(__dirname, '..', 'src', 'lib', 'gemini-block.js'), 'utf8'
-);
-const escapeHtmlBody = geminiBlockSrc.match(
-  /function escapeHtml\(text\)\s*\{([\s\S]*?)\n {2}\}/
-);
+const geminiBlockSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'gemini-block.js'), 'utf8');
+const escapeHtmlBody = geminiBlockSrc.match(/function escapeHtml\(text\)\s*\{([\s\S]*?)\n {2}\}/);
 const escapeHtml = new Function('text', escapeHtmlBody[1]);
 
 // --- Extract formatResponse + applyInline from sidebar-chat.js ---
-const sidebarSrc = fs.readFileSync(
-  path.join(__dirname, '..', 'src', 'content', 'sidebar-chat.js'), 'utf8'
-);
+const sidebarSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'content', 'sidebar-chat.js'), 'utf8');
 const fmtBlock = sidebarSrc.match(
-  /function formatResponse\(text\)\s*\{[\s\S]*?\n {2}\}\n\n {2}function applyInline[\s\S]*?\n {2}\}/
+  /function formatResponse\(text\)\s*\{[\s\S]*?\n {2}\}\n\n {2}function applyInline[\s\S]*?\n {2}\}/,
 );
-const { formatResponse, applyInline } = new Function(
-  'sb',
-  `${fmtBlock[0]}\n  return { formatResponse, applyInline };`
-)({ escapeHtml });
+const { formatResponse, applyInline } = new Function('sb', `${fmtBlock[0]}\n  return { formatResponse, applyInline };`)(
+  { escapeHtml },
+);
 
 describe('applyInline', () => {
   test('converts bold markdown', () => {
@@ -43,8 +36,9 @@ describe('applyInline', () => {
   });
 
   test('handles multiple inline styles', () => {
-    expect(applyInline('**bold** and *italic* and `code`'))
-      .toBe('<strong>bold</strong> and <em>italic</em> and <code>code</code>');
+    expect(applyInline('**bold** and *italic* and `code`')).toBe(
+      '<strong>bold</strong> and <em>italic</em> and <code>code</code>',
+    );
   });
 
   test('leaves plain text unchanged', () => {
