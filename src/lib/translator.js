@@ -13,19 +13,27 @@
 
 class SkilljarTranslator {
   constructor() {
-    this.staticDict = {};       // Merged flat dictionary from JSON
-    this.isReady = false;       // Bridge ready (for Gemini + AI Tutor)
+    /** @type {Record<string, string>} Merged flat dictionary from JSON */
+    this.staticDict = {};
+    /** @type {boolean} True once the page bridge is ready (Gemini + AI Tutor) */
+    this.isReady = false;
+    /** @type {Map<string, function>} Pending request callbacks keyed by ID */
     this.pendingCallbacks = new Map();
-    this._db = null;            // IndexedDB for verified translation cache
-    this._verifyQueue = [];     // Queue of texts awaiting Gemini verification
-    this._verifyLock = null;    // Promise-based lock for verify queue processing
-    this._onUpdateCallbacks = []; // Callbacks when Gemini improves a translation
-    // Premium languages have static dictionaries; others use Google Translate only
-    // Use shared constants from constants.js
+    /** @type {IDBDatabase|null} IndexedDB handle for verified translation cache */
+    this._db = null;
+    /** @type {Array<{original: string, googleTranslation: string, targetLang: string}>} */
+    this._verifyQueue = [];
+    /** @type {Promise|null} Lock for verify queue processing */
+    this._verifyLock = null;
+    /** @type {Array<function>} Callbacks when Gemini improves a translation */
+    this._onUpdateCallbacks = [];
+    /** @type {string[]} ISO codes with static dictionaries */
     this.premiumLanguages = PREMIUM_LANGUAGE_CODES;
+    /** @type {Record<string, string>} ISO code to language name */
     this.supportedLanguages = SUPPORTED_LANGUAGE_MAP;
   }
 
+  /** @returns {Promise<boolean>} true if initialization succeeded */
   async initialize() {
     try {
       await this._openDB();
@@ -74,7 +82,7 @@ class SkilljarTranslator {
 
   /**
    * Register a callback for when Gemini finishes verifying a translation.
-   * Callback receives (originalText, finalTranslation, targetLang, wasImproved).
+   * @param {(originalText: string, finalTranslation: string, targetLang: string, wasImproved: boolean) => void} callback
    */
   onTranslationUpdate(callback) {
     this._onUpdateCallbacks.push(callback);
@@ -84,6 +92,9 @@ class SkilljarTranslator {
 
   /**
    * Load static translation JSON for a given language.
+   * Populates {@link staticDict} and internal protected-terms map.
+   * @param {string} lang — ISO 639-1 language code (e.g. 'ko', 'ja')
+   * @returns {Promise<void>}
    */
   async loadStaticTranslations(lang) {
     try {
@@ -141,6 +152,7 @@ class SkilljarTranslator {
     return this._protectedTerms || {};
   }
 
+  /** @param {string} text @returns {string|null} */
   staticLookup(text) {
     if (!text) return null;
     const trimmed = text.trim();
@@ -190,6 +202,9 @@ class SkilljarTranslator {
 
   /**
    * Look up a cached Gemini-verified translation.
+   * @param {string} text — original English text
+   * @param {string} targetLang — ISO 639-1
+   * @returns {Promise<string|null>}
    */
   async cachedLookup(text, targetLang) {
     if (!this._db) return null;
@@ -245,7 +260,9 @@ class SkilljarTranslator {
 
   /**
    * Fast Google Translate via background service worker.
-   * Returns translated text or null on failure.
+   * @param {string} text — English source text
+   * @param {string} targetLang — ISO 639-1
+   * @returns {Promise<string|null>} translated text, or null on failure
    */
   async googleTranslate(text, targetLang) {
     try {
@@ -267,6 +284,9 @@ class SkilljarTranslator {
 
   /**
    * Batch Google Translate for multiple texts at once.
+   * @param {string[]} texts — English source texts
+   * @param {string} targetLang — ISO 639-1
+   * @returns {Promise<string[]>} translated texts (originals on failure)
    */
   async googleTranslateBatch(texts, targetLang) {
     try {
@@ -290,18 +310,11 @@ class SkilljarTranslator {
 
   /**
    * Queue a text for background Gemini verification.
-   * After Google Translate shows the initial result, Gemini checks quality.
-   */
-  /**
-   * Smart Gemini verification — only for content where Google Translate
-   * quality is likely insufficient.
-   *
-   * SKIP: short UI labels, numbers, time strings, simple phrases
-   * VERIFY: long paragraphs, technical content, complex sentences
-   */
-  /**
-   * Returns true if the text was actually queued for verification,
-   * false if it was filtered out (too short, simple, etc.).
+   * Skips short/simple strings where Google Translate is sufficient.
+   * @param {string} originalText — English source
+   * @param {string} googleTranslation — Google Translate output
+   * @param {string} targetLang — ISO 639-1
+   * @returns {boolean} true if queued, false if filtered out
    */
   queueGeminiVerify(originalText, googleTranslation, targetLang) {
     if (!originalText || !googleTranslation) return false;
@@ -436,8 +449,10 @@ RULES:
   // ==================== MAIN TRANSLATE API ====================
 
   /**
-   * Translate text. Priority: static dict → cache → Google Translate + Gemini verify.
-   * Returns { text, source } where source is 'static'|'cache'|'google'|'original'.
+   * Translate text. Priority: static dict -> cache -> Google Translate + Gemini verify.
+   * @param {string} text — English source text
+   * @param {string} targetLang — ISO 639-1
+   * @returns {Promise<{text: string, source: 'static'|'cache'|'google'|'original'}>}
    */
   async translate(text, targetLang) {
     if (!text || !text.trim()) return { text, source: 'original' };
@@ -465,7 +480,13 @@ RULES:
   // ==================== AI TUTOR CHAT ====================
 
   /**
-   * Streaming chat — calls onChunk(text) for each token, returns full text.
+   * Streaming AI tutor chat. Calls onChunk for each token, returns full response.
+   * @param {string} userMessage
+   * @param {string} targetLang — ISO 639-1
+   * @param {string} [courseContext=''] — current course/page context
+   * @param {(chunk: string, fullText: string) => void} onChunk — streaming callback
+   * @param {{isExamPage?: boolean}} [opts={}]
+   * @returns {Promise<string>} complete response text
    */
   async chatStream(userMessage, targetLang, courseContext = '', onChunk, opts = {}) {
     try {
@@ -531,9 +552,7 @@ RULES:
       });
     } catch (err) {
       console.error('[SkillBridge] Chat stream error:', err);
-      return targetLang === 'ko'
-        ? '죄송합니다. 응답을 생성하지 못했습니다. 잠시 후 다시 시도해주세요.'
-        : 'Sorry, I could not generate a response. Please try again.';
+      return (typeof CHAT_ERROR_LABELS !== 'undefined' && CHAT_ERROR_LABELS[targetLang]) || 'Sorry, I could not generate a response. Please try again.';
     }
   }
 

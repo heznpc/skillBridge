@@ -497,6 +497,36 @@
     "(5 minutes)": "(5분)",
     "(2 minutes)": "(2분)"
   },
+  "claudeCowork": {
+    "Introduction to Claude Cowork": "Claude Cowork 소개",
+    "What is Claude Cowork?": "Claude Cowork란 무엇인가요?",
+    "Claude Cowork is a collaborative coding environment": "Claude Cowork는 협업 코딩 환경입니다",
+    "Getting started with Cowork": "Cowork 시작하기",
+    "Real-time collaboration with Claude": "Claude와의 실시간 협업",
+    "Cowork sessions": "Cowork 세션",
+    "Starting a Cowork session": "Cowork 세션 시작하기",
+    "Sharing context in Cowork": "Cowork에서 컨텍스트 공유하기",
+    "Best practices for Cowork": "Cowork 모범 사례",
+    "Cowork vs Claude Code": "Cowork vs Claude Code",
+    "When to use Cowork": "Cowork를 사용해야 할 때",
+    "Collaborative development": "협업 개발",
+    "Working alongside Claude in your IDE": "IDE에서 Claude와 함께 작업하기"
+  },
+  "subagents": {
+    "Introduction to Subagents": "Subagents 소개",
+    "What are subagents?": "Subagents란 무엇인가요?",
+    "Subagents are specialized child agents": "Subagents는 전문화된 하위 에이전트입니다",
+    "Creating subagents": "Subagents 생성하기",
+    "Delegating tasks to subagents": "Subagents에 작업 위임하기",
+    "Subagent communication patterns": "Subagent 통신 패턴",
+    "Parallel subagent execution": "병렬 Subagent 실행",
+    "Subagent isolation and safety": "Subagent 격리 및 안전",
+    "When to use subagents": "Subagents를 사용해야 할 때",
+    "Subagent best practices": "Subagent 모범 사례",
+    "Orchestrating multiple subagents": "다중 Subagents 오케스트레이션",
+    "Subagent resource management": "Subagent 리소스 관리",
+    "Building complex workflows with subagents": "Subagents를 활용한 복잡한 워크플로우 구축"
+  },
   "aiFluency": {
     "AI Fluency: Framework & Foundations": "AI 활용 역량: 프레임워크 및 기본 원리",
     "Build a strong foundation in AI concepts and practical applications": "AI 개념과 실용적 활용에 대한 탄탄한 기초를 쌓습니다",

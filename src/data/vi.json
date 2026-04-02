@@ -497,6 +497,36 @@
     "(5 minutes)": "(5 phút)",
     "(2 minutes)": "(2 phút)"
   },
+  "claudeCowork": {
+    "Introduction to Claude Cowork": "Giới thiệu về Claude Cowork",
+    "What is Claude Cowork?": "Claude Cowork là gì?",
+    "Claude Cowork is a collaborative coding environment": "Claude Cowork là một môi trường lập trình cộng tác",
+    "Getting started with Cowork": "Bắt đầu với Cowork",
+    "Real-time collaboration with Claude": "Cộng tác thời gian thực với Claude",
+    "Cowork sessions": "Phiên làm việc Cowork",
+    "Starting a Cowork session": "Bắt đầu phiên Cowork",
+    "Sharing context in Cowork": "Chia sẻ ngữ cảnh trong Cowork",
+    "Best practices for Cowork": "Các phương pháp hay nhất cho Cowork",
+    "Cowork vs Claude Code": "Cowork và Claude Code",
+    "When to use Cowork": "Khi nào nên sử dụng Cowork",
+    "Collaborative development": "Phát triển cộng tác",
+    "Working alongside Claude in your IDE": "Làm việc cùng Claude trong IDE của bạn"
+  },
+  "subagents": {
+    "Introduction to Subagents": "Giới thiệu về Subagents",
+    "What are subagents?": "Subagents là gì?",
+    "Subagents are specialized child agents": "Subagents là các tác nhân con chuyên biệt",
+    "Creating subagents": "Tạo Subagents",
+    "Delegating tasks to subagents": "Ủy thác nhiệm vụ cho Subagents",
+    "Subagent communication patterns": "Mẫu giao tiếp của Subagent",
+    "Parallel subagent execution": "Thực thi Subagent song song",
+    "Subagent isolation and safety": "Cách ly và an toàn Subagent",
+    "When to use subagents": "Khi nào nên sử dụng Subagents",
+    "Subagent best practices": "Các phương pháp hay nhất cho Subagent",
+    "Orchestrating multiple subagents": "Điều phối nhiều Subagents",
+    "Subagent resource management": "Quản lý tài nguyên Subagent",
+    "Building complex workflows with subagents": "Xây dựng quy trình làm việc phức tạp với Subagents"
+  },
   "aiFluency": {
     "AI Fluency: Framework & Foundations": "Thành thạo AI: Khung & Nền tảng",
     "Build a strong foundation in AI concepts and practical applications": "Xây dựng nền tảng vững chắc về các khái niệm AI và ứng dụng thực tế",

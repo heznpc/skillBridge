@@ -8,13 +8,8 @@
  * 4. Periodic maintenance via Chrome Alarms (cache cleanup, version check)
  */
 
-// Language code mapping for Google Translate API
-// NOTE: Same map exists in constants.js (GT_LANG_MAP) for content scripts.
-// Service workers can't share globals with content scripts, so we duplicate here.
+// Shared constants — kept in sync with src/shared/constants.json via scripts/check-bg-sync.js
 const _BG_GT_LANG_MAP = { 'zh-CN': 'zh-CN', 'zh-TW': 'zh-TW', 'pt-BR': 'pt' };
-
-// YouTube InnerTube client version
-// NOTE: Same value exists in constants.js (YOUTUBE_CLIENT_VERSION) for content scripts.
 const _BG_YT_CLIENT_VERSION = '2.20260401.00.00';
 
 function gtLangCode(lang) {

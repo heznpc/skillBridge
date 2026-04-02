@@ -497,6 +497,36 @@
     "(5 minutes)": "(5 minutos)",
     "(2 minutes)": "(2 minutos)"
   },
+  "claudeCowork": {
+    "Introduction to Claude Cowork": "Introducción a Claude Cowork",
+    "What is Claude Cowork?": "¿Qué es Claude Cowork?",
+    "Claude Cowork is a collaborative coding environment": "Claude Cowork es un entorno de codificación colaborativa",
+    "Getting started with Cowork": "Primeros pasos con Cowork",
+    "Real-time collaboration with Claude": "Colaboración en tiempo real con Claude",
+    "Cowork sessions": "Sesiones de Cowork",
+    "Starting a Cowork session": "Iniciar una sesión de Cowork",
+    "Sharing context in Cowork": "Compartir contexto en Cowork",
+    "Best practices for Cowork": "Mejores prácticas para Cowork",
+    "Cowork vs Claude Code": "Cowork vs Claude Code",
+    "When to use Cowork": "Cuándo usar Cowork",
+    "Collaborative development": "Desarrollo colaborativo",
+    "Working alongside Claude in your IDE": "Trabajar junto a Claude en tu IDE"
+  },
+  "subagents": {
+    "Introduction to Subagents": "Introducción a los Subagents",
+    "What are subagents?": "¿Qué son los Subagents?",
+    "Subagents are specialized child agents": "Los Subagents son agentes secundarios especializados",
+    "Creating subagents": "Creación de Subagents",
+    "Delegating tasks to subagents": "Delegar tareas a Subagents",
+    "Subagent communication patterns": "Patrones de comunicación de Subagent",
+    "Parallel subagent execution": "Ejecución paralela de Subagents",
+    "Subagent isolation and safety": "Aislamiento y seguridad de Subagent",
+    "When to use subagents": "Cuándo usar Subagents",
+    "Subagent best practices": "Mejores prácticas de Subagent",
+    "Orchestrating multiple subagents": "Orquestación de múltiples Subagents",
+    "Subagent resource management": "Gestión de recursos de Subagent",
+    "Building complex workflows with subagents": "Construcción de flujos de trabajo complejos con Subagents"
+  },
   "aiFluency": {
     "AI Fluency: Framework & Foundations": "Fluidez en IA: Marco y Fundamentos",
     "Build a strong foundation in AI concepts and practical applications": "Construye una base sólida en conceptos de IA y aplicaciones prácticas",
