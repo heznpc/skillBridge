@@ -71,14 +71,14 @@ const availableLangs = parseLanguageArray(constantsSrc, 'AVAILABLE_LANGUAGES');
 
 // Deduplicate (spread + literal may overlap)
 const seen = new Set();
-const uniqueAvailable = availableLangs.filter(l => {
+const uniqueAvailable = availableLangs.filter((l) => {
   if (seen.has(l.code)) return false;
   seen.add(l.code);
   return true;
 });
 
 // Exclude English for the "translated languages" count
-const translatedCount = uniqueAvailable.filter(l => l.code !== 'en').length;
+const translatedCount = uniqueAvailable.filter((l) => l.code !== 'en').length;
 
 // Models
 const modelMatch = constantsSrc.match(/const\s+SKILLBRIDGE_MODELS\s*=\s*\{([\s\S]*?)\};/);
@@ -113,17 +113,13 @@ const langCountShort = `${translatedCount}+`;
 
 // Premium languages — rendered as lang-tag spans for the landing page
 function buildLangTagsHtml(langs) {
-  const tags = langs.map(l => `        <span class="lang-tag">${l.label}</span>`);
+  const tags = langs.map((l) => `        <span class="lang-tag">${l.label}</span>`);
   // Add a "+ more" tag showing the remaining standard languages
   const standardCount = translatedCount - premiumLangs.length;
   if (standardCount > 0) {
     tags.push(`        <span class="lang-tag">+ ${standardCount} more</span>`);
   }
-  return [
-    '      <div class="languages">',
-    ...tags,
-    '      </div>',
-  ].join('\n');
+  return ['      <div class="languages">', ...tags, '      </div>'].join('\n');
 }
 
 // Feature cards HTML — read current features from the index.html and keep them as-is.
@@ -140,10 +136,7 @@ function buildLangTagsHtml(langs) {
  */
 function replaceBetweenMarkers(content, tag, replacement) {
   // Inline pattern: <!-- TAG_START -->...<!-- TAG_END --> on a single line
-  const inlineRe = new RegExp(
-    `(<!--\\s*${tag}_START\\s*-->)[\\s\\S]*?(<!--\\s*${tag}_END\\s*-->)`,
-    'g'
-  );
+  const inlineRe = new RegExp(`(<!--\\s*${tag}_START\\s*-->)[\\s\\S]*?(<!--\\s*${tag}_END\\s*-->)`, 'g');
   return content.replace(inlineRe, `$1${replacement}$2`);
 }
 
@@ -174,9 +167,13 @@ console.log('generate-docs: updated docs from source files\n');
 console.log(`  Version:            ${version} (from manifest.json)`);
 console.log(`  Package version:    ${pkg.version} (from package.json)`);
 console.log(`  Total languages:    ${translatedCount} (excluding English)`);
-console.log(`  Premium languages:  ${premiumLangs.length} — ${premiumLangs.map(l => l.label).join(', ')}`);
+console.log(`  Premium languages:  ${premiumLangs.length} — ${premiumLangs.map((l) => l.label).join(', ')}`);
 console.log(`  Standard languages: ${translatedCount - premiumLangs.length}`);
-console.log(`  AI models:          ${Object.entries(modelLabels).map(([k, v]) => `${k}: ${v}`).join(', ')}`);
+console.log(
+  `  AI models:          ${Object.entries(modelLabels)
+    .map(([k, v]) => `${k}: ${v}`)
+    .join(', ')}`,
+);
 console.log('');
 console.log('  Updated files:');
 console.log(`    - ${path.relative(ROOT, indexPath)}`);

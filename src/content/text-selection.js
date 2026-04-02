@@ -59,7 +59,8 @@
       askTutorBtn.style.top = `${rect.bottom + scrollY + 6}px`;
       askTutorBtn.classList.add('visible');
 
-      pendingQuote = text.length > SKILLBRIDGE_LIMITS.QUOTE_MAX ? text.slice(0, SKILLBRIDGE_LIMITS.QUOTE_MAX) + '\u2026' : text;
+      pendingQuote =
+        text.length > SKILLBRIDGE_LIMITS.QUOTE_MAX ? text.slice(0, SKILLBRIDGE_LIMITS.QUOTE_MAX) + '\u2026' : text;
     }, SKILLBRIDGE_DELAYS.TEXT_SELECTION);
   }
 

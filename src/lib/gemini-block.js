@@ -13,15 +13,25 @@
 
   // Inline tags that indicate mixed content needing Gemini block translation
   const INLINE_TAGS = new Set([
-    'STRONG', 'B', 'EM', 'I', 'A', 'SPAN', 'CODE',
-    'MARK', 'SUB', 'SUP', 'ABBR', 'SMALL', 'U', 'S',
+    'STRONG',
+    'B',
+    'EM',
+    'I',
+    'A',
+    'SPAN',
+    'CODE',
+    'MARK',
+    'SUB',
+    'SUP',
+    'ABBR',
+    'SMALL',
+    'U',
+    'S',
   ]);
   const NO_TRANSLATE_TAGS = new Set(['CODE', 'PRE', 'KBD', 'SAMP', 'VAR']);
 
   // Tags allowed in Gemini block translation output — derived from existing sets + <br>
-  const SAFE_TAGS = new Set(
-    [...INLINE_TAGS, ...NO_TRANSLATE_TAGS, 'BR'].map(tag => tag.toLowerCase())
-  );
+  const SAFE_TAGS = new Set([...INLINE_TAGS, ...NO_TRANSLATE_TAGS, 'BR'].map((tag) => tag.toLowerCase()));
 
   /**
    * Check whether an element contains a mix of text nodes and inline element children.
@@ -134,8 +144,8 @@
             // Copy only safe attributes — allowlist approach
             for (const attr of Array.from(child.attributes)) {
               const name = attr.name.toLowerCase();
-              if (name.startsWith('on')) continue;  // event handlers
-              if (name === 'style') continue;       // CSS injection
+              if (name.startsWith('on')) continue; // event handlers
+              if (name === 'style') continue; // CSS injection
               if (name === 'href') {
                 // Only allow http(s) and anchor links
                 const raw = attr.value.replace(/[\x00-\x1f\s]/g, '');
@@ -195,24 +205,27 @@ RULES:
 - Keep these terms in English (DO NOT translate): ${keepEnglish}
 - Output ONLY the translated text with tags. No explanations.`;
 
-    translator._sendRequest({
-      type: 'VERIFY_REQUEST',
-      systemPrompt: prompt,
-      model: SKILLBRIDGE_MODELS.GEMINI,
-    }).then(result => {
-      if (!result) return;
-      const trimmed = result.trim();
-      if (trimmed.length > xml.length * 3 || trimmed.includes('SOURCE') || trimmed.includes('RULES:')) return;
+    translator
+      ._sendRequest({
+        type: 'VERIFY_REQUEST',
+        systemPrompt: prompt,
+        model: SKILLBRIDGE_MODELS.GEMINI,
+      })
+      .then((result) => {
+        if (!result) return;
+        const trimmed = result.trim();
+        if (trimmed.length > xml.length * 3 || trimmed.includes('SOURCE') || trimmed.includes('RULES:')) return;
 
-      if (el?.parentNode) {
-        el.innerHTML = xmlToHtml(trimmed, tagInfo);
-        el.classList.remove('si18n-verifying');
-      }
-      translator._cacheTranslation(pureText, el.textContent.trim(), targetLang);
-    }).catch(err => {
-      console.warn('[SkillBridge] Gemini block translation failed:', err.message);
-      if (el?.parentNode) el.classList.remove('si18n-verifying');
-    });
+        if (el?.parentNode) {
+          el.innerHTML = xmlToHtml(trimmed, tagInfo);
+          el.classList.remove('si18n-verifying');
+        }
+        translator._cacheTranslation(pureText, el.textContent.trim(), targetLang);
+      })
+      .catch((err) => {
+        console.warn('[SkillBridge] Gemini block translation failed:', err.message);
+        if (el?.parentNode) el.classList.remove('si18n-verifying');
+      });
 
     el.classList.add('si18n-verifying');
   }

@@ -216,14 +216,20 @@ class SkilljarTranslator {
         const req = store.get(id);
         req.onsuccess = () => {
           const entry = req.result;
-          if (!entry?.translation) { resolve(null); return; }
+          if (!entry?.translation) {
+            resolve(null);
+            return;
+          }
           // TTL — delete stale cache entries from IndexedDB
           if (entry.timestamp && Date.now() - entry.timestamp > SKILLBRIDGE_THRESHOLDS.CACHE_TTL_MS) {
             try {
               const delTx = this._db.transaction('translations', 'readwrite');
               delTx.objectStore('translations').delete(id);
-            } catch (_) { /* best-effort cleanup */ }
-            resolve(null); return;
+            } catch (_) {
+              /* best-effort cleanup */
+            }
+            resolve(null);
+            return;
           }
           resolve(entry.translation);
         };
@@ -292,7 +298,7 @@ class SkilljarTranslator {
     try {
       const response = await chrome.runtime.sendMessage({
         type: 'GOOGLE_TRANSLATE_BATCH',
-        texts: texts.map(t => t.trim()),
+        texts: texts.map((t) => t.trim()),
         targetLang,
         sourceLang: 'en',
       });
@@ -328,13 +334,16 @@ class SkilljarTranslator {
     if (alphaRatio < SKILLBRIDGE_THRESHOLDS.GEMINI_ALPHA_RATIO) return false;
 
     // Skip simple patterns: time, dates, labels
-    if (/^\d+[\s-]+\w+$/.test(text)) return false;                    // "6 minutes"
+    if (/^\d+[\s-]+\w+$/.test(text)) return false; // "6 minutes"
     if (/^(estimated|about|approx)/i.test(text) && text.length < 60) return false;
     if (/^(module|lesson|chapter|section|part)\s+\d/i.test(text)) return false;
 
     // Only verify sentences with real prose (has periods, commas, or is long)
-    const hasComplexity = text.includes('.') || text.includes(',') ||
-                          text.includes(':') || text.length > SKILLBRIDGE_THRESHOLDS.MIN_COMPLEX_TEXT;
+    const hasComplexity =
+      text.includes('.') ||
+      text.includes(',') ||
+      text.includes(':') ||
+      text.length > SKILLBRIDGE_THRESHOLDS.MIN_COMPLEX_TEXT;
     if (!hasComplexity) return false;
 
     // Cap queue size to prevent memory growth on large pages
@@ -350,7 +359,7 @@ class SkilljarTranslator {
     });
 
     if (!this._verifyLock) {
-      this._verifyLock = new Promise(resolve => {
+      this._verifyLock = new Promise((resolve) => {
         setTimeout(() => {
           this._runVerifyQueue().finally(() => {
             this._verifyLock = null;
@@ -364,15 +373,15 @@ class SkilljarTranslator {
 
   async _runVerifyQueue() {
     if (!this.isReady) {
-      await new Promise(r => setTimeout(r, SKILLBRIDGE_DELAYS.VERIFY_QUEUE_RETRY));
+      await new Promise((r) => setTimeout(r, SKILLBRIDGE_DELAYS.VERIFY_QUEUE_RETRY));
       if (!this.isReady) return;
     }
 
     while (this._verifyQueue.length > 0) {
       const batch = this._verifyQueue.splice(0, SKILLBRIDGE_THRESHOLDS.GEMINI_BATCH_SIZE);
-      await Promise.all(batch.map(item => this._verifySingle(item)));
+      await Promise.all(batch.map((item) => this._verifySingle(item)));
       if (this._verifyQueue.length > 0) {
-        await new Promise(r => setTimeout(r, SKILLBRIDGE_DELAYS.GEMINI_BATCH));
+        await new Promise((r) => setTimeout(r, SKILLBRIDGE_DELAYS.GEMINI_BATCH));
       }
     }
   }
@@ -415,7 +424,11 @@ RULES:
 
       // Gemini provided an improved translation
       // Sanity check: result should be similar length (not an explanation)
-      if (trimResult.length > original.length * 5 || trimResult.includes('ORIGINAL') || trimResult.includes('GOOGLE TRANSLATE')) {
+      if (
+        trimResult.length > original.length * 5 ||
+        trimResult.includes('ORIGINAL') ||
+        trimResult.includes('GOOGLE TRANSLATE')
+      ) {
         // Likely returned the prompt format, ignore
         await this._cacheTranslation(original, googleTranslation, targetLang);
         this._notifyUpdate(original, googleTranslation, targetLang, false);
@@ -539,20 +552,26 @@ RULES:
 
         window.addEventListener('message', handler);
 
-        window.postMessage({
-          __skillbridge__: true,
-          __nonce__: this._bridgeNonce,
-          type: 'CHAT_REQUEST',
-          id,
-          systemPrompt: prompt,
-          userMessage,
-          model: SKILLBRIDGE_MODELS.CLAUDE,
-          stream: true,
-        }, window.location.origin);
+        window.postMessage(
+          {
+            __skillbridge__: true,
+            __nonce__: this._bridgeNonce,
+            type: 'CHAT_REQUEST',
+            id,
+            systemPrompt: prompt,
+            userMessage,
+            model: SKILLBRIDGE_MODELS.CLAUDE,
+            stream: true,
+          },
+          window.location.origin,
+        );
       });
     } catch (err) {
       console.error('[SkillBridge] Chat stream error:', err);
-      return (typeof CHAT_ERROR_LABELS !== 'undefined' && CHAT_ERROR_LABELS[targetLang]) || 'Sorry, I could not generate a response. Please try again.';
+      return (
+        (typeof CHAT_ERROR_LABELS !== 'undefined' && CHAT_ERROR_LABELS[targetLang]) ||
+        'Sorry, I could not generate a response. Please try again.'
+      );
     }
   }
 
@@ -572,7 +591,7 @@ RULES:
         // Process any pending verify queue now that bridge is ready
         if (this._verifyQueue.length > 0) {
           if (!this._verifyLock) {
-            this._verifyLock = new Promise(resolve => {
+            this._verifyLock = new Promise((resolve) => {
               setTimeout(() => {
                 this._runVerifyQueue().finally(() => {
                   this._verifyLock = null;
@@ -588,9 +607,7 @@ RULES:
         console.error('[SkillBridge] Bridge error:', data.error);
       }
 
-      if (data.type === 'TRANSLATE_RESPONSE' ||
-          data.type === 'CHAT_RESPONSE' ||
-          data.type === 'VERIFY_RESPONSE') {
+      if (data.type === 'TRANSLATE_RESPONSE' || data.type === 'CHAT_RESPONSE' || data.type === 'VERIFY_RESPONSE') {
         const cb = this.pendingCallbacks.get(data.id);
         if (cb) {
           this.pendingCallbacks.delete(data.id);

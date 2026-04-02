@@ -71,16 +71,15 @@
     wrapper.id = 'si18n-header-lang';
     wrapper.className = 'headerheight align-vertical';
 
-    const options = AVAILABLE_LANGUAGES
-      .map(l => `<option value="${l.code}" ${l.code === sb.currentLang ? 'selected' : ''}>${l.label}</option>`)
-      .join('');
+    const options = AVAILABLE_LANGUAGES.map(
+      (l) => `<option value="${l.code}" ${l.code === sb.currentLang ? 'selected' : ''}>${l.label}</option>`,
+    ).join('');
 
     wrapper.innerHTML = `<select id="si18n-header-lang-select">${options}</select>`;
     headerRight.insertBefore(wrapper, linksContainer);
 
     document.getElementById('si18n-header-lang-select')?.addEventListener('change', (e) => {
-      sb.switchLanguage(e.target.value).catch(err =>
-        console.error('[SkillBridge] Header lang change error:', err));
+      sb.switchLanguage(e.target.value).catch((err) => console.error('[SkillBridge] Header lang change error:', err));
     });
   }
 
@@ -104,9 +103,8 @@
     // Show onboarding for ALL first-time visitors — including English speakers
     const isNonEnglish = detectedLang && detectedLang !== 'en';
 
-    const langOptions = AVAILABLE_LANGUAGES
-      .filter(l => l.code !== 'en')
-      .map(l => `<option value="${l.code}" ${l.code === (detectedLang || '') ? 'selected' : ''}>${l.label}</option>`)
+    const langOptions = AVAILABLE_LANGUAGES.filter((l) => l.code !== 'en')
+      .map((l) => `<option value="${l.code}" ${l.code === (detectedLang || '') ? 'selected' : ''}>${l.label}</option>`)
       .join('');
 
     const banner = document.createElement('div');
@@ -114,7 +112,7 @@
 
     if (isNonEnglish) {
       // Non-English: existing translate prompt
-      const langLabel = AVAILABLE_LANGUAGES.find(l => l.code === detectedLang)?.label || detectedLang;
+      const langLabel = AVAILABLE_LANGUAGES.find((l) => l.code === detectedLang)?.label || detectedLang;
       const ui = sb.t(BANNER_UI, detectedLang);
       banner.innerHTML = `
         <span class="si18n-banner-icon">\u{1F310}</span>
@@ -155,10 +153,12 @@
       setTimeout(() => banner.remove(), SKILLBRIDGE_DELAYS.BANNER_ANIMATION);
 
       if (selectedLang && selectedLang !== 'en') {
-        await sb.switchLanguage(selectedLang, {
-          skipRestore: true,
-          extraStorage: { autoTranslate: true, welcomeShown: true },
-        }).catch(err => console.error('[SkillBridge] Banner translate error:', err));
+        await sb
+          .switchLanguage(selectedLang, {
+            skipRestore: true,
+            extraStorage: { autoTranslate: true, welcomeShown: true },
+          })
+          .catch((err) => console.error('[SkillBridge] Banner translate error:', err));
       } else {
         chrome.storage.local.set({ welcomeShown: true });
       }
@@ -171,7 +171,7 @@
     });
 
     document.getElementById('si18n-banner-lang')?.addEventListener('change', (e) => {
-      const newLabel = AVAILABLE_LANGUAGES.find(l => l.code === e.target.value)?.label || e.target.value;
+      const newLabel = AVAILABLE_LANGUAGES.find((l) => l.code === e.target.value)?.label || e.target.value;
       const textEl = banner.querySelector('.si18n-banner-text strong');
       if (textEl) textEl.textContent = newLabel;
     });

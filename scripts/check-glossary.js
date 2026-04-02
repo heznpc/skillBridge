@@ -18,7 +18,7 @@ const DATA_DIR = path.join(__dirname, '..', 'src', 'data');
 
 // ==================== LOAD ALL LANGUAGE FILES ====================
 
-const files = fs.readdirSync(DATA_DIR).filter(f => f.endsWith('.json'));
+const files = fs.readdirSync(DATA_DIR).filter((f) => f.endsWith('.json'));
 if (files.length === 0) {
   console.error('No language files found in src/data/');
   process.exit(1);

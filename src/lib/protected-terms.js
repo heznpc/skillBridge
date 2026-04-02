@@ -34,9 +34,7 @@
     }
     _protectedTermsSorted = Object.entries(map).sort((a, b) => b[0].length - a[0].length);
     const terms = Object.keys(protectedEntries);
-    _protectedKeepEnglish = terms.length > 0
-      ? terms.join(', ')
-      : DEFAULT_PROTECTED_TERMS;
+    _protectedKeepEnglish = terms.length > 0 ? terms.join(', ') : DEFAULT_PROTECTED_TERMS;
   }
 
   /**

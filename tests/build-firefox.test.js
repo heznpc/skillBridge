@@ -15,9 +15,7 @@ const ROOT = path.join(__dirname, '..');
 const DIST_DIR = path.join(ROOT, 'dist', 'firefox');
 
 // ── Read the Chrome source manifest for comparison ─────────────
-const chromeManifest = JSON.parse(
-  fs.readFileSync(path.join(ROOT, 'manifest.json'), 'utf8')
-);
+const chromeManifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'manifest.json'), 'utf8'));
 
 // ── Run the build script before tests ──────────────────────────
 beforeAll(() => {
@@ -45,9 +43,7 @@ describe('Firefox manifest transformations', () => {
   let firefoxManifest;
 
   beforeAll(() => {
-    firefoxManifest = JSON.parse(
-      fs.readFileSync(path.join(DIST_DIR, 'manifest.json'), 'utf8')
-    );
+    firefoxManifest = JSON.parse(fs.readFileSync(path.join(DIST_DIR, 'manifest.json'), 'utf8'));
   });
 
   test('adds browser_specific_settings with gecko ID', () => {
@@ -72,9 +68,7 @@ describe('Firefox manifest transformations', () => {
   });
 
   test('background.scripts contains the original service_worker path', () => {
-    expect(firefoxManifest.background.scripts).toContain(
-      chromeManifest.background.service_worker
-    );
+    expect(firefoxManifest.background.scripts).toContain(chromeManifest.background.service_worker);
   });
 
   test('removes minimum_chrome_version', () => {
@@ -106,9 +100,7 @@ describe('Firefox manifest transformations', () => {
   });
 
   test('preserves web_accessible_resources', () => {
-    expect(firefoxManifest.web_accessible_resources).toEqual(
-      chromeManifest.web_accessible_resources
-    );
+    expect(firefoxManifest.web_accessible_resources).toEqual(chromeManifest.web_accessible_resources);
   });
 
   test('preserves name and description', () => {

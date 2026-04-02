@@ -15,15 +15,9 @@ global.window = { addEventListener: () => {} };
 const fs = require('fs');
 const path = require('path');
 
-const selectorsSrc = fs.readFileSync(
-  path.join(__dirname, '..', 'src', 'lib', 'selectors.js'), 'utf8'
-);
-const constantsSrc = fs.readFileSync(
-  path.join(__dirname, '..', 'src', 'lib', 'constants.js'), 'utf8'
-);
-const src = fs.readFileSync(
-  path.join(__dirname, '..', 'src', 'lib', 'translator.js'), 'utf8'
-);
+const selectorsSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'selectors.js'), 'utf8');
+const constantsSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'constants.js'), 'utf8');
+const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'translator.js'), 'utf8');
 
 let SkilljarTranslator;
 try {
@@ -78,18 +72,22 @@ describe('queueGeminiVerify', () => {
   });
 
   test('accepts long prose with punctuation', () => {
-    const prose = 'This is a comprehensive guide to understanding how large language models work. It covers the fundamental concepts, including tokenization, attention mechanisms, and training procedures.';
+    const prose =
+      'This is a comprehensive guide to understanding how large language models work. It covers the fundamental concepts, including tokenization, attention mechanisms, and training procedures.';
     expect(translator.queueGeminiVerify(prose, '이것은 대규모 언어 모델 이해 가이드입니다.', 'ko')).toBe(true);
   });
 
   test('accepts text longer than MIN_COMPLEX_TEXT even without punctuation', () => {
     // > 120 chars of pure prose
-    const text = 'A'.repeat(121) + ' text that is very long and contains only alphabetic characters without any punctuation marks at all here';
+    const text =
+      'A'.repeat(121) +
+      ' text that is very long and contains only alphabetic characters without any punctuation marks at all here';
     expect(translator.queueGeminiVerify(text, 'translation', 'ko')).toBe(true);
   });
 
   test('queues item and returns true for valid text', () => {
-    const text = 'This is a comprehensive guide to understanding how large language models work. It covers the fundamental concepts, including tokenization and more.';
+    const text =
+      'This is a comprehensive guide to understanding how large language models work. It covers the fundamental concepts, including tokenization and more.';
     translator.queueGeminiVerify(text, 'translation', 'ko');
     expect(translator._verifyQueue.length).toBe(1);
     expect(translator._verifyQueue[0].original).toBe(text);
@@ -100,7 +98,8 @@ describe('queueGeminiVerify', () => {
     // Mock _cacheTranslation to prevent IndexedDB calls
     translator._cacheTranslation = jest.fn();
 
-    const longText = 'This is a comprehensive test sentence that is definitely longer than eighty characters, with punctuation.';
+    const longText =
+      'This is a comprehensive test sentence that is definitely longer than eighty characters, with punctuation.';
 
     // Fill queue to max (500)
     for (let i = 0; i < 500; i++) {

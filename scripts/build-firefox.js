@@ -26,9 +26,7 @@ const DIST_DIR = path.join(ROOT, 'dist', 'firefox');
 
 // ── Read Chrome manifest ──────────────────────────────────────
 
-const chromeManifest = JSON.parse(
-  fs.readFileSync(path.join(ROOT, 'manifest.json'), 'utf8')
-);
+const chromeManifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'manifest.json'), 'utf8'));
 
 // ── Transform to Firefox manifest ────────────────────────────
 
@@ -91,10 +89,7 @@ function copyDir(src, dest) {
 copyDir(ROOT, DIST_DIR);
 
 // Write the Firefox-specific manifest
-fs.writeFileSync(
-  path.join(DIST_DIR, 'manifest.json'),
-  JSON.stringify(firefoxManifest, null, 2) + '\n'
-);
+fs.writeFileSync(path.join(DIST_DIR, 'manifest.json'), JSON.stringify(firefoxManifest, null, 2) + '\n');
 
 console.log('Firefox build complete: dist/firefox/');
 console.log('');
