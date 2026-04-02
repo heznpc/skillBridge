@@ -1,10 +1,21 @@
 node_modules/
 .DS_Store
-*.zip
 dist/
 .env
 .env.local
+.idea/
+
+# Build artifacts
+*.zip
 *.crx
 *.pem
-.idea/
-skillBridge logo.png
+
+# Media files (not part of the extension)
+*.mp4
+*.gif
+*.png
+!assets/**/*.png
+
+# Stray files in root
+/content.css
+/skillBridge logo.png
