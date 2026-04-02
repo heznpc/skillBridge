@@ -16,9 +16,10 @@ const REQUIRED_META_FIELDS = ['lang', 'langName', 'version'];
 
 let targetFiles = process.argv.slice(2);
 if (targetFiles.length === 0) {
-  targetFiles = fs.readdirSync(DATA_DIR)
-    .filter(f => f.endsWith('.json'))
-    .map(f => path.join(DATA_DIR, f));
+  targetFiles = fs
+    .readdirSync(DATA_DIR)
+    .filter((f) => f.endsWith('.json'))
+    .map((f) => path.join(DATA_DIR, f));
 }
 
 let errors = 0;

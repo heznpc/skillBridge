@@ -8,26 +8,19 @@
 const fs = require('fs');
 const path = require('path');
 
-// --- Extract escapeHtml from content.js (the production implementation) ---
-const contentSrc = fs.readFileSync(
-  path.join(__dirname, '..', 'src', 'content', 'content.js'), 'utf8'
-);
-const escapeHtmlBody = contentSrc.match(
-  /function escapeHtml\(text\)\s*\{([\s\S]*?)\n  \}/
-);
+// --- Extract escapeHtml from gemini-block.js (the canonical implementation) ---
+const geminiBlockSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'gemini-block.js'), 'utf8');
+const escapeHtmlBody = geminiBlockSrc.match(/function escapeHtml\(text\)\s*\{([\s\S]*?)\n {2}\}/);
 const escapeHtml = new Function('text', escapeHtmlBody[1]);
 
 // --- Extract formatResponse + applyInline from sidebar-chat.js ---
-const sidebarSrc = fs.readFileSync(
-  path.join(__dirname, '..', 'src', 'content', 'sidebar-chat.js'), 'utf8'
-);
+const sidebarSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'content', 'sidebar-chat.js'), 'utf8');
 const fmtBlock = sidebarSrc.match(
-  /function formatResponse\(text\)\s*\{[\s\S]*?\n  \}\n\n  function applyInline[\s\S]*?\n  \}/
+  /function formatResponse\(text\)\s*\{[\s\S]*?\n {2}\}\n\n {2}function applyInline[\s\S]*?\n {2}\}/,
 );
-const { formatResponse, applyInline } = new Function(
-  'sb',
-  `${fmtBlock[0]}\n  return { formatResponse, applyInline };`
-)({ escapeHtml });
+const { formatResponse, applyInline } = new Function('sb', `${fmtBlock[0]}\n  return { formatResponse, applyInline };`)(
+  { escapeHtml },
+);
 
 describe('applyInline', () => {
   test('converts bold markdown', () => {
@@ -43,8 +36,9 @@ describe('applyInline', () => {
   });
 
   test('handles multiple inline styles', () => {
-    expect(applyInline('**bold** and *italic* and `code`'))
-      .toBe('<strong>bold</strong> and <em>italic</em> and <code>code</code>');
+    expect(applyInline('**bold** and *italic* and `code`')).toBe(
+      '<strong>bold</strong> and <em>italic</em> and <code>code</code>',
+    );
   });
 
   test('leaves plain text unchanged', () => {
@@ -130,5 +124,29 @@ describe('formatResponse', () => {
     const input = 'First paragraph.\n\nSecond paragraph.';
     const result = formatResponse(input);
     expect(result).toBe('<p>First paragraph.</p><p>Second paragraph.</p>');
+  });
+
+  test('does not double-escape HTML entities in bold', () => {
+    const result = formatResponse('**A & B**');
+    expect(result).toBe('<p><strong>A &amp; B</strong></p>');
+    expect(result).not.toContain('&amp;amp;');
+  });
+
+  test('does not double-escape HTML entities in italic', () => {
+    const result = formatResponse('*x < y*');
+    expect(result).toBe('<p><em>x &lt; y</em></p>');
+    expect(result).not.toContain('&amp;lt;');
+  });
+
+  test('does not double-escape HTML entities in inline code', () => {
+    const result = formatResponse('use `a<b && c>d`');
+    expect(result).toContain('<code>a&lt;b &amp;&amp; c&gt;d</code>');
+    expect(result).not.toContain('&amp;amp;');
+  });
+
+  test('does not double-escape quotes in bold', () => {
+    const result = formatResponse('**say "hello"**');
+    expect(result).toBe('<p><strong>say &quot;hello&quot;</strong></p>');
+    expect(result).not.toContain('&amp;quot;');
   });
 });
