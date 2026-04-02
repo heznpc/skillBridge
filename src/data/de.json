@@ -497,6 +497,36 @@
     "(5 minutes)": "(5 Minuten)",
     "(2 minutes)": "(2 Minuten)"
   },
+  "claudeCowork": {
+    "Introduction to Claude Cowork": "Einführung in Claude Cowork",
+    "What is Claude Cowork?": "Was ist Claude Cowork?",
+    "Claude Cowork is a collaborative coding environment": "Claude Cowork ist eine kollaborative Programmierumgebung",
+    "Getting started with Cowork": "Erste Schritte mit Cowork",
+    "Real-time collaboration with Claude": "Echtzeit-Zusammenarbeit mit Claude",
+    "Cowork sessions": "Cowork-Sitzungen",
+    "Starting a Cowork session": "Eine Cowork-Sitzung starten",
+    "Sharing context in Cowork": "Kontext in Cowork teilen",
+    "Best practices for Cowork": "Best Practices für Cowork",
+    "Cowork vs Claude Code": "Cowork vs Claude Code",
+    "When to use Cowork": "Wann Sie Cowork verwenden sollten",
+    "Collaborative development": "Kollaborative Entwicklung",
+    "Working alongside Claude in your IDE": "Arbeiten Sie mit Claude in Ihrer IDE zusammen"
+  },
+  "subagents": {
+    "Introduction to Subagents": "Einführung in Subagents",
+    "What are subagents?": "Was sind Subagents?",
+    "Subagents are specialized child agents": "Subagents sind spezialisierte untergeordnete Agenten",
+    "Creating subagents": "Subagents erstellen",
+    "Delegating tasks to subagents": "Aufgaben an Subagents delegieren",
+    "Subagent communication patterns": "Subagent-Kommunikationsmuster",
+    "Parallel subagent execution": "Parallele Subagent-Ausführung",
+    "Subagent isolation and safety": "Subagent-Isolation und Sicherheit",
+    "When to use subagents": "Wann Sie Subagents verwenden sollten",
+    "Subagent best practices": "Subagent-Best-Practices",
+    "Orchestrating multiple subagents": "Orchestrierung mehrerer Subagents",
+    "Subagent resource management": "Subagent-Ressourcenverwaltung",
+    "Building complex workflows with subagents": "Komplexe Workflows mit Subagents erstellen"
+  },
   "aiFluency": {
     "AI Fluency: Framework & Foundations": "KI-Flüssigkeit: Rahmenwerk und Grundlagen",
     "Build a strong foundation in AI concepts and practical applications": "Schaffen Sie eine starke Grundlage in KI-Konzepten und praktischen Anwendungen",

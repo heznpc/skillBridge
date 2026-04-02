@@ -497,6 +497,36 @@
     "(5 minutes)": "（5分钟）",
     "(2 minutes)": "（2分钟）"
   },
+  "claudeCowork": {
+    "Introduction to Claude Cowork": "Claude Cowork 简介",
+    "What is Claude Cowork?": "什么是 Claude Cowork？",
+    "Claude Cowork is a collaborative coding environment": "Claude Cowork 是一个协作编程环境",
+    "Getting started with Cowork": "开始使用 Cowork",
+    "Real-time collaboration with Claude": "与 Claude 实时协作",
+    "Cowork sessions": "Cowork 会话",
+    "Starting a Cowork session": "启动 Cowork 会话",
+    "Sharing context in Cowork": "在 Cowork 中共享上下文",
+    "Best practices for Cowork": "Cowork 最佳实践",
+    "Cowork vs Claude Code": "Cowork 与 Claude Code",
+    "When to use Cowork": "何时使用 Cowork",
+    "Collaborative development": "协作开发",
+    "Working alongside Claude in your IDE": "在 IDE 中与 Claude 协同工作"
+  },
+  "subagents": {
+    "Introduction to Subagents": "Subagents 简介",
+    "What are subagents?": "什么是 Subagents？",
+    "Subagents are specialized child agents": "Subagents 是专门化的子代理",
+    "Creating subagents": "创建 Subagents",
+    "Delegating tasks to subagents": "将任务委派给 Subagents",
+    "Subagent communication patterns": "Subagent 通信模式",
+    "Parallel subagent execution": "Subagent 并行执行",
+    "Subagent isolation and safety": "Subagent 隔离与安全",
+    "When to use subagents": "何时使用 Subagents",
+    "Subagent best practices": "Subagent 最佳实践",
+    "Orchestrating multiple subagents": "编排多个 Subagents",
+    "Subagent resource management": "Subagent 资源管理",
+    "Building complex workflows with subagents": "使用 Subagents 构建复杂工作流"
+  },
   "aiFluency": {
     "AI Fluency: Framework & Foundations": "AI 流利度：框架与基础",
     "Build a strong foundation in AI concepts and practical applications": "在 AI 概念和实践应用中建立扎实的基础",

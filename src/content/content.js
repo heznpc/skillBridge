@@ -43,13 +43,6 @@
     'header nav', '.site-header nav', 'nav.navbar', 'footer',
   ].join(', ');
 
-  // Inline tags that indicate mixed content needing Gemini block translation
-  const INLINE_TAGS = new Set([
-    'STRONG', 'B', 'EM', 'I', 'A', 'SPAN', 'CODE',
-    'MARK', 'SUB', 'SUP', 'ABBR', 'SMALL', 'U', 'S',
-  ]);
-  const NO_TRANSLATE_TAGS = new Set(['CODE', 'PRE', 'KBD', 'SAMP', 'VAR']);
-
   let translator = null;
   let subtitleManager = null;
   let currentLang = 'en';
@@ -66,18 +59,47 @@
   let domObserver = null;
   let commentTranslateEnabled = false;
   let originalComments = new Map(); // el → original innerHTML for code elements
+  let isOffline = !navigator.onLine;
+
+  window.addEventListener('online', () => {
+    isOffline = false;
+    hideOfflineBanner();
+    // Retry pending translations
+    if (currentLang !== 'en' && translator && isReady) {
+      applyStaticTranslations(currentLang);
+    }
+  });
+
+  window.addEventListener('offline', () => {
+    isOffline = true;
+    if (currentLang !== 'en') showOfflineBanner();
+  });
+
+  function showOfflineBanner() {
+    if (document.getElementById('si18n-offline-banner')) return;
+    const banner = document.createElement('div');
+    banner.id = 'si18n-offline-banner';
+    banner.className = 'si18n-offline-banner';
+    banner.setAttribute('role', 'status');
+    banner.setAttribute('aria-live', 'polite');
+    banner.textContent = t(OFFLINE_LABELS);
+    document.body.appendChild(banner);
+    requestAnimationFrame(() => banner.classList.add('visible'));
+  }
+
+  function hideOfflineBanner() {
+    const banner = document.getElementById('si18n-offline-banner');
+    if (banner) {
+      banner.classList.remove('visible');
+      setTimeout(() => banner.remove(), 300);
+    }
+  }
 
   // Lookup helper: returns map entry for given lang, falling back to 'en'
   function t(map, lang) { return map[lang || currentLang] || map['en']; }
 
-  function escapeHtml(text) {
-    return text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
-  }
+  // escapeHtml is defined in gemini-block.js (loaded first) — reuse it
+  const escapeHtml = window._geminiBlock.escapeHtml;
 
   // ============================================================
   // SHARED NAMESPACE — expose state for extracted modules
@@ -115,8 +137,14 @@
     set sidebarVisible(v) { sidebarVisible = v; },
     get translator() { return translator; },
     get isExamPage() { return isExamPage; },
+    get originalTexts() { return originalTexts; },
+    get translatedTexts() { return translatedTexts; },
+    get originalComments() { return originalComments; },
+    get gtGeneration() { return gtGeneration; },
+    get isOffline() { return isOffline; },
     t,
     escapeHtml,
+    isLikelyEnglish,
     switchLanguage,
     getPageContext,
     // Filled by modules:
@@ -130,6 +158,7 @@
     toggleSidebar: null,
     updateLocalizedLabels: null,
     formatResponse: null,
+    translateCodeComments: null,
   };
 
   // ============================================================
@@ -243,7 +272,7 @@
         commentTranslateEnabled = request.enabled;
         chrome.storage.local.set({ commentTranslate: request.enabled });
         if (request.enabled && currentLang !== 'en') {
-          translateCodeComments(currentLang);
+          window._sb.translateCodeComments?.(currentLang);
         } else {
           originalComments.forEach((html, el) => {
             if (el && el.parentNode) el.innerHTML = html;
@@ -317,7 +346,7 @@
         for (const entry of live) {
           removeVerifySpinner(entry.el);
           if (wasImproved) {
-            safeReplaceText(entry.el, restoreProtectedTerms(finalTranslation));
+            safeReplaceText(entry.el, window._protectedTerms.restoreProtectedTerms(finalTranslation));
             entry.el.classList.add('si18n-text-updated');
             setTimeout(() => entry.el.classList.remove('si18n-text-updated'), SKILLBRIDGE_DELAYS.TEXT_UPDATE_FADE);
           }
@@ -402,7 +431,7 @@
   }
 
   function applyStaticTranslations(targetLang) {
-    buildProtectedTermsMap(targetLang);
+    window._protectedTerms.buildProtectedTermsMap(targetLang, translator);
     updateLangClass(targetLang);
     // Re-detect exam page (DOM may have loaded since init)
     if (!isExamPage) isExamPage = detectExamPage();
@@ -441,7 +470,7 @@
     }
 
     if (commentTranslateEnabled) {
-      translateCodeComments(targetLang);
+      window._sb.translateCodeComments?.(targetLang);
     }
   }
 
@@ -511,12 +540,13 @@
    * @param {boolean} [alreadyVisible] — if true, skip viewport re-check (caller already classified)
    */
   function queueForGoogleTranslate(elements, targetLang, alreadyVisible) {
+    const _hasInlineTags = window._geminiBlock.hasInlineTags;
     if (alreadyVisible) {
       for (const el of elements) {
         if (gtTranslateQueue.length >= SKILLBRIDGE_THRESHOLDS.GT_QUEUE_MAX) break;
         const text = el.textContent.trim();
         if (!text || text.length < 4) continue;
-        gtTranslateQueue.push({ el, text, targetLang, needsGemini: hasInlineTags(el) });
+        gtTranslateQueue.push({ el, text, targetLang, needsGemini: _hasInlineTags(el) });
       }
     } else {
       const visibleItems = [];
@@ -525,7 +555,7 @@
         if (gtTranslateQueue.length + visibleItems.length + offscreenItems.length >= SKILLBRIDGE_THRESHOLDS.GT_QUEUE_MAX) break;
         const text = el.textContent.trim();
         if (!text || text.length < 4) continue;
-        const item = { el, text, targetLang, needsGemini: hasInlineTags(el) };
+        const item = { el, text, targetLang, needsGemini: _hasInlineTags(el) };
         (isInViewport(el) ? visibleItems : offscreenItems).push(item);
       }
       gtTranslateQueue.push(...visibleItems, ...offscreenItems);
@@ -595,7 +625,7 @@
         for (let i = 0; i < uniqueTexts.length; i++) {
           let translated = translations[i];
           if (!translated || translated === uniqueTexts[i]) continue;
-          translated = restoreProtectedTerms(translated);
+          translated = window._protectedTerms.restoreProtectedTerms(translated);
           const items = textToItems.get(uniqueTexts[i]);
           let verifyQueued = false;
           for (const item of items) {
@@ -623,7 +653,11 @@
     pruneDetachedEntries();
 
     for (const { el, targetLang } of geminiQueue) {
-      if (el && el.parentNode) queueGeminiBlockTranslation(el, targetLang);
+      if (el && el.parentNode) {
+        window._geminiBlock.queueGeminiBlockTranslation(el, targetLang, {
+          translator, originalTexts, isLikelyEnglish,
+        });
+      }
     }
   }
 
@@ -655,6 +689,15 @@
       for (let i = 0; i < excess; i++) {
         const key = iter.next().value;
         translatedTexts.delete(key);
+      }
+    }
+    // Cap originalComments consistently with other Maps
+    if (originalComments.size > MAP_SIZE_CAP) {
+      const excess = originalComments.size - MAP_SIZE_CAP;
+      const iter = originalComments.keys();
+      for (let i = 0; i < excess; i++) {
+        const key = iter.next().value;
+        originalComments.delete(key);
       }
     }
   }
@@ -697,106 +740,13 @@
     clearTimeout(translateTimeout);
     pendingNodes = [];
     currentLang = 'en';
-    _protectedTermsLang = null;
+    window._protectedTerms.resetProtectedTerms();
     updateLangClass('en');
     hideTranslationProgress();
     originalComments.forEach((html, el) => {
       if (el && el.parentNode) el.innerHTML = html;
     });
     originalComments.clear();
-  }
-
-  // ============================================================
-  // CODE COMMENT TRANSLATION
-  // ============================================================
-
-  /**
-   * Detect programming language from code element class names.
-   */
-  function detectCodeLanguage(el) {
-    const cls = (el.className || '') + ' ' + (el.parentElement?.className || '');
-    if (/\b(language-|lang-|hljs-)?(python|py)\b/i.test(cls)) return 'python';
-    if (/\b(language-|lang-|hljs-)?(javascript|js|typescript|ts)\b/i.test(cls)) return 'js';
-    if (/\b(language-|lang-|hljs-)?(html|xml|svg)\b/i.test(cls)) return 'html';
-    if (/\b(language-|lang-|hljs-)?(bash|sh|shell|zsh)\b/i.test(cls)) return 'bash';
-    if (/\b(language-|lang-|hljs-)?(ruby|rb)\b/i.test(cls)) return 'ruby';
-    if (/\b(language-|lang-|hljs-)?(yaml|yml)\b/i.test(cls)) return 'yaml';
-    if (/\b(language-|lang-|hljs-)?(java|kotlin|swift|go|rust|c|cpp|csharp|cs)\b/i.test(cls)) return 'js';
-    // Heuristic fallback
-    const text = el.textContent || '';
-    if (/^\s*(def |import |class |from )/m.test(text)) return 'python';
-    if (/^\s*(function |const |let |var |import |export )/m.test(text)) return 'js';
-    return 'js'; // default to // style
-  }
-
-  /**
-   * Translate only comment text inside code blocks.
-   */
-  function _getCommentPattern(lang) {
-    if (lang === 'python' || lang === 'bash' || lang === 'ruby' || lang === 'yaml') return CODE_COMMENT_PATTERNS[1];
-    if (lang === 'html') return CODE_COMMENT_PATTERNS[2];
-    return CODE_COMMENT_PATTERNS[0];
-  }
-
-  async function _translateOneCodeBlock(el, targetLang) {
-    if (originalComments.has(el)) return;
-    const text = el.textContent;
-    if (!text || text.length < 10) return;
-
-    const pattern = _getCommentPattern(detectCodeLanguage(el));
-    originalComments.set(el, el.innerHTML);
-
-    let html = el.innerHTML;
-    let hasTranslation = false;
-
-    // Collect all comments, translate in batch, then apply
-    const replacements = [];
-
-    if (pattern.line) {
-      for (const match of [...html.matchAll(pattern.line)]) {
-        const ct = match[1]?.trim();
-        if (ct && ct.length >= 4 && isLikelyEnglish(ct)) replacements.push({ match, type: 'line' });
-      }
-    }
-    if (pattern.block) {
-      for (const match of [...html.matchAll(pattern.block)]) {
-        const ct = match[1]?.trim();
-        if (ct && ct.length >= 4 && isLikelyEnglish(ct)) replacements.push({ match, type: 'block' });
-      }
-    }
-
-    if (replacements.length === 0) { originalComments.delete(el); return; }
-
-    const translations = await Promise.all(
-      replacements.map(r => translator.translate(r.match[1].trim(), targetLang))
-    );
-
-    // Apply in reverse order to preserve indices
-    for (let i = replacements.length - 1; i >= 0; i--) {
-      const { match, type } = replacements[i];
-      const result = translations[i];
-      if (result.text === match[1].trim() || result.source === 'original') continue;
-      hasTranslation = true;
-
-      let replacement;
-      if (type === 'line') {
-        replacement = match[0].replace(match[1], result.text);
-      } else {
-        const opening = match[0].substring(0, match[0].indexOf(match[1]));
-        const closing = match[0].substring(match[0].indexOf(match[1]) + match[1].length);
-        replacement = `${opening}${result.text}${closing}`;
-      }
-      html = html.substring(0, match.index) + replacement + html.substring(match.index + match[0].length);
-    }
-
-    if (hasTranslation) { el.innerHTML = html; }
-    else { originalComments.delete(el); }
-  }
-
-  async function translateCodeComments(targetLang) {
-    if (!translator || targetLang === 'en') return;
-    const codeEls = document.querySelectorAll('pre code, pre.code, .code-block code');
-    await Promise.all(Array.from(codeEls).map(el => _translateOneCodeBlock(el, targetLang)));
   }
 
   async function switchLanguage(newLang, opts = {}) {
@@ -856,6 +806,9 @@
     for (const cls of toRemove) body.classList.remove(cls);
     // Set html lang for screen readers and font selection
     document.documentElement.lang = lang || 'en';
+    // Set dir attribute for RTL languages (Arabic, Hebrew)
+    const rtlLangs = ['ar', 'he'];
+    document.documentElement.dir = rtlLangs.includes(lang) ? 'rtl' : 'ltr';
     if (lang && lang !== 'en') {
       body.classList.add(`si18n-lang-${lang}`);
       injectGoogleFonts(lang);
@@ -922,203 +875,6 @@
         el.textContent = newText;
       }
     }
-  }
-
-  // ============================================================
-  // PROTECTED TERMS
-  // ============================================================
-
-  let _protectedTermsSorted = [];
-  let _protectedTermsLang = null;
-  let _protectedKeepEnglish = '';
-
-  function buildProtectedTermsMap(targetLang) {
-    if (_protectedTermsLang === targetLang) return;
-    _protectedTermsLang = targetLang;
-
-    const map = {};
-    const protectedEntries = translator.getProtectedTerms?.() || {};
-    for (const [correct, wrongForms] of Object.entries(protectedEntries)) {
-      if (Array.isArray(wrongForms)) {
-        for (const wrong of wrongForms) map[wrong] = correct;
-      }
-    }
-    _protectedTermsSorted = Object.entries(map).sort((a, b) => b[0].length - a[0].length);
-    const terms = Object.keys(protectedEntries);
-    _protectedKeepEnglish = terms.length > 0
-      ? terms.join(', ')
-      : DEFAULT_PROTECTED_TERMS;
-  }
-
-  function restoreProtectedTerms(text) {
-    if (_protectedTermsSorted.length === 0) return text;
-    let result = text;
-    for (const [wrong, correct] of _protectedTermsSorted) {
-      if (result.includes(wrong)) result = result.replaceAll(wrong, correct);
-    }
-    return result;
-  }
-
-  // ============================================================
-  // INLINE TAG PRESERVATION (Gemini block translation)
-  // ============================================================
-
-  function hasInlineTags(el) {
-    if (el.children.length === 0) return false;
-    let hasText = false;
-    let hasInline = false;
-    for (const node of el.childNodes) {
-      if (node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0) hasText = true;
-      if (node.nodeType === Node.ELEMENT_NODE && INLINE_TAGS.has(node.tagName)) hasInline = true;
-    }
-    return hasText && hasInline;
-  }
-
-  function buildXmlForGemini(el) {
-    const tagInfo = {};
-    let xCounter = 0;
-    let cCounter = 0;
-    let xml = '';
-
-    for (const node of el.childNodes) {
-      if (node.nodeType === Node.TEXT_NODE) {
-        xml += node.textContent;
-      } else if (node.nodeType === Node.ELEMENT_NODE && INLINE_TAGS.has(node.tagName)) {
-        if (NO_TRANSLATE_TAGS.has(node.tagName)) {
-          const id = `c${++cCounter}`;
-          tagInfo[id] = { tag: node.tagName.toLowerCase(), original: node.outerHTML };
-          xml += `<${id}/>`;
-        } else {
-          const id = `x${++xCounter}`;
-          tagInfo[id] = { tag: node.tagName.toLowerCase(), attrs: getAttrsString(node) };
-          xml += `<${id}>${node.textContent}</${id}>`;
-        }
-      } else if (node.nodeType === Node.ELEMENT_NODE) {
-        xml += node.outerHTML;
-      }
-    }
-    return { xml: xml.trim(), tagInfo };
-  }
-
-  function getAttrsString(el) {
-    const attrs = [];
-    for (const attr of el.attributes) {
-      attrs.push(`${attr.name}="${escapeHtml(attr.value)}"`);
-    }
-    return attrs.length ? ' ' + attrs.join(' ') : '';
-  }
-
-  // Tags allowed in Gemini block translation output — derived from existing sets + <br>
-  const SAFE_TAGS = new Set(
-    [...INLINE_TAGS, ...NO_TRANSLATE_TAGS, 'BR'].map(tag => tag.toLowerCase())
-  );
-
-  function xmlToHtml(translatedXml, tagInfo) {
-    // Step 1: Restore placeholder tags to real HTML using tagInfo
-    let rawHtml = translatedXml;
-    for (const [id, info] of Object.entries(tagInfo)) {
-      if (id.startsWith('c')) {
-        rawHtml = rawHtml.replace(new RegExp(`<${id}\\s*/>`, 'g'), info.original);
-      } else {
-        rawHtml = rawHtml.replace(new RegExp(`<${id}>([\\s\\S]*?)</${id}>`, 'g'), (_, content) => {
-          return `<${info.tag}${info.attrs}>${content}</${info.tag}>`;
-        });
-      }
-    }
-    // Clean up unmatched placeholder tags
-    rawHtml = rawHtml.replace(/<[xc]\d+\s*\/?>/g, '');
-    rawHtml = rawHtml.replace(/<\/[xc]\d+>/g, '');
-
-    // Step 2: DOM-based sanitization — parse and walk the tree,
-    // keeping only SAFE_TAGS and stripping dangerous attributes
-    const doc = new DOMParser().parseFromString(rawHtml, 'text/html');
-
-    function sanitizeNode(node) {
-      const fragment = document.createDocumentFragment();
-      for (const child of Array.from(node.childNodes)) {
-        if (child.nodeType === Node.TEXT_NODE) {
-          fragment.appendChild(document.createTextNode(child.textContent));
-        } else if (child.nodeType === Node.ELEMENT_NODE) {
-          if (SAFE_TAGS.has(child.tagName.toLowerCase())) {
-            const clean = document.createElement(child.tagName.toLowerCase());
-            // Copy only safe attributes — allowlist approach
-            for (const attr of Array.from(child.attributes)) {
-              const name = attr.name.toLowerCase();
-              if (name.startsWith('on')) continue;  // event handlers
-              if (name === 'style') continue;       // CSS injection
-              if (name === 'href') {
-                // Only allow http(s) and anchor links
-                const raw = attr.value.replace(/[\x00-\x1f\s]/g, '');
-                if (!/^https?:\/\//i.test(raw) && !raw.startsWith('#')) continue;
-              }
-              clean.setAttribute(attr.name, attr.value);
-            }
-            clean.appendChild(sanitizeNode(child));
-            fragment.appendChild(clean);
-          } else {
-            // Unsafe tag — keep its text children but drop the element
-            fragment.appendChild(sanitizeNode(child));
-          }
-        }
-      }
-      return fragment;
-    }
-
-    const sanitized = sanitizeNode(doc.body);
-    const wrapper = document.createElement('div');
-    wrapper.appendChild(sanitized);
-    return wrapper.innerHTML;
-  }
-
-  function queueGeminiBlockTranslation(el, targetLang) {
-    const { xml, tagInfo } = buildXmlForGemini(el);
-    const pureText = el.textContent.trim();
-
-    if (!pureText || pureText.length < 10) return;
-    if (!isLikelyEnglish(pureText)) return;
-
-    if (!originalTexts.has(el)) originalTexts.set(el, el.innerHTML);
-
-    const langName = translator.supportedLanguages[targetLang] || targetLang;
-
-    const prompt = `You are translating technical education content (Anthropic AI courses) to ${langName}.
-
-SOURCE (XML-tagged English):
-${xml}
-
-RULES:
-- Translate to natural, fluent ${langName}
-- PRESERVE all XML tags exactly: <x1>...</x1>, <x2>...</x2>, <c1/>, <c2/> etc.
-- You may REORDER tags to match ${langName} grammar (e.g., SOV word order for Korean/Japanese)
-- Translate the TEXT INSIDE <xN>...</xN> tags
-- NEVER modify <cN/> tags (they are code identifiers — keep exactly as-is)
-- Keep these terms in English (DO NOT translate): ${_protectedKeepEnglish}
-- Output ONLY the translated text with tags. No explanations.`;
-
-    translator._sendRequest({
-      type: 'VERIFY_REQUEST',
-      systemPrompt: prompt,
-      model: SKILLBRIDGE_MODELS.GEMINI,
-    }).then(result => {
-      if (!result) return;
-      const trimmed = result.trim();
-      if (trimmed.length > xml.length * 3 || trimmed.includes('SOURCE') || trimmed.includes('RULES:')) return;
-
-      if (el?.parentNode) {
-        el.innerHTML = xmlToHtml(trimmed, tagInfo);
-        el.classList.remove('si18n-verifying');
-      }
-      translator._cacheTranslation(pureText, el.textContent.trim(), targetLang);
-    }).catch(err => {
-      console.warn('[SkillBridge] Gemini block translation failed:', err.message);
-      if (el?.parentNode) el.classList.remove('si18n-verifying');
-    });
-
-    el.classList.add('si18n-verifying');
-  }
-
-  function isCodeContent(node) {
-    return !!node.parentElement?.closest('code, pre, script, style');
   }
 
   function getPageContext() {
@@ -1238,7 +994,7 @@ RULES:
     if (!domObserver || !document.body) {
       observeDOM();
     } else {
-      try { domObserver.observe(document.body, { childList: true, subtree: true }); } catch (_) {}
+      try { domObserver.observe(document.body, { childList: true, subtree: true }); } catch (_) { /* observer already active */ }
     }
 
     // Re-detect exam mode for the new page

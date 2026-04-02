@@ -13,6 +13,8 @@
   let scrollRAF = null;
   let savedChatHTML = null;
   let isSending = false;
+  let _rawSectionsCache = null; // Cached raw JSON for section-specific flashcards
+  let _rawSectionsLang = null;  // Language of the cached data
 
   // ============================================================
   // FLOATING BUTTON
@@ -198,6 +200,20 @@
     if (!text) return;
 
     isSending = true;
+
+    // Offline guard — show localized message instead of hitting the network
+    if (sb.isOffline) {
+      const messages = document.getElementById('si18n-chat-messages');
+      messages.insertAdjacentHTML('beforeend', `
+        <div class="si18n-chat-msg si18n-chat-bot">
+          <div class="si18n-chat-avatar">AI</div>
+          <div class="si18n-chat-bubble" role="alert">${sb.escapeHtml(sb.t(TUTOR_OFFLINE_LABELS))}</div>
+        </div>
+      `);
+      scrollToBottom(messages);
+      isSending = false;
+      return;
+    }
 
     const quoteEl = document.querySelector('.si18n-chat-quote');
     const quotedText = quoteEl?.textContent?.replace('\u00d7', '').trim() || '';
@@ -719,7 +735,64 @@
   function loadFlashcardsForCourse() {
     const dict = sb.translator?.staticDict;
     if (!dict || Object.keys(dict).length === 0) return [];
-    // staticDict is flattened across all sections; return all meaningful entries
+
+    // Try to match current URL to a course for section-specific flashcards
+    // Sort slugs longest-first to prevent short slugs stealing matches
+    // (e.g., 'ai-fluency' must not match 'ai-fluency-for-educators')
+    const url = location.pathname.toLowerCase();
+    let sections = null;
+    const sortedSlugs = Object.entries(FLASHCARD_COURSE_MAP)
+      .sort((a, b) => b[0].length - a[0].length);
+    for (const [slug, sects] of sortedSlugs) {
+      if (url.includes(slug)) {
+        sections = sects;
+        break;
+      }
+    }
+
+    // If we matched a course, try loading section-specific vocabulary from the raw JSON
+    if (sections) {
+      const lang = sb.currentLang;
+      if (lang && lang !== 'en' && sb.translator?.premiumLanguages?.includes(lang)) {
+        try {
+          // The static dict is flattened; load the raw JSON to get per-section data
+          const jsonUrl = chrome.runtime.getURL(`src/data/${lang}.json`);
+          // Invalidate cache if language changed
+          if (_rawSectionsCache && _rawSectionsLang !== lang) {
+            _rawSectionsCache = null;
+            _rawSectionsLang = null;
+          }
+          if (!_rawSectionsCache) {
+            // Trigger async load and fall back to all entries for now
+            fetch(jsonUrl).then(r => r.json()).then(data => {
+              _rawSectionsCache = data;
+              _rawSectionsLang = lang;
+              // Re-run with warm cache and update panel
+              if (flashcardPanelOpen) {
+                flashcardCards = loadFlashcardsForCourse();
+                flashcardIndex = 0;
+                refreshFlashcard();
+              }
+            }).catch(() => {});
+          } else {
+            const data = _rawSectionsCache;
+            const sectionEntries = [];
+            for (const sect of sections) {
+              if (data[sect] && typeof data[sect] === 'object') {
+                for (const [en, tr] of Object.entries(data[sect])) {
+                  if (en !== tr && en.length >= 6 && tr.length >= 2) {
+                    sectionEntries.push({ en, tr });
+                  }
+                }
+              }
+            }
+            if (sectionEntries.length > 0) return sectionEntries;
+          }
+        } catch (_) { /* fall through to all entries */ }
+      }
+    }
+
+    // Fallback: return all entries from staticDict
     return Object.entries(dict)
       .filter(([k, v]) => k !== v && k.length >= 6 && v.length >= 2)
       .map(([en, tr]) => ({ en, tr }));

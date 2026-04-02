@@ -497,6 +497,36 @@
     "(5 minutes)": "(5 minutes)",
     "(2 minutes)": "(2 minutes)"
   },
+  "claudeCowork": {
+    "Introduction to Claude Cowork": "Introduction à Claude Cowork",
+    "What is Claude Cowork?": "Qu'est-ce que Claude Cowork ?",
+    "Claude Cowork is a collaborative coding environment": "Claude Cowork est un environnement de codage collaboratif",
+    "Getting started with Cowork": "Premiers pas avec Cowork",
+    "Real-time collaboration with Claude": "Collaboration en temps réel avec Claude",
+    "Cowork sessions": "Sessions Cowork",
+    "Starting a Cowork session": "Démarrer une session Cowork",
+    "Sharing context in Cowork": "Partager le contexte dans Cowork",
+    "Best practices for Cowork": "Meilleures pratiques pour Cowork",
+    "Cowork vs Claude Code": "Cowork vs Claude Code",
+    "When to use Cowork": "Quand utiliser Cowork",
+    "Collaborative development": "Développement collaboratif",
+    "Working alongside Claude in your IDE": "Travailler aux côtés de Claude dans votre IDE"
+  },
+  "subagents": {
+    "Introduction to Subagents": "Introduction aux Subagents",
+    "What are subagents?": "Que sont les Subagents ?",
+    "Subagents are specialized child agents": "Les Subagents sont des agents enfants spécialisés",
+    "Creating subagents": "Création de Subagents",
+    "Delegating tasks to subagents": "Déléguer des tâches aux Subagents",
+    "Subagent communication patterns": "Modèles de communication des Subagents",
+    "Parallel subagent execution": "Exécution parallèle des Subagents",
+    "Subagent isolation and safety": "Isolation et sécurité des Subagents",
+    "When to use subagents": "Quand utiliser les Subagents",
+    "Subagent best practices": "Meilleures pratiques pour les Subagents",
+    "Orchestrating multiple subagents": "Orchestration de plusieurs Subagents",
+    "Subagent resource management": "Gestion des ressources des Subagents",
+    "Building complex workflows with subagents": "Construction de flux de travail complexes avec les Subagents"
+  },
   "aiFluency": {
     "AI Fluency: Framework & Foundations": "Fluidité de l'IA : Cadre et Fondements",
     "Build a strong foundation in AI concepts and practical applications": "Construire une base solide dans les concepts d'IA et les applications pratiques",
