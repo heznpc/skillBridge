@@ -1,0 +1,68 @@
+name: CD — Firefox AMO Deploy
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Only deploy when CI succeeded and relevant files changed
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check if deploy-relevant files changed
+        id: changes
+        run: |
+          CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "manifest.json")
+          if echo "$CHANGED" | grep -qE '^(manifest\.json|src/|_locales/|assets/icons/)'; then
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
+            echo "No deploy-relevant files changed, skipping."
+          fi
+
+      - name: Set up Node.js
+        if: steps.changes.outputs.should_deploy == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        if: steps.changes.outputs.should_deploy == 'true'
+        run: npm ci
+
+      - name: Extract version from manifest
+        if: steps.changes.outputs.should_deploy == 'true'
+        id: version
+        run: |
+          VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('manifest.json','utf8')).version)")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Version: $VERSION"
+
+      - name: Build Firefox zip
+        if: steps.changes.outputs.should_deploy == 'true'
+        run: |
+          mkdir -p store-assets
+          npm run build:firefox:zip
+          echo "Built store-assets/skillbridge-firefox.zip"
+
+      - name: Submit to AMO via web-ext
+        if: steps.changes.outputs.should_deploy == 'true'
+        run: |
+          npx web-ext@8 sign \
+            --source-dir=dist/firefox \
+            --channel=listed \
+            --api-key=${{ secrets.AMO_API_KEY }} \
+            --api-secret=${{ secrets.AMO_API_SECRET }} \
+            --id=skillbridge@heznpc
+
+      - name: Upload zip as artifact
+        if: steps.changes.outputs.should_deploy == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: skillbridge-firefox-v${{ steps.version.outputs.version }}
+          path: store-assets/skillbridge-firefox.zip

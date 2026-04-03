@@ -5,6 +5,9 @@ dist/
 .env.local
 .idea/
 
+# Test coverage
+coverage/
+
 # Build artifacts
 *.zip
 *.crx

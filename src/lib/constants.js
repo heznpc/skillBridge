@@ -98,6 +98,8 @@ const SKILLBRIDGE_THRESHOLDS = {
   GT_QUEUE_MAX: 200, // Max items in the Google Translate queue
   BRIDGE_READY_TIMEOUT: 20000, // 20s timeout waiting for Puter.js bridge
   REQUEST_TIMEOUT: 30000, // 30s timeout for individual AI requests
+  STORAGE_QUOTA_WARN: 0.9, // Warn when storage usage exceeds 90%
+  STORAGE_EVICT_TARGET: 0.7, // Evict old entries until usage drops below 70%
 };
 
 // ==================== DELAYS (ms) ====================
@@ -555,6 +557,20 @@ const OFFLINE_LABELS = {
   vi: 'Ngoại tuyến — chỉ sử dụng bản dịch đã lưu',
 };
 
+const STORAGE_WARNING_LABELS = {
+  en: 'Storage almost full — old translations will be cleared automatically',
+  ko: '저장 공간 부족 — 오래된 번역이 자동으로 삭제됩니다',
+  ja: 'ストレージがほぼ満杯です — 古い翻訳が自動的に削除されます',
+  'zh-CN': '存储空间即将满 — 旧翻译将自动清除',
+  'zh-TW': '儲存空間即將滿 — 舊翻譯將自動清除',
+  es: 'Almacenamiento casi lleno — las traducciones antiguas se eliminarán automáticamente',
+  fr: 'Stockage presque plein — les anciennes traductions seront supprimées automatiquement',
+  de: 'Speicher fast voll — alte Übersetzungen werden automatisch gelöscht',
+  'pt-BR': 'Armazenamento quase cheio — traduções antigas serão removidas automaticamente',
+  ru: 'Хранилище почти заполнено — старые переводы будут удалены автоматически',
+  vi: 'Bộ nhớ gần đầy — bản dịch cũ sẽ được xóa tự động',
+};
+
 const TUTOR_OFFLINE_LABELS = {
   en: 'AI Tutor is unavailable offline. Please check your connection.',
   ko: 'AI 튜터는 오프라인에서 사용할 수 없습니다. 인터넷 연결을 확인해주세요.',
@@ -972,6 +988,51 @@ const FLASHCARD_LABELS = {
     'pt-BR': 'Flashcards de vocabulário',
     ru: 'Карточки для запоминания',
     vi: 'Thẻ ghi nhớ từ vựng',
+  },
+};
+
+const PDF_EXPORT_LABELS = {
+  title: {
+    en: 'Export lesson as PDF',
+    ko: '레슨을 PDF로 내보내기',
+    ja: 'レッスンをPDFでエクスポート',
+    'zh-CN': '将课程导出为PDF',
+    'zh-TW': '將課程匯出為PDF',
+    es: 'Exportar lección como PDF',
+    fr: 'Exporter la leçon en PDF',
+    de: 'Lektion als PDF exportieren',
+    'pt-BR': 'Exportar aula como PDF',
+    ru: 'Экспортировать урок в PDF',
+    vi: 'Xuất bài học dưới dạng PDF',
+  },
+};
+
+const TERM_PREVIEW_LABELS = {
+  title: {
+    en: 'Key terms',
+    ko: '핵심 용어',
+    ja: 'キーワード',
+    'zh-CN': '关键术语',
+    'zh-TW': '關鍵術語',
+    es: 'Términos clave',
+    fr: 'Termes clés',
+    de: 'Schlüsselbegriffe',
+    'pt-BR': 'Termos-chave',
+    ru: 'Ключевые термины',
+    vi: 'Thuật ngữ chính',
+  },
+  viewAll: {
+    en: 'View all',
+    ko: '전체 보기',
+    ja: 'すべて表示',
+    'zh-CN': '查看全部',
+    'zh-TW': '查看全部',
+    es: 'Ver todo',
+    fr: 'Tout voir',
+    de: 'Alle anzeigen',
+    'pt-BR': 'Ver tudo',
+    ru: 'Все термины',
+    vi: 'Xem tất cả',
   },
 };
 
