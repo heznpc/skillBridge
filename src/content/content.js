@@ -92,13 +92,25 @@
   let commentTranslateEnabled = false;
   let originalComments = new Map(); // el → original innerHTML for code elements
   let isOffline = !navigator.onLine;
+  let _termPreviewShown = false;
+  let _offlinePendingItems = [];
 
   window.addEventListener('online', () => {
     isOffline = false;
     hideOfflineBanner();
-    // Retry pending translations
+    // Retry deferred offline items first, then re-apply if needed
     if (currentLang !== 'en' && translator && isReady) {
-      applyStaticTranslations(currentLang);
+      if (_offlinePendingItems.length > 0) {
+        const pending = _offlinePendingItems.filter((item) => item.el?.parentNode);
+        _offlinePendingItems = [];
+        if (pending.length > 0)
+          queueForGoogleTranslate(
+            pending.map((item) => item.el),
+            currentLang,
+          );
+      } else {
+        applyStaticTranslations(currentLang);
+      }
     }
   });
 
@@ -126,6 +138,23 @@
       setTimeout(() => banner.remove(), 300);
     }
   }
+
+  // Storage quota warning — auto-dismiss after 8 seconds
+  document.addEventListener('skillbridge:storagequota', () => {
+    if (document.getElementById('si18n-storage-banner')) return;
+    const banner = document.createElement('div');
+    banner.id = 'si18n-storage-banner';
+    banner.className = 'si18n-offline-banner si18n-storage-warn';
+    banner.setAttribute('role', 'status');
+    banner.setAttribute('aria-live', 'polite');
+    banner.textContent = t(STORAGE_WARNING_LABELS);
+    document.body.appendChild(banner);
+    requestAnimationFrame(() => banner.classList.add('visible'));
+    setTimeout(() => {
+      banner.classList.remove('visible');
+      setTimeout(() => banner.remove(), 300);
+    }, 8000);
+  });
 
   // Lookup helper: returns map entry for given lang, falling back to 'en'
   function t(map, lang) {
@@ -269,6 +298,114 @@
         toast?.remove();
       }, SKILLBRIDGE_DELAYS.PROGRESS_REMOVE);
     }, SKILLBRIDGE_DELAYS.PROGRESS_HIDE);
+  }
+
+  // ============================================================
+  // PER-LESSON TERM PREVIEW
+  // ============================================================
+
+  function showTermPreview() {
+    if (_termPreviewShown) return;
+    if (currentLang === 'en' || isExamPage) return;
+    if (!translator?.staticDict || Object.keys(translator.staticDict).length === 0) return;
+    if (document.getElementById('si18n-term-preview')) return;
+
+    // Match current URL to a course
+    const url = location.pathname.toLowerCase();
+    let matchedSlug = null;
+    let sections = null;
+    const sorted = Object.entries(FLASHCARD_COURSE_MAP).sort((a, b) => b[0].length - a[0].length);
+    for (const [slug, sects] of sorted) {
+      if (url.includes(slug)) {
+        matchedSlug = slug;
+        sections = sects;
+        break;
+      }
+    }
+    if (!matchedSlug) return;
+
+    // Check if already dismissed for this lesson
+    const dismissKey = `termPreview_${matchedSlug}`;
+    chrome.storage.local.get([dismissKey], (result) => {
+      if (result[dismissKey]) return;
+
+      // Gather terms from matched sections
+      let terms = [];
+      const lang = currentLang;
+      if (sections && translator.premiumLanguages.includes(lang)) {
+        try {
+          const jsonUrl = chrome.runtime.getURL(`src/data/${lang}.json`);
+          fetch(jsonUrl)
+            .then((r) => r.json())
+            .then((data) => {
+              for (const sect of sections) {
+                if (data[sect] && typeof data[sect] === 'object') {
+                  for (const [en, tr] of Object.entries(data[sect])) {
+                    if (en !== tr && en.length >= 3 && en.length <= 40 && tr.length >= 1) {
+                      terms.push({ en, tr });
+                    }
+                  }
+                }
+              }
+              if (terms.length > 0) _renderTermPreview(terms.slice(0, 6), matchedSlug, dismissKey);
+            })
+            .catch(() => {});
+        } catch (_) {
+          /* non-fatal */
+        }
+      } else {
+        // Fallback: pick short terms from staticDict
+        terms = Object.entries(translator.staticDict)
+          .filter(([k, v]) => k !== v && k.length >= 3 && k.length <= 40)
+          .map(([en, tr]) => ({ en, tr }))
+          .slice(0, 6);
+        if (terms.length > 0) _renderTermPreview(terms, matchedSlug, dismissKey);
+      }
+    });
+  }
+
+  function _renderTermPreview(terms, slug, dismissKey) {
+    _termPreviewShown = true;
+    const card = document.createElement('div');
+    card.id = 'si18n-term-preview';
+    card.setAttribute('role', 'status');
+    card.setAttribute('aria-live', 'polite');
+
+    const courseName = slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+
+    card.innerHTML = `
+      <div class="si18n-tp-header">
+        <span class="si18n-tp-title">${escapeHtml(t(TERM_PREVIEW_LABELS.title))} · ${escapeHtml(courseName)}</span>
+        <button class="si18n-tp-close" aria-label="Close">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="si18n-tp-terms">
+        ${terms.map((term) => `<div class="si18n-tp-chip"><span class="si18n-tp-en">${escapeHtml(term.en)}</span><span class="si18n-tp-tr">${escapeHtml(term.tr)}</span></div>`).join('')}
+      </div>
+      <button class="si18n-tp-viewall">${escapeHtml(t(TERM_PREVIEW_LABELS.viewAll))} →</button>
+    `;
+    document.body.appendChild(card);
+
+    requestAnimationFrame(() => card.classList.add('visible'));
+
+    const dismiss = () => {
+      card.classList.remove('visible');
+      chrome.storage.local.set({ [dismissKey]: true });
+      setTimeout(() => card.remove(), 400);
+    };
+
+    card.querySelector('.si18n-tp-close').addEventListener('click', dismiss);
+    card.querySelector('.si18n-tp-viewall').addEventListener('click', () => {
+      dismiss();
+      window._sb.toggleSidebar?.();
+      setTimeout(() => window._sb.toggleFlashcardPanel?.(), 400);
+    });
+
+    // Auto-dismiss after 15 seconds
+    setTimeout(() => {
+      if (document.getElementById('si18n-term-preview')) dismiss();
+    }, 15000);
   }
 
   // ============================================================
@@ -691,34 +828,39 @@
       }
 
       if (gtItems.length > 0) {
-        // Deduplicate texts — group elements by text to avoid redundant API calls
-        const textToItems = new Map();
-        for (const item of gtItems) {
-          if (!textToItems.has(item.text)) textToItems.set(item.text, []);
-          textToItems.get(item.text).push(item);
-        }
-        const uniqueTexts = [...textToItems.keys()];
-        const translations = await translator.googleTranslateBatch(uniqueTexts, targetLang);
+        // Offline: skip GT API calls, defer uncached items for retry on reconnect
+        if (isOffline) {
+          _offlinePendingItems.push(...gtItems);
+        } else {
+          // Deduplicate texts — group elements by text to avoid redundant API calls
+          const textToItems = new Map();
+          for (const item of gtItems) {
+            if (!textToItems.has(item.text)) textToItems.set(item.text, []);
+            textToItems.get(item.text).push(item);
+          }
+          const uniqueTexts = [...textToItems.keys()];
+          const translations = await translator.googleTranslateBatch(uniqueTexts, targetLang);
 
-        if (gtGeneration !== myGeneration) {
-          gtProcessing = false;
-          return;
-        }
+          if (gtGeneration !== myGeneration) {
+            gtProcessing = false;
+            return;
+          }
 
-        for (let i = 0; i < uniqueTexts.length; i++) {
-          let translated = translations[i];
-          if (!translated || translated === uniqueTexts[i]) continue;
-          translated = window._protectedTerms.restoreProtectedTerms(translated);
-          const items = textToItems.get(uniqueTexts[i]);
-          let verifyQueued = false;
-          for (const item of items) {
-            if (!item.el?.parentNode) continue;
-            safeReplaceText(item.el, translated);
-            trackTranslatedElement(item.text, item.el);
-            if (!verifyQueued) {
-              verifyQueued = !!translator.queueGeminiVerify(item.text, translated, targetLang);
+          for (let i = 0; i < uniqueTexts.length; i++) {
+            let translated = translations[i];
+            if (!translated || translated === uniqueTexts[i]) continue;
+            translated = window._protectedTerms.restoreProtectedTerms(translated);
+            const items = textToItems.get(uniqueTexts[i]);
+            let verifyQueued = false;
+            for (const item of items) {
+              if (!item.el?.parentNode) continue;
+              safeReplaceText(item.el, translated);
+              trackTranslatedElement(item.text, item.el);
+              if (!verifyQueued) {
+                verifyQueued = !!translator.queueGeminiVerify(item.text, translated, targetLang);
+              }
+              if (verifyQueued) addVerifySpinner(item.el);
             }
-            if (verifyQueued) addVerifySpinner(item.el);
           }
         }
       }
@@ -734,6 +876,7 @@
     gtProcessing = false;
     hideTranslationProgress();
     pruneDetachedEntries();
+    setTimeout(showTermPreview, 1500);
 
     for (const { el, targetLang } of geminiQueue) {
       if (el && el.parentNode) {

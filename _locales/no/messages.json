@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "SkillBridge — AI Course Translator",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "Flerspråklig læringsassistent for Anthropic Skilljar-kurs. Oversett kurs og lær med AI-veiledning — ingen API-nøkkel nødvendig.",
+    "description": "Extension description"
+  }
+}
