@@ -211,7 +211,7 @@ skillbridge/
 
 **모국어 사용자를 찾습니다!** 가장 영향력 있는 기여 방법은 언어 번역 사전을 개선하는 것입니다 — 코드가 필요 없고, JSON 파일만 편집하면 됩니다. 한 가지 잘못된 번역을 수정하는 것만으로도 해당 언어를 사용하는 모든 학습자에게 도움이 됩니다.
 
-전체 가이드는 [CONTRIBUTING.md](../../CONTRIBUTING.md)를 참고하고, [Good First Issues](https://github.com/heznpc/skillbridge/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)에서 시작하고, 프로젝트 방향은 [ROADMAP.md](../../docs/ROADMAP.md)를 참고하세요.
+전체 가이드는 [CONTRIBUTING.md](../../CONTRIBUTING.md)를 참고하고, [Good First Issues](https://github.com/heznpc/skillbridge/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)에서 시작하세요.
 
 ## 면책
 

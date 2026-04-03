@@ -211,7 +211,7 @@ skillbridge/
 
 **ネイティブスピーカー募集中!** 最も影響力のある貢献方法は、言語翻訳辞書を改善することです — コード不要、JSON ファイルを編集するだけです。1 つの誤った翻訳を修正することでも、その言語を使用するすべての学習者に役立ちます。
 
-完全なガイドは [CONTRIBUTING.md](../../CONTRIBUTING.md) を参照し、[Good First Issues](https://github.com/heznpc/skillbridge/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) で始め、プロジェクトの方向は [ROADMAP.md](../../docs/ROADMAP.md) を参照してください。
+完全なガイドは [CONTRIBUTING.md](../../CONTRIBUTING.md) を参照し、[Good First Issues](https://github.com/heznpc/skillbridge/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) で始めてください。
 
 ## 免責事項
 
