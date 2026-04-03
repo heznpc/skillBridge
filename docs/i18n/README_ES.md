@@ -211,7 +211,7 @@ El diccionario de cada idioma se cura cuidadosamente para sonar natural a los ha
 
 **¡Se buscan hablantes nativos!** La forma más impactante de contribuir es mejorar el diccionario de traducción de tu idioma — no se requiere código, solo editar un archivo JSON. Incluso corregir una mala traducción ayuda a todos los estudiantes que usan ese idioma.
 
-Consulta [CONTRIBUTING.md](../../CONTRIBUTING.md) para la guía completa, [Good First Issues](https://github.com/heznpc/skillbridge/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) para empezar, y [ROADMAP.md](../../docs/ROADMAP.md) para ver a dónde se dirige este proyecto.
+Consulta [CONTRIBUTING.md](../../CONTRIBUTING.md) para la guía completa y [Good First Issues](https://github.com/heznpc/skillbridge/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) para empezar.
 
 ## Descargo de Responsabilidad
 

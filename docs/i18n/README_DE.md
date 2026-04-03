@@ -211,7 +211,7 @@ Stimmen Sie nicht mit einer Begriffswahl überein? Das ist genau die Art von PR,
 
 **Muttersprachler gesucht!** Die wirkungsvollste Art beizutragen ist die Verbesserung des Übersetzungswörterbuchs Ihrer Sprache — kein Code erforderlich, nur eine JSON-Datei bearbeiten. Selbst das Beheben einer falschen Übersetzung hilft allen Lernenden dieser Sprache.
 
-Siehe [CONTRIBUTING.md](../../CONTRIBUTING.md) für den vollständigen Leitfaden, [Good First Issues](https://github.com/heznpc/skillbridge/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) zum Starten und [ROADMAP.md](../../docs/ROADMAP.md) zur Projektrichtung.
+Siehe [CONTRIBUTING.md](../../CONTRIBUTING.md) für den vollständigen Leitfaden und [Good First Issues](https://github.com/heznpc/skillbridge/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) zum Starten.
 
 ## Haftungsausschluss
 
