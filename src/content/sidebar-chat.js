@@ -97,6 +97,11 @@
             <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
           </svg>
         </button>
+        <button class="si18n-history-btn" id="si18n-pdf-btn" title="${sb.t(PDF_EXPORT_LABELS.title)}" aria-label="${sb.t(PDF_EXPORT_LABELS.title)}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/>
+          </svg>
+        </button>
         <span class="si18n-header-title">SkillBridge Tutor</span>
         <button class="si18n-close" id="si18n-close" aria-label="${sb.t(A11Y_LABELS.closeSidebar)}">&times;</button>
       </div>
@@ -127,6 +132,7 @@
     document.getElementById('si18n-close')?.addEventListener('click', toggleSidebar);
     document.getElementById('si18n-history-btn')?.addEventListener('click', toggleHistoryPanel);
     document.getElementById('si18n-fc-btn')?.addEventListener('click', toggleFlashcardPanel);
+    document.getElementById('si18n-pdf-btn')?.addEventListener('click', exportLessonPDF);
     bindChatInputEvents();
     bindExampleQuestions();
   }
@@ -506,7 +512,7 @@
       const db = await openHistoryDb();
       const chapter = document.querySelector('h1')?.textContent?.trim() || 'Unknown';
       const tx = db.transaction(HISTORY_STORE, 'readwrite');
-      tx.objectStore(HISTORY_STORE).add({
+      const req = tx.objectStore(HISTORY_STORE).add({
         question,
         answer,
         lang,
@@ -514,8 +520,35 @@
         timestamp: Date.now(),
         url: location.href,
       });
+      req.onerror = (e) => {
+        if (e.target.error?.name === 'QuotaExceededError') {
+          console.warn('[SkillBridge] Chat history quota exceeded — pruning old entries');
+          pruneOldHistory(db);
+        }
+      };
     } catch (e) {
       console.warn('[SkillBridge] Failed to save conversation:', e);
+    }
+  }
+
+  async function pruneOldHistory(db) {
+    try {
+      const tx = db.transaction(HISTORY_STORE, 'readwrite');
+      const store = tx.objectStore(HISTORY_STORE);
+      const idx = store.index('timestamp');
+      const req = idx.openCursor();
+      let deleted = 0;
+      req.onsuccess = (e) => {
+        const cursor = e.target.result;
+        // Delete oldest 20 entries to free space
+        if (cursor && deleted < 20) {
+          cursor.delete();
+          deleted++;
+          cursor.continue();
+        }
+      };
+    } catch (_) {
+      /* best-effort pruning */
     }
   }
 
@@ -769,6 +802,7 @@
   let flashcardCards = [];
   let flashcardIndex = 0;
   let flashcardBoxes = {};
+  let _matchedCourseSlug = null;
 
   function toggleFlashcardPanel() {
     const chatPanel = document.getElementById('si18n-panel-chat');
@@ -826,10 +860,12 @@
     // (e.g., 'ai-fluency' must not match 'ai-fluency-for-educators')
     const url = location.pathname.toLowerCase();
     let sections = null;
+    _matchedCourseSlug = null;
     const sortedSlugs = Object.entries(FLASHCARD_COURSE_MAP).sort((a, b) => b[0].length - a[0].length);
     for (const [slug, sects] of sortedSlugs) {
       if (url.includes(slug)) {
         sections = sects;
+        _matchedCourseSlug = slug;
         break;
       }
     }
@@ -942,12 +978,14 @@
     document.getElementById('si18n-fc-prev')?.addEventListener('click', () => {
       if (flashcardIndex > 0) {
         flashcardIndex--;
+        saveFlashcardProgress();
         refreshFlashcard();
       }
     });
     document.getElementById('si18n-fc-next')?.addEventListener('click', () => {
       if (flashcardIndex < flashcardCards.length - 1) {
         flashcardIndex++;
+        saveFlashcardProgress();
         refreshFlashcard();
       }
     });
@@ -967,23 +1005,98 @@
     });
   }
 
+  function _flashcardStorageKey() {
+    const slug = _matchedCourseSlug || 'all';
+    return `fc_${slug}_${sb.currentLang}`;
+  }
+
   function saveFlashcardProgress() {
-    const key = `fc_${sb.currentLang}`;
+    const key = _flashcardStorageKey();
+    // Use card english text as stable key (array index can shift between loads)
+    const stableBoxes = {};
+    for (const [idx, box] of Object.entries(flashcardBoxes)) {
+      const card = flashcardCards[idx];
+      if (card) stableBoxes[card.en] = box;
+    }
     const data = {};
-    data[key] = flashcardBoxes;
+    data[key] = { boxes: stableBoxes, index: flashcardIndex };
     chrome.storage.local.set(data);
   }
 
   function loadFlashcardProgress() {
-    const key = `fc_${sb.currentLang}`;
+    const key = _flashcardStorageKey();
     chrome.storage.local.get([key], (result) => {
-      flashcardBoxes = result[key] || {};
+      const saved = result[key];
+      flashcardBoxes = {};
+      if (saved?.boxes) {
+        // Restore by matching english text back to current card indices
+        for (let i = 0; i < flashcardCards.length; i++) {
+          const box = saved.boxes[flashcardCards[i].en];
+          if (box !== undefined) flashcardBoxes[i] = box;
+        }
+      }
+      if (saved?.index != null && saved.index < flashcardCards.length) {
+        flashcardIndex = saved.index;
+      }
       refreshFlashcard();
     });
   }
 
   function closeFlashcardPanel() {
     closeSubPanel();
+  }
+
+  // ============================================================
+  // PDF EXPORT
+  // ============================================================
+
+  function exportLessonPDF() {
+    const lessonContent =
+      document.querySelector(SKILLJAR_SELECTORS.lessonContent) ||
+      document.querySelector('.lesson-content') ||
+      document.querySelector('main');
+    if (!lessonContent) return;
+
+    const title = document.querySelector('h1')?.textContent?.trim() || 'SkillBridge Lesson';
+    const langName = sb.translator?.supportedLanguages?.[sb.currentLang] || sb.currentLang;
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    printWindow.document.write(`<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>${sb.escapeHtml(title)}</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 24px; color: #1c1917; line-height: 1.7; font-size: 14px; }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+  h2 { font-size: 18px; margin-top: 28px; }
+  h3 { font-size: 16px; margin-top: 20px; }
+  p { margin: 10px 0; }
+  code { background: #f5f5f4; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+  pre { background: #f5f5f4; padding: 14px; border-radius: 8px; overflow-x: auto; font-size: 13px; }
+  img { max-width: 100%; height: auto; }
+  .si18n-pdf-meta { color: #78716c; font-size: 12px; margin-bottom: 24px; border-bottom: 1px solid #e7e5e4; padding-bottom: 12px; }
+  @media print { body { margin: 20px; } }
+</style>
+</head>
+<body>
+  <h1>${sb.escapeHtml(title)}</h1>
+  <div class="si18n-pdf-meta">SkillBridge · ${sb.escapeHtml(langName)} · ${new Date().toLocaleDateString()}</div>
+  ${lessonContent.innerHTML}
+</body>
+</html>`);
+    printWindow.document.close();
+
+    // Remove extension UI elements from the print copy
+    printWindow.document
+      .querySelectorAll('[class*="si18n"], [id*="si18n"], [class*="skillbridge"], script, iframe')
+      .forEach((el) => el.remove());
+
+    setTimeout(() => {
+      printWindow.print();
+    }, 500);
   }
 
   // Export to shared namespace
