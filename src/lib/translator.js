@@ -38,6 +38,7 @@ class SkilljarTranslator {
     try {
       await this._openDB();
       this._cleanupExpiredCache();
+      this._checkStorageQuota();
       this._setupMessageListener();
       await this._injectPageBridge();
       return true;
@@ -77,6 +78,52 @@ class SkilljarTranslator {
       });
     } catch (err) {
       console.warn('[SkillBridge] Cache cleanup failed:', err);
+    }
+  }
+
+  /**
+   * Check IndexedDB storage quota and evict old entries if usage is high.
+   * Fires a 'skillbridge:storagequota' event on document when warning threshold is crossed.
+   */
+  async _checkStorageQuota() {
+    if (!navigator.storage?.estimate) return;
+    try {
+      const { usage, quota } = await navigator.storage.estimate();
+      const ratio = usage / quota;
+      if (ratio >= SKILLBRIDGE_THRESHOLDS.STORAGE_QUOTA_WARN) {
+        document.dispatchEvent(new CustomEvent('skillbridge:storagequota', { detail: { usage, quota, ratio } }));
+        await this._evictOldestEntries();
+      }
+    } catch (_) {
+      /* storage.estimate not supported or failed — non-fatal */
+    }
+  }
+
+  /**
+   * Evict oldest cache entries until usage drops below STORAGE_EVICT_TARGET.
+   */
+  async _evictOldestEntries() {
+    if (!this._db) return;
+    try {
+      const tx = this._db.transaction('translations', 'readwrite');
+      const store = tx.objectStore('translations');
+      const all = await new Promise((resolve, reject) => {
+        const req = store.getAll();
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+      // Sort oldest first
+      all.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+      // Delete oldest 30% of entries
+      const deleteCount = Math.ceil(all.length * 0.3);
+      const deleteTx = this._db.transaction('translations', 'readwrite');
+      const deleteStore = deleteTx.objectStore('translations');
+      for (let i = 0; i < deleteCount && i < all.length; i++) {
+        deleteStore.delete(all[i].id);
+      }
+      console.info(`[SkillBridge] Evicted ${deleteCount} old cache entries (storage quota high)`);
+    } catch (err) {
+      console.warn('[SkillBridge] Cache eviction failed:', err);
     }
   }
 
@@ -250,13 +297,20 @@ class SkilljarTranslator {
     try {
       const tx = this._db.transaction('translations', 'readwrite');
       const store = tx.objectStore('translations');
-      store.put({
+      const req = store.put({
         id: `${targetLang}\t${text.trim()}`,
         lang: targetLang,
         original: text.trim(),
         translation,
         timestamp: Date.now(),
       });
+      req.onerror = (e) => {
+        if (e.target.error?.name === 'QuotaExceededError') {
+          console.warn('[SkillBridge] Storage quota exceeded — evicting old entries');
+          this._evictOldestEntries();
+          document.dispatchEvent(new CustomEvent('skillbridge:storagequota', { detail: { exceeded: true } }));
+        }
+      };
     } catch (err) {
       console.warn('[SkillBridge] Cache write failed:', err);
     }
