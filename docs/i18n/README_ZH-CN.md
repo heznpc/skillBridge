@@ -211,7 +211,7 @@ skillbridge/
 
 **寻找母语使用者!** 最有影响力的贡献方式是改进你的语言的翻译字典 — 无需代码，只需编辑 JSON 文件。即使修复一个错误的翻译也能帮助使用该语言的每个学习者。
 
-参见 [CONTRIBUTING.md](../../CONTRIBUTING.md) 了解完整指南，从 [Good First Issues](https://github.com/heznpc/skillbridge/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) 开始，以及 [ROADMAP.md](../../docs/ROADMAP.md) 了解项目方向。
+参见 [CONTRIBUTING.md](../../CONTRIBUTING.md) 了解完整指南，从 [Good First Issues](https://github.com/heznpc/skillbridge/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) 开始。
 
 ## 免责声明
 

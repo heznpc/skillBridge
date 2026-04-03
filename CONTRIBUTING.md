@@ -131,10 +131,8 @@ skillbridge/
 ├── scripts/
 │   ├── build-firefox.js       # Generates Firefox-compatible build in dist/firefox/
 │   └── audit-translations.js  # Translation audit utility
-├── docs/                      # Roadmap, i18n READMEs, CWS listing
-│   ├── i18n/                  # Translated READMEs (KO, JA, ZH-CN, ES, FR, DE)
-│   ├── ROADMAP.md             # Project roadmap
-│   └── ROADMAP.md             # Product roadmap
+├── docs/                      # Landing page, i18n READMEs, privacy policy
+│   └── i18n/                  # Translated READMEs (KO, JA, ZH-CN, ES, FR, DE)
 └── README.md                  # Main readme
 ```
 
