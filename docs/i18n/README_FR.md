@@ -211,7 +211,7 @@ Vous n'êtes pas d'accord avec un choix de terme ? C'est exactement le type de P
 
 **Locuteurs natifs recherchés !** La façon la plus impactante de contribuer est d'améliorer le dictionnaire de traduction de votre langue — aucun code requis, il suffit d'éditer un fichier JSON. Même corriger une mauvaise traduction aide tous les apprenants utilisant cette langue.
 
-Consultez [CONTRIBUTING.md](../../CONTRIBUTING.md) pour le guide complet, [Good First Issues](https://github.com/heznpc/skillbridge/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) pour commencer, et [ROADMAP.md](../../docs/ROADMAP.md) pour voir où ce projet se dirige.
+Consultez [CONTRIBUTING.md](../../CONTRIBUTING.md) pour le guide complet et [Good First Issues](https://github.com/heznpc/skillbridge/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) pour commencer.
 
 ## Clause de Non-responsabilité
 

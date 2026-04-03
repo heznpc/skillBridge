@@ -2,7 +2,7 @@
 
 <img src="assets/icons/icon128.png" alt="SkillBridge" width="90" />
 
-# SkillBridge for Anthropic Academy <!-- VERSION_START -->v3.4.0<!-- VERSION_END -->
+# SkillBridge for Anthropic Academy <!-- VERSION_START -->v3.5.0<!-- VERSION_END -->
 
 > Available in multiple languages at the [project landing page](https://heznpc.github.io/skillbridge/).
 
@@ -17,7 +17,7 @@
 
 **Translate Anthropic Academy into your language — instantly.**
 
-Break the language barrier on Anthropic's free AI courses. <!-- LANG_COUNT_START -->32 languages<!-- LANG_COUNT_END --> supported.
+Break the language barrier on Anthropic's free AI courses. <!-- LANG_COUNT_START -->33 languages<!-- LANG_COUNT_END --> supported.
 
 [Install](#installation) · [Features](#features) · [Report Bug](https://github.com/heznpc/skillbridge/issues) · [Request Feature](https://github.com/heznpc/skillbridge/issues) · [Contributing](CONTRIBUTING.md)
 
@@ -109,6 +109,14 @@ A full dark theme for the entire Academy site — header, sidebar, lesson conten
 ### ⌨️ Keyboard Shortcuts
 
 `Ctrl+Shift+S` toggle sidebar, `Ctrl+Shift+L` dark mode, `Ctrl+Shift+/` help overlay, `Escape` close, `/` focus chat.
+
+### 📖 Per-Lesson Term Preview
+
+When you enter a lesson, a floating card shows **6 key terms** for the current course with their translations. Auto-dismisses after 15 seconds. Click "View all" to open the full flashcard panel.
+
+### 📄 PDF Export
+
+Export any translated lesson as a clean, print-friendly PDF — useful for offline study or quick reference.
 
 ### 🔍 Smart Detection
 
@@ -285,11 +293,12 @@ No. SkillBridge is an unofficial community project. It is not affiliated with, e
 - ~~Certification exam kill-switch~~ (shipped in v2.1.0)
 - ~~SPA navigation handling~~ (shipped in v2.1.0)
 - ~~New course support: Cowork, subagents, MCP Advanced Topics~~ (shipped in v2.1.0)
+- ~~Per-lesson term preview, PDF export, offline cache hardening~~ (shipped in v3.5.0)
+- ~~Firefox AMO deployment pipeline~~ (shipped in v3.5.0)
 - Additional curated language dictionaries (community-driven)
 - Translation quality analytics and community review
 - Multi-LMS platform support beyond Skilljar
 
-See [ROADMAP.md](docs/ROADMAP.md) for the full plan.
 
 ## Disclaimer
 
