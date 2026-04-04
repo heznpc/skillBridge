@@ -323,8 +323,8 @@
       }
     }
     if (!matchedSlug) return;
+    _termPreviewShown = true;
 
-    // Check if already dismissed for this lesson
     const dismissKey = `termPreview_${matchedSlug}`;
     chrome.storage.local.get([dismissKey], (result) => {
       if (result[dismissKey]) return;
@@ -828,9 +828,9 @@
       }
 
       if (gtItems.length > 0) {
-        // Offline: skip GT API calls, defer uncached items for retry on reconnect
         if (isOffline) {
-          _offlinePendingItems.push(...gtItems);
+          const remaining = SKILLBRIDGE_THRESHOLDS.GT_QUEUE_MAX - _offlinePendingItems.length;
+          if (remaining > 0) _offlinePendingItems.push(...gtItems.slice(0, remaining));
         } else {
           // Deduplicate texts — group elements by text to avoid redundant API calls
           const textToItems = new Map();

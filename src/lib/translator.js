@@ -99,9 +99,6 @@ class SkilljarTranslator {
     }
   }
 
-  /**
-   * Evict oldest cache entries until usage drops below STORAGE_EVICT_TARGET.
-   */
   async _evictOldestEntries() {
     if (!this._db) return;
     try {
@@ -112,14 +109,10 @@ class SkilljarTranslator {
         req.onsuccess = () => resolve(req.result);
         req.onerror = () => reject(req.error);
       });
-      // Sort oldest first
       all.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
-      // Delete oldest 30% of entries
-      const deleteCount = Math.ceil(all.length * 0.3);
-      const deleteTx = this._db.transaction('translations', 'readwrite');
-      const deleteStore = deleteTx.objectStore('translations');
+      const deleteCount = Math.ceil(all.length * (1 - SKILLBRIDGE_THRESHOLDS.STORAGE_EVICT_TARGET));
       for (let i = 0; i < deleteCount && i < all.length; i++) {
-        deleteStore.delete(all[i].id);
+        store.delete(all[i].id);
       }
       console.info(`[SkillBridge] Evicted ${deleteCount} old cache entries (storage quota high)`);
     } catch (err) {
