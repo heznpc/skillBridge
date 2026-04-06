@@ -15,6 +15,10 @@ on:
         required: false
         default: 'all'
 
+permissions:
+  issues: write
+  contents: read
+
 jobs:
   # ─── Job 1: Skilljar DOM Health Check (weekly, Monday) ────────
   dom-health-check:
