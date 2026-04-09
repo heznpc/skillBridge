@@ -23,7 +23,7 @@ describe('SKILLJAR_SELECTORS', () => {
   });
 
   test('all values are non-empty strings', () => {
-    for (const [key, value] of Object.entries(SKILLJAR_SELECTORS)) {
+    for (const [_key, value] of Object.entries(SKILLJAR_SELECTORS)) {
       expect(typeof value).toBe('string');
       expect(value.length).toBeGreaterThan(0);
     }
@@ -80,7 +80,7 @@ describe('SKILLJAR_SELECTORS', () => {
 
   describe('CSS selector syntax', () => {
     test('selectors use valid CSS prefixes (., #, or tag name)', () => {
-      for (const [key, value] of Object.entries(SKILLJAR_SELECTORS)) {
+      for (const [_key, value] of Object.entries(SKILLJAR_SELECTORS)) {
         // Each comma-separated selector should start with #, ., or a letter (tag name),
         // or contain attribute selectors ([...)
         const parts = value.split(',').map((s) => s.trim());
@@ -92,13 +92,13 @@ describe('SKILLJAR_SELECTORS', () => {
     });
 
     test('no selector has leading/trailing whitespace', () => {
-      for (const [key, value] of Object.entries(SKILLJAR_SELECTORS)) {
+      for (const [_key, value] of Object.entries(SKILLJAR_SELECTORS)) {
         expect(value).toBe(value.trim());
       }
     });
 
     test('no selector is just whitespace', () => {
-      for (const [key, value] of Object.entries(SKILLJAR_SELECTORS)) {
+      for (const [_key, value] of Object.entries(SKILLJAR_SELECTORS)) {
         expect(value.trim().length).toBeGreaterThan(0);
       }
     });

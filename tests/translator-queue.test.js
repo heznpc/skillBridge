@@ -23,7 +23,7 @@ let SkilljarTranslator;
 try {
   const combined = `(function() { ${selectorsSrc}; ${constantsSrc}; ${src}; return SkilljarTranslator; })()`;
   SkilljarTranslator = eval(combined);
-} catch (e) {
+} catch (_e) {
   eval(selectorsSrc);
   eval(constantsSrc);
   eval(src);
