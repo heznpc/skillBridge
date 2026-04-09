@@ -37,8 +37,8 @@ class SkilljarTranslator {
   async initialize() {
     try {
       await this._openDB();
-      this._cleanupExpiredCache();
-      this._checkStorageQuota();
+      await this._cleanupExpiredCache();
+      await this._checkStorageQuota();
       this._setupMessageListener();
       await this._injectPageBridge();
       return true;
@@ -732,19 +732,36 @@ User: ${userMessage}`;
       message.__skillbridge__ = true;
       message.__nonce__ = this._bridgeNonce;
 
+      // Evict stale callbacks before adding new one
+      if (this.pendingCallbacks.size >= SKILLBRIDGE_THRESHOLDS.PENDING_CALLBACKS_MAX) {
+        const now = Date.now();
+        for (const [cbId, cb] of this.pendingCallbacks) {
+          if (cb._ts && now - cb._ts > SKILLBRIDGE_THRESHOLDS.CALLBACK_STALE_MS) {
+            this.pendingCallbacks.delete(cbId);
+          }
+        }
+        // Hard cap: drop oldest if still over limit
+        if (this.pendingCallbacks.size >= SKILLBRIDGE_THRESHOLDS.PENDING_CALLBACKS_MAX) {
+          const oldest = this.pendingCallbacks.keys().next().value;
+          this.pendingCallbacks.delete(oldest);
+        }
+      }
+
       const timeout = setTimeout(() => {
         this.pendingCallbacks.delete(id);
         reject(new Error('Request timed out'));
       }, SKILLBRIDGE_THRESHOLDS.REQUEST_TIMEOUT);
 
-      this.pendingCallbacks.set(id, (response) => {
+      const handler = (response) => {
         clearTimeout(timeout);
         if (response.success === false && response.error) {
           reject(new Error(response.error));
         } else {
           resolve(response.result);
         }
-      });
+      };
+      handler._ts = Date.now();
+      this.pendingCallbacks.set(id, handler);
 
       window.postMessage(message, window.location.origin);
     });
