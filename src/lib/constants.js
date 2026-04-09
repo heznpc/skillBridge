@@ -98,6 +98,8 @@ const SKILLBRIDGE_THRESHOLDS = {
   GT_QUEUE_MAX: 200, // Max items in the Google Translate queue
   BRIDGE_READY_TIMEOUT: 20000, // 20s timeout waiting for Puter.js bridge
   REQUEST_TIMEOUT: 30000, // 30s timeout for individual AI requests
+  PENDING_CALLBACKS_MAX: 100, // Max concurrent pending bridge callbacks
+  CALLBACK_STALE_MS: 120000, // Auto-cleanup callbacks older than 2 min
   STORAGE_QUOTA_WARN: 0.9, // Warn when storage usage exceeds 90%
   STORAGE_EVICT_TARGET: 0.7, // Evict old entries until usage drops below 70%
 };
