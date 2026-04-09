@@ -220,7 +220,7 @@ class SkilljarTranslator {
   // ==================== IndexedDB CACHE ====================
 
   _openDB() {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, _reject) => {
       const req = indexedDB.open('skillbridge-cache', 1);
       req.onupgradeneeded = (e) => {
         const db = e.target.result;

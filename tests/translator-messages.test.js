@@ -32,7 +32,7 @@ let SkilljarTranslator;
 try {
   const combined = `(function() { ${selectorsSrc}; ${constantsSrc}; ${src}; return SkilljarTranslator; })()`;
   SkilljarTranslator = eval(combined);
-} catch (e) {
+} catch (_e) {
   eval(selectorsSrc);
   eval(constantsSrc);
   eval(src);
@@ -63,7 +63,7 @@ describe('pendingCallbacks management', () => {
   test('_sendRequest adds a callback with _ts timestamp', async () => {
     const before = Date.now();
     // Don't await — it will timeout; just fire and check
-    const promise = translator._sendRequest({ type: 'TEST' }).catch(() => {});
+    const _promise = translator._sendRequest({ type: 'TEST' }).catch(() => {});
     expect(translator.pendingCallbacks.size).toBe(1);
 
     const [, handler] = [...translator.pendingCallbacks.entries()][0];

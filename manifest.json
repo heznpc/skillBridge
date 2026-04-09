@@ -9,7 +9,6 @@
   "default_locale": "en",
   "permissions": [
     "storage",
-    "activeTab",
     "tabs",
     "alarms"
   ],
