@@ -10,6 +10,10 @@
   'use strict';
 
   const sb = window._sb;
+  if (!sb) {
+    console.warn('[SkillBridge] code-comments: _sb not ready');
+    return;
+  }
 
   /**
    * Detect programming language from code element class names.
@@ -53,6 +57,7 @@
     const translator = sb.translator;
 
     if (originalComments.has(el)) return;
+    if (originalComments.size >= 5000) return; // Consistent with MAP_SIZE_CAP
     const text = el.textContent;
     if (!text || text.length < 10) return;
 

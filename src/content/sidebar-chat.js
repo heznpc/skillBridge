@@ -7,6 +7,10 @@
   'use strict';
 
   const sb = window._sb;
+  if (!sb) {
+    console.warn('[SkillBridge] sidebar-chat: _sb not ready');
+    return;
+  }
 
   let historyDb = null;
   let historyPanelOpen = false;
