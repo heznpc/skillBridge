@@ -28,7 +28,16 @@ const fns = new Function(`
   return { gtLangCode, parseGTResponse, isYouTubeUrl, isAllowedFetchUrl, isNewerVersion, _rateLimiter, fetchWithRetry, registerAlarms };
 `)();
 
-const { gtLangCode, parseGTResponse, isYouTubeUrl, isAllowedFetchUrl, isNewerVersion, _rateLimiter, fetchWithRetry, registerAlarms } = fns;
+const {
+  gtLangCode,
+  parseGTResponse,
+  isYouTubeUrl,
+  isAllowedFetchUrl,
+  isNewerVersion,
+  _rateLimiter,
+  fetchWithRetry,
+  registerAlarms,
+} = fns;
 
 // ── Tests ──────────────────────────────────────────────────────
 
