@@ -7,6 +7,10 @@
   'use strict';
 
   const sb = window._sb;
+  if (!sb) {
+    console.warn('[SkillBridge] keyboard-shortcuts: _sb not ready');
+    return;
+  }
   let removeTimer = null;
 
   const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
