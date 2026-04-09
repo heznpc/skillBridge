@@ -55,6 +55,19 @@ describe('SKILLJAR_SELECTORS', () => {
       'answerLabel',
       'quizResult',
       'certificateSection',
+      // Skilljar AI Tutor (2026)
+      'aiTutor',
+      'aiTutorButton',
+      'aiTutorPanel',
+      // Course Families (Jan 2026)
+      'courseFamily',
+      'courseFamilyTitle',
+      // Course Ratings (Jan 2026)
+      'courseRating',
+      'courseRatingStars',
+      'courseRatingText',
+      // AI Feedback (Mar 2026)
+      'aiFeedback',
     ];
 
     for (const key of REQUIRED_KEYS) {
@@ -113,6 +126,27 @@ describe('SKILLJAR_SELECTORS', () => {
     test('certificate selector exists', () => {
       expect(SKILLJAR_SELECTORS.certificateSection).toBeDefined();
       expect(SKILLJAR_SELECTORS.certificateSection).toContain('certificate');
+    });
+
+    test('AI Tutor selectors support multiple variants', () => {
+      expect(SKILLJAR_SELECTORS.aiTutor).toContain(',');
+      expect(SKILLJAR_SELECTORS.aiTutorButton).toContain(',');
+      expect(SKILLJAR_SELECTORS.aiTutorPanel).toContain(',');
+    });
+
+    test('Course Families selectors exist', () => {
+      expect(SKILLJAR_SELECTORS.courseFamily).toContain('course-family');
+      expect(SKILLJAR_SELECTORS.courseFamilyTitle).toContain('course-family-title');
+    });
+
+    test('Course Ratings selectors exist', () => {
+      expect(SKILLJAR_SELECTORS.courseRating).toContain('course-rating');
+      expect(SKILLJAR_SELECTORS.courseRatingStars).toContain('rating-stars');
+      expect(SKILLJAR_SELECTORS.courseRatingText).toContain('rating-text');
+    });
+
+    test('AI Feedback selector exists', () => {
+      expect(SKILLJAR_SELECTORS.aiFeedback).toContain('ai-feedback');
     });
   });
 
