@@ -217,7 +217,14 @@ RULES:
         if (trimmed.length > xml.length * 3 || trimmed.includes('SOURCE') || trimmed.includes('RULES:')) return;
 
         if (el?.parentNode) {
-          el.innerHTML = xmlToHtml(trimmed, tagInfo);
+          try {
+            el.innerHTML = xmlToHtml(trimmed, tagInfo);
+          } catch (sanitizeErr) {
+            console.warn('[SkillBridge] Gemini block sanitization failed:', sanitizeErr.message);
+            // Restore original HTML on failure
+            const orig = originalTexts.get(el);
+            if (orig) el.innerHTML = orig;
+          }
           el.classList.remove('si18n-verifying');
         }
         translator._cacheTranslation(pureText, el.textContent.trim(), targetLang);

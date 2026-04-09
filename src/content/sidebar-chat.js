@@ -301,7 +301,7 @@
         const answerText = lastStreamedText?.trim() || bubble.textContent?.trim() || '';
         if (answerText) saveConversation(text, answerText, sb.currentLang);
       }
-    } catch (err) {
+    } catch (_err) {
       if (bubble) {
         bubble.classList.remove('si18n-streaming-cursor');
         bubble.setAttribute('role', 'alert');
@@ -547,7 +547,7 @@
           cursor.continue();
         }
       };
-    } catch (_) {
+    } catch (_ignored) {
       /* best-effort pruning */
     }
   }
@@ -911,7 +911,7 @@
             }
             if (sectionEntries.length > 0) return sectionEntries;
           }
-        } catch (_) {
+        } catch (_ignored) {
           /* fall through to all entries */
         }
       }
