@@ -84,8 +84,8 @@
   let isExamPage = false;
   let isReady = false;
   let sidebarVisible = false;
-  let originalTexts = new Map();
-  let translatedTexts = new Map();
+  const originalTexts = new Map();
+  const translatedTexts = new Map();
   const MAP_SIZE_CAP = 5000;
   let pendingActions = [];
   let gtTranslateQueue = [];
@@ -93,7 +93,7 @@
   let gtGeneration = 0;
   let domObserver = null;
   let commentTranslateEnabled = false;
-  let originalComments = new Map(); // el → original innerHTML for code elements
+  const originalComments = new Map(); // el → original innerHTML for code elements
   let isOffline = !navigator.onLine;
   let _termPreviewShown = false;
   let _offlinePendingItems = [];
@@ -353,7 +353,7 @@
               if (terms.length > 0) _renderTermPreview(terms.slice(0, 6), matchedSlug, dismissKey);
             })
             .catch(() => {});
-        } catch (_) {
+        } catch (_ignored) {
           /* non-fatal */
         }
       } else {
@@ -605,7 +605,7 @@
    * Process a single element: try static dict, then return category.
    * Returns 'static' | 'gt' | null.
    */
-  function processOneElement(el, targetLang) {
+  function processOneElement(el, _targetLang) {
     const fullText = el.textContent.trim();
     if (!fullText || fullText.length < 2) return null;
     if (!isLikelyEnglish(fullText)) return null;
@@ -689,9 +689,8 @@
    * Process offscreen elements in small chunks during idle time,
    * preventing main-thread blocking on pages with 500+ elements.
    */
-  function processOffscreenChunked(elements, targetLang, prevStatic, prevGt) {
+  function processOffscreenChunked(elements, targetLang, _prevStatic, prevGt) {
     let idx = 0;
-    let staticCount = prevStatic;
     const gtCandidates = [];
     // Capture generation to detect language switches during processing
     const myGeneration = gtGeneration;
@@ -708,8 +707,7 @@
       while (idx < chunkEnd && (processed === 0 || !hasDeadline || deadline.timeRemaining() > 1)) {
         const el = elements[idx++];
         const result = processOneElement(el, targetLang);
-        if (result === 'static') staticCount++;
-        else if (result === 'gt') gtCandidates.push(el);
+        if (result === 'gt') gtCandidates.push(el);
         processed++;
       }
 
@@ -973,6 +971,7 @@
     gtGeneration++;
     clearTimeout(translateTimeout);
     pendingNodes = [];
+    _offlinePendingItems = [];
     currentLang = 'en';
     window._protectedTerms.resetProtectedTerms();
     updateLangClass('en');
@@ -1237,7 +1236,7 @@
     } else {
       try {
         domObserver.observe(document.body, { childList: true, subtree: true });
-      } catch (_) {
+      } catch (_ignored) {
         /* observer already active */
       }
     }
