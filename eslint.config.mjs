@@ -88,7 +88,7 @@ export default [
       },
     },
     rules: {
-      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }],
       'no-console': 'off', // Extension uses console for debugging
       'no-undef': 'error',
       'eqeqeq': ['error', 'always', { null: 'ignore' }],
