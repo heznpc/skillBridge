@@ -143,7 +143,7 @@ class YouTubeSubtitleManager {
       let data;
       try {
         data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-      } catch (e) {
+      } catch (_e) {
         return; // Not JSON, skip
       }
 

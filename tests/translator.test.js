@@ -6,7 +6,7 @@
  * browser globals just enough to instantiate it.
  */
 
-/* global jest, describe, test, expect, beforeEach */
+/* global describe, test, expect, beforeEach */
 
 // ── Minimal browser mocks ──────────────────────────────────────
 global.chrome = { runtime: { getURL: (p) => p } };
@@ -27,7 +27,7 @@ let SkilljarTranslator;
 try {
   const combined = `(function() { ${selectorsSrc}; ${constantsSrc}; ${src}; return SkilljarTranslator; })()`;
   SkilljarTranslator = eval(combined);
-} catch (e) {
+} catch (_e) {
   eval(selectorsSrc);
   eval(constantsSrc);
   eval(src);
@@ -208,7 +208,7 @@ describe('Language JSON files', () => {
       });
 
       test('_protected values are arrays', () => {
-        for (const [key, value] of Object.entries(data._protected)) {
+        for (const [_key, value] of Object.entries(data._protected)) {
           expect(Array.isArray(value)).toBe(true);
           // Each array should have at least one entry
           expect(value.length).toBeGreaterThan(0);

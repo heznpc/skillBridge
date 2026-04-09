@@ -30,7 +30,7 @@ let YouTubeSubtitleManager;
 try {
   const combined = `(function() { ${selectorsSrc}; ${constantsSrc}; ${src}; return YouTubeSubtitleManager; })()`;
   YouTubeSubtitleManager = eval(combined);
-} catch (e) {
+} catch (_e) {
   eval(selectorsSrc);
   eval(constantsSrc);
   eval(src);

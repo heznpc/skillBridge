@@ -73,7 +73,7 @@ describe('SKILLBRIDGE_THRESHOLDS', () => {
 
 describe('SKILLBRIDGE_DELAYS', () => {
   test('all delays are non-negative', () => {
-    for (const [key, value] of Object.entries(SKILLBRIDGE_DELAYS)) {
+    for (const [_key, value] of Object.entries(SKILLBRIDGE_DELAYS)) {
       expect(value).toBeGreaterThanOrEqual(0);
     }
   });
@@ -115,14 +115,14 @@ describe('UI Labels (i18n)', () => {
   // UI labels are defined in constants.js but may not all be in scope
   // when eval'd outside the full extension context. Test what's available.
   test('POPUP_LABELS has English fallback for all entries', () => {
-    for (const [key, map] of Object.entries(POPUP_LABELS)) {
+    for (const [_key, map] of Object.entries(POPUP_LABELS)) {
       expect(map['en']).toBeDefined();
     }
   });
 
   test('POPUP_LABELS has entries for core i18n languages', () => {
     const coreI18nCodes = ['en', 'ko', 'ja', 'zh-CN', 'es', 'fr', 'de'];
-    for (const [key, map] of Object.entries(POPUP_LABELS)) {
+    for (const [_key, map] of Object.entries(POPUP_LABELS)) {
       for (const code of coreI18nCodes) {
         expect(map[code]).toBeDefined();
       }
