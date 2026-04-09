@@ -56,6 +56,8 @@
     SKILLJAR_SELECTORS.courseOverview,
     `${SKILLJAR_SELECTORS.lessonTop} h2`,
     SKILLJAR_SELECTORS.detailsPane,
+    SKILLJAR_SELECTORS.courseFamilyTitle,
+    SKILLJAR_SELECTORS.courseRatingText,
   ].join(', ');
 
   const EXCLUDE_SELECTOR = [
@@ -73,6 +75,7 @@
     '.site-header nav',
     'nav.navbar',
     'footer',
+    SKILLJAR_SELECTORS.aiTutor, // [class*="ai-tutor"] already covers button & panel variants
   ].join(', ');
 
   let translator = null;

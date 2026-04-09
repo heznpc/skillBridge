@@ -46,4 +46,21 @@ const SKILLJAR_SELECTORS = {
   answerLabel: 'label[class*="answer"], label[class*="option"], label[class*="choice"]',
   quizResult: '.quiz-result, .assessment-result, .quiz-score, .score-display',
   certificateSection: '.certificate-section, .certificate-panel, .certificate-container',
+
+  // Skilljar AI Tutor (open beta 2026) — exclude from translation to avoid DOM conflicts
+  aiTutor: '.sj-ai-tutor, .ai-tutor-widget, [class*="ai-tutor"], [data-ai-tutor]',
+  aiTutorButton: '.sj-ai-tutor-btn, .ai-tutor-button, button[class*="ai-tutor"]',
+  aiTutorPanel: '.sj-ai-tutor-panel, .ai-tutor-panel, [class*="ai-tutor-panel"]',
+
+  // Course Families (Jan 2026) — grouped course catalog listings
+  courseFamily: '.course-family, .sj-course-family, [class*="course-family"]',
+  courseFamilyTitle: '.course-family-title, .sj-course-family-title',
+
+  // Course Ratings (Jan 2026)
+  courseRating: '.course-rating, .sj-course-rating, [class*="course-rating"]',
+  courseRatingStars: '.course-rating-stars, .sj-rating-stars',
+  courseRatingText: '.course-rating-text, .sj-rating-text',
+
+  // AI Feedback Summaries (Mar 2026)
+  aiFeedback: '.ai-feedback-summary, .sj-ai-feedback, [class*="ai-feedback"]',
 };
