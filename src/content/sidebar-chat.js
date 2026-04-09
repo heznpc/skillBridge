@@ -1051,8 +1051,7 @@
   // ============================================================
 
   function exportLessonPDF() {
-    const lessonContent =
-      document.querySelector(SKILLJAR_SELECTORS.lessonContent) || document.querySelector('main');
+    const lessonContent = document.querySelector(SKILLJAR_SELECTORS.lessonContent) || document.querySelector('main');
     if (!lessonContent) return;
 
     const title = document.querySelector('h1')?.textContent?.trim() || 'SkillBridge Lesson';
