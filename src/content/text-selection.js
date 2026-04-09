@@ -7,6 +7,10 @@
   'use strict';
 
   const sb = window._sb;
+  if (!sb) {
+    console.warn('[SkillBridge] text-selection: _sb not ready');
+    return;
+  }
 
   let askTutorBtn = null;
   let pendingQuote = null;

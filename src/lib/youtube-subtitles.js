@@ -39,9 +39,13 @@ class YouTubeSubtitleManager {
     // Watch for new iframes
     this._startDomObserver();
 
-    // Retry for lazy-loaded content
-    setTimeout(() => this._processExistingIframes(), 2000);
-    setTimeout(() => this._processExistingIframes(), 5000);
+    // Retry for lazy-loaded content only if YouTube iframes exist on page
+    if (document.querySelector(YouTubeSubtitleManager.EMBED_SELECTOR)) {
+      this._retryTimers = [
+        setTimeout(() => this._processExistingIframes(), 2000),
+        setTimeout(() => this._processExistingIframes(), 5000),
+      ];
+    }
   }
 
   /** @param {string} newLang — ISO 639-1 code to switch subtitles to */
@@ -61,6 +65,10 @@ class YouTubeSubtitleManager {
     if (this._messageHandler) {
       window.removeEventListener('message', this._messageHandler);
       this._messageHandler = null;
+    }
+    if (this._retryTimers) {
+      for (const timer of this._retryTimers) clearTimeout(timer);
+      this._retryTimers = null;
     }
     this._iframes.clear();
   }
@@ -203,15 +211,15 @@ class YouTubeSubtitleManager {
       if (iframe.src !== newSrc) {
         iframe.src = newSrc;
 
-        // Register + send commands with aggressive retries after load
+        // Register + send commands with retries after load (reduced from 5 to 3)
         iframe.addEventListener(
           'load',
           () => {
             this._registerAsListener(iframe);
-            // Multiple retries to ensure captions activate
-            const delays = [500, 1500, 3000, 5000, 8000];
+            const delays = [500, 1500, 3000];
             for (const delay of delays) {
               setTimeout(() => {
+                if (!this._iframes.has(iframe)) return; // Skip if destroyed
                 this._registerAsListener(iframe);
                 this._sendCaptionCommands(iframe);
               }, delay);
