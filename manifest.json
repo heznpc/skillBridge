@@ -29,7 +29,7 @@
   "content_scripts": [
     {
       "matches": ["https://*.skilljar.com/*"],
-      "js": ["src/lib/browser-polyfill.js", "src/lib/constants.js", "src/lib/selectors.js", "src/lib/translator.js", "src/lib/youtube-subtitles.js", "src/lib/protected-terms.js", "src/lib/gemini-block.js", "src/content/content.js", "src/content/code-comments.js", "src/content/header-controls.js", "src/content/text-selection.js", "src/content/sidebar-chat.js", "src/content/keyboard-shortcuts.js"],
+      "js": ["src/lib/browser-polyfill.js", "src/lib/selectors.js", "src/lib/constants.js", "src/lib/translator.js", "src/lib/youtube-subtitles.js", "src/lib/protected-terms.js", "src/lib/gemini-block.js", "src/content/content.js", "src/content/code-comments.js", "src/content/header-controls.js", "src/content/text-selection.js", "src/content/sidebar-chat.js", "src/content/keyboard-shortcuts.js"],
       "css": ["src/content/content.css"],
       "run_at": "document_idle"
     }
