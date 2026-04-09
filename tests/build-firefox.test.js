@@ -5,7 +5,7 @@
  * the Chrome manifest into a Firefox-compatible manifest.
  */
 
-/* global describe, test, expect, beforeAll, afterAll */
+/* global describe, test, expect, beforeAll */
 
 const fs = require('fs');
 const path = require('path');
