@@ -7,6 +7,10 @@
   'use strict';
 
   const sb = window._sb;
+  if (!sb) {
+    console.warn('[SkillBridge] header-controls: _sb not ready');
+    return;
+  }
 
   // ============================================================
   // DARK MODE TOGGLE

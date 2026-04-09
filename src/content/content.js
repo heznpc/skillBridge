@@ -1175,6 +1175,9 @@
     domObserver?.disconnect();
     clearTimeout(translateTimeout);
     pendingNodes = [];
+    // Restore original history methods to prevent wrapper stacking on bfcache restore
+    if (_origPushState) history.pushState = _origPushState;
+    if (_origReplaceState) history.replaceState = _origReplaceState;
   });
 
   let translateTimeout;
