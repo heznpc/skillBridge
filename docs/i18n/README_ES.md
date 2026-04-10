@@ -156,13 +156,17 @@ Las solicitudes de traducción se envían a Google Translate y las APIs de Gemin
 | 🇰🇷 한국어 (Korean) | `ko` | 570+ entradas |
 | 🇯🇵 日本語 (Japanese) | `ja` | 570+ entradas |
 | 🇨🇳 中文简体 (Chinese Simplified) | `zh-CN` | 570+ entradas |
+| 🇹🇼 中文繁體 (Chinese Traditional) | `zh-TW` | 570+ entradas |
 | 🇪🇸 Español (Spanish) | `es` | 570+ entradas |
 | 🇫🇷 Français (French) | `fr` | 570+ entradas |
 | 🇩🇪 Deutsch (German) | `de` | 570+ entradas |
+| 🇧🇷 Português (Brazilian) | `pt-BR` | 570+ entradas |
+| 🇷🇺 Русский (Russian) | `ru` | 570+ entradas |
+| 🇻🇳 Tiếng Việt (Vietnamese) | `vi` | 570+ entradas |
 
 ### Estándar — Google Translate + Verificación IA
 
-🇹🇼 中文繁體 · 🇧🇷 Português (BR) · 🇵🇹 Português (PT) · 🇮🇹 Italiano · 🇳🇱 Nederlands · 🇷🇺 Русский · 🇵🇱 Polski · 🇺🇦 Українська · 🇨🇿 Čeština · 🇸🇪 Svenska · 🇩🇰 Dansk · 🇫🇮 Suomi · 🇳🇴 Norsk · 🇹🇷 Türkçe · 🇸🇦 العربية · 🇮🇳 हिन्दी · 🇹🇭 ภาษาไทย · 🇻🇳 Tiếng Việt · 🇮🇩 Bahasa Indonesia · 🇲🇾 Bahasa Melayu · 🇵🇭 Filipino · 🇧🇩 বাংলা · 🇮🇱 עברית · 🇷🇴 Română · 🇭🇺 Magyar · 🇬🇷 Ελληνικά
+🇵🇹 Português (PT) · 🇮🇹 Italiano · 🇳🇱 Nederlands · 🇵🇱 Polski · 🇺🇦 Українська · 🇨🇿 Čeština · 🇸🇪 Svenska · 🇩🇰 Dansk · 🇫🇮 Suomi · 🇳🇴 Norsk · 🇹🇷 Türkçe · 🇸🇦 العربية · 🇮🇳 हिन्दी · 🇹🇭 ภาษาไทย · 🇮🇩 Bahasa Indonesia · 🇲🇾 Bahasa Melayu · 🇵🇭 Filipino · 🇧🇩 বাংলা · 🇮🇱 עברית · 🇷🇴 Română · 🇭🇺 Magyar · 🇬🇷 Ελληνικά
 
 > ¿Quieres agregar tu idioma como Premium? Contribuye un diccionario curado — ver [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
@@ -178,7 +182,7 @@ skillbridge/
 │   ├── content/               # Traducción DOM + UI de barra lateral + fuentes
 │   ├── popup/                 # UI de popup de extensión
 │   ├── lib/                   # Motor de traducción, subtítulos, constantes
-│   └── data/                  # Diccionarios curados (6 idiomas × 570+)
+│   └── data/                  # Diccionarios curados (10 idiomas × 570+)
 └── assets/icons/
 ```
 
@@ -191,7 +195,7 @@ skillbridge/
 | Verificación de Calidad | Gemini 2.0 Flash vía [Puter.js](https://docs.puter.com/) |
 | Términos Protegidos | Autocorrección de errores de marca/términos técnicos GT por idioma |
 | Tutor de IA | Claude Sonnet 4 vía Puter.js |
-| Diccionarios Curados | JSON ajustado manualmente (570+ × 6 idiomas) |
+| Diccionarios Curados | JSON ajustado manualmente (570+ × 10 idiomas) |
 | Caché de Traducción | IndexedDB |
 | Renderizado de Fuentes CJK | Google Fonts Noto Sans |
 
