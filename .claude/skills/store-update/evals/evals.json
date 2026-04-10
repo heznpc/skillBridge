@@ -1,0 +1,41 @@
+{
+  "skill_name": "store-update",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "v3.5.4 나왔는데 스토어 설명 업데이트해줘",
+      "expected_output": "CHANGELOG.md에서 v3.5.4 변경사항을 읽고, 마케팅 분석 요약을 보여준 후, STORE_LISTING.md를 업데이트한 초안과 diff를 제시",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "스크린샷 새로 찍어야 하나? 뭐가 바뀌었는지 확인해줘",
+      "expected_output": "changelog을 분석해서 UI 변경 여부를 판단하고, 스크린샷 갱신이 필요한지/불필요한지 근거와 함께 답변",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "릴리즈 했으니 스토어도 바꿔줘, 근데 Claude in Chrome 지금 꺼져있어",
+      "expected_output": "Claude in Chrome 없이 동작하는 fallback 모드로 전환 — 텍스트/스크린샷 에셋을 생성하고 수동 업로드 체크리스트를 제시",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "v3.5.1에서 v3.5.4까지 패치만 있었는데 스토어도 업데이트해야 해?",
+      "expected_output": "changelog의 변경 규모를 분석해서, 패치 수준이면 스토어 업데이트 불필요하다고 판단하고 스킵을 권유. 필요한 경우만 업데이트 제안",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "새 코스 3개 추가됐어, 스토어 설명에 코스 수랑 목록 반영해줘",
+      "expected_output": "STORE_LISTING.md에서 코스 수와 목록이 있는 부분만 정확히 찾아서 부분 업데이트. 전체를 다시 쓰지 않고 해당 섹션만 수정한 diff를 제시",
+      "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "스토어 설명을 영어랑 한국어 둘 다 써줘",
+      "expected_output": "현재 영어 STORE_LISTING.md를 기반으로 한국어 버전을 생성. _locales/ 디렉토리의 기존 번역 톤을 참고. 두 버전 모두 store-assets/에 저장",
+      "files": []
+    }
+  ]
+}
