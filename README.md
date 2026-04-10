@@ -2,7 +2,7 @@
 
 <img src="assets/icons/icon128.png" alt="SkillBridge" width="90" />
 
-# SkillBridge for Anthropic Academy <!-- VERSION_START -->v3.5.0<!-- VERSION_END -->
+# SkillBridge for Anthropic Academy <!-- VERSION_START -->v3.5.4<!-- VERSION_END -->
 
 > Available in multiple languages at the [project landing page](https://heznpc.github.io/skillbridge/).
 
@@ -17,7 +17,7 @@
 
 **Translate Anthropic Academy into your language — instantly.**
 
-Break the language barrier on Anthropic's free AI courses. <!-- LANG_COUNT_START -->33 languages<!-- LANG_COUNT_END --> supported.
+Break the language barrier on Anthropic's free AI courses. <!-- LANG_COUNT_START -->32 languages<!-- LANG_COUNT_END --> supported.
 
 [Install](#installation) · [Features](#features) · [Report Bug](https://github.com/heznpc/skillbridge/issues) · [Request Feature](https://github.com/heznpc/skillbridge/issues) · [Contributing](CONTRIBUTING.md)
 
@@ -208,13 +208,17 @@ Translation requests are sent to Google Translate and Gemini/Claude APIs via [Pu
 | 🇰🇷 한국어 (Korean) | `ko` | 570+ entries |
 | 🇯🇵 日本語 (Japanese) | `ja` | 570+ entries |
 | 🇨🇳 中文简体 (Chinese Simplified) | `zh-CN` | 570+ entries |
+| 🇹🇼 中文繁體 (Chinese Traditional) | `zh-TW` | 570+ entries |
 | 🇪🇸 Español (Spanish) | `es` | 570+ entries |
 | 🇫🇷 Français (French) | `fr` | 570+ entries |
 | 🇩🇪 Deutsch (German) | `de` | 570+ entries |
+| 🇧🇷 Português (Brazilian) | `pt-BR` | 570+ entries |
+| 🇷🇺 Русский (Russian) | `ru` | 570+ entries |
+| 🇻🇳 Tiếng Việt (Vietnamese) | `vi` | 570+ entries |
 
 ### Standard — Google Translate + AI Verification
 
-🇹🇼 中文繁體 · 🇧🇷 Português (BR) · 🇵🇹 Português (PT) · 🇮🇹 Italiano · 🇳🇱 Nederlands · 🇷🇺 Русский · 🇵🇱 Polski · 🇺🇦 Українська · 🇨🇿 Čeština · 🇸🇪 Svenska · 🇩🇰 Dansk · 🇫🇮 Suomi · 🇳🇴 Norsk · 🇹🇷 Türkçe · 🇸🇦 العربية · 🇮🇳 हिन्दी · 🇹🇭 ภาษาไทย · 🇻🇳 Tiếng Việt · 🇮🇩 Bahasa Indonesia · 🇲🇾 Bahasa Melayu · 🇵🇭 Filipino · 🇧🇩 বাংলা · 🇮🇱 עברית · 🇷🇴 Română · 🇭🇺 Magyar · 🇬🇷 Ελληνικά
+🇵🇹 Português (PT) · 🇮🇹 Italiano · 🇳🇱 Nederlands · 🇵🇱 Polski · 🇺🇦 Українська · 🇨🇿 Čeština · 🇸🇪 Svenska · 🇩🇰 Dansk · 🇫🇮 Suomi · 🇳🇴 Norsk · 🇹🇷 Türkçe · 🇸🇦 العربية · 🇮🇳 हिन्दी · 🇹🇭 ภาษาไทย · 🇮🇩 Bahasa Indonesia · 🇲🇾 Bahasa Melayu · 🇵🇭 Filipino · 🇧🇩 বাংলা · 🇮🇱 עברית · 🇷🇴 Română · 🇭🇺 Magyar · 🇬🇷 Ελληνικά
 
 > Want to add your language as Premium? Contribute a curated dictionary — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -239,7 +243,7 @@ See our full [Privacy Policy](PRIVACY_POLICY.md).
 | Quality Verification | Gemini 2.0 Flash via [Puter.js](https://docs.puter.com/) |
 | Protected Terms | Auto-correction of GT brand/tech term errors per language (Cowork, Dispatch, Computer Use, Subagent, etc.) |
 | AI Tutor | Claude Sonnet 4 via Puter.js |
-| Curated Dictionaries | Hand-tuned JSON (570+ × 6 languages) |
+| Curated Dictionaries | Hand-tuned JSON (570+ × 10 languages) |
 | Translation Cache | IndexedDB |
 | CJK Font Rendering | Google Fonts Noto Sans |
 
