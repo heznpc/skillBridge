@@ -14,7 +14,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check AMO secrets configured
+        id: secrets
+        run: |
+          if [ -z "${{ secrets.AMO_API_KEY }}" ] || [ -z "${{ secrets.AMO_API_SECRET }}" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::AMO secrets not configured — skipping Firefox AMO deploy. Set AMO_API_KEY and AMO_API_SECRET in repo Settings > Secrets to enable."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Check if deploy-relevant files changed
+        if: steps.secrets.outputs.configured == 'true'
         id: changes
         run: |
           CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "manifest.json")
@@ -26,17 +37,17 @@ jobs:
           fi
 
       - name: Set up Node.js
-        if: steps.changes.outputs.should_deploy == 'true'
+        if: steps.secrets.outputs.configured == 'true' && steps.changes.outputs.should_deploy == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
       - name: Install dependencies
-        if: steps.changes.outputs.should_deploy == 'true'
+        if: steps.secrets.outputs.configured == 'true' && steps.changes.outputs.should_deploy == 'true'
         run: npm ci
 
       - name: Extract version from manifest
-        if: steps.changes.outputs.should_deploy == 'true'
+        if: steps.secrets.outputs.configured == 'true' && steps.changes.outputs.should_deploy == 'true'
         id: version
         run: |
           VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('manifest.json','utf8')).version)")
@@ -44,14 +55,14 @@ jobs:
           echo "Version: $VERSION"
 
       - name: Build Firefox zip
-        if: steps.changes.outputs.should_deploy == 'true'
+        if: steps.secrets.outputs.configured == 'true' && steps.changes.outputs.should_deploy == 'true'
         run: |
           mkdir -p store-assets
           npm run build:firefox:zip
           echo "Built store-assets/skillbridge-firefox.zip"
 
       - name: Submit to AMO via web-ext
-        if: steps.changes.outputs.should_deploy == 'true'
+        if: steps.secrets.outputs.configured == 'true' && steps.changes.outputs.should_deploy == 'true'
         run: |
           npx web-ext@8 sign \
             --source-dir=dist/firefox \
@@ -61,7 +72,7 @@ jobs:
             --id=skillbridge@heznpc
 
       - name: Upload zip as artifact
-        if: steps.changes.outputs.should_deploy == 'true'
+        if: steps.secrets.outputs.configured == 'true' && steps.changes.outputs.should_deploy == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: skillbridge-firefox-v${{ steps.version.outputs.version }}
