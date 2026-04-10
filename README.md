@@ -4,7 +4,7 @@
 
 # SkillBridge for Anthropic Academy <!-- VERSION_START -->v3.5.4<!-- VERSION_END -->
 
-> Available in multiple languages at the [project landing page](https://heznpc.github.io/skillbridge/).
+> Available in multiple languages at the [project landing page](https://heznpc.github.io/skillBridge/).
 
 [![CI](https://github.com/heznpc/skillBridge/actions/workflows/ci.yml/badge.svg)](https://github.com/heznpc/skillBridge/actions/workflows/ci.yml)
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
