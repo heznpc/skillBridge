@@ -156,13 +156,17 @@ SkillBridge 使用**五层翻译引擎**来优先考虑速度和准确性:
 | 🇰🇷 한국어 (Korean) | `ko` | 570+ 条目 |
 | 🇯🇵 日本語 (Japanese) | `ja` | 570+ 条目 |
 | 🇨🇳 中文简体 (Chinese Simplified) | `zh-CN` | 570+ 条目 |
+| 🇹🇼 中文繁體 (Chinese Traditional) | `zh-TW` | 570+ 条目 |
 | 🇪🇸 Español (Spanish) | `es` | 570+ 条目 |
 | 🇫🇷 Français (French) | `fr` | 570+ 条目 |
 | 🇩🇪 Deutsch (German) | `de` | 570+ 条目 |
+| 🇧🇷 Português (Brazilian) | `pt-BR` | 570+ 条目 |
+| 🇷🇺 Русский (Russian) | `ru` | 570+ 条目 |
+| 🇻🇳 Tiếng Việt (Vietnamese) | `vi` | 570+ 条目 |
 
 ### 标准 — Google 翻译 + AI 验证
 
-🇹🇼 中文繁體 · 🇧🇷 Português (BR) · 🇵🇹 Português (PT) · 🇮🇹 Italiano · 🇳🇱 Nederlands · 🇷🇺 Русский · 🇵🇱 Polski · 🇺🇦 Українська · 🇨🇿 Čeština · 🇸🇪 Svenska · 🇩🇰 Dansk · 🇫🇮 Suomi · 🇳🇴 Norsk · 🇹🇷 Türkçe · 🇸🇦 العربية · 🇮🇳 हिन्दी · 🇹🇭 ภาษาไทย · 🇻🇳 Tiếng Việt · 🇮🇩 Bahasa Indonesia · 🇲🇾 Bahasa Melayu · 🇵🇭 Filipino · 🇧🇩 বাংলা · 🇮🇱 עברית · 🇷🇴 Română · 🇭🇺 Magyar · 🇬🇷 Ελληνικά
+🇵🇹 Português (PT) · 🇮🇹 Italiano · 🇳🇱 Nederlands · 🇵🇱 Polski · 🇺🇦 Українська · 🇨🇿 Čeština · 🇸🇪 Svenska · 🇩🇰 Dansk · 🇫🇮 Suomi · 🇳🇴 Norsk · 🇹🇷 Türkçe · 🇸🇦 العربية · 🇮🇳 हिन्दी · 🇹🇭 ภาษาไทย · 🇮🇩 Bahasa Indonesia · 🇲🇾 Bahasa Melayu · 🇵🇭 Filipino · 🇧🇩 বাংলা · 🇮🇱 עברית · 🇷🇴 Română · 🇭🇺 Magyar · 🇬🇷 Ελληνικά
 
 > 想为你的语言添加高级版? 贡献一份策划字典 — 参见 [CONTRIBUTING.md](../../CONTRIBUTING.md)。
 
@@ -178,7 +182,7 @@ skillbridge/
 │   ├── content/               # DOM 翻译 + 侧边栏 UI + 字体
 │   ├── popup/                 # 扩展弹出窗口 UI
 │   ├── lib/                   # 翻译引擎、字幕、常量
-│   └── data/                  # 策划字典 (6 种语言 × 570+)
+│   └── data/                  # 策划字典 (10 种语言 × 570+)
 └── assets/icons/
 ```
 
@@ -191,7 +195,7 @@ skillbridge/
 | 质量验证 | 通过 [Puter.js](https://docs.puter.com/) 的 Gemini 2.0 Flash |
 | 受保护术语 | 每种语言的 GT 品牌/技术术语错误自动修正 |
 | AI 导师 | 通过 Puter.js 的 Claude Sonnet 4 |
-| 策划字典 | 手工调整的 JSON (570+ × 6 种语言) |
+| 策划字典 | 手工调整的 JSON (570+ × 10 种语言) |
 | 翻译缓存 | IndexedDB |
 | CJK 字体渲染 | Google Fonts Noto Sans |
 
