@@ -156,13 +156,17 @@ Les demandes de traduction sont envoyées à Google Translate et aux APIs Gemini
 | 🇰🇷 한국어 (Korean) | `ko` | 570+ entrées |
 | 🇯🇵 日本語 (Japanese) | `ja` | 570+ entrées |
 | 🇨🇳 中文简体 (Chinese Simplified) | `zh-CN` | 570+ entrées |
+| 🇹🇼 中文繁體 (Chinese Traditional) | `zh-TW` | 570+ entrées |
 | 🇪🇸 Español (Spanish) | `es` | 570+ entrées |
 | 🇫🇷 Français (French) | `fr` | 570+ entrées |
 | 🇩🇪 Deutsch (German) | `de` | 570+ entrées |
+| 🇧🇷 Português (Brazilian) | `pt-BR` | 570+ entrées |
+| 🇷🇺 Русский (Russian) | `ru` | 570+ entrées |
+| 🇻🇳 Tiếng Việt (Vietnamese) | `vi` | 570+ entrées |
 
 ### Standard — Google Translate + Vérification IA
 
-🇹🇼 中文繁體 · 🇧🇷 Português (BR) · 🇵🇹 Português (PT) · 🇮🇹 Italiano · 🇳🇱 Nederlands · 🇷🇺 Русский · 🇵🇱 Polski · 🇺🇦 Українська · 🇨🇿 Čeština · 🇸🇪 Svenska · 🇩🇰 Dansk · 🇫🇮 Suomi · 🇳🇴 Norsk · 🇹🇷 Türkçe · 🇸🇦 العربية · 🇮🇳 हिन्दी · 🇹🇭 ภาษาไทย · 🇻🇳 Tiếng Việt · 🇮🇩 Bahasa Indonesia · 🇲🇾 Bahasa Melayu · 🇵🇭 Filipino · 🇧🇩 বাংলা · 🇮🇱 עברית · 🇷🇴 Română · 🇭🇺 Magyar · 🇬🇷 Ελληνικά
+🇵🇹 Português (PT) · 🇮🇹 Italiano · 🇳🇱 Nederlands · 🇵🇱 Polski · 🇺🇦 Українська · 🇨🇿 Čeština · 🇸🇪 Svenska · 🇩🇰 Dansk · 🇫🇮 Suomi · 🇳🇴 Norsk · 🇹🇷 Türkçe · 🇸🇦 العربية · 🇮🇳 हिन्दी · 🇹🇭 ภาษาไทย · 🇮🇩 Bahasa Indonesia · 🇲🇾 Bahasa Melayu · 🇵🇭 Filipino · 🇧🇩 বাংলা · 🇮🇱 עברית · 🇷🇴 Română · 🇭🇺 Magyar · 🇬🇷 Ελληνικά
 
 > Vous voulez ajouter votre langue en tant que Premium ? Contribuez un dictionnaire curé — voir [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
@@ -178,7 +182,7 @@ skillbridge/
 │   ├── content/               # Traduction DOM + UI de barre latérale + polices
 │   ├── popup/                 # UI de popup d'extension
 │   ├── lib/                   # Moteur de traduction, sous-titres, constantes
-│   └── data/                  # Dictionnaires curés (6 langues × 570+)
+│   └── data/                  # Dictionnaires curés (10 langues × 570+)
 └── assets/icons/
 ```
 
@@ -191,7 +195,7 @@ skillbridge/
 | Vérification de Qualité | Gemini 2.0 Flash via [Puter.js](https://docs.puter.com/) |
 | Termes Protégés | Correction automatique des erreurs de marque/termes techniques GT par langue |
 | Tuteur IA | Claude Sonnet 4 via Puter.js |
-| Dictionnaires Curés | JSON ajusté manuellement (570+ × 6 langues) |
+| Dictionnaires Curés | JSON ajusté manuellement (570+ × 10 langues) |
 | Cache de Traduction | IndexedDB |
 | Rendu des Polices CJK | Google Fonts Noto Sans |
 

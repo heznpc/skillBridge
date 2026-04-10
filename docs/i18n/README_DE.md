@@ -156,13 +156,17 @@ Seitentext
 | 🇰🇷 한국어 (Korean) | `ko` | 570+ Einträge |
 | 🇯🇵 日本語 (Japanese) | `ja` | 570+ Einträge |
 | 🇨🇳 中文简体 (Chinese Simplified) | `zh-CN` | 570+ Einträge |
+| 🇹🇼 中文繁體 (Chinese Traditional) | `zh-TW` | 570+ Einträge |
 | 🇪🇸 Español (Spanish) | `es` | 570+ Einträge |
 | 🇫🇷 Français (French) | `fr` | 570+ Einträge |
 | 🇩🇪 Deutsch (German) | `de` | 570+ Einträge |
+| 🇧🇷 Português (Brazilian) | `pt-BR` | 570+ Einträge |
+| 🇷🇺 Русский (Russian) | `ru` | 570+ Einträge |
+| 🇻🇳 Tiếng Việt (Vietnamese) | `vi` | 570+ Einträge |
 
 ### Standard — Google Translate + KI-Verifizierung
 
-🇹🇼 中文繁體 · 🇧🇷 Português (BR) · 🇵🇹 Português (PT) · 🇮🇹 Italiano · 🇳🇱 Nederlands · 🇷🇺 Русский · 🇵🇱 Polski · 🇺🇦 Українська · 🇨🇿 Čeština · 🇸🇪 Svenska · 🇩🇰 Dansk · 🇫🇮 Suomi · 🇳🇴 Norsk · 🇹🇷 Türkçe · 🇸🇦 العربية · 🇮🇳 हिन्दी · 🇹🇭 ภาษาไทย · 🇻🇳 Tiếng Việt · 🇮🇩 Bahasa Indonesia · 🇲🇾 Bahasa Melayu · 🇵🇭 Filipino · 🇧🇩 বাংলা · 🇮🇱 עברית · 🇷🇴 Română · 🇭🇺 Magyar · 🇬🇷 Ελληνικά
+🇵🇹 Português (PT) · 🇮🇹 Italiano · 🇳🇱 Nederlands · 🇵🇱 Polski · 🇺🇦 Українська · 🇨🇿 Čeština · 🇸🇪 Svenska · 🇩🇰 Dansk · 🇫🇮 Suomi · 🇳🇴 Norsk · 🇹🇷 Türkçe · 🇸🇦 العربية · 🇮🇳 हिन्दी · 🇹🇭 ภาษาไทย · 🇮🇩 Bahasa Indonesia · 🇲🇾 Bahasa Melayu · 🇵🇭 Filipino · 🇧🇩 বাংলা · 🇮🇱 עברית · 🇷🇴 Română · 🇭🇺 Magyar · 🇬🇷 Ελληνικά
 
 > Möchten Sie Ihre Sprache als Premium hinzufügen? Tragen Sie ein kuratiertes Wörterbuch bei — siehe [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
@@ -178,7 +182,7 @@ skillbridge/
 │   ├── content/               # DOM-Übersetzung + Seitenleisten-UI + Schriftarten
 │   ├── popup/                 # Erweiterungs-Popup-UI
 │   ├── lib/                   # Übersetzungs-Engine, Untertitel, Konstanten
-│   └── data/                  # Kuratierte Wörterbücher (6 Sprachen × 570+)
+│   └── data/                  # Kuratierte Wörterbücher (10 Sprachen × 570+)
 └── assets/icons/
 ```
 
@@ -191,7 +195,7 @@ skillbridge/
 | Qualitätsverifizierung | Gemini 2.0 Flash über [Puter.js](https://docs.puter.com/) |
 | Geschützte Begriffe | Automatische Korrektur von GT-Marken-/Fachbegriff-Fehlern pro Sprache |
 | KI-Tutor | Claude Sonnet 4 über Puter.js |
-| Kuratierte Wörterbücher | Manuell angepasstes JSON (570+ × 6 Sprachen) |
+| Kuratierte Wörterbücher | Manuell angepasstes JSON (570+ × 10 Sprachen) |
 | Übersetzungs-Cache | IndexedDB |
 | CJK-Schriftartenrendering | Google Fonts Noto Sans |
 

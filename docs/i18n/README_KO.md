@@ -156,13 +156,17 @@ SkillBridge는 **5단계 번역 엔진**을 사용하여 속도와 정확도를 
 | 🇰🇷 한국어 (Korean) | `ko` | 570+ 항목 |
 | 🇯🇵 日本語 (Japanese) | `ja` | 570+ 항목 |
 | 🇨🇳 中文简体 (Chinese Simplified) | `zh-CN` | 570+ 항목 |
+| 🇹🇼 中文繁體 (Chinese Traditional) | `zh-TW` | 570+ 항목 |
 | 🇪🇸 Español (Spanish) | `es` | 570+ 항목 |
 | 🇫🇷 Français (French) | `fr` | 570+ 항목 |
 | 🇩🇪 Deutsch (German) | `de` | 570+ 항목 |
+| 🇧🇷 Português (Brazilian) | `pt-BR` | 570+ 항목 |
+| 🇷🇺 Русский (Russian) | `ru` | 570+ 항목 |
+| 🇻🇳 Tiếng Việt (Vietnamese) | `vi` | 570+ 항목 |
 
 ### 스탠다드 — Google 번역 + AI 검증
 
-🇹🇼 中文繁體 · 🇧🇷 Português (BR) · 🇵🇹 Português (PT) · 🇮🇹 Italiano · 🇳🇱 Nederlands · 🇷🇺 Русский · 🇵🇱 Polski · 🇺🇦 Українська · 🇨🇿 Čeština · 🇸🇪 Svenska · 🇩🇰 Dansk · 🇫🇮 Suomi · 🇳🇴 Norsk · 🇹🇷 Türkçe · 🇸🇦 العربية · 🇮🇳 हिन्दी · 🇹🇭 ภาษาไทย · 🇻🇳 Tiếng Việt · 🇮🇩 Bahasa Indonesia · 🇲🇾 Bahasa Melayu · 🇵🇭 Filipino · 🇧🇩 বাংলা · 🇮🇱 עברית · 🇷🇴 Română · 🇭🇺 Magyar · 🇬🇷 Ελληνικά
+🇵🇹 Português (PT) · 🇮🇹 Italiano · 🇳🇱 Nederlands · 🇵🇱 Polski · 🇺🇦 Українська · 🇨🇿 Čeština · 🇸🇪 Svenska · 🇩🇰 Dansk · 🇫🇮 Suomi · 🇳🇴 Norsk · 🇹🇷 Türkçe · 🇸🇦 العربية · 🇮🇳 हिन्दी · 🇹🇭 ภาษาไทย · 🇮🇩 Bahasa Indonesia · 🇲🇾 Bahasa Melayu · 🇵🇭 Filipino · 🇧🇩 বাংলা · 🇮🇱 עברית · 🇷🇴 Română · 🇭🇺 Magyar · 🇬🇷 Ελληνικά
 
 > 언어를 프리미엄으로 추가하고 싶으신가요? 수동 검수 사전을 기여하세요 — [CONTRIBUTING.md](../../CONTRIBUTING.md)를 참고하세요.
 
@@ -178,7 +182,7 @@ skillbridge/
 │   ├── content/               # DOM 번역 + 사이드바 UI + 폰트
 │   ├── popup/                 # 확장 프로그램 팝업 UI
 │   ├── lib/                   # 번역 엔진, 자막, 상수
-│   └── data/                  # 수동 검수 사전 (6개 언어 × 570+)
+│   └── data/                  # 수동 검수 사전 (10개 언어 × 570+)
 └── assets/icons/
 ```
 
@@ -191,7 +195,7 @@ skillbridge/
 | 품질 검증 | [Puter.js](https://docs.puter.com/)를 통한 Gemini 2.0 Flash |
 | 보호 용어 | 언어별 GT 브랜드/기술 용어 오류 자동 수정 |
 | AI 튜터 | Puter.js를 통한 Claude Sonnet 4 |
-| 수동 검수 사전 | 수동 조정 JSON (570+ × 6개 언어) |
+| 수동 검수 사전 | 수동 조정 JSON (570+ × 10개 언어) |
 | 번역 캐시 | IndexedDB |
 | CJK 폰트 렌더링 | Google Fonts Noto Sans |
 
