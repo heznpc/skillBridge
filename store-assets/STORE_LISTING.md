@@ -1,4 +1,4 @@
-# Chrome Web Store — Store Listing (v3.4.0)
+# Chrome Web Store — Store Listing (v3.5.4)
 
 ## Title (max 75 chars)
 SkillBridge — AI Course Translator (32 Languages + AI Tutor)
