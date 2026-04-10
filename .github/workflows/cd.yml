@@ -9,14 +9,26 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # Only deploy when CI succeeded and relevant files changed
+    # Only run when the CI workflow succeeded
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 2
+
+      - name: Check if deploy-relevant files changed
+        id: changes
+        run: |
+          CHANGED=$(git diff --name-only HEAD~1 HEAD)
+          if echo "$CHANGED" | grep -qE '^(manifest\.json|src/|_locales/|assets/icons/)'; then
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
+            echo "No deploy-relevant files changed, skipping."
+          fi
 
       - name: Check CWS secrets configured
+        if: steps.changes.outputs.should_deploy == 'true'
         id: secrets
         run: |
           if [ -z "${{ secrets.CWS_EXTENSION_ID }}" ] || [ -z "${{ secrets.CWS_CLIENT_ID }}" ] || \
@@ -27,20 +39,8 @@ jobs:
             echo "configured=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Check if deploy-relevant files changed
-        if: steps.secrets.outputs.configured == 'true'
-        id: changes
-        run: |
-          CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "manifest.json")
-          if echo "$CHANGED" | grep -qE '^(manifest\.json|src/|_locales/|assets/icons/)'; then
-            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
-            echo "No deploy-relevant files changed, skipping."
-          fi
-
       - name: Extract version from manifest
-        if: steps.secrets.outputs.configured == 'true' && steps.changes.outputs.should_deploy == 'true'
+        if: steps.secrets.outputs.configured == 'true'
         id: version
         run: |
           VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('manifest.json','utf8')).version)")
@@ -48,14 +48,14 @@ jobs:
           echo "Version: $VERSION"
 
       - name: Build zip
-        if: steps.secrets.outputs.configured == 'true' && steps.changes.outputs.should_deploy == 'true'
+        if: steps.secrets.outputs.configured == 'true'
         run: |
           mkdir -p store-assets
           zip -r store-assets/skillbridge.zip manifest.json _locales/ src/ assets/icons/ -x '*.DS_Store'
           echo "Built store-assets/skillbridge.zip"
 
       - name: Upload to Chrome Web Store
-        if: steps.secrets.outputs.configured == 'true' && steps.changes.outputs.should_deploy == 'true'
+        if: steps.secrets.outputs.configured == 'true'
         uses: mnao305/chrome-extension-upload@v5.0.0
         with:
           file-path: store-assets/skillbridge.zip
@@ -66,7 +66,7 @@ jobs:
           publish: false
 
       - name: Upload zip as artifact
-        if: steps.secrets.outputs.configured == 'true' && steps.changes.outputs.should_deploy == 'true'
+        if: steps.secrets.outputs.configured == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: skillbridge-v${{ steps.version.outputs.version }}
