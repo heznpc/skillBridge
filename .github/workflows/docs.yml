@@ -6,15 +6,18 @@ on:
       - 'manifest.json'
       - 'src/lib/constants.js'
       - 'README.md'
+  workflow_dispatch:
 
 jobs:
   update-docs:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
       - run: node scripts/generate-docs.js
       - name: Commit changes
         run: |
