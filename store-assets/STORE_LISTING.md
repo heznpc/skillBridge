@@ -100,7 +100,7 @@ SkillBridge does NOT operate any servers. However, to provide translation and AI
 
 All settings, translation cache, and conversation history are stored locally in your browser (chrome.storage and IndexedDB). This data never leaves your device.
 
-Full privacy policy: https://heznpc.github.io/skillbridge/privacy.html
+Full privacy policy: https://heznpc.github.io/skillBridge/privacy.html
 
 📖 OPEN SOURCE
 https://github.com/heznpc/skillbridge
