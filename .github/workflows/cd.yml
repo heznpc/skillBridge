@@ -13,6 +13,8 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Check CWS secrets configured
         id: secrets
@@ -61,7 +63,7 @@ jobs:
           client-id: ${{ secrets.CWS_CLIENT_ID }}
           client-secret: ${{ secrets.CWS_CLIENT_SECRET }}
           refresh-token: ${{ secrets.CWS_REFRESH_TOKEN }}
-          publish: true
+          publish: false
 
       - name: Upload zip as artifact
         if: steps.secrets.outputs.configured == 'true' && steps.changes.outputs.should_deploy == 'true'
