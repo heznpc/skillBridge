@@ -13,6 +13,13 @@ coverage/
 *.crx
 *.pem
 
+# Claude Code local state (skills under .claude/skills/ ARE tracked)
+.claude/settings.local.json
+.claude/worktrees/
+
+# Packaged skill bundles (build artifacts of .claude/skills/*)
+*.skill
+
 # Media files (not part of the extension)
 *.mp4
 *.gif
