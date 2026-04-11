@@ -147,9 +147,22 @@
               if (name.startsWith('on')) continue; // event handlers
               if (name === 'style') continue; // CSS injection
               if (name === 'href') {
-                // Only allow http(s) and anchor links
-                const raw = attr.value.replace(/[\x00-\x1f\s]/g, '');
-                if (!/^https?:\/\//i.test(raw) && !raw.startsWith('#')) continue;
+                // Parse against the document base so we can judge the resolved
+                // protocol. Pure-fragment hrefs ("#section") stay as-is.
+                const raw = attr.value.trim().replace(/[\x00-\x1f]/g, '');
+                if (raw.startsWith('#')) {
+                  clean.setAttribute('href', raw);
+                  continue;
+                }
+                let parsed;
+                try {
+                  parsed = new URL(raw, document.baseURI);
+                } catch {
+                  continue; // unparseable — drop
+                }
+                if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') continue;
+                clean.setAttribute('href', parsed.href);
+                continue;
               }
               clean.setAttribute(attr.name, attr.value);
             }
