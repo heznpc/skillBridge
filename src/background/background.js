@@ -23,7 +23,12 @@ const _YT_VERSION_STORAGE_KEY = 'sb_yt_client_version';
 // Hydrate the runtime override from storage on service worker start.
 // Wrapped defensively because tests stub `chrome` with only the surfaces
 // they exercise — production always has chrome.storage.local available.
-if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local && typeof chrome.storage.local.get === 'function') {
+if (
+  typeof chrome !== 'undefined' &&
+  chrome.storage &&
+  chrome.storage.local &&
+  typeof chrome.storage.local.get === 'function'
+) {
   try {
     const result = chrome.storage.local.get(_YT_VERSION_STORAGE_KEY);
     if (result && typeof result.then === 'function') {
