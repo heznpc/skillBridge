@@ -10,7 +10,38 @@
 
 // Shared constants — kept in sync with src/shared/constants.json via scripts/check-bg-sync.js
 const _BG_GT_LANG_MAP = { 'zh-CN': 'zh-CN', 'zh-TW': 'zh-TW', 'pt-BR': 'pt' };
-const _BG_YT_CLIENT_VERSION = '2.20260401.00.00';
+
+// YouTube's internal client version is bumped every few weeks. Storing the
+// "default" inline as a fallback and overriding it from chrome.storage.local
+// (refreshed by the maintenance alarm) means a stale build keeps working
+// until the next 24h alarm tick rather than dying immediately.
+const _BG_YT_CLIENT_VERSION_DEFAULT = '2.20260401.00.00';
+let _BG_YT_CLIENT_VERSION = _BG_YT_CLIENT_VERSION_DEFAULT;
+
+const _YT_VERSION_STORAGE_KEY = 'sb_yt_client_version';
+
+// Hydrate the runtime override from storage on service worker start.
+// Wrapped defensively because tests stub `chrome` with only the surfaces
+// they exercise — production always has chrome.storage.local available.
+if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local && typeof chrome.storage.local.get === 'function') {
+  try {
+    const result = chrome.storage.local.get(_YT_VERSION_STORAGE_KEY);
+    if (result && typeof result.then === 'function') {
+      result
+        .then((stored) => {
+          const v = stored && stored[_YT_VERSION_STORAGE_KEY];
+          if (typeof v === 'string' && /^\d+\.\d+\.\d+\.\d+$/.test(v)) {
+            _BG_YT_CLIENT_VERSION = v;
+          }
+        })
+        .catch(() => {
+          /* non-fatal */
+        });
+    }
+  } catch {
+    /* test stub may throw — non-fatal */
+  }
+}
 
 function gtLangCode(lang) {
   return _BG_GT_LANG_MAP[lang] || lang;
