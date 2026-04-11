@@ -10,7 +10,7 @@
 
 <img src="../../assets/icons/icon128.png" alt="SkillBridge" width="90" />
 
-# SkillBridge for Anthropic Academy
+# SkillBridge for Anthropic Academy <!-- VERSION_START -->v3.5.4<!-- VERSION_END -->
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](../../LICENSE)
 [![Chrome MV3](https://img.shields.io/badge/Chrome-Extension_MV3-blue.svg)](https://developer.chrome.com/docs/extensions/)
