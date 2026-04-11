@@ -159,26 +159,6 @@ readme = replaceBetweenMarkers(readme, 'LANG_COUNT', `${translatedCount} languag
 
 fs.writeFileSync(readmePath, readme, 'utf8');
 
-// --- docs/i18n/README_*.md ---
-// Translated READMEs only carry a VERSION marker so the "v3.x.x" badge stays
-// in sync with manifest.json. Everything else is maintained manually because
-// prose translation is not mechanical.
-const i18nDir = path.join(ROOT, 'docs/i18n');
-const updatedI18n = [];
-if (fs.existsSync(i18nDir)) {
-  for (const entry of fs.readdirSync(i18nDir)) {
-    if (!/^README_.*\.md$/.test(entry)) continue;
-    const filePath = path.join(i18nDir, entry);
-    const before = fs.readFileSync(filePath, 'utf8');
-    if (!before.includes('VERSION_START')) continue; // Skip files without markers
-    const after = replaceBetweenMarkers(before, 'VERSION', `v${version}`);
-    if (after !== before) {
-      fs.writeFileSync(filePath, after, 'utf8');
-      updatedI18n.push(path.relative(ROOT, filePath));
-    }
-  }
-}
-
 // --- src/data/*.json (_meta.version only; lastUpdated stays authoritative) ---
 // We bump version to follow manifest but deliberately do NOT touch
 // _meta.lastUpdated — that field drives scripts/check-dicts.js and must reflect
@@ -228,7 +208,5 @@ console.log('');
 console.log('  Updated files:');
 console.log(`    - ${path.relative(ROOT, indexPath)}`);
 console.log(`    - ${path.relative(ROOT, readmePath)}`);
-for (const p of updatedI18n) console.log(`    - ${p}`);
 for (const p of updatedDicts) console.log(`    - ${p}`);
-if (updatedI18n.length === 0) console.log('    (no i18n README changes)');
 if (updatedDicts.length === 0) console.log('    (no dictionary version changes)');
