@@ -38,6 +38,12 @@ jobs:
       - name: Check glossary consistency
         run: node scripts/check-glossary.js
 
+      - name: Check shared constants sync
+        run: node scripts/check-bg-sync.js
+
+      - name: Check dictionary freshness
+        run: node scripts/check-dicts.js
+
       - name: Install dependencies
         run: npm ci
 

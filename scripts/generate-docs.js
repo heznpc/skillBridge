@@ -159,6 +159,56 @@ readme = replaceBetweenMarkers(readme, 'LANG_COUNT', `${translatedCount} languag
 
 fs.writeFileSync(readmePath, readme, 'utf8');
 
+// --- docs/i18n/README_*.md ---
+// Translated READMEs only carry a VERSION marker so the "v3.x.x" badge stays
+// in sync with manifest.json. Everything else is maintained manually because
+// prose translation is not mechanical.
+const i18nDir = path.join(ROOT, 'docs/i18n');
+const updatedI18n = [];
+if (fs.existsSync(i18nDir)) {
+  for (const entry of fs.readdirSync(i18nDir)) {
+    if (!/^README_.*\.md$/.test(entry)) continue;
+    const filePath = path.join(i18nDir, entry);
+    const before = fs.readFileSync(filePath, 'utf8');
+    if (!before.includes('VERSION_START')) continue; // Skip files without markers
+    const after = replaceBetweenMarkers(before, 'VERSION', `v${version}`);
+    if (after !== before) {
+      fs.writeFileSync(filePath, after, 'utf8');
+      updatedI18n.push(path.relative(ROOT, filePath));
+    }
+  }
+}
+
+// --- src/data/*.json (_meta.version only; lastUpdated stays authoritative) ---
+// We bump version to follow manifest but deliberately do NOT touch
+// _meta.lastUpdated — that field drives scripts/check-dicts.js and must reflect
+// the actual date the dictionary contents were curated, not the build date.
+const dataDir = path.join(ROOT, 'src/data');
+const updatedDicts = [];
+if (fs.existsSync(dataDir)) {
+  for (const entry of fs.readdirSync(dataDir)) {
+    if (!entry.endsWith('.json')) continue;
+    const filePath = path.join(dataDir, entry);
+    const raw = fs.readFileSync(filePath, 'utf8');
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      console.warn(`  [skip] ${entry}: invalid JSON`);
+      continue;
+    }
+    if (!data._meta || data._meta.version === version) continue;
+    // Rewrite in-place using a targeted replace so we do not reformat the file
+    // (which would cause noisy diffs across 10 dictionaries × ~110 KB each).
+    const versionRe = /("_meta"\s*:\s*\{[^}]*?"version"\s*:\s*)"[^"]*"/;
+    const next = raw.replace(versionRe, `$1"${version}"`);
+    if (next !== raw) {
+      fs.writeFileSync(filePath, next, 'utf8');
+      updatedDicts.push(path.relative(ROOT, filePath));
+    }
+  }
+}
+
 // ---------------------------------------------------------------------------
 // 5. Report
 // ---------------------------------------------------------------------------
@@ -178,3 +228,7 @@ console.log('');
 console.log('  Updated files:');
 console.log(`    - ${path.relative(ROOT, indexPath)}`);
 console.log(`    - ${path.relative(ROOT, readmePath)}`);
+for (const p of updatedI18n) console.log(`    - ${p}`);
+for (const p of updatedDicts) console.log(`    - ${p}`);
+if (updatedI18n.length === 0) console.log('    (no i18n README changes)');
+if (updatedDicts.length === 0) console.log('    (no dictionary version changes)');

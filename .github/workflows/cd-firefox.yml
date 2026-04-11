@@ -6,6 +6,12 @@ on:
     types: [completed]
     branches: [main]
 
+# Match CWS behaviour: queue concurrent runs so a second push does not race
+# web-ext sign and get rejected with "version already exists".
+concurrency:
+  group: amo-deploy
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -79,3 +85,4 @@ jobs:
         with:
           name: skillbridge-firefox-v${{ steps.version.outputs.version }}
           path: store-assets/skillbridge-firefox.zip
+          retention-days: 14
