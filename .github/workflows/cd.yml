@@ -6,6 +6,13 @@ on:
     types: [completed]
     branches: [main]
 
+# Prevent two back-to-back pushes from racing for the same draft upload slot.
+# A second upload would fail with "version already exists" and obscure the
+# actually deployed artifact — so we queue instead of cancelling.
+concurrency:
+  group: cws-deploy
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -71,3 +78,4 @@ jobs:
         with:
           name: skillbridge-v${{ steps.version.outputs.version }}
           path: store-assets/skillbridge.zip
+          retention-days: 14
