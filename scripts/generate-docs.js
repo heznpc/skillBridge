@@ -159,6 +159,36 @@ readme = replaceBetweenMarkers(readme, 'LANG_COUNT', `${translatedCount} languag
 
 fs.writeFileSync(readmePath, readme, 'utf8');
 
+// --- src/data/*.json (_meta.version only; lastUpdated stays authoritative) ---
+// We bump version to follow manifest but deliberately do NOT touch
+// _meta.lastUpdated — that field drives scripts/check-dicts.js and must reflect
+// the actual date the dictionary contents were curated, not the build date.
+const dataDir = path.join(ROOT, 'src/data');
+const updatedDicts = [];
+if (fs.existsSync(dataDir)) {
+  for (const entry of fs.readdirSync(dataDir)) {
+    if (!entry.endsWith('.json')) continue;
+    const filePath = path.join(dataDir, entry);
+    const raw = fs.readFileSync(filePath, 'utf8');
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      console.warn(`  [skip] ${entry}: invalid JSON`);
+      continue;
+    }
+    if (!data._meta || data._meta.version === version) continue;
+    // Rewrite in-place using a targeted replace so we do not reformat the file
+    // (which would cause noisy diffs across 10 dictionaries × ~110 KB each).
+    const versionRe = /("_meta"\s*:\s*\{[^}]*?"version"\s*:\s*)"[^"]*"/;
+    const next = raw.replace(versionRe, `$1"${version}"`);
+    if (next !== raw) {
+      fs.writeFileSync(filePath, next, 'utf8');
+      updatedDicts.push(path.relative(ROOT, filePath));
+    }
+  }
+}
+
 // ---------------------------------------------------------------------------
 // 5. Report
 // ---------------------------------------------------------------------------
@@ -178,3 +208,5 @@ console.log('');
 console.log('  Updated files:');
 console.log(`    - ${path.relative(ROOT, indexPath)}`);
 console.log(`    - ${path.relative(ROOT, readmePath)}`);
+for (const p of updatedDicts) console.log(`    - ${p}`);
+if (updatedDicts.length === 0) console.log('    (no dictionary version changes)');

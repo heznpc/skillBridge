@@ -1,6 +1,6 @@
 # Privacy Policy — SkillBridge
 
-**Last updated:** March 16, 2026
+**Last updated:** April 11, 2026
 
 ## Overview
 
@@ -36,9 +36,9 @@ All requests to Gemini and Claude are routed through [Puter.js](https://docs.put
 
 | Permission | Purpose |
 |---|---|
-| `storage` | Save user preferences (selected language, dark mode, auto-translate) |
-| `activeTab` | Access the current tab to translate page content |
-| `tabs` | Detect navigation events for auto-translation |
+| `storage` | Save user preferences (selected language, dark mode, auto-translate) and cached translations |
+| `tabs` | Detect navigation events for auto-translation and send language-change messages from the popup |
+| `alarms` | Run periodic maintenance (24h cache cleanup, 7d update check) without waking the user |
 | `*.skilljar.com` | Translate Anthropic Academy pages |
 | `*.youtube.com` | Auto-activate translated subtitles on course videos |
 | `translate.googleapis.com` | Send text to Google Translate API |

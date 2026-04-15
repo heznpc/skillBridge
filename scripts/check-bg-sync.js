@@ -68,8 +68,8 @@ if (!constVerMatch) {
 
 const bgSrc = fs.readFileSync(BG_PATH, 'utf8');
 
-// Extract _BG_GT_LANG_MAP fallback
-const bgMapMatch = bgSrc.match(/let\s+_BG_GT_LANG_MAP\s*=\s*\{([^}]+)\}/);
+// Extract _BG_GT_LANG_MAP fallback (accepts const or let — declared once, never reassigned in practice)
+const bgMapMatch = bgSrc.match(/(?:const|let)\s+_BG_GT_LANG_MAP\s*=\s*\{([^}]+)\}/);
 if (!bgMapMatch) {
   fail('Could not find _BG_GT_LANG_MAP in background.js');
 } else {
@@ -82,13 +82,15 @@ if (!bgMapMatch) {
   }
 }
 
-// Extract _BG_YT_CLIENT_VERSION fallback
-const bgVerMatch = bgSrc.match(/let\s+_BG_YT_CLIENT_VERSION\s*=\s*'([^']+)'/);
+// Extract _BG_YT_CLIENT_VERSION_DEFAULT fallback — this is the inline default
+// that is always present; _BG_YT_CLIENT_VERSION itself is a `let` that gets
+// hydrated from chrome.storage.local at runtime (see #78).
+const bgVerMatch = bgSrc.match(/(?:const|let)\s+_BG_YT_CLIENT_VERSION_DEFAULT\s*=\s*'([^']+)'/);
 if (!bgVerMatch) {
-  fail('Could not find _BG_YT_CLIENT_VERSION in background.js');
+  fail('Could not find _BG_YT_CLIENT_VERSION_DEFAULT in background.js');
 } else if (bgVerMatch[1] !== jsonVersion) {
   fail(
-    `_BG_YT_CLIENT_VERSION fallback in background.js differs from constants.json\n  background.js:  ${bgVerMatch[1]}\n  constants.json: ${jsonVersion}`,
+    `_BG_YT_CLIENT_VERSION_DEFAULT fallback in background.js differs from constants.json\n  background.js:  ${bgVerMatch[1]}\n  constants.json: ${jsonVersion}`,
   );
 }
 

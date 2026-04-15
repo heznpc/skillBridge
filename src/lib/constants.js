@@ -36,8 +36,19 @@ const CERT_DISABLE_PATTERNS = [
 
 // ==================== COURSE QUIZ / ASSESSMENT (exam mode) ====================
 // Lightweight course-completion quizzes — translate question text, skip answers.
+//
+// Each pattern requires a strict path-segment boundary (`/`, `?`, `#`, or end
+// of string) after the keyword. The earlier `\b` form matched benign URLs like
+// `/quiz-answers-blog` because `-` is a word boundary too; segment boundaries
+// avoid those false positives without losing any real quiz/exam URL.
 
-const EXAM_URL_PATTERNS = [/\/quiz\b/i, /\/exam\b/i, /\/assessment\b/i, /[?&]type=quiz/i, /[?&]type=exam/i];
+const EXAM_URL_PATTERNS = [
+  /\/quiz(?:\/|\?|#|$)/i,
+  /\/exam(?:\/|\?|#|$)/i,
+  /\/assessment(?:\/|\?|#|$)/i,
+  /[?&]type=quiz/i,
+  /[?&]type=exam/i,
+];
 
 // Elements whose text should NOT be translated on exam pages
 // (answer choices, form inputs — translating these could alter meaning)
