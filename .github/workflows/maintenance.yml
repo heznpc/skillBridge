@@ -42,7 +42,7 @@ jobs:
 
       - name: Open issue if selectors missing
         if: failure()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
@@ -97,7 +97,7 @@ jobs:
 
       - name: Open issue if dictionaries stale
         if: failure()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
@@ -184,7 +184,7 @@ jobs:
 
       - name: Open issue if audit findings
         if: steps.npm-audit.outputs.audit_exit != '0' || steps.puter-check.outputs.puter_match == 'false'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
