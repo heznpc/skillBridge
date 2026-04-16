@@ -9,7 +9,7 @@
 
 const SKILLBRIDGE_MODELS = {
   GEMINI: 'gemini-2.0-flash',
-  CLAUDE: 'claude-sonnet-4',
+  CLAUDE: 'claude-sonnet-4-6',
 };
 
 // ==================== DEFAULTS ====================
@@ -767,7 +767,7 @@ const POPUP_LABELS = {
 
 const SKILLBRIDGE_MODEL_LABELS = {
   GEMINI: 'Gemini 2.0 Flash',
-  CLAUDE: 'Claude Sonnet 4',
+  CLAUDE: 'Claude Sonnet 4.6',
 };
 
 // ==================== KEYBOARD SHORTCUTS (i18n) ====================
@@ -1056,6 +1056,7 @@ const FLASHCARD_COURSE_MAP = {
   // Claude / Developer courses
   'claude-101': ['claude101'],
   'claude-code': ['claudeCode'],
+  'claude-code-101': ['claudeCode'],
   'claude-code-in-action': ['claudeCode'],
   'claude-cowork': ['claudeCowork'],
   'introduction-to-claude-cowork': ['claudeCowork'],

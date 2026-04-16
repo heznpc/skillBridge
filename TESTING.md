@@ -226,7 +226,7 @@ User visits anthropic.skilljar.com
   ├── AI Tutor (sidebar-chat.js)
   │     ├── User sends message
   │     ├── Page context appended (title + headings + 2000 chars)
-  │     └── Claude Sonnet 4 streaming response (via page-bridge.js → Puter.js) → external
+  │     └── Claude Sonnet 4.6 streaming response (via page-bridge.js → Puter.js) → external
   │
   └── YouTube subtitles (youtube-subtitles.js)
         ├── Detects YouTube embed iframes

@@ -90,7 +90,7 @@ Every text element on the page is translated, with AI-specific terms handled cor
 
 ### 🤖 AI Tutor
 
-A sidebar chatbot powered by **Claude Sonnet 4** via [Puter.js](https://docs.puter.com/). It knows which course and lesson you're on. Ask questions in your language, get streaming answers.
+A sidebar chatbot powered by **Claude Sonnet 4.6** via [Puter.js](https://docs.puter.com/). It knows which course and lesson you're on. Ask questions in your language, get streaming answers.
 
 ### 🎬 Auto-Subtitles
 
@@ -242,7 +242,7 @@ See our full [Privacy Policy](PRIVACY_POLICY.md).
 | Inline Tag Translation | Gemini 2.0 Flash (preserves `<strong>`, `<a>`, `<code>`) |
 | Quality Verification | Gemini 2.0 Flash via [Puter.js](https://docs.puter.com/) |
 | Protected Terms | Auto-correction of GT brand/tech term errors per language (Cowork, Dispatch, Computer Use, Subagent, etc.) |
-| AI Tutor | Claude Sonnet 4 via Puter.js |
+| AI Tutor | Claude Sonnet 4.6 via Puter.js |
 | Curated Dictionaries | Hand-tuned JSON (570+ × 10 languages) |
 | Translation Cache | IndexedDB |
 | CJK Font Rendering | Google Fonts Noto Sans |

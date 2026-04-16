@@ -4,18 +4,18 @@
 SkillBridge — AI Course Translator (32 Languages + AI Tutor)
 
 ## Summary (max 132 chars)
-Translate all 16 Anthropic Academy courses into 32 languages with curated AI dictionaries, flashcards, and a Claude-powered AI Tutor.
+Translate all 17 Anthropic Academy courses into 32 languages with curated AI dictionaries, flashcards, and a Claude-powered AI Tutor.
 
 ## Description (for Store listing)
 
 Anthropic Academy offers world-class free courses on Claude, prompt engineering, and AI safety — but only in English.
 
-SkillBridge translates all 16 courses into 32 languages with accurate AI terminology. Unlike generic translators, SkillBridge uses 570+ hand-curated translation entries per language so "Prompt" stays "프롬프트" (Korean) — not "신속한" (a common mistranslation).
+SkillBridge translates all 17 courses into 32 languages with accurate AI terminology. Unlike generic translators, SkillBridge uses 570+ hand-curated translation entries per language so "Prompt" stays "프롬프트" (Korean) — not "신속한" (a common mistranslation).
 
 🌐 FULL PAGE TRANSLATION
 Every text element on the page is translated — headings, paragraphs, lists, navigation, course cards, and progress labels. Interactive elements stay intact.
 
-🤖 AI TUTOR (Claude Sonnet 4)
+🤖 AI TUTOR (Claude Sonnet 4.6)
 A sidebar chatbot that knows which course and lesson you're on. Ask questions in your language, get streaming answers. Powered by Claude via Puter.js.
 
 🃏 VOCABULARY FLASHCARDS
@@ -64,7 +64,7 @@ First-time visitors see a welcome banner with quick setup. The AI Tutor shows ex
 
 ━━━━━━━━━━━━━━━━━━━
 
-SUPPORTED COURSES (all 16 Anthropic Academy courses):
+SUPPORTED COURSES (all 17 Anthropic Academy courses):
 Claude 101 · Claude Code in Action · Introduction to Claude Cowork · Introduction to Agent Skills · Introduction to Subagents · Building with the Claude API · Introduction to MCP · MCP: Advanced Topics · Claude with Amazon Bedrock · Claude with Google Vertex AI · AI Fluency: Framework & Foundations · AI Fluency for Students · AI Fluency for Educators · Teaching AI Fluency · AI Fluency for Nonprofits · AI Capabilities and Limitations
 
 ━━━━━━━━━━━━━━━━━━━
@@ -96,7 +96,7 @@ SkillBridge does NOT operate any servers. However, to provide translation and AI
 
 • Google Translate — Page text is sent to Google's translation endpoint for translation. Google's privacy policy applies.
 • Puter.js → Gemini 2.0 Flash — Translation text is sent via Puter.js for quality verification of complex sentences. Puter's privacy policy applies.
-• Puter.js → Claude Sonnet 4 — Chat messages and lesson context (up to 2,000 characters) are sent via Puter.js for AI tutoring. Puter's privacy policy applies.
+• Puter.js → Claude Sonnet 4.6 — Chat messages and lesson context (up to 2,000 characters) are sent via Puter.js for AI tutoring. Puter's privacy policy applies.
 
 All settings, translation cache, and conversation history are stored locally in your browser (chrome.storage and IndexedDB). This data never leaves your device.
 

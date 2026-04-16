@@ -25,13 +25,13 @@ const SKILLJAR_SELECTORS = {
   courseBox: '.coursebox-text',
   courseBoxDesc: '.coursebox-text-description',
   ribbonText: '.sj-ribbon-text',
-  courseTime: '.course-time',
+  courseTime: '.course-time, .coursebox-duration',
 
   // Lesson navigation
   lessonRow: '.lesson-row',
   sectionTitle: '.section-title',
   leftNavReturn: '.left-nav-return-text',
-  courseOverview: '.sj-text-course-overview',
+  courseOverview: '.sj-text-course-overview, .course-description, .sj-course-info-wrapper',
   lessonTop: '.lesson-top',
   detailsPane: '.details-pane-description',
   focusLink: '.focus-link-v2',

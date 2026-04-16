@@ -2,7 +2,7 @@
 
 조사 일자: 2026-04-11
 대상 커밋: `345d155` (v3.5.4)
-스택: Manifest V3 Chrome/Firefox extension · 33-locale i18n · IndexedDB cache · Google Translate proxy + Gemini 2.0 Flash 검증 + Claude Sonnet 4 AI tutor (via Puter.js page bridge) · Jest 30 + ESLint 10 + Prettier · GitHub Actions CD (Chrome Web Store + Firefox AMO)
+스택: Manifest V3 Chrome/Firefox extension · 33-locale i18n · IndexedDB cache · Google Translate proxy + Gemini 2.0 Flash 검증 + Claude Sonnet 4.6 AI tutor (via Puter.js page bridge) · Jest 30 + ESLint 10 + Prettier · GitHub Actions CD (Chrome Web Store + Firefox AMO)
 도메인: Anthropic Academy (skilljar.com 호스팅) 자동 번역 + AI 튜터 브라우저 확장
 
 ---
@@ -66,7 +66,7 @@
   - **중기 확장**: TODO.md 의 "Multi-LMS 피봇" — selector layer를 `src/platforms/{skilljar,coursera,edx}/selectors.js` 로 분리. base interface 정의.
   - **선택자 변경 대응**: `scripts/check-selectors.js` 가 매주 실행되어 dead selector 알림 (이미 부분 구현됨, 강화 필요).
 
-**[P1] Puter.js 의존 (Gemini 2.0 Flash + Claude Sonnet 4 모두)**
+**[P1] Puter.js 의존 (Gemini 2.0 Flash + Claude Sonnet 4.6 모두)**
 - 위치: `src/bridge/puter.js`
 - 증상: 사용자가 자기 API key 없이 Gemini/Claude에 무료로 접근하는 메커니즘. **Puter가 종료/정책 변경하면 AI 검증과 AI 튜터 둘 다 동시 죽음.** TODO.md 에는 이 위험이 명시되지 않음.
 - Fix:
@@ -166,7 +166,7 @@
 - **Indirect 경쟁자**: Coursera/edX의 자체 자막, YouTube 자동 자막, Google Translate. 모두 AI 용어에 약함.
 - **차별화 요인**:
   1. AI 용어 커스텀 사전 (570+) — translation quality의 1순위.
-  2. AI 튜터 sidebar (Claude Sonnet 4 통합) — Q&A 지원.
+  2. AI 튜터 sidebar (Claude Sonnet 4.6 통합) — Q&A 지원.
   3. YouTube 자막 자동 번역 — 강의 영상.
   4. 33개 언어, 10개 premium (사전 포함) + 23개 standard.
   5. 100% 클라이언트 처리, no API key.
