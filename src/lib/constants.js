@@ -19,7 +19,7 @@ const DEFAULT_PROTECTED_TERMS =
 
 // YouTube InnerTube client version — update periodically as needed
 // Source of truth: src/shared/constants.json (keep in sync; validated by scripts/check-bg-sync.js)
-const YOUTUBE_CLIENT_VERSION = '2.20260401.00.00';
+const YOUTUBE_CLIENT_VERSION = '2.20260415.01.00';
 
 // ==================== CERTIFICATION EXAM (full disable) ====================
 // Proctored certification exams — extension must NOT run at all.
