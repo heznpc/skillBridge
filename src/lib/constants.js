@@ -1070,6 +1070,7 @@ const FLASHCARD_COURSE_MAP = {
   'introduction-to-model-context-protocol': ['mcpIntro'],
   'mcp-advanced': ['mcpAdvanced'],
   'model-context-protocol-advanced': ['mcpAdvanced'],
+  'model-context-protocol-advanced-topics': ['mcpAdvanced'],
   // Cloud deployment
   'amazon-bedrock': ['cloudDeployment'],
   'claude-in-amazon-bedrock': ['cloudDeployment'],
