@@ -19,7 +19,6 @@ const path = require('path');
 const selectorsPath = path.resolve(__dirname, '../src/lib/selectors.js');
 const selectorsSource = fs.readFileSync(selectorsPath, 'utf8');
 // Same pattern as tests/selectors.test.js — trusted first-party source.
-// eslint-disable-next-line no-new-func
 const SEL = new Function(`${selectorsSource}; return SKILLJAR_SELECTORS;`)();
 
 const CATALOG_URL = 'https://anthropic.skilljar.com';
