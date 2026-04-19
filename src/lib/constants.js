@@ -1050,7 +1050,17 @@ const TERM_PREVIEW_LABELS = {
 };
 
 /**
- * Map URL slug patterns to dictionary section names for flashcard loading.
+ * Map URL slug substrings to dictionary section names for flashcard loading.
+ *
+ * Each course appears under both its canonical Academy slug (the long one,
+ * e.g. `claude-with-the-anthropic-api`) AND a shorter fallback (e.g.
+ * `claude-api`). Matching in content.js/sidebar-chat.js is sorted by key
+ * length descending so the canonical slug wins; the short fallback only
+ * triggers if Skilljar ever rotates the URL.
+ *
+ * "Extended Thinking" is not a standalone Academy course — it's a topic
+ * inside `claude-with-the-anthropic-api`, so its deck is attached to that
+ * course's slug rather than exposed under a separate entry.
  */
 const FLASHCARD_COURSE_MAP = {
   // Claude / Developer courses
@@ -1064,8 +1074,8 @@ const FLASHCARD_COURSE_MAP = {
   'introduction-to-agent-skills': ['agentSkills'],
   subagents: ['subagents'],
   'introduction-to-subagents': ['subagents'],
-  'claude-api': ['claudeAPI'],
-  'claude-with-the-anthropic-api': ['claudeAPI'],
+  'claude-api': ['claudeAPI', 'extendedThinking'],
+  'claude-with-the-anthropic-api': ['claudeAPI', 'extendedThinking'],
   'model-context-protocol': ['mcpIntro', 'mcpAdvanced'],
   'introduction-to-model-context-protocol': ['mcpIntro'],
   'mcp-advanced': ['mcpAdvanced'],
@@ -1087,7 +1097,6 @@ const FLASHCARD_COURSE_MAP = {
   // Other
   'ai-capabilities': ['aiCapabilities'],
   'ai-capabilities-and-limitations': ['aiCapabilities'],
-  'extended-thinking': ['extendedThinking'],
 };
 
 // ==================== CODE COMMENT TRANSLATION ====================
