@@ -1050,17 +1050,13 @@ const TERM_PREVIEW_LABELS = {
 };
 
 /**
- * Map URL slug substrings to dictionary section names for flashcard loading.
+ * Map URL slug substrings (hyphenated) to deck names (camelCase) for
+ * flashcard loading. Each course has both a canonical Academy slug and a
+ * shorter fallback; consumers match longest-first so the canonical wins and
+ * the fallback only kicks in if Skilljar rotates the URL.
  *
- * Each course appears under both its canonical Academy slug (the long one,
- * e.g. `claude-with-the-anthropic-api`) AND a shorter fallback (e.g.
- * `claude-api`). Matching in content.js/sidebar-chat.js is sorted by key
- * length descending so the canonical slug wins; the short fallback only
- * triggers if Skilljar ever rotates the URL.
- *
- * "Extended Thinking" is not a standalone Academy course — it's a topic
- * inside `claude-with-the-anthropic-api`, so its deck is attached to that
- * course's slug rather than exposed under a separate entry.
+ * `extendedThinking` is not a standalone course — it's a topic inside the
+ * API course, so its deck rides along with `claude-with-the-anthropic-api`.
  */
 const FLASHCARD_COURSE_MAP = {
   // Claude / Developer courses
@@ -1098,6 +1094,9 @@ const FLASHCARD_COURSE_MAP = {
   'ai-capabilities': ['aiCapabilities'],
   'ai-capabilities-and-limitations': ['aiCapabilities'],
 };
+
+// Pre-sorted longest-first so consumers iterate once per URL without re-sorting.
+const FLASHCARD_COURSE_SLUGS_SORTED = Object.entries(FLASHCARD_COURSE_MAP).sort((a, b) => b[0].length - a[0].length);
 
 // ==================== CODE COMMENT TRANSLATION ====================
 
