@@ -865,8 +865,7 @@
     const url = location.pathname.toLowerCase();
     let sections = null;
     _matchedCourseSlug = null;
-    const sortedSlugs = Object.entries(FLASHCARD_COURSE_MAP).sort((a, b) => b[0].length - a[0].length);
-    for (const [slug, sects] of sortedSlugs) {
+    for (const [slug, sects] of FLASHCARD_COURSE_SLUGS_SORTED) {
       if (url.includes(slug)) {
         sections = sects;
         _matchedCourseSlug = slug;
