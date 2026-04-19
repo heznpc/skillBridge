@@ -5,10 +5,17 @@ on:
     workflows: ["CI"]
     types: [completed]
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publish after upload (true = live, false = draft only)'
+        required: false
+        default: 'true'
+      force:
+        description: 'Skip file-change check and deploy regardless'
+        required: false
+        default: 'false'
 
-# Prevent two back-to-back pushes from racing for the same draft upload slot.
-# A second upload would fail with "version already exists" and obscure the
-# actually deployed artifact — so we queue instead of cancelling.
 concurrency:
   group: cws-deploy
   cancel-in-progress: false
@@ -16,19 +23,35 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # Only run when the CI workflow succeeded
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: >-
+      github.event_name == 'workflow_dispatch'
+      || github.event.workflow_run.conclusion == 'success'
+
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0
 
       - name: Check if deploy-relevant files changed
         id: changes
         run: |
-          CHANGED=$(git diff --name-only HEAD~1 HEAD)
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+            echo "Force deploy requested."
+            exit 0
+          fi
+
+          # For merge commits (PRs), compare against the merge base
+          if git rev-parse HEAD~1 >/dev/null 2>&1; then
+            MERGE_BASE=$(git merge-base HEAD~1 HEAD 2>/dev/null || echo "HEAD~1")
+            CHANGED=$(git diff --name-only "$MERGE_BASE" HEAD)
+          else
+            CHANGED=$(git diff --name-only HEAD)
+          fi
+
           if echo "$CHANGED" | grep -qE '^(manifest\.json|src/|_locales/|assets/icons/)'; then
             echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+            echo "Deploy-relevant changes detected."
           else
             echo "should_deploy=false" >> "$GITHUB_OUTPUT"
             echo "No deploy-relevant files changed, skipping."
@@ -41,7 +64,7 @@ jobs:
           if [ -z "${{ secrets.CWS_EXTENSION_ID }}" ] || [ -z "${{ secrets.CWS_CLIENT_ID }}" ] || \
              [ -z "${{ secrets.CWS_CLIENT_SECRET }}" ] || [ -z "${{ secrets.CWS_REFRESH_TOKEN }}" ]; then
             echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::CWS secrets not configured — skipping Chrome Web Store deploy. Set CWS_EXTENSION_ID, CWS_CLIENT_ID, CWS_CLIENT_SECRET, CWS_REFRESH_TOKEN in repo Settings > Secrets to enable."
+            echo "::error::CWS secrets not configured — set CWS_EXTENSION_ID, CWS_CLIENT_ID, CWS_CLIENT_SECRET, CWS_REFRESH_TOKEN in repo Settings > Secrets."
           else
             echo "configured=true" >> "$GITHUB_OUTPUT"
           fi
@@ -52,14 +75,15 @@ jobs:
         run: |
           VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('manifest.json','utf8')).version)")
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "Version: $VERSION"
+          echo "Deploying v$VERSION"
 
       - name: Build zip
         if: steps.secrets.outputs.configured == 'true'
         run: |
           mkdir -p store-assets
           zip -r store-assets/skillbridge.zip manifest.json _locales/ src/ assets/icons/ -x '*.DS_Store'
-          echo "Built store-assets/skillbridge.zip"
+          SIZE=$(du -h store-assets/skillbridge.zip | cut -f1)
+          echo "Built store-assets/skillbridge.zip ($SIZE)"
 
       - name: Upload to Chrome Web Store
         if: steps.secrets.outputs.configured == 'true'
@@ -70,7 +94,7 @@ jobs:
           client-id: ${{ secrets.CWS_CLIENT_ID }}
           client-secret: ${{ secrets.CWS_CLIENT_SECRET }}
           refresh-token: ${{ secrets.CWS_REFRESH_TOKEN }}
-          publish: false
+          publish: ${{ github.event.inputs.publish || 'true' }}
 
       - name: Upload zip as artifact
         if: steps.secrets.outputs.configured == 'true'

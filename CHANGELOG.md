@@ -4,10 +4,28 @@ All notable changes to SkillBridge are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+## [3.5.5] - 2026-04-19
+
+### Added
+- Claude Code 101 course support (flashcard mapping + store listing)
+
+### Changed
+- Migrate AI tutor model from Claude Sonnet 4 to Claude Sonnet 4.6 (deprecation June 15)
+- Refactor DOM health check to load selectors from source-of-truth, parallelize page fetches
+
+### Fixed
+- Update stale Skilljar course-page selectors (`.lesson-row` → `li.lesson-modular`, `.section-title` → `li.section`, `.course-title` → `.dp-summary-wrapper h1, h1.break-word`), with legacy selectors kept as fallback so the fix is backwards-compatible
+- Exclude lesson-page-only `lessonMain` from catalog/course DOM health check (requires auth to verify — covered by manual lesson-page QA)
+- Add fallback DOM selectors for Skilljar courseTime and courseOverview changes
+- Add missing course slug `model-context-protocol-advanced-topics` to flashcard map
+- Update YouTube InnerTube client version to 2.20260415.01.00
+
 ## [3.4.0] - 2026-04-02
 
 ### Added
-- Full course coverage across all 15 Anthropic Academy modules
+- Full course coverage across all 17 Anthropic Academy modules
 - DX tooling improvements for local development
 
 ### Changed

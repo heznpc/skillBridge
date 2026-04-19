@@ -51,7 +51,7 @@ When generating text, verify these numbers against the codebase:
 - Course count (check `src/data/` or CHANGELOG for latest)
 - Language count (premium + standard)
 - Dictionary entry count per premium language
-- Model names (currently Claude Sonnet 4 for tutor, Gemini 2.0 Flash for verification)
+- Model names (currently Claude Sonnet 4.6 for tutor, Gemini 2.0 Flash for verification)
 
 ### Protected Terms
 SkillBridge uses a curated protected-terms dictionary. When writing Korean (or other language) store descriptions, these brand/tech terms must NOT be translated:

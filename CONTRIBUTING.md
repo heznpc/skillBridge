@@ -262,7 +262,7 @@ Areas that need work:
 - **Batch processing** — the Google Translate queue processes in batches of `GT_BATCH_SIZE`. Performance tuning is welcome
 - **Cache eviction strategy** — IndexedDB cache entries expire after 30 days; smarter invalidation (e.g., per-dictionary-version) could improve freshness
 
-#### AI Tutor (Claude Sonnet 4)
+#### AI Tutor (Claude Sonnet 4.6)
 
 The tutor lives in `src/content/sidebar-chat.js` (sidebar UI, chat, conversation history) and uses `src/lib/page-bridge.js` to communicate with Puter.js in the main world. Text selection quoting is in `src/content/text-selection.js`.
 
@@ -382,7 +382,7 @@ Result cached in IndexedDB for future visits
 
 - **Why Google Translate + Gemini instead of just one?** Google Translate is fast and free. Gemini catches domain-specific errors (e.g., translating "Claude" as a person's name). Two-tier gives us speed AND quality.
 - **Why static dictionaries?** For the 570+ most critical AI/ML terms, human-curated translations are simply better than any MT engine. These are the terms that matter most for comprehension.
-- **Why Puter.js for the AI Tutor?** It provides free access to Claude Sonnet 4 without requiring users to have API keys. The "user-pays" model means the extension itself costs nothing.
+- **Why Puter.js for the AI Tutor?** It provides free access to Claude Sonnet 4.6 without requiring users to have API keys. The "user-pays" model means the extension itself costs nothing.
 - **Why no build step?** Lower barrier to entry for contributors. Clone, load, done.
 
 ---

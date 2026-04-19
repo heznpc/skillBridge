@@ -1397,7 +1397,8 @@ html.si18n-dark .coursebox-container .coursebox-text h2 {
 }
 html.si18n-dark .coursebox-container .coursebox-text-description,
 html.si18n-dark .coursebox-container .storefront-price,
-html.si18n-dark .coursebox-container .course-time {
+html.si18n-dark .coursebox-container .course-time,
+html.si18n-dark .coursebox-container .coursebox-duration {
   color: #9e9e9e !important;
 }
 

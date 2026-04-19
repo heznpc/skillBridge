@@ -21,7 +21,7 @@ To provide translation and AI features, SkillBridge sends data to the following 
 |---------|-------------|---------|----------------|
 | Google Translate API | Page text to be translated | Primary translation for plain text | [Google Privacy Policy](https://policies.google.com/privacy) |
 | Gemini 2.0 Flash (via Puter.js) | Text with inline HTML tags; original + translated text pairs for quality verification | Tag-preserving translation of complex HTML; background quality checks | [Puter.js Privacy Policy](https://puter.com/privacy) |
-| Claude Sonnet 4 (via Puter.js) | User's chat message + lesson context (page title, headings, and up to 2,000 characters of lesson body) | AI Tutor sidebar chatbot | [Puter.js Privacy Policy](https://puter.com/privacy) |
+| Claude Sonnet 4.6 (via Puter.js) | User's chat message + lesson context (page title, headings, and up to 2,000 characters of lesson body) | AI Tutor sidebar chatbot | [Puter.js Privacy Policy](https://puter.com/privacy) |
 
 All requests to Gemini and Claude are routed through [Puter.js](https://docs.puter.com/), a third-party client-side AI gateway. Please review Puter's privacy policy for details on how they process data.
 
