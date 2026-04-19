@@ -26,7 +26,9 @@ const COURSE_URL = 'https://anthropic.skilljar.com/claude-101';
 
 // Keys from SKILLJAR_SELECTORS that MUST exist on each page type.
 const CATALOG_KEYS = ['courseBox', 'courseBoxDesc'];
-const COURSE_KEYS = ['lessonRow', 'lessonMain', 'sectionTitle', 'courseTitle'];
+// Note: lessonMain ('#lesson-main') is lesson-page only (requires auth to access),
+// so it's not checked here — it's verified manually during lesson-page QA.
+const COURSE_KEYS = ['lessonRow', 'sectionTitle', 'courseTitle'];
 
 function escapeRegex(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
