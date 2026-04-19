@@ -47,20 +47,30 @@ const SKILLJAR_SELECTORS = {
   quizResult: '.quiz-result, .assessment-result, .quiz-score, .score-display',
   certificateSection: '.certificate-section, .certificate-panel, .certificate-container',
 
-  // Skilljar AI Tutor (open beta 2026) — exclude from translation to avoid DOM conflicts
+  // ─── Defensive selectors for Skilljar features not yet on Anthropic's tenant ───
+  // As of 2026-04-19 none of the classes below are observed on live
+  // anthropic.skilljar.com pages; the extension's behavior is a no-op.
+  // They stay in the registry so that when Anthropic enables these Skilljar
+  // features (or when we need to replicate for other Skilljar tenants),
+  // only the selector values need updating — consumers don't change.
+  // Guesses for class names are conservative: a broad `[class*="..."]`
+  // matcher keeps us resilient to minor renames.
+
+  // Skilljar AI Tutor (open beta announced 2026) — if surfaced, exclude
+  // from translation so its own DOM doesn't fight ours.
   aiTutor: '.sj-ai-tutor, .ai-tutor-widget, [class*="ai-tutor"], [data-ai-tutor]',
   aiTutorButton: '.sj-ai-tutor-btn, .ai-tutor-button, button[class*="ai-tutor"]',
   aiTutorPanel: '.sj-ai-tutor-panel, .ai-tutor-panel, [class*="ai-tutor-panel"]',
 
-  // Course Families (Jan 2026) — grouped course catalog listings
+  // Course Families (Jan 2026 Skilljar release) — grouped catalog listings
   courseFamily: '.course-family, .sj-course-family, [class*="course-family"]',
   courseFamilyTitle: '.course-family-title, .sj-course-family-title',
 
-  // Course Ratings (Jan 2026)
+  // Course Ratings (Jan 2026 Skilljar release)
   courseRating: '.course-rating, .sj-course-rating, [class*="course-rating"]',
   courseRatingStars: '.course-rating-stars, .sj-rating-stars',
   courseRatingText: '.course-rating-text, .sj-rating-text',
 
-  // AI Feedback Summaries (Mar 2026)
+  // AI Feedback Summaries (Mar 2026 Skilljar release)
   aiFeedback: '.ai-feedback-summary, .sj-ai-feedback, [class*="ai-feedback"]',
 };
