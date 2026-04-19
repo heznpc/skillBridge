@@ -49,7 +49,7 @@
     SKILLJAR_SELECTORS.faqTitle,
     `${SKILLJAR_SELECTORS.faqPost} p`,
     'div.title',
-    `${SKILLJAR_SELECTORS.lessonRow} div.title`,
+    `${SKILLJAR_SELECTORS.lessonRow} div.title, ${SKILLJAR_SELECTORS.lessonRow} .lesson-wrapper div`,
     SKILLJAR_SELECTORS.focusLink,
     SKILLJAR_SELECTORS.sectionTitle,
     SKILLJAR_SELECTORS.leftNavReturn,

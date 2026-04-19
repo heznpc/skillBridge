@@ -9,7 +9,7 @@
 
 const SKILLBRIDGE_MODELS = {
   GEMINI: 'gemini-2.0-flash',
-  CLAUDE: 'claude-sonnet-4',
+  CLAUDE: 'claude-sonnet-4-6',
 };
 
 // ==================== DEFAULTS ====================
@@ -19,7 +19,7 @@ const DEFAULT_PROTECTED_TERMS =
 
 // YouTube InnerTube client version — update periodically as needed
 // Source of truth: src/shared/constants.json (keep in sync; validated by scripts/check-bg-sync.js)
-const YOUTUBE_CLIENT_VERSION = '2.20260401.00.00';
+const YOUTUBE_CLIENT_VERSION = '2.20260415.01.00';
 
 // ==================== CERTIFICATION EXAM (full disable) ====================
 // Proctored certification exams — extension must NOT run at all.
@@ -767,7 +767,7 @@ const POPUP_LABELS = {
 
 const SKILLBRIDGE_MODEL_LABELS = {
   GEMINI: 'Gemini 2.0 Flash',
-  CLAUDE: 'Claude Sonnet 4',
+  CLAUDE: 'Claude Sonnet 4.6',
 };
 
 // ==================== KEYBOARD SHORTCUTS (i18n) ====================
@@ -1056,6 +1056,7 @@ const FLASHCARD_COURSE_MAP = {
   // Claude / Developer courses
   'claude-101': ['claude101'],
   'claude-code': ['claudeCode'],
+  'claude-code-101': ['claudeCode'],
   'claude-code-in-action': ['claudeCode'],
   'claude-cowork': ['claudeCowork'],
   'introduction-to-claude-cowork': ['claudeCowork'],
@@ -1069,6 +1070,7 @@ const FLASHCARD_COURSE_MAP = {
   'introduction-to-model-context-protocol': ['mcpIntro'],
   'mcp-advanced': ['mcpAdvanced'],
   'model-context-protocol-advanced': ['mcpAdvanced'],
+  'model-context-protocol-advanced-topics': ['mcpAdvanced'],
   // Cloud deployment
   'amazon-bedrock': ['cloudDeployment'],
   'claude-in-amazon-bedrock': ['cloudDeployment'],
