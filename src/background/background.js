@@ -15,7 +15,7 @@ const _BG_GT_LANG_MAP = { 'zh-CN': 'zh-CN', 'zh-TW': 'zh-TW', 'pt-BR': 'pt' };
 // "default" inline as a fallback and overriding it from chrome.storage.local
 // (refreshed by the maintenance alarm) means a stale build keeps working
 // until the next 24h alarm tick rather than dying immediately.
-const _BG_YT_CLIENT_VERSION_DEFAULT = '2.20260401.00.00';
+const _BG_YT_CLIENT_VERSION_DEFAULT = '2.20260415.01.00';
 let _BG_YT_CLIENT_VERSION = _BG_YT_CLIENT_VERSION_DEFAULT;
 
 const _YT_VERSION_STORAGE_KEY = 'sb_yt_client_version';

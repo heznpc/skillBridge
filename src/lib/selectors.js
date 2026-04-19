@@ -19,19 +19,19 @@ const SKILLJAR_SELECTORS = {
   lessonMain: '#lesson-main',
   lessonContent: '.lesson-content',
   courseContent: '.course-content',
-  courseTitle: '.course-title',
+  courseTitle: '.dp-summary-wrapper h1, h1.break-word, .course-title',
 
   // Catalog
   courseBox: '.coursebox-text',
   courseBoxDesc: '.coursebox-text-description',
   ribbonText: '.sj-ribbon-text',
-  courseTime: '.course-time',
+  courseTime: '.course-time, .coursebox-duration',
 
   // Lesson navigation
-  lessonRow: '.lesson-row',
-  sectionTitle: '.section-title',
+  lessonRow: 'li.lesson-modular, .lesson-row',
+  sectionTitle: 'li.section, .section-title',
   leftNavReturn: '.left-nav-return-text',
-  courseOverview: '.sj-text-course-overview',
+  courseOverview: '.sj-text-course-overview, .course-description, .sj-course-info-wrapper',
   lessonTop: '.lesson-top',
   detailsPane: '.details-pane-description',
   focusLink: '.focus-link-v2',

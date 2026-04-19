@@ -5,9 +5,13 @@ on:
     workflows: ["CI"]
     types: [completed]
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Skip file-change check and deploy regardless'
+        required: false
+        default: 'false'
 
-# Match CWS behaviour: queue concurrent runs so a second push does not race
-# web-ext sign and get rejected with "version already exists".
 concurrency:
   group: amo-deploy
   cancel-in-progress: false
@@ -15,19 +19,34 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # Only run when the CI workflow succeeded
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: >-
+      github.event_name == 'workflow_dispatch'
+      || github.event.workflow_run.conclusion == 'success'
+
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0
 
       - name: Check if deploy-relevant files changed
         id: changes
         run: |
-          CHANGED=$(git diff --name-only HEAD~1 HEAD)
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+            echo "Force deploy requested."
+            exit 0
+          fi
+
+          if git rev-parse HEAD~1 >/dev/null 2>&1; then
+            MERGE_BASE=$(git merge-base HEAD~1 HEAD 2>/dev/null || echo "HEAD~1")
+            CHANGED=$(git diff --name-only "$MERGE_BASE" HEAD)
+          else
+            CHANGED=$(git diff --name-only HEAD)
+          fi
+
           if echo "$CHANGED" | grep -qE '^(manifest\.json|src/|_locales/|assets/icons/)'; then
             echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+            echo "Deploy-relevant changes detected."
           else
             echo "should_deploy=false" >> "$GITHUB_OUTPUT"
             echo "No deploy-relevant files changed, skipping."
@@ -39,7 +58,7 @@ jobs:
         run: |
           if [ -z "${{ secrets.AMO_API_KEY }}" ] || [ -z "${{ secrets.AMO_API_SECRET }}" ]; then
             echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::AMO secrets not configured — skipping Firefox AMO deploy. Set AMO_API_KEY and AMO_API_SECRET in repo Settings > Secrets to enable."
+            echo "::error::AMO secrets not configured — set AMO_API_KEY and AMO_API_SECRET in repo Settings > Secrets."
           else
             echo "configured=true" >> "$GITHUB_OUTPUT"
           fi
@@ -60,7 +79,7 @@ jobs:
         run: |
           VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('manifest.json','utf8')).version)")
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "Version: $VERSION"
+          echo "Deploying v$VERSION"
 
       - name: Build Firefox zip
         if: steps.secrets.outputs.configured == 'true'
