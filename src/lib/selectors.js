@@ -48,16 +48,11 @@ const SKILLJAR_SELECTORS = {
   certificateSection: '.certificate-section, .certificate-panel, .certificate-container',
 
   // ─── Defensive selectors for Skilljar features not yet on Anthropic's tenant ───
-  // As of 2026-04-19 none of the classes below are observed on live
-  // anthropic.skilljar.com pages; the extension's behavior is a no-op.
-  // They stay in the registry so that when Anthropic enables these Skilljar
-  // features (or when we need to replicate for other Skilljar tenants),
-  // only the selector values need updating — consumers don't change.
-  // Guesses for class names are conservative: a broad `[class*="..."]`
-  // matcher keeps us resilient to minor renames.
+  // Not observed on live anthropic.skilljar.com as of 2026-04-19; kept so
+  // only values (not consumers) change when Anthropic enables them. Broad
+  // `[class*="..."]` matchers absorb minor class renames.
 
-  // Skilljar AI Tutor (open beta announced 2026) — if surfaced, exclude
-  // from translation so its own DOM doesn't fight ours.
+  // Skilljar AI Tutor (open beta 2026) — exclude from translation if present.
   aiTutor: '.sj-ai-tutor, .ai-tutor-widget, [class*="ai-tutor"], [data-ai-tutor]',
   aiTutorButton: '.sj-ai-tutor-btn, .ai-tutor-button, button[class*="ai-tutor"]',
   aiTutorPanel: '.sj-ai-tutor-panel, .ai-tutor-panel, [class*="ai-tutor-panel"]',
