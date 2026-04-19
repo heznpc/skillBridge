@@ -53,6 +53,29 @@ jobs:
       - name: Check formatting
         run: npx prettier --check 'src/**/*.{js,css,html}' 'tests/**/*.js' 'scripts/**/*.js'
 
+      - name: DOM health check (Skilljar selectors)
+        run: node scripts/check-selectors.js
+        env:
+          CI: 'true'
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Firefox artifact
+        run: npm run build:firefox
+
+      - name: Build bundled artifact
+        run: npm run build:bundle
+
   test:
     runs-on: ubuntu-latest
     steps:
