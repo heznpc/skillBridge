@@ -77,8 +77,23 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Deploying v$VERSION"
 
+      - name: Skip if version was already deployed
+        if: steps.secrets.outputs.configured == 'true' && github.event.inputs.force != 'true'
+        id: tag_guard
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          TAG="cws-v${VERSION}"
+          git fetch --tags --depth=1 origin "refs/tags/${TAG}:refs/tags/${TAG}" 2>/dev/null || true
+          if git rev-parse --verify --quiet "refs/tags/${TAG}" >/dev/null; then
+            echo "::notice::${TAG} already exists on origin — v${VERSION} was already deployed. Skipping upload. Bump manifest.json version or re-run with force=true to override."
+            echo "should_upload=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_upload=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build zip
-        if: steps.secrets.outputs.configured == 'true'
+        if: steps.secrets.outputs.configured == 'true' && steps.tag_guard.outputs.should_upload != 'false'
         run: |
           mkdir -p store-assets
           zip -r store-assets/skillbridge.zip manifest.json _locales/ src/ assets/icons/ -x '*.DS_Store'
@@ -86,7 +101,7 @@ jobs:
           echo "Built store-assets/skillbridge.zip ($SIZE)"
 
       - name: Upload to Chrome Web Store
-        if: steps.secrets.outputs.configured == 'true'
+        if: steps.secrets.outputs.configured == 'true' && steps.tag_guard.outputs.should_upload != 'false'
         uses: mnao305/chrome-extension-upload@v5.0.0
         with:
           file-path: store-assets/skillbridge.zip
@@ -96,8 +111,16 @@ jobs:
           refresh-token: ${{ secrets.CWS_REFRESH_TOKEN }}
           publish: ${{ github.event.inputs.publish || 'true' }}
 
+      - name: Tag version on successful upload
+        if: steps.secrets.outputs.configured == 'true' && steps.tag_guard.outputs.should_upload != 'false'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git tag "cws-v${VERSION}"
+          git push origin "cws-v${VERSION}"
+
       - name: Upload zip as artifact
-        if: steps.secrets.outputs.configured == 'true'
+        if: steps.secrets.outputs.configured == 'true' && steps.tag_guard.outputs.should_upload != 'false'
         uses: actions/upload-artifact@v4
         with:
           name: skillbridge-v${{ steps.version.outputs.version }}
