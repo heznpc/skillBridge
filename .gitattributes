@@ -1,0 +1,15 @@
+# Enforce LF line endings for cross-platform consistency.
+# Prettier (default endOfLine=lf) and CI run on Linux — Windows checkouts with
+# core.autocrlf=true would otherwise produce CRLF and fail `format:check`
+# and regex-based source extraction in tests/format-response.test.js.
+* text=auto eol=lf
+
+# Binary files — never normalize
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.zip binary
+*.xpi binary
+*.pdf binary

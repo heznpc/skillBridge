@@ -8,13 +8,17 @@
 const fs = require('fs');
 const path = require('path');
 
+// Normalize CRLF → LF so regex \n anchors work on Windows checkouts
+// (core.autocrlf=true rewrites line endings on checkout).
+const normalizeLF = (s) => s.replace(/\r\n/g, '\n');
+
 // --- Extract escapeHtml from gemini-block.js (the canonical implementation) ---
-const geminiBlockSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'gemini-block.js'), 'utf8');
+const geminiBlockSrc = normalizeLF(fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'gemini-block.js'), 'utf8'));
 const escapeHtmlBody = geminiBlockSrc.match(/function escapeHtml\(text\)\s*\{([\s\S]*?)\n {2}\}/);
 const escapeHtml = new Function('text', escapeHtmlBody[1]);
 
 // --- Extract formatResponse + applyInline from sidebar-chat.js ---
-const sidebarSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'content', 'sidebar-chat.js'), 'utf8');
+const sidebarSrc = normalizeLF(fs.readFileSync(path.join(__dirname, '..', 'src', 'content', 'sidebar-chat.js'), 'utf8'));
 const fmtBlock = sidebarSrc.match(
   /function formatResponse\(text\)\s*\{[\s\S]*?\n {2}\}\n\n {2}function applyInline[\s\S]*?\n {2}\}/,
 );

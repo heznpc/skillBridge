@@ -451,7 +451,7 @@
 
       case 'setLanguage': {
         const newLang = request.language;
-        if (newLang !== 'en' && !SUPPORTED_LANGUAGE_MAP[newLang]) {
+        if (newLang !== 'en' && (!SUPPORTED_LANGUAGE_MAP || !SUPPORTED_LANGUAGE_MAP[newLang])) {
           sendResponse({ success: false, error: 'Unsupported language' });
           return false;
         }
@@ -785,20 +785,17 @@
     const geminiQueue = [];
 
     while (gtTranslateQueue.length > 0) {
-      if (gtGeneration !== myGeneration) {
-        gtProcessing = false;
-        return;
-      }
+      // Staleness check: restoreOriginal() already cleared queue + reset gtProcessing
+      // and incremented gtGeneration, so we MUST NOT touch gtProcessing here — a newer
+      // generation may already own the lock.
+      if (gtGeneration !== myGeneration) return;
 
       const batch = gtTranslateQueue.splice(0, SKILLBRIDGE_THRESHOLDS.GT_BATCH_SIZE);
       const targetLang = batch[0].targetLang;
 
       const cacheResults = await Promise.all(batch.map((item) => translator.cachedLookup(item.text, targetLang)));
 
-      if (gtGeneration !== myGeneration) {
-        gtProcessing = false;
-        return;
-      }
+      if (gtGeneration !== myGeneration) return;
 
       const uncached = [];
       for (let i = 0; i < batch.length; i++) {
@@ -841,10 +838,7 @@
           const uniqueTexts = [...textToItems.keys()];
           const translations = await translator.googleTranslateBatch(uniqueTexts, targetLang);
 
-          if (gtGeneration !== myGeneration) {
-            gtProcessing = false;
-            return;
-          }
+          if (gtGeneration !== myGeneration) return;
 
           for (let i = 0; i < uniqueTexts.length; i++) {
             let translated = translations[i];
@@ -1172,6 +1166,7 @@
   // Cleanup on page hide (pagehide is preferred over unload — doesn't block bfcache)
   window.addEventListener('pagehide', () => {
     domObserver?.disconnect();
+    domObserver = null;
     clearTimeout(translateTimeout);
     pendingNodes = [];
     // Restore original history methods to prevent wrapper stacking on bfcache restore
@@ -1226,6 +1221,7 @@
     // If user navigated to a certification exam page, tear down
     if (CERT_DISABLE_PATTERNS.some((p) => p.test(href))) {
       domObserver?.disconnect();
+      domObserver = null;
       restoreOriginal();
       document.getElementById('si18n-exam-banner')?.remove();
       console.info('[SkillBridge] Navigated to certification page — extension disabled.');
@@ -1233,14 +1229,8 @@
     }
 
     // Re-enable observer if it was disconnected (e.g., after visiting a cert page)
-    if (!domObserver || !document.body) {
+    if (!domObserver && document.body) {
       observeDOM();
-    } else {
-      try {
-        domObserver.observe(document.body, { childList: true, subtree: true });
-      } catch (_ignored) {
-        /* observer already active */
-      }
     }
 
     // Re-detect exam mode for the new page

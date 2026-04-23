@@ -21,6 +21,7 @@ export default [
         setInterval: 'readonly',
         clearInterval: 'readonly',
         requestAnimationFrame: 'readonly',
+        cancelAnimationFrame: 'readonly',
         requestIdleCallback: 'readonly',
         console: 'readonly',
         confirm: 'readonly',

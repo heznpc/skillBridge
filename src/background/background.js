@@ -19,6 +19,13 @@ const _BG_YT_CLIENT_VERSION_DEFAULT = '2.20260415.01.00';
 let _BG_YT_CLIENT_VERSION = _BG_YT_CLIENT_VERSION_DEFAULT;
 
 const _YT_VERSION_STORAGE_KEY = 'sb_yt_client_version';
+const _YT_VERSION_PATTERN = /^\d+\.\d+\.\d+\.\d+$/;
+
+// Reject absurdly long strings before regex so a corrupted storage value can't
+// pin a large buffer; the expected format is ~19 chars.
+function _isValidYtClientVersion(v) {
+  return typeof v === 'string' && v.length > 0 && v.length <= 40 && _YT_VERSION_PATTERN.test(v);
+}
 
 // Hydrate the runtime override from storage on service worker start.
 // Wrapped defensively because tests stub `chrome` with only the surfaces
@@ -35,8 +42,10 @@ if (
       result
         .then((stored) => {
           const v = stored && stored[_YT_VERSION_STORAGE_KEY];
-          if (typeof v === 'string' && /^\d+\.\d+\.\d+\.\d+$/.test(v)) {
+          if (_isValidYtClientVersion(v)) {
             _BG_YT_CLIENT_VERSION = v;
+          } else if (v !== undefined) {
+            console.warn('[SkillBridge] Rejecting malformed YT client version in storage');
           }
         })
         .catch(() => {

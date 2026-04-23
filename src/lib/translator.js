@@ -52,7 +52,7 @@ class SkilljarTranslator {
    * Delete cache entries older than CACHE_TTL_MS (30 days).
    * Called once during initialization — not on every lookup.
    */
-  _cleanupExpiredCache() {
+  async _cleanupExpiredCache() {
     if (!this._db) return;
     try {
       const tx = this._db.transaction('translations', 'readwrite');
@@ -60,7 +60,7 @@ class SkilljarTranslator {
       const req = store.openCursor();
       const now = Date.now();
 
-      return new Promise((resolve, reject) => {
+      await new Promise((resolve, reject) => {
         req.onsuccess = (e) => {
           const cursor = e.target.result;
           if (!cursor) return;
@@ -71,13 +71,16 @@ class SkilljarTranslator {
           cursor.continue();
         };
         req.onerror = () => {
-          console.warn('[SkillBridge] Cache cleanup cursor failed');
+          console.warn('[SkillBridge] Cache cleanup cursor failed:', req.error?.message);
+          reject(req.error || new Error('cursor error'));
         };
         tx.oncomplete = () => resolve();
         tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error || new Error('tx aborted'));
       });
     } catch (err) {
-      console.warn('[SkillBridge] Cache cleanup failed:', err);
+      console.warn('[SkillBridge] Cache cleanup failed:', err?.message || err);
+      // Non-fatal: init should still proceed with a potentially fuller cache.
     }
   }
 
@@ -426,7 +429,11 @@ class SkilljarTranslator {
 
     while (this._verifyQueue.length > 0) {
       const batch = this._verifyQueue.splice(0, SKILLBRIDGE_THRESHOLDS.GEMINI_BATCH_SIZE);
-      await Promise.all(batch.map((item) => this._verifySingle(item)));
+      try {
+        await Promise.all(batch.map((item) => this._verifySingle(item)));
+      } catch (err) {
+        console.warn('[SkillBridge] Verify queue batch failed:', err?.message || err);
+      }
       if (this._verifyQueue.length > 0) {
         await new Promise((r) => setTimeout(r, SKILLBRIDGE_DELAYS.GEMINI_BATCH));
       }
@@ -680,22 +687,26 @@ User: ${userMessage}`;
 
   _injectPageBridge() {
     return new Promise((resolve, reject) => {
+      const cleanup = () => {
+        clearTimeout(timeout);
+        window.removeEventListener('message', onReady);
+      };
+
       const timeout = setTimeout(() => {
         console.warn('[SkillBridge] Bridge ready timeout - resolving anyway');
+        window.removeEventListener('message', onReady);
         resolve();
       }, SKILLBRIDGE_THRESHOLDS.BRIDGE_READY_TIMEOUT);
 
       const onReady = (event) => {
         if (event.source !== window) return;
         if (event.data?.__skillbridge__ && event.data.type === 'BRIDGE_READY') {
-          clearTimeout(timeout);
-          window.removeEventListener('message', onReady);
+          cleanup();
           this.isReady = true;
           resolve();
         }
         if (event.data?.__skillbridge__ && event.data.type === 'BRIDGE_ERROR') {
-          clearTimeout(timeout);
-          window.removeEventListener('message', onReady);
+          cleanup();
           reject(new Error(event.data.error));
         }
       };
@@ -712,8 +723,7 @@ User: ${userMessage}`;
         script.remove();
       };
       script.onerror = () => {
-        clearTimeout(timeout);
-        window.removeEventListener('message', onReady);
+        cleanup();
         reject(new Error('Failed to inject page-bridge.js'));
       };
       (document.head || document.documentElement).appendChild(script);
@@ -732,17 +742,21 @@ User: ${userMessage}`;
       message.__skillbridge__ = true;
       message.__nonce__ = this._bridgeNonce;
 
-      // Evict stale callbacks before adding new one
-      if (this.pendingCallbacks.size >= SKILLBRIDGE_THRESHOLDS.PENDING_CALLBACKS_MAX) {
+      // Evict stale callbacks proactively — half-cap triggers sweep so timers
+      // paused by bfcache / tab suspension don't let the Map grow unbounded.
+      const maxCallbacks = SKILLBRIDGE_THRESHOLDS.PENDING_CALLBACKS_MAX;
+      if (this.pendingCallbacks.size >= Math.floor(maxCallbacks / 2)) {
         const now = Date.now();
+        const staleMs = SKILLBRIDGE_THRESHOLDS.CALLBACK_STALE_MS;
         for (const [cbId, cb] of this.pendingCallbacks) {
-          if (cb._ts && now - cb._ts > SKILLBRIDGE_THRESHOLDS.CALLBACK_STALE_MS) {
+          if (cb._ts && now - cb._ts > staleMs) {
             this.pendingCallbacks.delete(cbId);
           }
         }
         // Hard cap: drop oldest if still over limit
-        if (this.pendingCallbacks.size >= SKILLBRIDGE_THRESHOLDS.PENDING_CALLBACKS_MAX) {
+        while (this.pendingCallbacks.size >= maxCallbacks) {
           const oldest = this.pendingCallbacks.keys().next().value;
+          if (oldest === undefined) break;
           this.pendingCallbacks.delete(oldest);
         }
       }

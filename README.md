@@ -252,6 +252,15 @@ See our full [Privacy Policy](PRIVACY_POLICY.md).
 
 ## Contributing
 
+### Development environment
+
+Tested tooling (minimum versions — CI pins major releases):
+
+- **Node.js 22+** (see `.github/workflows/ci.yml`)
+- **ESLint 10.1+**, **Jest 30.2+**, **Prettier 3.8+**, **esbuild 0.27+**
+
+Run `npm install` then `npm run lint && npm test` to verify your environment.
+
 SkillBridge is a community-driven project. The single most impactful way to contribute is improving the translation dictionary for your language — no code required, just edit a JSON file. Even fixing one bad translation helps every learner using that language.
 
 Each language's dictionary is curated to sound natural to native speakers. We align with [Anthropic's official multilingual docs](https://docs.anthropic.com) as a baseline, but community conventions matter too — if Korean developers say "프롬프트" instead of "prompt", that's what we use. Disagree with a term choice? That's exactly the kind of PR we want.

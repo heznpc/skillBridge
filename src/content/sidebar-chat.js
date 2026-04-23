@@ -336,6 +336,7 @@
   // ============================================================
 
   function formatResponse(text) {
+    if (typeof text !== 'string') text = text == null ? '' : String(text);
     const escaped = sb.escapeHtml(text);
 
     // Ensure markdown block elements start on new lines
@@ -637,6 +638,7 @@
     historyPanelOpen = false;
     flashcardPanelOpen = false;
     bindChatInputEvents();
+    bindExampleQuestions();
   }
 
   function closeHistoryPanel() {
@@ -769,6 +771,13 @@
 
       // Remove focus trap
       if (sidebar) sidebar.removeEventListener('keydown', trapFocus);
+
+      // Cancel any pending scroll RAF so the callback can't run against a
+      // detached/hidden DOM tree after close.
+      if (scrollRAF !== null) {
+        cancelAnimationFrame(scrollRAF);
+        scrollRAF = null;
+      }
     }
   }
 
@@ -899,7 +908,9 @@
                   refreshFlashcard();
                 }
               })
-              .catch(() => {});
+              .catch((err) => {
+                console.debug('[SkillBridge] Flashcard section data load failed:', err?.message || err);
+              });
           } else {
             const data = _rawSectionsCache;
             const sectionEntries = [];
