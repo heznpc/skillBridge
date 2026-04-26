@@ -681,7 +681,12 @@ User: ${userMessage}`;
   _injectPageBridge() {
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
-        console.warn('[SkillBridge] Bridge ready timeout - resolving anyway');
+        // Bridge never confirmed ready — keep isReady=false so _sendRequest
+        // fails fast, and notify UI so the user sees an actionable banner
+        // instead of a silent dead tutor.
+        console.warn('[SkillBridge] Bridge ready timeout — AI features disabled');
+        this.bridgeFailed = true;
+        window.dispatchEvent(new CustomEvent('skillbridge:bridgeunavailable'));
         resolve();
       }, SKILLBRIDGE_THRESHOLDS.BRIDGE_READY_TIMEOUT);
 

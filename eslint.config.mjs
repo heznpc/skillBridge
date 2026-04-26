@@ -79,6 +79,7 @@ export default [
         TERM_PREVIEW_LABELS: 'readonly',
         FLASHCARD_COURSE_MAP: 'readonly',
         FLASHCARD_COURSE_SLUGS_SORTED: 'readonly',
+        BRIDGE_UNAVAILABLE_LABELS: 'readonly',
         CODE_COMMENT_PATTERNS: 'readonly',
         COMMENT_TRANSLATE_LABELS: 'readonly',
         // Classes from other content scripts
