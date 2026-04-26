@@ -122,9 +122,6 @@
     if (currentLang !== 'en') window._sb.showOfflineBanner?.();
   });
 
-  // Banner UI (offline / bridge-unavailable / storage / exam / progress)
-  // lives in src/content/banners.js and attaches to window._sb.
-
   // Lookup helper: returns map entry for given lang, falling back to 'en'
   function t(map, lang) {
     return map[lang || currentLang] || map['en'];

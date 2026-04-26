@@ -2,13 +2,12 @@
  * SkillBridge — Banner UI
  *
  * Pure DOM banner registry split out of content.js. Loaded after content.js
- * so it can read live language and helper state via `window._sb.t` /
- * `window._sb.escapeHtml`. Functions attach back onto `window._sb` so
- * content.js call sites only change the prefix.
+ * so it can read live language and helper state via `window._sb.t`.
+ * Functions attach back onto `window._sb` so call sites only change shape,
+ * not semantics.
  *
- * Covers: offline, bridge-unavailable, storage-quota, exam, translation
- * progress. The term-preview card stays in content.js because it touches
- * translator state and FLASHCARD_COURSE_SLUGS_SORTED resolution.
+ * Term-preview stays in content.js because it needs translator state and
+ * FLASHCARD_COURSE_SLUGS_SORTED resolution.
  */
 
 (function () {
@@ -18,87 +17,81 @@
     return;
   }
 
-  // ============================================================
-  // OFFLINE BANNER
-  // ============================================================
+  // Guard: extension auto-update / dev reload re-runs content scripts.
+  // Without this marker we'd attach a second listener for each event each
+  // time, causing N banners per fire after N reloads (mirrors the
+  // history.pushState __sb_wrapped__ guard in content.js).
+  if (sb.__bannersLoaded) return;
+  sb.__bannersLoaded = true;
 
-  function showOfflineBanner() {
-    if (document.getElementById('si18n-offline-banner')) return;
+  // Build a transient banner element and animate it in. Used for the
+  // five "small toast" cases below; translation progress is its own
+  // shape (two coordinated elements, dynamic content) and doesn't fit.
+  function showSimpleBanner({ id, className, role, ariaLive, labels, autoDismissMs }) {
+    if (document.getElementById(id)) return;
     const banner = document.createElement('div');
-    banner.id = 'si18n-offline-banner';
-    banner.className = 'si18n-offline-banner';
-    banner.setAttribute('role', 'status');
-    banner.setAttribute('aria-live', 'polite');
-    banner.textContent = sb.t(OFFLINE_LABELS);
+    banner.id = id;
+    banner.className = className;
+    banner.setAttribute('role', role);
+    if (ariaLive) banner.setAttribute('aria-live', ariaLive);
+    banner.textContent = sb.t(labels);
     document.body.appendChild(banner);
     requestAnimationFrame(() => banner.classList.add('visible'));
+    if (autoDismissMs) {
+      setTimeout(() => {
+        banner.classList.remove('visible');
+        setTimeout(() => banner.remove(), 300);
+      }, autoDismissMs);
+    }
+  }
+
+  function showOfflineBanner() {
+    showSimpleBanner({
+      id: 'si18n-offline-banner',
+      className: 'si18n-offline-banner',
+      role: 'status',
+      ariaLive: 'polite',
+      labels: OFFLINE_LABELS,
+    });
   }
 
   function hideOfflineBanner() {
     const banner = document.getElementById('si18n-offline-banner');
-    if (banner) {
-      banner.classList.remove('visible');
-      setTimeout(() => banner.remove(), 300);
-    }
+    if (!banner) return;
+    banner.classList.remove('visible');
+    setTimeout(() => banner.remove(), 300);
   }
 
-  // ============================================================
-  // BRIDGE UNAVAILABLE BANNER (persistent — refresh required)
-  // ============================================================
-
-  // Puter.js script never confirmed BRIDGE_READY; alert the user that AI
-  // features are off until they reload. No auto-dismiss because reloading
-  // is the only recovery path.
+  // No auto-dismiss: refresh is the only recovery, so keep the alert visible.
   window.addEventListener('skillbridge:bridgeunavailable', () => {
-    if (document.getElementById('si18n-bridge-banner')) return;
-    const banner = document.createElement('div');
-    banner.id = 'si18n-bridge-banner';
-    banner.className = 'si18n-offline-banner si18n-storage-warn';
-    banner.setAttribute('role', 'alert');
-    banner.setAttribute('aria-live', 'assertive');
-    banner.textContent = sb.t(BRIDGE_UNAVAILABLE_LABELS);
-    document.body.appendChild(banner);
-    requestAnimationFrame(() => banner.classList.add('visible'));
+    showSimpleBanner({
+      id: 'si18n-bridge-banner',
+      className: 'si18n-offline-banner si18n-storage-warn',
+      role: 'alert',
+      ariaLive: 'assertive',
+      labels: BRIDGE_UNAVAILABLE_LABELS,
+    });
   });
-
-  // ============================================================
-  // STORAGE QUOTA BANNER (auto-dismiss after 8s)
-  // ============================================================
 
   document.addEventListener('skillbridge:storagequota', () => {
-    if (document.getElementById('si18n-storage-banner')) return;
-    const banner = document.createElement('div');
-    banner.id = 'si18n-storage-banner';
-    banner.className = 'si18n-offline-banner si18n-storage-warn';
-    banner.setAttribute('role', 'status');
-    banner.setAttribute('aria-live', 'polite');
-    banner.textContent = sb.t(STORAGE_WARNING_LABELS);
-    document.body.appendChild(banner);
-    requestAnimationFrame(() => banner.classList.add('visible'));
-    setTimeout(() => {
-      banner.classList.remove('visible');
-      setTimeout(() => banner.remove(), 300);
-    }, 8000);
+    showSimpleBanner({
+      id: 'si18n-storage-banner',
+      className: 'si18n-offline-banner si18n-storage-warn',
+      role: 'status',
+      ariaLive: 'polite',
+      labels: STORAGE_WARNING_LABELS,
+      autoDismissMs: 8000,
+    });
   });
 
-  // ============================================================
-  // EXAM BANNER
-  // ============================================================
-
   function showExamBanner() {
-    if (document.getElementById('si18n-exam-banner')) return;
-    const banner = document.createElement('div');
-    banner.id = 'si18n-exam-banner';
-    banner.className = 'si18n-exam-banner';
-    banner.setAttribute('role', 'alert');
-    banner.textContent = sb.t(EXAM_BANNER_LABELS);
-    document.body.appendChild(banner);
-    requestAnimationFrame(() => banner.classList.add('visible'));
+    showSimpleBanner({
+      id: 'si18n-exam-banner',
+      className: 'si18n-exam-banner',
+      role: 'alert',
+      labels: EXAM_BANNER_LABELS,
+    });
   }
-
-  // ============================================================
-  // TRANSLATION PROGRESS
-  // ============================================================
 
   function showTranslationProgress() {
     let bar = document.getElementById('si18n-progress-bar');
@@ -150,8 +143,6 @@
     }, SKILLBRIDGE_DELAYS.PROGRESS_HIDE);
   }
 
-  // Expose on the shared namespace so content.js call sites stay the same
-  // shape as other extracted modules (header-controls.js, text-selection.js).
   sb.showOfflineBanner = showOfflineBanner;
   sb.hideOfflineBanner = hideOfflineBanner;
   sb.showExamBanner = showExamBanner;
