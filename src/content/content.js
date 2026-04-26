@@ -100,7 +100,7 @@
 
   window.addEventListener('online', () => {
     isOffline = false;
-    hideOfflineBanner();
+    window._sb.hideOfflineBanner?.();
     // Retry deferred offline items first, then re-apply if needed
     if (currentLang !== 'en' && translator && isReady) {
       if (_offlinePendingItems.length > 0) {
@@ -119,60 +119,11 @@
 
   window.addEventListener('offline', () => {
     isOffline = true;
-    if (currentLang !== 'en') showOfflineBanner();
+    if (currentLang !== 'en') window._sb.showOfflineBanner?.();
   });
 
-  function showOfflineBanner() {
-    if (document.getElementById('si18n-offline-banner')) return;
-    const banner = document.createElement('div');
-    banner.id = 'si18n-offline-banner';
-    banner.className = 'si18n-offline-banner';
-    banner.setAttribute('role', 'status');
-    banner.setAttribute('aria-live', 'polite');
-    banner.textContent = t(OFFLINE_LABELS);
-    document.body.appendChild(banner);
-    requestAnimationFrame(() => banner.classList.add('visible'));
-  }
-
-  function hideOfflineBanner() {
-    const banner = document.getElementById('si18n-offline-banner');
-    if (banner) {
-      banner.classList.remove('visible');
-      setTimeout(() => banner.remove(), 300);
-    }
-  }
-
-  // Bridge unavailable — Puter.js script never confirmed BRIDGE_READY.
-  // Persistent banner (no auto-dismiss) so users know AI features are off
-  // until they refresh the page.
-  window.addEventListener('skillbridge:bridgeunavailable', () => {
-    if (document.getElementById('si18n-bridge-banner')) return;
-    const banner = document.createElement('div');
-    banner.id = 'si18n-bridge-banner';
-    banner.className = 'si18n-offline-banner si18n-storage-warn';
-    banner.setAttribute('role', 'alert');
-    banner.setAttribute('aria-live', 'assertive');
-    banner.textContent = t(BRIDGE_UNAVAILABLE_LABELS);
-    document.body.appendChild(banner);
-    requestAnimationFrame(() => banner.classList.add('visible'));
-  });
-
-  // Storage quota warning — auto-dismiss after 8 seconds
-  document.addEventListener('skillbridge:storagequota', () => {
-    if (document.getElementById('si18n-storage-banner')) return;
-    const banner = document.createElement('div');
-    banner.id = 'si18n-storage-banner';
-    banner.className = 'si18n-offline-banner si18n-storage-warn';
-    banner.setAttribute('role', 'status');
-    banner.setAttribute('aria-live', 'polite');
-    banner.textContent = t(STORAGE_WARNING_LABELS);
-    document.body.appendChild(banner);
-    requestAnimationFrame(() => banner.classList.add('visible'));
-    setTimeout(() => {
-      banner.classList.remove('visible');
-      setTimeout(() => banner.remove(), 300);
-    }, 8000);
-  });
+  // Banner UI (offline / bridge-unavailable / storage / exam / progress)
+  // lives in src/content/banners.js and attaches to window._sb.
 
   // Lookup helper: returns map entry for given lang, falling back to 'en'
   function t(map, lang) {
@@ -198,17 +149,6 @@
     if (document.querySelector(SKILLJAR_SELECTORS.quizForm)) return true;
     if (document.querySelector(SKILLJAR_SELECTORS.answerOption)) return true;
     return false;
-  }
-
-  function showExamBanner() {
-    if (document.getElementById('si18n-exam-banner')) return;
-    const banner = document.createElement('div');
-    banner.id = 'si18n-exam-banner';
-    banner.className = 'si18n-exam-banner';
-    banner.setAttribute('role', 'alert');
-    banner.textContent = t(EXAM_BANNER_LABELS);
-    document.body.appendChild(banner);
-    requestAnimationFrame(() => banner.classList.add('visible'));
   }
 
   window._sb = {
@@ -263,60 +203,6 @@
     formatResponse: null,
     translateCodeComments: null,
   };
-
-  // ============================================================
-  // TRANSLATION PROGRESS INDICATOR
-  // ============================================================
-
-  function showTranslationProgress() {
-    let bar = document.getElementById('si18n-progress-bar');
-    if (!bar) {
-      bar = document.createElement('div');
-      bar.id = 'si18n-progress-bar';
-      bar.innerHTML = '<div class="si18n-progress-fill" style="width: 15%"></div>';
-      document.body.appendChild(bar);
-    } else {
-      const fill = bar.querySelector('.si18n-progress-fill');
-      if (fill) fill.style.width = '15%';
-    }
-    let toast = document.getElementById('si18n-progress-toast');
-    const label = t(PROGRESS_LABELS);
-    if (!toast) {
-      toast = document.createElement('div');
-      toast.id = 'si18n-progress-toast';
-      toast.setAttribute('role', 'status');
-      toast.setAttribute('aria-live', 'polite');
-      toast.innerHTML = `<div class="si18n-progress-spinner"></div><span>${label}</span>`;
-      document.body.appendChild(toast);
-    } else {
-      const span = toast.querySelector('span');
-      if (span) span.textContent = label;
-    }
-    requestAnimationFrame(() => {
-      bar.classList.add('active');
-      toast.classList.add('active');
-    });
-  }
-
-  function updateTranslationProgress(pct) {
-    const fill = document.querySelector('#si18n-progress-bar .si18n-progress-fill');
-    if (fill) fill.style.width = `${Math.min(pct, 95)}%`;
-  }
-
-  function hideTranslationProgress() {
-    const fill = document.querySelector('#si18n-progress-bar .si18n-progress-fill');
-    if (fill) fill.style.width = '100%';
-    setTimeout(() => {
-      const bar = document.getElementById('si18n-progress-bar');
-      const toast = document.getElementById('si18n-progress-toast');
-      bar?.classList.remove('active');
-      toast?.classList.remove('active');
-      setTimeout(() => {
-        bar?.remove();
-        toast?.remove();
-      }, SKILLBRIDGE_DELAYS.PROGRESS_REMOVE);
-    }, SKILLBRIDGE_DELAYS.PROGRESS_HIDE);
-  }
 
   // ============================================================
   // PER-LESSON TERM PREVIEW
@@ -669,7 +555,7 @@
     updateLangClass(targetLang);
     // Re-detect exam page (DOM may have loaded since init)
     if (!isExamPage) isExamPage = detectExamPage();
-    if (isExamPage && targetLang !== 'en') showExamBanner();
+    if (isExamPage && targetLang !== 'en') window._sb.showExamBanner?.();
 
     const elements = getTranslatableElements();
     if (elements.length === 0) return;
@@ -693,8 +579,8 @@
 
     // Start GT for visible elements right away (skip redundant viewport check)
     if (gtCandidates.length > 0 && targetLang !== 'en') {
-      showTranslationProgress();
-      updateTranslationProgress(
+      window._sb.showTranslationProgress?.();
+      window._sb.updateTranslationProgress?.(
         Math.round((staticCount / (staticCount + gtCandidates.length + offscreen.length)) * 80),
       );
       queueForGoogleTranslate(gtCandidates, targetLang, true);
@@ -746,7 +632,7 @@
       } else if (gtGeneration === myGeneration) {
         // All offscreen elements processed — queue GT candidates
         if (gtCandidates.length > 0 && targetLang !== 'en') {
-          if (prevGt === 0) showTranslationProgress();
+          if (prevGt === 0) window._sb.showTranslationProgress?.();
           queueForGoogleTranslate(gtCandidates, targetLang);
         }
       }
@@ -888,7 +774,7 @@
         }
 
         processedItems += batch.length;
-        updateTranslationProgress(80 + Math.round((processedItems / totalItems) * 15));
+        window._sb.updateTranslationProgress?.(80 + Math.round((processedItems / totalItems) * 15));
 
         if (gtTranslateQueue.length > 0) {
           await new Promise((r) => setTimeout(r, SKILLBRIDGE_DELAYS.GT_BATCH));
@@ -896,7 +782,7 @@
       }
     } finally {
       gtProcessing = false;
-      hideTranslationProgress();
+      window._sb.hideTranslationProgress?.();
       pruneDetachedEntries();
 
       // Term-preview only on full completion; on cancellation, the new
@@ -1004,7 +890,7 @@
     currentLang = 'en';
     window._protectedTerms.resetProtectedTerms();
     updateLangClass('en');
-    hideTranslationProgress();
+    window._sb.hideTranslationProgress?.();
     originalComments.forEach((html, el) => {
       if (el && el.parentNode) el.innerHTML = html;
     });
