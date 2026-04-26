@@ -515,28 +515,45 @@
     try {
       const db = await openHistoryDb();
       const chapter = document.querySelector('h1')?.textContent?.trim() || 'Unknown';
-      const tx = db.transaction(HISTORY_STORE, 'readwrite');
-      const req = tx.objectStore(HISTORY_STORE).add({
+      const entry = {
         question,
         answer,
         lang,
         chapter,
         timestamp: Date.now(),
         url: location.href,
-      });
-      req.onerror = (e) => {
-        if (e.target.error?.name === 'QuotaExceededError') {
-          console.warn('[SkillBridge] Chat history quota exceeded — pruning old entries');
-          pruneOldHistory(db);
-        }
       };
+      const ok = await _addHistoryEntry(db, entry);
+      if (!ok) {
+        // First add hit the IDB quota — prune oldest 20 then retry once
+        // (without retry the conversation just gets dropped silently).
+        await pruneOldHistory(db);
+        await _addHistoryEntry(db, entry);
+      }
     } catch (e) {
       console.warn('[SkillBridge] Failed to save conversation:', e);
     }
   }
 
-  async function pruneOldHistory(db) {
-    try {
+  function _addHistoryEntry(db, entry) {
+    return new Promise((resolve) => {
+      const tx = db.transaction(HISTORY_STORE, 'readwrite');
+      const req = tx.objectStore(HISTORY_STORE).add(entry);
+      req.onsuccess = () => resolve(true);
+      req.onerror = (e) => {
+        const isQuota = e.target.error?.name === 'QuotaExceededError';
+        if (isQuota) {
+          console.warn('[SkillBridge] Chat history quota exceeded — will prune and retry');
+        } else {
+          console.warn('[SkillBridge] Chat history add failed:', e.target.error?.name);
+        }
+        resolve(false);
+      };
+    });
+  }
+
+  function pruneOldHistory(db) {
+    return new Promise((resolve) => {
       const tx = db.transaction(HISTORY_STORE, 'readwrite');
       const store = tx.objectStore(HISTORY_STORE);
       const idx = store.index('timestamp');
@@ -544,16 +561,18 @@
       let deleted = 0;
       req.onsuccess = (e) => {
         const cursor = e.target.result;
-        // Delete oldest 20 entries to free space
         if (cursor && deleted < 20) {
           cursor.delete();
           deleted++;
           cursor.continue();
         }
       };
-    } catch (_ignored) {
-      /* best-effort pruning */
-    }
+      // Resolve when the whole transaction commits, so the caller's retry
+      // sees the freed space.
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => resolve();
+      tx.onabort = () => resolve();
+    });
   }
 
   async function getConversations(limit = SKILLBRIDGE_LIMITS.HISTORY) {
