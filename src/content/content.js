@@ -142,6 +142,21 @@
     }
   }
 
+  // Bridge unavailable — Puter.js script never confirmed BRIDGE_READY.
+  // Persistent banner (no auto-dismiss) so users know AI features are off
+  // until they refresh the page.
+  window.addEventListener('skillbridge:bridgeunavailable', () => {
+    if (document.getElementById('si18n-bridge-banner')) return;
+    const banner = document.createElement('div');
+    banner.id = 'si18n-bridge-banner';
+    banner.className = 'si18n-offline-banner si18n-storage-warn';
+    banner.setAttribute('role', 'alert');
+    banner.setAttribute('aria-live', 'assertive');
+    banner.textContent = t(BRIDGE_UNAVAILABLE_LABELS);
+    document.body.appendChild(banner);
+    requestAnimationFrame(() => banner.classList.add('visible'));
+  });
+
   // Storage quota warning — auto-dismiss after 8 seconds
   document.addEventListener('skillbridge:storagequota', () => {
     if (document.getElementById('si18n-storage-banner')) return;
@@ -468,6 +483,17 @@
         sendResponse({ ready: isReady });
         return false;
 
+      case 'cacheCleanup':
+        // Triggered by the 24h alarm in background.js. Page-load fallback
+        // also runs this on translator init, so the alarm path is for
+        // long-pinned tabs that never get a fresh load.
+        translator
+          ?._cleanupExpiredCache()
+          .then(() => translator?._checkStorageQuota())
+          .catch((err) => console.warn('[SkillBridge] alarm cleanup error:', err.message));
+        sendResponse({ success: true });
+        return false;
+
       case 'toggleCommentTranslation':
         commentTranslateEnabled = request.enabled;
         chrome.storage.local.set({ commentTranslate: request.enabled });
@@ -784,107 +810,111 @@
     let processedItems = 0;
     const geminiQueue = [];
 
-    while (gtTranslateQueue.length > 0) {
-      if (gtGeneration !== myGeneration) {
-        gtProcessing = false;
-        return;
-      }
+    // Wrap the whole batch loop so progress UI and detached-entry pruning
+    // always run, even if the user switches language mid-batch (which trips
+    // the gtGeneration check below). Without this, the progress bar and
+    // verify spinners stay on screen until next nav.
+    try {
+      while (gtTranslateQueue.length > 0) {
+        if (gtGeneration !== myGeneration) return;
 
-      const batch = gtTranslateQueue.splice(0, SKILLBRIDGE_THRESHOLDS.GT_BATCH_SIZE);
-      const targetLang = batch[0].targetLang;
+        const batch = gtTranslateQueue.splice(0, SKILLBRIDGE_THRESHOLDS.GT_BATCH_SIZE);
+        const targetLang = batch[0].targetLang;
 
-      const cacheResults = await Promise.all(batch.map((item) => translator.cachedLookup(item.text, targetLang)));
+        const cacheResults = await Promise.all(batch.map((item) => translator.cachedLookup(item.text, targetLang)));
 
-      if (gtGeneration !== myGeneration) {
-        gtProcessing = false;
-        return;
-      }
+        if (gtGeneration !== myGeneration) return;
 
-      const uncached = [];
-      for (let i = 0; i < batch.length; i++) {
-        if (cacheResults[i]) {
-          const item = batch[i];
-          if (item.el && item.el.parentNode) {
-            if (item.needsGemini) {
-              uncached.push(item);
-            } else {
-              safeReplaceText(item.el, cacheResults[i]);
-              trackTranslatedElement(item.text, item.el);
-            }
-          }
-        } else {
-          uncached.push(batch[i]);
-        }
-      }
-
-      const gtItems = uncached.filter((item) => !item.needsGemini);
-      const geminiItems = uncached.filter((item) => item.needsGemini);
-
-      for (const item of geminiItems) {
-        if (item.el && item.el.parentNode) {
-          if (!originalTexts.has(item.el)) originalTexts.set(item.el, item.el.innerHTML);
-          geminiQueue.push({ el: item.el, targetLang: item.targetLang });
-        }
-      }
-
-      if (gtItems.length > 0) {
-        if (isOffline) {
-          const remaining = SKILLBRIDGE_THRESHOLDS.GT_QUEUE_MAX - _offlinePendingItems.length;
-          if (remaining > 0) _offlinePendingItems.push(...gtItems.slice(0, remaining));
-        } else {
-          // Deduplicate texts — group elements by text to avoid redundant API calls
-          const textToItems = new Map();
-          for (const item of gtItems) {
-            if (!textToItems.has(item.text)) textToItems.set(item.text, []);
-            textToItems.get(item.text).push(item);
-          }
-          const uniqueTexts = [...textToItems.keys()];
-          const translations = await translator.googleTranslateBatch(uniqueTexts, targetLang);
-
-          if (gtGeneration !== myGeneration) {
-            gtProcessing = false;
-            return;
-          }
-
-          for (let i = 0; i < uniqueTexts.length; i++) {
-            let translated = translations[i];
-            if (!translated || translated === uniqueTexts[i]) continue;
-            translated = window._protectedTerms.restoreProtectedTerms(translated);
-            const items = textToItems.get(uniqueTexts[i]);
-            let verifyQueued = false;
-            for (const item of items) {
-              if (!item.el?.parentNode) continue;
-              safeReplaceText(item.el, translated);
-              trackTranslatedElement(item.text, item.el);
-              if (!verifyQueued) {
-                verifyQueued = !!translator.queueGeminiVerify(item.text, translated, targetLang);
+        const uncached = [];
+        for (let i = 0; i < batch.length; i++) {
+          if (cacheResults[i]) {
+            const item = batch[i];
+            if (item.el && item.el.parentNode) {
+              if (item.needsGemini) {
+                uncached.push(item);
+              } else {
+                safeReplaceText(item.el, cacheResults[i]);
+                trackTranslatedElement(item.text, item.el);
               }
-              if (verifyQueued) addVerifySpinner(item.el);
+            }
+          } else {
+            uncached.push(batch[i]);
+          }
+        }
+
+        const gtItems = uncached.filter((item) => !item.needsGemini);
+        const geminiItems = uncached.filter((item) => item.needsGemini);
+
+        for (const item of geminiItems) {
+          if (item.el && item.el.parentNode) {
+            if (!originalTexts.has(item.el)) originalTexts.set(item.el, item.el.innerHTML);
+            geminiQueue.push({ el: item.el, targetLang: item.targetLang });
+          }
+        }
+
+        if (gtItems.length > 0) {
+          if (isOffline) {
+            const remaining = SKILLBRIDGE_THRESHOLDS.GT_QUEUE_MAX - _offlinePendingItems.length;
+            if (remaining > 0) _offlinePendingItems.push(...gtItems.slice(0, remaining));
+          } else {
+            // Deduplicate texts — group elements by text to avoid redundant API calls
+            const textToItems = new Map();
+            for (const item of gtItems) {
+              if (!textToItems.has(item.text)) textToItems.set(item.text, []);
+              textToItems.get(item.text).push(item);
+            }
+            const uniqueTexts = [...textToItems.keys()];
+            const translations = await translator.googleTranslateBatch(uniqueTexts, targetLang);
+
+            if (gtGeneration !== myGeneration) return;
+
+            for (let i = 0; i < uniqueTexts.length; i++) {
+              let translated = translations[i];
+              if (!translated || translated === uniqueTexts[i]) continue;
+              translated = window._protectedTerms.restoreProtectedTerms(translated);
+              const items = textToItems.get(uniqueTexts[i]);
+              let verifyQueued = false;
+              for (const item of items) {
+                if (!item.el?.parentNode) continue;
+                safeReplaceText(item.el, translated);
+                trackTranslatedElement(item.text, item.el);
+                if (!verifyQueued) {
+                  verifyQueued = !!translator.queueGeminiVerify(item.text, translated, targetLang);
+                }
+                if (verifyQueued) addVerifySpinner(item.el);
+              }
             }
           }
         }
+
+        processedItems += batch.length;
+        updateTranslationProgress(80 + Math.round((processedItems / totalItems) * 15));
+
+        if (gtTranslateQueue.length > 0) {
+          await new Promise((r) => setTimeout(r, SKILLBRIDGE_DELAYS.GT_BATCH));
+        }
+      }
+    } finally {
+      gtProcessing = false;
+      hideTranslationProgress();
+      pruneDetachedEntries();
+
+      // Term-preview only on full completion; on cancellation, the new
+      // generation will trigger its own preview.
+      if (gtGeneration === myGeneration) {
+        setTimeout(showTermPreview, 1500);
       }
 
-      processedItems += batch.length;
-      updateTranslationProgress(80 + Math.round((processedItems / totalItems) * 15));
-
-      if (gtTranslateQueue.length > 0) {
-        await new Promise((r) => setTimeout(r, SKILLBRIDGE_DELAYS.GT_BATCH));
-      }
-    }
-
-    gtProcessing = false;
-    hideTranslationProgress();
-    pruneDetachedEntries();
-    setTimeout(showTermPreview, 1500);
-
-    for (const { el, targetLang } of geminiQueue) {
-      if (el && el.parentNode) {
-        window._geminiBlock.queueGeminiBlockTranslation(el, targetLang, {
-          translator,
-          originalTexts,
-          isLikelyEnglish,
-        });
+      // Flush any block-translation work queued during this generation.
+      // Stale items get filtered by parentNode + targetLang on the consumer.
+      for (const { el, targetLang } of geminiQueue) {
+        if (el && el.parentNode) {
+          window._geminiBlock.queueGeminiBlockTranslation(el, targetLang, {
+            translator,
+            originalTexts,
+            isLikelyEnglish,
+          });
+        }
       }
     }
   }
@@ -1255,17 +1285,26 @@
   window.addEventListener('popstate', onRouteChange);
   window.addEventListener('hashchange', onRouteChange);
 
-  // Catch pushState/replaceState (Skilljar SPA uses these)
-  const _origPushState = history.pushState;
-  const _origReplaceState = history.replaceState;
-  history.pushState = function (...args) {
-    _origPushState.apply(this, args);
-    onRouteChange();
-  };
-  history.replaceState = function (...args) {
-    _origReplaceState.apply(this, args);
-    onRouteChange();
-  };
+  // Catch pushState/replaceState (Skilljar SPA uses these).
+  // Guard against double-wrapping: extension reloads/updates re-run this
+  // module; without the marker we'd capture the previous wrapper as the
+  // "original" and stack handlers, doubling onRouteChange per nav.
+  let _origPushState = null;
+  let _origReplaceState = null;
+  if (!history.pushState.__sb_wrapped__) {
+    _origPushState = history.pushState;
+    _origReplaceState = history.replaceState;
+    history.pushState = function (...args) {
+      _origPushState.apply(this, args);
+      onRouteChange();
+    };
+    history.replaceState = function (...args) {
+      _origReplaceState.apply(this, args);
+      onRouteChange();
+    };
+    history.pushState.__sb_wrapped__ = true;
+    history.replaceState.__sb_wrapped__ = true;
+  }
 
   // ============================================================
   // BOOT

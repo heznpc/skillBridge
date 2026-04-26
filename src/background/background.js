@@ -94,6 +94,19 @@ const _rateLimiter = {
     this.timestamps.push(now);
     return true;
   },
+  /**
+   * Wait until a slot is available, up to maxWaitMs. Returns true if acquired,
+   * false on timeout. Lets large batches pace naturally instead of dropping
+   * items into the original-English passthrough that callers can't detect.
+   */
+  async acquire(maxWaitMs = 60000) {
+    const start = Date.now();
+    while (!this.check()) {
+      if (Date.now() - start > maxWaitMs) return false;
+      await new Promise((r) => setTimeout(r, 200));
+    }
+    return true;
+  },
 };
 
 // ==================== EXPONENTIAL BACKOFF FETCH ====================
@@ -142,7 +155,7 @@ async function handleCacheCleanup() {
   try {
     const tabs = await chrome.tabs.query({ url: 'https://*.skilljar.com/*' });
     for (const tab of tabs) {
-      chrome.tabs.sendMessage(tab.id, { type: 'CACHE_CLEANUP' }).catch(() => {
+      chrome.tabs.sendMessage(tab.id, { action: 'cacheCleanup' }).catch(() => {
         // Tab may not have content script loaded — that is fine
       });
     }
@@ -295,15 +308,22 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     const tl = gtLangCode(targetLang);
 
     Promise.all(
-      texts.map((text) => {
-        if (!_rateLimiter.check()) return text; // skip if rate limited
+      texts.map(async (text) => {
+        // Wait for a rate-limit slot. Falling back to the original English
+        // text would be silently dropped by content.js (translated === original
+        // is treated as no-op), so we pace instead.
+        const ok = await _rateLimiter.acquire();
+        if (!ok) {
+          console.warn('[SkillBridge] GT rate-limit acquire timed out');
+          return null;
+        }
         const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
         return fetchWithRetry(url)
           .then((resp) => resp.json())
           .then((data) => parseGTResponse(data, text))
           .catch((err) => {
             console.warn('[SkillBridge] GT batch item failed:', err.message);
-            return text;
+            return null;
           });
       }),
     )
