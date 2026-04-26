@@ -570,6 +570,20 @@ const OFFLINE_LABELS = {
   vi: 'Ngoại tuyến — chỉ sử dụng bản dịch đã lưu',
 };
 
+const BRIDGE_UNAVAILABLE_LABELS = {
+  en: 'AI features unavailable — refresh the page to retry',
+  ko: 'AI 기능을 사용할 수 없습니다 — 페이지를 새로고침하여 다시 시도해주세요',
+  ja: 'AI機能が利用できません — ページを再読み込みして再試行してください',
+  'zh-CN': 'AI 功能不可用 — 刷新页面以重试',
+  'zh-TW': 'AI 功能無法使用 — 重新整理頁面以重試',
+  es: 'Funciones de IA no disponibles — recarga la página para reintentar',
+  fr: 'Fonctions IA indisponibles — rechargez la page pour réessayer',
+  de: 'KI-Funktionen nicht verfügbar — Seite neu laden, um es erneut zu versuchen',
+  'pt-BR': 'Recursos de IA indisponíveis — recarregue a página para tentar novamente',
+  ru: 'ИИ-функции недоступны — обновите страницу, чтобы повторить попытку',
+  vi: 'Tính năng AI không khả dụng — làm mới trang để thử lại',
+};
+
 const STORAGE_WARNING_LABELS = {
   en: 'Storage almost full — old translations will be cleared automatically',
   ko: '저장 공간 부족 — 오래된 번역이 자동으로 삭제됩니다',
