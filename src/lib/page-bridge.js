@@ -24,6 +24,32 @@
     console.warn('[SkillBridge PageBridge]', ...args);
   }
 
+  // Fallback chain — used when a primary model is rejected by Puter
+  // (deprecation, rename, regional availability). Hardcoded here because
+  // page-bridge runs in the page world and can't import constants.js.
+  const _MODEL_FALLBACKS = {
+    'claude-sonnet-4-6': 'claude-sonnet-4-5',
+    'claude-opus-4-7': 'claude-opus-4-6',
+    'claude-opus-4-6': 'claude-opus-4-5',
+    'gemini-2.0-flash': 'gemini-1.5-flash',
+  };
+
+  function _isModelError(err) {
+    const msg = (err?.message || err?.error || String(err) || '').toLowerCase();
+    return /\b(model|invalid|deprecated|unsupported|not[ _-]?found|404)\b/.test(msg);
+  }
+
+  async function _puterChat(prompt, opts) {
+    try {
+      return await puter.ai.chat(prompt, opts);
+    } catch (err) {
+      const fallback = opts?.model && _MODEL_FALLBACKS[opts.model];
+      if (!fallback || !_isModelError(err)) throw err;
+      log(`Model "${opts.model}" rejected (${err?.message}); retrying with "${fallback}"`);
+      return await puter.ai.chat(prompt, { ...opts, model: fallback });
+    }
+  }
+
   function loadPuter() {
     if (puterLoadPromise) return puterLoadPromise;
     puterLoadPromise = new Promise((resolve, reject) => {
@@ -62,7 +88,7 @@
    * Single-prompt call to puter.ai.chat (confirmed working format)
    */
   async function callAI(prompt, model) {
-    const response = await puter.ai.chat(prompt, {
+    const response = await _puterChat(prompt, {
       model: model || 'gemini-2.0-flash',
       stream: false,
     });
@@ -170,7 +196,7 @@
 
         if (data.stream) {
           // Streaming mode — send chunks via postMessage
-          const response = await puter.ai.chat(prompt, {
+          const response = await _puterChat(prompt, {
             model: data.model || 'gpt-4o-mini',
             stream: true,
           });
