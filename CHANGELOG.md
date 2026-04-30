@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.7] - 2026-04-27
+
+### Fixed
+- Verify-queue tail items no longer sit un-verified forever. The lock-clear and queue-empty checks had a brief race window: items pushed between `_runVerifyQueue`'s exit and the `.finally` clearing `_verifyLock` got queued but never scheduled (on a quiet page that meant "never"). Extracted `_kickVerifyQueue` and self-restart from `.finally` if items arrived during teardown.
+- Mid-flight verify items targeting a previous language no longer write stale-language text into the now-current page. Translator now stamps `_langGeneration` on each queued item and the runner re-checks before calling `_notifyUpdate` (the await fence is seconds long; the user can switch language during it).
+- `_cacheTranslation` now resolves on `tx.oncomplete` instead of returning the moment `store.put()` is queued. Callers that `await` the call now actually wait for the write to commit.
+- IndexedDB cache rejects suspicious payloads before persisting them for 30 days: HTML-shaped strings, length ratios over 10×, and >95% ASCII responses for non-Latin target languages (typical refusal/error string).
+- Bridge injection now retries up to 2× with exponential backoff before giving up. Single CDN hiccups, slow networks, and one-shot CSP transients no longer kill the AI tutor for the whole session. The `skillbridge:bridgeunavailable` banner only fires after the retry budget is exhausted.
+
+### Changed
+- Page bridge wraps all `puter.ai.chat` calls with a model-fallback chain (`claude-sonnet-4-6` → `claude-sonnet-4-5`, `claude-opus-4-7` → `4-6`, `gemini-2.0-flash` → `1.5-flash`). If Puter or Anthropic deprecates a model name, the tutor falls back rather than 500-erroring at the user.
+
 ## [3.5.6] - 2026-04-26
 
 ### Fixed
