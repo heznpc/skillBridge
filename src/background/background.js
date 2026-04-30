@@ -125,10 +125,7 @@ async function fetchWithRetry(url, opts = {}, maxRetries = 3, baseDelay = 500) {
       await new Promise((r) => setTimeout(r, baseDelay * Math.pow(2, attempt) + Math.random() * 200));
       continue;
     }
-    // Non-retryable client errors (4xx except 429): fail immediately.
-    // Previously the throw here was caught by an outer try/catch and the
-    // loop kept retrying — exact opposite of the intent. Now the throw
-    // escapes the function as the caller expects.
+    // Non-retryable client error (4xx except 429): fail immediately.
     if (resp.status >= 400 && resp.status < 500 && resp.status !== 429) {
       throw new Error(`HTTP ${resp.status}`);
     }

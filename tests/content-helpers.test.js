@@ -1,18 +1,8 @@
 /**
- * Unit tests for content-script-side helpers exposed for cross-module use.
- *
- * Loads the real `escapeHtml` from `src/lib/gemini-block.js` (the previous
- * version of this file shipped its own copy and would have stayed green if
- * production drifted). Also exercises the constant patterns in
- * `src/lib/constants.js` directly.
- *
- * The `t()` i18n helper, the in-memory queue caps, and the storage-quota
- * eviction loop all live inside the content.js IIFE and aren't pure
- * functions we can call without spinning up a DOM. The previous test file
- * re-implemented those in the test, then asserted against the
- * re-implementation — circular validation. Those tests are removed; the
- * behaviors are now exercised end-to-end during manual QA / CI selector
- * health checks instead.
+ * Tests `escapeHtml` (loaded from `src/lib/gemini-block.js`) and the
+ * exam/cert URL pattern constants. Helpers that live inside the content.js
+ * IIFE (`t()`, queue caps, eviction loop) aren't testable in isolation and
+ * are covered by manual QA / CI selector health checks.
  */
 
 /* global describe, test, expect */

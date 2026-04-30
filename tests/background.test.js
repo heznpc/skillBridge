@@ -259,25 +259,11 @@ describe('fetchWithRetry', () => {
     expect(global.fetch).toHaveBeenCalledTimes(2);
   });
 
-  test('does not retry on 4xx client errors (except 429)', async () => {
-    global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 400 });
-    await expect(fetchWithRetry('https://example.com', {}, 3, 10)).rejects.toThrow('HTTP 400');
-    // Non-retryable client error must fail on the first attempt — retrying
-    // a 400 just makes us look abusive to the upstream API and risks a hard
-    // block. The pre-3.5.8 code accidentally retried because the throw was
-    // caught by the surrounding try/catch.
-    expect(global.fetch).toHaveBeenCalledTimes(1);
-  });
-
-  test('does not retry on 403 forbidden', async () => {
-    global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 403 });
-    await expect(fetchWithRetry('https://example.com', {}, 3, 10)).rejects.toThrow('HTTP 403');
-    expect(global.fetch).toHaveBeenCalledTimes(1);
-  });
-
-  test('does not retry on 404 not found', async () => {
-    global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 404 });
-    await expect(fetchWithRetry('https://example.com', {}, 3, 10)).rejects.toThrow('HTTP 404');
+  // Non-retryable client errors must fail on the first attempt. Retrying
+  // a 4xx just looks abusive to the upstream API and risks a hard block.
+  test.each([[400], [403], [404]])('does not retry on %i client error', async (status) => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false, status });
+    await expect(fetchWithRetry('https://example.com', {}, 3, 10)).rejects.toThrow(`HTTP ${status}`);
     expect(global.fetch).toHaveBeenCalledTimes(1);
   });
 
