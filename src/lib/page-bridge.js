@@ -197,7 +197,9 @@
         if (data.stream) {
           // Streaming mode — send chunks via postMessage
           const response = await _puterChat(prompt, {
-            model: data.model || 'gpt-4o-mini',
+            // SkillBridge is Claude-focused; default to Haiku as a cheap,
+            // fast Claude fallback if content.js forgets to pass `model`.
+            model: data.model || 'claude-haiku-4-5',
             stream: true,
           });
 

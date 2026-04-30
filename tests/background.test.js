@@ -259,14 +259,12 @@ describe('fetchWithRetry', () => {
     expect(global.fetch).toHaveBeenCalledTimes(2);
   });
 
-  test('does not retry on 4xx client errors (except 429)', async () => {
-    global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 400 });
-    await expect(fetchWithRetry('https://example.com', {}, 3, 10)).rejects.toThrow('HTTP 400');
-    // 4xx errors throw inside try, caught by catch, then re-thrown at maxRetries
-    // The throw breaks the loop on first attempt since status >= 400 && < 500 && !== 429
-    // But the thrown error is caught by catch block which also checks attempt === maxRetries
-    // So it retries until maxRetries — this is expected behavior (conservative retry)
-    expect(global.fetch).toHaveBeenCalledTimes(4); // initial + 3 retries
+  // Non-retryable client errors must fail on the first attempt. Retrying
+  // a 4xx just looks abusive to the upstream API and risks a hard block.
+  test.each([[400], [403], [404]])('does not retry on %i client error', async (status) => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false, status });
+    await expect(fetchWithRetry('https://example.com', {}, 3, 10)).rejects.toThrow(`HTTP ${status}`);
+    expect(global.fetch).toHaveBeenCalledTimes(1);
   });
 
   test('throws after max retries exhausted', async () => {

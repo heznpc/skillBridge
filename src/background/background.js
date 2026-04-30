@@ -112,22 +112,29 @@ const _rateLimiter = {
 // ==================== EXPONENTIAL BACKOFF FETCH ====================
 
 async function fetchWithRetry(url, opts = {}, maxRetries = 3, baseDelay = 500) {
+  let lastErr;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    let resp;
     try {
-      const resp = await fetch(url, opts);
+      resp = await fetch(url, opts);
       if (resp.ok) return resp;
-      // Don't retry client errors (4xx) except 429 (rate limit)
-      if (resp.status >= 400 && resp.status < 500 && resp.status !== 429) {
-        throw new Error(`HTTP ${resp.status}`);
-      }
-      // Retryable server error or rate limit
-      if (attempt === maxRetries) throw new Error(`HTTP ${resp.status}`);
     } catch (err) {
+      // Network error — eligible for retry.
+      lastErr = err;
       if (attempt === maxRetries) throw err;
+      await new Promise((r) => setTimeout(r, baseDelay * Math.pow(2, attempt) + Math.random() * 200));
+      continue;
     }
-    const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 200;
-    await new Promise((r) => setTimeout(r, delay));
+    // Non-retryable client error (4xx except 429): fail immediately.
+    if (resp.status >= 400 && resp.status < 500 && resp.status !== 429) {
+      throw new Error(`HTTP ${resp.status}`);
+    }
+    // Retryable: 5xx, 429, etc.
+    lastErr = new Error(`HTTP ${resp.status}`);
+    if (attempt === maxRetries) throw lastErr;
+    await new Promise((r) => setTimeout(r, baseDelay * Math.pow(2, attempt) + Math.random() * 200));
   }
+  throw lastErr;
 }
 
 // ==================== CHROME ALARMS (MAINTENANCE) ====================
