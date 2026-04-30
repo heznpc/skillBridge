@@ -31,6 +31,18 @@ class SkilljarTranslator {
     this.premiumLanguages = PREMIUM_LANGUAGE_CODES;
     /** @type {Record<string, string>} ISO code to language name */
     this.supportedLanguages = SUPPORTED_LANGUAGE_MAP;
+    /** Bumped on every active-language switch; verify items stamped with the
+     *  generation at queue time get filtered if it changes mid-flight. */
+    this._langGeneration = 0;
+  }
+
+  /**
+   * Called by content.js when the user switches language. Invalidates any
+   * verify-queue work targeting the old language so we don't write stale
+   * translations into the now-current page.
+   */
+  bumpLangGeneration() {
+    this._langGeneration++;
   }
 
   /** @returns {Promise<boolean>} true if initialization succeeded */
@@ -40,7 +52,7 @@ class SkilljarTranslator {
       await this._cleanupExpiredCache();
       await this._checkStorageQuota();
       this._setupMessageListener();
-      await this._injectPageBridge();
+      await this._injectPageBridgeWithRetry();
       return true;
     } catch (err) {
       console.error('[SkillBridge] Init failed:', err);
@@ -283,30 +295,69 @@ class SkilljarTranslator {
   }
 
   /**
-   * Save a Gemini-verified translation to cache.
+   * Save a translation to cache. Resolves on `tx.oncomplete` so callers
+   * that `await` actually wait for the write to commit (the previous
+   * version returned right after queuing the put, making the await a no-op).
+   *
+   * Rejects nothing — cache failures are non-fatal; the caller has already
+   * shown the translation to the user. We just silently skip the cache.
    */
-  async _cacheTranslation(text, translation, targetLang) {
-    if (!this._db) return;
-    try {
-      const tx = this._db.transaction('translations', 'readwrite');
-      const store = tx.objectStore('translations');
-      const req = store.put({
-        id: `${targetLang}\t${text.trim()}`,
-        lang: targetLang,
-        original: text.trim(),
-        translation,
-        timestamp: Date.now(),
-      });
-      req.onerror = (e) => {
-        if (e.target.error?.name === 'QuotaExceededError') {
-          console.warn('[SkillBridge] Storage quota exceeded — evicting old entries');
-          this._evictOldestEntries();
-          document.dispatchEvent(new CustomEvent('skillbridge:storagequota', { detail: { exceeded: true } }));
-        }
-      };
-    } catch (err) {
-      console.warn('[SkillBridge] Cache write failed:', err);
+  _cacheTranslation(text, translation, targetLang) {
+    if (!this._db) return Promise.resolve();
+    if (!this._isValidTranslation(translation, text, targetLang)) {
+      console.warn('[SkillBridge] Skipping cache: translation failed shape check');
+      return Promise.resolve();
     }
+    return new Promise((resolve) => {
+      try {
+        const tx = this._db.transaction('translations', 'readwrite');
+        const store = tx.objectStore('translations');
+        store.put({
+          id: `${targetLang}\t${text.trim()}`,
+          lang: targetLang,
+          original: text.trim(),
+          translation,
+          timestamp: Date.now(),
+        });
+        tx.oncomplete = () => resolve();
+        tx.onerror = (e) => {
+          if (e.target.error?.name === 'QuotaExceededError') {
+            console.warn('[SkillBridge] Storage quota exceeded — evicting old entries');
+            this._evictOldestEntries();
+            document.dispatchEvent(new CustomEvent('skillbridge:storagequota', { detail: { exceeded: true } }));
+          }
+          resolve();
+        };
+        tx.onabort = () => resolve();
+      } catch (err) {
+        console.warn('[SkillBridge] Cache write failed:', err);
+        resolve();
+      }
+    });
+  }
+
+  /**
+   * Reject obvious garbage before persisting it for 30 days. Covers the
+   * cases we've observed: GT/Gemini returning a partial HTML error page,
+   * untranslated ASCII when a non-Latin target was requested, or a wildly
+   * inflated string that's likely the model echoing the prompt.
+   */
+  _isValidTranslation(translation, original, targetLang) {
+    if (!translation || typeof translation !== 'string') return false;
+    if (translation.length > original.length * 10) return false;
+    // HTML tag at start = error page, not a translation
+    if (/<\s*[a-z!][^>]*>/i.test(translation)) return false;
+    // For non-Latin targets, mostly-ASCII output usually means the model
+    // refused or returned an error string in English.
+    const NON_LATIN = new Set(['ko', 'ja', 'zh-CN', 'zh-TW', 'ru', 'ar', 'hi', 'th', 'he', 'el', 'uk', 'bn']);
+    if (NON_LATIN.has(targetLang) && translation.length > 20) {
+      let nonAscii = 0;
+      for (const ch of translation) {
+        if (ch.codePointAt(0) > 127) nonAscii++;
+      }
+      if (nonAscii / translation.length < 0.05) return false;
+    }
+    return true;
   }
 
   // ==================== GOOGLE TRANSLATE ====================
@@ -403,19 +454,32 @@ class SkilljarTranslator {
       original: text,
       googleTranslation,
       targetLang,
+      _gen: this._langGeneration,
     });
 
-    if (!this._verifyLock) {
-      this._verifyLock = new Promise((resolve) => {
-        setTimeout(() => {
-          this._runVerifyQueue().finally(() => {
-            this._verifyLock = null;
-            resolve();
-          });
-        }, SKILLBRIDGE_DELAYS.VERIFY_QUEUE);
-      });
-    }
+    this._kickVerifyQueue();
     return true;
+  }
+
+  /**
+   * Schedule the verify-queue runner. Re-kicks itself if items arrive during
+   * the brief window between the while loop draining and the lock clearing
+   * (previously these tail items sat un-verified until the next manual
+   * trigger, which on a quiet page is "never").
+   */
+  _kickVerifyQueue() {
+    if (this._verifyLock) return;
+    this._verifyLock = new Promise((resolve) => {
+      setTimeout(() => {
+        this._runVerifyQueue().finally(() => {
+          this._verifyLock = null;
+          resolve();
+          if (this._verifyQueue.length > 0 && this.isReady) {
+            this._kickVerifyQueue();
+          }
+        });
+      }, SKILLBRIDGE_DELAYS.VERIFY_QUEUE);
+    });
   }
 
   async _runVerifyQueue() {
@@ -426,14 +490,22 @@ class SkilljarTranslator {
 
     while (this._verifyQueue.length > 0) {
       const batch = this._verifyQueue.splice(0, SKILLBRIDGE_THRESHOLDS.GEMINI_BATCH_SIZE);
-      await Promise.all(batch.map((item) => this._verifySingle(item)));
+      // Filter stale items (user switched language while we were waiting).
+      const fresh = batch.filter((item) => item._gen === this._langGeneration);
+      if (fresh.length > 0) {
+        await Promise.all(fresh.map((item) => this._verifySingle(item)));
+      }
       if (this._verifyQueue.length > 0) {
         await new Promise((r) => setTimeout(r, SKILLBRIDGE_DELAYS.GEMINI_BATCH));
       }
     }
   }
 
-  async _verifySingle({ original, googleTranslation, targetLang }) {
+  async _verifySingle({ original, googleTranslation, targetLang, _gen }) {
+    // Re-check generation after the await fence — the user can switch
+    // language while we're inside Gemini, and writing the result then would
+    // place stale-language text into a now-current page.
+    if (_gen !== undefined && _gen !== this._langGeneration) return;
     try {
       const langName = this.supportedLanguages[targetLang] || targetLang;
       const prompt = `You are a translation quality reviewer for technical education content (Anthropic AI courses).
@@ -458,6 +530,8 @@ RULES:
         model: SKILLBRIDGE_MODELS.GEMINI,
       });
 
+      // Bridge round-trip can take seconds; re-check before writing result.
+      if (_gen !== undefined && _gen !== this._langGeneration) return;
       if (!result) return;
 
       const trimResult = result.trim();
@@ -651,16 +725,7 @@ User: ${userMessage}`;
         this.isReady = true;
         // Process any pending verify queue now that bridge is ready
         if (this._verifyQueue.length > 0) {
-          if (!this._verifyLock) {
-            this._verifyLock = new Promise((resolve) => {
-              setTimeout(() => {
-                this._runVerifyQueue().finally(() => {
-                  this._verifyLock = null;
-                  resolve();
-                });
-              }, SKILLBRIDGE_DELAYS.BRIDGE_READY_VERIFY);
-            });
-          }
+          this._kickVerifyQueue();
         }
       }
 
@@ -678,16 +743,37 @@ User: ${userMessage}`;
     });
   }
 
+  /**
+   * Inject the page bridge, retrying on transient failure (CDN hiccup,
+   * one-shot CSP transient, network drop). Final timeout/error after the
+   * retry budget is exhausted dispatches `skillbridge:bridgeunavailable`
+   * so the banner UI shows the user what happened.
+   */
+  async _injectPageBridgeWithRetry(maxRetries = 2) {
+    let lastErr;
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        await this._injectPageBridge();
+        return;
+      } catch (err) {
+        lastErr = err;
+        console.warn(`[SkillBridge] Bridge inject attempt ${attempt + 1}/${maxRetries + 1} failed:`, err.message);
+        if (attempt < maxRetries) {
+          await new Promise((r) => setTimeout(r, 500 * Math.pow(2, attempt)));
+        }
+      }
+    }
+    this.bridgeFailed = true;
+    window.dispatchEvent(new CustomEvent('skillbridge:bridgeunavailable'));
+    throw lastErr;
+  }
+
   _injectPageBridge() {
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
-        // Bridge never confirmed ready — keep isReady=false so _sendRequest
-        // fails fast, and notify UI so the user sees an actionable banner
-        // instead of a silent dead tutor.
-        console.warn('[SkillBridge] Bridge ready timeout — AI features disabled');
-        this.bridgeFailed = true;
-        window.dispatchEvent(new CustomEvent('skillbridge:bridgeunavailable'));
-        resolve();
+        // Reject so the retry wrapper can attempt re-injection. The wrapper
+        // dispatches the unavailable banner only after all retries fail.
+        reject(new Error('Bridge ready timeout'));
       }, SKILLBRIDGE_THRESHOLDS.BRIDGE_READY_TIMEOUT);
 
       const onReady = (event) => {

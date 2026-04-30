@@ -900,6 +900,10 @@
 
     if (!opts.skipRestore) restoreOriginal();
     currentLang = newLang;
+    // Invalidate any in-flight verify-queue work targeting the previous lang
+    // so its callbacks don't write stale translations into the now-current
+    // page. Mirrors content.js's gtGeneration counter for the GT pipeline.
+    translator?.bumpLangGeneration?.();
 
     try {
       if (newLang === 'en') {
