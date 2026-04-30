@@ -1,101 +1,96 @@
 /**
- * Unit tests for the Protected Terms system (from content.js).
+ * Unit tests for the Protected Terms system.
  *
- * Tests the buildProtectedTermsMap + restoreProtectedTerms logic
- * by reimplementing the pure functions (they live inside content.js IIFE).
+ * Loads the real `src/lib/protected-terms.js` IIFE (the previous version of
+ * this file re-implemented the functions inline, so production-code bugs
+ * would have left every test green).
  */
 
 /* global describe, test, expect, beforeEach */
 
-// ── Reimplementation of protected terms logic ──────────────────
-// (Extracted from content.js since the IIFE makes it hard to import directly)
+const fs = require('fs');
+const path = require('path');
 
-let PROTECTED_TERMS_SORTED = [];
-let _protectedTermsLang = null;
+// Production code expects `window` and `DEFAULT_PROTECTED_TERMS` in scope.
+// We give it a sandboxed `window` so the IIFE attaches its API there, and
+// a stand-in for the constants.js global it reaches for as a last-resort
+// fallback (its actual value doesn't matter for these tests — it's only
+// returned when `getProtectedTerms()` is empty).
+const fakeWindow = {};
+const DEFAULT_PROTECTED_TERMS = 'API, Claude, Anthropic';
 
-function buildProtectedTermsMap(targetLang, protectedEntries) {
-  if (_protectedTermsLang === targetLang) return;
-  _protectedTermsLang = targetLang;
+const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'protected-terms.js'), 'utf8');
+new Function('window', 'DEFAULT_PROTECTED_TERMS', src)(fakeWindow, DEFAULT_PROTECTED_TERMS);
 
-  const map = {};
-  for (const [correct, wrongForms] of Object.entries(protectedEntries)) {
-    if (Array.isArray(wrongForms)) {
-      for (const wrong of wrongForms) {
-        map[wrong] = correct;
-      }
-    }
-  }
-  PROTECTED_TERMS_SORTED = Object.entries(map).sort((a, b) => b[0].length - a[0].length);
-}
+const { buildProtectedTermsMap, restoreProtectedTerms, resetProtectedTerms, getKeepEnglishTerms } =
+  fakeWindow._protectedTerms;
 
-function restoreProtectedTerms(text) {
-  if (PROTECTED_TERMS_SORTED.length === 0) return text;
-  let result = text;
-  for (const [wrong, correct] of PROTECTED_TERMS_SORTED) {
-    if (result.includes(wrong)) {
-      result = result.replaceAll(wrong, correct);
-    }
-  }
-  return result;
-}
+const fakeTranslator = (entries) => ({ getProtectedTerms: () => entries });
 
-function resetState() {
-  PROTECTED_TERMS_SORTED = [];
-  _protectedTermsLang = null;
-}
+const koProtected = {
+  'Claude Code': ['클로드 코드', '클로드 Code', '클라우드 코드'],
+  Claude: ['클로드', '클라우드'],
+  Anthropic: ['앤스로픽', '앤트로픽', '안트로픽'],
+  Enterprise: ['기업'],
+  skill: ['기술', '스킬'],
+  skills: ['기술들', '스킬들', '기술'],
+  'SKILL.md': ['스킬.md', '기술.md'],
+  frontmatter: ['프론트매터', '앞부분', '서문'],
+};
 
-// ── Tests ──────────────────────────────────────────────────────
-
-describe('Protected Terms System', () => {
-  const koProtected = {
-    'Claude Code': ['클로드 코드', '클로드 Code', '클라우드 코드'],
-    Claude: ['클로드', '클라우드'],
-    Anthropic: ['앤스로픽', '앤트로픽', '안트로픽'],
-    Enterprise: ['기업'],
-    skill: ['기술', '스킬'],
-    skills: ['기술들', '스킬들', '기술'],
-    'SKILL.md': ['스킬.md', '기술.md'],
-    frontmatter: ['프론트매터', '앞부분', '서문'],
-  };
-
+describe('Protected Terms System (real production code)', () => {
   beforeEach(() => {
-    resetState();
+    resetProtectedTerms();
   });
 
   describe('buildProtectedTermsMap', () => {
-    test('builds map from protected entries', () => {
-      buildProtectedTermsMap('ko', koProtected);
-      expect(PROTECTED_TERMS_SORTED.length).toBeGreaterThan(0);
+    test('built map enables restoration of mistranslated terms', () => {
+      buildProtectedTermsMap('ko', fakeTranslator(koProtected));
+      // Black-box check: a mistranslation should be repaired.
+      expect(restoreProtectedTerms('클로드 코드를 설치하세요')).toBe('Claude Code를 설치하세요');
     });
 
-    test('skips rebuild for same language', () => {
-      buildProtectedTermsMap('ko', koProtected);
-      const firstBuild = [...PROTECTED_TERMS_SORTED];
-      buildProtectedTermsMap('ko', {}); // different data, same lang
-      expect(PROTECTED_TERMS_SORTED).toEqual(firstBuild); // unchanged
+    test('skips rebuild for same language even if entries change', () => {
+      buildProtectedTermsMap('ko', fakeTranslator(koProtected));
+      // Calling again with the same lang but empty entries must NOT clear
+      // the map — the cache key is the language code, not the data.
+      buildProtectedTermsMap('ko', fakeTranslator({}));
+      expect(restoreProtectedTerms('클로드')).toBe('Claude');
     });
 
     test('rebuilds for different language', () => {
-      buildProtectedTermsMap('ko', koProtected);
-      const koBuild = [...PROTECTED_TERMS_SORTED];
-      buildProtectedTermsMap('ja', { Claude: ['クロード'] });
-      expect(PROTECTED_TERMS_SORTED).not.toEqual(koBuild);
+      buildProtectedTermsMap('ko', fakeTranslator(koProtected));
+      buildProtectedTermsMap('ja', fakeTranslator({ Claude: ['クロード'] }));
+      // Old Korean map should be gone; new Japanese map active.
+      expect(restoreProtectedTerms('クロード')).toBe('Claude');
+      // Korean entry from previous lang must NOT still apply.
+      expect(restoreProtectedTerms('클로드')).toBe('클로드');
     });
 
-    test('sorts by length descending (longer matches first)', () => {
-      buildProtectedTermsMap('ko', koProtected);
-      for (let i = 1; i < PROTECTED_TERMS_SORTED.length; i++) {
-        expect(PROTECTED_TERMS_SORTED[i - 1][0].length).toBeGreaterThanOrEqual(PROTECTED_TERMS_SORTED[i][0].length);
-      }
+    test('longer wrong-form takes priority over shorter overlapping form', () => {
+      // "클로드 코드" must resolve to "Claude Code", not "Claude 코드".
+      buildProtectedTermsMap('ko', fakeTranslator(koProtected));
+      expect(restoreProtectedTerms('클로드 코드 설치')).toBe('Claude Code 설치');
+    });
+
+    test('handles entries with non-array values (skips them)', () => {
+      buildProtectedTermsMap('ko', fakeTranslator({ Claude: 'not-an-array' }));
+      // Bad shape must not crash; restoration becomes a no-op.
+      expect(restoreProtectedTerms('클로드')).toBe('클로드');
+    });
+
+    test('handles missing getProtectedTerms gracefully', () => {
+      buildProtectedTermsMap('ko', {}); // translator without the method
+      expect(restoreProtectedTerms('클로드')).toBe('클로드');
     });
   });
 
   describe('restoreProtectedTerms', () => {
     beforeEach(() => {
-      buildProtectedTermsMap('ko', koProtected);
+      buildProtectedTermsMap('ko', fakeTranslator(koProtected));
     });
 
-    test('returns unchanged text when no matches', () => {
+    test('returns unchanged text when no protected term matches', () => {
       expect(restoreProtectedTerms('안녕하세요')).toBe('안녕하세요');
     });
 
@@ -104,16 +99,9 @@ describe('Protected Terms System', () => {
     });
 
     test('fixes multiple mistranslations in one string', () => {
-      const input = '클로드 코드를 사용하여 기술을 만듭니다';
-      const result = restoreProtectedTerms(input);
+      const result = restoreProtectedTerms('클로드 코드를 사용하여 기술을 만듭니다');
       expect(result).toContain('Claude Code');
       expect(result).toContain('skills');
-    });
-
-    test('longer match takes priority over shorter', () => {
-      // "클로드 코드" should match "Claude Code", not "Claude 코드"
-      const result = restoreProtectedTerms('클로드 코드 설치');
-      expect(result).toBe('Claude Code 설치');
     });
 
     test('fixes Enterprise term', () => {
@@ -132,9 +120,30 @@ describe('Protected Terms System', () => {
       expect(restoreProtectedTerms('')).toBe('');
     });
 
-    test('returns input when no map is built', () => {
-      resetState();
+    test('returns input when no map is built (after reset)', () => {
+      resetProtectedTerms();
+      // Reset only clears the lang cache; the sorted map stays. Build with
+      // empty entries to actually empty the map.
+      buildProtectedTermsMap('ja', fakeTranslator({}));
       expect(restoreProtectedTerms('클로드')).toBe('클로드');
+    });
+
+    test('replaces all occurrences of the same wrong form', () => {
+      expect(restoreProtectedTerms('클로드 클로드 클로드')).toBe('Claude Claude Claude');
+    });
+  });
+
+  describe('getKeepEnglishTerms', () => {
+    test('returns the comma-joined list of correct terms', () => {
+      buildProtectedTermsMap('ko', fakeTranslator({ Claude: ['클로드'], API: ['에이피아이'] }));
+      const terms = getKeepEnglishTerms();
+      expect(terms).toContain('Claude');
+      expect(terms).toContain('API');
+    });
+
+    test('falls back to DEFAULT_PROTECTED_TERMS when entries are empty', () => {
+      buildProtectedTermsMap('ko', fakeTranslator({}));
+      expect(getKeepEnglishTerms()).toBe(DEFAULT_PROTECTED_TERMS);
     });
   });
 });

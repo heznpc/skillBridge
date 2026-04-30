@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.8] - 2026-04-30
+
+### Fixed
+- `fetchWithRetry` no longer retries 4xx client errors. The comment said "Don't retry client errors (4xx) except 429" but the throw on a 4xx was caught by the same `try/catch` and the loop kept going for the full retry budget. So a single 400/403/404 caused 4 calls to GT/GitHub — exactly the abusive pattern the comment claimed we avoided. The throw now escapes the function on the first attempt; only 429s and network errors retry.
+- Streaming-chat fallback model in `page-bridge.js` was `gpt-4o-mini`, which is wrong-brand for a Claude-focused extension if `data.model` is ever missing. Switched to `claude-haiku-4-5` (cheap, fast, correct brand).
+
+### Changed (test integrity — found by audit, not user-visible behavior change)
+- `tests/protected-terms.test.js` (14 tests): rewritten from a parallel re-implementation of the production functions into an actual loader of `src/lib/protected-terms.js`. Previously, the tests would all stay green even if production was completely broken. Now the IIFE is sourced via `new Function` (same pattern as `tests/selectors.test.js`) and tests exercise the real `window._protectedTerms` API.
+- `tests/content-helpers.test.js`: `escapeHtml` now loaded from `src/lib/gemini-block.js` instead of being re-defined inline. Removed 9 tautological tests (`t()` reimplementation, offline-queue cap, Map size cap, storage-quota eviction) — they all asserted on test-local logic, not production code paths. The exam/cert URL pattern tests stay (they already operated on the real constants), plus a new false-positive guard for prefix-only matches like `/quizlet`.
+- `tests/background.test.js`: the "does not retry on 4xx" test was asserting `toHaveBeenCalledTimes(4)` and the comment admitted this codified the bug. Now asserts `toHaveBeenCalledTimes(1)` and is paired with new tests for 403 and 404 to guard the contract.
+
 ## [3.5.7] - 2026-04-27
 
 ### Fixed
