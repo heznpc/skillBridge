@@ -24,10 +24,13 @@ export default [
         requestIdleCallback: 'readonly',
         console: 'readonly',
         confirm: 'readonly',
+        alert: 'readonly',
         Node: 'readonly',
         NodeFilter: 'readonly',
         DOMParser: 'readonly',
+        DOMException: 'readonly',
         MutationObserver: 'readonly',
+        AbortController: 'readonly',
         CustomEvent: 'readonly',
         URL: 'readonly',
         // Chrome extension APIs

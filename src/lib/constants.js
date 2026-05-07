@@ -1032,6 +1032,19 @@ const PDF_EXPORT_LABELS = {
     ru: 'Экспортировать урок в PDF',
     vi: 'Xuất bài học dưới dạng PDF',
   },
+  blocked: {
+    en: 'PDF export was blocked by your browser. Allow popups for this site and try again.',
+    ko: 'PDF 내보내기가 브라우저에 의해 차단되었습니다. 이 사이트의 팝업을 허용하고 다시 시도하세요.',
+    ja: 'PDFエクスポートがブラウザによってブロックされました。このサイトのポップアップを許可して再試行してください。',
+    'zh-CN': '浏览器已阻止 PDF 导出。请允许此网站的弹出窗口，然后重试。',
+    'zh-TW': '瀏覽器已封鎖 PDF 匯出。請允許此網站的彈出視窗後再試一次。',
+    es: 'El navegador bloqueó la exportación de PDF. Permite las ventanas emergentes para este sitio e inténtalo de nuevo.',
+    fr: "Le navigateur a bloqué l'export PDF. Autorisez les pop-ups pour ce site et réessayez.",
+    de: 'Der PDF-Export wurde vom Browser blockiert. Erlauben Sie Pop-ups für diese Seite und versuchen Sie es erneut.',
+    'pt-BR': 'A exportação de PDF foi bloqueada pelo navegador. Permita pop-ups para este site e tente novamente.',
+    ru: 'Браузер заблокировал экспорт PDF. Разрешите всплывающие окна для этого сайта и повторите попытку.',
+    vi: 'Trình duyệt đã chặn xuất PDF. Cho phép cửa sổ bật lên cho trang này và thử lại.',
+  },
 };
 
 const TERM_PREVIEW_LABELS = {
