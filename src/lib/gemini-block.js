@@ -99,7 +99,10 @@
    * @returns {string}
    */
   function escapeHtml(text) {
-    return text
+    // Coerce non-strings (null/undefined/numbers from out-of-tree callers
+    // like flashcard / chapter title fields). The previous version threw
+    // TypeError on `null.replace`.
+    return String(text ?? '')
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
@@ -133,6 +136,27 @@
     // keeping only SAFE_TAGS and stripping dangerous attributes
     const doc = new DOMParser().parseFromString(rawHtml, 'text/html');
 
+    // Per-tag attribute allowlist. The previous version copied any attr
+    // that wasn't `on*` / `style` / unsafe `href` — that left
+    // `target="_blank"` (reverse tabnabbing), `formaction`, `srcset`,
+    // `srcdoc`, `is="x-element"` etc. open. Restrict to the specific
+    // attrs that are actually meaningful on inline tags.
+    const TAG_ATTR_ALLOWLIST = {
+      a: new Set(['href', 'title', 'lang', 'target']),
+      abbr: new Set(['title', 'lang']),
+      time: new Set(['datetime', 'lang']),
+      code: new Set(['class', 'lang']),
+      pre: new Set(['class', 'lang']),
+      samp: new Set(['lang']),
+      kbd: new Set(['lang']),
+      var: new Set(['lang']),
+      mark: new Set(['lang']),
+      span: new Set(['class', 'lang', 'title']),
+    };
+    // Default allowlist for any other SAFE_TAG we didn't enumerate
+    // (b, em, i, q, s, small, strong, sub, sup, u, br, wbr, ...).
+    const DEFAULT_ALLOWED_ATTRS = new Set(['lang', 'title']);
+
     function sanitizeNode(node) {
       const fragment = document.createDocumentFragment();
       for (const child of Array.from(node.childNodes)) {
@@ -140,12 +164,12 @@
           fragment.appendChild(document.createTextNode(child.textContent));
         } else if (child.nodeType === Node.ELEMENT_NODE) {
           if (SAFE_TAGS.has(child.tagName.toLowerCase())) {
-            const clean = document.createElement(child.tagName.toLowerCase());
-            // Copy only safe attributes — allowlist approach
+            const tagName = child.tagName.toLowerCase();
+            const clean = document.createElement(tagName);
+            const allowed = TAG_ATTR_ALLOWLIST[tagName] || DEFAULT_ALLOWED_ATTRS;
             for (const attr of Array.from(child.attributes)) {
               const name = attr.name.toLowerCase();
-              if (name.startsWith('on')) continue; // event handlers
-              if (name === 'style') continue; // CSS injection
+              if (!allowed.has(name)) continue;
               if (name === 'href') {
                 // Parse against the document base so we can judge the resolved
                 // protocol. Pure-fragment hrefs ("#section") stay as-is.
@@ -158,13 +182,18 @@
                 try {
                   parsed = new URL(raw, document.baseURI);
                 } catch {
-                  continue; // unparseable — drop
+                  continue;
                 }
                 if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') continue;
                 clean.setAttribute('href', parsed.href);
                 continue;
               }
               clean.setAttribute(attr.name, attr.value);
+            }
+            // Force noopener/noreferrer on `target="_blank"` to prevent
+            // reverse tabnabbing if Gemini ever injects an external link.
+            if (tagName === 'a' && clean.getAttribute('target') === '_blank') {
+              clean.setAttribute('rel', 'noopener noreferrer');
             }
             clean.appendChild(sanitizeNode(child));
             fragment.appendChild(clean);
@@ -192,6 +221,12 @@
    * @returns {void}
    */
   function queueGeminiBlockTranslation(el, targetLang, deps) {
+    // Dedup: MutationObserver-driven SPA navs can re-fire for the same
+    // element while a previous Gemini call is still in flight. Without
+    // this guard we double-spend Gemini quota and race two innerHTML
+    // writes with stale tagInfo on the second response.
+    if (el.classList.contains('si18n-verifying')) return;
+
     const { translator, originalTexts, isLikelyEnglish } = deps;
     const { xml, tagInfo } = buildXmlForGemini(el);
     const pureText = el.textContent.trim();
@@ -227,7 +262,15 @@ RULES:
       .then((result) => {
         if (!result) return;
         const trimmed = result.trim();
-        if (trimmed.length > xml.length * 3 || trimmed.includes('SOURCE') || trimmed.includes('RULES:')) return;
+        if (trimmed.length > xml.length * 3) return;
+        if (trimmed.includes('SOURCE') || trimmed.includes('RULES:')) return;
+        // If the original element contained inline <xN>/<cN> tags, the
+        // model's reply must too — otherwise it's a refusal/echo and
+        // we'd render an English error string mid-page. The simple
+        // includes() check below misses Gemini's "I cannot..." style
+        // refusals because those omit our marker tokens.
+        const hadTags = Object.keys(tagInfo).length > 0;
+        if (hadTags && !/<[xc]\d/.test(trimmed)) return;
 
         if (el?.parentNode) {
           try {

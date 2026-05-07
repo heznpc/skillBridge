@@ -55,6 +55,21 @@ describe('escapeHtml (production)', () => {
       '&lt;a href=&quot;test&quot;&gt;it&#39;s &amp; more&lt;/a&gt;',
     );
   });
+
+  // v3.5.11: out-of-tree callers (flashcard / chapter title) can pass
+  // null / undefined; the previous version threw `TypeError: Cannot
+  // read properties of null (reading 'replace')`.
+  test('coerces null to empty string', () => {
+    expect(escapeHtml(null)).toBe('');
+  });
+
+  test('coerces undefined to empty string', () => {
+    expect(escapeHtml(undefined)).toBe('');
+  });
+
+  test('coerces numbers to their string form', () => {
+    expect(escapeHtml(42)).toBe('42');
+  });
 });
 
 describe('exam / cert URL patterns (production)', () => {
