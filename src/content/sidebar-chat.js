@@ -19,6 +19,17 @@
   let isSending = false;
   let _rawSectionsCache = null; // Cached raw JSON for section-specific flashcards
   let _rawSectionsLang = null; // Language of the cached data
+  // Tracks the currently-streaming chat so we can cancel it on sidebar
+  // close / sub-panel switch / SPA route change. Without this the message
+  // handler stays live and writes chunks into a DOM node we've already
+  // replaced.
+  let _activeStreamController = null;
+
+  function cancelActiveStream() {
+    if (!_activeStreamController) return;
+    _activeStreamController.abort();
+    _activeStreamController = null;
+  }
 
   // ============================================================
   // FLOATING BUTTON
@@ -276,6 +287,12 @@
     const sendBtn = document.getElementById('si18n-chat-send');
     if (sendBtn) sendBtn.disabled = true;
 
+    // Cancel any in-flight stream first; user pressing send while one is
+    // already running should replace it, not race with it.
+    cancelActiveStream();
+    _activeStreamController = new AbortController();
+    const signal = _activeStreamController.signal;
+
     try {
       let started = false;
       let lastStreamedText = '';
@@ -284,6 +301,7 @@
         sb.currentLang,
         context,
         (chunk, fullText) => {
+          if (signal.aborted) return; // user cancelled mid-stream
           lastStreamedText = fullText;
           if (!started) {
             started = true;
@@ -297,15 +315,21 @@
             scrollToBottom(messages);
           }
         },
-        { isExamPage: sb.isExamPage },
+        { isExamPage: sb.isExamPage, signal },
       );
 
-      if (bubble) {
+      if (bubble && !signal.aborted) {
         bubble.classList.remove('si18n-streaming-cursor');
         const answerText = lastStreamedText?.trim() || bubble.textContent?.trim() || '';
         if (answerText) saveConversation(text, answerText, sb.currentLang);
       }
-    } catch (_err) {
+    } catch (err) {
+      // AbortError is expected when the user navigates away mid-stream.
+      // Don't render an error bubble or leave the spinner on.
+      if (err?.name === 'AbortError') {
+        if (bubble) bubble.classList.remove('si18n-streaming-cursor');
+        return;
+      }
       if (bubble) {
         bubble.classList.remove('si18n-streaming-cursor');
         bubble.setAttribute('role', 'alert');
@@ -441,7 +465,9 @@
       'id',
       'data-id',
       'data-question',
-      'style',
+      // `style` was previously allowed but enables CSS exfil
+      // (`background:url(attacker)`) and clickjack overlays via attacker-
+      // influenced content. Use class-based styling instead.
       'title',
       'aria-label',
       'role',
@@ -505,6 +531,13 @@
       };
       req.onsuccess = (e) => {
         historyDb = e.target.result;
+        // If another tab (or a future extension update) bumps the schema,
+        // close this connection so it doesn't block the upgrade. Without
+        // this, every subsequent transaction() throws InvalidStateError.
+        historyDb.onversionchange = () => {
+          historyDb.close();
+          historyDb = null;
+        };
         resolve(historyDb);
       };
       req.onerror = () => reject(req.error);
@@ -525,10 +558,20 @@
       };
       const ok = await _addHistoryEntry(db, entry);
       if (!ok) {
-        // First add hit the IDB quota — prune oldest 20 then retry once
-        // (without retry the conversation just gets dropped silently).
-        await pruneOldHistory(db);
-        await _addHistoryEntry(db, entry);
+        // First add hit the IDB quota — prune oldest 20 then retry once.
+        // If the prune freed less than expected (some deletes silently
+        // failed under the cursor) the retry can still fail; we then
+        // double the prune count once before giving up. Two-shot retry
+        // is bounded so a sticky quota can't infinite-loop.
+        const pruned = await pruneOldHistory(db, 20);
+        let okAfterPrune = await _addHistoryEntry(db, entry);
+        if (!okAfterPrune && pruned > 0) {
+          await pruneOldHistory(db, 40);
+          okAfterPrune = await _addHistoryEntry(db, entry);
+        }
+        if (!okAfterPrune) {
+          console.warn('[SkillBridge] Chat history save failed after prune+retry — quota may be stuck');
+        }
       }
     } catch (e) {
       console.warn('[SkillBridge] Failed to save conversation:', e);
@@ -552,7 +595,7 @@
     });
   }
 
-  function pruneOldHistory(db) {
+  function pruneOldHistory(db, target = 20) {
     return new Promise((resolve) => {
       const tx = db.transaction(HISTORY_STORE, 'readwrite');
       const store = tx.objectStore(HISTORY_STORE);
@@ -561,17 +604,24 @@
       let deleted = 0;
       req.onsuccess = (e) => {
         const cursor = e.target.result;
-        if (cursor && deleted < 20) {
-          cursor.delete();
-          deleted++;
+        if (cursor && deleted < target) {
+          // Track per-delete failures — without this the count claims
+          // success even when the runtime silently aborted some deletes.
+          const delReq = cursor.delete();
+          delReq.onsuccess = () => {
+            deleted++;
+          };
+          delReq.onerror = () => {
+            console.warn('[SkillBridge] history prune: delete failed at cursor', cursor.primaryKey);
+          };
           cursor.continue();
         }
       };
-      // Resolve when the whole transaction commits, so the caller's retry
-      // sees the freed space.
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => resolve();
-      tx.onabort = () => resolve();
+      // Resolve with the actually-deleted count when the whole transaction
+      // commits (or fails), so the caller knows whether to escalate.
+      tx.oncomplete = () => resolve(deleted);
+      tx.onerror = () => resolve(deleted);
+      tx.onabort = () => resolve(deleted);
     });
   }
 
@@ -651,6 +701,9 @@
   function closeSubPanel() {
     const chatPanel = document.getElementById('si18n-panel-chat');
     if (!chatPanel || !savedChatHTML) return;
+    // The chat bubble that was streaming is about to be replaced — abort
+    // the stream so its onChunk callback doesn't write into a detached node.
+    cancelActiveStream();
     chatPanel.innerHTML = savedChatHTML;
     savedChatHTML = null;
     historyPanelOpen = false;
@@ -754,6 +807,10 @@
     const sidebar = document.getElementById('skillbridge-sidebar');
     const fab = document.getElementById('skillbridge-fab');
     sb.sidebarVisible = !sb.sidebarVisible;
+    // If we're closing, cancel any in-flight chat — the user clearly
+    // doesn't want the answer anymore and we shouldn't keep saving
+    // partial responses to history.
+    if (!sb.sidebarVisible) cancelActiveStream();
     if (sidebar) sidebar.classList.toggle('open', sb.sidebarVisible);
     if (fab) fab.classList.toggle('hidden', sb.sidebarVisible);
 
@@ -1032,9 +1089,14 @@
     return `fc_${slug}_${sb.currentLang}`;
   }
 
+  // Serialize flashcard writes through a single promise chain. chrome.storage
+  // .set is async with no ordering guarantee across in-flight calls, so
+  // rapid box-up/box-down clicks could interleave and resurrect cleared
+  // boxes. The chain forces last-clicked-wins semantics.
+  let _flashcardSaveQueue = Promise.resolve();
+
   function saveFlashcardProgress() {
     const key = _flashcardStorageKey();
-    // Use card english text as stable key (array index can shift between loads)
     const stableBoxes = {};
     for (const [idx, box] of Object.entries(flashcardBoxes)) {
       const card = flashcardCards[idx];
@@ -1042,7 +1104,9 @@
     }
     const data = {};
     data[key] = { boxes: stableBoxes, index: flashcardIndex };
-    chrome.storage.local.set(data);
+    _flashcardSaveQueue = _flashcardSaveQueue
+      .catch(() => {}) // a prior failure shouldn't block the next write
+      .then(() => new Promise((resolve) => chrome.storage.local.set(data, resolve)));
   }
 
   function loadFlashcardProgress() {
@@ -1080,7 +1144,38 @@
     const langName = sb.translator?.supportedLanguages?.[sb.currentLang] || sb.currentLang;
 
     const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
+    if (!printWindow) {
+      // Popup blocker rejected the open. Without a signal the user thinks
+      // the button did nothing. alert() is intentionally used over a
+      // banner here — the failure is rare and the recovery (allow popups)
+      // requires user attention, not a passive notification.
+      alert(sb.t(PDF_EXPORT_LABELS.blocked));
+      return;
+    }
+
+    // Sanitize the lesson body BEFORE injecting it into the new window.
+    // The previous version wrote `lessonContent.innerHTML` directly, then
+    // tried to remove `<script>`/`<iframe>` after `document.close()` — by
+    // which point inline scripts had already executed. Sanitize the
+    // cloned DOM tree first; serialize the cleaned tree into the new doc.
+    const lessonClone = lessonContent.cloneNode(true);
+    const DANGEROUS_TAGS = 'script, iframe, object, embed, link[rel="import"], style';
+    lessonClone.querySelectorAll(DANGEROUS_TAGS).forEach((el) => el.remove());
+    // Strip the extension's own UI elements that may be inside the lesson.
+    lessonClone
+      .querySelectorAll('[class*="si18n"], [id*="si18n"], [class*="skillbridge"]')
+      .forEach((el) => el.remove());
+    // Strip inline event handlers (onclick, onload, …) that survived as
+    // attributes; cloneNode preserves them.
+    lessonClone.querySelectorAll('*').forEach((el) => {
+      for (const attr of [...el.attributes]) {
+        if (attr.name.toLowerCase().startsWith('on')) el.removeAttribute(attr.name);
+        // Reject javascript: URLs.
+        if ((attr.name === 'href' || attr.name === 'src') && /^\s*javascript:/i.test(attr.value)) {
+          el.removeAttribute(attr.name);
+        }
+      }
+    });
 
     printWindow.document.write(`<!DOCTYPE html>
 <html>
@@ -1103,18 +1198,18 @@
 <body>
   <h1>${sb.escapeHtml(title)}</h1>
   <div class="si18n-pdf-meta">SkillBridge · ${sb.escapeHtml(langName)} · ${new Date().toLocaleDateString()}</div>
-  ${lessonContent.innerHTML}
+  ${lessonClone.innerHTML}
 </body>
 </html>`);
     printWindow.document.close();
 
-    // Remove extension UI elements from the print copy
-    printWindow.document
-      .querySelectorAll('[class*="si18n"], [id*="si18n"], [class*="skillbridge"], script, iframe')
-      .forEach((el) => el.remove());
-
     setTimeout(() => {
-      printWindow.print();
+      // The user may have closed the popup before the timer fires.
+      try {
+        if (!printWindow.closed) printWindow.print();
+      } catch (_e) {
+        /* window already closed — nothing to do */
+      }
     }, 500);
   }
 
@@ -1125,4 +1220,5 @@
   sb.updateLocalizedLabels = updateLocalizedLabels;
   sb.formatResponse = formatResponse;
   sb.toggleFlashcardPanel = toggleFlashcardPanel;
+  sb.cancelActiveStream = cancelActiveStream;
 })();
