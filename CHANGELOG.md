@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.11] - 2026-05-07
+
+### Security / Hardening
+- `gemini-block.js` sanitizer switched from open-by-default attribute filtering to a per-tag allowlist. The previous version stripped only `on*`, `style`, and unsafe `href`s — every other attribute was copied verbatim onto safe inline tags. That left `target="_blank"` (reverse tabnabbing), `formaction`, `srcset`, `srcdoc`, `is="x-element"`, and similar carry-overs open. New allowlist enumerates the actually-meaningful attrs per tag (`href`/`title`/`lang`/`target` on `<a>`, `datetime` on `<time>`, etc.); everything else falls through to a tiny default set (`title`, `lang`). Also force `rel="noopener noreferrer"` on any `<a target="_blank">` produced by the translator.
+- `code-comments.js` now escapes Google Translate output before splicing it back into `el.innerHTML`. GT doesn't normally return raw HTML, but a jailbroken / MITM'd / proxied response could — and we'd `innerHTML` it. Escaping also correctly normalizes legitimate `&` / `<` characters in translations (e.g., "AT&T").
+
+### Fixed
+- `escapeHtml` no longer throws `TypeError: Cannot read properties of null` when called with a non-string. Out-of-tree callers in `sidebar-chat.js` (flashcard `card.en`, history `chapter` titles) can pass null/undefined; the helper now coerces via `String(text ?? '')`.
+- `queueGeminiBlockTranslation` deduplicates concurrent calls. MutationObserver-driven SPA navs could re-fire for the same element while a previous Gemini call was in flight, double-spending Gemini quota and racing two `innerHTML` writes with stale `tagInfo`. Early-returns now if `si18n-verifying` is already set.
+- Tighter Gemini bad-output detection. The previous `result.includes('SOURCE') || 'RULES:'` check missed Gemini refusals that omit those marker tokens (e.g., "I cannot translate this content"), letting the English error string render mid-page. Added: when the original element had `<xN>`/`<cN>` placeholder tags, the response must too — otherwise bail.
+
+### Added (test lock-in)
+- `tests/content-helpers.test.js` (+3 tests): `escapeHtml` null/undefined/number coercion.
+
 ## [3.5.10] - 2026-05-07
 
 ### Fixed
