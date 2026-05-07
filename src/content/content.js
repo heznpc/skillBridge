@@ -1140,6 +1140,11 @@
     if (href === _lastHref) return;
     _lastHref = href;
 
+    // Abort any in-flight tutor stream — its target lesson context is now
+    // stale, and onChunk would write into a chat bubble for a page the
+    // user has already left.
+    window._sb.cancelActiveStream?.();
+
     // If user navigated to a certification exam page, tear down
     if (CERT_DISABLE_PATTERNS.some((p) => p.test(href))) {
       domObserver?.disconnect();

@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.9] - 2026-05-07
+
+### Fixed
+- **PDF export was vulnerable to lesson-content XSS.** `exportLessonPDF` wrote `lessonContent.innerHTML` straight into a new window via `document.write`, then tried to remove `<script>`/`<iframe>` tags — but cleanup ran after `document.close()`, so inline scripts had already executed in the new about:blank context. Skilljar lessons are third-party content. Now clones the lesson DOM, strips `<script>`, `<iframe>`, `<object>`, `<embed>`, `<style>`, `<link rel="import">`, all `on*` event-handler attributes, and `javascript:` URLs *before* serializing into the new window.
+- Tutor chat streams are now cancellable. Previously the stream's message handler stayed live for up to 60 s after the user closed the sidebar / switched sub-panel / SPA-navigated, writing chunks into a detached DOM bubble and saving abandoned conversations to history. `chatStream` now accepts an `AbortSignal`; sidebar-chat aborts on close, sub-panel switch, and starts a fresh stream when the user re-sends. content.js calls `cancelActiveStream` from `onRouteChange`.
+- `historyDb` connection now closes on `versionchange`. Without the handler, an extension auto-update or a parallel tab schema bump would block the upgrade indefinitely and every subsequent transaction would throw `InvalidStateError`.
+- Chat-history quota recovery now bounded-retries with cursor-error tracking. The previous prune was a "best-effort" cursor that ignored per-delete failures and reported success even when no space was actually freed; one retry then failed permanently and the conversation was dropped silently. New version returns the actually-deleted count, retries with double the prune target if the first attempt didn't free enough, and gives up after two attempts to prevent infinite loops on a sticky quota.
+- Flashcard progress writes are now serialized through a single promise chain. `chrome.storage.local.set` is async with no ordering guarantee, so rapid box-up/box-down clicks could interleave and resurrect already-cleared boxes.
+- PDF export popup-blocker rejection now surfaces a localized alert instead of failing silently. Also guards `printWindow.print()` against the user closing the popup before the 500 ms timer fires.
+- Removed `style` from `sanitizeHtml`'s allowed attribute set. No internal template required it; allowing it created a sharp edge for future rendering paths (CSS exfil, clickjack overlays).
+
 ## [3.5.8] - 2026-04-30
 
 ### Fixed
