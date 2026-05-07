@@ -229,4 +229,58 @@ describe('Language JSON files', () => {
       });
     });
   }
+
+  // ── _isValidTranslation (cache-poisoning guard, added in v3.5.7) ──
+  // Lock in the exact rejection rules so a future tweak to the regex /
+  // ratio doesn't silently let garbage back into the 30-day IDB cache.
+  describe('_isValidTranslation', () => {
+    let t;
+    beforeEach(() => {
+      t = new SkilljarTranslator();
+    });
+
+    test('rejects null / non-string', () => {
+      expect(t._isValidTranslation(null, 'hello', 'ko')).toBe(false);
+      expect(t._isValidTranslation(undefined, 'hello', 'ko')).toBe(false);
+      expect(t._isValidTranslation(42, 'hello', 'ko')).toBe(false);
+    });
+
+    test('rejects HTML-shaped strings (proxy / error pages)', () => {
+      expect(t._isValidTranslation('<html><body>Error</body></html>', 'hello', 'ko')).toBe(false);
+      expect(t._isValidTranslation('<!DOCTYPE html><p>Forbidden</p>', 'hello', 'ko')).toBe(false);
+      expect(t._isValidTranslation('  <div>ratelimited</div>', 'hi', 'ko')).toBe(false);
+    });
+
+    test('rejects translations more than 10× the original length', () => {
+      const original = 'hi';
+      const huge = 'a'.repeat(original.length * 10 + 1);
+      expect(t._isValidTranslation(huge, original, 'ko')).toBe(false);
+    });
+
+    test('accepts plausible non-Latin translations', () => {
+      expect(t._isValidTranslation('안녕하세요 클로드입니다', 'Hello, I am Claude', 'ko')).toBe(true);
+      expect(t._isValidTranslation('こんにちは、クロードです', 'Hello, I am Claude', 'ja')).toBe(true);
+      expect(t._isValidTranslation('你好，我是克劳德', 'Hello, I am Claude', 'zh-CN')).toBe(true);
+    });
+
+    test('rejects mostly-ASCII output for non-Latin target (refusal/error string)', () => {
+      // Long enough to trip the non-Latin guard, but contains <5% non-ASCII.
+      const refusal = 'I cannot translate this content. Please contact support.';
+      expect(t._isValidTranslation(refusal, 'hello world', 'ko')).toBe(false);
+      expect(t._isValidTranslation(refusal, 'hello world', 'ja')).toBe(false);
+      expect(t._isValidTranslation(refusal, 'hello world', 'ru')).toBe(false);
+    });
+
+    test('does not apply non-Latin guard to short strings', () => {
+      // Short (≤20 chars) — Latin-script proper nouns or codes are fine.
+      expect(t._isValidTranslation('Claude', 'Claude', 'ko')).toBe(true);
+      expect(t._isValidTranslation('OK', 'OK', 'ja')).toBe(true);
+    });
+
+    test('does not apply non-Latin guard to Latin-script targets', () => {
+      // English source → English/French/Spanish output is mostly-ASCII; that's correct.
+      expect(t._isValidTranslation('Hola, soy Claude', 'Hello, I am Claude', 'es')).toBe(true);
+      expect(t._isValidTranslation('Bonjour, je suis Claude', 'Hello, I am Claude', 'fr')).toBe(true);
+    });
+  });
 });
