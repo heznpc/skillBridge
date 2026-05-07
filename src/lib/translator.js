@@ -652,6 +652,14 @@ User: ${userMessage}`;
         const id = crypto.randomUUID();
         let fullText = '';
 
+        // Honor an AbortSignal so callers can cancel the stream when the
+        // user navigates away / closes the sidebar / switches sub-panels.
+        // Without this the message handler stayed live for up to 60s and
+        // wrote chunks into orphaned DOM nodes (and saved abandoned chats).
+        if (opts.signal?.aborted) {
+          return reject(new DOMException('Aborted', 'AbortError'));
+        }
+
         const timeout = setTimeout(() => {
           cleanup();
           reject(new Error('Stream timed out'));
@@ -680,11 +688,18 @@ User: ${userMessage}`;
           }
         };
 
+        const onAbort = () => {
+          cleanup();
+          reject(new DOMException('Aborted', 'AbortError'));
+        };
+
         const cleanup = () => {
           clearTimeout(timeout);
           window.removeEventListener('message', handler);
+          opts.signal?.removeEventListener('abort', onAbort);
         };
 
+        if (opts.signal) opts.signal.addEventListener('abort', onAbort, { once: true });
         window.addEventListener('message', handler);
 
         window.postMessage(
