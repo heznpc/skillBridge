@@ -26,6 +26,10 @@ class YouTubeSubtitleManager {
     this._domObserver = null;
     /** @type {((event: MessageEvent) => void)|null} */
     this._messageHandler = null;
+    /** @type {Set<number>} per-iframe load + caption timers (cleared on
+     *  destroy and on setLanguage so rapid toggles don't pile up stale
+     *  postMessages and so timers don't fire after teardown). */
+    this._pendingTimers = new Set();
   }
 
   /** Discover existing iframes, start DOM observer, and begin listening for player events. @returns {Promise<void>} */
@@ -50,6 +54,10 @@ class YouTubeSubtitleManager {
 
   /** @param {string} newLang — ISO 639-1 code to switch subtitles to */
   setLanguage(newLang) {
+    // Cancel pending per-iframe timers from the previous language. Without
+    // this, a rapid toggle leaves old chains running for up to 3 seconds
+    // and they postMessage with the now-outdated targetLang.
+    this._clearPendingTimers();
     this.targetLang = newLang;
     for (const iframe of this._iframes) {
       this._enableAutoSubtitles(iframe);
@@ -70,7 +78,22 @@ class YouTubeSubtitleManager {
       for (const timer of this._retryTimers) clearTimeout(timer);
       this._retryTimers = null;
     }
+    this._clearPendingTimers();
     this._iframes.clear();
+  }
+
+  _clearPendingTimers() {
+    for (const id of this._pendingTimers) clearTimeout(id);
+    this._pendingTimers.clear();
+  }
+
+  _trackTimer(fn, delay) {
+    const id = setTimeout(() => {
+      this._pendingTimers.delete(id);
+      fn();
+    }, delay);
+    this._pendingTimers.add(id);
+    return id;
   }
 
   // ==================== IFRAME DISCOVERY ====================
@@ -211,15 +234,18 @@ class YouTubeSubtitleManager {
       if (iframe.src !== newSrc) {
         iframe.src = newSrc;
 
-        // Register + send commands with retries after load (reduced from 5 to 3)
+        // Register + send commands with retries after load. Timer ids
+        // are tracked so destroy()/setLanguage() can cancel them; the
+        // previous version leaked them and their callbacks fired (then
+        // early-returned) for up to 3 seconds after manager teardown.
         iframe.addEventListener(
           'load',
           () => {
             this._registerAsListener(iframe);
             const delays = [500, 1500, 3000];
             for (const delay of delays) {
-              setTimeout(() => {
-                if (!this._iframes.has(iframe)) return; // Skip if destroyed
+              this._trackTimer(() => {
+                if (!this._iframes.has(iframe)) return; // skip if destroyed
                 this._registerAsListener(iframe);
                 this._sendCaptionCommands(iframe);
               }, delay);
@@ -272,8 +298,9 @@ class YouTubeSubtitleManager {
         '*',
       );
 
-      // Step 2: After module loads, set caption track + force show
-      setTimeout(() => {
+      // Step 2: After module loads, set caption track + force show.
+      // Tracked so destroy()/setLanguage() can cancel.
+      this._trackTimer(() => {
         try {
           // Set the caption track to English with auto-translation
           iframe.contentWindow.postMessage(

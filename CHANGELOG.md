@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.10] - 2026-05-07
+
+### Fixed
+- YouTube subtitle manager no longer leaks per-iframe load-event timers. `_enableAutoSubtitles` schedules 500/1500/3000 ms postMessage chains on every `load`, plus an 800 ms chain inside `_sendCaptionCommands`; previously `destroy()` only cleared `_retryTimers` (the init-time 2 s/5 s pair) and these per-iframe timers fired and early-returned for up to 3 s after teardown. They're now tracked in a `_pendingTimers` set via a `_trackTimer` helper and cleared on both `destroy()` and `setLanguage()` (rapid lang toggles otherwise stacked stale postMessage spam targeting the previous language).
+
+### Added (test lock-in for v3.5.7 / v3.5.8 helpers)
+The recent rounds added `_puterChat`, `_isValidTranslation`, and `_kickVerifyQueue` without test coverage; a future regression would have silently undone the fixes. New tests cover the contracts:
+- `tests/page-bridge-fallback.test.js` (new file, 11 tests): validates the `_MODEL_FALLBACKS` chain (Sonnet 4.6 → 4.5, Opus 4.7 → 4.6, etc.) and `_isModelError`'s deprecation-vs-network-error discrimination via regex extraction (page-bridge.js can't be loaded whole because it references the page-world `puter` global).
+- `tests/translator.test.js` (+7 tests): `_isValidTranslation` rejects HTML payloads, length-bombed strings, and mostly-ASCII output for non-Latin targets; accepts plausible CJK / Cyrillic translations and short Latin proper-nouns.
+- `tests/translator-queue.test.js` (+3 tests): `_kickVerifyQueue` deduplicates concurrent kicks via the lock, self-restarts when items arrive during the teardown window (the actual v3.5.7 race fix), and refuses to re-kick when `isReady` flips false mid-run.
+- `tests/youtube-subtitles.test.js` (+3 tests): timer cleanup on `destroy()`, timer cleanup on `setLanguage()`, and `_trackTimer` self-removes ids after fire.
+
+Total: +24 tests against code paths that had zero coverage.
+
 ## [3.5.9] - 2026-05-07
 
 ### Fixed
