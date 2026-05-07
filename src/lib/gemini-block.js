@@ -33,6 +33,24 @@
   // Tags allowed in Gemini block translation output — derived from existing sets + <br>
   const SAFE_TAGS = new Set([...INLINE_TAGS, ...NO_TRANSLATE_TAGS, 'BR'].map((tag) => tag.toLowerCase()));
 
+  // Per-tag attribute allowlist for the sanitizer. Hoisted to module scope
+  // so we don't rebuild 9 Sets every xmlToHtml call. WHY allowlist instead
+  // of the older blocklist: open-by-default left target="_blank" (reverse
+  // tabnabbing), formaction, srcset, srcdoc, is="x-element" through.
+  const TAG_ATTR_ALLOWLIST = {
+    a: new Set(['href', 'title', 'lang', 'target']),
+    abbr: new Set(['title', 'lang']),
+    time: new Set(['datetime', 'lang']),
+    code: new Set(['class', 'lang']),
+    pre: new Set(['class', 'lang']),
+    samp: new Set(['lang']),
+    kbd: new Set(['lang']),
+    var: new Set(['lang']),
+    mark: new Set(['lang']),
+    span: new Set(['class', 'lang', 'title']),
+  };
+  const DEFAULT_ALLOWED_ATTRS = new Set(['lang', 'title']);
+
   /**
    * Check whether an element contains a mix of text nodes and inline element children.
    * @param {Element} el
@@ -136,27 +154,6 @@
     // keeping only SAFE_TAGS and stripping dangerous attributes
     const doc = new DOMParser().parseFromString(rawHtml, 'text/html');
 
-    // Per-tag attribute allowlist. The previous version copied any attr
-    // that wasn't `on*` / `style` / unsafe `href` — that left
-    // `target="_blank"` (reverse tabnabbing), `formaction`, `srcset`,
-    // `srcdoc`, `is="x-element"` etc. open. Restrict to the specific
-    // attrs that are actually meaningful on inline tags.
-    const TAG_ATTR_ALLOWLIST = {
-      a: new Set(['href', 'title', 'lang', 'target']),
-      abbr: new Set(['title', 'lang']),
-      time: new Set(['datetime', 'lang']),
-      code: new Set(['class', 'lang']),
-      pre: new Set(['class', 'lang']),
-      samp: new Set(['lang']),
-      kbd: new Set(['lang']),
-      var: new Set(['lang']),
-      mark: new Set(['lang']),
-      span: new Set(['class', 'lang', 'title']),
-    };
-    // Default allowlist for any other SAFE_TAG we didn't enumerate
-    // (b, em, i, q, s, small, strong, sub, sup, u, br, wbr, ...).
-    const DEFAULT_ALLOWED_ATTRS = new Set(['lang', 'title']);
-
     function sanitizeNode(node) {
       const fragment = document.createDocumentFragment();
       for (const child of Array.from(node.childNodes)) {
@@ -221,10 +218,8 @@
    * @returns {void}
    */
   function queueGeminiBlockTranslation(el, targetLang, deps) {
-    // Dedup: MutationObserver-driven SPA navs can re-fire for the same
-    // element while a previous Gemini call is still in flight. Without
-    // this guard we double-spend Gemini quota and race two innerHTML
-    // writes with stale tagInfo on the second response.
+    // Dedup: in-flight elements would otherwise race two innerHTML writes
+    // with mismatched tagInfo on rapid SPA-nav re-fires.
     if (el.classList.contains('si18n-verifying')) return;
 
     const { translator, originalTexts, isLikelyEnglish } = deps;
@@ -264,11 +259,9 @@ RULES:
         const trimmed = result.trim();
         if (trimmed.length > xml.length * 3) return;
         if (trimmed.includes('SOURCE') || trimmed.includes('RULES:')) return;
-        // If the original element contained inline <xN>/<cN> tags, the
-        // model's reply must too — otherwise it's a refusal/echo and
-        // we'd render an English error string mid-page. The simple
-        // includes() check below misses Gemini's "I cannot..." style
-        // refusals because those omit our marker tokens.
+        // Refusal guard: if the source had placeholders, the reply must too —
+        // catches "I cannot translate this" responses that the substring
+        // checks above miss.
         const hadTags = Object.keys(tagInfo).length > 0;
         if (hadTags && !/<[xc]\d/.test(trimmed)) return;
 

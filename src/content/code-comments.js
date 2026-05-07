@@ -99,12 +99,8 @@
       if (result.text === match[1].trim() || result.source === 'original') continue;
       hasTranslation = true;
 
-      // Escape translator output before splicing into innerHTML — GT
-      // doesn't normally return raw HTML, but a jailbroken/proxied/MITM
-      // response could, and we'd then innerHTML it. Escaping also
-      // correctly normalizes legit `&` / `<` characters in translations
-      // (e.g., "AT&T") into HTML entities.
-      const safeText = window._geminiBlock.escapeHtml(result.text);
+      // Escape before splicing into innerHTML — GT output is untrusted text.
+      const safeText = sb.escapeHtml(result.text);
 
       let replacement;
       if (type === 'line') {
