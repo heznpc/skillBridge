@@ -131,5 +131,33 @@ describe('YouTubeSubtitleManager', () => {
       manager.setLanguage('ja');
       expect(manager.targetLang).toBe('ja');
     });
+
+    test('clears pending timers when language changes', () => {
+      // Seed with fake pending timer ids so we can assert they get cleared
+      // without standing up a full DOM/iframe load fake.
+      const ids = [101, 102, 103];
+      manager._pendingTimers = new Set(ids);
+      manager.setLanguage('ja');
+      expect(manager._pendingTimers.size).toBe(0);
+    });
+  });
+
+  describe('destroy', () => {
+    test('clears pending timers on teardown', () => {
+      manager._pendingTimers = new Set([1, 2, 3]);
+      manager.destroy();
+      expect(manager._pendingTimers.size).toBe(0);
+    });
+  });
+
+  describe('_trackTimer', () => {
+    test('registers and self-removes after fire', (done) => {
+      const id = manager._trackTimer(() => {
+        // After the callback runs, the helper has already deleted the id.
+        expect(manager._pendingTimers.has(id)).toBe(false);
+        done();
+      }, 1);
+      expect(manager._pendingTimers.has(id)).toBe(true);
+    });
   });
 });

@@ -116,3 +116,83 @@ describe('queueGeminiVerify', () => {
     expect(translator._cacheTranslation).toHaveBeenCalled();
   });
 });
+
+// ── _kickVerifyQueue race fix (added in v3.5.7) ──
+// Items pushed during the brief teardown window (after `_runVerifyQueue`
+// drains the queue but before `.finally()` clears `_verifyLock`) used to
+// sit forever on a quiet page. The fix self-restarts from the .finally
+// when the queue is non-empty.
+describe('_kickVerifyQueue', () => {
+  let translator;
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+    translator = new SkilljarTranslator();
+    translator.isReady = true;
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  test('schedules a single run when called multiple times in quick succession', () => {
+    translator._runVerifyQueue = jest.fn().mockResolvedValue(undefined);
+
+    translator._kickVerifyQueue();
+    translator._kickVerifyQueue();
+    translator._kickVerifyQueue();
+
+    expect(translator._runVerifyQueue).not.toHaveBeenCalled(); // not yet — setTimeout pending
+    jest.runOnlyPendingTimers();
+    // Even with three kick calls, only one schedule fires (the lock dedupes).
+    expect(translator._runVerifyQueue).toHaveBeenCalledTimes(1);
+  });
+
+  test('self-restarts when items arrive during teardown', async () => {
+    let runCount = 0;
+    translator._runVerifyQueue = jest.fn(async () => {
+      runCount++;
+      // First run only: simulate an item pushed while _runVerifyQueue
+      // is wrapping up — the canonical race window the fix targets.
+      if (runCount === 1) {
+        translator._verifyQueue.push({
+          original: 'late',
+          googleTranslation: 'tr',
+          targetLang: 'ko',
+        });
+      }
+    });
+
+    translator._kickVerifyQueue();
+    jest.runOnlyPendingTimers();
+    // Drain microtasks so .finally fires and re-kicks.
+    await Promise.resolve();
+    await Promise.resolve();
+    jest.runOnlyPendingTimers();
+    await Promise.resolve();
+
+    expect(runCount).toBe(2);
+  });
+
+  test('does not re-kick when isReady is false (bridge died mid-run)', async () => {
+    let runCount = 0;
+    translator._runVerifyQueue = jest.fn(async () => {
+      runCount++;
+      translator.isReady = false;
+      translator._verifyQueue.push({
+        original: 'orphan',
+        googleTranslation: 'tr',
+        targetLang: 'ko',
+      });
+    });
+
+    translator._kickVerifyQueue();
+    jest.runOnlyPendingTimers();
+    await Promise.resolve();
+    await Promise.resolve();
+    jest.runOnlyPendingTimers();
+    await Promise.resolve();
+
+    expect(runCount).toBe(1);
+  });
+});
