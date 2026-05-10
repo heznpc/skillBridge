@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.12] - 2026-05-11
+
+### Fixed
+- Background SW removed a dead chrome.storage.local self-healing path for the YouTube InnerTube client version. The hydration block read `sb_yt_client_version` on every SW wake but **no code anywhere ever wrote that key** — the comment claimed the maintenance alarm refreshed it, but the alarm only sends `version-check` against GitHub. The runtime override never triggered; `_BG_YT_CLIENT_VERSION` was effectively a const all along. Replaced the let + hydration block with a plain const + comment explaining the manual-bump workflow (in sync with `src/lib/constants.js` + `src/shared/constants.json` via `check-bg-sync.js`). Also removes the fire-and-forget storage race on every SW wake.
+- `FETCH_URL` proxy handler now routes through `fetchWithRetry` instead of raw `fetch`. Previously a transient YouTube/InnerTube 5xx propagated straight to the content script while `GOOGLE_TRANSLATE_BATCH` got the retry contract — inconsistency the v3.5.8 fix was supposed to eliminate.
+- `handleVersionCheck` (GitHub API call) likewise routes through `fetchWithRetry`. Anonymous GitHub quota is 60/h per IP; with users converging on residential ranges, 403s are common, and the previous code silently dropped them with a single attempt. The 4xx fail-fast contract still prevents pointless retries on 403/404.
+
+### Changed
+- Added `https://api.github.com/*` to `host_permissions` in `manifest.json`. SW `fetch` to undeclared origins works in MV3 but CWS reviewers flag undeclared hostnames; explicit declaration matches what the code actually does.
+
 ## [3.5.11] - 2026-05-07
 
 ### Security / Hardening
