@@ -39,6 +39,9 @@ jobs:
       - name: Check glossary consistency
         run: node scripts/check-glossary.js
 
+      - name: Check i18n key coverage
+        run: node scripts/check-i18n-keys.js
+
       - name: Check shared constants sync
         run: node scripts/check-bg-sync.js
 
