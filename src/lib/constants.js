@@ -24,12 +24,21 @@ const YOUTUBE_CLIENT_VERSION = '2.20260415.01.00';
 // ==================== CERTIFICATION EXAM (full disable) ====================
 // Proctored certification exams — extension must NOT run at all.
 // The extension could be flagged as a cheating tool during proctored exams.
+//
+// Live URL verified 2026-05-11:
+//   https://anthropic.skilljar.com/claude-certified-architect-foundations-access-request
+// Patterns also cover the public CCAF / CCA abbreviations seen in
+// third-party prep guides, and Skilljar's `*-foundations-access-request`
+// shape (used for any future cert tier — Professional, Expert, etc.).
 
 const CERT_DISABLE_PATTERNS = [
   /\/claude-certified/i,
   /\/certified-architect/i,
   /\/certification-exam/i,
   /\/certified.*access-request/i,
+  /foundations-access-request/i,
+  /[/-]cca-?(?:foundations|professional|expert|associate)\b/i,
+  /\/ccaf\b/i,
   /[?&]type=certification/i,
   /\/proctored\b/i,
 ];

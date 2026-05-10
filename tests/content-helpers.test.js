@@ -82,6 +82,26 @@ describe('exam / cert URL patterns (production)', () => {
     expect(CERT_DISABLE_PATTERNS.some((p) => p.test('/proctored'))).toBe(true);
   });
 
+  test('cert patterns match the live CCA-Foundations access-request URL', () => {
+    // Verified live 2026-05-11 — this is the actual cert entry point.
+    expect(CERT_DISABLE_PATTERNS.some((p) => p.test('/claude-certified-architect-foundations-access-request'))).toBe(
+      true,
+    );
+    expect(CERT_DISABLE_PATTERNS.some((p) => p.test('/claude-certified-architect-foundations'))).toBe(true);
+  });
+
+  test('cert patterns match future cert-tier variants', () => {
+    // Forward-compat: Anthropic's cert ladder is likely Foundations →
+    // Associate → Professional → Expert. Catch the abbreviation set
+    // already used in third-party prep guides plus the Skilljar
+    // access-request URL shape.
+    expect(CERT_DISABLE_PATTERNS.some((p) => p.test('/cca-foundations'))).toBe(true);
+    expect(CERT_DISABLE_PATTERNS.some((p) => p.test('/cca-professional'))).toBe(true);
+    expect(CERT_DISABLE_PATTERNS.some((p) => p.test('/cca-expert'))).toBe(true);
+    expect(CERT_DISABLE_PATTERNS.some((p) => p.test('/ccaf'))).toBe(true);
+    expect(CERT_DISABLE_PATTERNS.some((p) => p.test('/anthropic-architect-foundations-access-request'))).toBe(true);
+  });
+
   test('cert patterns do not match normal course URLs', () => {
     expect(CERT_DISABLE_PATTERNS.some((p) => p.test('/courses/prompt-engineering'))).toBe(false);
     expect(CERT_DISABLE_PATTERNS.some((p) => p.test('/courses/claude-overview'))).toBe(false);
