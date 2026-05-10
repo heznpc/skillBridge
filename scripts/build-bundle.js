@@ -23,6 +23,12 @@ async function build() {
   const contentEntryPath = path.join(DIST, '_content-entry.js');
   fs.writeFileSync(contentEntryPath, contentEntry);
 
+  // `pure: ['console.debug', 'console.info']` lets minify drop those calls
+  // entirely from the production bundle (their return values are unused, so
+  // marking them pure tree-shakes the call-sites). `console.warn`/`error` are
+  // preserved on purpose so real degradation/errors still reach DevTools.
+  const PROD_PURE = ['console.debug', 'console.info'];
+
   await esbuild.build({
     entryPoints: [contentEntryPath],
     outfile: path.join(DIST, 'content.bundle.js'),
@@ -30,6 +36,7 @@ async function build() {
     minify: true,
     target: ['chrome120'],
     format: 'iife',
+    pure: PROD_PURE,
   });
 
   // Bundle background service worker
@@ -40,6 +47,7 @@ async function build() {
     minify: true,
     target: ['chrome120'],
     format: 'iife',
+    pure: PROD_PURE,
   });
 
   // Bundle CSS

@@ -6,6 +6,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.13] - 2026-05-11
+
+### Refactor
+- Split `src/content/sidebar-chat.js` (1224 → 815 lines, –33%) into three modules with a shared `window._sb._chat` namespace:
+  - `src/content/chat-render.js` (new) — `formatResponse`, `applyInline`, `sanitizeHtml`. Pure DOM-free markdown→HTML + the trusted-structure HTML sanitizer used by both the live chat bubble and the history detail view.
+  - `src/content/chat-history.js` (new) — IndexedDB conversation store, history sub-panel, detail view. Owns `chat-history` IDB store + the panel UI; calls back into sidebar-chat through `_sb._chat.{closeSubPanel,formatResponse,sanitizeHtml}`.
+  - `src/content/sidebar-chat.js` keeps panel infrastructure (sidebar inject, chat input, sub-panel state machinery, focus trap, flashcards, PDF export, send-chat stream).
+  - Sub-panel state (`savedChatHTML`, `historyPanelOpen`, `flashcardPanelOpen`) hoisted to `_sb._chat.state` so history and flashcard modules share one source of truth instead of duplicating local flags.
+  - `manifest.json` `content_scripts.js` order updated to load `chat-render.js` before `sidebar-chat.js` (which now exposes the `_sb._chat` panel helpers) and `chat-history.js` after (which consumes them).
+  - `tests/format-response.test.js` follows `formatResponse`/`applyInline` to its new home in `chat-render.js`.
+
+### Added
+- `src/lib/_sb-typedef.js` — JSDoc-only contract for the `window._sb` shared namespace and the `_chat`/`ProtectedTermsApi`/`GeminiBlockApi` sub-namespaces. Not loaded at runtime (no manifest entry); picked up by IDEs and `tsc --noEmit` via the new `tsconfig.json`.
+- `tsconfig.json` — `allowJs` + `checkJs` for IDE/local type checking against existing JSDoc. `strict: false` so the rollout doesn't surface a wave of pre-existing nullability warnings; tighten incrementally as files migrate.
+- `scripts/check-i18n-keys.js` + `npm run check:i18n` — validates (1) every locale under `_locales/` matches the English `messages.json` key set so Chrome doesn't silently fall back, and (2) every `*_LABELS` / `*_GREETINGS` / `*_PLACEHOLDERS` dictionary in `src/lib/constants.js` is shape-consistent across the 11 premium languages, both for flat `{ en, ko, … }` maps and section-outer `{ key: { en, ko, … } }` maps. Wired into the CI `validate` job.
+- `docs/E2E_PLAN.md` — working spec for the deferred Playwright suite. Records the 6 priority coverage targets (golden translation, SPA mid-stream, cache-cleanup alarm, stream-cancel, protected-terms, panel switch) so the next person who picks it up doesn't restart from zero.
+
+### Fixed
+- `restoreProtectedTerms(text)` now defends against three production-realistic edge cases that previously corrupted output or crashed: `null`/`undefined`/non-string input (returned safe fallback instead of throwing on `.includes`); empty-string wrong-forms in the dictionary (`String.prototype.replaceAll('', x)` would have inserted the correct form between every char); and self-mapping entries where a wrong-form equals its correct form (silent no-op cycle bloating the hot loop on long pages).
+- Background SW + content-script handlers gain a `_logMisroutedMessage` defensive log: if a `{ action: ... }`-shaped message reaches the background (or a `{ type: ... }` reaches a content script) it warns loudly with the discriminator. Catches the v3.5.6 cache-cleanup class of bug at first occurrence in dev rather than silently falling through "Unknown action".
+
+### Build
+- `scripts/build-bundle.js` esbuild now passes `pure: ['console.debug', 'console.info']` to the content + background bundles. With `minify: true` already on, those calls get tree-shaken from production output (verified 0 occurrences in `dist/bundled/*.bundle.js`). `console.warn` / `console.error` deliberately preserved so real degradation/errors still reach DevTools.
+
+### Tests
+- `tests/protected-terms.test.js` (+6 tests): null/undefined/non-string input safety, idempotence (`f(f(x)) == f(x)`), empty-wrong-form skip, self-mapping skip, non-string-array-element skip. Total now 24 tests against the protected-terms helper.
+
 ## [3.5.12] - 2026-05-11
 
 ### Fixed

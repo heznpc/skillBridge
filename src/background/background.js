@@ -214,6 +214,30 @@ chrome.runtime.onInstalled.addListener((details) => {
   }
 });
 
+// ==================== MESSAGE DISPATCH CONVENTION ====================
+//
+// All cross-context messages use ONE of two discriminator fields:
+//
+//   { type: 'SCREAMING_SNAKE' }   — addressed to the background worker
+//                                   (FETCH_URL, GOOGLE_TRANSLATE, ...)
+//   { action: 'camelCase' }       — addressed to a content script
+//                                   (cacheCleanup, setLanguage, toggleSidebar, ...)
+//
+// Mixing the two (action→bg or type→content) was the v3.5.6 cache-cleanup
+// bug. The `__messageDispatchSanityCheck` below catches a recurrence in dev
+// builds where the wrong discriminator reaches the wrong handler.
+
+function _logMisroutedMessage(msg) {
+  if (msg && typeof msg === 'object' && 'action' in msg && !('type' in msg)) {
+    // Got an `action`-shaped message at the background — almost certainly a
+    // copy-paste from the popup→content path. Real bg messages use `type`.
+    console.warn(
+      '[SkillBridge BG] Unhandled `action`-shaped message — should this go to a content script instead?',
+      msg.action,
+    );
+  }
+}
+
 // Message handlers
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   // Verify sender is this extension
@@ -305,6 +329,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       .catch((err) => sendResponse({ ok: false, error: err.message }));
     return true;
   }
+
+  // Fell through every `msg.type === ...` branch — surface anything that
+  // looks like a misrouted content-script message instead of swallowing it.
+  _logMisroutedMessage(msg);
 });
 
 // Badge to show active language

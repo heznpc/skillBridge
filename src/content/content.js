@@ -315,6 +315,18 @@
   chrome.runtime.onMessage.addListener(handleMessage);
 
   function handleMessage(request, sender, sendResponse) {
+    // Catch the inverse of background.js' guard: if a `type`-shaped message
+    // (intended for the bg worker) somehow reached the content script, we
+    // would otherwise silently fall through to "Unknown action" and the
+    // sender just sees a generic failure. Warn loudly in dev so the
+    // misroute is obvious.
+    if (request && typeof request === 'object' && 'type' in request && !('action' in request)) {
+      console.warn(
+        '[SkillBridge] Content received `type`-shaped message — should this go to background?',
+        request.type,
+      );
+    }
+
     if (!isReady && request.action === 'translatePage') {
       pendingActions.push({ request, sendResponse });
       sendResponse({ success: true, queued: true });

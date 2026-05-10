@@ -131,6 +131,50 @@ describe('Protected Terms System (real production code)', () => {
     test('replaces all occurrences of the same wrong form', () => {
       expect(restoreProtectedTerms('클로드 클로드 클로드')).toBe('Claude Claude Claude');
     });
+
+    test('is idempotent — applying twice equals applying once', () => {
+      const once = restoreProtectedTerms('클로드 코드를 사용하여 기술을 만듭니다');
+      const twice = restoreProtectedTerms(once);
+      expect(twice).toBe(once);
+    });
+
+    test('returns empty string for null input (does not throw)', () => {
+      // Real callers pass `null` when a Gemini stream aborts mid-flight;
+      // the previous implementation crashed with `Cannot read .includes of null`.
+      expect(restoreProtectedTerms(null)).toBe('');
+    });
+
+    test('returns empty string for undefined input (does not throw)', () => {
+      expect(restoreProtectedTerms(undefined)).toBe('');
+    });
+
+    test('passes non-string input through unchanged', () => {
+      // Defensive — a number sneaking in shouldn't crash. Returning the input
+      // makes the corruption obvious upstream rather than masking it as "".
+      expect(restoreProtectedTerms(42)).toBe(42);
+    });
+  });
+
+  describe('hardening — empty / self-mapping wrong forms', () => {
+    test('skips empty-string wrong forms (would corrupt every char)', () => {
+      // String.prototype.replaceAll('', x) inserts x between every char.
+      // Production must filter empties before they reach the replace step.
+      buildProtectedTermsMap('ko', fakeTranslator({ Claude: ['', '클로드'] }));
+      expect(restoreProtectedTerms('클로드 hi')).toBe('Claude hi');
+    });
+
+    test('skips wrong forms that equal their correct form (no-op cycle)', () => {
+      // Self-mapping like { Claude: ['Claude'] } would do String.replaceAll
+      // work for nothing on every pass; ensuring it's filtered keeps the hot
+      // path tight as glossaries grow.
+      buildProtectedTermsMap('ko', fakeTranslator({ Claude: ['Claude', '클로드'] }));
+      expect(restoreProtectedTerms('Claude와 클로드')).toBe('Claude와 Claude');
+    });
+
+    test('skips non-string wrong forms inside the array (defensive)', () => {
+      buildProtectedTermsMap('ko', fakeTranslator({ Claude: [null, undefined, 42, '클로드'] }));
+      expect(restoreProtectedTerms('클로드')).toBe('Claude');
+    });
   });
 
   describe('getKeepEnglishTerms', () => {
