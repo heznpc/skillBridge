@@ -11,42 +11,10 @@
 // Shared constants — kept in sync with src/shared/constants.json via scripts/check-bg-sync.js
 const _BG_GT_LANG_MAP = { 'zh-CN': 'zh-CN', 'zh-TW': 'zh-TW', 'pt-BR': 'pt' };
 
-// YouTube's internal client version is bumped every few weeks. Storing the
-// "default" inline as a fallback and overriding it from chrome.storage.local
-// (refreshed by the maintenance alarm) means a stale build keeps working
-// until the next 24h alarm tick rather than dying immediately.
-const _BG_YT_CLIENT_VERSION_DEFAULT = '2.20260415.01.00';
-let _BG_YT_CLIENT_VERSION = _BG_YT_CLIENT_VERSION_DEFAULT;
-
-const _YT_VERSION_STORAGE_KEY = 'sb_yt_client_version';
-
-// Hydrate the runtime override from storage on service worker start.
-// Wrapped defensively because tests stub `chrome` with only the surfaces
-// they exercise — production always has chrome.storage.local available.
-if (
-  typeof chrome !== 'undefined' &&
-  chrome.storage &&
-  chrome.storage.local &&
-  typeof chrome.storage.local.get === 'function'
-) {
-  try {
-    const result = chrome.storage.local.get(_YT_VERSION_STORAGE_KEY);
-    if (result && typeof result.then === 'function') {
-      result
-        .then((stored) => {
-          const v = stored && stored[_YT_VERSION_STORAGE_KEY];
-          if (typeof v === 'string' && /^\d+\.\d+\.\d+\.\d+$/.test(v)) {
-            _BG_YT_CLIENT_VERSION = v;
-          }
-        })
-        .catch(() => {
-          /* non-fatal */
-        });
-    }
-  } catch {
-    /* test stub may throw — non-fatal */
-  }
-}
+// YouTube's internal client version. Bumped manually when InnerTube rejects
+// our value (observed every few weeks); kept in sync with the same constant
+// in src/lib/constants.js + src/shared/constants.json via check-bg-sync.js.
+const _BG_YT_CLIENT_VERSION = '2.20260415.01.00';
 
 function gtLangCode(lang) {
   return _BG_GT_LANG_MAP[lang] || lang;
@@ -181,13 +149,13 @@ async function handleVersionCheck() {
     const manifest = chrome.runtime.getManifest();
     const localVersion = manifest.version;
 
-    const resp = await fetch(`https://api.github.com/repos/${_GITHUB_REPO}/releases/latest`, {
+    // Anonymous GitHub API quota is 60/h per IP — with hundreds of users on
+    // the same residential ranges, 403s are common. fetchWithRetry's 4xx
+    // fail-fast bails immediately on 403/404 (no point retrying without auth)
+    // and backs off transient 5xx.
+    const resp = await fetchWithRetry(`https://api.github.com/repos/${_GITHUB_REPO}/releases/latest`, {
       headers: { Accept: 'application/vnd.github.v3+json' },
     });
-    if (!resp.ok) {
-      console.warn(`[SkillBridge] Version check: GitHub API returned ${resp.status}`);
-      return;
-    }
     const release = await resp.json();
     const remoteVersion = (release.tag_name || '').replace(/^v/, '');
 
@@ -272,14 +240,13 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       }
     }
     fetchOpts.headers = headers;
-    fetch(msg.url, fetchOpts)
-      .then((resp) => {
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        return resp.text();
-      })
+    // Route through fetchWithRetry so 5xx/429s back off, 4xx fails fast,
+    // and the abuse-pattern contract is consistent with the GT path.
+    fetchWithRetry(msg.url, fetchOpts)
+      .then((resp) => resp.text())
       .then((text) => sendResponse({ ok: true, data: text }))
       .catch((err) => {
-        console.error(`[SkillBridge BG] Error: ${err.message}`);
+        console.error(`[SkillBridge BG] FETCH_URL error: ${err.message}`);
         sendResponse({ ok: false, error: err.message });
       });
     return true;
