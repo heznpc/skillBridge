@@ -1,6 +1,9 @@
 /**
  * Unit tests for chat response formatting (markdown → HTML).
- * Extracts formatResponse and applyInline directly from sidebar-chat.js source.
+ * Extracts formatResponse and applyInline from chat-render.js (where the
+ * functions live since the v3.5.13 sidebar-chat.js split). The test follows
+ * the production code to its new home rather than re-implementing it, so
+ * production bugs can't pass green.
  */
 
 /* global describe, test, expect */
@@ -13,9 +16,9 @@ const geminiBlockSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 
 const escapeHtmlBody = geminiBlockSrc.match(/function escapeHtml\(text\)\s*\{([\s\S]*?)\n {2}\}/);
 const escapeHtml = new Function('text', escapeHtmlBody[1]);
 
-// --- Extract formatResponse + applyInline from sidebar-chat.js ---
-const sidebarSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'content', 'sidebar-chat.js'), 'utf8');
-const fmtBlock = sidebarSrc.match(
+// --- Extract formatResponse + applyInline from chat-render.js ---
+const renderSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'content', 'chat-render.js'), 'utf8');
+const fmtBlock = renderSrc.match(
   /function formatResponse\(text\)\s*\{[\s\S]*?\n {2}\}\n\n {2}function applyInline[\s\S]*?\n {2}\}/,
 );
 const { formatResponse, applyInline } = new Function('sb', `${fmtBlock[0]}\n  return { formatResponse, applyInline };`)(

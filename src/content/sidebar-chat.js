@@ -12,10 +12,19 @@
     return;
   }
 
-  let historyDb = null;
-  let historyPanelOpen = false;
+  // Sub-panel state shared with chat-history.js (and, eventually,
+  // chat-flashcards.js when that gets extracted). Kept on `sb._chat.state`
+  // so any module loaded after content.js can read/mutate the same object
+  // without us re-introducing a tangle of ad-hoc globals.
+  sb._chat = sb._chat || {};
+  sb._chat.state = sb._chat.state || {
+    savedChatHTML: null,
+    historyPanelOpen: false,
+    flashcardPanelOpen: false,
+  };
+  const _state = sb._chat.state;
+
   let scrollRAF = null;
-  let savedChatHTML = null;
   let isSending = false;
   let _rawSectionsCache = null; // Cached raw JSON for section-specific flashcards
   let _rawSectionsLang = null; // Language of the cached data
@@ -145,7 +154,7 @@
 
   function bindSidebarEvents() {
     document.getElementById('si18n-close')?.addEventListener('click', toggleSidebar);
-    document.getElementById('si18n-history-btn')?.addEventListener('click', toggleHistoryPanel);
+    document.getElementById('si18n-history-btn')?.addEventListener('click', () => sb._chat.toggleHistoryPanel?.());
     document.getElementById('si18n-fc-btn')?.addEventListener('click', toggleFlashcardPanel);
     document.getElementById('si18n-pdf-btn')?.addEventListener('click', exportLessonPDF);
     bindChatInputEvents();
@@ -311,7 +320,7 @@
             }
           }
           if (bubble) {
-            bubble.innerHTML = formatResponse(fullText);
+            bubble.innerHTML = sb._chat.formatResponse(fullText);
             scrollToBottom(messages);
           }
         },
@@ -321,7 +330,7 @@
       if (bubble && !signal.aborted) {
         bubble.classList.remove('si18n-streaming-cursor');
         const answerText = lastStreamedText?.trim() || bubble.textContent?.trim() || '';
-        if (answerText) saveConversation(text, answerText, sb.currentLang);
+        if (answerText) sb._chat.saveConversation?.(text, answerText, sb.currentLang);
       }
     } catch (err) {
       // AbortError is expected when the user navigates away mid-stream.
@@ -355,448 +364,25 @@
     scrollToBottom(messages);
   }
 
-  // ============================================================
-  // MARKDOWN RESPONSE FORMATTING
-  // ============================================================
-
-  function formatResponse(text) {
-    const escaped = sb.escapeHtml(text);
-
-    // Ensure markdown block elements start on new lines
-    // (avoid lookbehind for wider browser compatibility)
-    const normalized = escaped
-      .replace(/([^\n#])(#{2,3}\s)/g, '$1\n$2')
-      .replace(/([^\n])(-\s)/g, '$1\n$2')
-      .replace(/([^\n])(\d+[.)]\s)/g, '$1\n$2');
-
-    const lines = normalized.split('\n');
-    const out = [];
-    let listBuf = [];
-    let listOrdered = false;
-    let paraBuf = [];
-
-    const flushList = () => {
-      if (!listBuf.length) return;
-      const tag = listOrdered ? 'ol' : 'ul';
-      out.push(`<${tag}>${listBuf.map((t) => `<li>${applyInline(t)}</li>`).join('')}</${tag}>`);
-      listBuf = [];
-    };
-    const flushPara = () => {
-      if (!paraBuf.length) return;
-      out.push(`<p>${applyInline(paraBuf.join('<br>'))}</p>`);
-      paraBuf = [];
-    };
-
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed) {
-        flushList();
-        flushPara();
-        continue;
-      }
-      const hMatch = trimmed.match(/^(#{2,3})\s+(.+)/);
-      if (hMatch) {
-        flushList();
-        flushPara();
-        out.push(`<h3>${applyInline(hMatch[2])}</h3>`);
-        continue;
-      }
-      const ulMatch = trimmed.match(/^[-*]\s+(.*)/);
-      if (ulMatch) {
-        if (listBuf.length && listOrdered) flushList();
-        listOrdered = false;
-        flushPara();
-        listBuf.push(ulMatch[1]);
-        continue;
-      }
-      const olMatch = trimmed.match(/^\d+[.)]\s+(.*)/);
-      if (olMatch) {
-        if (listBuf.length && !listOrdered) flushList();
-        listOrdered = true;
-        flushPara();
-        listBuf.push(olMatch[1]);
-        continue;
-      }
-      flushList();
-      paraBuf.push(trimmed);
-    }
-    flushList();
-    flushPara();
-    return out.join('');
-  }
-
-  function applyInline(text) {
-    // Input is already HTML-escaped by formatResponse — do NOT re-escape captured groups
-    return text
-      .replace(/\*\*(.*?)\*\*/g, (_, g) => '<strong>' + g + '</strong>')
-      .replace(/\*(.*?)\*/g, (_, g) => '<em>' + g + '</em>')
-      .replace(/`(.*?)`/g, (_, g) => '<code>' + g + '</code>');
-  }
+  // Markdown rendering + sanitizer were extracted to chat-render.js.
+  // IndexedDB history (saveConversation, toggleHistoryPanel, …) was extracted
+  // to chat-history.js. Both attach their public surface onto `sb._chat`.
 
   // ============================================================
-  // SIMPLE HTML SANITIZER (no external dependency)
+  // SUB-PANEL STATE MACHINERY (shared with chat-history.js / flashcards)
   // ============================================================
-
-  /**
-   * Strip dangerous tags and attributes from trusted-structure HTML.
-   * Keeps only the tags used by our own formatResponse / history rendering.
-   */
-  function sanitizeHtml(html) {
-    const ALLOWED_TAGS = new Set([
-      'div',
-      'span',
-      'p',
-      'h3',
-      'ul',
-      'ol',
-      'li',
-      'strong',
-      'em',
-      'code',
-      'br',
-      'button',
-      'svg',
-      'polyline',
-      'path',
-      'circle',
-    ]);
-    const ALLOWED_ATTRS = new Set([
-      'class',
-      'id',
-      'data-id',
-      'data-question',
-      // `style` was previously allowed but enables CSS exfil
-      // (`background:url(attacker)`) and clickjack overlays via attacker-
-      // influenced content. Use class-based styling instead.
-      'title',
-      'aria-label',
-      'role',
-      // SVG presentational attributes
-      'width',
-      'height',
-      'viewBox',
-      'fill',
-      'stroke',
-      'stroke-width',
-      'stroke-linecap',
-      'stroke-linejoin',
-      'cx',
-      'cy',
-      'r',
-      'd',
-      'points',
-    ]);
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-
-    function walk(node) {
-      const children = Array.from(node.childNodes);
-      for (const child of children) {
-        if (child.nodeType === Node.ELEMENT_NODE) {
-          const tag = child.tagName.toLowerCase();
-          if (!ALLOWED_TAGS.has(tag)) {
-            child.remove();
-            continue;
-          }
-          // Strip disallowed attributes (including event handlers)
-          for (const attr of Array.from(child.attributes)) {
-            if (!ALLOWED_ATTRS.has(attr.name) || attr.name.startsWith('on')) {
-              child.removeAttribute(attr.name);
-            }
-          }
-          walk(child);
-        }
-      }
-    }
-
-    walk(doc.body);
-    return doc.body.innerHTML;
-  }
-
-  // ============================================================
-  // TUTOR CONVERSATION HISTORY (IndexedDB)
-  // ============================================================
-
-  function openHistoryDb() {
-    return new Promise((resolve, reject) => {
-      if (historyDb) return resolve(historyDb);
-      const req = indexedDB.open(HISTORY_DB_NAME, 1);
-      req.onupgradeneeded = (e) => {
-        const db = e.target.result;
-        if (!db.objectStoreNames.contains(HISTORY_STORE)) {
-          const store = db.createObjectStore(HISTORY_STORE, { keyPath: 'id', autoIncrement: true });
-          store.createIndex('timestamp', 'timestamp');
-          store.createIndex('chapter', 'chapter');
-        }
-      };
-      req.onsuccess = (e) => {
-        historyDb = e.target.result;
-        // If another tab (or a future extension update) bumps the schema,
-        // close this connection so it doesn't block the upgrade. Without
-        // this, every subsequent transaction() throws InvalidStateError.
-        historyDb.onversionchange = () => {
-          historyDb.close();
-          historyDb = null;
-        };
-        resolve(historyDb);
-      };
-      req.onerror = () => reject(req.error);
-    });
-  }
-
-  async function saveConversation(question, answer, lang) {
-    try {
-      const db = await openHistoryDb();
-      const chapter = document.querySelector('h1')?.textContent?.trim() || 'Unknown';
-      const entry = {
-        question,
-        answer,
-        lang,
-        chapter,
-        timestamp: Date.now(),
-        url: location.href,
-      };
-      const ok = await _addHistoryEntry(db, entry);
-      if (!ok) {
-        // First add hit the IDB quota — prune oldest 20 then retry once.
-        // If the prune freed less than expected (some deletes silently
-        // failed under the cursor) the retry can still fail; we then
-        // double the prune count once before giving up. Two-shot retry
-        // is bounded so a sticky quota can't infinite-loop.
-        const pruned = await pruneOldHistory(db, 20);
-        let okAfterPrune = await _addHistoryEntry(db, entry);
-        if (!okAfterPrune && pruned > 0) {
-          await pruneOldHistory(db, 40);
-          okAfterPrune = await _addHistoryEntry(db, entry);
-        }
-        if (!okAfterPrune) {
-          console.warn('[SkillBridge] Chat history save failed after prune+retry — quota may be stuck');
-        }
-      }
-    } catch (e) {
-      console.warn('[SkillBridge] Failed to save conversation:', e);
-    }
-  }
-
-  function _addHistoryEntry(db, entry) {
-    return new Promise((resolve) => {
-      const tx = db.transaction(HISTORY_STORE, 'readwrite');
-      const req = tx.objectStore(HISTORY_STORE).add(entry);
-      req.onsuccess = () => resolve(true);
-      req.onerror = (e) => {
-        const isQuota = e.target.error?.name === 'QuotaExceededError';
-        if (isQuota) {
-          console.warn('[SkillBridge] Chat history quota exceeded — will prune and retry');
-        } else {
-          console.warn('[SkillBridge] Chat history add failed:', e.target.error?.name);
-        }
-        resolve(false);
-      };
-    });
-  }
-
-  function pruneOldHistory(db, target = 20) {
-    return new Promise((resolve) => {
-      const tx = db.transaction(HISTORY_STORE, 'readwrite');
-      const store = tx.objectStore(HISTORY_STORE);
-      const idx = store.index('timestamp');
-      const req = idx.openCursor();
-      let deleted = 0;
-      req.onsuccess = (e) => {
-        const cursor = e.target.result;
-        if (cursor && deleted < target) {
-          // Track per-delete failures — without this the count claims
-          // success even when the runtime silently aborted some deletes.
-          const delReq = cursor.delete();
-          delReq.onsuccess = () => {
-            deleted++;
-          };
-          delReq.onerror = () => {
-            console.warn('[SkillBridge] history prune: delete failed at cursor', cursor.primaryKey);
-          };
-          cursor.continue();
-        }
-      };
-      // Resolve with the actually-deleted count when the whole transaction
-      // commits (or fails), so the caller knows whether to escalate.
-      tx.oncomplete = () => resolve(deleted);
-      tx.onerror = () => resolve(deleted);
-      tx.onabort = () => resolve(deleted);
-    });
-  }
-
-  async function getConversations(limit = SKILLBRIDGE_LIMITS.HISTORY) {
-    try {
-      const db = await openHistoryDb();
-      return new Promise((resolve) => {
-        const tx = db.transaction(HISTORY_STORE, 'readonly');
-        const idx = tx.objectStore(HISTORY_STORE).index('timestamp');
-        const results = [];
-        const req = idx.openCursor(null, 'prev');
-        req.onsuccess = (e) => {
-          const cursor = e.target.result;
-          if (cursor && results.length < limit) {
-            results.push(cursor.value);
-            cursor.continue();
-          } else {
-            resolve(results);
-          }
-        };
-        req.onerror = () => resolve([]);
-      });
-    } catch {
-      return [];
-    }
-  }
-
-  async function clearAllHistory() {
-    try {
-      const db = await openHistoryDb();
-      const tx = db.transaction(HISTORY_STORE, 'readwrite');
-      tx.objectStore(HISTORY_STORE).clear();
-      tx.oncomplete = () => {
-        const listEl = document.getElementById('si18n-history-list');
-        if (listEl) {
-          listEl.innerHTML = `<div class="si18n-history-empty">${sb.t(HISTORY_LABELS.historyCleared)}</div>`;
-        }
-      };
-    } catch (e) {
-      console.warn('[SkillBridge] Failed to clear history:', e);
-    }
-  }
-
-  function toggleHistoryPanel() {
-    const chatPanel = document.getElementById('si18n-panel-chat');
-    if (!chatPanel) return;
-
-    if (historyPanelOpen) {
-      closeSubPanel();
-      return;
-    }
-    if (flashcardPanelOpen) closeSubPanel();
-
-    historyPanelOpen = true;
-    savedChatHTML = chatPanel.innerHTML;
-    chatPanel.innerHTML = `
-      <div class="si18n-history-header">
-        <button class="si18n-history-back" id="si18n-history-back" aria-label="${sb.t(A11Y_LABELS.backToChat)}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
-        <span class="si18n-history-title">${sb.t(HISTORY_LABELS.title)}</span>
-        <button class="si18n-history-clear" id="si18n-history-clear" title="${sb.t(HISTORY_LABELS.clearHistory)}">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-          <span>${sb.t(HISTORY_LABELS.clearHistory)}</span>
-        </button>
-      </div>
-      <div class="si18n-history-list" id="si18n-history-list">
-        <div class="si18n-history-loading">${sb.t(HISTORY_LABELS.loading)}</div>
-      </div>
-    `;
-
-    document.getElementById('si18n-history-back')?.addEventListener('click', closeHistoryPanel);
-    document.getElementById('si18n-history-clear')?.addEventListener('click', () => {
-      if (confirm(sb.t(HISTORY_LABELS.clearHistory) + '?')) clearAllHistory();
-    });
-    loadHistoryList();
-  }
 
   function closeSubPanel() {
     const chatPanel = document.getElementById('si18n-panel-chat');
-    if (!chatPanel || !savedChatHTML) return;
+    if (!chatPanel || !_state.savedChatHTML) return;
     // The chat bubble that was streaming is about to be replaced — abort
     // the stream so its onChunk callback doesn't write into a detached node.
     cancelActiveStream();
-    chatPanel.innerHTML = savedChatHTML;
-    savedChatHTML = null;
-    historyPanelOpen = false;
-    flashcardPanelOpen = false;
+    chatPanel.innerHTML = _state.savedChatHTML;
+    _state.savedChatHTML = null;
+    _state.historyPanelOpen = false;
+    _state.flashcardPanelOpen = false;
     bindChatInputEvents();
-  }
-
-  function closeHistoryPanel() {
-    closeSubPanel();
-  }
-
-  async function loadHistoryList() {
-    const listEl = document.getElementById('si18n-history-list');
-    if (!listEl) return;
-
-    const conversations = await getConversations();
-    if (conversations.length === 0) {
-      listEl.innerHTML = `<div class="si18n-history-empty">${sb.t(HISTORY_LABELS.empty)}</div>`;
-      return;
-    }
-
-    const grouped = {};
-    for (const conv of conversations) {
-      const ch = conv.chapter || 'Other';
-      if (!grouped[ch]) grouped[ch] = [];
-      grouped[ch].push(conv);
-    }
-
-    let html = '';
-    for (const [chapter, convs] of Object.entries(grouped)) {
-      html += `<div class="si18n-history-chapter">${sb.escapeHtml(chapter)}</div>`;
-      for (const conv of convs) {
-        const preview =
-          conv.question.length > SKILLBRIDGE_LIMITS.HISTORY_PREVIEW
-            ? conv.question.slice(0, SKILLBRIDGE_LIMITS.HISTORY_PREVIEW) + '\u2026'
-            : conv.question;
-        const time = new Date(conv.timestamp).toLocaleDateString(undefined, {
-          month: 'short',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-        });
-        html += `
-          <div class="si18n-history-item" data-id="${conv.id}">
-            <div class="si18n-history-item-q">${sb.escapeHtml(preview)}</div>
-            <div class="si18n-history-item-time">${time}</div>
-          </div>
-        `;
-      }
-    }
-    listEl.innerHTML = sanitizeHtml(html);
-
-    // Event delegation instead of per-item listeners
-    listEl.addEventListener('click', (e) => {
-      const item = e.target.closest('.si18n-history-item');
-      if (item) showConversationDetail(item.dataset.id);
-    });
-  }
-
-  async function showConversationDetail(id) {
-    try {
-      const db = await openHistoryDb();
-      const tx = db.transaction(HISTORY_STORE, 'readonly');
-      const req = tx.objectStore(HISTORY_STORE).get(Number(id));
-      req.onsuccess = () => {
-        const conv = req.result;
-        if (!conv) return;
-        const listEl = document.getElementById('si18n-history-list');
-        if (!listEl) return;
-        const time = conv.timestamp ? new Date(conv.timestamp).toLocaleString() : '';
-        const chapter = conv.chapter ? sb.escapeHtml(conv.chapter) : '';
-        let metaHtml = '';
-        if (chapter || time) {
-          metaHtml = `<div class="si18n-history-detail-meta">`;
-          if (chapter) metaHtml += `<span class="si18n-detail-lesson">${chapter}</span>`;
-          if (time) metaHtml += `<span class="si18n-detail-time">${time}</span>`;
-          metaHtml += `</div>`;
-        }
-        listEl.innerHTML = sanitizeHtml(`
-          <div class="si18n-history-detail">
-            ${metaHtml}
-            <div class="si18n-chat-msg si18n-chat-user">
-              <div class="si18n-chat-bubble">${sb.escapeHtml(conv.question)}</div>
-            </div>
-            <div class="si18n-chat-msg si18n-chat-bot">
-              <div class="si18n-chat-bubble">${formatResponse(conv.answer)}</div>
-            </div>
-          </div>
-        `);
-      };
-    } catch (e) {
-      console.warn('[SkillBridge] Failed to load conversation:', e);
-    }
   }
 
   // ============================================================
@@ -878,7 +464,6 @@
   // FLASHCARD MODE (Vocabulary Cards for Exam Prep)
   // ============================================================
 
-  let flashcardPanelOpen = false;
   let flashcardCards = [];
   let flashcardIndex = 0;
   let flashcardBoxes = {};
@@ -888,15 +473,16 @@
     const chatPanel = document.getElementById('si18n-panel-chat');
     if (!chatPanel) return;
 
-    if (flashcardPanelOpen) {
+    if (_state.flashcardPanelOpen) {
       closeFlashcardPanel();
       return;
     }
-    // Close history if open
-    if (historyPanelOpen) closeHistoryPanel();
+    // Close history if open — they share `savedChatHTML`, so closing first
+    // restores the chat panel before we save it again.
+    if (_state.historyPanelOpen) closeSubPanel();
 
-    flashcardPanelOpen = true;
-    savedChatHTML = chatPanel.innerHTML;
+    _state.flashcardPanelOpen = true;
+    _state.savedChatHTML = chatPanel.innerHTML;
 
     flashcardCards = loadFlashcardsForCourse();
     flashcardIndex = 0;
@@ -969,7 +555,7 @@
                 _rawSectionsCache = data;
                 _rawSectionsLang = lang;
                 // Re-run with warm cache and update panel
-                if (flashcardPanelOpen) {
+                if (_state.flashcardPanelOpen) {
                   flashcardCards = loadFlashcardsForCourse();
                   flashcardIndex = 0;
                   refreshFlashcard();
@@ -1213,12 +799,17 @@
     }, 500);
   }
 
-  // Export to shared namespace
+  // Export to shared namespace.
+  // `formatResponse` is now provided by chat-render.js (loaded earlier in
+  // the manifest order); we deliberately do NOT re-assign it here.
   sb.injectSidebar = injectSidebar;
   sb.injectFloatingButton = injectFloatingButton;
   sb.toggleSidebar = toggleSidebar;
   sb.updateLocalizedLabels = updateLocalizedLabels;
-  sb.formatResponse = formatResponse;
   sb.toggleFlashcardPanel = toggleFlashcardPanel;
   sb.cancelActiveStream = cancelActiveStream;
+  // Surface for chat-history.js / chat-flashcards.js / SPA route handlers.
+  sb._chat.closeSubPanel = closeSubPanel;
+  sb._chat.bindChatInputEvents = bindChatInputEvents;
+  sb._chat.cancelActiveStream = cancelActiveStream;
 })();
