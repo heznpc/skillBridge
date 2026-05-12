@@ -1,34 +1,47 @@
-# SkillBridge 상용화 TODO
+# SkillBridge TODO
 
-> 2026-04-03 기준 | v3.4.0 | 완성도 ~90%
+> Strategy & scope: see [POSITIONING.md](POSITIONING.md).
+> Last refreshed: 2026-05-13 (v3.5.14)
 
-## 버그/기술 부채
+Items below are concrete engineering / ops work. Anything strategic — what
+markets we enter, what we charge, what features we accept — belongs in
+POSITIONING.md, not here.
 
-- [x] ~~package.json Jest `^30.2.0` — Jest 30 릴리즈 확인 (npm latest: 30.3.0)~~
-- [x] ~~tests/format-response.test.js — 22개 전부 PASS (262/262 전체 통과)~~
-- [x] ~~IndexedDB 쿼터 관리 — estimate() API + 자동 eviction + 사용자 알림 배너~~
-- [x] ~~플래시카드 상태 영속성 — 코스+언어별 키, 카드 텍스트 기반 안정 매핑, 위치 복원~~
+## Now (this week)
 
-## 배포
+- [ ] **v3.5.13 smoke test in an actual browser** — load `dist/bundled` unpacked in Chrome, run through Skilljar → sidebar → chat → history → flashcards → close. The v3.5.13 split moved `savedChatHTML` / panel flags onto `_sb._chat.state`; unit tests pass but the cross-module wiring hasn't been validated end-to-end. PR #102 left this unchecked.
+- [ ] **Apply to Anthropic Claude Ambassador program** — pitch writes itself; 11 premium-language dictionaries are the credentials.
+- [ ] **CWS listing refresh** — store metadata still says 2026-03-10 / v3.5.4. Update screenshots, description to reflect v3.5.13 (sidebar split, protected-terms hardening, i18n CI).
 
-- [x] ~~Firefox Add-ons — cd-firefox.yml 워크플로우 추가 (AMO_API_KEY/SECRET 시크릿 설정 필요)~~
-- [x] ~~Chrome i18n `_locales/` — 33개 언어 전체 커버 (11 기존 + 22 신규)~~
-- [x] ~~CHANGELOG.md — v1.0.0 ~ v3.4.0 실제 커밋 날짜 기준 작성~~
+## Next (this month)
 
-## 기능
+- [ ] **Playwright E2E (6 priority scenarios)** — spec in [docs/E2E_PLAN.md](docs/E2E_PLAN.md). Without it the v3.5.6 → 3.5.12 hotfix-train pattern continues. Estimated 4–6 hours.
+- [ ] **Extract `gt-queue.js` from `content.js`** — the STATIC TRANSLATIONS + GT QUEUE section (lines ~517–872 of content.js, 9 functions) is the largest remaining content-script chunk. Same `_sb._chat`-style namespace pattern that validated in v3.5.13.
+- [ ] **`scripts/check-dict-coverage.js`** — per-language × per-Anthropic-course term coverage check. Today `check-dicts.js` only checks freshness. POSITIONING.md commits us to "new course → 11 languages within 48h"; we need machine enforcement.
+- [ ] **YouTube `_BG_YT_CLIENT_VERSION` auto-bump GH Action** — currently manual every few weeks (see comment in `src/background/background.js`). Cron workflow that pings InnerTube and opens a PR when stale.
 
-- [x] ~~Per-Lesson Term Preview — 하단 플로팅 카드, 코스별 6개 용어, 15초 자동닫힘, 다크모드~~
-- [x] ~~Offline Translation Cache 강화 — 오프라인 시 GT 스킵 + 캐시만 적용 + 온라인 복귀 시 자동 재시도~~
-- [x] ~~PDF Export — window.print() 기반, 사이드바 헤더 버튼, 깔끔한 인쇄 스타일~~
-- [ ] Multi-LMS 지원 탐색 (Anthropic Academy 종속 탈피 → 일반 교육 플랫폼)
+## Later (when we have a real signal)
 
-## 수익화
+- [ ] **Extract `chat-flashcards.js` from `sidebar-chat.js`** — 250 lines, tangled with `savedChatHTML` panel state. Safe to extract once `_sb._chat.state` pattern has run in production for ≥ 1 release without regressions.
+- [ ] **Memory leak profiling on long-running tabs** — v3.5.9 (stream cleanup) and v3.5.10 (timer leak) found two; the pattern suggests more. SPA navigation churn + Chrome heap snapshot diff.
+- [ ] **Anonymized error telemetry** — currently every regression is found by a user filing a GitHub issue. Even a minimal "anonymous stack-trace, 30-day retention, off by default with explicit opt-in" loop would shorten time-to-fix significantly. Must respect the [POSITIONING.md](POSITIONING.md) client-side-privacy promise; design carefully.
+- [ ] **`tsconfig` strict ratchet** — `tsconfig.json` is currently `strict: false` to avoid surfacing a wave of pre-existing nullability warnings. Tighten file-by-file as JSDoc gets added.
 
-- [ ] 프리미엄 AI 튜터 (무제한 대화, 고급 설명) 유료화 탐색
-- [ ] 수익모델 확정 (현재 완전 무료)
+## Done — moved out of "Now" recently
 
-## 제작 병목 주의
+- v3.5.13 quality pass (#102): sidebar-chat split, `tsconfig + checkJs`, `_sb-typedef.js`, `scripts/check-i18n-keys.js` + CI, protected-terms hardening, production console strip
+- v3.5.14 P1 cleanup (this PR): dead `_sb` exports removed, `tests/gemini-block.test.js` lock-in, TODO.md rewrite, POSITIONING.md committed
 
-- **Firefox AMO 퍼블리싱**: cd-firefox.yml 준비 완료. GitHub Secrets에 `AMO_API_KEY` + `AMO_API_SECRET` 설정 필요
-- **Multi-LMS 피봇**: DOM 셀렉터가 Skilljar 전용. 다른 LMS 지원 시 셀렉터 추상화 레이어 필요 → 설계 먼저
-- **PDF Export**: @react-pdf 또는 jsPDF 단일 구현. 복잡한 레이아웃 피하기
+## Explicit not-doing (see POSITIONING.md for reasoning)
+
+- ❌ Multi-LMS / general course-platform support
+- ❌ Premium / paid tier
+- ❌ User-supplied API key
+- ❌ Server-side features that break client-side privacy
+- ❌ Full TypeScript migration — `tsconfig + checkJs` + JSDoc captures the 80% benefit; the migration cost outweighs the marginal compile-time gain for an MV3 extension with direct unpacked-load workflow
+
+## Production bottlenecks to remember
+
+- **Firefox AMO publishing** — `cd-firefox.yml` ready; needs `AMO_API_KEY` + `AMO_API_SECRET` in GitHub Secrets.
+- **CWS reviewer expectations** — raw `src/` zip submission keeps reviews fast. If we ever switch to bundled-only output, expect slower reviews.
+- **Anthropic Academy DOM stability** — selectors live in `src/lib/selectors.js`; `scripts/check-selectors.js` runs in CI against the live site. When that turns red, drop everything and fix.
