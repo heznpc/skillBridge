@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.14] - 2026-05-13
+
+### Strategy
+- `POSITIONING.md` committed — locks SkillBridge as "the canonical translation + AI tutor extension for Anthropic Academy". Records the three pillars (AI terminology fidelity, exam awareness, contextual tutor) the product defends, the explicit not-doings (multi-LMS, paid tier, user API key, server-side features), and the sunset triggers that would re-open the decision. Written off a 2026-05-13 market sweep (Academy launched 2026-03-02, no announced localization, Anthropic Ambassador program just opened, no direct competitors — generic translators target Netflix/YouTube/Coursera).
+- `TODO.md` rewritten from scratch — purged stale items (v3.4.0-era multi-LMS exploration, paid-tutor monetization) that conflict with the locked positioning, separated strategy (now in POSITIONING.md) from concrete eng / ops work, and seeded a fresh Now / Next / Later split.
+
+### Tests
+- `tests/gemini-block.test.js` (new, 25 tests) — locks in the Gemini-translated-HTML sanitizer's security invariants under `jest-environment-jsdom`. Covers: placeholder restoration (`<xN>`, `<cN/>`) and unmatched-placeholder cleanup; SAFE_TAGS allowlist (strips `<script>` / `<iframe>` / `<img>` / `<object>` / `<embed>` while preserving safe inline tags + child text nodes); per-tag attribute allowlist (`formaction`, `srcdoc`, `is=` strip on `<a>`; `on*` strip everywhere); `javascript:` / `data:` URL rejection on `<a href>` including case-insensitive + control-char-prefixed variants; fragment + `https:` href preservation; reverse-tabnabbing defense (`target="_blank"` forces `rel="noopener noreferrer"`, `target="_self"` doesn't add `rel`); `hasInlineTags` mixed-content detection; `escapeHtml` idempotence under double-encoding and `undefined` coercion. Adds `_xmlToHtml` to `window._geminiBlock` as a test-only handle (clearly commented; no production callers).
+- `jest-environment-jsdom@^30.4.1` added as a devDependency to support the new DOM-dependent sanitizer tests. Used per-file via `@jest-environment jsdom` pragma so the rest of the suite stays on the faster Node environment.
+
+### Refactor
+- Removed dead `_sb` exports landed in v3.5.13: `sb._chat.applyInline`, `sb._chat.bindChatInputEvents`, `sb._chat.cancelActiveStream`, and the back-compat `sb.formatResponse` shim. Grep confirmed zero external callers — they were namespace pollution that would have invited "where is this used?" hunts on future edits. `sb.cancelActiveStream` (the real public handle) and `sb._chat.closeSubPanel` (used by chat-history.js) are retained.
+
+### Tests (totals)
+- Suite: **368/368** pass (was 343). New `gemini-block.test.js` is the largest single addition (+25).
+
 ## [3.5.13] - 2026-05-11
 
 ### Refactor

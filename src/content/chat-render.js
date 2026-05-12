@@ -185,11 +185,10 @@
   }
 
   // Reserve the sub-namespace; sidebar-chat.js will fill in its half.
+  // `applyInline` is intentionally not exposed — it's an implementation
+  // detail of formatResponse. The v3.5.13 back-compat `sb.formatResponse`
+  // shim was removed in v3.5.14 after grep confirmed zero external callers.
   sb._chat = sb._chat || {};
   sb._chat.formatResponse = formatResponse;
-  sb._chat.applyInline = applyInline;
   sb._chat.sanitizeHtml = sanitizeHtml;
-
-  // Back-compat: existing callers in sidebar-chat.js use the old global name.
-  sb.formatResponse = formatResponse;
 })();

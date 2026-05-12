@@ -809,7 +809,8 @@
   sb.toggleFlashcardPanel = toggleFlashcardPanel;
   sb.cancelActiveStream = cancelActiveStream;
   // Surface for chat-history.js / chat-flashcards.js / SPA route handlers.
+  // bindChatInputEvents + cancelActiveStream were exposed on `_chat` in
+  // v3.5.13 but grep showed zero external callers — removed in v3.5.14.
+  // `sb.cancelActiveStream` (above) remains the single public handle.
   sb._chat.closeSubPanel = closeSubPanel;
-  sb._chat.bindChatInputEvents = bindChatInputEvents;
-  sb._chat.cancelActiveStream = cancelActiveStream;
 })();

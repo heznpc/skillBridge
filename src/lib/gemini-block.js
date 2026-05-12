@@ -286,10 +286,15 @@ RULES:
     el.classList.add('si18n-verifying');
   }
 
-  // Expose as standalone global (loaded before content.js)
+  // Expose as standalone global (loaded before content.js).
+  // `_xmlToHtml` is a test-only handle so the sanitizer (the security-
+  // critical piece — strips on* handlers, javascript:/data: URLs, enforces
+  // per-tag attribute allowlist, forces rel=noopener on target=_blank) can
+  // be unit-tested without spinning up the full Gemini request pipeline.
   window._geminiBlock = {
     hasInlineTags,
     queueGeminiBlockTranslation,
     escapeHtml,
+    _xmlToHtml: xmlToHtml,
   };
 })();
