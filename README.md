@@ -2,7 +2,7 @@
 
 <img src="assets/icons/icon128.png" alt="SkillBridge" width="90" />
 
-# SkillBridge for Anthropic Academy <!-- VERSION_START -->v3.5.12<!-- VERSION_END -->
+# SkillBridge for Anthropic Academy <!-- VERSION_START -->v3.5.14<!-- VERSION_END -->
 
 > Available in multiple languages at the [project landing page](https://heznpc.github.io/skillBridge/).
 
@@ -45,7 +45,7 @@ Break the language barrier on Anthropic's free AI courses. <!-- LANG_COUNT_START
 - [Supported Languages](#supported-languages)
 - [Privacy & Security](#privacy--security)
 - [Tech Stack](#tech-stack)
-- [Contributing](#contributing)
+- [Contributing](#contributing) · [Positioning & Scope](POSITIONING.md)
 - [FAQ](#faq)
 - [License](#license)
 
