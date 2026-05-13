@@ -93,6 +93,10 @@ function makePatchedExtension() {
 const PUTER_STREAM_STUB = `
 (function () {
   const STREAM_CHUNKS = ['안녕하세요! ', '프롬프트는 Claude에게 ', '주는 입력입니다.'];
+  // 150ms per chunk → 450ms total stream. Slow enough for the cancel
+  // spec to interrupt between chunks but still fast enough that the
+  // tutor-chat spec finishes under its 10s deadline.
+  window.__sbE2eChunkDelayMs = 150;
   window.puter = {
     ai: {
       chat: async function (prompt, opts) {
@@ -102,7 +106,7 @@ const PUTER_STREAM_STUB = `
               let i = 0;
               return {
                 async next() {
-                  await new Promise((r) => setTimeout(r, 20));
+                  await new Promise((r) => setTimeout(r, window.__sbE2eChunkDelayMs || 150));
                   if (i >= STREAM_CHUNKS.length) return { done: true };
                   return { done: false, value: { text: STREAM_CHUNKS[i++] } };
                 },
@@ -348,6 +352,18 @@ async function evalInContentWorld(context, op, arg) {
               }
               input.value = text;
               sendBtn.click();
+              return { ok: true };
+            },
+            // Trigger sb.cancelActiveStream — the same path that fires on
+            // sidebar close / SPA nav / sub-panel switch. After this, any
+            // in-flight chatStream should reject with AbortError, sidebar-
+            // chat's catch handler should remove the streaming-cursor
+            // class on the bot bubble, and isSending should be reset.
+            cancelStream: () => {
+              if (!window._sb || !window._sb.cancelActiveStream) {
+                return { error: 'cancelActiveStream not on _sb' };
+              }
+              window._sb.cancelActiveStream();
               return { ok: true };
             },
             // Read every chat bubble currently in the messages area.
