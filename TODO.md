@@ -1,34 +1,47 @@
 # SkillBridge TODO
 
 > Strategy & scope: see [POSITIONING.md](POSITIONING.md).
-> Last refreshed: 2026-05-13 (v3.5.14)
+> Last refreshed: 2026-05-14 (v3.5.30)
 
 Items below are concrete engineering / ops work. Anything strategic — what
 markets we enter, what we charge, what features we accept — belongs in
 POSITIONING.md, not here.
 
-## Now (this week)
+## Now
 
-- [ ] **v3.5.13/14 smoke test in an actual browser** — load `dist/bundled` unpacked in Chrome, run through Skilljar → sidebar → chat → history → flashcards → close. The v3.5.13 split moved `savedChatHTML` / panel flags onto `_sb._chat.state`; unit tests pass but the cross-module wiring hasn't been validated end-to-end. PR #102 and #103 both left this unchecked.
+- [ ] **Smoke-test the latest CWS bundle in an actual Chrome.** The 16-scenario Playwright suite (`tests/e2e/`) covers every documented README feature except YouTube subtitles (real iframe needed) and dark mode toggle (UI-only). But a real-tab eyeball test on `dist/bundled` before each CWS push is still valuable for catching CSS/visual regressions the assertion-based suite doesn't see.
+- [ ] **CWS listing refresh.** Store metadata likely still shows an older version. Update description, screenshots, and "What's new" text to reflect v3.5.30 (sidebar split complete, full E2E suite, IDB cache E2E, selectors drift watcher).
 
 ## Next (this month)
 
-- [ ] **Playwright E2E (6 priority scenarios)** — spec in [docs/E2E_PLAN.md](docs/E2E_PLAN.md). Without it the v3.5.6 → 3.5.12 hotfix-train pattern continues. Estimated 4–6 hours.
-- [ ] **Extract `gt-queue.js` from `content.js`** — the STATIC TRANSLATIONS + GT QUEUE section (lines ~517–872 of content.js, 9 functions) is the largest remaining content-script chunk. Same `_sb._chat`-style namespace pattern that validated in v3.5.13.
-- [ ] **`scripts/check-dict-coverage.js`** — per-language × per-Anthropic-course term coverage check. Today `check-dicts.js` only checks freshness. POSITIONING.md commits us to "new course → 11 languages within 48h"; we need machine enforcement.
-- [ ] **YouTube `_BG_YT_CLIENT_VERSION` auto-bump GH Action** — currently manual every few weeks (see comment in `src/background/background.js`). Cron workflow that pings InnerTube and opens a PR when stale.
+- [ ] **YouTube `_BG_YT_CLIENT_VERSION` auto-bump GH Action.** Currently manual every few weeks (see comment in `src/background/background.js`). Cron workflow that pings InnerTube and opens a PR when stale. Same pattern as the new `.github/workflows/selectors-drift.yml` — easy to copy.
+- [ ] **48-hour SOP for new Academy courses** (POSITIONING.md pillar #1). The dict-coverage check now enforces per-course parity ONCE a course is added to `FLASHCARD_COURSE_MAP`, but there's no automation that NOTIFIES us when a new Academy course goes live. RSS / sitemap scrape + GitHub Action that opens a "translate course X to 11 languages" issue with the per-language section skeleton pre-filled.
+- [ ] **Performance budget E2E.** Measure time from page load → fully translated H1. Sets a regression detector for any future refactor that degrades cold-start. ~1h add to the suite.
 
 ## Later (when we have a real signal)
 
-- [ ] **Extract `chat-flashcards.js` from `sidebar-chat.js`** — 250 lines, tangled with `savedChatHTML` panel state. Safe to extract once `_sb._chat.state` pattern has run in production for ≥ 1 release without regressions.
-- [ ] **Memory leak profiling on long-running tabs** — v3.5.9 (stream cleanup) and v3.5.10 (timer leak) found two; the pattern suggests more. SPA navigation churn + Chrome heap snapshot diff.
-- [ ] **Anonymized error telemetry** — currently every regression is found by a user filing a GitHub issue. Even a minimal "anonymous stack-trace, 30-day retention, off by default with explicit opt-in" loop would shorten time-to-fix significantly. Must respect the [POSITIONING.md](POSITIONING.md) client-side-privacy promise; design carefully.
-- [ ] **`tsconfig` strict ratchet** — `tsconfig.json` is currently `strict: false` to avoid surfacing a wave of pre-existing nullability warnings. Tighten file-by-file as JSDoc gets added.
+- [ ] **Memory leak profiling on long-running tabs.** v3.5.9 (stream cleanup) and v3.5.10 (timer leak) found two; the pattern suggests more. SPA navigation churn + Chrome heap snapshot diff. Probably needs a dedicated harness; the current E2E suite is functional, not memory-oriented.
+- [ ] **Anonymized error telemetry.** Currently every regression is found by a user filing a GitHub issue. Even a minimal "anonymous stack-trace, 30-day retention, off by default with explicit opt-in" loop would shorten time-to-fix significantly. Must respect the [POSITIONING.md](POSITIONING.md) client-side-privacy promise; design carefully.
+- [ ] **`tsconfig` strict ratchet.** Currently `strict: false` to avoid surfacing pre-existing nullability warnings. Tighten file-by-file as JSDoc gets added.
 
-## Done — moved out of "Now" recently
+## Done — shipped this cycle (2026-05-11 → 05-14)
 
-- v3.5.13 quality pass (#102): sidebar-chat split, `tsconfig + checkJs`, `_sb-typedef.js`, `scripts/check-i18n-keys.js` + CI, protected-terms hardening, production console strip
-- v3.5.14 P1 cleanup (this PR): dead `_sb` exports removed, `tests/gemini-block.test.js` lock-in, TODO.md rewrite, POSITIONING.md committed
+A burst of 18 PRs cleared most of what the v3.5.6 → 3.5.12 hotfix train had been signaling as missing infrastructure. The current state is "all README-documented features locked by E2E, all v3.5.X regression classes covered, all sidebar-chat big files split."
+
+**Refactors:**
+- `sidebar-chat.js`: 1224 → 559 lines (–54%) split across 4 modules (`chat-render.js`, `chat-history.js`, `chat-flashcards.js`, plus core panel infrastructure)
+- `content.js`: 1222 → ~869 lines, GT pipeline extracted to `gt-queue.js`
+- Dead `_sb` namespace exports removed
+
+**Tests (E2E):** Playwright suite from 0 → **16 scenarios across 11 specs**: `golden-translation` (4), `exam-mode` (2), `spa-navigation` (2), `tutor-chat` (1), `stream-cancel` (1), `protected-terms` (1), `chat-history` (1), `pdf-export` (1), `rapid-switch` (1), `code-comments` (1), `idb-cache` (1).
+
+**Tests (unit):** +50 (336 → 386). Sanitizer (gemini-block.test.js, 25 cases), protected-terms hardening (+6), gt-queue, dict-coverage self-test, etc.
+
+**CI:** added `e2e` job (parallel workers — wall time ~1m for 16 scenarios). Added `selectors-drift` watcher (6h cron + auto-issued GitHub issue on Skilljar DOM change). Added `check-dict-coverage` + `check-i18n-keys` validators.
+
+**Strategy:** POSITIONING.md committed (locks the "canonical Anthropic Academy extension" angle); `_sb-typedef.js` documents the cross-module namespace contract.
+
+**Production fix:** v3.5.16 — `const sb = window._sb` hoisting bug that 386 unit tests had let through three releases. Found by the first run of the new E2E suite.
 
 ## Explicit not-doing (see POSITIONING.md for reasoning)
 
@@ -36,10 +49,11 @@ POSITIONING.md, not here.
 - ❌ Premium / paid tier
 - ❌ User-supplied API key
 - ❌ Server-side features that break client-side privacy
-- ❌ Full TypeScript migration — `tsconfig + checkJs` + JSDoc captures the 80% benefit; the migration cost outweighs the marginal compile-time gain for an MV3 extension with direct unpacked-load workflow
+- ❌ Full TypeScript migration — `tsconfig + checkJs` + JSDoc captures the 80% benefit; full migration cost outweighs the marginal compile-time gain for an MV3 extension with direct unpacked-load workflow
 
 ## Production bottlenecks to remember
 
 - **Firefox AMO publishing** — `cd-firefox.yml` ready; needs `AMO_API_KEY` + `AMO_API_SECRET` in GitHub Secrets.
 - **CWS reviewer expectations** — raw `src/` zip submission keeps reviews fast. If we ever switch to bundled-only output, expect slower reviews.
-- **Anthropic Academy DOM stability** — selectors live in `src/lib/selectors.js`; `scripts/check-selectors.js` runs in CI against the live site. When that turns red, drop everything and fix.
+- **Anthropic Academy DOM stability** — selectors live in `src/lib/selectors.js`. `scripts/check-selectors.js` runs on every PR (`validate` job) AND on a 6h cron (`selectors-drift` workflow) — auto-opens an issue if Skilljar changes their DOM out from under us.
+- **MV3 extension content-script CSP** — forbids `eval` / `new Function` inside content scripts. The E2E harness bridges into the isolated world via a hard-coded menu of diagnostic ops (see `tests/e2e/helpers/extension.js`) — if you add a new op, add it to that switch, don't try to pass arbitrary functions through.

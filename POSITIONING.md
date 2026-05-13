@@ -50,13 +50,29 @@ quality is no longer the bottleneck.
    Action that opens a "translate course X to 11 languages" issue with the
    per-language section skeleton pre-filled. Without this the "terminology
    fidelity within 48h" pillar is aspirational instead of mechanical.
-2. **Per-language × per-course dictionary coverage check** — `scripts/check-dict-coverage.js`
-   that fails CI if any of the 11 premium languages is missing terminology
-   for any current Academy course. Today's `check-dicts.js` only checks file
-   freshness, not actual content coverage.
-3. **Playwright E2E suite** — six scenarios in `docs/E2E_PLAN.md`. The
-   v3.5.6 → 3.5.12 hotfix train shows we're catching cross-module integration
-   bugs in production; this is the mechanism to catch them in CI instead.
+   **Status: still open.** Dict coverage now enforces parity ONCE a course
+   is added to `FLASHCARD_COURSE_MAP`, but there's no automation that
+   notifies us when a new course goes live on the Academy site.
+2. ~~**Per-language × per-course dictionary coverage check**~~ — **shipped
+   in v3.5.18** as `scripts/check-dict-coverage.js`. Fails CI if any of the
+   10 premium languages is missing terminology for any course referenced
+   from `FLASHCARD_COURSE_MAP`. Five-check shape: section parity, English-
+   key parity, FLASHCARD_COURSE_MAP referential integrity, orphan section
+   detection, and `_meta.version` sync with manifest.
+3. ~~**Playwright E2E suite**~~ — **shipped** across v3.5.16 → v3.5.30,
+   currently 16 scenarios across 11 specs (was originally scoped for 6 in
+   `docs/E2E_PLAN.md`). Covers every documented README feature except
+   YouTube subtitle activation (real iframe required) and dark mode toggle
+   (UI-only, low risk). Caught a real production regression on its very
+   first run (v3.5.16 fixed the `const sb = window._sb` hoist bug that
+   386 unit tests had let through three releases).
+
+Also worth tracking but lower priority:
+
+4. **Selectors drift watcher** — shipped in v3.5.29 as a 6h cron that runs
+   `check-selectors.js` against the live Skilljar pages and auto-opens an
+   idempotent issue when it fails. Closes the "Skilljar redeploys mid-week,
+   our PR queue is closed, users see broken pages for days" gap.
 
 ## Sunset triggers (re-open this document)
 
