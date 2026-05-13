@@ -318,6 +318,25 @@ async function evalInContentWorld(context, op, arg) {
             // Whether content.js's detectExamPage() flipped isExamPage true.
             // Read via the `_sb.isExamPage` getter content.js exposes.
             examStatus: () => ({ isExamPage: !!(window._sb && window._sb.isExamPage) }),
+            // Run sb.translateCodeComments on the current language.
+            // Mirrors what the popup's `toggleCommentTranslation` message
+            // handler does on enable. Returns when the translate pass
+            // completes (the function is async; resolves after every
+            // <code> block has its translate() call resolve).
+            translateCodeComments: async () => {
+              if (!window._sb || !window._sb.translateCodeComments) {
+                return { error: 'translateCodeComments missing' };
+              }
+              await window._sb.translateCodeComments(window._sb.currentLang);
+              return { ok: true };
+            },
+            // Read the Python fixture code block. Returns its textContent
+            // so the spec can assert on both the translated comment AND
+            // the preserved code keywords (def/return/pass).
+            readCodeFencePython: () => {
+              const el = document.querySelector('#code-fence-python code');
+              return { text: el ? el.textContent : null };
+            },
             // Simulate a Skilljar SPA-style navigation: atomically swap the
             // body HTML and push a new history entry. Triggers the wrapped
             // `history.pushState` which content.js intercepts to fire
