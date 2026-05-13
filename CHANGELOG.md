@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.15] - 2026-05-13
+
+### Refactor
+- Extracted `src/content/gt-queue.js` (new, 537 lines) from `src/content/content.js` (1222 → 869 lines, –29%). gt-queue.js now owns the static-dictionary lookup pass, the Google Translate batch queue, the language-generation counter (`gtGeneration`), the offline-deferred items list, viewport-first chunked scheduling, and the verify-spinner helpers. Cross-module access goes through a new `window._sb._gt` sub-namespace (`applyStaticTranslations`, `queueForGoogleTranslate`, `processOneElement`, `pruneDetachedEntries`, `reset`, `bumpGeneration`, `flushOfflinePending`, `removeVerifySpinner`, plus a `get gtGeneration` view); the four mutable state variables that used to live in `content.js` are now encapsulated inside the gt-queue IIFE so the only way for an external module to mutate them is through the public surface.
+  - `content.js` keeps the page-translation entry points (`translatePage`, `switchLanguage`, `restoreOriginal`), the DOM observer (which delegates to `sb._gt.processOneElement` / `sb._gt.queueForGoogleTranslate`), exam detection, and the per-lesson term preview UI.
+  - `restoreOriginal` simplifies from a five-line state reset to `sb._gt.reset()`.
+  - The `online` event handler simplifies from inline state inspection to `sb._gt.flushOfflinePending(currentLang)` with a boolean return that says whether a flush actually happened.
+  - `isLikelyEnglish` moved to gt-queue.js (it was only called from inside the GT section), and re-attached on `sb.isLikelyEnglish` so `code-comments.js` (the one external caller) keeps working unchanged.
+  - `content.js` exposes `safeReplaceText` / `updateLangClass` / `detectExamPage` / `showTermPreview` plus `mapSizeCap` and the prebuilt `translatableSelector` / `excludeSelector` strings via `_sb` so gt-queue.js can use them without re-importing the Skilljar selector dictionary.
+  - `manifest.json` `content_scripts.js` order updated to load `gt-queue.js` right after `content.js` (and before the rest of the content modules) so `_sb._gt` is ready by the time `init()` runs.
+
+### Strategy
+- POSITIONING.md "90-day growth moves" section replaced with "Quality investments that compound" — keeps the three load-bearing engineering items (course-launch SOP, dictionary coverage check, Playwright E2E) and drops the marketing speculation (Ambassador program — the program is community-organizer-focused and didn't match SkillBridge's profile; Code with Claude Tokyo timing; Class Central outreach; Twitter outreach). Strategy doc is now strictly about what the product defends, not how it grows.
+- TODO.md `Now` section trimmed accordingly: dropped Ambassador application (mismatch) and CWS listing refresh (marketing, not engineering).
+
+### Tests
+- `tests/gt-queue.test.js` (new, 13 cases) — pins `isLikelyEnglish`'s majority-Latin threshold behaviour: Hangul / Kana / Hanzi / Cyrillic correctly classified as not English; code-mixed strings classified by whose characters dominate; whitespace excluded from the denominator (so tab-and-newline noise doesn't flip results); empty / numeric-only / exactly-50% inputs all return false. Extracted via regex from gt-queue.js source so production code stays the source of truth.
+
+### Tests (totals)
+- Suite: **381/381** pass (was 368, +13).
+
 ## [3.5.14] - 2026-05-13
 
 ### Strategy
