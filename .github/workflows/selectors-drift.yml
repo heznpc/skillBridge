@@ -1,0 +1,92 @@
+name: Selectors drift watcher
+
+# Runs `scripts/check-selectors.js` against the live Skilljar pages on a
+# 6h cron. The same script runs in the `validate` CI job on every PR,
+# but PR cadence doesn't catch the Skilljar-redeploys-without-us scenario:
+# Skilljar can ship a DOM change on a Monday and our PR review queue is
+# closed until Wednesday, during which time the extension silently fails
+# to translate parts of the page for every user.
+#
+# On failure, opens a GitHub issue (idempotent — won't spam) so the
+# repo owner notices via standard issue notifications rather than
+# having to monitor the Actions tab. The auto-opened issue includes
+# the dom-check-report.txt that the script writes in CI mode.
+
+on:
+  schedule:
+    # Every 6 hours — fine-grained enough to catch a Skilljar redeploy
+    # within a US-business-day, coarse enough that we don't burn GitHub
+    # minutes on a no-change workflow.
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # manual trigger from Actions UI
+
+permissions:
+  contents: read
+  issues: write # for auto-opened drift issues
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check Skilljar selectors against live pages
+        id: check
+        run: node scripts/check-selectors.js
+        env:
+          CI: 'true'
+
+      - name: Open drift-detected issue (idempotent)
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let report = '(no dom-check-report.txt produced)';
+            try {
+              report = fs.readFileSync('dom-check-report.txt', 'utf8').slice(0, 3000);
+            } catch (e) { /* file missing — script may have crashed before writing */ }
+
+            const title = '⚠️ Skilljar selectors drift detected';
+
+            // Idempotency: skip if there's already an open drift issue.
+            // Without this, a persistent drift would spawn a new issue
+            // every 6 hours until someone fixes selectors.js.
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+            });
+            if (existing.data.some(i => i.title === title)) {
+              core.info('A drift issue is already open; skipping the create.');
+              return;
+            }
+
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = [
+              '`scripts/check-selectors.js` failed against the live Skilljar pages.',
+              '',
+              '**Likely cause**: Skilljar pushed a DOM change. Our `src/lib/selectors.js` no longer matches one or more elements, and the extension will silently fail to translate parts of the page until the selectors are updated.',
+              '',
+              '**Action**: run `node scripts/check-selectors.js` locally, identify which selectors fail, and update `src/lib/selectors.js` to match the new DOM. Also re-run the CI `e2e` job — content-script paths that depend on the failing selectors may need follow-ups.',
+              '',
+              '**Report** (truncated):',
+              '```',
+              report,
+              '```',
+              '',
+              `Workflow run: ${runUrl}`,
+              '',
+              '_Close this issue after the fix lands; the cron will re-open one only if drift recurs._',
+            ].join('\n');
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body,
+            });

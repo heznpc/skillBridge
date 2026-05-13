@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.29] - 2026-05-14
+
+### Build / Ops — Selectors drift watcher (6h cron + auto-issue)
+- `.github/workflows/selectors-drift.yml` (new) runs `scripts/check-selectors.js` against the live Skilljar pages every 6 hours. Same script runs on every PR's `validate` job, but PR cadence doesn't catch the **Skilljar-redeploys-without-us** scenario: Skilljar can ship a DOM change on a Monday and our PR queue is closed until Wednesday, during which the extension silently fails to translate parts of the page for every user.
+- On failure the workflow auto-opens a GitHub issue (idempotent — skips create if one is already open under the same title, so a persistent drift doesn't spawn a new issue every 6 hours). The issue body includes the truncated `dom-check-report.txt` plus a `Workflow run:` link, with a brief action checklist (run script locally → identify failures → update `src/lib/selectors.js` → re-run E2E).
+- Manual `workflow_dispatch` trigger included so the cron can be re-run on demand from the Actions UI.
+- Failure detection latency: was *"user opens GitHub issue → we see it"* (potentially days). Now: *"auto-opened issue within 6h of drift"*. Production-quality monitoring at zero ops cost.
+
 ## [3.5.28] - 2026-05-14
 
 ### Tests (E2E — code-comment translation, last README feature without E2E coverage)
