@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.26] - 2026-05-14
+
+### Tests (E2E — rapid language-switch race lock-in, v3.5.7 regression class)
+- `tests/e2e/rapid-switch.spec.js` (new) — locks in v3.5.7's race-condition class. The `gtGeneration` counter exists specifically to invalidate in-flight GT batch + verifier callbacks when the user switches language mid-pipeline. Every call-site reads its generation at queue time and bails if it doesn't match on resolution. Until now: zero coverage of the case where a language switch actually fires WHILE a translation pipeline is still working.
+- Spec triggers `switchLanguage('ko')` → 80ms pause (long enough for GT queue to start, short enough to not complete) → `switchLanguage('en')` → immediately `switchLanguage('ko')` again. Asserts:
+  1. Final `currentLang === 'ko'`.
+  2. `gtGeneration` bumped **at least twice** from start — once per switch via `sb._gt.reset()`. If reset were silently broken the counter would lag.
+  3. Every fixture translation target (H1, p1, li1) is fully Korean — no English leftover where Korean should be (would indicate the second ko pipeline didn't complete after the rapid switches).
+  4. H1 specifically does NOT contain `Introduction` — defends against partial-leak shape where the first ko run wrote a fragment and then bailed.
+
+### Tests (totals)
+- Unit (jest): 386/386 unchanged.
+- E2E (Playwright): **14/14** (was 13/13) — adds rapid language switch.
+
 ## [3.5.25] - 2026-05-14
 
 ### Build / CI — parallel E2E workers
