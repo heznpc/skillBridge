@@ -256,6 +256,23 @@ async function evalInContentWorld(context, op, arg) {
             // Whether content.js's detectExamPage() flipped isExamPage true.
             // Read via the `_sb.isExamPage` getter content.js exposes.
             examStatus: () => ({ isExamPage: !!(window._sb && window._sb.isExamPage) }),
+            // Simulate a Skilljar SPA-style navigation: atomically swap the
+            // body HTML and push a new history entry. Triggers the wrapped
+            // `history.pushState` which content.js intercepts to fire
+            // `onRouteChange`. payload = { html, path }.
+            replaceBodyAndPushState: (p) => {
+              document.body.innerHTML = p.html;
+              history.pushState({}, '', p.path);
+              return { url: location.href };
+            },
+            // Snapshot of body text after a SPA nav — used to assert both
+            // (a) new content was translated and (b) old content didn't
+            // leak through.
+            bodyTextSnapshot: () => ({
+              text: document.body.textContent.replace(/\s+/g, ' ').trim(),
+              h1: document.querySelector('h1') && document.querySelector('h1').textContent,
+              p: document.querySelector('p') && document.querySelector('p').textContent,
+            }),
           };
           if (!ops[opNameInner]) throw new Error('Unknown op: ' + opNameInner);
           return await ops[opNameInner](payloadInner);
