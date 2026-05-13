@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.31] - 2026-05-14
+
+### Docs — TODO.md + POSITIONING.md freshness pass
+- After 18 PRs in 4 days, the strategy doc and the engineering backlog had drifted from reality. This release reconciles both.
+- **TODO.md** rewritten:
+  - The previous `Next` list claimed 4 in-flight items — 3 of them are now shipped (`scripts/check-dict-coverage.js`, gt-queue extraction, Playwright E2E). The lone remaining item (`_BG_YT_CLIENT_VERSION` auto-bump GH Action) stays in `Next`.
+  - The previous `Later` list claimed `chat-flashcards.js` extraction was pending — shipped in v3.5.27, moved to `Done`.
+  - The `Done` section had two entries (v3.5.13 + .14). Now lists the full v3.5.13 → v3.5.30 shipped work, grouped by refactor / tests / CI / strategy / production-fix.
+  - New `Now` reflects actual current state (CWS listing refresh + real-browser smoke).
+  - Added a fourth bullet under "Production bottlenecks": MV3 content-script CSP forbids `eval` / `new Function` — the E2E harness uses a hard-coded diagnostic-op menu, not arbitrary function passing. Documenting so the next person extending the harness doesn't relive the v3.5.16 CSP debug session.
+- **POSITIONING.md** "Quality investments that compound" section:
+  - Item 1 (48-hour course-launch SOP): still open, expanded note on what's now in place (dict-coverage enforces parity ONCE a course is in `FLASHCARD_COURSE_MAP`; what's missing is the new-course detection signal).
+  - Item 2 (dict coverage check): marked shipped, references v3.5.18 with the five-check shape.
+  - Item 3 (Playwright E2E): marked shipped, references v3.5.16 → v3.5.30 (16 scenarios, way past the original 6), notes that the first run caught the v3.5.15 hoist regression.
+  - New item 4: selectors drift watcher (v3.5.29) — closes the "Skilljar redeploys mid-week and we don't notice for days" gap.
+
+No production code changes in this release; docs only.
+
 ## [3.5.30] - 2026-05-14
 
 ### Tests (E2E — translator IDB cache round-trip)
