@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.21] - 2026-05-13
+
+### Tests (E2E — stream cancel lock-in)
+- `tests/e2e/stream-cancel.spec.js` (new) — locks in the INTERRUPT path of the tutor chat. Stream lifecycle has been the single most recurring bug class across v3.5.6 → 3.5.12 (timer/listener cleanup, stream cancel, YouTube subtitle timer leak). The tutor-chat spec verified the happy path; this verifies what happens when `sb.cancelActiveStream()` fires mid-stream — the same path that triggers on sidebar close / SPA nav / sub-panel switch.
+- Asserts after a mid-stream cancel:
+  - The bot bubble contains chunk 1 (`안녕하세요`) but **NOT** chunk 3 (`주는 입력입니다`) — proves cancel actually stopped the stream rather than passively letting it finish.
+  - The `si18n-streaming-cursor` class is gone — proves the catch block's cleanup ran.
+  - No `role="alert"` error bubble — proves AbortError took the early-return branch, not the error-render branch.
+  - A second `sendChat` succeeds — proves `isSending` was correctly reset by the `finally` even on the AbortError early-return (regression-class shape for v3.5.9).
+- Two harness pieces enable the test:
+  - Puter stub paced at 150ms/chunk (was 20ms) — slow enough for the test to interrupt between chunks but still well under the tutor-chat spec's 10s deadline. Configurable via `window.__sbE2eChunkDelayMs` for future tests that need different pacing.
+  - New diagnostic op `cancelStream` — triggers `sb.cancelActiveStream()`, the same single entry point every interrupt source funnels through.
+
+### Tests (totals)
+- Unit (jest): 386/386 unchanged.
+- E2E (Playwright): **10/10** (was 9/9) — golden translation + exam mode + SPA navigation + tutor chat happy path + tutor chat cancel.
+
 ## [3.5.20] - 2026-05-13
 
 ### Tests (E2E — tutor chat lock-in, 3rd POSITIONING pillar)
