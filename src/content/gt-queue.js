@@ -47,15 +47,15 @@
   let gtProcessing = false;
   let gtGeneration = 0;
   let _offlinePendingItems = [];
-  // Lazy-translation observer state (added in v3.5.32).
-  //   `_lazyObserver`     — the IntersectionObserver, one per generation
-  //   `_lazyObserverGen`  — generation the observer was constructed at;
-  //                         intersect callbacks re-check vs gtGeneration
-  //   `_lazyElements`     — WeakMap of observed el → target lang (so the
-  //                         callback knows which lang to translate to and
-  //                         entries get GC'd when DOM nodes are removed)
+  // One IntersectionObserver per language generation. Constructed lazily
+  // (first applyStaticTranslations call); disconnected + nulled in reset()
+  // and bumpGeneration(). The generation it was built for is captured in
+  // the callback's closure, NOT module state — a module-state version
+  // would be overwritten when the next-gen observer is created and
+  // wouldn't help a stale callback discriminate.
   let _lazyObserver = null;
-  let _lazyObserverGen = 0;
+  // Observed-element → target lang. WeakMap so removed DOM nodes get GC'd
+  // without explicit cleanup.
   const _lazyElements = new WeakMap();
 
   // ============================================================
@@ -230,33 +230,41 @@
    * well covered.
    *
    * Generation safety: stale observers from a previous language are
-   * disconnected in `reset()` and `bumpGeneration()`. Within a single
-   * generation, an in-flight intersect callback also re-checks
-   * `gtGeneration` before queueing.
+   * disconnected in `reset()` / `bumpGeneration()`. A callback queued
+   * but not yet executed before disconnect compares its closure-
+   * captured generation against the live `gtGeneration` and bails
+   * if they differ — protects against the disconnect-races-rebuild
+   * window.
    */
   function observeLazyTranslation(elements, targetLang) {
-    // One observer per generation. Constructed lazily; disconnected when
-    // gtGeneration moves. A persistent observer would fire callbacks
-    // into the wrong generation if reset() didn't replace it.
     if (!_lazyObserver) {
-      _lazyObserver = new IntersectionObserver(
+      // Closure-capture the generation. A module-scope `_lazyObserverGen`
+      // would be overwritten when the NEXT-gen observer is constructed,
+      // so a stale callback that fires after disconnect+rebuild would
+      // mistakenly see its gen match the new one. Capturing here freezes
+      // the value with the callback that uses it.
+      const observerGen = gtGeneration;
+      // `obs` likewise captured so a stale callback's `unobserve` runs
+      // against the observer the callback was attached to, not against
+      // whatever `_lazyObserver` currently points at (could be a new one).
+      const obs = new IntersectionObserver(
         (entries) => {
-          if (gtGeneration !== _lazyObserverGen) return;
+          if (gtGeneration !== observerGen) return;
           const candidates = [];
-          let lazyLang = targetLang;
+          let lang = targetLang;
           for (const entry of entries) {
             if (!entry.isIntersecting) continue;
             const el = entry.target;
-            const lang = _lazyElements.get(el);
-            if (!lang) continue;
-            _lazyObserver.unobserve(el);
+            const elLang = _lazyElements.get(el);
+            if (!elLang) continue;
+            obs.unobserve(el);
             _lazyElements.delete(el);
-            lazyLang = lang;
-            const result = processOneElement(el, lang);
+            lang = elLang;
+            const result = processOneElement(el, elLang);
             if (result === 'gt') candidates.push(el);
           }
-          if (candidates.length > 0 && lazyLang !== 'en') {
-            queueForGoogleTranslate(candidates, lazyLang, true);
+          if (candidates.length > 0 && lang !== 'en') {
+            queueForGoogleTranslate(candidates, lang, true);
           }
         },
         {
@@ -268,7 +276,7 @@
           threshold: 0,
         },
       );
-      _lazyObserverGen = gtGeneration;
+      _lazyObserver = obs;
     }
     for (const el of elements) {
       _lazyElements.set(el, targetLang);
