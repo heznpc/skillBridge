@@ -39,13 +39,24 @@ not for individual feature debates.
 - **Require an API key for any feature**. Same reason.
 - **Add features that need server-side infrastructure**. Breaks the client-side privacy promise; introduces ops cost we can't fund without monetization (see above).
 
-## 90-day growth moves
+## Quality investments that compound
 
-1. **Apply to the Anthropic Claude Ambassador program**. The pitch writes itself.
-2. **Time a Japanese localized push around Code with Claude Tokyo**. Premium-language already covered; needs landing-page + Product Hunt JP timing.
-3. **48-hour SOP for new Academy courses** — automate where possible (RSS poll → GH Action that opens a "translate course X to 11 languages" issue).
-4. **Outreach to Class Central / Medium "Anthropic Academy 2026 guide" authors** — they already cover Academy; ask for a "multilingual access" mention with SkillBridge link.
-5. **Korean / Japanese AI dev Twitter outreach** — strong communities, premium languages already covered, high ROI vs effort.
+These are the work items the positioning *makes load-bearing* — they're the
+mechanisms that defend the three pillars above. Marketing / outreach moves
+are out of scope for this document; pick those up only when product
+quality is no longer the bottleneck.
+
+1. **48-hour SOP for new Academy courses** — RSS poll on Academy → GitHub
+   Action that opens a "translate course X to 11 languages" issue with the
+   per-language section skeleton pre-filled. Without this the "terminology
+   fidelity within 48h" pillar is aspirational instead of mechanical.
+2. **Per-language × per-course dictionary coverage check** — `scripts/check-dict-coverage.js`
+   that fails CI if any of the 11 premium languages is missing terminology
+   for any current Academy course. Today's `check-dicts.js` only checks file
+   freshness, not actual content coverage.
+3. **Playwright E2E suite** — six scenarios in `docs/E2E_PLAN.md`. The
+   v3.5.6 → 3.5.12 hotfix train shows we're catching cross-module integration
+   bugs in production; this is the mechanism to catch them in CI instead.
 
 ## Sunset triggers (re-open this document)
 
