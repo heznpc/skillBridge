@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.19] - 2026-05-13
+
+### Tests (E2E — SPA navigation race coverage)
+- `tests/e2e/spa-navigation.spec.js` (new, 2 steps) — covers the bug class that the v3.5.6 → 3.5.12 hotfix train kept finding in production: race conditions around Skilljar's pjax-style intra-course navigation, where `content.js` stays loaded across the transition and `onRouteChange` is the path that has to re-translate the swapped-in DOM. None of the existing E2E specs exercise that path.
+  - **Step A** (baseline): /lesson, switchLanguage('ko'), assert H1 translated to `"Claude 소개"`.
+  - **Step B**: atomically swap body HTML with lesson-2 content + push `/lesson-2` via `history.pushState` (which content.js wraps to fire `onRouteChange`). Assert: new H1 translates to `"고급 프롬프트 엔지니어링"`, paragraph + bullet also translate, and crucially **lesson-1 stale text (`Claude 소개`, the original Korean translation of the prior lesson) does NOT leak into the new DOM** — the regression shape that v3.5.7 fixed and could re-appear under future refactors. `currentLang` stays `ko` (we didn't switch languages, just navigated), `gtGeneration` stays consistent.
+- New diagnostic ops in `helpers/extension.js`:
+  - `replaceBodyAndPushState({ html, path })` — atomic body swap + pushState, isolating the SPA transition into one bridge call so timing doesn't drift between the two.
+  - `bodyTextSnapshot()` — full body text + H1/first-P snapshot, used for the stale-leak assertion.
+- New `GT_KO` entries for the lesson-2 content. Strings chosen so the H1 swap from `"Introduction to Claude"` → `"Advanced prompt engineering"` gives a clean assertion target and the chain-of-thought paragraph proves the GT batch ran end-to-end on the new content.
+
+### Tests (totals)
+- Unit (jest): 386/386 unchanged.
+- E2E (Playwright): **8/8** (was 6/8) — golden translation + exam mode + SPA navigation.
+
 ## [3.5.18] - 2026-05-13
 
 ### Added — `scripts/check-dict-coverage.js` (POSITIONING.md "48h SLA" enforcement)

@@ -94,6 +94,13 @@ const GT_KO = {
   'Claude Fundamentals Quiz': 'Claude 기초 퀴즈',
   'Which model is best suited for fast, high-volume classification tasks?':
     '어떤 모델이 빠르고 대용량 분류 작업에 가장 적합합니까?',
+  // SPA-navigation second-lesson fixture content (injected via the
+  // `replaceBodyAndPushState` diagnostic op, not served from a separate
+  // HTTP route). Used by tests/e2e/spa-navigation.spec.js.
+  'Advanced prompt engineering': '고급 프롬프트 엔지니어링',
+  'Chain of thought prompting improves Claude reasoning on multi-step tasks.':
+    '연쇄 추론 프롬프팅은 Claude가 다단계 작업에서 추론하는 능력을 향상시킵니다.',
+  'Use XML tags to delimit sections': 'XML 태그로 섹션을 구분하세요',
 };
 
 /**
