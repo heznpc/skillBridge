@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Anthropic Academy — Lesson Quiz</title>
+</head>
+<body>
+  <!-- Quiz fixture. The URL `/quiz` matches EXAM_URL_PATTERNS so
+       detectExamPage() returns true. The `.quiz-form` + `.answer-option`
+       DOM selectors are also redundant fallbacks — if the URL changes,
+       detectExamPage still trips via the DOM path. -->
+  <header>
+    <nav><span class="nav-text">Anthropic Academy</span></nav>
+  </header>
+
+  <main id="lesson-main">
+    <h1 id="quiz-title">Claude Fundamentals Quiz</h1>
+
+    <p id="quiz-question">
+      Which model is best suited for fast, high-volume classification tasks?
+    </p>
+
+    <form class="quiz-form" id="quiz-form">
+      <div>
+        <label class="answer-option" id="answer-a">
+          <input type="radio" name="answer" value="a" />
+          Claude Opus — for the longest reasoning chains
+        </label>
+      </div>
+      <div>
+        <label class="answer-option" id="answer-b">
+          <input type="radio" name="answer" value="b" />
+          Claude Haiku — for high-throughput, low-latency tasks
+        </label>
+      </div>
+      <div>
+        <label class="answer-option" id="answer-c">
+          <input type="radio" name="answer" value="c" />
+          Claude Sonnet — balanced general-purpose model
+        </label>
+      </div>
+      <div>
+        <label class="answer-option" id="answer-d">
+          <input type="radio" name="answer" value="d" />
+          None of the above
+        </label>
+      </div>
+    </form>
+  </main>
+
+  <footer><span>Copyright Anthropic</span></footer>
+</body>
+</html>

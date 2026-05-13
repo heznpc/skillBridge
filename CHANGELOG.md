@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.17] - 2026-05-13
+
+### Tests (E2E — exam-mode lock-in)
+- `tests/e2e/exam-mode.spec.js` (new, 2 steps) — locks in the "exam awareness" pillar from POSITIONING.md. If this contract silently breaks (translated answer-option labels reach students), SkillBridge gets flagged as a cheating tool — existential brand risk. The spec asserts:
+  - `detectExamPage()` flips `_sb.isExamPage = true` on the `/quiz` fixture (URL pattern hits `EXAM_URL_PATTERNS`, DOM also has the `.quiz-form` + `.answer-option` shape as a redundancy).
+  - After `switchLanguage('ko')`, the quiz title and question text translate to Korean BUT every `.answer-option` label stays in English. Verified both by absence-of-Hangul on each label AND verbatim presence of the original English phrases ("Claude Opus", "Claude Haiku", "Claude Sonnet", "None of the above") — defends against partial translation (e.g. only the descriptive tail being translated).
+- `tests/e2e/fixtures/skilljar-quiz.html` (new) — minimal Skilljar-shaped quiz DOM with 4 answer options.
+- `tests/e2e/helpers/network-stubs.js` — fixture server is now path-aware: `/quiz` / `/exam` / `/assessment` serve the quiz fixture; everything else serves the lesson fixture. Keeps both specs in one process under one Playwright launch.
+- `tests/e2e/helpers/extension.js` — two new diagnostic ops in the isolated-world bridge: `quizText` (returns the quiz title, question, and per-`.answer-option` label texts with whitespace normalized) and `examStatus` (returns `{ isExamPage }`).
+- New GT stub entries for the quiz fixture's question text. Answer-option strings deliberately NOT in `GT_KO` — if the EXAM_SKIP_SELECTORS path ever regresses they'd hit the stub as untranslated markers (`[UNTRANSLATED:...]`) and the assertions would fail cleanly.
+
+### Tests (totals)
+- Unit (jest): 381/381 unchanged.
+- E2E (Playwright): **6/6** (was 4/4) — golden translation + exam mode.
+
 ## [3.5.16] - 2026-05-13
 
 ### Fixed (caught by the new E2E suite)
