@@ -109,6 +109,11 @@ const GT_KO = {
   // MIN_COMPLEX_TEXT=120). The verify queue is what writes the cache.
   'Cache me through the IDB layer; this sentence is long enough to clear the GEMINI_MIN_TEXT threshold.':
     'IDB 레이어를 통해 캐시하세요; 이 문장은 GEMINI_MIN_TEXT 임계값을 통과할 만큼 깁니다.',
+  // Lazy translation E2E (tests/e2e/lazy-translate.spec.js). Distinctive
+  // strings so we can detect by Hangul presence whether the lazy path
+  // queued this paragraph or not.
+  'This paragraph is below the lazy-translation horizon and should stay English until scrolled.':
+    '이 문단은 지연 번역 지평선 아래에 있어 스크롤하기 전까지 영어로 남아 있어야 합니다.',
   // Quiz fixture — question text translates, answer options should NOT
   // reach this map at all (the EXAM_SKIP_SELECTORS path filters them out
   // before GT is even called). If they DO appear here it's a regression.

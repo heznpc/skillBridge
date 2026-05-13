@@ -30,6 +30,8 @@ export default [
         DOMParser: 'readonly',
         DOMException: 'readonly',
         MutationObserver: 'readonly',
+        IntersectionObserver: 'readonly',
+        WeakMap: 'readonly',
         AbortController: 'readonly',
         CustomEvent: 'readonly',
         URL: 'readonly',

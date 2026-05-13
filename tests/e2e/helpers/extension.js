@@ -307,6 +307,8 @@ async function evalInContentWorld(context, op, arg) {
               // protected-terms.spec.js — the GT stub returns mistranslated
               // content and we assert the wrong forms got fixed.
               pProtected: document.querySelector('#p-protected') && document.querySelector('#p-protected').textContent,
+              pBelowFold:
+                document.querySelector('#p-below-fold') && document.querySelector('#p-below-fold').textContent,
             }),
             // Read quiz fixture state. `answers` is the array of answer-option
             // label texts AFTER translation — the test asserts these are
@@ -377,6 +379,16 @@ async function evalInContentWorld(context, op, arg) {
             readCodeFencePython: () => {
               const el = document.querySelector('#code-fence-python code');
               return { text: el ? el.textContent : null };
+            },
+            // Scroll the below-the-fold paragraph into view — used by
+            // tests/e2e/lazy-translate.spec.js to verify the lazy
+            // IntersectionObserver fires translation work only when
+            // content nears the viewport (not upfront on page load).
+            scrollToBelowFold: () => {
+              const el = document.querySelector('#p-below-fold');
+              if (!el) return { error: 'no #p-below-fold element' };
+              el.scrollIntoView({ behavior: 'instant', block: 'center' });
+              return { ok: true };
             },
             // Simulate a Skilljar SPA-style navigation: atomically swap the
             // body HTML and push a new history entry. Triggers the wrapped

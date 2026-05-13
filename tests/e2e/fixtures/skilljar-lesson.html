@@ -69,6 +69,16 @@ def hello():
       lesson body content (not just the dangerous bits) made it through.
     -->
     <p id="p-pdf-marker">Printable content survived sanitization.</p>
+
+    <!--
+      Tall spacer + below-the-fold paragraph for tests/e2e/lazy-translate.spec.js.
+      With default 1280×720 viewport + rootMargin: '50% 0px' (half-viewport
+      lookahead), this paragraph at >1500px down should remain un-translated
+      until the user scrolls toward it. Spec asserts the bytes-saved invariant
+      that the lazy IntersectionObserver path is supposed to deliver.
+    -->
+    <div id="below-fold-spacer" style="height: 1800px;"></div>
+    <p id="p-below-fold">This paragraph is below the lazy-translation horizon and should stay English until scrolled.</p>
     <script id="pdf-xss-script">window.__pdfExportXssRan = true;</script>
     <iframe id="pdf-xss-iframe" src="about:blank"></iframe>
     <p id="pdf-xss-onclick" onclick="window.__pdfExportXssRan = true">click me</p>
