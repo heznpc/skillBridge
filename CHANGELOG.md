@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.22] - 2026-05-14
+
+### Tests (E2E — Protected Terms restoration in production pipeline)
+- `tests/e2e/protected-terms.spec.js` (new) — `protected-terms.js`'s 24 unit tests cover the function in isolation, but the function only matters if `gt-queue.js` actually invokes it on every GT result before the DOM write. A silent refactor that bypassed the restoration step would pass every unit test and ship. This spec closes that gap.
+- The lesson fixture gains a sentence chosen because Google Translate has historically mistranslated both "Anthropic" (→ "인류학적", "anthropological") and "Claude" (→ "클로드") in Korean — these are exactly the wrong forms `src/data/ko.json` `_protected` map exists to fix. The GT stub deliberately returns the wrong-form translation; the spec asserts the user-facing DOM shows the corrected English brand names, NOT the mistranslation.
+- Three layers of assertion:
+  1. **Wrong forms NOT in DOM** — `expect(text).not.toContain('인류학적')`, `not.toContain('클로드')`. The hard invariant.
+  2. **Correct forms ARE in DOM** — `Anthropic` + `Claude` both verbatim. Proves restoration succeeded.
+  3. **Surrounding Korean intact** — `프런티어 모델로` (frontier model translation) survives. Proves the restoration is surgical, not a wholesale GT-bypass.
+- Cross-check: other paragraphs without protected-term content still translate normally (H1 → "Claude 소개", p1 contains "프롬프트 엔지니어링").
+
+### Tests (totals)
+- Unit (jest): 386/386 unchanged.
+- E2E (Playwright): **11/11** (was 10/10) — adds Protected Terms restoration.
+
 ## [3.5.21] - 2026-05-13
 
 ### Tests (E2E — stream cancel lock-in)

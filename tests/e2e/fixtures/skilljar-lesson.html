@@ -38,6 +38,16 @@
       A prompt is the input you give to Claude. Better prompts produce
       better responses.
     </p>
+
+    <!--
+      Sentence chosen because Google Translate has historically mistranslated
+      "Anthropic" as "인류학적" ("anthropological") and "Claude" as
+      "클로드"/"클라우드". The GT stub deliberately returns those wrong
+      forms; protected-terms.js must restore them post-translation. The
+      tests/e2e/protected-terms.spec.js test asserts the wrong forms do
+      NOT make it to the DOM.
+    -->
+    <p id="p-protected">Anthropic released Claude as a frontier model.</p>
   </main>
 
   <footer>

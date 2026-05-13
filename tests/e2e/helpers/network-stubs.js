@@ -88,6 +88,14 @@ const GT_KO = {
   'Key concepts': '핵심 개념',
   'A prompt is the input you give to Claude. Better prompts produce better responses.':
     '프롬프트는 Claude에게 주는 입력입니다. 더 나은 프롬프트는 더 나은 응답을 만듭니다.',
+  // DELIBERATELY mistranslated entry. "Anthropic" → "인류학적" and
+  // "Claude" → "클로드" are exactly the GT mistakes the
+  // src/data/ko.json `_protected` map exists to fix. protected-terms.js
+  // runs `restoreProtectedTerms()` on every GT batch result before it
+  // reaches the DOM, so the user should see "Anthropic" + "Claude" — NOT
+  // the wrong forms below. tests/e2e/protected-terms.spec.js asserts
+  // exactly that.
+  'Anthropic released Claude as a frontier model.': '인류학적은 클로드를 프런티어 모델로 출시했습니다.',
   // Quiz fixture — question text translates, answer options should NOT
   // reach this map at all (the EXAM_SKIP_SELECTORS path filters them out
   // before GT is even called). If they DO appear here it's a regression.
