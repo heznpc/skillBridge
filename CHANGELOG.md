@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.30] - 2026-05-14
+
+### Tests (E2E — translator IDB cache round-trip)
+- `tests/e2e/idb-cache.spec.js` (new) — locks in the last untested production path: `translator.cachedLookup` + `_cacheTranslation` are what make repeat translations zero-network. Without them every page load would re-hit Google Translate, blowing through the per-tab rate limiter and slowing the UX. v3.5.6 fixed a bug in the alarm-driven cleanup path; the cache helpers have unit tests in isolation but no end-to-end proof of the full lifecycle.
+- The spec exercises three transitions in one test:
+  1. **Cold miss → GT**: first `translator.translate(TEXT, 'ko')` returns `{source: 'google'}`.
+  2. **Warm hit → cache**: after the verify queue drains and writes the cache (polled with a 6s deadline), the second call returns `{source: 'cache'}`.
+  3. **Cross-language miss**: same `TEXT` with `lang: 'ja'` returns `{source: 'google'}` — proves the cache key includes lang (`${lang}\t${text}` per `_cacheTranslation`).
+- Test text is 100+ chars with a semicolon — required because `queueGeminiVerify` filters out shorter / simpler text (`GEMINI_MIN_TEXT=80`, `MIN_COMPLEX_TEXT=120`). The verify queue is what writes the cache, so anything below those thresholds never caches by design.
+- Two new diagnostic ops in `helpers/extension.js`:
+  - `translateOnce({text, lang})` — calls `sb.translator.translate` and returns `{text, source}`.
+  - `cacheState` — reads `translator._db` count + `_verifyQueue.length` + `isReady` + `_langGeneration` for debugging.
+- Puter stub's non-streaming path now returns `"OK"` instead of the chat-streaming Korean chunks. Non-streaming is only used by Gemini verify; returning `"OK"` makes `_verifySingle` cache the GT result verbatim (rather than caching the chat-stream greeting as an "improved" translation). Tutor-chat is unaffected — it uses `stream: true`.
+
+### Tests (totals)
+- Unit (jest): 386/386 unchanged.
+- E2E (Playwright): **16/16** (was 15/15) — adds translator IDB cache round-trip.
+
 ## [3.5.29] - 2026-05-14
 
 ### Build / Ops — Selectors drift watcher (6h cron + auto-issue)
