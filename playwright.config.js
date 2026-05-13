@@ -8,8 +8,13 @@
  *      mode supports it, and we set `headless: false` here to be safe
  *      because some older runners (and earlier Playwright versions) still
  *      fail silently with --load-extension under the old headless flag.
- *   2. `workers: 1` because the extension claims a single user-data dir.
- *      Parallel workers would race on it and produce confusing failures.
+ *   2. `workers: process.env.CI ? 2 : 1` — `launchExtension` builds a
+ *      fresh per-launch temp dir for the user data + patched-manifest
+ *      copy, so parallel workers are safe (no shared mutable state).
+ *      Locally we keep workers=1 so the output is easier to read while
+ *      debugging; CI parallelizes for wall-time. Each spec has its own
+ *      Chromium + extension load (~15s cold start), so two workers
+ *      roughly halve the total e2e job time once we have 4+ specs.
  *   3. `timeout: 60_000` because the first launch (cold cache, extension
  *      install, service-worker registration) can take 5–10s before any
  *      page navigation is even possible.
@@ -27,7 +32,13 @@ module.exports = defineConfig({
   testDir: path.join(__dirname, 'tests', 'e2e'),
   testMatch: '**/*.spec.js',
   fullyParallel: false,
-  workers: 1,
+  // `workers` controls cross-FILE parallelism. `fullyParallel: false`
+  // keeps WITHIN-file specs sequential — which we want because chat-
+  // history.spec.js relies on the sequential setup ordering of its
+  // beforeAll. CI=2 was measured to take ~3m vs sequential ~7m on 8
+  // specs; bumping further hits Chromium-instance memory ceilings on
+  // ubuntu-latest's 2-vCPU / 7GB runners.
+  workers: process.env.CI ? 2 : 1,
   timeout: 60_000,
   expect: {
     // The translate path is async — give DOM-text assertions a slightly

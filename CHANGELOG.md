@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.25] - 2026-05-14
+
+### Build / CI — parallel E2E workers
+- `playwright.config.js` now uses `workers: process.env.CI ? 2 : 1` instead of always 1. The `workers: 1` comment claimed the extension's user-data dir couldn't be shared — but `launchExtension` already builds a fresh per-launch temp dir (both for the user-data dir and the patched-manifest copy), so cross-file parallelism is safe. `fullyParallel: false` keeps within-file specs sequential (chat-history.spec.js depends on its beforeAll setup ordering).
+- **Motivation**: e2e job time was climbing fast as specs accumulated — PR #105 (1 spec): 52s; PR #110 (5 specs): 1m48s; PR #112 (7 specs): 2m23s; PR #113 (8 specs): **7m9s**. Each spec carries a ~15s cold-start tax (Chromium launch + extension install + service-worker registration + bridge ready). Sequentially, those costs accumulate; with two workers they overlap.
+- Local runs stay at workers=1 so the reporter output is readable while debugging. ubuntu-latest's 2-vCPU / 7GB runners can handle two parallel Chromium instances without OOM but more than that hits memory ceilings.
+
 ## [3.5.24] - 2026-05-14
 
 ### Tests (E2E — PDF export XSS lock-in, v3.5.9 regression class)
