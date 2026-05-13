@@ -28,7 +28,7 @@ jobs:
         (github.event.inputs.job == 'dom-health' || github.event.inputs.job == 'all')
       || github.event.schedule == '0 9 * * 1'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-node@v4
         with:
@@ -83,7 +83,7 @@ jobs:
         (github.event.inputs.job == 'dict-freshness' || github.event.inputs.job == 'all')
       || github.event.schedule == '0 9 1 * *'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-node@v4
         with:
@@ -148,7 +148,7 @@ jobs:
         (github.event.inputs.job == 'dep-audit' || github.event.inputs.job == 'all')
       || github.event.schedule == '0 9 * * 3'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-node@v4
         with:
