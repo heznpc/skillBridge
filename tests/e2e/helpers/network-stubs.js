@@ -151,15 +151,52 @@ async function registerStubs(context) {
     });
   });
 
-  // Puter SDK — serve a stub script. The real SDK injects window.puter,
-  // we just need *something* loadable so page-bridge.js doesn't throw on
-  // the script-injection step. The tutor itself isn't exercised in the
-  // golden test (no chat send) so a no-op puter is enough.
+  // Puter SDK stub. Two callers exercise this:
+  //   - golden / exam / SPA specs never send a chat, so they only need
+  //     `window.puter.ai` to exist so page-bridge.js's `loadPuter()` resolves
+  //     and emits BRIDGE_READY (which flips translator.isReady=true).
+  //   - tutor-chat spec sends a chat — for that the `chat(prompt, opts)` fn
+  //     must (a) when called with `{stream:true}`, return an async iterable
+  //     yielding `{text}` chunks (the real SDK's contract; see page-bridge
+  //     `for await (const chunk of response)` loop), and (b) when called
+  //     non-streaming, return `{message:{content:'...'}}`.
+  //
+  // We hardcode a Korean-ish three-chunk reply so the tutor-chat spec can
+  // assert the streamed text shows up in the bot bubble verbatim.
+  const PUTER_STUB = `
+    (function () {
+      const STREAM_CHUNKS = ['안녕하세요! ', '프롬프트는 Claude에게 ', '주는 입력입니다.'];
+      window.puter = {
+        ai: {
+          chat: async function (prompt, opts) {
+            if (opts && opts.stream) {
+              return {
+                [Symbol.asyncIterator]() {
+                  let i = 0;
+                  return {
+                    async next() {
+                      // Throttle slightly so the test sees incremental
+                      // chunks, not a single batch — exercising the
+                      // CHAT_STREAM_CHUNK → onChunk → DOM-update path.
+                      await new Promise((r) => setTimeout(r, 20));
+                      if (i >= STREAM_CHUNKS.length) return { done: true };
+                      return { done: false, value: { text: STREAM_CHUNKS[i++] } };
+                    },
+                  };
+                },
+              };
+            }
+            return { message: { content: STREAM_CHUNKS.join('') } };
+          },
+        },
+      };
+    })();
+  `;
   await context.route('https://js.puter.com/**', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/javascript',
-      body: 'window.puter = window.puter || { ai: { chat: () => Promise.resolve({ message: { content: [] } }) } };',
+      body: PUTER_STUB,
     });
   });
 
