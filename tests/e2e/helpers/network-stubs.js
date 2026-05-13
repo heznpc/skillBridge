@@ -18,8 +18,23 @@ const fs = require('fs');
 const http = require('http');
 const path = require('path');
 
-const FIXTURE_PATH = path.join(__dirname, '..', 'fixtures', 'skilljar-lesson.html');
-const FIXTURE_HTML = fs.readFileSync(FIXTURE_PATH, 'utf8');
+const FIXTURE_DIR = path.join(__dirname, '..', 'fixtures');
+const LESSON_HTML = fs.readFileSync(path.join(FIXTURE_DIR, 'skilljar-lesson.html'), 'utf8');
+const QUIZ_HTML = fs.readFileSync(path.join(FIXTURE_DIR, 'skilljar-quiz.html'), 'utf8');
+
+// Kept exported for back-compat with anything that imported it; new tests
+// should use the path-aware server directly.
+const FIXTURE_HTML = LESSON_HTML;
+
+/**
+ * Pick the fixture body for a given request path. Routes:
+ *   /quiz, /exam, /assessment   → quiz fixture (matches EXAM_URL_PATTERNS)
+ *   anything else               → lesson fixture
+ */
+function fixtureForPath(reqPath) {
+  if (/^\/(quiz|exam|assessment)(\/|$|\?)/.test(reqPath)) return QUIZ_HTML;
+  return LESSON_HTML;
+}
 
 /**
  * Start a tiny localhost HTTP server that serves the Skilljar fixture at
@@ -32,25 +47,15 @@ const FIXTURE_HTML = fs.readFileSync(FIXTURE_PATH, 'utf8');
 function startFixtureServer() {
   return new Promise((resolve) => {
     const server = http.createServer((req, res) => {
-      // Serve fixture for any path — keeps the test forgiving about path shape.
-      // The permissive CSP lets the diagnostic bridge in helpers/extension.js
-      // use `new Function()` from the content-script isolated world, which
-      // would otherwise be blocked by the default page CSP. Production
-      // Skilljar pages have their own CSP that doesn't include unsafe-eval,
-      // but this only affects our test diagnostic bridge — the extension's
-      // own runtime never evals at all.
+      const body = fixtureForPath(req.url || '/');
       res.writeHead(200, {
         'Content-Type': 'text/html; charset=utf-8',
-        // Permissive CSP — needed so the test diagnostic bridge in
-        // helpers/extension.js can use `new Function()` from the
-        // content-script isolated world. `script-src` must be explicit;
-        // `default-src` alone is overridden by Chrome defaults.
         'Content-Security-Policy':
           "default-src * data: blob: 'unsafe-eval' 'unsafe-inline'; " +
           "script-src * 'unsafe-eval' 'unsafe-inline' data: blob:; " +
           "style-src * 'unsafe-inline'",
       });
-      res.end(FIXTURE_HTML);
+      res.end(body);
     });
     server.listen(0, '127.0.0.1', () => {
       const { port } = server.address();
@@ -71,6 +76,7 @@ function stopFixtureServer(server) {
  * The real GT response shape is `[[ ['translated', 'original', ...], ... ], ...]`.
  */
 const GT_KO = {
+  // Lesson fixture
   'Introduction to Claude': 'Claude 소개',
   'Course overview': '코스 개요',
   'This lesson covers prompt engineering fundamentals and how Claude processes user requests.':
@@ -82,6 +88,12 @@ const GT_KO = {
   'Key concepts': '핵심 개념',
   'A prompt is the input you give to Claude. Better prompts produce better responses.':
     '프롬프트는 Claude에게 주는 입력입니다. 더 나은 프롬프트는 더 나은 응답을 만듭니다.',
+  // Quiz fixture — question text translates, answer options should NOT
+  // reach this map at all (the EXAM_SKIP_SELECTORS path filters them out
+  // before GT is even called). If they DO appear here it's a regression.
+  'Claude Fundamentals Quiz': 'Claude 기초 퀴즈',
+  'Which model is best suited for fast, high-volume classification tasks?':
+    '어떤 모델이 빠르고 대용량 분류 작업에 가장 적합합니까?',
 };
 
 /**
