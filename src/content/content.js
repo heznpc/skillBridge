@@ -9,7 +9,6 @@
 (function () {
   'use strict';
 
-  const sb = window._sb;
   // Prevent duplicate initialization (content scripts can fire multiple times on SPA navigation)
   if (window.__skillbridge_initialized__) return;
   window.__skillbridge_initialized__ = true;
@@ -208,6 +207,15 @@
     formatResponse: null,
     translateCodeComments: null,
   };
+
+  // Local alias for the namespace, captured AFTER assignment so the
+  // `sb._gt.X` / `sb._chat.X` call-sites below resolve correctly. The
+  // previous version of this file declared `const sb = window._sb` at the
+  // very top of the IIFE — before `window._sb = {...}` ran — which left
+  // `sb` permanently undefined and every later `sb._gt.X` call would
+  // throw "Cannot read properties of undefined". The v3.5.16 E2E suite
+  // (tests/e2e/golden-translation.spec.js) caught this on the first run.
+  const sb = window._sb;
 
   // ============================================================
   // PER-LESSON TERM PREVIEW
