@@ -297,6 +297,10 @@ async function evalInContentWorld(context, op, arg) {
               h1: document.querySelector('h1') && document.querySelector('h1').textContent,
               p1: document.querySelector('#p-1') && document.querySelector('#p-1').textContent,
               li1: document.querySelector('#li-1') && document.querySelector('#li-1').textContent,
+              // #p-protected exists in the lesson fixture specifically for
+              // protected-terms.spec.js — the GT stub returns mistranslated
+              // content and we assert the wrong forms got fixed.
+              pProtected: document.querySelector('#p-protected') && document.querySelector('#p-protected').textContent,
             }),
             // Read quiz fixture state. `answers` is the array of answer-option
             // label texts AFTER translation — the test asserts these are
