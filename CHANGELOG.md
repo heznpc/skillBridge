@@ -6,6 +6,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.16] - 2026-05-13
+
+### Fixed (caught by the new E2E suite)
+- `src/content/content.js` declared `const sb = window._sb` at the very top of its IIFE — before `window._sb = {...}` ran on line 142. `sb` captured `undefined` permanently, so every later `sb._gt.X` / `sb._chat.X` / `sb.safeReplaceText = ...` call would throw `Cannot set properties of undefined`. This was a real regression from the v3.5.15 gt-queue extraction (the regex-pass that introduced the `sb._gt.X` rewrites also inserted the early `const sb`). 381 unit tests passed through three releases (v3.5.13 → 14 → 15) without catching it; the very first run of the new E2E spec did. Fixed by moving the declaration to immediately AFTER the `window._sb = {...}` assignment.
+
+### Tests (E2E — new suite)
+- `tests/e2e/golden-translation.spec.js` (new, 4 sequential steps under Playwright + chromium with `--load-extension`):
+  - **Step A** — every cross-module `_sb` surface (`_gt.*`, `_chat.*`, `sb.switchLanguage`, `sb.isLikelyEnglish`, `sb.safeReplaceText`, etc.) is present after the manifest's content scripts all load. Catches manifest-order regressions.
+  - **Step B** — `switchLanguage('ko')` triggers the static dict + GT batch path; page H1 / paragraph text actually swap to Korean (stubbed GT response); `_gt.gtGeneration` moves off 0. Catches breaks in the gt-queue.js extraction.
+  - **Step C** — `injectSidebar` + `toggleSidebar` + `toggleHistoryPanel` + `closeSubPanel`; assert `_sb._chat.state.{savedChatHTML,historyPanelOpen,flashcardPanelOpen}` transitions correctly through the sub-panel lifecycle. Catches breaks in the sidebar-chat / chat-history split.
+  - **Step D** — `switchLanguage('en')` restores original text and bumps `gtGeneration` again. Catches breaks in `restoreOriginal`'s v3.5.15 delegation to `sb._gt.reset()`.
+- Test harness in `tests/e2e/helpers/`:
+  - `extension.js` — launches headless Chromium via `chromium.launchPersistentContext` with `--load-extension=dist/bundled`. Patches a temp copy of the bundled manifest to add `http://localhost:*/*` to content_scripts.matches and the `scripting` permission (the production manifest is untouched). Bridges into the content-script isolated world via `chrome.scripting.executeScript` from the SW, using a hard-coded menu of seven diagnostic operations (`snapshot` / `switchLanguage` / `injectSidebar` / `toggleSidebar` / `toggleHistoryPanel` / `closeSubPanel` / `pageText`) — MV3 content-script CSP forbids `eval` / `new Function`, so arbitrary user-function bridging from Playwright's main world wasn't an option.
+  - `network-stubs.js` — local HTTP server serves the Skilljar lesson fixture (Playwright's `route().fulfill()` doesn't trigger MV3 content-script injection, so the fixture must come from a real origin); `context.route()` interceptors stub `translate.googleapis.com`, `api.github.com`, `js.puter.com`, and `api.puter.com` so no test traffic leaves the runner and translations are deterministic.
+  - `fixtures/skilljar-lesson.html` — minimal Skilljar-shaped DOM with a known set of English strings the GT stub knows how to translate.
+
+### Build / CI
+- `@playwright/test@^1.60.0` + `jest-environment-jsdom@^30.4.1` (already in v3.5.14) are the new devDependencies.
+- New `npm run test:e2e` (builds the bundle, then runs Playwright) and `npm run e2e:install` (`playwright install chromium`).
+- New CI job `e2e` in `.github/workflows/ci.yml`: installs xvfb + Playwright Chromium, builds the bundle, runs the suite under `xvfb-run -a npx playwright test`. Uploads `playwright-report/` + `test-results/` as a GitHub artifact on failure. The job runs in parallel with `test` so it doesn't block the fast jest path; if E2E flakes intermittently in the future we keep the option to mark it non-blocking.
+
+### Tests (totals)
+- Unit (jest): 381/381 unchanged.
+- E2E (Playwright): 4/4 new — covers cross-module wiring that unit tests cannot reach.
+
 ## [3.5.15] - 2026-05-13
 
 ### Refactor

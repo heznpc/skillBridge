@@ -1,11 +1,13 @@
 {
   "name": "skillbridge",
-  "version": "3.5.15",
+  "version": "3.5.16",
   "private": true,
   "scripts": {
     "test": "jest --verbose",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:e2e": "npm run build:bundle && playwright test",
+    "e2e:install": "playwright install chromium",
     "glossary": "node scripts/check-glossary.js",
     "validate": "node scripts/validate-translations.js",
     "build:zip": "rm -f store-assets/skillbridge.zip && zip -r store-assets/skillbridge.zip manifest.json _locales/ src/ assets/icons/ -x '*.DS_Store'",
@@ -26,11 +28,13 @@
   "jest": {
     "testPathIgnorePatterns": [
       "/node_modules/",
-      "/dist/"
+      "/dist/",
+      "/tests/e2e/"
     ]
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.60.0",
     "esbuild": "^0.27.5",
     "eslint": "^10.1.0",
     "eslint-config-prettier": "^10.1.8",

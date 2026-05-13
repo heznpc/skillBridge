@@ -150,6 +150,21 @@ export default [
     },
   },
   {
-    ignores: ['dist/**', 'node_modules/**', 'src/bridge/puter.js', 'store-assets/**'],
+    // Playwright config + E2E specs run under @playwright/test (CommonJS).
+    // No jest globals; everything's via `require('@playwright/test')`.
+    files: ['playwright.config.js', 'tests/e2e/**/*.js'],
+    languageOptions: {
+      sourceType: 'commonjs',
+      globals: {
+        require: 'readonly',
+        module: 'readonly',
+        __dirname: 'readonly',
+        process: 'readonly',
+        Buffer: 'readonly',
+      },
+    },
+  },
+  {
+    ignores: ['dist/**', 'node_modules/**', 'src/bridge/puter.js', 'store-assets/**', 'test-results/**', 'playwright-report/**', 'eslint.config.mjs'],
   },
 ];

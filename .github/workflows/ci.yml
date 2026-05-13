@@ -96,3 +96,43 @@ jobs:
 
       - name: Run tests
         run: npx jest --passWithNoTests
+
+  e2e:
+    # Playwright E2E. Loads the actual built extension into headed Chromium
+    # under xvfb so MV3 content scripts inject reliably (the new chromium
+    # headless mode in --load-extension still has flake we'd rather avoid).
+    # Catches the class of cross-module wiring bug that unit tests miss
+    # (see tests/e2e/golden-translation.spec.js header for the rationale).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install xvfb + Playwright Chromium
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+          npx playwright install --with-deps chromium
+
+      - name: Build extension bundle
+        run: npm run build:bundle
+
+      - name: Run E2E suite under xvfb
+        run: xvfb-run -a npx playwright test
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
