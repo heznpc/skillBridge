@@ -42,6 +42,9 @@ jobs:
       - name: Check i18n key coverage
         run: node scripts/check-i18n-keys.js
 
+      - name: Check dictionary coverage (POSITIONING.md "48h" SLA)
+        run: node scripts/check-dict-coverage.js
+
       - name: Check shared constants sync
         run: node scripts/check-bg-sync.js
 
