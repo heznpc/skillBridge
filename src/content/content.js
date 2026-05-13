@@ -9,6 +9,7 @@
 (function () {
   'use strict';
 
+  const sb = window._sb;
   // Prevent duplicate initialization (content scripts can fire multiple times on SPA navigation)
   if (window.__skillbridge_initialized__) return;
   window.__skillbridge_initialized__ = true;
@@ -88,32 +89,22 @@
   const translatedTexts = new Map();
   const MAP_SIZE_CAP = 5000;
   let pendingActions = [];
-  let gtTranslateQueue = [];
-  let gtProcessing = false;
-  let gtGeneration = 0;
+  // gtTranslateQueue / gtProcessing / gtGeneration / _offlinePendingItems
+  // moved to gt-queue.js in v3.5.15. Read via sb._gt.gtGeneration; mutate
+  // via sb._gt.reset() / bumpGeneration() / flushOfflinePending().
   let domObserver = null;
   let commentTranslateEnabled = false;
   const originalComments = new Map(); // el → original innerHTML for code elements
   let isOffline = !navigator.onLine;
   let _termPreviewShown = false;
-  let _offlinePendingItems = [];
 
   window.addEventListener('online', () => {
     isOffline = false;
     window._sb.hideOfflineBanner?.();
-    // Retry deferred offline items first, then re-apply if needed
+    // Retry deferred offline items first, then re-apply if needed.
     if (currentLang !== 'en' && translator && isReady) {
-      if (_offlinePendingItems.length > 0) {
-        const pending = _offlinePendingItems.filter((item) => item.el?.parentNode);
-        _offlinePendingItems = [];
-        if (pending.length > 0)
-          queueForGoogleTranslate(
-            pending.map((item) => item.el),
-            currentLang,
-          );
-      } else {
-        applyStaticTranslations(currentLang);
-      }
+      const flushed = window._sb._gt?.flushOfflinePending?.(currentLang);
+      if (!flushed) window._sb._gt?.applyStaticTranslations?.(currentLang);
     }
   });
 
@@ -167,6 +158,9 @@
     get isExamPage() {
       return isExamPage;
     },
+    set isExamPage(v) {
+      isExamPage = v;
+    },
     get originalTexts() {
       return originalTexts;
     },
@@ -176,17 +170,31 @@
     get originalComments() {
       return originalComments;
     },
+    // gtGeneration now lives in gt-queue.js; expose the read-only view here
+    // so existing consumers (typedef, DOM observer) keep working unchanged.
     get gtGeneration() {
-      return gtGeneration;
+      return window._sb._gt?.gtGeneration ?? 0;
     },
     get isOffline() {
       return isOffline;
     },
+    get commentTranslateEnabled() {
+      return commentTranslateEnabled;
+    },
+    get mapSizeCap() {
+      return MAP_SIZE_CAP;
+    },
     t,
     escapeHtml,
-    isLikelyEnglish,
+    // isLikelyEnglish is re-attached by gt-queue.js (declared there since
+    // v3.5.15 — every call-site lived inside the GT pipeline).
     switchLanguage,
     getPageContext,
+    // Helpers consumed by gt-queue.js / banners / route-change handler:
+    safeReplaceText: null, // filled below after function definition
+    updateLangClass: null,
+    detectExamPage,
+    showTermPreview: null, // filled below
     // Filled by modules:
     injectDarkModeToggle: null,
     injectHeaderLanguageSelect: null,
@@ -432,7 +440,7 @@
       if (currentLang !== 'en') {
         await translator.loadStaticTranslations(currentLang);
         if (stored.autoTranslate && Object.keys(translator.staticDict).length > 0) {
-          applyStaticTranslations(currentLang);
+          sb._gt.applyStaticTranslations(currentLang);
         }
       }
 
@@ -449,7 +457,7 @@
           if (Object.keys(translator.staticDict).length === 0) {
             await translator.loadStaticTranslations(request.language);
           }
-          applyStaticTranslations(request.language);
+          sb._gt.applyStaticTranslations(request.language);
         }
       }
       pendingActions = [];
@@ -457,7 +465,7 @@
       observeDOM();
 
       if (stored.autoTranslate && currentLang !== 'en') {
-        setTimeout(() => applyStaticTranslations(currentLang), SKILLBRIDGE_DELAYS.LATE_CONTENT);
+        setTimeout(() => sb._gt.applyStaticTranslations(currentLang), SKILLBRIDGE_DELAYS.LATE_CONTENT);
       }
 
       translator.onTranslationUpdate((originalText, finalTranslation, targetLang, wasImproved) => {
@@ -474,7 +482,7 @@
         if (live.length < entries.length) translatedTexts.set(originalText, live);
 
         for (const entry of live) {
-          removeVerifySpinner(entry.el);
+          sb._gt.removeVerifySpinner(entry.el);
           if (wasImproved) {
             safeReplaceText(entry.el, window._protectedTerms.restoreProtectedTerms(finalTranslation));
             entry.el.classList.add('si18n-text-updated');
@@ -513,361 +521,6 @@
   }
 
   // ============================================================
-  // STATIC TRANSLATIONS + GT QUEUE (viewport-first, chunked)
-  // ============================================================
-
-  function isInViewport(el) {
-    const rect = el.getBoundingClientRect();
-    return rect.bottom > 0 && rect.top < window.innerHeight;
-  }
-
-  /**
-   * Process a single element: try static dict, then return category.
-   * Returns 'static' | 'gt' | null.
-   */
-  function processOneElement(el, _targetLang) {
-    const fullText = el.textContent.trim();
-    if (!fullText || fullText.length < 2) return null;
-    if (!isLikelyEnglish(fullText)) return null;
-
-    if (!originalTexts.has(el)) {
-      originalTexts.set(el, el.innerHTML);
-    }
-
-    const elementMatch = translator.staticLookup(fullText);
-    if (elementMatch) {
-      safeReplaceText(el, elementMatch);
-      return 'static';
-    }
-
-    let allNodesMatched = true;
-    let matchCount = 0;
-    const textNodes = getTextNodes(el);
-    for (const node of textNodes) {
-      const text = node.textContent.trim();
-      if (text.length < 2) continue;
-      const nodeMatch = translator.staticLookup(text);
-      if (nodeMatch) {
-        node.textContent = nodeMatch;
-        matchCount++;
-      } else if (text.length >= 4 && isLikelyEnglish(text)) {
-        allNodesMatched = false;
-      }
-    }
-
-    if (!allNodesMatched && fullText.length >= 10) return 'gt';
-    return matchCount > 0 ? 'static' : null;
-  }
-
-  function applyStaticTranslations(targetLang) {
-    window._protectedTerms.buildProtectedTermsMap(targetLang, translator);
-    updateLangClass(targetLang);
-    // Re-detect exam page (DOM may have loaded since init)
-    if (!isExamPage) isExamPage = detectExamPage();
-    if (isExamPage && targetLang !== 'en') window._sb.showExamBanner?.();
-
-    const elements = getTranslatableElements();
-    if (elements.length === 0) return;
-
-    // Split into viewport (visible) and offscreen for prioritized processing
-    const visible = [];
-    const offscreen = [];
-    for (const el of elements) {
-      (isInViewport(el) ? visible : offscreen).push(el);
-    }
-
-    // Phase 1 — Process visible elements immediately (no jank for above-fold)
-    let staticCount = 0;
-    const gtCandidates = [];
-
-    for (const el of visible) {
-      const result = processOneElement(el, targetLang);
-      if (result === 'static') staticCount++;
-      else if (result === 'gt') gtCandidates.push(el);
-    }
-
-    // Start GT for visible elements right away (skip redundant viewport check)
-    if (gtCandidates.length > 0 && targetLang !== 'en') {
-      window._sb.showTranslationProgress?.();
-      window._sb.updateTranslationProgress?.(
-        Math.round((staticCount / (staticCount + gtCandidates.length + offscreen.length)) * 80),
-      );
-      queueForGoogleTranslate(gtCandidates, targetLang, true);
-    }
-
-    // Phase 2 — Process offscreen elements in idle-time chunks
-    if (offscreen.length > 0) {
-      processOffscreenChunked(offscreen, targetLang, staticCount, gtCandidates.length);
-    }
-
-    if (commentTranslateEnabled) {
-      window._sb.translateCodeComments?.(targetLang);
-    }
-  }
-
-  /**
-   * Process offscreen elements in small chunks during idle time,
-   * preventing main-thread blocking on pages with 500+ elements.
-   */
-  function processOffscreenChunked(elements, targetLang, _prevStatic, prevGt) {
-    let idx = 0;
-    const gtCandidates = [];
-    // Capture generation to detect language switches during processing
-    const myGeneration = gtGeneration;
-
-    function processChunk(deadline) {
-      // Abort if language was switched (restoreOriginal increments gtGeneration)
-      if (gtGeneration !== myGeneration) return;
-
-      const hasDeadline = typeof deadline !== 'undefined' && typeof deadline.timeRemaining === 'function';
-      const chunkEnd = Math.min(idx + SKILLBRIDGE_THRESHOLDS.VIEWPORT_CHUNK_SIZE, elements.length);
-      let processed = 0;
-
-      // Always process at least 1 element per callback to guarantee forward progress
-      while (idx < chunkEnd && (processed === 0 || !hasDeadline || deadline.timeRemaining() > 1)) {
-        const el = elements[idx++];
-        const result = processOneElement(el, targetLang);
-        if (result === 'gt') gtCandidates.push(el);
-        processed++;
-      }
-
-      if (idx < elements.length) {
-        // Yield and continue in next idle period
-        if (typeof requestIdleCallback !== 'undefined') {
-          requestIdleCallback(processChunk, { timeout: SKILLBRIDGE_DELAYS.IDLE_TIMEOUT });
-        } else {
-          setTimeout(processChunk, 0);
-        }
-      } else if (gtGeneration === myGeneration) {
-        // All offscreen elements processed — queue GT candidates
-        if (gtCandidates.length > 0 && targetLang !== 'en') {
-          if (prevGt === 0) window._sb.showTranslationProgress?.();
-          queueForGoogleTranslate(gtCandidates, targetLang);
-        }
-      }
-    }
-
-    if (typeof requestIdleCallback !== 'undefined') {
-      requestIdleCallback(processChunk, { timeout: SKILLBRIDGE_DELAYS.IDLE_TIMEOUT });
-    } else {
-      setTimeout(processChunk, 0);
-    }
-  }
-
-  function isLikelyEnglish(text) {
-    let latin = 0,
-      total = 0;
-    for (let i = 0; i < text.length; i++) {
-      const c = text.charCodeAt(i);
-      if (c === 32 || c === 9 || c === 10 || c === 13) continue; // whitespace
-      total++;
-      if ((c >= 65 && c <= 90) || (c >= 97 && c <= 122)) latin++;
-    }
-    return total > 0 && latin / total > 0.5;
-  }
-
-  /**
-   * @param {boolean} [alreadyVisible] — if true, skip viewport re-check (caller already classified)
-   */
-  function queueForGoogleTranslate(elements, targetLang, alreadyVisible) {
-    const _hasInlineTags = window._geminiBlock.hasInlineTags;
-    if (alreadyVisible) {
-      for (const el of elements) {
-        if (gtTranslateQueue.length >= SKILLBRIDGE_THRESHOLDS.GT_QUEUE_MAX) break;
-        const text = el.textContent.trim();
-        if (!text || text.length < 4) continue;
-        gtTranslateQueue.push({ el, text, targetLang, needsGemini: _hasInlineTags(el) });
-      }
-    } else {
-      const visibleItems = [];
-      const offscreenItems = [];
-      for (const el of elements) {
-        if (
-          gtTranslateQueue.length + visibleItems.length + offscreenItems.length >=
-          SKILLBRIDGE_THRESHOLDS.GT_QUEUE_MAX
-        )
-          break;
-        const text = el.textContent.trim();
-        if (!text || text.length < 4) continue;
-        const item = { el, text, targetLang, needsGemini: _hasInlineTags(el) };
-        (isInViewport(el) ? visibleItems : offscreenItems).push(item);
-      }
-      gtTranslateQueue.push(...visibleItems, ...offscreenItems);
-    }
-    processGTQueue();
-  }
-
-  async function processGTQueue() {
-    if (gtProcessing || gtTranslateQueue.length === 0) return;
-    gtProcessing = true;
-    const myGeneration = gtGeneration;
-    const totalItems = gtTranslateQueue.length;
-    let processedItems = 0;
-    const geminiQueue = [];
-
-    // Wrap the whole batch loop so progress UI and detached-entry pruning
-    // always run, even if the user switches language mid-batch (which trips
-    // the gtGeneration check below). Without this, the progress bar and
-    // verify spinners stay on screen until next nav.
-    try {
-      while (gtTranslateQueue.length > 0) {
-        if (gtGeneration !== myGeneration) return;
-
-        const batch = gtTranslateQueue.splice(0, SKILLBRIDGE_THRESHOLDS.GT_BATCH_SIZE);
-        const targetLang = batch[0].targetLang;
-
-        const cacheResults = await Promise.all(batch.map((item) => translator.cachedLookup(item.text, targetLang)));
-
-        if (gtGeneration !== myGeneration) return;
-
-        const uncached = [];
-        for (let i = 0; i < batch.length; i++) {
-          if (cacheResults[i]) {
-            const item = batch[i];
-            if (item.el && item.el.parentNode) {
-              if (item.needsGemini) {
-                uncached.push(item);
-              } else {
-                safeReplaceText(item.el, cacheResults[i]);
-                trackTranslatedElement(item.text, item.el);
-              }
-            }
-          } else {
-            uncached.push(batch[i]);
-          }
-        }
-
-        const gtItems = uncached.filter((item) => !item.needsGemini);
-        const geminiItems = uncached.filter((item) => item.needsGemini);
-
-        for (const item of geminiItems) {
-          if (item.el && item.el.parentNode) {
-            if (!originalTexts.has(item.el)) originalTexts.set(item.el, item.el.innerHTML);
-            geminiQueue.push({ el: item.el, targetLang: item.targetLang });
-          }
-        }
-
-        if (gtItems.length > 0) {
-          if (isOffline) {
-            const remaining = SKILLBRIDGE_THRESHOLDS.GT_QUEUE_MAX - _offlinePendingItems.length;
-            if (remaining > 0) _offlinePendingItems.push(...gtItems.slice(0, remaining));
-          } else {
-            // Deduplicate texts — group elements by text to avoid redundant API calls
-            const textToItems = new Map();
-            for (const item of gtItems) {
-              if (!textToItems.has(item.text)) textToItems.set(item.text, []);
-              textToItems.get(item.text).push(item);
-            }
-            const uniqueTexts = [...textToItems.keys()];
-            const translations = await translator.googleTranslateBatch(uniqueTexts, targetLang);
-
-            if (gtGeneration !== myGeneration) return;
-
-            for (let i = 0; i < uniqueTexts.length; i++) {
-              let translated = translations[i];
-              if (!translated || translated === uniqueTexts[i]) continue;
-              translated = window._protectedTerms.restoreProtectedTerms(translated);
-              const items = textToItems.get(uniqueTexts[i]);
-              let verifyQueued = false;
-              for (const item of items) {
-                if (!item.el?.parentNode) continue;
-                safeReplaceText(item.el, translated);
-                trackTranslatedElement(item.text, item.el);
-                if (!verifyQueued) {
-                  verifyQueued = !!translator.queueGeminiVerify(item.text, translated, targetLang);
-                }
-                if (verifyQueued) addVerifySpinner(item.el);
-              }
-            }
-          }
-        }
-
-        processedItems += batch.length;
-        window._sb.updateTranslationProgress?.(80 + Math.round((processedItems / totalItems) * 15));
-
-        if (gtTranslateQueue.length > 0) {
-          await new Promise((r) => setTimeout(r, SKILLBRIDGE_DELAYS.GT_BATCH));
-        }
-      }
-    } finally {
-      gtProcessing = false;
-      window._sb.hideTranslationProgress?.();
-      pruneDetachedEntries();
-
-      // Term-preview only on full completion; on cancellation, the new
-      // generation will trigger its own preview.
-      if (gtGeneration === myGeneration) {
-        setTimeout(showTermPreview, 1500);
-      }
-
-      // Flush any block-translation work queued during this generation.
-      // Stale items get filtered by parentNode + targetLang on the consumer.
-      for (const { el, targetLang } of geminiQueue) {
-        if (el && el.parentNode) {
-          window._geminiBlock.queueGeminiBlockTranslation(el, targetLang, {
-            translator,
-            originalTexts,
-            isLikelyEnglish,
-          });
-        }
-      }
-    }
-  }
-
-  function trackTranslatedElement(originalText, el) {
-    if (!translatedTexts.has(originalText)) translatedTexts.set(originalText, []);
-    translatedTexts.get(originalText).push({ el });
-  }
-
-  function pruneDetachedEntries() {
-    for (const [el] of originalTexts) {
-      if (!el.parentNode) originalTexts.delete(el);
-    }
-    for (const [text, entries] of translatedTexts) {
-      const live = entries.filter((e) => e.el?.parentNode);
-      if (live.length === 0) translatedTexts.delete(text);
-      else if (live.length < entries.length) translatedTexts.set(text, live);
-    }
-    if (originalTexts.size > MAP_SIZE_CAP) {
-      const excess = originalTexts.size - MAP_SIZE_CAP;
-      const iter = originalTexts.keys();
-      for (let i = 0; i < excess; i++) {
-        const key = iter.next().value;
-        originalTexts.delete(key);
-      }
-    }
-    if (translatedTexts.size > MAP_SIZE_CAP) {
-      const excess = translatedTexts.size - MAP_SIZE_CAP;
-      const iter = translatedTexts.keys();
-      for (let i = 0; i < excess; i++) {
-        const key = iter.next().value;
-        translatedTexts.delete(key);
-      }
-    }
-    // Cap originalComments consistently with other Maps
-    if (originalComments.size > MAP_SIZE_CAP) {
-      const excess = originalComments.size - MAP_SIZE_CAP;
-      const iter = originalComments.keys();
-      for (let i = 0; i < excess; i++) {
-        const key = iter.next().value;
-        originalComments.delete(key);
-      }
-    }
-  }
-
-  function addVerifySpinner(el) {
-    if (el.querySelector('.si18n-verify-spinner')) return;
-    const spinner = document.createElement('span');
-    spinner.className = 'si18n-verify-spinner';
-    spinner.innerHTML = '<span class="si18n-dot"></span><span class="si18n-dot"></span><span class="si18n-dot"></span>';
-    el.appendChild(spinner);
-  }
-
-  function removeVerifySpinner(el) {
-    el.querySelector('.si18n-verify-spinner')?.remove();
-  }
-
-  // ============================================================
   // PAGE TRANSLATION
   // ============================================================
 
@@ -881,7 +534,7 @@
     if (Object.keys(translator.staticDict).length === 0) {
       await translator.loadStaticTranslations(targetLang);
     }
-    applyStaticTranslations(targetLang);
+    sb._gt.applyStaticTranslations(targetLang);
   }
 
   function restoreOriginal() {
@@ -890,12 +543,12 @@
     });
     originalTexts.clear();
     translatedTexts.clear();
-    gtTranslateQueue = [];
-    gtProcessing = false;
-    gtGeneration++;
+    // gt-queue.js owns gtTranslateQueue / gtProcessing / gtGeneration /
+    // _offlinePendingItems since v3.5.15 — reset() clears all four and bumps
+    // gtGeneration so any in-flight Promise.all bails before writing.
+    sb._gt?.reset?.();
     clearTimeout(translateTimeout);
     pendingNodes = [];
-    _offlinePendingItems = [];
     currentLang = 'en';
     window._protectedTerms.resetProtectedTerms();
     updateLangClass('en');
@@ -925,7 +578,7 @@
       }
 
       await translator.loadStaticTranslations(newLang);
-      applyStaticTranslations(newLang);
+      sb._gt.applyStaticTranslations(newLang);
       window._sb.updateLocalizedLabels?.();
       if (subtitleManager) subtitleManager.setLanguage(newLang);
     } finally {
@@ -980,41 +633,6 @@
     }
   }
 
-  function getTranslatableElements() {
-    const examSkip = isExamPage ? EXAM_SKIP_SELECTORS.join(', ') : null;
-    return Array.from(document.querySelectorAll(TRANSLATABLE_SELECTOR)).filter((el) => {
-      if (el.closest(EXCLUDE_SELECTOR)) return false;
-      // On exam pages, skip answer choice elements
-      if (examSkip && el.matches(examSkip)) return false;
-      if (examSkip && el.closest(examSkip)) return false;
-      const parent = el.parentElement;
-      if (parent && parent.matches && parent.matches(TRANSLATABLE_SELECTOR) && !parent.closest(EXCLUDE_SELECTOR)) {
-        if (['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI', 'TD', 'TH', 'BLOCKQUOTE'].includes(parent.tagName)) {
-          return false;
-        }
-      }
-      if (el.tagName === 'SPAN') {
-        const text = el.textContent.trim();
-        if (text.length < 4) return false;
-        if (el.children.length > 3) return false;
-      }
-      return el.textContent.trim().length > 1;
-    });
-  }
-
-  function getTextNodes(element) {
-    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, {
-      acceptNode: (node) => {
-        if (node.textContent.trim().length < 2) return NodeFilter.FILTER_REJECT;
-        if (node.parentElement?.closest('code, pre, script, style')) return NodeFilter.FILTER_REJECT;
-        return NodeFilter.FILTER_ACCEPT;
-      },
-    });
-    const nodes = [];
-    while (walker.nextNode()) nodes.push(walker.currentNode);
-    return nodes;
-  }
-
   function safeReplaceText(el, newText) {
     if (el.children.length === 0) {
       el.textContent = newText;
@@ -1044,6 +662,23 @@
     }
   }
 
+  // Local copy — gt-queue.js has its own (private to the GT pipeline).
+  // Both walk the same tree shape so keeping them in sync is trivial; the
+  // alternative (a `sb.getTextNodes` shared handle) would just funnel two
+  // independent call sites through one extra indirection for no real win.
+  function getTextNodes(element) {
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, {
+      acceptNode: (node) => {
+        if (node.textContent.trim().length < 2) return NodeFilter.FILTER_REJECT;
+        if (node.parentElement?.closest('code, pre, script, style')) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      },
+    });
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    return nodes;
+  }
+
   function getPageContext() {
     const title =
       document.querySelector(`h1, h2, ${SKILLJAR_SELECTORS.courseTitle}`)?.textContent || document.title || '';
@@ -1059,6 +694,18 @@
     return `Course: ${title}. Sections: ${headings}${bodyText ? `\n\nLesson content:\n${bodyText}` : ''}`;
   }
 
+  // Wire helpers onto `_sb` now that their function declarations are in scope.
+  // (Function declarations are hoisted, but the namespace object was built
+  // before this point and its initial values for these keys were `null`.)
+  sb.safeReplaceText = safeReplaceText;
+  sb.updateLangClass = updateLangClass;
+  sb.showTermPreview = showTermPreview;
+  // Build the translatable + exclude selectors once and expose them so
+  // gt-queue.js's getTranslatableElements doesn't have to know about the
+  // Skilljar selector dictionary.
+  sb.translatableSelector = TRANSLATABLE_SELECTOR;
+  sb.excludeSelector = EXCLUDE_SELECTOR;
+
   // ============================================================
   // DOM OBSERVER (with cleanup)
   // ============================================================
@@ -1069,7 +716,7 @@
     _pruneScheduled = true;
     requestAnimationFrame(() => {
       _pruneScheduled = false;
-      pruneDetachedEntries();
+      sb._gt.pruneDetachedEntries();
     });
   }
 
@@ -1130,12 +777,12 @@
 
         for (const el of elements) {
           if (el.closest(EXCLUDE_SELECTOR)) continue;
-          const result = processOneElement(el, currentLang);
+          const result = sb._gt.processOneElement(el, currentLang);
           if (result === 'gt') gtCandidates.push(el);
         }
 
         if (gtCandidates.length > 0) {
-          queueForGoogleTranslate(gtCandidates, currentLang);
+          sb._gt.queueForGoogleTranslate(gtCandidates, currentLang);
         }
       }
     }, SKILLBRIDGE_DELAYS.DOM_DEBOUNCE);
@@ -1182,7 +829,7 @@
 
     // Re-apply translations for new content
     if (currentLang !== 'en' && translator && isReady) {
-      setTimeout(() => applyStaticTranslations(currentLang), SKILLBRIDGE_DELAYS.LATE_CONTENT);
+      setTimeout(() => sb._gt.applyStaticTranslations(currentLang), SKILLBRIDGE_DELAYS.LATE_CONTENT);
     }
   }
 

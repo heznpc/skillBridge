@@ -9,9 +9,7 @@ POSITIONING.md, not here.
 
 ## Now (this week)
 
-- [ ] **v3.5.13 smoke test in an actual browser** — load `dist/bundled` unpacked in Chrome, run through Skilljar → sidebar → chat → history → flashcards → close. The v3.5.13 split moved `savedChatHTML` / panel flags onto `_sb._chat.state`; unit tests pass but the cross-module wiring hasn't been validated end-to-end. PR #102 left this unchecked.
-- [ ] **Apply to Anthropic Claude Ambassador program** — pitch writes itself; 11 premium-language dictionaries are the credentials.
-- [ ] **CWS listing refresh** — store metadata still says 2026-03-10 / v3.5.4. Update screenshots, description to reflect v3.5.13 (sidebar split, protected-terms hardening, i18n CI).
+- [ ] **v3.5.13/14 smoke test in an actual browser** — load `dist/bundled` unpacked in Chrome, run through Skilljar → sidebar → chat → history → flashcards → close. The v3.5.13 split moved `savedChatHTML` / panel flags onto `_sb._chat.state`; unit tests pass but the cross-module wiring hasn't been validated end-to-end. PR #102 and #103 both left this unchecked.
 
 ## Next (this month)
 
