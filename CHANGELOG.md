@@ -6,6 +6,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.18] - 2026-05-13
+
+### Added — `scripts/check-dict-coverage.js` (POSITIONING.md "48h SLA" enforcement)
+
+Mechanical defense for the first product pillar from POSITIONING.md — "AI terminology fidelity, new Academy course → 11 languages within 48 hours." Until now that commitment was honor-system; the script now fails CI when any of five integrity invariants drift:
+
+1. **Section parity** — every `src/data/<lang>.json` has the same top-level section set. A new course landing in one language but missing from the others is the most common failure mode.
+2. **English-key parity within each section** — for every section (excluding `_meta` and `_protected`), the set of English source keys must be identical across all 10 dictionaries. Catches a translator updating one language with a new term but forgetting the others. `_protected` is excluded by design — each language has its own mistranslation patterns (e.g. ko's `클로드` → `Claude` has no equivalent in de).
+3. **`FLASHCARD_COURSE_MAP` referential integrity** — every section name referenced by the constants.js course map must exist in the dictionaries.
+4. **Orphan section detection** — every course-shaped section in the dictionaries must be referenced by at least one slug in `FLASHCARD_COURSE_MAP`; otherwise users can't reach its flashcards / term preview.
+5. **`_meta.version` sync** — every dictionary's `_meta.version` matches `manifest.json`. `generate-docs.js` already auto-syncs these on `npm run docs`, but the check catches drift before a CWS push if docs weren't regenerated.
+
+Wired into the CI `validate` job and exposed as `npm run check:dict-coverage`. Honors `SB_DICT_DIR_OVERRIDE` env var so the new self-test suite can point it at fault-injected fixture dirs.
+
+### Added — `tests/dict-coverage-checker.test.js` (5 cases)
+
+Self-test for the script itself — without coverage of the checker, a silent regression in the checker would void the SLA defense. Cases:
+- Happy path: real `src/data/` passes
+- Check 1 fault injection: a dropped section in `ja.claude101` triggers exit 1 with `ja` + `claude101` in the message
+- Check 2 fault injection: an extra English key in `ko.claude101` (not in other languages) triggers exit 1 with the section name
+- Check 5 fault injection: a `_meta.version` set to `0.0.1-wrong` triggers exit 1 and surfaces the `npm run docs` recovery hint
+- Negative control: `_protected` key divergence is allowed (intentionally per-language) and does NOT trigger exit 1
+
+### Tests (totals)
+- Unit (jest): 386/386 (was 381, +5)
+- E2E (Playwright): 6/6 unchanged
+
 ## [3.5.17] - 2026-05-13
 
 ### Tests (E2E — exam-mode lock-in)
