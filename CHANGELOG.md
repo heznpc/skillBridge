@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.27] - 2026-05-14
+
+### Refactor — `chat-flashcards.js` extracted from `sidebar-chat.js`
+- Completes the v3.5.13 sidebar-chat split that was deferred for "1 release of `_sb._chat.state` running in production without regressions". 13 PRs later (14 versions of production stability + an E2E suite that exercises the panel state machinery), the pattern is well-validated; safe to extract.
+- `src/content/sidebar-chat.js`: **816 → 559 lines** (–257, –31%). Last big-file in the chat surface to split.
+- `src/content/chat-flashcards.js` (new, 328 lines) — owns:
+  - Per-course flashcard deck building (URL slug → `FLASHCARD_COURSE_MAP` → static-dict section lookup)
+  - Leitner-box state (each card → 0/1/2: new/learning/mastered) + auto-advance on grade
+  - Render + bind events for the flashcard sub-panel UI
+  - Persistence under `fc_<slug>_<lang>` chrome.storage keys, serialized through a single promise chain (last-click-wins under rapid box-up/box-down clicks)
+- Reads sub-panel state machinery from `_sb._chat.state.{savedChatHTML,flashcardPanelOpen,historyPanelOpen}` + calls `sb._chat.closeSubPanel`. Mirrors the chat-history.js extraction shape.
+- Public surface: `sb.toggleFlashcardPanel` (back-compat — `keyboard-shortcuts.js` was already reading through this handle) + `sb._chat.toggleFlashcardPanel` (parallel to `sb._chat.toggleHistoryPanel`).
+- `manifest.json` `content_scripts.js`: `chat-flashcards.js` loads after `chat-history.js` and before `keyboard-shortcuts.js`. Order matters because the SidebarHTML's `si18n-fc-btn` click handler in sidebar-chat now does `sb._chat.toggleFlashcardPanel?.()` (optional-chained for load-order safety, but practically always populated by the time the user clicks).
+- Local state hoisted with the functions: `flashcardCards`, `flashcardIndex`, `flashcardBoxes`, `_matchedCourseSlug`, `_rawSectionsCache`, `_rawSectionsLang`, `_flashcardSaveQueue`. All previously top-of-file in sidebar-chat.js; now scoped to the module that uses them.
+
+### Tests (totals)
+- Unit (jest): 386/386 unchanged.
+- E2E (Playwright): 14/14 unchanged — proves the refactor preserved sidebar / sub-panel state behavior end-to-end.
+
 ## [3.5.26] - 2026-05-14
 
 ### Tests (E2E — rapid language-switch race lock-in, v3.5.7 regression class)
