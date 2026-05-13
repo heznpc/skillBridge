@@ -48,6 +48,19 @@
       NOT make it to the DOM.
     -->
     <p id="p-protected">Anthropic released Claude as a frontier model.</p>
+
+    <!--
+      XSS-shaped content for tests/e2e/pdf-export.spec.js. Each of these
+      MUST be stripped by exportLessonPDF's pre-write sanitization before
+      the printable popup renders, or v3.5.9's XSS fix has regressed.
+      The harmless `<p id="p-pdf-marker">` exists so the spec can prove
+      lesson body content (not just the dangerous bits) made it through.
+    -->
+    <p id="p-pdf-marker">Printable content survived sanitization.</p>
+    <script id="pdf-xss-script">window.__pdfExportXssRan = true;</script>
+    <iframe id="pdf-xss-iframe" src="about:blank"></iframe>
+    <p id="pdf-xss-onclick" onclick="window.__pdfExportXssRan = true">click me</p>
+    <a id="pdf-xss-href" href="javascript:window.__pdfExportXssRan = true">js link</a>
   </main>
 
   <footer>

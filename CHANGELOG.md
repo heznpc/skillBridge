@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.24] - 2026-05-14
+
+### Tests (E2E — PDF export XSS lock-in, v3.5.9 regression class)
+- `tests/e2e/pdf-export.spec.js` (new) — locks in v3.5.9's fix for the PDF-export XSS. Before that fix, `exportLessonPDF` wrote `lessonContent.innerHTML` directly into a new `window.open('', '_blank')`-spawned popup via `document.write`, then tried to remove `<script>` / `<iframe>` AFTER `document.close()` — by which point inline scripts had already executed in the new about:blank context. Skilljar lessons are third-party content, so any attacker-influenced lesson body could execute JS in the print popup.
+- The lesson fixture gains four attacker-shaped elements (each marked with the `pdf-xss-*` id pattern):
+  - `<script>` element that would set `window.__pdfExportXssRan = true`
+  - `<iframe>`
+  - `<p onclick="...">` event-handler attribute
+  - `<a href="javascript:...">` URL
+  - Plus a benign `<p id="p-pdf-marker">` to confirm lesson body content still makes it through.
+- Spec clicks `#si18n-pdf-btn`, captures the `window.open` popup via Playwright's `waitForEvent('popup')`, and asserts:
+  1. **`window.__pdfExportXssRan` is undefined in the popup** — the hard XSS invariant. The fixture's `<script>` runs at main-page load (browser default), so the marker exists on the main page; v3.5.9's regression shape was that the SAME script ALSO ran in the popup. The popup-only check is the right boundary.
+  2. **No `<script>` / `<iframe>` tag in the popup HTML** (regex, case-insensitive).
+  3. **No `onclick=` attribute in the popup HTML**.
+  4. **No `href="javascript:"` in the popup HTML**.
+  5. **Lesson body text (`Introduction to Claude`, `Anthropic`, `Printable content survived sanitization.`) IS in the popup** — proves sanitization is surgical, not a wholesale wipe.
+
+### Tests (totals)
+- Unit (jest): 386/386 unchanged.
+- E2E (Playwright): **13/13** (was 12/12) — adds PDF export sanitization.
+
 ## [3.5.23] - 2026-05-14
 
 ### Tests (E2E — chat history IDB persistence round-trip)
