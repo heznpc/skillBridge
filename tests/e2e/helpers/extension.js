@@ -57,7 +57,10 @@ function makePatchedExtension() {
   // chrome.runtime.getURL() / SW message routing keep working from the
   // fixture page.
   manifest.host_permissions = manifest.host_permissions || [];
-  manifest.host_permissions.push('http://localhost/*');
+  // Port wildcards are required — `http://localhost/*` matches port 80 only.
+  // chrome.scripting.executeScript silently refuses to inject without a
+  // host_permissions entry that covers the active tab's port.
+  manifest.host_permissions.push('http://localhost:*/*', 'http://127.0.0.1:*/*');
   // Tests rely on chrome.scripting (manual injection diagnostics) being
   // available; the production manifest doesn't need it but adding it for
   // E2E doesn't affect runtime behaviour of the content scripts we test.
@@ -67,8 +70,52 @@ function makePatchedExtension() {
     war.matches.push('http://localhost:*/*', 'http://127.0.0.1:*/*');
   }
   fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+
+  // Replace the bundled `src/bridge/puter.js` with a stream-friendly stub.
+  // The production manifest sends `chrome.runtime.getURL('src/bridge/puter.js')`
+  // to page-bridge as the Puter SDK URL — that's a `chrome-extension://`
+  // path inside the extension dir, not an external URL, so the
+  // `https://js.puter.com/**` route handler never fires. Patching the
+  // bundled file is the only way to intercept Puter for tutor-chat E2E.
+  const puterStubPath = path.join(extDir, 'src', 'bridge', 'puter.js');
+  if (fs.existsSync(puterStubPath)) {
+    fs.writeFileSync(puterStubPath, PUTER_STREAM_STUB);
+  }
+
   return extDir;
 }
+
+// Stream-friendly Puter SDK stub. `chat(prompt, {stream:true})` returns an
+// async iterable yielding 3 Korean chunks — page-bridge.js then forwards
+// each as a CHAT_STREAM_CHUNK message, and translator's onChunk fires for
+// each. The strings are deliberately distinctive so the tutor-chat spec
+// can assert each chunk made it end-to-end.
+const PUTER_STREAM_STUB = `
+(function () {
+  const STREAM_CHUNKS = ['안녕하세요! ', '프롬프트는 Claude에게 ', '주는 입력입니다.'];
+  window.puter = {
+    ai: {
+      chat: async function (prompt, opts) {
+        if (opts && opts.stream) {
+          return {
+            [Symbol.asyncIterator]() {
+              let i = 0;
+              return {
+                async next() {
+                  await new Promise((r) => setTimeout(r, 20));
+                  if (i >= STREAM_CHUNKS.length) return { done: true };
+                  return { done: false, value: { text: STREAM_CHUNKS[i++] } };
+                },
+              };
+            },
+          };
+        }
+        return { message: { content: STREAM_CHUNKS.join('') } };
+      },
+    },
+  };
+})();
+`;
 
 async function launchExtension() {
   const EXTENSION_PATH = makePatchedExtension();
@@ -164,11 +211,18 @@ async function evalInContentWorld(context, op, arg) {
   const safeArg = arg === undefined ? null : arg;
   return await sw.evaluate(
     async ([opName, payload]) => {
-      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (tabs.length === 0) throw new Error('No active tab to inject into');
+      // Query by URL pattern, not active-tab: Playwright sometimes loses
+      // "current window" focus when the page-bridge injects its
+      // web_accessible_resource <script>, and `{active:true}` then returns
+      // a tab from a different window that the extension has no host
+      // permission for. Matching on the fixture URL is unambiguous.
+      const allTabs = await chrome.tabs.query({ url: ['http://localhost/*', 'http://localhost:*/*'] });
+      // Prefer the most-recently-active matching tab.
+      const tab = allTabs.sort((a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0))[0];
+      if (!tab) throw new Error('No fixture tab to inject into');
 
       const [{ result, error }] = await chrome.scripting.executeScript({
-        target: { tabId: tabs[0].id },
+        target: { tabId: tab.id },
         world: 'ISOLATED',
         func: async (opNameInner, payloadInner) => {
           // Re-declare the ops table inside the content-script world.
@@ -273,6 +327,49 @@ async function evalInContentWorld(context, op, arg) {
               h1: document.querySelector('h1') && document.querySelector('h1').textContent,
               p: document.querySelector('p') && document.querySelector('p').textContent,
             }),
+            // Whether the page-bridge has finished initializing and the
+            // tutor is callable. Used by tutor-chat.spec.js to gate the
+            // first sendChat — translator.chatStream throws "Bridge not
+            // ready" if you call it before BRIDGE_READY lands.
+            bridgeReady: () => ({
+              isReady: !!(window._sb && window._sb.translator && window._sb.translator.isReady),
+            }),
+            // Simulate the user typing in the chat input + clicking send.
+            // This exercises the full sidebar-chat.sendChatMessage path:
+            //   input.value = text → click handler → translator.chatStream
+            //   → CHAT_REQUEST postMessage → page-bridge → puter stub →
+            //   CHAT_STREAM_CHUNK events → onChunk → formatResponse →
+            //   bubble.innerHTML update → CHAT_STREAM_END → saveConversation.
+            sendChat: (text) => {
+              const input = document.getElementById('si18n-chat-input');
+              const sendBtn = document.getElementById('si18n-chat-send');
+              if (!input || !sendBtn) {
+                return { error: 'chat UI not present — open sidebar first' };
+              }
+              input.value = text;
+              sendBtn.click();
+              return { ok: true };
+            },
+            // Read every chat bubble currently in the messages area.
+            // Returns role + text per bubble so the test can assert (a) a
+            // user bubble with the typed text exists and (b) a bot bubble
+            // with the streamed-and-formatted response exists.
+            readChatLog: () => {
+              const msgs = document.querySelectorAll('#si18n-chat-messages .si18n-chat-msg');
+              return Array.from(msgs).map((m) => {
+                const role = m.classList.contains('si18n-chat-user')
+                  ? 'user'
+                  : m.classList.contains('si18n-chat-bot')
+                    ? 'bot'
+                    : 'other';
+                const bubble = m.querySelector('.si18n-chat-bubble');
+                return {
+                  role,
+                  text: bubble ? bubble.textContent.replace(/\s+/g, ' ').trim() : '',
+                  html: bubble ? bubble.innerHTML : '',
+                };
+              });
+            },
           };
           if (!ops[opNameInner]) throw new Error('Unknown op: ' + opNameInner);
           return await ops[opNameInner](payloadInner);

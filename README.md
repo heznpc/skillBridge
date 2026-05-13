@@ -2,7 +2,7 @@
 
 <img src="assets/icons/icon128.png" alt="SkillBridge" width="90" />
 
-# SkillBridge for Anthropic Academy <!-- VERSION_START -->v3.5.19<!-- VERSION_END -->
+# SkillBridge for Anthropic Academy <!-- VERSION_START -->v3.5.20<!-- VERSION_END -->
 
 > Available in multiple languages at the [project landing page](https://heznpc.github.io/skillBridge/).
 

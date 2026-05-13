@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.20] - 2026-05-13
+
+### Tests (E2E — tutor chat lock-in, 3rd POSITIONING pillar)
+- `tests/e2e/tutor-chat.spec.js` (new) — locks in the third POSITIONING.md pillar ("contextual AI tutor with zero friction"), the one the README + CWS listing lead with. v3.5.9 fixed a stream-cancel bug here and v3.5.11 fixed a sanitizer XSS along the same path; v3.5.13's chat-render / sidebar-chat / chat-history split refactored every component the chat traverses. Until now: zero automated coverage of:
+  - `sidebar-chat.sendChatMessage` → `translator.chatStream` → `postMessage({type:'CHAT_REQUEST',stream:true})` → page-bridge (main world) → `puter.ai.chat(prompt, {stream:true})` → `for await` async iterable → `CHAT_STREAM_CHUNK` × N → `onChunk` callback → `chat-render.formatResponse(fullText)` → `bubble.innerHTML` → `CHAT_STREAM_END`.
+- The spec asserts: user bubble has the typed text, bot bubble accumulates all 3 streamed chunks verbatim, the final HTML is wrapped in `<p>…</p>` (proving formatResponse ran), and **no `role="alert"` error bubble exists** (a CHAT_ERROR_LABELS render would mean the stream threw silently).
+- Three test-harness pieces unlock this:
+  1. **`src/bridge/puter.js` REPLACED in the patched extension dir** — not stubbed at `https://js.puter.com/**`. The production manifest sends `chrome.runtime.getURL('src/bridge/puter.js')` to page-bridge as the Puter URL — a `chrome-extension://` path, not external — so external URL route handlers never fire. The stub puter returns a real async-iterable yielding 3 Korean chunks paced at 20ms each, matching the real SDK's streaming contract.
+  2. **URL-pattern tab query** replaces `chrome.tabs.query({active:true})` in `evalInContentWorld` — Playwright's persistent context occasionally loses "current window" focus when page-bridge injects its `<script>`, and the active-tab query then returned a tab in a window the extension lacks host permission for. Matching on the fixture URL (`http://localhost:*/*`) is unambiguous.
+  3. **`host_permissions` port wildcards** (`http://localhost:*/*` instead of `http://localhost/*`) in the patched manifest — chrome.scripting.executeScript silently refuses to inject without a host_permissions entry covering the active tab's port, and ephemeral local servers never run on port 80.
+- New diagnostic ops in `helpers/extension.js`: `bridgeReady` (checks `translator.isReady`), `sendChat` (sets input + clicks send button — exercises the full sidebar-chat path, not just the API), and `readChatLog` (returns per-bubble `{role, text, html}`).
+
+### Tests (totals)
+- Unit (jest): 386/386 unchanged.
+- E2E (Playwright): **9/9** (was 8/8) — golden translation + exam mode + SPA navigation + tutor chat.
+
 ## [3.5.19] - 2026-05-13
 
 ### Tests (E2E — SPA navigation race coverage)
