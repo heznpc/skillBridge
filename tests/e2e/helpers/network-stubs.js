@@ -96,6 +96,11 @@ const GT_KO = {
   // the wrong forms below. tests/e2e/protected-terms.spec.js asserts
   // exactly that.
   'Anthropic released Claude as a frontier model.': '인류학적은 클로드를 프런티어 모델로 출시했습니다.',
+  // Code-comment fixture (tests/e2e/code-comments.spec.js). The Python
+  // `# This is a Claude prompt example` comment gets translated by
+  // translateCodeComments — the line's leading `# ` is preserved
+  // automatically by the regex, only the trimmed text reaches GT.
+  'This is a Claude prompt example': 'Claude 프롬프트 예시',
   // Quiz fixture — question text translates, answer options should NOT
   // reach this map at all (the EXAM_SKIP_SELECTORS path filters them out
   // before GT is even called). If they DO appear here it's a regression.

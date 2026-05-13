@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.28] - 2026-05-14
+
+### Tests (E2E — code-comment translation, last README feature without E2E coverage)
+- `tests/e2e/code-comments.spec.js` (new) — locks in the path that runs when the user toggles "Translate code comments" in the popup. v3.5.11 fixed an XSS-class bug here (GT output is untrusted and was previously spliced into `<code>` innerHTML without `escapeHtml` — a jailbroken/MITM'd response containing raw HTML would have XSS'd the lesson page). The path has had no end-to-end coverage until now.
+- The lesson fixture gains a Python code block with one comment + 2 lines of real code. The spec asserts BOTH halves of the code-comment contract:
+  1. **English comment translates** — `# This is a Claude prompt example` → `# Claude 프롬프트 예시`. Leading `# ` is preserved by the regex; only the trimmed comment text reaches GT.
+  2. **Code keywords preserved verbatim** — `def hello():` and `return "world"` survive untouched. Translating Python keywords would break the user's ability to copy + run the snippet, which is the whole reason this feature exists.
+- New diagnostic ops in `helpers/extension.js`:
+  - `translateCodeComments` — awaits `sb.translateCodeComments(currentLang)`, mirroring what the popup's `toggleCommentTranslation` handler does on enable.
+  - `readCodeFencePython` — returns the `#code-fence-python code` element's textContent so the spec can grep for both the translated comment and the preserved code keywords.
+
+### Coverage status
+With this spec, **every documented README feature has an E2E lock-in** except for YouTube subtitle activation (genuinely needs a real iframe — deferred) and dark mode toggle (UI-only, low risk). All v3.5.6 → 3.5.12 hotfix-train regression classes are covered.
+
+### Tests (totals)
+- Unit (jest): 386/386 unchanged.
+- E2E (Playwright): **15/15** (was 14/14) — adds code-comment translation.
+
 ## [3.5.27] - 2026-05-14
 
 ### Refactor — `chat-flashcards.js` extracted from `sidebar-chat.js`

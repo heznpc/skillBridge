@@ -50,6 +50,18 @@
     <p id="p-protected">Anthropic released Claude as a frontier model.</p>
 
     <!--
+      Code block for tests/e2e/code-comments.spec.js. The Python comment
+      "This is a Claude prompt example" gets translated by
+      code-comments.js's translateCodeComments path. The code itself
+      (def, return, pass) MUST be preserved — translating Python keywords
+      breaks the user's ability to copy + run the snippet.
+    -->
+    <pre id="code-fence-python"><code class="language-python"># This is a Claude prompt example
+def hello():
+    return "world"
+</code></pre>
+
+    <!--
       XSS-shaped content for tests/e2e/pdf-export.spec.js. Each of these
       MUST be stripped by exportLessonPDF's pre-write sanitization before
       the printable popup renders, or v3.5.9's XSS fix has regressed.
