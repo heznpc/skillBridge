@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.32] - 2026-05-14
+
+### Performance — Lazy translation via IntersectionObserver
+- `gt-queue.js` `processOffscreenChunked` (idle-time chunked traversal of every offscreen element) replaced with `observeLazyTranslation` — an IntersectionObserver that defers each offscreen element until it nears the viewport (`rootMargin: '50% 0px'` half-viewport lookahead). Inspired by the same pattern Immersive Translate / Brendan Chia's real-time page translation article documents, and by X.com's auto-translate-on-scroll behavior shipped April 2026.
+- **Cost model change**: previously a 150-element lesson translated all 150 elements upfront (visible first via Phase 1, offscreen via idle-time chunks). If the user only read the first 30%, the other ~105 GT calls were waste — they consumed the per-tab rate-limiter, filled the IDB cache with content that may never display, and slowed the initial above-the-fold render.
+  - **After v3.5.32**: Phase 1 (visible) unchanged. Phase 2 now only translates offscreen elements as they cross the 50%-viewport-lookahead threshold during scroll. For partial-read sessions, GT calls drop in proportion to read depth — a user reading 30% of a long lesson pays ~30% of the previous GT budget.
+- **Generation safety**: `_lazyObserver` is disconnected in both `sb._gt.reset()` (called on language switch) and `sb._gt.bumpGeneration()`. The intersect callback also re-checks `gtGeneration` before queueing, so a stale callback from before the language switch can't write into the new generation's DOM.
+- **Per-element lang capture**: each observed element gets stored in a `WeakMap` with its target language, so the intersect handler always knows what to translate to. WeakMap means DOM-removed elements get GC'd without manual cleanup.
+- **rootMargin tuning**: `50% 0px` was chosen because typical Academy lesson scroll-and-read pacing makes 360px (50% of default 720px viewport) enough lookahead to keep content ready before the eye reaches it. Fast scrollers may briefly see English flash; the alternative `100% 0px` would eliminate flash but also eliminate most savings on long pages.
+
+### Tests (E2E — lazy translation horizon)
+- `tests/e2e/lazy-translate.spec.js` (new) — locks in the savings claim. Fixture gains a 1800px-tall spacer + a `#p-below-fold` paragraph well outside the lookahead window. Spec asserts:
+  1. After `switchLanguage('ko')` settles, the below-fold paragraph **stays English** (lazy horizon held).
+  2. After explicit `scrollIntoView`, the same element becomes Korean (observer triggered translation on intersect).
+- New diagnostic op `scrollToBelowFold` + `pageText` reads `#p-below-fold`.
+
+### Tests (totals)
+- Unit (jest): 386/386 unchanged.
+- E2E (Playwright): **17/17** (was 16/16) — adds lazy translation horizon.
+
 ## [3.5.31] - 2026-05-14
 
 ### Docs — TODO.md + POSITIONING.md freshness pass
