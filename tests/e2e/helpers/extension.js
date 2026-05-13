@@ -114,7 +114,13 @@ const PUTER_STREAM_STUB = `
             },
           };
         }
-        return { message: { content: STREAM_CHUNKS.join('') } };
+        // Non-streaming path = Gemini verify (translator._verifySingle).
+        // Returning "OK" tells _verifySingle the GT result is good →
+        // _cacheTranslation(original, googleTranslation) — the GT
+        // translation gets cached verbatim. Without this we'd cache the
+        // chat-stream Korean greeting which is harder for tests to
+        // pre-compute. Tutor-chat uses stream=true so it's unaffected.
+        return { message: { content: 'OK' } };
       },
     },
   };
@@ -318,6 +324,41 @@ async function evalInContentWorld(context, op, arg) {
             // Whether content.js's detectExamPage() flipped isExamPage true.
             // Read via the `_sb.isExamPage` getter content.js exposes.
             examStatus: () => ({ isExamPage: !!(window._sb && window._sb.isExamPage) }),
+            // Diagnostic: probe translator IDB cache state directly.
+            // Returns the count of entries + the verifyQueue length +
+            // whether _db is open. Used by idb-cache.spec.js to verify
+            // the cache write path is actually running, not just trust
+            // the translator.translate() return value.
+            cacheState: async () => {
+              const t = window._sb?.translator;
+              if (!t) return { error: 'translator missing' };
+              const dbOpen = !!t._db;
+              const verifyLen = (t._verifyQueue && t._verifyQueue.length) || 0;
+              if (!dbOpen) return { dbOpen, verifyLen, count: null };
+              const count = await new Promise((resolve) => {
+                try {
+                  const tx = t._db.transaction('translations', 'readonly');
+                  const req = tx.objectStore('translations').count();
+                  req.onsuccess = () => resolve(req.result);
+                  req.onerror = () => resolve(-1);
+                } catch (_e) {
+                  resolve(-2);
+                }
+              });
+              return { dbOpen, verifyLen, count, isReady: t.isReady, gen: t._langGeneration };
+            },
+            // Call `sb.translator.translate(text, lang)` once and return
+            // the `{text, source}` shape. `source` is one of static | cache
+            // | google | original — used by tests/e2e/idb-cache.spec.js to
+            // assert that a second translate() of the same (text, lang)
+            // pair hits the cache (source==='cache') instead of re-firing
+            // the GT network call (source==='google').
+            translateOnce: async (payload) => {
+              if (!window._sb?.translator?.translate) return { error: 'translator.translate missing' };
+              const { text, lang } = payload || {};
+              const result = await window._sb.translator.translate(text, lang);
+              return { text: result?.text, source: result?.source };
+            },
             // Run sb.translateCodeComments on the current language.
             // Mirrors what the popup's `toggleCommentTranslation` message
             // handler does on enable. Returns when the translate pass
