@@ -240,6 +240,22 @@ async function evalInContentWorld(context, op, arg) {
               p1: document.querySelector('#p-1') && document.querySelector('#p-1').textContent,
               li1: document.querySelector('#li-1') && document.querySelector('#li-1').textContent,
             }),
+            // Read quiz fixture state. `answers` is the array of answer-option
+            // label texts AFTER translation — the test asserts these are
+            // still English (the v3.5.x "exam-mode" contract).
+            quizText: () => {
+              const trim = (s) => (s == null ? null : s.replace(/\s+/g, ' ').trim());
+              return {
+                title: trim(document.querySelector('#quiz-title') && document.querySelector('#quiz-title').textContent),
+                question: trim(
+                  document.querySelector('#quiz-question') && document.querySelector('#quiz-question').textContent,
+                ),
+                answers: Array.from(document.querySelectorAll('.answer-option')).map((el) => trim(el.textContent)),
+              };
+            },
+            // Whether content.js's detectExamPage() flipped isExamPage true.
+            // Read via the `_sb.isExamPage` getter content.js exposes.
+            examStatus: () => ({ isExamPage: !!(window._sb && window._sb.isExamPage) }),
           };
           if (!ops[opNameInner]) throw new Error('Unknown op: ' + opNameInner);
           return await ops[opNameInner](payloadInner);
