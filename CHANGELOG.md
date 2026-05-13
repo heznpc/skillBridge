@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.23] - 2026-05-14
+
+### Tests (E2E — chat history IDB persistence round-trip)
+- `tests/e2e/chat-history.spec.js` (new) — the v3.5.6 + v3.5.9 hotfixes both touched IDB resilience (history quota retry, prune+retry cascade). Unit tests cover each helper in isolation but only an end-to-end test proves the full round-trip works: `sidebar-chat.sendChatMessage` → `translator.chatStream` → `saveConversation(q, a, lang)` → `openHistoryDb().add(entry)` → later → `toggleHistoryPanel` → `loadHistoryList()` cursor read → re-render → `openHistoryDetail(id)` primary-key read. A regression anywhere along that chain is silent data loss for the user.
+- The spec sends two chats, waits for each to complete (saveConversation fires after the stream ends), opens the history panel, asserts both questions appear in the list (cursor read works), then clicks one entry and asserts the detail view shows both the saved user question AND the saved bot answer (single-record read by primary key works).
+- New diagnostic ops in `helpers/extension.js`:
+  - `readHistoryList` — returns every `.si18n-history-item` with its `data-id` (IDB primary key) and question preview text.
+  - `openHistoryDetail(id)` — clicks the item with matching `data-id`, triggering `showConversationDetail` → `tx.objectStore(HISTORY_STORE).get(Number(id))`.
+  - `readHistoryDetail` — returns the user + bot bubble text from the rendered detail view.
+
+### Tests (totals)
+- Unit (jest): 386/386 unchanged.
+- E2E (Playwright): **12/12** (was 11/11) — adds chat history persistence.
+
 ## [3.5.22] - 2026-05-14
 
 ### Tests (E2E — Protected Terms restoration in production pipeline)
