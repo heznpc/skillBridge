@@ -370,6 +370,39 @@ async function evalInContentWorld(context, op, arg) {
               window._sb.cancelActiveStream();
               return { ok: true };
             },
+            // Read history-panel list items after toggleHistoryPanel +
+            // loadHistoryList have run. Each `.si18n-history-item` has a
+            // `data-id` matching the IndexedDB primary key, a preview of
+            // the question text, and a localized timestamp. The test
+            // asserts both expected questions appear, proving the
+            // saveConversation → IDB → loadHistoryList round-trip works.
+            readHistoryList: () => {
+              const items = document.querySelectorAll('.si18n-history-item');
+              return Array.from(items).map((el) => ({
+                id: el.dataset.id,
+                question: el.querySelector('.si18n-history-item-q')?.textContent.trim() || '',
+              }));
+            },
+            // Click a history list item by its data-id, opening the detail
+            // view. Returns the rendered detail HTML so the test can
+            // assert the original question and bot-answer text are present
+            // (proves IDB read of a single record by primary key works).
+            openHistoryDetail: (id) => {
+              const item = document.querySelector(`.si18n-history-item[data-id="${id}"]`);
+              if (!item) return { error: 'no item with id=' + id };
+              item.click();
+              return { ok: true };
+            },
+            // Read the detail-view content after openHistoryDetail.
+            readHistoryDetail: () => {
+              const detail = document.querySelector('.si18n-history-detail');
+              if (!detail) return { present: false };
+              return {
+                present: true,
+                userText: detail.querySelector('.si18n-chat-user .si18n-chat-bubble')?.textContent.trim() || '',
+                botText: detail.querySelector('.si18n-chat-bot .si18n-chat-bubble')?.textContent.trim() || '',
+              };
+            },
             // Read every chat bubble currently in the messages area.
             // Returns role + text per bubble so the test can assert (a) a
             // user bubble with the typed text exists and (b) a bot bubble
