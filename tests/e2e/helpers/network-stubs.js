@@ -101,6 +101,14 @@ const GT_KO = {
   // translateCodeComments — the line's leading `# ` is preserved
   // automatically by the regex, only the trimmed text reaches GT.
   'This is a Claude prompt example': 'Claude 프롬프트 예시',
+  // Cache E2E (tests/e2e/idb-cache.spec.js). The string is deliberately
+  // NOT in any static dictionary so the first lookup misses → GT call;
+  // the second lookup must hit the IDB cache the verify queue wrote.
+  // Length ≥ 80 chars + at least one period/comma/colon is required —
+  // queueGeminiVerify skips shorter / simpler text (GEMINI_MIN_TEXT=80,
+  // MIN_COMPLEX_TEXT=120). The verify queue is what writes the cache.
+  'Cache me through the IDB layer; this sentence is long enough to clear the GEMINI_MIN_TEXT threshold.':
+    'IDB 레이어를 통해 캐시하세요; 이 문장은 GEMINI_MIN_TEXT 임계값을 통과할 만큼 깁니다.',
   // Quiz fixture — question text translates, answer options should NOT
   // reach this map at all (the EXAM_SKIP_SELECTORS path filters them out
   // before GT is even called). If they DO appear here it's a regression.
