@@ -47,6 +47,16 @@
   let gtProcessing = false;
   let gtGeneration = 0;
   let _offlinePendingItems = [];
+  // Lazy-translation observer state (added in v3.5.32).
+  //   `_lazyObserver`     — the IntersectionObserver, one per generation
+  //   `_lazyObserverGen`  — generation the observer was constructed at;
+  //                         intersect callbacks re-check vs gtGeneration
+  //   `_lazyElements`     — WeakMap of observed el → target lang (so the
+  //                         callback knows which lang to translate to and
+  //                         entries get GC'd when DOM nodes are removed)
+  let _lazyObserver = null;
+  let _lazyObserverGen = 0;
+  const _lazyElements = new WeakMap();
 
   // ============================================================
   // SHARED HELPERS (moved from content.js: only callers were inside this section)
@@ -197,9 +207,13 @@
       queueForGoogleTranslate(gtCandidates, targetLang, true);
     }
 
-    // Phase 2 — Process offscreen elements in idle-time chunks.
+    // Phase 2 — Register offscreen elements for lazy translation as
+    // they enter the viewport. Replaces the previous "idle-chunk every
+    // offscreen element" path: a user reading the first 30% of a long
+    // lesson no longer pays GT calls for the bottom 70% they never
+    // scroll to. See v3.5.32 changelog for the cost analysis.
     if (offscreen.length > 0) {
-      processOffscreenChunked(offscreen, targetLang, staticCount, gtCandidates.length);
+      observeLazyTranslation(offscreen, targetLang);
     }
 
     if (sb.commentTranslateEnabled) {
@@ -208,51 +222,57 @@
   }
 
   /**
-   * Process offscreen elements in small chunks during idle time,
-   * preventing main-thread blocking on pages with 500+ elements.
+   * Register offscreen elements with an IntersectionObserver so each
+   * one only triggers translation work when it nears the viewport.
+   * `rootMargin: '50% 0px'` gives a half-viewport lookahead so typical
+   * reading-speed scroll keeps content ready BEFORE it's visible — fast
+   * scrollers may briefly see English flash but reading patterns are
+   * well covered.
+   *
+   * Generation safety: stale observers from a previous language are
+   * disconnected in `reset()` and `bumpGeneration()`. Within a single
+   * generation, an in-flight intersect callback also re-checks
+   * `gtGeneration` before queueing.
    */
-  function processOffscreenChunked(elements, targetLang, _prevStatic, prevGt) {
-    let idx = 0;
-    const gtCandidates = [];
-    // Capture generation to detect language switches during processing.
-    const myGeneration = gtGeneration;
-
-    function processChunk(deadline) {
-      // Abort if language was switched (restoreOriginal bumps gtGeneration).
-      if (gtGeneration !== myGeneration) return;
-
-      const hasDeadline = typeof deadline !== 'undefined' && typeof deadline.timeRemaining === 'function';
-      const chunkEnd = Math.min(idx + SKILLBRIDGE_THRESHOLDS.VIEWPORT_CHUNK_SIZE, elements.length);
-      let processed = 0;
-
-      // Always process at least 1 element per callback to guarantee forward progress.
-      while (idx < chunkEnd && (processed === 0 || !hasDeadline || deadline.timeRemaining() > 1)) {
-        const el = elements[idx++];
-        const result = processOneElement(el, targetLang);
-        if (result === 'gt') gtCandidates.push(el);
-        processed++;
-      }
-
-      if (idx < elements.length) {
-        // Yield and continue in next idle period.
-        if (typeof requestIdleCallback !== 'undefined') {
-          requestIdleCallback(processChunk, { timeout: SKILLBRIDGE_DELAYS.IDLE_TIMEOUT });
-        } else {
-          setTimeout(processChunk, 0);
-        }
-      } else if (gtGeneration === myGeneration) {
-        // All offscreen elements processed — queue GT candidates.
-        if (gtCandidates.length > 0 && targetLang !== 'en') {
-          if (prevGt === 0) sb.showTranslationProgress?.();
-          queueForGoogleTranslate(gtCandidates, targetLang);
-        }
-      }
+  function observeLazyTranslation(elements, targetLang) {
+    // One observer per generation. Constructed lazily; disconnected when
+    // gtGeneration moves. A persistent observer would fire callbacks
+    // into the wrong generation if reset() didn't replace it.
+    if (!_lazyObserver) {
+      _lazyObserver = new IntersectionObserver(
+        (entries) => {
+          if (gtGeneration !== _lazyObserverGen) return;
+          const candidates = [];
+          let lazyLang = targetLang;
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            const el = entry.target;
+            const lang = _lazyElements.get(el);
+            if (!lang) continue;
+            _lazyObserver.unobserve(el);
+            _lazyElements.delete(el);
+            lazyLang = lang;
+            const result = processOneElement(el, lang);
+            if (result === 'gt') candidates.push(el);
+          }
+          if (candidates.length > 0 && lazyLang !== 'en') {
+            queueForGoogleTranslate(candidates, lazyLang, true);
+          }
+        },
+        {
+          // Half-viewport lookahead — content gets translated before the
+          // user actually sees it under typical reading-speed scroll.
+          // Bumping this up trades GT-call savings for fewer English
+          // flashes on fast scroll; '50% 0px' is the sweet spot.
+          rootMargin: '50% 0px',
+          threshold: 0,
+        },
+      );
+      _lazyObserverGen = gtGeneration;
     }
-
-    if (typeof requestIdleCallback !== 'undefined') {
-      requestIdleCallback(processChunk, { timeout: SKILLBRIDGE_DELAYS.IDLE_TIMEOUT });
-    } else {
-      setTimeout(processChunk, 0);
+    for (const el of elements) {
+      _lazyElements.set(el, targetLang);
+      _lazyObserver.observe(el);
     }
   }
 
@@ -489,10 +509,23 @@
     gtProcessing = false;
     _offlinePendingItems = [];
     gtGeneration++;
+    _disconnectLazyObserver();
   }
 
   function bumpGeneration() {
     gtGeneration++;
+    _disconnectLazyObserver();
+  }
+
+  // Tear down the lazy IntersectionObserver. Any pending offscreen
+  // elements stop receiving intersect callbacks for the now-stale
+  // generation. The observer gets re-created lazily on the next
+  // applyStaticTranslations call.
+  function _disconnectLazyObserver() {
+    if (_lazyObserver) {
+      _lazyObserver.disconnect();
+      _lazyObserver = null;
+    }
   }
 
   /**
