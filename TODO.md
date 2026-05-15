@@ -21,13 +21,14 @@ Ambassador submission is worth the user-facing effort.
   terminology). Add the slug row to `FLASHCARD_COURSE_MAP`. `npm run
   check:dict-coverage` + `npm run check:academy` must both pass.
   **Korea-first** — Korean translation lands first, others same week.
-- [ ] **CWS listing refresh (multilingual).** Store metadata still shows
-  v3.5.4. Update English title, description, screenshots, and "What's new"
-  to reflect v3.5.33 (sidebar split, 16-scenario E2E, IDB cache, both
-  drift watchers). Add Korean and Japanese localized listings — generic
-  English metadata is a credibility leak for Korea-first outreach. Re-
-  anchor copy on **certificate accessibility**, not "translator" (see
-  pillar reorder in POSITIONING.md).
+- [ ] **CWS listing refresh (multilingual) — upload to dashboard.**
+  Repo-side copy is ready: `store-assets/STORE_LISTING.md` rewritten on
+  certificate-accessibility framing (v3.5.33), plus localized
+  `STORE_LISTING-ko.md` and `STORE_LISTING-ja.md`. Remaining work is
+  human-only: paste each into the CWS dashboard's locale slots, refresh
+  screenshots, write the "What's new" entry. Other 8 premium-language
+  listings (de / es / fr / pt-BR / ru / vi / zh-CN / zh-TW) deferred to
+  "Next" — Korea + Japan unblock the highest-leverage outreach first.
 - [ ] **Trademark resolution.** We've been contacted about the name.
   Until either safe use is confirmed or we rebrand, public outreach is on
   hold. **Blocks Ambassador application and Korea-language blog posts** —
@@ -52,6 +53,13 @@ Ambassador submission is worth the user-facing effort.
 
 ## Next (this month)
 
+- [ ] **CWS listing — other 8 premium-language translations.** Currently
+  shipped: en / ko / ja. Remaining: de / es / fr / pt-BR / ru / vi /
+  zh-CN / zh-TW. Use `STORE_LISTING-ko.md` as the reference for tone
+  and structure (cert-first framing, pillar order matches POSITIONING).
+  Defer-not-cancel because Korea + Japan unblock the highest-leverage
+  outreach first; the other 8 are nice-to-have for credibility once
+  multilingual store metadata is live.
 - [ ] **YouTube `_BG_YT_CLIENT_VERSION` auto-bump GH Action.** Currently
   manual every few weeks (see comment in `src/background/background.js`).
   Cron workflow that pings InnerTube and opens a PR when stale. Same
