@@ -1,7 +1,7 @@
 # SkillBridge TODO
 
 > Strategy & scope: see [POSITIONING.md](POSITIONING.md).
-> Last refreshed: 2026-05-14 (v3.5.30)
+> Last refreshed: 2026-05-14 (v3.5.32 + academy-courses-drift)
 
 Items below are concrete engineering / ops work. Anything strategic — what
 markets we enter, what we charge, what features we accept — belongs in
@@ -14,8 +14,8 @@ POSITIONING.md, not here.
 
 ## Next (this month)
 
-- [ ] **YouTube `_BG_YT_CLIENT_VERSION` auto-bump GH Action.** Currently manual every few weeks (see comment in `src/background/background.js`). Cron workflow that pings InnerTube and opens a PR when stale. Same pattern as the new `.github/workflows/selectors-drift.yml` — easy to copy.
-- [ ] **48-hour SOP for new Academy courses** (POSITIONING.md pillar #1). The dict-coverage check now enforces per-course parity ONCE a course is added to `FLASHCARD_COURSE_MAP`, but there's no automation that NOTIFIES us when a new Academy course goes live. RSS / sitemap scrape + GitHub Action that opens a "translate course X to 11 languages" issue with the per-language section skeleton pre-filled.
+- [ ] **First-issue follow-up: translate `ai-fluency-for-small-businesses`.** The new academy-courses-drift watcher's first run (2026-05-14) caught this 18th course as unknown to `FLASHCARD_COURSE_MAP`. Add an `aiFluencySmallBiz` section to all 10 premium-language dictionaries in `src/data/` (clone `aiFluencyNonprofit` as a template since the AI Fluency series share terminology). Add the slug row to `FLASHCARD_COURSE_MAP`. `npm run check:dict-coverage` + `npm run check:academy` must both pass.
+- [ ] **YouTube `_BG_YT_CLIENT_VERSION` auto-bump GH Action.** Currently manual every few weeks (see comment in `src/background/background.js`). Cron workflow that pings InnerTube and opens a PR when stale. Same pattern as the now-shipped `selectors-drift.yml` and `academy-courses-drift.yml` — easy to copy.
 - [ ] **Performance budget E2E.** Measure time from page load → fully translated H1. Sets a regression detector for any future refactor that degrades cold-start. ~1h add to the suite.
 
 ## Later (when we have a real signal)
@@ -37,7 +37,7 @@ A burst of 18 PRs cleared most of what the v3.5.6 → 3.5.12 hotfix train had be
 
 **Tests (unit):** +50 (336 → 386). Sanitizer (gemini-block.test.js, 25 cases), protected-terms hardening (+6), gt-queue, dict-coverage self-test, etc.
 
-**CI:** added `e2e` job (parallel workers — wall time ~1m for 16 scenarios). Added `selectors-drift` watcher (6h cron + auto-issued GitHub issue on Skilljar DOM change). Added `check-dict-coverage` + `check-i18n-keys` validators.
+**CI:** added `e2e` job (parallel workers — wall time ~1m for 16 scenarios). Added `selectors-drift` watcher (6h cron + auto-issued GitHub issue on Skilljar DOM change). Added `academy-courses-drift` watcher (12h cron + auto-issued issue when a new course slug appears on `anthropic.skilljar.com/` that isn't wired into `FLASHCARD_COURSE_MAP` — closes the last gap in POSITIONING.md pillar #1's 48-hour SLA). Added `check-dict-coverage` + `check-i18n-keys` validators.
 
 **Strategy:** POSITIONING.md committed (locks the "canonical Anthropic Academy extension" angle); `_sb-typedef.js` documents the cross-module namespace contract.
 
@@ -56,4 +56,5 @@ A burst of 18 PRs cleared most of what the v3.5.6 → 3.5.12 hotfix train had be
 - **Firefox AMO publishing** — `cd-firefox.yml` ready; needs `AMO_API_KEY` + `AMO_API_SECRET` in GitHub Secrets.
 - **CWS reviewer expectations** — raw `src/` zip submission keeps reviews fast. If we ever switch to bundled-only output, expect slower reviews.
 - **Anthropic Academy DOM stability** — selectors live in `src/lib/selectors.js`. `scripts/check-selectors.js` runs on every PR (`validate` job) AND on a 6h cron (`selectors-drift` workflow) — auto-opens an issue if Skilljar changes their DOM out from under us.
+- **Anthropic Academy catalog drift** — the live course list at `anthropic.skilljar.com/` is the source of truth for which slugs need terminology coverage. `scripts/check-academy-courses.js` runs on a 12h cron (`academy-courses-drift` workflow) and auto-opens an issue listing any slug on the live page that isn't in `FLASHCARD_COURSE_MAP`. When you see this issue: add the per-language dictionary section first, THEN the map row — `check-dict-coverage` will fail otherwise.
 - **MV3 extension content-script CSP** — forbids `eval` / `new Function` inside content scripts. The E2E harness bridges into the isolated world via a hard-coded menu of diagnostic ops (see `tests/e2e/helpers/extension.js`) — if you add a new op, add it to that switch, don't try to pass arbitrary functions through.

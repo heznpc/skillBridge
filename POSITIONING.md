@@ -46,13 +46,19 @@ mechanisms that defend the three pillars above. Marketing / outreach moves
 are out of scope for this document; pick those up only when product
 quality is no longer the bottleneck.
 
-1. **48-hour SOP for new Academy courses** — RSS poll on Academy → GitHub
-   Action that opens a "translate course X to 11 languages" issue with the
-   per-language section skeleton pre-filled. Without this the "terminology
-   fidelity within 48h" pillar is aspirational instead of mechanical.
-   **Status: still open.** Dict coverage now enforces parity ONCE a course
-   is added to `FLASHCARD_COURSE_MAP`, but there's no automation that
-   notifies us when a new course goes live on the Academy site.
+1. ~~**48-hour SOP for new Academy courses**~~ — **shipped 2026-05-14** as
+   `scripts/check-academy-courses.js` + `.github/workflows/academy-
+   courses-drift.yml`. A 12-hour cron fetches the public catalog at
+   `anthropic.skilljar.com/`, extracts every course slug, and cross-
+   references against `FLASHCARD_COURSE_MAP` in `src/lib/constants.js`.
+   When a live slug is unknown to the map, the workflow auto-opens an
+   idempotent issue with the per-language follow-up checklist. Pillar #1
+   is now mechanically enforced end-to-end: dict-coverage catches missing
+   sections within a course (after the slug lands in the map), and this
+   new watcher catches missing slugs entirely. The 48-hour SLA is no
+   longer honor-system. **First-run catch (the same day)**: the script
+   flagged `ai-fluency-for-small-businesses` (Academy's 18th course) as
+   unknown — the very gap the workflow exists to surface.
 2. ~~**Per-language × per-course dictionary coverage check**~~ — **shipped
    in v3.5.18** as `scripts/check-dict-coverage.js`. Fails CI if any of the
    10 premium languages is missing terminology for any course referenced
