@@ -1,48 +1,59 @@
-# Chrome Web Store — Store Listing (v3.5.4)
+# Chrome Web Store — Store Listing (v3.5.33)
+
+Localized listings live alongside this file:
+
+- Korean — [STORE_LISTING-ko.md](STORE_LISTING-ko.md)
+- Japanese — [STORE_LISTING-ja.md](STORE_LISTING-ja.md)
+
+Other premium languages (de / es / fr / pt-BR / ru / vi / zh-CN / zh-TW)
+are tracked in TODO.md and will follow once the Korean and Japanese
+listings are validated in the CWS dashboard.
 
 ## Title (max 75 chars)
-SkillBridge — AI Course Translator (32 Languages + AI Tutor)
+
+SkillBridge — Anthropic Academy in your language + AI Tutor
 
 ## Summary (max 132 chars)
-Translate all 17 Anthropic Academy courses into 32 languages with curated AI dictionaries, flashcards, and a Claude-powered AI Tutor.
+
+Finish Anthropic Academy in 32 languages. Curated AI terminology, mother-language AI Tutor, exam-safe. No API key, no signup.
 
 ## Description (for Store listing)
 
-Anthropic Academy offers world-class free courses on Claude, prompt engineering, and AI safety — but only in English.
+Anthropic Academy offers world-class free courses on Claude, prompt engineering, and AI safety — but only in English. SkillBridge is how non-English learners actually finish a course and earn the certificate.
 
-SkillBridge translates all 17 courses into 32 languages with accurate AI terminology. Unlike generic translators, SkillBridge uses 570+ hand-curated translation entries per language so "Prompt" stays "프롬프트" (Korean) — not "신속한" (a common mistranslation).
+This is not a generic translator. SkillBridge ships hand-curated terminology dictionaries for 10 premium languages so "Prompt" stays "프롬프트" (Korean) instead of "신속한" (a common mistranslation), and a mother-language AI tutor that knows which lesson you're on — so when you get stuck, you can ask in your own language and the answer fits the slide you're actually looking at.
 
-🌐 FULL PAGE TRANSLATION
-Every text element on the page is translated — headings, paragraphs, lists, navigation, course cards, and progress labels. Interactive elements stay intact.
+🎓 FINISH IN YOUR LANGUAGE
+Every text element on the page is translated — headings, paragraphs, lists, navigation, course cards, progress labels, video subtitles, and code comments. Interactive elements stay intact so progress tracking and quiz submission keep working.
 
-🤖 AI TUTOR (Claude Sonnet 4.6)
-A sidebar chatbot that knows which course and lesson you're on. Ask questions in your language, get streaming answers. Powered by Claude via Puter.js.
+🤖 MOTHER-LANGUAGE AI TUTOR (Claude Sonnet 4.6)
+A sidebar chatbot that knows which course and lesson you're on. Ask questions in your language; get streaming answers grounded in the current lesson. Powered by Claude via Puter.js — no API key, no signup, no payment.
 
-🃏 VOCABULARY FLASHCARDS
-Course-specific flashcard decks generated from the curated dictionary. Track progress with a 3-box system (New → Learning → Mastered). Cards match the course you're currently viewing.
+🃏 COURSE-SPECIFIC VOCABULARY FLASHCARDS
+Flashcard decks generated from the curated dictionary for the course you're currently viewing. 3-box review system (New → Learning → Mastered) saved locally.
+
+📝 SELECT-AND-ASK
+Select any text in the lesson and click "Ask Tutor" for an explanation in your language. The tutor sees the full lesson context.
+
+💬 CONVERSATION HISTORY
+Chat history is saved locally (IndexedDB), grouped by chapter. Review past Q&A across sessions without losing context.
+
+🎓 EXAM MODE & CERTIFICATION SAFETY (the rule that makes this safe to use)
+Course quizzes: answer choices are NEVER translated, so your selection matches the canonical English answer. The AI Tutor switches to exam-safe mode.
+
+Proctored certification exams (e.g., Claude Certified Architect): the extension disables itself entirely — no translation, no UI, no AI tutor — so it cannot be mistaken for a cheating tool.
+
+✨ PROTECTED TERMS
+570+ curated entries per premium language. Brand names (Anthropic, Claude, Cowork, Dispatch, Computer Use, Subagent) and technical AI terms stay correct. Auto-corrects known mistranslations per language. New Academy courses get terminology coverage within 48 hours — mechanically enforced by our open-source drift watcher.
+
+💻 CODE COMMENT TRANSLATION
+Comments inside code blocks get translated; the code itself stays intact. Supports Python, JavaScript, HTML, Bash, and more.
 
 🎬 AUTO-SUBTITLES
 Course videos automatically activate translated subtitles when you play them. No manual toggle needed.
 
-💻 CODE COMMENT TRANSLATION
-Translate comments inside code blocks while preserving the code itself. Supports Python, JavaScript, HTML, Bash, and more.
-
 🔍 SMART DETECTION
 Detects your browser language on first visit and offers to translate — including an onboarding guide for English-speaking users. Handles SPA navigation: when you move between lessons, the new page translates automatically without a reload.
-
-✨ PROTECTED TERMS
-570+ curated entries per premium language. Brand names (Anthropic, Claude, Cowork, Dispatch, Computer Use, Subagent) and technical AI terms stay correct. Auto-corrects known mistranslations per language.
-
-📝 TEXT SELECTION → ASK TUTOR
-Select any text on the page and click "Ask Tutor" to get an explanation in your language. The AI tutor sees the full lesson context.
-
-💬 CONVERSATION HISTORY
-Chat history is saved locally in your browser (IndexedDB), grouped by chapter. Review past Q&A across sessions.
-
-🎓 EXAM MODE & CERTIFICATION SAFETY
-Course quizzes (e.g., Claude 101 completion quiz): answer choices are NOT translated to preserve accuracy. The AI Tutor switches to exam-safe mode.
-
-Proctored certification exams (e.g., Claude Certified Architect): the extension disables itself entirely — no translation, no UI, no AI tutor — so it cannot be mistaken for a cheating tool.
 
 📡 OFFLINE SUPPORT
 When you lose internet, SkillBridge switches to cached translations and shows an offline banner. The AI Tutor displays a friendly offline notice instead of failing silently.
@@ -50,21 +61,13 @@ When you lose internet, SkillBridge switches to cached translations and shows an
 ⌨️ KEYBOARD SHORTCUTS
 Ctrl+Shift+S (toggle tutor), Ctrl+Shift+F (flashcards), Ctrl+Shift+L (dark mode), Ctrl+Shift+/ (help), Escape (close), / (focus chat).
 
-🌙 DARK MODE
-Full dark theme for the entire Academy site — header, sidebar, lesson content, and tutor. Toggle with one click.
-
-🔄 RTL SUPPORT
-Full right-to-left layout for Arabic and Hebrew — sidebar, chat, flashcards, and all UI elements adapt automatically.
-
-📱 MOBILE FRIENDLY
-Sidebar adapts to small screens with full-width layout on mobile devices.
-
-💡 ONBOARDING
-First-time visitors see a welcome banner with quick setup. The AI Tutor shows example questions to get you started.
+🌙 DARK MODE · 🔄 RTL SUPPORT · 📱 MOBILE FRIENDLY
+Full dark theme for the entire Academy site. Full right-to-left layout for Arabic and Hebrew. Sidebar adapts to mobile.
 
 ━━━━━━━━━━━━━━━━━━━
 
-SUPPORTED COURSES (all 17 Anthropic Academy courses):
+SUPPORTED COURSES
+All 17 currently-published Anthropic Academy courses, with terminology coverage for any new course added within 48 hours (mechanically enforced by an open-source drift watcher that auto-opens an issue when a new slug appears):
 Claude 101 · Claude Code 101 · Claude Code in Action · Introduction to Claude Cowork · Introduction to Agent Skills · Introduction to Subagents · Building with the Claude API · Introduction to MCP · MCP: Advanced Topics · Claude with Amazon Bedrock · Claude with Google Vertex AI · AI Fluency: Framework & Foundations · AI Fluency for Students · AI Fluency for Educators · Teaching AI Fluency · AI Fluency for Nonprofits · AI Capabilities and Limitations
 
 ━━━━━━━━━━━━━━━━━━━
@@ -80,21 +83,21 @@ Português (PT) · Italiano · Nederlands · Polski · Українська · �
 HOW IT WORKS
 1. Curated dictionary lookup (570+ entries) → instant, fully local
 2. Local cache (IndexedDB) → instant, stays on your device
-3. Inline HTML tags? → Gemini 2.0 Flash translates with tag preservation (via Puter.js)
+3. Inline HTML tags → Gemini 2.0 Flash translates with tag preservation (via Puter.js)
 4. Plain text → Google Translate API (~200ms)
-5. AI quality check → Gemini 2.0 Flash verifies complex sentences in background
-6. Protected Terms auto-fix → restores brand/tech terms
+5. AI quality check → Gemini 2.0 Flash verifies complex sentences in the background
+6. Protected Terms auto-fix → restores brand and technical terms
 
-No data is stored on SkillBridge servers. Translation uses Google Translate and Puter.js — see our Privacy Policy for details.
+No data is stored on SkillBridge servers. Translation uses Google Translate and Puter.js — see Privacy Policy below for details.
 
 ━━━━━━━━━━━━━━━━━━━
 
 🔒 PRIVACY & DATA
-No API keys needed. No accounts. No analytics or tracking.
+No API keys needed. No accounts. No analytics or tracking by default.
 
-SkillBridge does NOT operate any servers. However, to provide translation and AI features, the following data is sent to third-party services:
+SkillBridge does NOT operate any servers. To provide translation and AI features, data is sent to third parties:
 
-• Google Translate — Page text is sent to Google's translation endpoint for translation. Google's privacy policy applies.
+• Google Translate — Page text is sent to Google's translation endpoint. Google's privacy policy applies.
 • Puter.js → Gemini 2.0 Flash — Translation text is sent via Puter.js for quality verification of complex sentences. Puter's privacy policy applies.
 • Puter.js → Claude Sonnet 4.6 — Chat messages and lesson context (up to 2,000 characters) are sent via Puter.js for AI tutoring. Puter's privacy policy applies.
 
@@ -104,7 +107,7 @@ Full privacy policy: https://heznpc.github.io/skillBridge/privacy.html
 
 📖 OPEN SOURCE
 https://github.com/heznpc/skillbridge
-MIT License — contributions welcome!
+MIT License — contributions welcome. Strategy, scope, and the "things we will not do" list are public in POSITIONING.md.
 
 ⚠️ DISCLAIMER
 SkillBridge is an unofficial community project. Not affiliated with, endorsed by, or sponsored by Anthropic.
@@ -120,11 +123,8 @@ All languages
 ### storage
 Saves user preferences such as selected language, dark mode, and auto-translate settings locally in the browser.
 
-### activeTab
-Accesses the current tab's page content to translate text elements on Anthropic Academy pages.
-
-### tabs
-Detects page navigation events to automatically trigger translation when the user navigates between lessons.
+### alarms
+Schedules background maintenance tasks (cache trim, YouTube client version refresh) without keeping the service worker alive unnecessarily.
 
 ### Host permission: *.skilljar.com
 Required to inject content scripts that translate Anthropic Academy (hosted on skilljar.com) page content.
@@ -134,3 +134,6 @@ Required to auto-activate translated subtitles on course videos embedded from Yo
 
 ### Host permission: translate.googleapis.com
 Required to send page text to Google Translate API for translation.
+
+### Host permission: api.github.com
+Used only by the in-extension update notifier to check for newer published versions of SkillBridge. Read-only, no auth.
