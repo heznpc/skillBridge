@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.33] - 2026-05-15
+
+### Added — Academy course catalog drift watcher (POSITIONING pillar #1)
+- `scripts/check-academy-courses.js` — fetches the public Anthropic Academy catalog (`anthropic.skilljar.com`), extracts every course slug it links to, and cross-references against `FLASHCARD_COURSE_MAP` in `src/lib/constants.js`. Exits 1 if any live slug is unknown to the extension, and writes `academy-courses-report.txt` in CI mode for the workflow to attach to an issue.
+- `.github/workflows/academy-courses-drift.yml` — 12-hour cron + idempotent issue (mirrors `selectors-drift.yml`). Auto-opens `🆕 New Anthropic Academy course detected — terminology update needed` with the per-language follow-up checklist; skips re-open if an open issue with the same title already exists.
+- `tests/academy-courses-checker.test.js` — 12 unit tests covering the slug parser (absolute + relative href forms, multi-segment rejection, template-literal sanitization, sort stability) and the CLI (fixture-driven exit codes + CI report file).
+- `npm run check:academy` wired into `package.json`.
+- **Why this matters**: closes the last gap in the POSITIONING.md pillar #1 SLA ("new Academy course → terminology update within 48h"). Before this, the 48h window was honor-system; a new course could ship on Monday and we'd learn from a user issue days later. The previously-shipped `check-dict-coverage` enforces per-course parity ONCE a slug is added to `FLASHCARD_COURSE_MAP` — but until now, nothing notified us that a new slug existed on the live catalog.
+- **First-run catch (2026-05-14)**: the new script run against the live catalog detected `ai-fluency-for-small-businesses` (the 18th course, launched after the prior dict update). That slug is now the first follow-up issue the workflow will open.
+
+### Tests (totals)
+- Unit (jest): 398/398 (was 386 + 12 new for the academy checker).
+
 ## [3.5.32] - 2026-05-14
 
 ### Performance — Lazy translation via IntersectionObserver
