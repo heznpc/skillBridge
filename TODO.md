@@ -42,8 +42,11 @@ Ambassador submission is worth the user-facing effort.
   ROI is unmeasurable without it. Hard constraints from POSITIONING.md:
   off by default, explicit opt-in toggle in popup, error stacks only (no
   PII, no user content, no full URLs, no learning history), 30-day
-  retention, user-purgeable. ~6–8h careful design. Get this wrong once
-  and it's the only thing CWS reviewers / X commenters remember.
+  retention, user-purgeable. **Design proposal**:
+  [docs/TELEMETRY_DESIGN.md](docs/TELEMETRY_DESIGN.md) — open for review
+  before any code lands. Implementation is a separate PR. Blockers
+  documented in the design doc itself (trademark, Cloudflare ownership,
+  independent privacy review).
 - [ ] **Smoke-test the latest CWS bundle in an actual Chrome.** The 16-
   scenario Playwright suite covers every documented README feature except
   YouTube subtitles (real iframe needed) and dark mode toggle (UI-only).
