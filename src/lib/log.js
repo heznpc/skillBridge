@@ -1,19 +1,21 @@
 // Thin structured logger for SkillBridge content + background scripts.
 //
 // Why: 57+ ad-hoc `console.log/warn/error` calls are scattered across
-// src/content/* and src/lib/*. They make user bug reports hard to
-// triage because lines don't carry a module name and severity is
-// mixed (warn-as-log, log-as-warn). This wrapper standardizes the
-// prefix and log level without forcing a bulk refactor of existing
-// call sites — new code uses `createLogger`, old code keeps working.
+// src/content/* and src/lib/*. They make user bug reports hard to triage
+// because lines don't carry a module name and severity is mixed
+// (warn-as-log, log-as-warn). This wrapper standardizes the prefix and
+// severity routing without forcing a bulk refactor — see POSITIONING.md
+// "Things we will not do" for why there's no remote sink.
 //
-// Constraints honored:
-//   - No external dep (POSITIONING.md "No SkillBridge servers"; we
-//     keep client-side bundle small).
-//   - No remote sink (no Sentry, no telemetry endpoint — see
-//     POSITIONING "Things we will not do"). Errors stay in DevTools.
-//   - MV3-safe: pure functions, no global state besides the level
-//     threshold read from chrome.storage when available.
+// Prefix format is `[SkillBridge ModuleName]` to match the existing
+// hand-rolled convention in src/content/* (chat-flashcards, sidebar-chat,
+// keyboard-shortcuts, etc.) so log lines from new and old call sites read
+// uniformly in DevTools.
+//
+// Note: `src/lib/page-bridge.js` is intentionally NOT a consumer of this
+// module. It runs in the host page's main world (not the extension
+// context), where neither `window._skillbridgeLog` nor a `require()` of
+// this file would resolve.
 //
 // Usage:
 //   const log = createLogger('Translator');
@@ -22,24 +24,30 @@
 //   log.error('escapeHtml missing', err);
 //
 // In production builds, `info` is silenced by default; `warn` / `error`
-// always print. Set chrome.storage.local.skillbridgeLogLevel = 'debug'
-// to enable everything (the popup may surface this toggle later).
+// always print. Set `chrome.storage.local.skillbridgeLogLevel = 'debug'`
+// to enable everything — changes take effect immediately via
+// storage.onChanged (no reload needed).
 
 (function () {
   'use strict';
 
   const LEVELS = { debug: 10, info: 20, warn: 30, error: 40, silent: 99 };
-  // Default production level — `warn` and above visible without opt-in.
+  const VALID_LEVELS = ['debug', 'info', 'warn', 'error'];
   let _threshold = LEVELS.warn;
 
-  // Best-effort runtime override. We don't `await` chrome.storage here;
-  // the threshold updates asynchronously the first time storage resolves.
+  function _applyLevel(v) {
+    if (v && Object.hasOwn(LEVELS, v)) _threshold = LEVELS[v];
+  }
+
   try {
     if (typeof chrome !== 'undefined' && chrome?.storage?.local?.get) {
-      chrome.storage.local.get(['skillbridgeLogLevel'], (res) => {
-        const v = res?.skillbridgeLogLevel;
-        if (v && Object.prototype.hasOwnProperty.call(LEVELS, v)) {
-          _threshold = LEVELS[v];
+      chrome.storage.local.get(['skillbridgeLogLevel'], (res) => _applyLevel(res?.skillbridgeLogLevel));
+      // Live-update when the popup (or any other surface) flips the level
+      // — without this, a verbose-mode toggle only takes effect on next
+      // page load, which makes triage-during-repro flaky.
+      chrome.storage.onChanged?.addListener?.((changes, area) => {
+        if (area === 'local' && changes.skillbridgeLogLevel) {
+          _applyLevel(changes.skillbridgeLogLevel.newValue);
         }
       });
     }
@@ -49,7 +57,7 @@
 
   function _emit(level, module, args) {
     if (LEVELS[level] < _threshold) return;
-    const prefix = `[SkillBridge:${module}]`;
+    const prefix = `[SkillBridge ${module}]`;
     // Route to the matching console method so DevTools severity filter
     // works. `console.debug` shows only when "Verbose" is enabled.
     const fn = console[level] || console.log;
@@ -60,20 +68,20 @@
     if (!module || typeof module !== 'string') {
       throw new TypeError('createLogger requires a non-empty module name');
     }
-    return {
-      debug: (...a) => _emit('debug', module, a),
-      info: (...a) => _emit('info', module, a),
-      warn: (...a) => _emit('warn', module, a),
-      error: (...a) => _emit('error', module, a),
-    };
+    // Narrowing dispatch: build the 4-method API by iterating VALID_LEVELS
+    // instead of hand-listing each call to `_emit('debug', ...)`. A typo
+    // in the level name now fails at module load via the LEVELS lookup,
+    // not silently at the first log call.
+    const api = {};
+    for (const level of VALID_LEVELS) {
+      api[level] = (...a) => _emit(level, module, a);
+    }
+    return api;
   }
 
-  // Expose for both content-script (window) and CommonJS (tests) contexts.
   if (typeof window !== 'undefined') {
     window._skillbridgeLog = { createLogger, LEVELS };
   }
-  // CommonJS export for unit tests. `module` is undefined in content-script
-  // context, so this is gated behind a typeof check.
   // eslint-disable-next-line no-undef
   if (typeof module !== 'undefined' && module.exports) {
     // eslint-disable-next-line no-undef
