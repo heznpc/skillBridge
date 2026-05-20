@@ -29,9 +29,20 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Job-level gate. The first half is the existing trigger filter
+    # (manual dispatch or successful CI). The second half is the
+    # publication-pause guard: while the CWS listing is removed pending
+    # icon redesign (see README.md "Installation" + POSITIONING.md
+    # "Blockers before outreach"), every push to manifest.json / src/*
+    # would otherwise fail with HTTP 400 from CWS and bury real
+    # regressions under red Xs. Flip the repo variable
+    # `CWS_PUBLICATION_PAUSED` to `false` (or unset) on re-publication
+    # day, or pass `force=true` via workflow_dispatch to bypass once.
     if: >-
-      github.event_name == 'workflow_dispatch'
-      || github.event.workflow_run.conclusion == 'success'
+      (github.event_name == 'workflow_dispatch'
+        || github.event.workflow_run.conclusion == 'success')
+      && (vars.CWS_PUBLICATION_PAUSED != 'true'
+        || github.event.inputs.force == 'true')
     permissions:
       contents: write        # for `git push origin cws-v${VERSION}` tag
       id-token: write        # for actions/attest-build-provenance OIDC
