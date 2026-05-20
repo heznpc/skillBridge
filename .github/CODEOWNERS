@@ -1,0 +1,38 @@
+# SkillBridge CODEOWNERS
+#
+# Solo maintainer today, but contributor PRs route through review here.
+# Adjust per-area ownership as the project grows — keep the catch-all
+# at the bottom so changes outside listed paths still get reviewed.
+
+# Catch-all
+* @heznpc
+
+# Load-bearing per-area ownership (also covered by catch-all; listed
+# explicitly so a reviewer skim of CODEOWNERS surfaces the
+# high-blast-radius surfaces).
+
+# Positioning + governance — strategic, must not drift silently.
+/POSITIONING.md            @heznpc
+/CLAUDE.md                 @heznpc
+/SECURITY.md               @heznpc
+/.github/CODEOWNERS        @heznpc
+
+# Deploy + secret-handling workflows.
+/.github/workflows/cd.yml          @heznpc
+/.github/workflows/cd-firefox.yml  @heznpc
+/.github/workflows/release.yml     @heznpc
+
+# Translation pipeline — terminology fidelity (POSITIONING pillar #3).
+/src/lib/translator.js     @heznpc
+/src/lib/protected-terms.js @heznpc
+/src/data/                 @heznpc
+
+# Exam-mode safety (POSITIONING safety footnote — never publish a
+# regression that disables exam-safe gating).
+/src/lib/gemini-block.js   @heznpc
+/src/content/banners.js    @heznpc
+
+# Third-party vendored code — any change must update SHA in
+# THIRD_PARTY_NOTICES.md and pass maintenance.yml hash check.
+/src/bridge/puter.js       @heznpc
+/THIRD_PARTY_NOTICES.md    @heznpc
