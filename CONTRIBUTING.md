@@ -280,6 +280,26 @@ The tutor lives in `src/content/sidebar-chat.js` (sidebar UI, chat, conversation
 - Write tutorials or guides
 - Create screenshots/GIFs for the README
 
+> **Where do translated READMEs live?**
+> The public landing page at
+> [https://heznpc.github.io/skillBridge/](https://heznpc.github.io/skillBridge/)
+> is the canonical multilingual surface and is managed in a separate
+> repo (the GitHub Pages source). Inside *this* repo, the only
+> translated long-form doc is `CHANGES_KO.md` (release notes in
+> Korean). When a translated README is large enough to be worth a
+> PR here rather than on the landing page, drop it under
+> `docs/i18n/README.<lang>.md` so it sits next to its sibling and
+> doesn't compete with the English `README.md` for top-of-repo
+> attention. Smaller localized strings go in `_locales/<lang>/messages.json`,
+> not in Markdown.
+
+> **Logging in new modules.** The thin wrapper at
+> `src/lib/log.js` exposes `createLogger('ModuleName')` for new
+> content / background scripts. Use it instead of bare
+> `console.log/warn/error` so DevTools severity filtering works and
+> module names show up in user bug reports. Existing call sites are
+> kept as-is — there's no bulk-refactor mandate.
+
 ---
 
 ## Code Guidelines

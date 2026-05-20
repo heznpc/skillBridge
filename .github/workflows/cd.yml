@@ -20,15 +20,25 @@ concurrency:
   group: cws-deploy
   cancel-in-progress: false
 
+# Top-level least-privilege. The deploy job escalates id-token (for SLSA
+# build provenance) and contents (for the cws-vN tag push) at the job
+# level; nothing else needs write access.
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     if: >-
       github.event_name == 'workflow_dispatch'
       || github.event.workflow_run.conclusion == 'success'
+    permissions:
+      contents: write        # for `git push origin cws-v${VERSION}` tag
+      id-token: write        # for actions/attest-build-provenance OIDC
+      attestations: write    # for the attestation upload step
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
         with:
           fetch-depth: 0
 
@@ -100,9 +110,19 @@ jobs:
           SIZE=$(du -h store-assets/skillbridge.zip | cut -f1)
           echo "Built store-assets/skillbridge.zip ($SIZE)"
 
+      # SLSA build provenance for the .zip — generated *before* upload so
+      # the attestation is published whether or not CWS accepts the bundle.
+      # Future Chrome Web Store / supply-chain reviewers can verify the
+      # zip was built from this workflow run, in this repo, at this SHA.
+      - name: Attest CWS zip build provenance
+        if: steps.secrets.outputs.configured == 'true' && steps.tag_guard.outputs.should_upload != 'false'
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be  # v2
+        with:
+          subject-path: store-assets/skillbridge.zip
+
       - name: Upload to Chrome Web Store
         if: steps.secrets.outputs.configured == 'true' && steps.tag_guard.outputs.should_upload != 'false'
-        uses: mnao305/chrome-extension-upload@v5.0.0
+        uses: mnao305/chrome-extension-upload@4008e29e13c144d0f6725462cbd49b7c291b4928  # v5.0.0
         with:
           file-path: store-assets/skillbridge.zip
           extension-id: ${{ secrets.CWS_EXTENSION_ID }}
@@ -121,7 +141,7 @@ jobs:
 
       - name: Upload zip as artifact
         if: steps.secrets.outputs.configured == 'true' && steps.tag_guard.outputs.should_upload != 'false'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: skillbridge-v${{ steps.version.outputs.version }}
           path: store-assets/skillbridge.zip

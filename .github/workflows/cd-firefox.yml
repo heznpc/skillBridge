@@ -16,6 +16,11 @@ concurrency:
   group: amo-deploy
   cancel-in-progress: false
 
+# Top-level least-privilege. The deploy job uses long-lived AMO API
+# credentials only; no GITHUB_TOKEN escalation needed.
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -24,7 +29,7 @@ jobs:
       || github.event.workflow_run.conclusion == 'success'
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
         with:
           fetch-depth: 0
 
@@ -65,9 +70,9 @@ jobs:
 
       - name: Set up Node.js
         if: steps.secrets.outputs.configured == 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
         with:
-          node-version: 22
+          node-version-file: '.nvmrc'
 
       - name: Install dependencies
         if: steps.secrets.outputs.configured == 'true'
@@ -100,7 +105,7 @@ jobs:
 
       - name: Upload zip as artifact
         if: steps.secrets.outputs.configured == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: skillbridge-firefox-v${{ steps.version.outputs.version }}
           path: store-assets/skillbridge-firefox.zip

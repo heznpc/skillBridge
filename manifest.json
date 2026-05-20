@@ -3,7 +3,7 @@
   "name": "__MSG_extName__",
   "description": "__MSG_extDescription__",
   "version": "3.5.33",
-  "minimum_chrome_version": "120",
+  "minimum_chrome_version": "124",
   "author": "SkillBridge Contributors",
   "homepage_url": "https://github.com/heznpc/skillbridge",
   "default_locale": "en",

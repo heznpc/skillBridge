@@ -12,11 +12,20 @@ updates:
       prefix: chore
       include: scope
     groups:
+      # Bundle minor + patch dev-dep bumps into one weekly PR — they're
+      # low-risk and we don't want 5 PRs on a Monday morning.
       dev-dependencies:
         dependency-type: development
         update-types:
           - minor
           - patch
+      # Surface major dev-dep bumps in their own PR so the upgrade can
+      # be evaluated deliberately (jest 30 → 31, eslint 10 → 11 are not
+      # safely group-mergeable).
+      dev-dependencies-major:
+        dependency-type: development
+        update-types:
+          - major
 
   - package-ecosystem: github-actions
     directory: /
@@ -29,3 +38,10 @@ updates:
     commit-message:
       prefix: chore
       include: scope
+    groups:
+      # Bundle all GitHub Actions bumps. SHA-pinned references in
+      # workflows mean Dependabot will still bump each action's SHA;
+      # grouping just keeps the PR queue clean.
+      actions:
+        patterns:
+          - "*"
