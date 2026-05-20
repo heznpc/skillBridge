@@ -101,6 +101,17 @@ export default [
       'eqeqeq': ['error', 'always', { null: 'ignore' }],
       'no-var': 'error',
       'prefer-const': ['warn', { destructuring: 'all' }],
+
+      // ── Security hardening (P2 modernization 2026-05-21) ──
+      // Belt-and-suspenders: today's code passes these already, but
+      // future contributors can't reintroduce these patterns without
+      // an explicit `eslint-disable` that surfaces in review. CodeQL
+      // default-setup catches the same categories at a deeper level
+      // — these rules give a faster local signal.
+      'no-implied-eval': 'error',       // bans setTimeout(string), setInterval(string)
+      'no-new-func': 'error',           // bans new Function('...')
+      'no-script-url': 'error',         // bans href="javascript:..."
+      'no-prototype-builtins': 'error', // forces Object.hasOwn / hasOwnProperty.call
     },
   },
   {
@@ -127,7 +138,7 @@ export default [
     },
   },
   {
-    // Test and script files use CommonJS; suppress redeclare for jest globals
+    // Test and script files use CommonJS; suppress redeclare for jest globals.
     files: ['tests/**/*.js', 'scripts/**/*.js'],
     languageOptions: {
       sourceType: 'commonjs',
@@ -149,6 +160,13 @@ export default [
     },
     rules: {
       'no-redeclare': 'off',
+      // Content scripts are non-module scripts; the test harness loads them
+      // via `new Function('window', src)(fakeWindow)` so the production
+      // file under test can register on `window.*` exactly the way Chrome
+      // does at runtime. `require()`-ing would change the load semantics
+      // and miss exactly the class of bug we test for. The Function
+      // constructor here is hermetic to test setup, not user input.
+      'no-new-func': 'off',
     },
   },
   {
