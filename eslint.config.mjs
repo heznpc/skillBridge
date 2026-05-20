@@ -102,12 +102,11 @@ export default [
       'no-var': 'error',
       'prefer-const': ['warn', { destructuring: 'all' }],
 
-      // ── Security hardening (P2 modernization 2026-05-21) ──
-      // Belt-and-suspenders: today's code passes these already, but
-      // future contributors can't reintroduce these patterns without
-      // an explicit `eslint-disable` that surfaces in review. CodeQL
-      // default-setup catches the same categories at a deeper level
-      // — these rules give a faster local signal.
+      // Belt-and-suspenders security rules. Today's code passes these;
+      // they exist so future contributors can't reintroduce the patterns
+      // without an explicit `eslint-disable` that surfaces in review.
+      // CodeQL default-setup catches the same categories more deeply —
+      // these give a faster local signal.
       'no-implied-eval': 'error',       // bans setTimeout(string), setInterval(string)
       'no-new-func': 'error',           // bans new Function('...')
       'no-script-url': 'error',         // bans href="javascript:..."
