@@ -144,9 +144,13 @@ Generic translation tools often **mistranslate brand names and technical terms**
 
 ## Installation
 
-### Chrome / Edge / Chromium browsers
+> **Status: pending re-publication after icon redesign.** The Chrome Web
+> Store listing was removed pending an icon redesign and is not currently
+> available. Install via the manual / developer-mode path below — the
+> code in `main` is the up-to-date release. The store listing will be
+> restored once the new icon ships.
 
-> Install from the [Chrome Web Store](https://chromewebstore.google.com/) (search "SkillBridge for Anthropic Academy").
+### Chrome / Edge / Chromium browsers
 
 **Manual install** (developer mode):
 

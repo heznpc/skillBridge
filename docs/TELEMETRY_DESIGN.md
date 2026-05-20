@@ -104,7 +104,11 @@ This is the hard part. POSITIONING.md says "we do not add server-side infrastruc
 ### Option A — Cloudflare Worker + D1 (recommended)
 
 - Single Worker route, single D1 SQLite table.
-- Free tier: 100k requests/day, 5GB D1. At 710 users today and even 100k installs in 12 months, we're nowhere near the cap.
+- Free tier: 100k requests/day, 5GB D1. The free tier is sized for hobby
+  projects; even a 100k-install scenario after re-publication stays
+  comfortably under the cap, so this option fits the
+  free-for-users-and-creator constraint indefinitely without monetization
+  pressure.
 - Schema:
   ```sql
   CREATE TABLE telemetry (
