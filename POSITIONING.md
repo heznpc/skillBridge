@@ -1,4 +1,4 @@
-# SkillBridge — Positioning (locked 2026-05-15)
+# SkillBridge — Positioning (locked 2026-05-20)
 
 This document is the decision baseline for what SkillBridge is and is not.
 When a feature request, dependency choice, or scope expansion lands, check
@@ -26,9 +26,12 @@ not for individual feature debates.
 - The dominant fallback is Chrome's built-in translate (with Gemini Nano
   on-device since 2025). Free, ubiquitous, but no AI terminology fidelity,
   no tutor, no exam mode.
-- SkillBridge CWS: 710 users, ★5.0 / 3 reviews, last visible store update
-  2026-03-10. Listing still shows v3.5.4 metadata — refresh is a blocker
-  for any growth push (see "Blockers before outreach").
+- SkillBridge CWS: **listing removed pending icon redesign.** Re-publication
+  is the gating prerequisite for any growth push (see "Blockers before
+  outreach"). Until the new icon ships and the listing is re-approved, all
+  marketing motion is on hold by design — installs through the store are
+  not available, only the manual / developer-mode path documented in the
+  README.
 
 ## Position (one sentence)
 
@@ -176,24 +179,20 @@ or an Ambassador application is worth the user-facing effort. Pillars
 above are about *what* the product is; this section is about *what has to
 be true before we tell anyone*.
 
-1. **CWS listing refresh**. Store metadata still shows v3.5.4. Title,
-   description, screenshots, and "What's new" need to reflect v3.5.33
-   (sidebar split, 16-scenario E2E, IDB cache, both drift watchers,
-   academy-courses watcher). Korean and Japanese localized listings are a
-   prerequisite for Korea-first outreach to feel native — generic English
-   store metadata is a credibility leak.
-2. **Trademark resolution**. We've been contacted about the name. Until
-   we've either confirmed safe use or rebranded, public outreach (CWS
-   featured listing application, Ambassador submission, Korea-language
-   blog posts) is on hold — a takedown after a growth push erases the
-   acquisition we paid for. *(Placeholder: notice content not yet shared
-   with this document. When resolved, replace this paragraph with the
-   actual decision and date.)*
-3. **Ambassador application**. Open program, deliberately scoped at
+1. **Re-publication after icon redesign**. The CWS listing was removed
+   pending an icon redesign. Until the new icon ships and the listing
+   is re-approved, there is no store install path and no public landing
+   surface to point new users at — every other outreach motion is
+   downstream of this. Korean and Japanese localized listings (already
+   drafted under `store-assets/`) ship in the same re-publication so the
+   Korea-first outreach feels native from day one, rather than racing a
+   generic English listing later.
+2. **Ambassador application**. Open program, deliberately scoped at
    community builders. SkillBridge fits the profile (free, single-
    audience, demonstrated traction). Application drafted, submission
-   blocked on #2.
-4. **Anonymized opt-in telemetry** (new). Promoted from Later because
+   blocked on #1 — applying without a live store listing would burn the
+   one-shot first impression.
+3. **Anonymized opt-in telemetry** (new). Promoted from Later because
    we can't measure marketing ROI without it. Hard constraints: off by
    default, explicit opt-in toggle in popup, error stacks only (no PII,
    no user content, no full URLs, no learning history), 30-day retention,
@@ -203,7 +202,7 @@ be true before we tell anyone*.
 
 ### Marketing readiness sequence
 
-Once #1–#3 are cleared:
+Once #1–#2 are cleared:
 
 - **T+0 to 2 weeks**: CWS multilingual listing live; Ambassador
   submission filed.
