@@ -16,20 +16,20 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { execSync } = require('child_process');
+const { spawnSync } = require('child_process');
 
 const SCRIPT = path.join(__dirname, '..', 'scripts', 'check-dict-coverage.js');
 
 function run(env) {
-  try {
-    const out = execSync(`node ${SCRIPT}`, {
-      env: { ...process.env, ...env },
-      encoding: 'utf8',
-    });
-    return { code: 0, out };
-  } catch (e) {
-    return { code: e.status, out: (e.stdout || '') + (e.stderr || '') };
-  }
+  // spawnSync with array args avoids the shell-interpolation form that
+  // CodeQL flags as js/shell-command-injection-from-environment. The
+  // SCRIPT path is __dirname-derived so there's no real injection
+  // vector, but the array form is honest about that.
+  const r = spawnSync(process.execPath, [SCRIPT], {
+    env: { ...process.env, ...env },
+    encoding: 'utf8',
+  });
+  return { code: r.status, out: (r.stdout || '') + (r.stderr || '') };
 }
 
 describe('check-dict-coverage.js self-test', () => {
