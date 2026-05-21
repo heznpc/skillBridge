@@ -293,12 +293,16 @@ The tutor lives in `src/content/sidebar-chat.js` (sidebar UI, chat, conversation
 > attention. Smaller localized strings go in `_locales/<lang>/messages.json`,
 > not in Markdown.
 
-> **Logging in new modules.** The thin wrapper at
-> `src/lib/log.js` exposes `createLogger('ModuleName')` for new
-> content / background scripts. Use it instead of bare
+> **Logging in new content modules.** `src/lib/log.js` is loaded by
+> `manifest.json` content_scripts ahead of every other module, so
+> `window._skillbridgeLog.createLogger('ModuleName')` is available
+> globally inside content scripts. Prefer it over bare
 > `console.log/warn/error` so DevTools severity filtering works and
-> module names show up in user bug reports. Existing call sites are
-> kept as-is — there's no bulk-refactor mandate.
+> module names appear in user bug reports. (Background service-worker
+> and `src/lib/page-bridge.js` — which runs in the page world — are
+> intentionally not consumers of this module; see `src/lib/log.js`
+> header.) Existing call sites are kept as-is; there's no bulk-refactor
+> mandate.
 
 ---
 

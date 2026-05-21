@@ -13,22 +13,21 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { execSync } = require('child_process');
+const { spawnSync } = require('child_process');
 
 const SCRIPT = path.join(__dirname, '..', 'scripts', 'check-academy-courses.js');
 const { parseSlugs, NON_COURSE_SLUGS } = require(SCRIPT);
 
 function run(env) {
-  try {
-    const out = execSync(`node ${SCRIPT}`, {
-      env: { ...process.env, ...env, CI: 'true' },
-      encoding: 'utf8',
-      cwd: os.tmpdir(),
-    });
-    return { code: 0, out };
-  } catch (e) {
-    return { code: e.status ?? 1, out: (e.stdout || '') + (e.stderr || '') };
-  }
+  // spawnSync with array args avoids js/shell-command-injection-from-
+  // environment. SCRIPT is __dirname-derived (no injection vector) but
+  // the array form documents that.
+  const r = spawnSync(process.execPath, [SCRIPT], {
+    env: { ...process.env, ...env, CI: 'true' },
+    encoding: 'utf8',
+    cwd: os.tmpdir(),
+  });
+  return { code: r.status ?? 1, out: (r.stdout || '') + (r.stderr || '') };
 }
 
 function writeFixture(name, content) {
@@ -157,21 +156,17 @@ describe('CLI behavior (against fixtures)', () => {
   test('CI=true writes the report file with the new slug', () => {
     // Use a temp cwd so the report file lands in a known location.
     const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'sb-academy-report-'));
-    try {
-      execSync(`node ${SCRIPT}`, {
-        env: {
-          ...process.env,
-          CI: 'true',
-          SB_CATALOG_HTML_FIXTURE: htmlOneUnknown,
-          SB_CONSTANTS_FIXTURE: constantsFile,
-        },
-        cwd,
-        encoding: 'utf8',
-      });
-      throw new Error('expected exit 1');
-    } catch (e) {
-      expect(e.status).toBe(1);
-    }
+    const r = spawnSync(process.execPath, [SCRIPT], {
+      env: {
+        ...process.env,
+        CI: 'true',
+        SB_CATALOG_HTML_FIXTURE: htmlOneUnknown,
+        SB_CONSTANTS_FIXTURE: constantsFile,
+      },
+      cwd,
+      encoding: 'utf8',
+    });
+    expect(r.status).toBe(1);
     const report = fs.readFileSync(path.join(cwd, 'academy-courses-report.txt'), 'utf8');
     expect(report).toMatch(/totally-new-course/);
     expect(report).toMatch(/POSITIONING\.md pillar #1/);

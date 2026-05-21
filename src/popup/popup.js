@@ -3,9 +3,25 @@
  * Uses shared constants from constants.js (loaded via <script> in popup.html).
  */
 
+// Hostname-exact / suffix match against `skilljar.com`. The previous
+// substring check matched `evil.skilljar.com.attacker.example/` and
+// `prefix-skilljar.com/`, both of which CodeQL flagged
+// (`js/incomplete-url-substring-sanitization`, HIGH). The popup runs in
+// extension context and sees any active-tab URL, so this matters even
+// though the rest of the extension is host-gated by manifest
+// `host_permissions`.
+function isSkilljarHost(url) {
+  try {
+    const host = new URL(url).hostname;
+    return host === 'skilljar.com' || host.endsWith('.skilljar.com');
+  } catch {
+    return false;
+  }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const isSkilljar = tab?.url?.includes('skilljar.com');
+  const isSkilljar = isSkilljarHost(tab?.url);
 
   document.getElementById('main-content').style.display = isSkilljar ? 'block' : 'none';
   document.getElementById('not-skilljar').style.display = isSkilljar ? 'none' : 'block';
