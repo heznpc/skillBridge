@@ -24,6 +24,50 @@
     console.warn('[SkillBridge PageBridge]', ...args);
   }
 
+  // Hard upper bound on request payload sizes. Real translations top out
+  // at a few kB; chat prompts in the 10-20 kB range. 200 kB sits well
+  // above legitimate usage and well below any reasonable Claude / Gemini
+  // context limit. Without this guard a buggy caller — or a page-world
+  // script that managed to read the loader nonce — could burn the
+  // shared Puter.js quota by submitting megabyte-sized prompts.
+  const _MAX_PAYLOAD_CHARS = 200_000;
+
+  function _payloadTooLarge(data) {
+    return (
+      (data?.text?.length || 0) + (data?.systemPrompt?.length || 0) + (data?.userMessage?.length || 0) >
+      _MAX_PAYLOAD_CHARS
+    );
+  }
+
+  function _replyTooLarge(type, id, fallbackText) {
+    window.postMessage(
+      {
+        __skillbridge__: true,
+        __nonce__: _bridgeNonce,
+        type,
+        id,
+        success: false,
+        error: `Payload exceeds ${_MAX_PAYLOAD_CHARS} chars`,
+        result: fallbackText || '',
+      },
+      window.location.origin,
+    );
+  }
+
+  // Map of in-flight streaming-CHAT request id → { cancelled: boolean }.
+  // The translator's AbortController previously stopped the UI from
+  // *displaying* further chunks but did NOT stop Puter.js from generating
+  // them — so a user clicking "send" 3x in a row left two zombie streams
+  // burning the shared Puter.js quota until completion. CHAT_ABORT flips
+  // the flag and the for-await loop breaks on next iteration, which lets
+  // the async iterator's `return()` close the underlying connection.
+  const _activeStreams = new Map();
+
+  function _handleAbort(id) {
+    const entry = _activeStreams.get(id);
+    if (entry) entry.cancelled = true;
+  }
+
   // Fallback chain — used when a primary model is rejected by Puter
   // (deprecation, rename, regional availability). Hardcoded here because
   // page-bridge runs in the page world and can't import constants.js.
@@ -111,12 +155,26 @@
     if (event.source !== window) return;
     const data = event.data;
     if (!data || !data.__skillbridge__) return;
-    // Validate nonce to prevent other page scripts from spoofing messages
-    // Always enforce — nonce is never empty (crypto.randomUUID fallback above)
+    // Nonce check. NOTE: the nonce lives in the loader script's
+    // data-attribute and is therefore readable by any same-page script.
+    // It does NOT secure us against malicious page-world code — the
+    // actual gate is `manifest.json` `host_permissions` (the bridge
+    // only ever runs on Skilljar pages we trust). This check just stops
+    // accidental message echoes from unrelated libraries.
     if (data.__nonce__ !== _bridgeNonce) return;
+
+    // === CHAT_ABORT === (fire-and-forget; no response expected)
+    if (data.type === 'CHAT_ABORT') {
+      _handleAbort(data.id);
+      return;
+    }
 
     // === TRANSLATE ===
     if (data.type === 'TRANSLATE_REQUEST') {
+      if (_payloadTooLarge(data)) {
+        _replyTooLarge('TRANSLATE_RESPONSE', data.id, data.text);
+        return;
+      }
       try {
         if (!puterReady) await loadPuter();
         // systemPrompt already contains the full prompt including the text
@@ -154,6 +212,10 @@
 
     // === GEMINI VERIFY (background quality check) ===
     if (data.type === 'VERIFY_REQUEST') {
+      if (_payloadTooLarge(data)) {
+        _replyTooLarge('VERIFY_RESPONSE', data.id, '');
+        return;
+      }
       try {
         if (!puterReady) await loadPuter();
         const prompt = data.systemPrompt;
@@ -190,6 +252,16 @@
 
     // === CHAT (streaming) ===
     if (data.type === 'CHAT_REQUEST') {
+      if (_payloadTooLarge(data)) {
+        _replyTooLarge('CHAT_RESPONSE', data.id, '');
+        return;
+      }
+      // Register the stream entry BEFORE awaiting Puter — a CHAT_ABORT
+      // can arrive while we're still inside `_puterChat` (e.g. Puter is
+      // slow to first-byte) and must take effect when the stream starts.
+      const streamEntry = data.stream ? { cancelled: false } : null;
+      if (streamEntry) _activeStreams.set(data.id, streamEntry);
+
       try {
         if (!puterReady) await loadPuter();
         const prompt = data.systemPrompt || data.userMessage;
@@ -204,6 +276,10 @@
           });
 
           for await (const chunk of response) {
+            // Bail on cancellation — breaking out of for-await calls the
+            // iterator's `return()` which signals Puter.js to close the
+            // upstream stream and stops billing for further tokens.
+            if (streamEntry.cancelled) break;
             const text = chunk?.text || chunk?.message?.content || '';
             if (text) {
               window.postMessage(
@@ -218,16 +294,22 @@
               );
             }
           }
-          window.postMessage(
-            {
-              __skillbridge__: true,
-              __nonce__: _bridgeNonce,
-              type: 'CHAT_STREAM_END',
-              id: data.id,
-              success: true,
-            },
-            window.location.origin,
-          );
+          // Only emit END for natural completion — a cancelled stream
+          // means the translator already rejected with AbortError; an
+          // END here would race with that and resolve the orphan
+          // promise to "No response".
+          if (!streamEntry.cancelled) {
+            window.postMessage(
+              {
+                __skillbridge__: true,
+                __nonce__: _bridgeNonce,
+                type: 'CHAT_STREAM_END',
+                id: data.id,
+                success: true,
+              },
+              window.location.origin,
+            );
+          }
         } else {
           // Non-streaming fallback
           const result = await callAI(prompt, data.model);
@@ -258,6 +340,8 @@
           },
           window.location.origin,
         );
+      } finally {
+        if (streamEntry) _activeStreams.delete(data.id);
       }
     }
   });

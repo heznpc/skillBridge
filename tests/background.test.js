@@ -25,7 +25,7 @@ const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'background', 'bac
 // Extract pure functions via eval
 const fns = new Function(`
   ${src}
-  return { gtLangCode, parseGTResponse, isYouTubeUrl, isAllowedFetchUrl, isNewerVersion, _rateLimiter, fetchWithRetry, registerAlarms };
+  return { gtLangCode, parseGTResponse, isYouTubeUrl, isAllowedFetchUrl, isNewerVersion, _rateLimiter, fetchWithRetry, registerAlarms, _gtFetchDedup, _inflightGT, _gtKey };
 `)();
 
 const {
@@ -37,6 +37,9 @@ const {
   _rateLimiter,
   fetchWithRetry,
   registerAlarms,
+  _gtFetchDedup,
+  _inflightGT,
+  _gtKey,
 } = fns;
 
 // ── Tests ──────────────────────────────────────────────────────
@@ -97,6 +100,125 @@ describe('parseGTResponse', () => {
   test('returns fallback for empty translation', () => {
     const data = [[[null], [null]]];
     expect(parseGTResponse(data, 'fallback')).toBe('fallback');
+  });
+
+  // ── M-6 regression guards (2nd-pass audit 2026-05-21) ──
+  // Without the typeof === 'string' check, parseGTResponse silently
+  // concatenated `[object Object]` into the translation and cached it
+  // for the 30-day TTL when GT returned an unexpected segment shape.
+  test('returns fallback when data[0] is not an array (object wrapper)', () => {
+    expect(parseGTResponse([{ unexpected: 'shape' }], 'fallback')).toBe('fallback');
+    expect(parseGTResponse(['string-where-array-expected'], 'fallback')).toBe('fallback');
+  });
+
+  test('skips segments whose first element is an object (no [object Object] poisoning)', () => {
+    const data = [
+      [
+        ['valid', 'V'],
+        [{ nested: 'thing' }, 'X'],
+        ['more', 'M'],
+      ],
+    ];
+    expect(parseGTResponse(data, 'fallback')).toBe('validmore');
+  });
+
+  test('skips segments that are not arrays at all', () => {
+    const data = [['valid', null, 'not-an-array', ['more']]];
+    expect(parseGTResponse(data, 'fallback')).toBe('more');
+  });
+
+  test('skips segments where first element is a number (defensive)', () => {
+    const data = [
+      [
+        ['valid', 'V'],
+        [42, 'X'],
+      ],
+    ];
+    expect(parseGTResponse(data, 'fallback')).toBe('valid');
+  });
+});
+
+// ── M-4 regression guards: in-flight GT deduplication ──
+// Without dedup, 10 simultaneous identical translate calls each consumed
+// a rate-limit slot AND a real GT fetch, multiplying 429-risk for no
+// benefit. The Map keyed on `text+sl+tl` is the chokepoint.
+describe('_gtFetchDedup — in-flight dedup', () => {
+  let originalFetch;
+  beforeEach(() => {
+    originalFetch = global.fetch;
+    _inflightGT.clear();
+  });
+  afterEach(() => {
+    global.fetch = originalFetch;
+    _inflightGT.clear();
+  });
+
+  test('shares a single network request for concurrent identical calls', async () => {
+    let resolveFetch;
+    let fetchCallCount = 0;
+    global.fetch = jest.fn(() => {
+      fetchCallCount++;
+      return new Promise((resolve) => {
+        resolveFetch = () => resolve({ ok: true, json: async () => [[['translated', 'src']]] });
+      });
+    });
+
+    const p1 = _gtFetchDedup('hello', 'ko', 'en');
+    const p2 = _gtFetchDedup('hello', 'ko', 'en');
+    const p3 = _gtFetchDedup('hello', 'ko', 'en');
+
+    expect(fetchCallCount).toBe(1);
+    resolveFetch();
+
+    const [r1, r2, r3] = await Promise.all([p1, p2, p3]);
+    expect(r1).toBe('translated');
+    expect(r2).toBe('translated');
+    expect(r3).toBe('translated');
+    expect(fetchCallCount).toBe(1);
+  });
+
+  test('different keys (different text) do NOT share a request', async () => {
+    let fetchCallCount = 0;
+    global.fetch = jest.fn(() => {
+      fetchCallCount++;
+      return Promise.resolve({ ok: true, json: async () => [[['x', 'y']]] });
+    });
+
+    await Promise.all([_gtFetchDedup('a', 'ko', 'en'), _gtFetchDedup('b', 'ko', 'en')]);
+    expect(fetchCallCount).toBe(2);
+  });
+
+  test('different targetLang does NOT share a request (key includes tl)', async () => {
+    let fetchCallCount = 0;
+    global.fetch = jest.fn(() => {
+      fetchCallCount++;
+      return Promise.resolve({ ok: true, json: async () => [[['x', 'y']]] });
+    });
+
+    await Promise.all([_gtFetchDedup('hello', 'ko', 'en'), _gtFetchDedup('hello', 'ja', 'en')]);
+    expect(fetchCallCount).toBe(2);
+  });
+
+  test('map entry is deleted after success so the next call re-fetches', async () => {
+    global.fetch = jest.fn(() => Promise.resolve({ ok: true, json: async () => [[['x', 'y']]] }));
+
+    await _gtFetchDedup('hello', 'ko', 'en');
+    expect(_inflightGT.has(_gtKey('hello', 'ko', 'en'))).toBe(false);
+    global.fetch.mockClear();
+
+    await _gtFetchDedup('hello', 'ko', 'en');
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  test('map entry is deleted after failure too (no zombie blocking)', async () => {
+    global.fetch = jest.fn(() => Promise.reject(new Error('network')));
+
+    await expect(_gtFetchDedup('hello', 'ko', 'en')).rejects.toThrow();
+    expect(_inflightGT.has(_gtKey('hello', 'ko', 'en'))).toBe(false);
+  });
+
+  test('_gtKey distinguishes sourceLang too', () => {
+    expect(_gtKey('hello', 'ko', 'en')).not.toBe(_gtKey('hello', 'ko', 'auto'));
   });
 });
 
