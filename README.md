@@ -215,6 +215,7 @@ Translation requests are sent to Google Translate and Gemini/Claude APIs via [Pu
 | 🇹🇼 中文繁體 (Chinese Traditional) | `zh-TW` | 570+ entries |
 | 🇪🇸 Español (Spanish) | `es` | 570+ entries |
 | 🇫🇷 Français (French) | `fr` | 570+ entries |
+| 🇮🇹 Italiano (Italian) | `it` | 570+ entries (v1 — Spanish-derived, native review welcome) |
 | 🇩🇪 Deutsch (German) | `de` | 570+ entries |
 | 🇧🇷 Português (Brazilian) | `pt-BR` | 570+ entries |
 | 🇷🇺 Русский (Russian) | `ru` | 570+ entries |
@@ -222,7 +223,7 @@ Translation requests are sent to Google Translate and Gemini/Claude APIs via [Pu
 
 ### Standard — Google Translate + AI Verification
 
-🇵🇹 Português (PT) · 🇮🇹 Italiano · 🇳🇱 Nederlands · 🇵🇱 Polski · 🇺🇦 Українська · 🇨🇿 Čeština · 🇸🇪 Svenska · 🇩🇰 Dansk · 🇫🇮 Suomi · 🇳🇴 Norsk · 🇹🇷 Türkçe · 🇸🇦 العربية · 🇮🇳 हिन्दी · 🇹🇭 ภาษาไทย · 🇮🇩 Bahasa Indonesia · 🇲🇾 Bahasa Melayu · 🇵🇭 Filipino · 🇧🇩 বাংলা · 🇮🇱 עברית · 🇷🇴 Română · 🇭🇺 Magyar · 🇬🇷 Ελληνικά
+🇵🇹 Português (PT) · 🇳🇱 Nederlands · 🇵🇱 Polski · 🇺🇦 Українська · 🇨🇿 Čeština · 🇸🇪 Svenska · 🇩🇰 Dansk · 🇫🇮 Suomi · 🇳🇴 Norsk · 🇹🇷 Türkçe · 🇸🇦 العربية · 🇮🇳 हिन्दी · 🇹🇭 ภาษาไทย · 🇮🇩 Bahasa Indonesia · 🇲🇾 Bahasa Melayu · 🇵🇭 Filipino · 🇧🇩 বাংলা · 🇮🇱 עברית · 🇷🇴 Română · 🇭🇺 Magyar · 🇬🇷 Ελληνικά
 
 > Want to add your language as Premium? Contribute a curated dictionary — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
