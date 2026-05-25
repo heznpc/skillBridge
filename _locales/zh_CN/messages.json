@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "Anthropic Skilljar课程的多语言学习助手。通过AI辅导翻译课程 — 无需API密钥。",
+    "message": "面向 anthropic.skilljar.com 上的免费 AI 课程的多语言学习助手。翻译课程页面并通过页面内 AI 导师学习 — 无需 API 密钥。",
     "description": "Extension description"
   }
 }

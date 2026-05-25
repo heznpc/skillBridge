@@ -1,8 +1,9 @@
 /**
  * SkillBridge — Platform detection
  *
- * The extension currently only ships selectors for Skilljar (the host of
- * Anthropic Academy at the time of v3.5.4). This module is the single point
+ * The extension currently only ships selectors for Skilljar (the LMS that
+ * hosts the free AI courses at anthropic.skilljar.com — confirmed as the
+ * sole platform target at v3.5.4). This module is the single point
  * where new LMSes get registered, so the rest of the codebase can call
  * `detectPlatform()` and switch on the result instead of grepping for
  * skilljar.com host_permissions in 12 different files when we add support
