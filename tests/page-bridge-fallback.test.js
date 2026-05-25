@@ -32,16 +32,27 @@ const maxCharsMatch = src.match(/const\s+_MAX_PAYLOAD_CHARS\s*=\s*([\d_]+)\s*;/)
 if (!maxCharsMatch) throw new Error('Could not extract _MAX_PAYLOAD_CHARS');
 const _MAX_PAYLOAD_CHARS = Number(maxCharsMatch[1].replace(/_/g, ''));
 
-// _payloadTooLarge is small enough that mirroring it (rather than eval'ing
-// the source) keeps the test honest about what the production code does.
-// If the production helper changes shape, this mirror must change too —
-// the assertions below pin the contract.
-function _payloadTooLarge(data) {
-  return (
-    (data?.text?.length || 0) + (data?.systemPrompt?.length || 0) + (data?.userMessage?.length || 0) >
-    _MAX_PAYLOAD_CHARS
-  );
-}
+// Extract the REAL _payloadTooLarge + _fieldChars from page-bridge.js
+// rather than mirroring (audit sweep #3 — a mirror passes green even
+// after the production helper drifts). _fieldChars is a sibling helper
+// added for audit V5 (String coercion against non-string `.length`
+// bypass); we extract both and wire them together.
+const fieldCharsMatch = src.match(/function\s+_fieldChars\s*\(v\)\s*\{([\s\S]+?return[\s\S]+?)\}\s*\n/);
+if (!fieldCharsMatch) throw new Error('Could not extract _fieldChars');
+const _fieldChars = new Function('v', fieldCharsMatch[1]);
+
+const payloadTooLargeMatch = src.match(/function\s+_payloadTooLarge\s*\(data\)\s*\{([\s\S]+?return[\s\S]+?)\}\s*\n/);
+if (!payloadTooLargeMatch) throw new Error('Could not extract _payloadTooLarge');
+// Reconstruct in the test scope so _fieldChars + _MAX_PAYLOAD_CHARS
+// resolve. This way any change to the production body (e.g. adding
+// a `prompt` field, or removing String coercion) breaks the tests below.
+const _payloadTooLarge = new Function(
+  'data',
+  '_fieldChars',
+  '_MAX_PAYLOAD_CHARS',
+  payloadTooLargeMatch[1].replace(/_fieldChars/g, 'arguments[1]').replace(/_MAX_PAYLOAD_CHARS/g, 'arguments[2]'),
+);
+const _payloadTooLargeCall = (data) => _payloadTooLarge(data, _fieldChars, _MAX_PAYLOAD_CHARS);
 
 describe('_MODEL_FALLBACKS chain', () => {
   test('Sonnet 4.6 falls back to 4.5', () => {
@@ -112,13 +123,13 @@ describe('_payloadTooLarge', () => {
   });
 
   test('passes ordinary translate payloads', () => {
-    expect(_payloadTooLarge({ text: 'Hello world' })).toBe(false);
-    expect(_payloadTooLarge({ text: 'x'.repeat(50_000) })).toBe(false);
+    expect(_payloadTooLargeCall({ text: 'Hello world' })).toBe(false);
+    expect(_payloadTooLargeCall({ text: 'x'.repeat(50_000) })).toBe(false);
   });
 
   test('passes ordinary chat payloads', () => {
     expect(
-      _payloadTooLarge({
+      _payloadTooLargeCall({
         systemPrompt: 'You are a tutor. ' + 'x'.repeat(5_000),
         userMessage: 'Explain ' + 'y'.repeat(2_000),
       }),
@@ -126,13 +137,13 @@ describe('_payloadTooLarge', () => {
   });
 
   test('rejects when text alone exceeds the cap', () => {
-    expect(_payloadTooLarge({ text: 'x'.repeat(_MAX_PAYLOAD_CHARS + 1) })).toBe(true);
+    expect(_payloadTooLargeCall({ text: 'x'.repeat(_MAX_PAYLOAD_CHARS + 1) })).toBe(true);
   });
 
   test('rejects when the SUM of text + systemPrompt + userMessage exceeds the cap', () => {
     // Each below the cap, total above.
     expect(
-      _payloadTooLarge({
+      _payloadTooLargeCall({
         text: 'x'.repeat(80_000),
         systemPrompt: 'y'.repeat(80_000),
         userMessage: 'z'.repeat(80_000),
@@ -141,9 +152,45 @@ describe('_payloadTooLarge', () => {
   });
 
   test('treats missing fields as zero (does not throw)', () => {
-    expect(_payloadTooLarge({})).toBe(false);
-    expect(_payloadTooLarge(null)).toBe(false);
-    expect(_payloadTooLarge(undefined)).toBe(false);
+    expect(_payloadTooLargeCall({})).toBe(false);
+    expect(_payloadTooLargeCall(null)).toBe(false);
+    expect(_payloadTooLargeCall(undefined)).toBe(false);
+  });
+
+  // ── Audit V5: non-string `.length` bypass via String coercion ──
+  // Without String(...) coercion, `data.text = new Array(N).fill('x'.repeat(M))`
+  // had `.length === N`, bypassing the cap while the array stringified
+  // to ~N*M characters in the prompt sent to Puter.js. _fieldChars now
+  // forces String(...) before reading `.length`.
+  test('_fieldChars treats null/undefined as 0', () => {
+    expect(_fieldChars(null)).toBe(0);
+    expect(_fieldChars(undefined)).toBe(0);
+  });
+
+  test('_fieldChars coerces non-strings to their stringified length', () => {
+    // An array of 10 items each 100 chars → stringified is ~1010 chars
+    // (joined with commas). The point: NOT 10 (the array's own length).
+    const arr = new Array(10).fill('x'.repeat(100));
+    expect(_fieldChars(arr)).toBeGreaterThan(1000);
+  });
+
+  test('rejects when data.text is an array whose joined size exceeds the cap', () => {
+    // Adversary trick: 10-item array, each ~25K chars → stringified ~250K.
+    // .length === 10 would pass the old guard; String coercion catches it.
+    const bigArray = new Array(10).fill('x'.repeat(25_000));
+    expect(_payloadTooLargeCall({ text: bigArray })).toBe(true);
+  });
+
+  test('catches an object whose toString dumps bytes beyond .length=10', () => {
+    // The point of String coercion: an attacker can't smuggle a huge
+    // payload past the cap by passing an object whose .length lies.
+    // String(obj) calls toString() and returns whatever it produces;
+    // if that's a huge string, _fieldChars catches it.
+    const hostile = {
+      length: 10,
+      toString: () => 'x'.repeat(_MAX_PAYLOAD_CHARS + 1),
+    };
+    expect(_payloadTooLargeCall({ text: hostile })).toBe(true);
   });
 });
 
@@ -170,8 +217,11 @@ describe('CHAT_ABORT wiring (M-1 regression guard)', () => {
     expect(src).toMatch(/_handleAbort\s*\(\s*data\.id\s*\)/);
   });
 
-  test('registers a stream entry on CHAT_REQUEST start', () => {
-    expect(src).toMatch(/_activeStreams\.set\s*\(\s*data\.id\s*,/);
+  test('registers the streamEntry object specifically (not null/undefined)', () => {
+    // Tightened per audit sweep #4 — previously matched any second arg
+    // including `null`/`undefined`. Pin that we register the real
+    // entry object that carries the `cancelled` flag.
+    expect(src).toMatch(/_activeStreams\.set\s*\(\s*data\.id\s*,\s*streamEntry\s*\)/);
   });
 
   test('breaks the for-await loop on cancellation', () => {
@@ -185,24 +235,77 @@ describe('CHAT_ABORT wiring (M-1 regression guard)', () => {
   test('deletes the stream entry in finally (no zombie growth)', () => {
     expect(src).toMatch(/_activeStreams\.delete\s*\(\s*data\.id\s*\)/);
   });
+
+  // ── Audit V3: bridge-side watchdog on hung Puter.js streams ──
+  test('arms a watchdog timeout that flips cancelled on stall', () => {
+    expect(src).toMatch(/setTimeout\s*\([\s\S]+?streamEntry\.cancelled\s*=\s*true/);
+    expect(src).toMatch(/_CHAT_STREAM_BRIDGE_TIMEOUT_MS/);
+  });
+
+  test('clears the watchdog in finally (no timer leak)', () => {
+    expect(src).toMatch(/if\s*\(\s*watchdog\s*\)\s*clearTimeout\s*\(\s*watchdog\s*\)/);
+  });
+
+  // ── Audit V15: cancelled check between loadPuter and _puterChat ──
+  test('checks streamEntry?.cancelled after loadPuter() before _puterChat', () => {
+    // Find the streaming branch; the early-return must sit between
+    // `await loadPuter()` and the first _puterChat call.
+    const loadIdx = src.indexOf('await loadPuter()');
+    const cancelCheckIdx = src.indexOf('streamEntry?.cancelled', loadIdx);
+    const puterChatIdx = src.indexOf('_puterChat(', cancelCheckIdx);
+    expect(loadIdx).toBeGreaterThan(0);
+    expect(cancelCheckIdx).toBeGreaterThan(loadIdx);
+    expect(puterChatIdx).toBeGreaterThan(cancelCheckIdx);
+  });
 });
 
-// ── M-1 content-side: translator.js onAbort must emit CHAT_ABORT ──
-// The bridge-side wiring above is half the fix; the other half is the
-// translator firing the message when the AbortController fires. Without
-// this the bridge never knows to cancel.
-describe('translator.js emits CHAT_ABORT on AbortSignal (M-1 content side)', () => {
+// ── M-1 content-side: translator.js must emit CHAT_ABORT on BOTH the
+//    user-initiated abort path AND the stream timeout path (audit V1).
+describe('translator.js emits CHAT_ABORT on both abort and timeout', () => {
   const translatorSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'translator.js'), 'utf8');
 
-  test('onAbort posts a CHAT_ABORT message with the request id', () => {
-    // Look inside the `onAbort = () => { ... }` body. It must postMessage
-    // with type CHAT_ABORT and the in-flight `id`.
-    const onAbortMatch = translatorSrc.match(/const\s+onAbort\s*=\s*\(\)\s*=>\s*\{([\s\S]+?)\};/);
-    expect(onAbortMatch).not.toBeNull();
-    const body = onAbortMatch[1];
-    expect(body).toMatch(/window\.postMessage/);
+  test('_postAbort helper builds CHAT_ABORT with full required shape', () => {
+    // _postAbort is the shared chokepoint used by both onAbort and the
+    // setTimeout. The PR consolidated to avoid the V1 regression where
+    // the timeout path quietly let the bridge keep streaming. Pin the
+    // helper's structure here so a future refactor that drops fields
+    // (id, nonce, target origin) fails fast.
+    const m = translatorSrc.match(/const\s+_postAbort\s*=\s*\(\)\s*=>\s*\{([\s\S]+?)\};/);
+    expect(m).not.toBeNull();
+    const body = m[1];
+    expect(body).toMatch(/window\.postMessage\s*\(/);
     expect(body).toMatch(/type:\s*['"]CHAT_ABORT['"]/);
-    expect(body).toMatch(/id,/); // shorthand of `id: id`
+    expect(body).toMatch(/\bid,/); // shorthand `id: id`
     expect(body).toMatch(/__nonce__:\s*this\._bridgeNonce/);
+    expect(body).toMatch(/window\.location\.origin/);
+  });
+
+  test('onAbort calls _postAbort() then cleanup() then reject(AbortError)', () => {
+    // Order matters: cleanup() removes the message listener; calling it
+    // before _postAbort would let the abort message race against
+    // teardown.
+    const m = translatorSrc.match(/const\s+onAbort\s*=\s*\(\)\s*=>\s*\{([\s\S]+?)\};/);
+    expect(m).not.toBeNull();
+    const body = m[1];
+    const postIdx = body.indexOf('_postAbort()');
+    const cleanupIdx = body.indexOf('cleanup()');
+    const rejectIdx = body.indexOf('reject(');
+    expect(postIdx).toBeGreaterThanOrEqual(0);
+    expect(cleanupIdx).toBeGreaterThan(postIdx);
+    expect(rejectIdx).toBeGreaterThan(cleanupIdx);
+    expect(body).toMatch(/AbortError/);
+  });
+
+  test('stream timeout body ALSO calls _postAbort (audit V1 regression guard)', () => {
+    // Before this fix, the setTimeout callback was `cleanup() + reject` —
+    // bridge kept generating tokens until Puter completed naturally on
+    // every 60s timeout. Assert _postAbort is in the callback.
+    const m = translatorSrc.match(
+      /setTimeout\s*\(\s*\(\)\s*=>\s*\{([\s\S]+?)\},\s*SKILLBRIDGE_THRESHOLDS\.CHAT_STREAM_TIMEOUT/,
+    );
+    expect(m).not.toBeNull();
+    const body = m[1];
+    expect(body).toMatch(/_postAbort\(\)/);
+    expect(body).toMatch(/Stream timed out/);
   });
 });
