@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "Mehrsprachiger Lernassistent für Anthropic-Kurse auf Skilljar. Übersetzen Sie Kurse und lernen Sie mit KI-Unterstützung — kein API-Schlüssel erforderlich.",
+    "message": "Mehrsprachiger Lernassistent für die kostenlosen KI-Kurse auf anthropic.skilljar.com. Übersetzen Sie Kursseiten und lernen Sie mit einem eingebetteten KI-Tutor — kein API-Schlüssel erforderlich.",
     "description": "Extension description"
   }
 }

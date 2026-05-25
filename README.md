@@ -2,7 +2,7 @@
 
 <img src="assets/icons/icon128.png" alt="SkillBridge" width="90" />
 
-# SkillBridge for Anthropic Academy <!-- VERSION_START -->v3.5.33<!-- VERSION_END -->
+# SkillBridge — AI Course Translator <!-- VERSION_START -->v3.5.33<!-- VERSION_END -->
 
 > Available in multiple languages at the [project landing page](https://heznpc.github.io/skillBridge/).
 
@@ -15,9 +15,9 @@
 [![GitHub contributors](https://img.shields.io/github/contributors/heznpc/skillbridge)](https://github.com/heznpc/skillbridge/graphs/contributors)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-**Translate Anthropic Academy into your language — instantly.**
+**Translate the free AI courses at [anthropic.skilljar.com](https://anthropic.skilljar.com/) into your language — instantly.**
 
-Break the language barrier on Anthropic's free AI courses. <!-- LANG_COUNT_START -->32 languages<!-- LANG_COUNT_END --> supported.
+Break the language barrier on these free AI courses. <!-- LANG_COUNT_START -->32 languages<!-- LANG_COUNT_END --> supported.
 
 [Install](#installation) · [Features](#features) · [Report Bug](https://github.com/heznpc/skillbridge/issues) · [Request Feature](https://github.com/heznpc/skillbridge/issues) · [Contributing](CONTRIBUTING.md)
 
@@ -27,9 +27,9 @@ Break the language barrier on Anthropic's free AI courses. <!-- LANG_COUNT_START
 
 <div align="center">
 
-<img src="assets/screenshots/skillbridge-demo.gif" alt="SkillBridge Demo — translating Anthropic Academy in real time" width="720" />
+<img src="assets/screenshots/skillbridge-demo.gif" alt="SkillBridge demo — translating an AI course page in real time" width="720" />
 
-*Install SkillBridge, visit Anthropic Academy, and the entire page is translated instantly.*
+*Install SkillBridge, visit a course page at anthropic.skilljar.com, and the entire page is translated instantly.*
 
 </div>
 
@@ -51,7 +51,7 @@ Break the language barrier on Anthropic's free AI courses. <!-- LANG_COUNT_START
 
 ## The Problem
 
-[Anthropic Academy](https://anthropic.skilljar.com/) is one of the best free resources for learning Claude, prompt engineering, and AI safety. Millions of developers worldwide want to take these courses — but they're **only available in English**.
+The free AI courses at [anthropic.skilljar.com](https://anthropic.skilljar.com/) — covering prompt engineering, AI safety, the Claude API, and more — are one of the best free learning resources on the topic. Millions of developers worldwide want to take these courses, but they're **only available in English**.
 
 Generic translators make it worse, not better:
 
@@ -71,7 +71,7 @@ Generic translators make it worse, not better:
 ## Quick Start
 
 1. Install the extension ([see below](#installation))
-2. Visit [Anthropic Academy](https://anthropic.skilljar.com/)
+2. Visit a course page at [anthropic.skilljar.com](https://anthropic.skilljar.com/)
 3. SkillBridge translates the entire page automatically
 
 That's it.
@@ -137,7 +137,7 @@ Generic translation tools often **mistranslate brand names and technical terms**
 </div>
 
 <div align="center">
-<img src="assets/screenshots/catalog-translated.png" alt="Anthropic Academy catalog page translated to Korean with correct terminology" width="720" />
+<img src="assets/screenshots/catalog-translated.png" alt="Course catalog page translated to Korean with correct terminology" width="720" />
 <br/>
 <em>Course catalog translated to Korean — brand names and AI terms stay accurate.</em>
 </div>
@@ -312,7 +312,7 @@ No. SkillBridge is an unofficial community project. It is not affiliated with, e
 
 SkillBridge is a personal translation tool, similar to your browser's built-in translate feature. Text is translated on-the-fly in your browser — never stored or redistributed.
 
-> **SkillBridge for Anthropic Academy** is an unofficial community project. It is not affiliated with, endorsed by, or sponsored by Anthropic. "Anthropic", "Claude", and "Skilljar" are trademarks of their respective owners.
+> **SkillBridge** is an unofficial, independent community project. It is not affiliated with, endorsed by, or sponsored by Anthropic or Skilljar. References to "Anthropic", "Claude", "Skilljar", and `anthropic.skilljar.com` are nominative — they describe the third-party platform and content this extension translates. All trademarks remain the property of their respective owners.
 
 ## License
 

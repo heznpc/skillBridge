@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "Meertalige leerassistent voor Anthropic Skilljar-cursussen. Vertaal cursussen en leer met AI-begeleiding — geen API-sleutel nodig.",
+    "message": "Meertalige leerassistent voor Skilljar-cursussen. Vertaal cursussen en leer met AI-begeleiding — geen API-sleutel nodig.",
     "description": "Extension description"
   }
 }

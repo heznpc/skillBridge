@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "Anthropic Skilljar kursları için çok dilli öğrenme asistanı. Kursları çevirin ve yapay zeka eğitmenliğiyle öğrenin — API anahtarı gerekmez.",
+    "message": "Skilljar kursları için çok dilli öğrenme asistanı. Kursları çevirin ve yapay zeka eğitmenliğiyle öğrenin — API anahtarı gerekmez.",
     "description": "Extension description"
   }
 }

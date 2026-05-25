@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "Többnyelvű tanulási asszisztens az Anthropic Skilljar kurzusaihoz. Fordítson kurzusokat és tanuljon AI oktatással — API-kulcs nem szükséges.",
+    "message": "Többnyelvű tanulási asszisztens az Skilljar kurzusaihoz. Fordítson kurzusokat és tanuljon AI oktatással — API-kulcs nem szükséges.",
     "description": "Extension description"
   }
 }

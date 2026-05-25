@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "مساعد تعليمي متعدد اللغات لدورات Anthropic على Skilljar. ترجم الدورات وتعلّم مع مدرّس ذكاء اصطناعي — لا حاجة لمفتاح API.",
+    "message": "مساعد تعليمي متعدد اللغات لدورات على Skilljar. ترجم الدورات وتعلّم مع مدرّس ذكاء اصطناعي — لا حاجة لمفتاح API.",
     "description": "Extension description"
   }
 }

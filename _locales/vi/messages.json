@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "Trợ lý học tập đa ngôn ngữ cho các khóa học Anthropic trên Skilljar. Dịch khóa học và học với gia sư AI — không cần API key.",
+    "message": "Trợ lý học tập đa ngôn ngữ cho các khóa học AI miễn phí trên anthropic.skilljar.com. Dịch trang khóa học và học cùng gia sư AI tích hợp — không cần khóa API.",
     "description": "Extension description"
   }
 }

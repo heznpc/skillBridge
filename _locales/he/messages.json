@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "עוזר למידה רב-לשוני לקורסי Anthropic ב-Skilljar. תרגמו קורסים ולמדו עם חונכות AI — ללא צורך במפתח API.",
+    "message": "עוזר למידה רב-לשוני לקורסי ב-Skilljar. תרגמו קורסים ולמדו עם חונכות AI — ללא צורך במפתח API.",
     "description": "Extension description"
   }
 }

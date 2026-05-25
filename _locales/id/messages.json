@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "Asisten pembelajaran multibahasa untuk kursus Anthropic Skilljar. Terjemahkan kursus dan belajar dengan bimbingan AI — tanpa perlu kunci API.",
+    "message": "Asisten pembelajaran multibahasa untuk kursus Skilljar. Terjemahkan kursus dan belajar dengan bimbingan AI — tanpa perlu kunci API.",
     "description": "Extension description"
   }
 }

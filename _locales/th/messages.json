@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "ผู้ช่วยการเรียนรู้หลายภาษาสำหรับคอร์ส Anthropic บน Skilljar แปลคอร์สและเรียนรู้ด้วยการสอนจาก AI — ไม่ต้องใช้คีย์ API",
+    "message": "ผู้ช่วยการเรียนรู้หลายภาษาสำหรับคอร์ส บน Skilljar แปลคอร์สและเรียนรู้ด้วยการสอนจาก AI — ไม่ต้องใช้คีย์ API",
     "description": "Extension description"
   }
 }

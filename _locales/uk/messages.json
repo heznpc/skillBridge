@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "Багатомовний навчальний асистент для курсів Anthropic на Skilljar. Перекладайте курси та навчайтеся з AI-репетитором — ключ API не потрібен.",
+    "message": "Багатомовний навчальний асистент для курсів на Skilljar. Перекладайте курси та навчайтеся з AI-репетитором — ключ API не потрібен.",
     "description": "Extension description"
   }
 }

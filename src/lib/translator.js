@@ -1,5 +1,5 @@
 /**
- * SkillBridge for Anthropic Academy - Translation Engine v3.0
+ * SkillBridge — AI Course Translator - Translation Engine v3.0
  *
  * Translation priority (3-tier with background verification):
  * 1. Static JSON dictionary (instant, no network)
@@ -628,7 +628,7 @@ RULES:
       const examGuard = opts.isExamPage
         ? '\nCRITICAL: The user is on a certification exam page. You MUST NOT provide answers, solutions, or hints to exam questions under any circumstances. Only explain general concepts. If the user asks for specific exam answers, politely decline.'
         : '';
-      const prompt = `You are SkillBridge Tutor, a bilingual AI learning assistant for Anthropic Academy. Respond in ${langName}.
+      const prompt = `You are SkillBridge Tutor, a bilingual AI learning assistant for free AI courses hosted at anthropic.skilljar.com. Respond in ${langName}.
 
 Your strengths:
 - You understand both the original English content and the learner's language.

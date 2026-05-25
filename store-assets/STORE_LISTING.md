@@ -11,23 +11,23 @@ listings are validated in the CWS dashboard.
 
 ## Title (max 75 chars)
 
-SkillBridge — Anthropic Academy in your language + AI Tutor
+SkillBridge — AI Course Translator with in-page AI tutor
 
 ## Summary (max 132 chars)
 
-Finish Anthropic Academy in 32 languages. Curated AI terminology, mother-language AI Tutor, exam-safe. No API key, no signup.
+Translate the free AI courses on anthropic.skilljar.com in 32 languages. Curated terminology + in-page AI tutor. No API key, no signup.
 
 ## Description (for Store listing)
 
-Anthropic Academy offers world-class free courses on Claude, prompt engineering, and AI safety — but only in English. SkillBridge is how non-English learners actually finish a course and earn the certificate.
+The free AI courses hosted at anthropic.skilljar.com — covering prompt engineering, AI safety, the Claude API, MCP, and more — are world-class learning material, but only available in English. SkillBridge is how non-English learners actually finish a course and earn the certificate.
 
-This is not a generic translator. SkillBridge ships hand-curated terminology dictionaries for 10 premium languages so "Prompt" stays "프롬프트" (Korean) instead of "신속한" (a common mistranslation), and a mother-language AI tutor that knows which lesson you're on — so when you get stuck, you can ask in your own language and the answer fits the slide you're actually looking at.
+This is not a generic translator. SkillBridge ships hand-curated terminology dictionaries for 10 premium languages so "Prompt" stays "프롬프트" (Korean) instead of "신속한" (a common mistranslation), and an in-page AI tutor that knows which lesson you're on — so when you get stuck, you can ask in your own language and the answer fits the slide you're actually looking at.
 
 🎓 FINISH IN YOUR LANGUAGE
 Every text element on the page is translated — headings, paragraphs, lists, navigation, course cards, progress labels, video subtitles, and code comments. Interactive elements stay intact so progress tracking and quiz submission keep working.
 
-🤖 MOTHER-LANGUAGE AI TUTOR (Claude Sonnet 4.6)
-A sidebar chatbot that knows which course and lesson you're on. Ask questions in your language; get streaming answers grounded in the current lesson. Powered by Claude via Puter.js — no API key, no signup, no payment.
+🤖 IN-PAGE AI TUTOR (powered by Claude Sonnet 4.6 via Puter.js)
+A sidebar chatbot that knows which course and lesson you're on. Ask questions in your language; get streaming answers grounded in the current lesson. No API key, no signup, no payment.
 
 🃏 COURSE-SPECIFIC VOCABULARY FLASHCARDS
 Flashcard decks generated from the curated dictionary for the course you're currently viewing. 3-box review system (New → Learning → Mastered) saved locally.
@@ -44,7 +44,7 @@ Course quizzes: answer choices are NEVER translated, so your selection matches t
 Proctored certification exams (e.g., Claude Certified Architect): the extension disables itself entirely — no translation, no UI, no AI tutor — so it cannot be mistaken for a cheating tool.
 
 ✨ PROTECTED TERMS
-570+ curated entries per premium language. Brand names (Anthropic, Claude, Cowork, Dispatch, Computer Use, Subagent) and technical AI terms stay correct. Auto-corrects known mistranslations per language. New Academy courses get terminology coverage within 48 hours — mechanically enforced by our open-source drift watcher.
+570+ curated entries per premium language. Brand names (Anthropic, Claude, Cowork, Dispatch, Computer Use, Subagent) and technical AI terms stay correct — these are descriptive references to third-party brands, not our claim of association. Auto-corrects known mistranslations per language. New courses on the platform get terminology coverage within 48 hours, mechanically enforced by our open-source drift watcher.
 
 💻 CODE COMMENT TRANSLATION
 Comments inside code blocks get translated; the code itself stays intact. Supports Python, JavaScript, HTML, Bash, and more.
@@ -62,12 +62,12 @@ When you lose internet, SkillBridge switches to cached translations and shows an
 Ctrl+Shift+S (toggle tutor), Ctrl+Shift+F (flashcards), Ctrl+Shift+L (dark mode), Ctrl+Shift+/ (help), Escape (close), / (focus chat).
 
 🌙 DARK MODE · 🔄 RTL SUPPORT · 📱 MOBILE FRIENDLY
-Full dark theme for the entire Academy site. Full right-to-left layout for Arabic and Hebrew. Sidebar adapts to mobile.
+Full dark theme for the course site. Full right-to-left layout for Arabic and Hebrew. Sidebar adapts to mobile.
 
 ━━━━━━━━━━━━━━━━━━━
 
 SUPPORTED COURSES
-All 17 currently-published Anthropic Academy courses, with terminology coverage for any new course added within 48 hours (mechanically enforced by an open-source drift watcher that auto-opens an issue when a new slug appears):
+All 17 currently-published courses on anthropic.skilljar.com, with terminology coverage for any new course added within 48 hours (mechanically enforced by an open-source drift watcher that auto-opens an issue when a new slug appears). Course names referenced descriptively for compatibility:
 Claude 101 · Claude Code 101 · Claude Code in Action · Introduction to Claude Cowork · Introduction to Agent Skills · Introduction to Subagents · Building with the Claude API · Introduction to MCP · MCP: Advanced Topics · Claude with Amazon Bedrock · Claude with Google Vertex AI · AI Fluency: Framework & Foundations · AI Fluency for Students · AI Fluency for Educators · Teaching AI Fluency · AI Fluency for Nonprofits · AI Capabilities and Limitations
 
 ━━━━━━━━━━━━━━━━━━━
@@ -103,14 +103,14 @@ SkillBridge does NOT operate any servers. To provide translation and AI features
 
 All settings, translation cache, and conversation history are stored locally in your browser (chrome.storage and IndexedDB). This data never leaves your device.
 
-Full privacy policy: https://heznpc.github.io/skillBridge/privacy.html
+Full privacy policy: https://heznpc.github.io/skillBridge/privacy
 
 📖 OPEN SOURCE
 https://github.com/heznpc/skillbridge
 MIT License — contributions welcome. Strategy, scope, and the "things we will not do" list are public in POSITIONING.md.
 
 ⚠️ DISCLAIMER
-SkillBridge is an unofficial community project. Not affiliated with, endorsed by, or sponsored by Anthropic.
+SkillBridge is an unofficial, independent community project. It is not affiliated with, endorsed by, or sponsored by Anthropic or Skilljar. References to "Anthropic", "Claude", "Skilljar", and the URL anthropic.skilljar.com are nominative — they describe the third-party platform and content this extension translates. All trademarks remain the property of their respective owners.
 
 ## Category
 Education
@@ -127,7 +127,7 @@ Saves user preferences such as selected language, dark mode, and auto-translate 
 Schedules background maintenance tasks (cache trim, YouTube client version refresh) without keeping the service worker alive unnecessarily.
 
 ### Host permission: *.skilljar.com
-Required to inject content scripts that translate Anthropic Academy (hosted on skilljar.com) page content.
+Required to inject content scripts that translate the course pages at anthropic.skilljar.com (and other Skilljar-hosted course content if extended in the future).
 
 ### Host permission: *.youtube.com
 Required to auto-activate translated subtitles on course videos embedded from YouTube.

@@ -1,5 +1,5 @@
 /**
- * SkillBridge for Anthropic Academy - Popup Script
+ * SkillBridge — AI Course Translator - Popup Script
  * Uses shared constants from constants.js (loaded via <script> in popup.html).
  */
 

@@ -1,4 +1,4 @@
-# Contributing to SkillBridge for Anthropic Academy
+# Contributing to SkillBridge — AI Course Translator
 
 Thank you for your interest in contributing! SkillBridge makes Anthropic's educational content accessible to learners worldwide — and every contribution, whether it's fixing a typo or adding a new language, moves us closer to that goal.
 
