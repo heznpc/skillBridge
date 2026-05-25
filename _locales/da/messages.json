@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "Flersproget læringsassistent til Anthropic Skilljar-kurser. Oversæt kurser og lær med AI-vejledning — ingen API-nøgle påkrævet.",
+    "message": "Flersproget læringsassistent til Skilljar-kurser. Oversæt kurser og lær med AI-vejledning — ingen API-nøgle påkrævet.",
     "description": "Extension description"
   }
 }

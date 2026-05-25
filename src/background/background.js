@@ -1,5 +1,5 @@
 /**
- * SkillBridge for Anthropic Academy - Background Service Worker
+ * SkillBridge — AI Course Translator - Background Service Worker
  *
  * Handles:
  * 1. Google Translate API proxy (fast initial translation)

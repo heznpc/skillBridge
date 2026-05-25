@@ -1,5 +1,5 @@
 /**
- * SkillBridge for Anthropic Academy - Content Script
+ * SkillBridge — AI Course Translator - Content Script
  * Injects translation UI and handles page content translation
  *
  * Translates displayed text on-the-fly in the user's browser.
