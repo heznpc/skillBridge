@@ -85,8 +85,12 @@ describe('SKILLBRIDGE_DELAYS', () => {
 });
 
 describe('Languages', () => {
-  test('PREMIUM_LANGUAGES has 10 entries', () => {
-    expect(PREMIUM_LANGUAGES).toHaveLength(10);
+  test('PREMIUM_LANGUAGES has 11 entries (added Italian in v3.5.34)', () => {
+    expect(PREMIUM_LANGUAGES).toHaveLength(11);
+  });
+
+  test('PREMIUM_LANGUAGES includes Italian (data-driven promotion 2026-05-25)', () => {
+    expect(PREMIUM_LANGUAGES.map((l) => l.code)).toContain('it');
   });
 
   test('AVAILABLE_LANGUAGES includes English and all premium', () => {
