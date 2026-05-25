@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "Multilingual learning assistant for Anthropic Skilljar courses. Translate courses and learn with AI tutoring — no API key needed.",
+    "message": "Multilingual learning assistant for the free AI courses on anthropic.skilljar.com. Translate course pages and learn with an in-page AI tutor — no API key needed.",
     "description": "Extension description"
   }
 }
