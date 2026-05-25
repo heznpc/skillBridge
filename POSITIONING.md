@@ -1,4 +1,4 @@
-# SkillBridge — Positioning (locked 2026-05-20)
+# SkillBridge — Positioning (locked 2026-05-25)
 
 This document is the decision baseline for what SkillBridge is and is not.
 When a feature request, dependency choice, or scope expansion lands, check
@@ -186,7 +186,13 @@ be true before we tell anyone*.
    downstream of this. Korean and Japanese localized listings (already
    drafted under `store-assets/`) ship in the same re-publication so the
    Korea-first outreach feels native from day one, rather than racing a
-   generic English listing later.
+   generic English listing later. **As of 2026-05-25**: the supporting
+   work — listing copy nominative-use sweep, name rewrite to
+   "SkillBridge — AI Course Translator", privacy URL fix to lowercase
+   `/privacy`, audit-followup hardening — has all landed (PRs #137 +
+   #138). The remaining blocker is purely the icon design itself, plus
+   the dashboard upload steps documented in
+   `store-assets/RELEASE_CHECKLIST.md`.
 2. **Ambassador application**. Open program, deliberately scoped at
    community builders. SkillBridge fits the profile (free, single-
    audience, demonstrated traction). Application drafted, submission
@@ -217,7 +223,17 @@ Once #1–#2 are cleared:
 
 - **Anthropic ships official translation** → translation becomes
   commoditized. Re-position around the tutor + flashcards + exam mode
-  (still differentiated).
+  (still differentiated). *As of 2026-05-25, the path-of-least-
+  resistance for "official translation" looks like one of: (a)
+  Anthropic enables Skilljar's built-in 11-language pack add-on for
+  anthropic.skilljar.com, or (b) Anthropic ports Academy content
+  to Coursera — already underway, with 4 courses + 1 Specialization
+  live on the [Anthropic Coursera partner page](https://www.coursera.org/partners/anthropic).
+  Coursera handles subtitle / audio i18n natively, so courses migrated
+  there are out of scope for SkillBridge by design. Watch the Coursera
+  catalog quarterly; if it absorbs the Korean-priority courses we
+  target, the relative leverage of the Korean-on-Skilljar niche
+  shrinks fast.*
 - **CWS install count crosses 10,000 and plateaus for 6 months** → maybe
   the Anthropic-only niche is capped; re-evaluate Skilljar-platform
   expansion.
