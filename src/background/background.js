@@ -21,10 +21,16 @@ function gtLangCode(lang) {
 }
 
 function parseGTResponse(data, fallback) {
-  if (!data || !data[0]) return fallback;
+  if (!data || !Array.isArray(data[0])) return fallback;
   let translated = '';
   for (const seg of data[0]) {
-    if (seg[0]) translated += seg[0];
+    // GT returns each segment as [translatedText, originalText, ...]. Older
+    // responses occasionally swap in `null` or an object wrapper; without
+    // the strict-string check we'd silently concatenate `[object Object]`
+    // into the translated text and cache it for the 30-day TTL.
+    if (Array.isArray(seg) && typeof seg[0] === 'string') {
+      translated += seg[0];
+    }
   }
   return translated || fallback;
 }
@@ -76,6 +82,36 @@ const _rateLimiter = {
     return true;
   },
 };
+
+// ==================== IN-FLIGHT GT DEDUPLICATION ====================
+//
+// When content scripts fan out many translate requests for the same string
+// in a short window (SPA navigation re-fires, MutationObserver bursts,
+// rapid language switches), the cache hasn't populated yet but the same
+// `text+sourceLang+targetLang` keeps hitting this worker. Without dedup
+// each one consumed a rate-limit slot AND a real GT fetch, multiplying
+// 429-risk for no benefit. With dedup, concurrent identical calls share
+// one outgoing fetch.
+
+const _inflightGT = new Map();
+
+function _gtKey(text, tl, sl) {
+  return `${sl}|${tl}|${text}`;
+}
+
+function _gtFetchDedup(text, tl, sl) {
+  const key = _gtKey(text, tl, sl);
+  const existing = _inflightGT.get(key);
+  if (existing) return existing;
+
+  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
+  const promise = fetchWithRetry(url)
+    .then((resp) => resp.json())
+    .then((data) => parseGTResponse(data, text))
+    .finally(() => _inflightGT.delete(key));
+  _inflightGT.set(key, promise);
+  return promise;
+}
 
 // ==================== EXPONENTIAL BACKOFF FETCH ====================
 
@@ -279,18 +315,19 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   // Google Translate: single text (with rate limiting + exponential backoff)
   if (msg.type === 'GOOGLE_TRANSLATE') {
     const { text, targetLang, sourceLang } = msg;
-    if (!_rateLimiter.check()) {
+    const sl = sourceLang || 'en';
+    const tl = gtLangCode(targetLang);
+    // Skip the rate-limit slot if an identical request is already in-flight
+    // — piggybacking on it doesn't generate a new outgoing GT fetch, so
+    // charging a slot would over-throttle legitimate fan-out callers.
+    if (!_inflightGT.has(_gtKey(text, tl, sl)) && !_rateLimiter.check()) {
       sendResponse({ ok: false, error: 'Rate limit exceeded' });
       return true;
     }
-    const sl = sourceLang || 'en';
-    const tl = gtLangCode(targetLang);
-    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
 
-    fetchWithRetry(url)
-      .then((resp) => resp.json())
-      .then((data) => {
-        sendResponse({ ok: true, translated: parseGTResponse(data, text) });
+    _gtFetchDedup(text, tl, sl)
+      .then((translated) => {
+        sendResponse({ ok: true, translated });
       })
       .catch((err) => {
         console.warn('[SkillBridge] Google Translate error:', err.message);
@@ -307,22 +344,24 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
     Promise.all(
       texts.map(async (text) => {
-        // Wait for a rate-limit slot. Falling back to the original English
-        // text would be silently dropped by content.js (translated === original
-        // is treated as no-op), so we pace instead.
-        const ok = await _rateLimiter.acquire();
-        if (!ok) {
-          console.warn('[SkillBridge] GT rate-limit acquire timed out');
-          return null;
-        }
-        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
-        return fetchWithRetry(url)
-          .then((resp) => resp.json())
-          .then((data) => parseGTResponse(data, text))
-          .catch((err) => {
-            console.warn('[SkillBridge] GT batch item failed:', err.message);
+        // Same dedup gate as the single path — only acquire a slot if
+        // this exact key isn't already in-flight, so a batch of duplicates
+        // pays one slot, not N.
+        if (!_inflightGT.has(_gtKey(text, tl, sl))) {
+          // Wait for a rate-limit slot. Falling back to the original
+          // English text would be silently dropped by content.js
+          // (translated === original is treated as no-op), so we pace
+          // instead.
+          const ok = await _rateLimiter.acquire();
+          if (!ok) {
+            console.warn('[SkillBridge] GT rate-limit acquire timed out');
             return null;
-          });
+          }
+        }
+        return _gtFetchDedup(text, tl, sl).catch((err) => {
+          console.warn('[SkillBridge] GT batch item failed:', err.message);
+          return null;
+        });
       }),
     )
       .then((results) => sendResponse({ ok: true, translations: results }))

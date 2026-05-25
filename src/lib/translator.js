@@ -689,6 +689,20 @@ User: ${userMessage}`;
         };
 
         const onAbort = () => {
+          // Tell page-bridge to tear down the underlying Puter.js stream
+          // — otherwise the bridge keeps pulling tokens and postMessaging
+          // chunks to dead listeners until the model finishes naturally,
+          // burning the shared (free-tier) Puter.js quota for nothing.
+          // Fire-and-forget; the bridge owes us no response.
+          window.postMessage(
+            {
+              __skillbridge__: true,
+              __nonce__: this._bridgeNonce,
+              type: 'CHAT_ABORT',
+              id,
+            },
+            window.location.origin,
+          );
           cleanup();
           reject(new DOMException('Aborted', 'AbortError'));
         };
