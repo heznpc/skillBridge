@@ -32,10 +32,26 @@
   // shared Puter.js quota by submitting megabyte-sized prompts.
   const _MAX_PAYLOAD_CHARS = 200_000;
 
+  // Watchdog timeout for streaming CHAT — if no chunk arrives within
+  // this window, the for-await is presumed stuck and we flip cancelled
+  // + delete the Map entry to prevent the leak described in audit V3.
+  // Picked > the translator's CHAT_STREAM_TIMEOUT so well-behaved long
+  // responses still go through; bridge fires only when Puter genuinely
+  // stalls (network hang, upstream stuck).
+  const _CHAT_STREAM_BRIDGE_TIMEOUT_MS = 90_000;
+
+  // Use String(...) coercion rather than `.length` directly: a page-world
+  // adversary that read the loader nonce could otherwise pass
+  // `data.text = new Array(10).fill('x'.repeat(1_000_000))` and bypass the
+  // cap because `.length === 10`. After coercion the array stringifies to
+  // its actual character size, so the cap holds. (Audit V5.)
+  function _fieldChars(v) {
+    return v == null ? 0 : String(v).length;
+  }
+
   function _payloadTooLarge(data) {
     return (
-      (data?.text?.length || 0) + (data?.systemPrompt?.length || 0) + (data?.userMessage?.length || 0) >
-      _MAX_PAYLOAD_CHARS
+      _fieldChars(data?.text) + _fieldChars(data?.systemPrompt) + _fieldChars(data?.userMessage) > _MAX_PAYLOAD_CHARS
     );
   }
 
@@ -262,11 +278,42 @@
       const streamEntry = data.stream ? { cancelled: false } : null;
       if (streamEntry) _activeStreams.set(data.id, streamEntry);
 
+      // Bridge-side watchdog (audit V3). The for-await loop only checks
+      // `cancelled` BETWEEN chunks; if Puter.js stalls (no first chunk,
+      // or chunk gap > 60s), the loop sits inside `await response.next()`,
+      // the cancelled flag is never observed, the finally never runs,
+      // and the Map entry leaks. We arm a setTimeout that flips the
+      // flag and lets the iterator's next() resolve (Puter may still
+      // hang — but the cleanup path executes regardless because we
+      // also clear from the timeout itself).
+      let watchdog = null;
+      const _armWatchdog = () => {
+        if (watchdog) clearTimeout(watchdog);
+        watchdog = setTimeout(() => {
+          if (streamEntry) {
+            streamEntry.cancelled = true;
+            // The for-await may still be waiting on next() forever —
+            // explicitly delete here so a stalled stream doesn't
+            // accumulate Map entries indefinitely.
+            _activeStreams.delete(data.id);
+          }
+        }, _CHAT_STREAM_BRIDGE_TIMEOUT_MS);
+      };
+
       try {
         if (!puterReady) await loadPuter();
+
+        // Audit V15: an abort during loadPuter (Puter cold-start can
+        // take seconds) used to still fire one outbound _puterChat
+        // call. Check here before paying for the request.
+        if (streamEntry?.cancelled) {
+          return;
+        }
+
         const prompt = data.systemPrompt || data.userMessage;
 
         if (data.stream) {
+          _armWatchdog();
           // Streaming mode — send chunks via postMessage
           const response = await _puterChat(prompt, {
             // SkillBridge is Claude-focused; default to Haiku as a cheap,
@@ -280,6 +327,9 @@
             // iterator's `return()` which signals Puter.js to close the
             // upstream stream and stops billing for further tokens.
             if (streamEntry.cancelled) break;
+            // Reset the watchdog on each live chunk so an actively-
+            // streaming response doesn't get killed mid-flight.
+            _armWatchdog();
             const text = chunk?.text || chunk?.message?.content || '';
             if (text) {
               window.postMessage(
@@ -341,6 +391,7 @@
           window.location.origin,
         );
       } finally {
+        if (watchdog) clearTimeout(watchdog);
         if (streamEntry) _activeStreams.delete(data.id);
       }
     }

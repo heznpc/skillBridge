@@ -660,7 +660,24 @@ User: ${userMessage}`;
           return reject(new DOMException('Aborted', 'AbortError'));
         }
 
+        // Fire-and-forget CHAT_ABORT to the bridge. Used by both the
+        // explicit onAbort (user-initiated) and the stream timeout —
+        // 2nd-pass audit V1 found the timeout path silently let the
+        // bridge keep pulling Puter.js tokens until natural completion.
+        const _postAbort = () => {
+          window.postMessage(
+            {
+              __skillbridge__: true,
+              __nonce__: this._bridgeNonce,
+              type: 'CHAT_ABORT',
+              id,
+            },
+            window.location.origin,
+          );
+        };
+
         const timeout = setTimeout(() => {
+          _postAbort();
           cleanup();
           reject(new Error('Stream timed out'));
         }, SKILLBRIDGE_THRESHOLDS.CHAT_STREAM_TIMEOUT);
@@ -689,20 +706,7 @@ User: ${userMessage}`;
         };
 
         const onAbort = () => {
-          // Tell page-bridge to tear down the underlying Puter.js stream
-          // — otherwise the bridge keeps pulling tokens and postMessaging
-          // chunks to dead listeners until the model finishes naturally,
-          // burning the shared (free-tier) Puter.js quota for nothing.
-          // Fire-and-forget; the bridge owes us no response.
-          window.postMessage(
-            {
-              __skillbridge__: true,
-              __nonce__: this._bridgeNonce,
-              type: 'CHAT_ABORT',
-              id,
-            },
-            window.location.origin,
-          );
+          _postAbort();
           cleanup();
           reject(new DOMException('Aborted', 'AbortError'));
         };
