@@ -155,6 +155,11 @@ const SKILLBRIDGE_LIMITS = {
 
 // ==================== LANGUAGES ====================
 
+// Italian promoted to Premium in v3.5.34 after the 2026-05-23 CWS dashboard
+// pull showed it as the #2 install language (~72 installs in May, second only
+// to English-US, ahead of French/Spanish/Korean) while shipping with no
+// curated terminology. src/data/it.json v1 was derived from es.json via
+// Spanish→Italian regex (Romance proximity ~80%); native Italian PRs welcome.
 const PREMIUM_LANGUAGES = [
   { code: 'ko', label: '한국어' },
   { code: 'ja', label: '日本語' },
@@ -162,6 +167,7 @@ const PREMIUM_LANGUAGES = [
   { code: 'zh-TW', label: '中文(繁體)' },
   { code: 'es', label: 'Español' },
   { code: 'fr', label: 'Français' },
+  { code: 'it', label: 'Italiano' },
   { code: 'de', label: 'Deutsch' },
   { code: 'pt-BR', label: 'Português (BR)' },
   { code: 'ru', label: 'Русский' },
@@ -172,7 +178,6 @@ const AVAILABLE_LANGUAGES = [
   { code: 'en', label: 'English' },
   ...PREMIUM_LANGUAGES,
   { code: 'pt', label: 'Português (PT)' },
-  { code: 'it', label: 'Italiano' },
   { code: 'nl', label: 'Nederlands' },
   { code: 'pl', label: 'Polski' },
   { code: 'uk', label: 'Українська' },

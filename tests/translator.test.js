@@ -54,8 +54,9 @@ describe('SkilljarTranslator', () => {
       expect(translator.premiumLanguages).toContain('zh-CN');
     });
 
-    test('has all 10 premium languages', () => {
-      expect(translator.premiumLanguages).toHaveLength(10);
+    test('has all 11 premium languages (Italian added v3.5.34)', () => {
+      expect(translator.premiumLanguages).toHaveLength(11);
+      expect(translator.premiumLanguages).toContain('it');
     });
 
     test('supportedLanguages includes 30+ languages', () => {
@@ -162,10 +163,12 @@ describe('SkilljarTranslator', () => {
   });
 
   describe('queueGeminiVerify heuristics', () => {
-    test('isPremium returns true for premium languages', () => {
+    test('isPremium returns true for premium languages (Italian promoted v3.5.34)', () => {
       expect(translator.premiumLanguages.includes('ko')).toBe(true);
       expect(translator.premiumLanguages.includes('pt-BR')).toBe(true);
-      expect(translator.premiumLanguages.includes('it')).toBe(false);
+      expect(translator.premiumLanguages.includes('it')).toBe(true);
+      // Sanity: a still-Standard language should remain non-premium
+      expect(translator.premiumLanguages.includes('nl')).toBe(false);
     });
   });
 });
