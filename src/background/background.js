@@ -95,6 +95,14 @@ const _rateLimiter = {
 
 const _inflightGT = new Map();
 
+// Max age for an in-flight entry. If `fetchWithRetry` stalls beyond this
+// (network hang, upstream stuck through retries), we force-expire the
+// entry so the next identical request can't keep bypassing the rate
+// limiter (audit V14). 30s is long enough to absorb the normal retry
+// chain (3 attempts × exponential backoff ≈ 3.5s + per-attempt timeout)
+// without surfacing as 429 to the user.
+const _GT_INFLIGHT_TTL_MS = 30_000;
+
 function _gtKey(text, tl, sl) {
   return `${sl}|${tl}|${text}`;
 }
@@ -105,10 +113,14 @@ function _gtFetchDedup(text, tl, sl) {
   if (existing) return existing;
 
   const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
+  const expireTimer = setTimeout(() => _inflightGT.delete(key), _GT_INFLIGHT_TTL_MS);
   const promise = fetchWithRetry(url)
     .then((resp) => resp.json())
     .then((data) => parseGTResponse(data, text))
-    .finally(() => _inflightGT.delete(key));
+    .finally(() => {
+      clearTimeout(expireTimer);
+      _inflightGT.delete(key);
+    });
   _inflightGT.set(key, promise);
   return promise;
 }
@@ -342,26 +354,39 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     const sl = sourceLang || 'en';
     const tl = gtLangCode(targetLang);
 
+    // Audit V9: previously each item independently did
+    // `if (!_inflightGT.has(key))` + `await acquire()`. With concurrent
+    // identical items, all N saw has()=false (the first hasn't yet
+    // populated the map) and all N consumed slots — N slots burned for
+    // 1 actual fetch. Fix: dedup inside the synchronous Promise.all map
+    // call BEFORE any await fires, so duplicates within a batch share
+    // a single in-flight promise and consume one slot total.
+    const seenInBatch = new Map(); // key → promise
+
     Promise.all(
-      texts.map(async (text) => {
-        // Same dedup gate as the single path — only acquire a slot if
-        // this exact key isn't already in-flight, so a batch of duplicates
-        // pays one slot, not N.
-        if (!_inflightGT.has(_gtKey(text, tl, sl))) {
-          // Wait for a rate-limit slot. Falling back to the original
-          // English text would be silently dropped by content.js
-          // (translated === original is treated as no-op), so we pace
-          // instead.
-          const ok = await _rateLimiter.acquire();
-          if (!ok) {
-            console.warn('[SkillBridge] GT rate-limit acquire timed out');
-            return null;
+      texts.map((text) => {
+        const key = _gtKey(text, tl, sl);
+        if (seenInBatch.has(key)) return seenInBatch.get(key);
+
+        const itemPromise = (async () => {
+          // Wait for a rate-limit slot only if no in-flight global entry.
+          if (!_inflightGT.has(key)) {
+            // Falling back to original English would be silently
+            // dropped by content.js (translated === original is no-op),
+            // so we pace instead.
+            const ok = await _rateLimiter.acquire();
+            if (!ok) {
+              console.warn('[SkillBridge] GT rate-limit acquire timed out');
+              return null;
+            }
           }
-        }
-        return _gtFetchDedup(text, tl, sl).catch((err) => {
-          console.warn('[SkillBridge] GT batch item failed:', err.message);
-          return null;
-        });
+          return _gtFetchDedup(text, tl, sl).catch((err) => {
+            console.warn('[SkillBridge] GT batch item failed:', err.message);
+            return null;
+          });
+        })();
+        seenInBatch.set(key, itemPromise);
+        return itemPromise;
       }),
     )
       .then((results) => sendResponse({ ok: true, translations: results }))

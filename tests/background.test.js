@@ -167,7 +167,15 @@ describe('_gtFetchDedup — in-flight dedup', () => {
     const p2 = _gtFetchDedup('hello', 'ko', 'en');
     const p3 = _gtFetchDedup('hello', 'ko', 'en');
 
+    // Synchronous check — fetch is called in the same tick as _gtFetchDedup
     expect(fetchCallCount).toBe(1);
+    // Flush microtasks too — audit sweep #8: a future refactor that
+    // defers the fetch into a microtask would leave fetchCallCount at 0
+    // here and the synchronous assertion above would falsely still
+    // pass. After awaiting a microtask we re-assert.
+    await Promise.resolve();
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+
     resolveFetch();
 
     const [r1, r2, r3] = await Promise.all([p1, p2, p3]);
@@ -219,6 +227,40 @@ describe('_gtFetchDedup — in-flight dedup', () => {
 
   test('_gtKey distinguishes sourceLang too', () => {
     expect(_gtKey('hello', 'ko', 'en')).not.toBe(_gtKey('hello', 'ko', 'auto'));
+  });
+
+  // ── Audit V14: TTL on _inflightGT so a hung fetch can't indefinitely
+  //    bypass the rate limiter for that key.
+  test('TTL constant pinned at 30s (audit V14)', () => {
+    // Read the constant straight from source rather than ship a magic
+    // number here; if the prod value drifts, this fails fast.
+    const src = require('fs').readFileSync(
+      require('path').join(__dirname, '..', 'src', 'background', 'background.js'),
+      'utf8',
+    );
+    const m = src.match(/const\s+_GT_INFLIGHT_TTL_MS\s*=\s*([\d_]+)\s*;/);
+    expect(m).not.toBeNull();
+    expect(Number(m[1].replace(/_/g, ''))).toBe(30_000);
+  });
+
+  test('TTL forces map entry deletion if fetch never settles', async () => {
+    jest.useFakeTimers();
+    try {
+      // fetch returns a promise that never resolves — simulates a hung
+      // upstream. Without the TTL, _inflightGT.has(key) would return
+      // true forever and let identical requests skip rate-limit.
+      global.fetch = jest.fn(() => new Promise(() => {}));
+
+      _gtFetchDedup('hung-key', 'ko', 'en');
+      expect(_inflightGT.has(_gtKey('hung-key', 'ko', 'en'))).toBe(true);
+
+      // Advance past the TTL — the setTimeout fires and deletes.
+      jest.advanceTimersByTime(31_000);
+
+      expect(_inflightGT.has(_gtKey('hung-key', 'ko', 'en'))).toBe(false);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });
 
