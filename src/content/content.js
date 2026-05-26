@@ -21,6 +21,39 @@
     return;
   }
 
+  // ── AI-content gate (v3.5.34, 2026-05-26) ──────────────────
+  // Manifest host_permission is `*.skilljar.com` (broader than just
+  // anthropic.skilljar.com so the same code can serve other Skilljar-
+  // hosted AI courses if any emerge). On a non-anthropic tenant we run
+  // the AI-content detector and short-circuit on non-AI pages
+  // (Calendly Academy etc. — Skilljar's general B2B LMS customers
+  // that fell into our host pattern but aren't our audience).
+  //
+  // Anthropic Academy users see no change: the detector's fast path
+  // unconditionally activates for `anthropic.skilljar.com`.
+  //
+  // Sync-only on purpose. An async storage-backed override (for the
+  // rare case the heuristic mis-rejects an AI page) would require
+  // wrapping the entire IIFE body in an async callback; that
+  // refactor is deliberately deferred. For now the heuristic is
+  // intentionally generous (anthropic-host fast path + 2 keyword
+  // matches in any of title/h1/breadcrumb/body-head).
+  try {
+    const verdict = window._sbPlatform?.detectAITrainingContent?.() || { isAI: true };
+    if (!verdict.isAI) {
+      console.info(
+        `[SkillBridge] Non-AI Skilljar tenant detected (${verdict.reason}). ` +
+          `Extension paused on this site — gated to AI-training content per ` +
+          `POSITIONING non-goal "Adding other Skilljar customers".`,
+      );
+      return;
+    }
+  } catch (err) {
+    console.warn('[SkillBridge] AI-content gate failed open:', err?.message);
+    // Fail open — better to over-activate than to silently break the
+    // extension on a transient gate error.
+  }
+
   // Target ALL visible text elements — including Skilljar-specific
   // Skilljar selectors are centralized in src/lib/selectors.js
   const TRANSLATABLE_SELECTOR = [
