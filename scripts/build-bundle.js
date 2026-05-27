@@ -106,15 +106,9 @@ async function build() {
   console.log(`\nBundled extension ready at: ${DIST}`);
 }
 
-// Directory names that should never ship in the bundled extension.
-// `source/` holds design source files (e.g. icon SVGs with internal notes)
-// that exist for regeneration but must not be exposed via web_accessible_resources.
-const COPY_DIR_SKIP = new Set(['source']);
-
 function copyDir(src, dest) {
   fs.mkdirSync(dest, { recursive: true });
   for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
-    if (entry.isDirectory() && COPY_DIR_SKIP.has(entry.name)) continue;
     const srcPath = path.join(src, entry.name);
     const destPath = path.join(dest, entry.name);
     if (entry.isDirectory()) {
