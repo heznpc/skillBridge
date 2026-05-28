@@ -1,0 +1,114 @@
+name: Chrome Web Store publish drift watcher
+
+# Runs `scripts/check-cws-drift.js` against the live SkillBridge CWS
+# listing and auto-opens an issue when the published version drifts
+# materially behind `manifest.json`.
+#
+# Why this exists
+# ---------------
+#
+# The 2026-05-29 market-pulse fetch surfaced a 3-month publish drift:
+# `manifest.json` was at v3.5.34 while the CWS listing had been frozen
+# at v1.0.1 (2026-03-10) since before the Italian Premium dictionary,
+# the AI-content gate, the trademark sweep, and the audit series all
+# landed on `main`. None of that reached users until a dashboard re-
+# upload. Nothing in CI noticed.
+#
+# This workflow runs weekly + on push to main + on manual dispatch. A
+# drift detection opens (or re-opens) a single issue with the actual
+# version delta and a pointer to `store-assets/RELEASE_CHECKLIST.md`
+# for the dashboard upload step. Idempotent — mirrors
+# `selectors-drift.yml` and `academy-courses-drift.yml`.
+#
+# Security note: this workflow only runs static commands (`npm run
+# check:cws-drift`, `node scripts/check-cws-drift.js --json`). It does
+# NOT interpolate any github.event.* fields into shell strings, so the
+# common workflow-injection vectors do not apply here.
+
+on:
+  schedule:
+    - cron: '30 6 * * 1' # weekly: every Monday 06:30 UTC (15:30 KST)
+  push:
+    branches: [main]
+    paths:
+      - 'manifest.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Check CWS listing vs local manifest version
+        id: check
+        # Run via npm script so the command stays consistent with local
+        # `npm run check:cws-drift` invocations.
+        run: npm run check:cws-drift
+
+      - name: Open CWS-publish-drift issue (idempotent)
+        if: failure()
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b  # v7
+        with:
+          script: |
+            const { execSync } = require('child_process');
+            // Re-run to capture structured JSON for the issue body.
+            // Both args are hardcoded — no untrusted input.
+            let json = '{}';
+            try {
+              json = execSync('node scripts/check-cws-drift.js --json', { encoding: 'utf8' });
+            } catch (err) {
+              // Script exits 1 on drift but still prints valid JSON on stdout.
+              json = err.stdout || '{}';
+            }
+            let report;
+            try { report = JSON.parse(json); } catch { report = { status: 'parse-fail', raw: json }; }
+
+            const title = '🚨 Chrome Web Store publish drift — re-upload needed';
+
+            // Idempotency: skip if an open drift issue already exists.
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+            });
+            if (existing.data.some(i => i.title === title)) {
+              core.info('A CWS-drift issue is already open; skipping the create.');
+              return;
+            }
+
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = [
+              '`scripts/check-cws-drift.js` reports the published Chrome Web Store listing has drifted materially behind `manifest.json` on `main`.',
+              '',
+              '**Drift report**:',
+              '```json',
+              JSON.stringify(report, null, 2),
+              '```',
+              '',
+              '**Why this matters**: every PR that lands on `main` without a CWS dashboard re-upload is invisible to users. The 2026-05-29 audit surfaced a 3-month drift (1.0.1 → 3.5.34) — that meant the Italian Premium dictionary, AI-content gate, trademark sweep, and entire audit series sat on `main` without reaching users.',
+              '',
+              '**Action**:',
+              '1. `npm run build:bundle:zip` — regenerates `store-assets/skillbridge-bundled.zip`.',
+              '2. Upload the zip via the CWS developer dashboard (`store-assets/RELEASE_CHECKLIST.md` has the step-by-step).',
+              '3. After the listing goes live, re-run this workflow via `workflow_dispatch` to confirm drift is cleared.',
+              '4. Close this issue. The cron will re-open one only if drift recurs.',
+              '',
+              `Workflow run: ${runUrl}`,
+            ].join('\n');
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body,
+              labels: ['cws-drift', 'release', 'priority:high'],
+            });

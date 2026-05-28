@@ -87,8 +87,17 @@
   // Fallback chain — used when a primary model is rejected by Puter
   // (deprecation, rename, regional availability). Hardcoded here because
   // page-bridge runs in the page world and can't import constants.js.
+  //
+  // 2026-05-28: Anthropic released Claude Opus 4.8. The default tutor
+  // model stays at Sonnet 4.6 (`SKILLBRIDGE_MODELS.CLAUDE` in
+  // src/lib/constants.js) — Sonnet is faster, cheaper for Puter's
+  // free tier, and the in-page tutor doesn't need Opus-class
+  // reasoning. The Opus chain below extends to 4.8 anyway so callers
+  // that explicitly opt into Opus (e.g. via a future user setting)
+  // get a working fallback if Puter hasn't propagated the new model.
   const _MODEL_FALLBACKS = {
     'claude-sonnet-4-6': 'claude-sonnet-4-5',
+    'claude-opus-4-8': 'claude-opus-4-7',
     'claude-opus-4-7': 'claude-opus-4-6',
     'claude-opus-4-6': 'claude-opus-4-5',
     'gemini-2.0-flash': 'gemini-1.5-flash',
