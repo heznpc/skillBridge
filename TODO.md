@@ -1,7 +1,7 @@
 # SkillBridge TODO
 
 > Strategy & scope: see [POSITIONING.md](POSITIONING.md).
-> Last refreshed: 2026-05-15 (v3.5.33 + positioning rewrite — certificate-first, Korea-weighted)
+> Last refreshed: 2026-05-15 (v3.5.34 + positioning rewrite — certificate-first, Korea-weighted)
 
 Items below are concrete engineering / ops work. Anything strategic — what
 markets we enter, what we charge, what features we accept — belongs in
@@ -23,7 +23,7 @@ Ambassador submission is worth the user-facing effort.
   **Korea-first** — Korean translation lands first, others same week.
 - [ ] **CWS listing refresh (multilingual) — upload to dashboard.**
   Repo-side copy is ready: `store-assets/STORE_LISTING.md` rewritten on
-  certificate-accessibility framing (v3.5.33), plus localized
+  certificate-accessibility framing (v3.5.34), plus localized
   `STORE_LISTING-ko.md` and `STORE_LISTING-ja.md`. Remaining work is
   human-only: paste each into the CWS dashboard's locale slots, refresh
   screenshots, write the "What's new" entry. Other 8 premium-language

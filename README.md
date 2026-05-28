@@ -2,7 +2,7 @@
 
 <img src="assets/icons/icon128.png" alt="SkillBridge" width="90" />
 
-# SkillBridge — AI Course Translator <!-- VERSION_START -->v3.5.33<!-- VERSION_END -->
+# SkillBridge — AI Course Translator <!-- VERSION_START -->v3.5.34<!-- VERSION_END -->
 
 > Available in multiple languages at the [project landing page](https://heznpc.github.io/skillBridge/).
 

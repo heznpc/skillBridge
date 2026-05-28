@@ -1,93 +1,120 @@
-# Release Checklist — Re-publication after icon redesign
+# Release Checklist — v3.5.34 re-publication
 
-Code-side prep is finished in this PR. The remaining steps require your hands (icon design + CWS dashboard + repo variable toggle) because they cross trust boundaries the automation can't cross.
+> Refreshed 2026-05-29. The previous revision predated the v2 icon revert (PR #144),
+> the manifest version bump to 3.5.34, and the CWS-drift watcher. This is the source
+> of truth for the next dashboard upload.
 
-## What this PR already does
+CWS listing as of 2026-05-29 (verified via `npm run check:cws-drift`):
+- Published: **v1.0.1** (uploaded 2026-03-10, 80 days ago)
+- Local: **v3.5.34**
+- Drift score: **20,533** (threshold: 5) → drift watcher will open a tracking issue
+- 11 PRs landed since the published version — none of them have reached users
 
-- ✅ Extension name: `SkillBridge — AI Course Translator` (no "Anthropic" in name)
-- ✅ All 33 `_locales/<lang>/messages.json` `extDescription` rewritten to nominative-use form (URL `anthropic.skilljar.com` + descriptive nouns; no brand-as-product-modifier)
-- ✅ `README.md`, `store-assets/STORE_LISTING*.md` (en/ko/ja), `docs/index.html`, `docs/privacy.html`, `PRIVACY_POLICY.md`, `CONTRIBUTING.md`, source-file headers — all swept to nominative use
-- ✅ Privacy URL in store listings updated to `https://heznpc.github.io/skillBridge/privacy` (verified 200 OK from Googlebot UA)
-- ✅ Disclaimer expanded: "independent project, not affiliated with Anthropic or Skilljar, all trademarks belong to respective owners"
-- ✅ Code audit follow-ups landed (V1/V3/V5/V9/V14/V15 + test quality)
-- ✅ Tests 446/446, eslint clean, prettier clean
+The remaining publish steps cross trust boundaries the automation can't cross
+(your hands on the dashboard, the icon design decision, the public-variable toggle).
+Everything code-side is ready and pre-built.
 
-## What you need to do before flipping the publish switch
+## What's already prepared (no further action needed)
 
-### 1. Replace the icon (4 PNGs in `assets/icons/`)
+- ✅ `manifest.json` v3.5.34 + `package.json` + 11 `src/data/*.json` `_meta.version` all bumped
+- ✅ `CHANGELOG.md` v3.5.34 section written (PR #135, #136, #137, #138, #139, #140, #142, #145 consolidated)
+- ✅ `store-assets/skillbridge-bundled.zip` (2.9 MB, minified) — **this is the CWS upload artifact**
+- ✅ `store-assets/skillbridge.zip` (636 KB, raw source) — alternative upload if the bundled fails review
+- ✅ All 11 Premium `_locales/*/messages.json` have `extDescription` nominative form
+- ✅ Nominative-use sweep clean (`SkillBridge — AI Course Translator`, no Anthropic-as-product-modifier)
+- ✅ Privacy URL `/privacy` (lowercase) — verified 200 from Googlebot UA
+- ✅ Tests 482/482, ESLint + Prettier clean, all check-* scripts clean
+- ✅ AI-content gate wired into `manifest.json:content_scripts[].js` (PR #145 hotfix)
+- ✅ CWS-drift watcher will keep this from drifting 3 months again
+- ✅ Italian dictionary live (PR #140) — timed with Anthropic Milan office opening 2026-05-27
 
-Current files contain the design that triggered the trademark complaint (Anthropic Claude logo similarity). Replace all four:
+## What needs your hands
 
-- `assets/icons/icon16.png` (16×16)
-- `assets/icons/icon32.png` (32×32)
-- `assets/icons/icon48.png` (48×48)
-- `assets/icons/icon128.png` (128×128) — the one CWS shows in the listing
+### 1. Icon decision
 
-**Design constraints**:
-- Zero similarity to Claude's design mark: avoid orange (#cc785c family), 8-point star, octagonal frame, minimal geometric mark
-- Distinct identity rooted in "translation / bridge / education" motifs (book + globe, two halves bridging, multilingual letterforms, etc.)
-- Same file paths; the build script reads from these names
+Status: **unresolved**. v1 icons (the Claude-mark-adjacent design that triggered
+the trademark complaint) are currently on `main` — PR #143's v2 redesign was
+merged then reverted (PR #144) at your request because the visual asset went
+in without your approval.
 
-### 2. Recapture / blur screenshots (`assets/screenshots/` + `store-assets/`)
+Options for this release:
 
-Files that may visually contain the Claude logo or "Anthropic Academy" branding in the page chrome being demonstrated:
+| Option | Description | Trade-off |
+|---|---|---|
+| A | Upload v3.5.34 with v1 icon as-is | Trademark complaint may recur on the same icon |
+| B | Design v3 icon yourself (Figma/Canva), drop PNGs into `assets/icons/`, then ship | Slowest. Cleanest. Full control. |
+| C | Ask me for 3 v3 SVG drafts in a separate PR (no auto-merge); pick one | Faster than B, you keep the call. |
 
-- `assets/screenshots/01-lesson-translated.png` — likely shows the Anthropic Academy header
-- `assets/screenshots/catalog-translated.png` — likely shows the course catalog header
-- `assets/screenshots/skillbridge-demo.gif` — animation; whatever it captures
-- `store-assets/screenshot-01-lesson.png`, `store-assets/screenshot-02-catalog.png` — same review
+If A, skip to step 3. If B/C, finish that step first then return here.
 
-**Two options per screenshot**:
-- (a) Blur or crop out the Anthropic logo in the page chrome; keep the lesson/catalog body visible
-- (b) Re-capture against a placeholder page (e.g., a forked Skilljar sandbox without the header logo)
+### 2. Re-capture screenshots (only if you re-designed the icon)
 
-Option (a) is faster; (b) is cleanest.
+If the icon changed, the screenshots that include the toolbar icon need refresh:
+- `assets/screenshots/01-lesson-translated.png`
+- `assets/screenshots/catalog-translated.png`
+- `assets/screenshots/skillbridge-demo.gif`
+- `store-assets/screenshot-01-lesson.png`
+- `store-assets/screenshot-02-catalog.png`
 
-### 3. Update CWS dev console fields
+Lesson body / Skilljar header — no Anthropic logo blur needed; the rename + URL-
+anchor sweep handled the trademark exposure on that front.
+
+### 3. Upload to CWS dev console
 
 Open https://chrome.google.com/webstore/devconsole/a4725d38-81e7-41f5-bf21-5c11fb825074
 
-| Field | New value |
+| Field | Value |
 |---|---|
+| Package upload | `store-assets/skillbridge-bundled.zip` ← drag this in |
 | Listing title | `SkillBridge — AI Course Translator with in-page AI tutor` |
-| Summary | (paste from `store-assets/STORE_LISTING.md` "Summary" section) |
-| Description | (paste from `store-assets/STORE_LISTING.md` "Description" section) |
-| Privacy policy URL | `https://heznpc.github.io/skillBridge/privacy` ← **fix the 404 here** |
-| Korean listing | (paste from `store-assets/STORE_LISTING-ko.md`) |
-| Japanese listing | (paste from `store-assets/STORE_LISTING-ja.md`) |
-| Icon (128×128) | upload new `assets/icons/icon128.png` |
-| Promo tile + screenshots | upload new versions |
+| Summary | paste from `store-assets/STORE_LISTING.md` "Summary" section |
+| Description | paste from `store-assets/STORE_LISTING.md` "Description" section |
+| Privacy policy URL | `https://heznpc.github.io/skillBridge/privacy` |
+| Korean listing | paste from `store-assets/STORE_LISTING-ko.md` |
+| Japanese listing | paste from `store-assets/STORE_LISTING-ja.md` |
+| Icon (128×128) | upload current `assets/icons/icon128.png` |
+| Promo tile + screenshots | upload current set (no change unless step 2 ran) |
 
-### 4. Bump version + push
-
-Once icon + dashboard updates are in, bump `manifest.json` `version` (e.g., `3.5.33` → `3.5.34`), push to `main`. The release workflow will auto-tag and the CD workflow will...
-
-### 5. Flip CWS_PUBLICATION_PAUSED off
-
-CD is currently gated by repo variable `CWS_PUBLICATION_PAUSED=true` (the guard added in PR #133). Re-enable:
+### 4. Flip CWS_PUBLICATION_PAUSED off (only if currently set)
 
 ```
-gh variable delete CWS_PUBLICATION_PAUSED
+gh variable list | grep CWS_PUBLICATION_PAUSED && gh variable delete CWS_PUBLICATION_PAUSED
 ```
 
-Next push (or manual `gh workflow run cd.yml`) will then upload to CWS.
+The flag was added in PR #133 to prevent the CD workflow from publishing while
+the trademark complaint was unresolved. If it's still set, CD will skip the
+upload step; deleting it re-enables CD's CWS upload path on the next push.
 
-### 6. After upload — CWS review wait
+If the variable is already absent, skip.
 
-Typical 1-3 business days. Track at the dev console "Status" tab.
+### 5. CWS review wait
+
+Typical 1–3 business days. Track at the dev console "Status" tab.
+
+After the listing goes live, run `npm run check:cws-drift` locally OR trigger
+the `cws-drift.yml` workflow via `workflow_dispatch` — it should report `OK`
+(drift cleared). The auto-opened drift issue can then be closed.
+
+## What's already automated
+
+- `scripts/check-cws-drift.js` runs against the live listing weekly (Monday 06:30
+  UTC) + on every `main` push that touches `manifest.json`. Opens a single
+  GitHub issue when drift exceeds 5 patches OR the published version is older
+  than 60 days. Idempotent — only one issue at a time.
 
 ## If trademark complaint comes back
 
-If Tracer or Anthropic IP enforcement files another complaint against the new version, **the issue is probably not the icon anymore** — it's the name or copy. In that case:
-- Review `store-assets/STORE_LISTING*.md` for any remaining brand-claim language
-- Consider deeper rename (e.g., to `SkillBridge — Skilljar Course Translator`, dropping the `anthropic.skilljar.com` URL from the title and moving it to body-only)
-- Open a `chore/trademark-deeper-rename` branch and iterate
+If Tracer / Anthropic IP enforcement files another complaint against v3.5.34:
+1. Check whether it cites the icon (then return to step 1 option B/C) or the
+   listing copy (then re-sweep `store-assets/STORE_LISTING*.md` for any
+   residual brand-as-product-modifier phrasing).
+2. Consider deeper rename (`SkillBridge — Skilljar AI-Course Translator` with
+   `anthropic.skilljar.com` only in body, not title).
+3. Open `chore/trademark-deeper-rename` branch and iterate.
 
-## SNS launch (separate session)
+## SNS launch (separate session, after listing is live)
 
-After CWS is live again, draft SNS posts in a separate session. Targets you mentioned:
-- Velog / Disquiet / GeekNews (Korean)
-- X.com (English)
-- Anthropic Ambassador application (now eligible since the listing is back)
-
-Anthropic's Claude account does amplify developer stories. Tag `@AnthropicAI` / `@claudeai` and use `#Claude` `#ClaudeCode` `#AnthropicAcademy` hashtags judiciously.
+Drafts are queued in `store-assets/promotion/` (see `x-thread-italian.md` and
+`plugin-directory-submission.md`). Do not post until the CWS listing reflects
+v3.5.34 — posting before would point users at a listing missing all the work
+the post talks about.

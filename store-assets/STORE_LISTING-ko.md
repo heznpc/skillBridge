@@ -1,4 +1,4 @@
-# Chrome Web Store — 스토어 등록 정보 (v3.5.33, 한국어)
+# Chrome Web Store — 스토어 등록 정보 (v3.5.34, 한국어)
 
 원본 영문판: [STORE_LISTING.md](STORE_LISTING.md)
 

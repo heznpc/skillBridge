@@ -1,6 +1,6 @@
 {
   "name": "skillbridge",
-  "version": "3.5.33",
+  "version": "3.5.34",
   "private": true,
   "scripts": {
     "test": "jest --verbose",
@@ -19,6 +19,7 @@
     "check:i18n": "node scripts/check-i18n-keys.js",
     "check:dict-coverage": "node scripts/check-dict-coverage.js",
     "check:academy": "node scripts/check-academy-courses.js",
+    "check:cws-drift": "node scripts/check-cws-drift.js",
     "docs": "node scripts/generate-docs.js",
     "lint": "eslint src/ tests/ scripts/",
     "lint:fix": "eslint src/ tests/ scripts/ --fix",
