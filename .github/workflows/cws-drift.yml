@@ -50,27 +50,37 @@ jobs:
 
       - name: Check CWS listing vs local manifest version
         id: check
-        # Run via npm script so the command stays consistent with local
-        # `npm run check:cws-drift` invocations.
-        run: npm run check:cws-drift
+        # Run via the JSON path so the next step can inspect status without
+        # re-fetching. `set +e` because the script's exit codes carry meaning:
+        #   1 = drift detected (open release issue)
+        #   0 with status:soft-fail = parser/network miss (open degraded issue)
+        #   0 with status:ok        = nothing to do
+        # The action-level `continue-on-error` keeps GH from flagging the
+        # whole job as failed for the parser-miss case (which is expected
+        # on CI runner IPs since CWS serves different markup to those).
+        continue-on-error: true
+        run: |
+          set +e
+          npm run check:cws-drift -- --json > drift-report.json 2>&1
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+          cat drift-report.json
+          # Extract status into an output for the issue-creation step.
+          STATUS=$(node -e "try{console.log(JSON.parse(require('fs').readFileSync('drift-report.json','utf8')).status||'unknown')}catch{console.log('parse-fail')}")
+          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
 
       - name: Open CWS-publish-drift issue (idempotent)
-        if: failure()
+        if: steps.check.outputs.status == 'drift'
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b  # v7
         with:
           script: |
-            const { execSync } = require('child_process');
-            // Re-run to capture structured JSON for the issue body.
-            // Both args are hardcoded — no untrusted input.
-            let json = '{}';
-            try {
-              json = execSync('node scripts/check-cws-drift.js --json', { encoding: 'utf8' });
-            } catch (err) {
-              // Script exits 1 on drift but still prints valid JSON on stdout.
-              json = err.stdout || '{}';
-            }
+            const fs = require('fs');
+            // Drift report was already written to disk by the previous step.
             let report;
-            try { report = JSON.parse(json); } catch { report = { status: 'parse-fail', raw: json }; }
+            try {
+              report = JSON.parse(fs.readFileSync('drift-report.json', 'utf8'));
+            } catch (err) {
+              report = { status: 'parse-fail', error: err.message };
+            }
 
             const title = '🚨 Chrome Web Store publish drift — re-upload needed';
 
@@ -111,4 +121,57 @@ jobs:
               title,
               body,
               labels: ['cws-drift', 'release', 'priority:high'],
+            });
+
+      - name: Open drift-watcher-degraded issue (idempotent)
+        # CWS serves different markup to GH-runner IPs than to interactive
+        # browsers (parser miss + 'soft-fail' status). The script still
+        # works locally — `npm run check:cws-drift` from a developer
+        # machine returns the correct result. CI surface needs its own
+        # heads-up so this degradation doesn't go silent.
+        if: steps.check.outputs.status == 'soft-fail'
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b  # v7
+        with:
+          script: |
+            const fs = require('fs');
+            let report;
+            try { report = JSON.parse(fs.readFileSync('drift-report.json', 'utf8')); }
+            catch { report = { status: 'parse-fail' }; }
+
+            const title = '⚠️ CWS drift watcher degraded (parser/network miss on CI runner)';
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+            });
+            if (existing.data.some(i => i.title === title)) {
+              core.info('A drift-watcher-degraded issue is already open; skipping.');
+              return;
+            }
+
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = [
+              '`scripts/check-cws-drift.js` could not extract the published version from the CWS listing when run on a GitHub Actions runner. The script soft-failed by design (network blip or page-format change), but that means the CI surface is no longer giving an authoritative drift answer.',
+              '',
+              '**Soft-fail report**:',
+              '```json',
+              JSON.stringify(report, null, 2),
+              '```',
+              '',
+              '**Likely causes** (in order of probability):',
+              '1. CWS serves different markup to GH-runner IPs than to interactive browsers (bot detection). Workaround: run `npm run check:cws-drift` from a developer machine.',
+              '2. CWS frontend layout changed — the inline-JS metadata blob no longer matches the script\'s primary regex. Fix: update the patterns in `extractPublishedVersion` / `extractLastUpdated`.',
+              '3. Transient network blip on the runner. Self-resolves on next scheduled run.',
+              '',
+              '**Action**: run `npm run check:cws-drift` locally. If it returns a real status (ok/drift), close this issue — the next scheduled CI run will re-open it only if the soft-fail persists.',
+              '',
+              `Workflow run: ${runUrl}`,
+            ].join('\n');
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body,
+              labels: ['cws-drift', 'tooling', 'priority:medium'],
             });
