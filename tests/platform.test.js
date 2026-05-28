@@ -27,7 +27,10 @@ const {
   detectAITrainingContent,
   PLATFORM_IDS,
   _AI_KEYWORDS,
+  _SHORT_KEYWORDS,
   _AI_KEYWORD_THRESHOLD,
+  _AI_INSPECT_BODY_CHARS,
+  _FAST_PATH_HITS,
 } = _fakeGlobal.module.exports;
 
 describe('detectPlatform', () => {
@@ -81,8 +84,27 @@ describe('detectAITrainingContent — fast path', () => {
     const v = detectAITrainingContent(doc, loc);
     expect(v.isAI).toBe(true);
     expect(v.reason).toBe('anthropic-host');
+    // Hits sentinel must be finite (was Infinity in v1, which became
+    // null on JSON round-trip and lost the meaning).
+    expect(v.hits).toBe(_FAST_PATH_HITS);
+    expect(Number.isFinite(v.hits)).toBe(true);
+    expect(JSON.parse(JSON.stringify(v)).hits).toBe(_FAST_PATH_HITS);
     // Sanity: the v3.5.33 audience must never be gated out even if
     // their lesson body is unusually short / off-topic.
+  });
+
+  test('strips trailing dot from FQDN-form anthropic host', () => {
+    const v = detectAITrainingContent(mockDocument({ title: '', body: '' }), { hostname: 'anthropic.skilljar.com.' });
+    expect(v.isAI).toBe(true);
+    expect(v.reason).toBe('anthropic-host');
+  });
+
+  test('strips leading www. from anthropic host alias', () => {
+    const v = detectAITrainingContent(mockDocument({ title: '', body: '' }), {
+      hostname: 'www.anthropic.skilljar.com',
+    });
+    expect(v.isAI).toBe(true);
+    expect(v.reason).toBe('anthropic-host');
   });
 });
 
@@ -144,15 +166,64 @@ describe('detectAITrainingContent — keyword path', () => {
     expect(v.isAI).toBe(true);
   });
 
-  test('only inspects first 500 chars of body to bound work', () => {
-    // Keywords beyond char 500 should not count.
-    const padding = 'x'.repeat(600);
+  test('only inspects first N body chars where N === _AI_INSPECT_BODY_CHARS', () => {
+    // Keywords beyond the inspection bound should not count. Padding
+    // sized to the exported constant + 100 so the test stays correct
+    // if the bound is later raised (the assertion name stays accurate).
+    const padding = 'x'.repeat(_AI_INSPECT_BODY_CHARS + 100);
     const doc = mockDocument({
       title: 'Random course',
-      body: padding + 'claude anthropic mcp openai gemini', // pushed past 500
+      body: padding + 'claude anthropic openai gemini',
     });
     const v = detectAITrainingContent(doc, { hostname: 'tenant.skilljar.com' });
     expect(v.isAI).toBe(false);
+  });
+
+  // ── Short-keyword word-boundary regression tests ──────────────
+  // The v1 detector used String.includes for everything; `rag` matched
+  // inside `drag` / `fragment` / `storage`, `mcp` matched inside
+  // `McPherson`, `llm` matched inside `Hellman` / `Stallman` / `Pullman`.
+  // These tests pin the fixed behavior so a future refactor can't
+  // accidentally re-introduce the regression.
+
+  test('short keyword `rag` does NOT match inside `drag` / `fragment` / `storage`', () => {
+    const doc = mockDocument({
+      title: 'Drag-and-drop scheduling',
+      h1: 'Storage and migration',
+      body: 'Drag your booking link into any paragraph. Storage settings include fragment editing and outrage handling.',
+    });
+    const v = detectAITrainingContent(doc, { hostname: 'calendly.skilljar.com' });
+    expect(v.isAI).toBe(false);
+    expect(v.hits).toBe(0);
+  });
+
+  test('short keyword `mcp` does NOT match inside `McPherson`', () => {
+    const doc = mockDocument({
+      title: 'Sales training with instructor McPherson',
+      body: 'Course taught by McPherson; covers customer success workflows.',
+    });
+    const v = detectAITrainingContent(doc, { hostname: 'sales.skilljar.com' });
+    expect(v.isAI).toBe(false);
+  });
+
+  test('short keyword `llm` does NOT match inside `Hellman` / `Pullman` / `Stallman`', () => {
+    const doc = mockDocument({
+      title: 'Hospitality training — Pullman & Hellman protocols',
+      body: 'Pullman porters, Hellman service standards, Stallman archive protocols.',
+    });
+    const v = detectAITrainingContent(doc, { hostname: 'hosp.skilljar.com' });
+    expect(v.isAI).toBe(false);
+  });
+
+  test('short keyword still matches when surrounded by punctuation / whitespace', () => {
+    // Word boundary should accept the actual AI usage of the short tokens.
+    const doc = mockDocument({
+      title: 'LLM intro: MCP and RAG fundamentals',
+      body: 'This is about LLM, MCP, and RAG.',
+    });
+    const v = detectAITrainingContent(doc, { hostname: 'tenant.skilljar.com' });
+    expect(v.isAI).toBe(true);
+    expect(v.hits).toBeGreaterThanOrEqual(3);
   });
 });
 
@@ -190,5 +261,21 @@ describe('AI keyword list invariants', () => {
 
   test('threshold is 2 (anchored constant)', () => {
     expect(_AI_KEYWORD_THRESHOLD).toBe(2);
+  });
+
+  test('keyword list is frozen — cross-test pollution cannot mutate it', () => {
+    // strict-mode push on a frozen array throws TypeError.
+    expect(() => _AI_KEYWORDS.push('contaminated')).toThrow(TypeError);
+    expect(Object.isFrozen(_AI_KEYWORDS)).toBe(true);
+  });
+
+  test('short-keyword set covers the 3-char ambiguous tokens', () => {
+    // These are the tokens that would substring-match common English
+    // words if not word-boundary-checked. Pin the membership so a
+    // future "add llm-like keyword" PR explicitly considers whether
+    // word boundaries are needed.
+    expect(_SHORT_KEYWORDS.has('mcp')).toBe(true);
+    expect(_SHORT_KEYWORDS.has('llm')).toBe(true);
+    expect(_SHORT_KEYWORDS.has('rag')).toBe(true);
   });
 });
