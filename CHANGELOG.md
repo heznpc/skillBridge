@@ -6,6 +6,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.34] - 2026-05-29
+
+### Added — Italian as 11th Premium language (PR #140)
+- `src/data/it.json` (NEW, ~1100 entries) — derived from `src/data/es.json` via Spanish→Italian regex transformation (Romance proximity ~80%). `_meta.translation_provenance` discloses derivation; native Italian review welcome. **Timing context**: Anthropic Milan office opened 2026-05-27 (Italian enterprise/research/dev focus). Italian was the #2 install language in the CWS dashboard pull (2026-05-23) despite no curated dictionary — this addresses that gap.
+- `src/lib/constants.js` — `PREMIUM_LANGUAGES` 10 → 11, `it` removed from Standard list.
+- `_locales/it/messages.json` — `extDescription` nominative form for the CWS Italian listing.
+- `tests/constants.test.js` / `tests/translator.test.js` — count assertions bumped 10 → 11 + presence checks for `it`.
+
+### Added — AI-content gate for non-anthropic Skilljar tenants (PR #142 + #145)
+- `src/lib/platform.js` — `detectAITrainingContent(doc, loc)`. Fast path: `anthropic.skilljar.com` (or trailing-dot / `www.` aliases) unconditionally activates. Slow path: scans title / h1 / breadcrumb / first 500 chars of body for ≥2 AI keywords, with word-boundary checks for the 3-char tokens (`mcp`, `llm`, `rag`) so they don't substring-match `McPherson` / `Hellman` / `drag` / `fragment` / `storage`.
+- `src/content/content.js` — gate runs after the cert-exam kill-switch. Non-AI tenants (Calendly Academy, Atlassian Academy etc. that fall into our `*.skilljar.com` host pattern but aren't our audience) are short-circuited with a `console.warn` notice. Fail-open on detector error.
+- `tests/platform.test.js` + `tests/platform.handshake.test.js` (NEW, jsdom env, +14 cases total) — pins the production handshake (`window._sbPlatform` populated by content-script load) so a future manifest re-order can't silently regress the gate.
+- **Wiring fix** (PR #145): the initial #142 PR shipped without adding `src/lib/platform.js` to `manifest.json:content_scripts[].js`, so `window._sbPlatform` was never defined and the gate was a permanent no-op. Manifest entry added; regression-guard test now reads manifest from disk and asserts load order.
+
+### Added — Trademark / nominative-use sweep (PR #138)
+- Product name renamed `SkillBridge for Anthropic Academy` → `SkillBridge — AI Course Translator`. All store-listing copy, in-extension UI strings, README, and `_locales/*/messages.json` updated to use Anthropic / Claude / Skilljar only as descriptive references, never as product-noun modifiers. Privacy URL path normalized to lowercase `/privacy`.
+
+### Added — Adversarial 2nd-pass audit fixes (PR #135 → #137)
+- `src/background/background.js` — `_inflightGT` Map gains TTL (`_GT_INFLIGHT_TTL_MS = 30s`); batch dedup uses sync-populated `seenInBatch` Map; `parseGTResponse` enforces strict `typeof string` checks.
+- `src/lib/page-bridge.js` — payload guard via `_fieldChars` using `String(v ?? '').length` (prevents array-bypass); `_CHAT_STREAM_BRIDGE_TIMEOUT_MS = 90s` watchdog with cancellation; cancelled check between `loadPuter` and `_puterChat`.
+- `src/lib/translator.js` — `_postAbort()` helper shared by `onAbort` and timeout path so a stream that hangs past the watchdog is genuinely aborted.
+- `src/lib/log.js` wired into `manifest.json` content_scripts (was dead code in v3.5.33).
+- Private vulnerability reporting enabled. Popup URL check hardened (extracted `isSkilljarHost()` via URL parse + hostname suffix). Test `execSync` replaced with `spawnSync` array-form.
+
+### Tests (totals)
+- Unit (jest): **482/482** (was 398 — 84 new tests across the audit + AI-gate + Italian-dictionary work).
+
 ## [3.5.33] - 2026-05-15
 
 ### Added — Academy course catalog drift watcher (POSITIONING pillar #1)

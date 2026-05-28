@@ -1,4 +1,4 @@
-# Chrome Web Store — Store Listing (v3.5.33)
+# Chrome Web Store — Store Listing (v3.5.34)
 
 Localized listings live alongside this file:
 

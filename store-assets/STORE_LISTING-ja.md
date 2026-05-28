@@ -1,4 +1,4 @@
-# Chrome Web Store — ストア掲載情報 (v3.5.33, 日本語)
+# Chrome Web Store — ストア掲載情報 (v3.5.34, 日本語)
 
 英語原文: [STORE_LISTING.md](STORE_LISTING.md)
 

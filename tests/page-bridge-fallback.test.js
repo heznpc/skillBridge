@@ -59,6 +59,10 @@ describe('_MODEL_FALLBACKS chain', () => {
     expect(_MODEL_FALLBACKS['claude-sonnet-4-6']).toBe('claude-sonnet-4-5');
   });
 
+  test('Opus 4.8 falls back to 4.7 (added 2026-05-28 with Anthropic release)', () => {
+    expect(_MODEL_FALLBACKS['claude-opus-4-8']).toBe('claude-opus-4-7');
+  });
+
   test('Opus 4.7 falls back to 4.6', () => {
     expect(_MODEL_FALLBACKS['claude-opus-4-7']).toBe('claude-opus-4-6');
   });
