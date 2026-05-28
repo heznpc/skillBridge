@@ -50,23 +50,27 @@ jobs:
 
       - name: Check CWS listing vs local manifest version
         id: check
-        # Run via the JSON path so the next step can inspect status without
-        # re-fetching. `set +e` because the script's exit codes carry meaning:
+        # Run the script directly (not via `npm run`) so stdout is pure JSON.
+        # `npm run` prefixes its own banner lines, which would break the
+        # JSON.parse in the next step.
+        #
+        # `set +e` because the script's exit codes carry meaning:
         #   1 = drift detected (open release issue)
         #   0 with status:soft-fail = parser/network miss (open degraded issue)
         #   0 with status:ok        = nothing to do
-        # The action-level `continue-on-error` keeps GH from flagging the
-        # whole job as failed for the parser-miss case (which is expected
-        # on CI runner IPs since CWS serves different markup to those).
+        # `continue-on-error` keeps GH from flagging the whole job as failed
+        # for the parser-miss case (which is expected on CI runner IPs since
+        # CWS serves different markup to those — see PR #147).
         continue-on-error: true
         run: |
           set +e
-          npm run check:cws-drift -- --json > drift-report.json 2>&1
+          node scripts/check-cws-drift.js --json > drift-report.json
           echo "exit_code=$?" >> "$GITHUB_OUTPUT"
           cat drift-report.json
           # Extract status into an output for the issue-creation step.
           STATUS=$(node -e "try{console.log(JSON.parse(require('fs').readFileSync('drift-report.json','utf8')).status||'unknown')}catch{console.log('parse-fail')}")
           echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+          echo "Resolved status: $STATUS"
 
       - name: Open CWS-publish-drift issue (idempotent)
         if: steps.check.outputs.status == 'drift'
