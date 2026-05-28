@@ -94,7 +94,14 @@ function isPlatformSupported(id) {
 // in non-AI training contexts. Single-word matches like "model" or
 // "agent" are too generic and excluded; multi-word phrases and
 // brand names dominate.
-const _AI_KEYWORDS = [
+//
+// Short 3-char tokens (`mcp`, `llm`, `rag`) match via word boundary
+// — see `_SHORT_KEYWORDS` below — so they do NOT false-positive on
+// `McPherson`, `Hellman`, `drag`, `fragment`, `storage`, etc.
+//
+// Frozen so a future test or external script that does `.push` /
+// `.splice` cannot silently mutate detector behavior mid-suite.
+const _AI_KEYWORDS = Object.freeze([
   // Anthropic-specific anchors (case-insensitive)
   'anthropic',
   'claude',
@@ -131,17 +138,43 @@ const _AI_KEYWORDS = [
   'function calling',
   'embeddings',
   'vector database',
-];
+]);
+
+// Short tokens that would substring-match common English words if
+// counted via `includes`. These get word-boundary checks below.
+const _SHORT_KEYWORDS = Object.freeze(new Set(['mcp', 'llm', 'rag']));
 
 const _AI_KEYWORD_THRESHOLD = 2;
 const _AI_INSPECT_BODY_CHARS = 500;
+// Sentinel for the anthropic-host fast path. Finite (not Infinity) so
+// the verdict object round-trips through JSON for logs / telemetry
+// without becoming `null` and losing the meaning.
+const _FAST_PATH_HITS = -1;
+
+function _wordBoundaryHit(lower, kw) {
+  // Match `kw` only when not adjacent to [a-z0-9]. Cheap manual scan —
+  // avoids constructing a per-keyword regex on every detector call.
+  let from = 0;
+  while (from <= lower.length - kw.length) {
+    const idx = lower.indexOf(kw, from);
+    if (idx === -1) return false;
+    const before = idx === 0 ? '' : lower[idx - 1];
+    const after = idx + kw.length >= lower.length ? '' : lower[idx + kw.length];
+    const beforeOk = !before || !/[a-z0-9]/.test(before);
+    const afterOk = !after || !/[a-z0-9]/.test(after);
+    if (beforeOk && afterOk) return true;
+    from = idx + 1;
+  }
+  return false;
+}
 
 function _countKeywordMatches(text, keywords) {
   if (!text) return 0;
   const lower = String(text).toLowerCase();
   let hits = 0;
   for (const kw of keywords) {
-    if (lower.includes(kw)) hits++;
+    const matched = _SHORT_KEYWORDS.has(kw) ? _wordBoundaryHit(lower, kw) : lower.includes(kw);
+    if (matched) hits++;
   }
   return hits;
 }
@@ -162,18 +195,23 @@ function detectAITrainingContent(doc, loc) {
 
   // Fast path: anthropic.skilljar.com always qualifies — preserves
   // the v3.5.33 behavior verbatim for the primary audience.
-  const host = loc.hostname || '';
+  // Strip a trailing dot (FQDN form, occasionally emitted by intermediate
+  // proxies) and a leading `www.` so common host variants don't drop to
+  // the slow path. Browser-set `location.hostname` is already lowercased.
+  const host = (loc.hostname || '').replace(/\.$/, '').replace(/^www\./, '');
   if (host === 'anthropic.skilljar.com') {
-    return { isAI: true, reason: 'anthropic-host', hits: Infinity };
+    return { isAI: true, reason: 'anthropic-host', hits: _FAST_PATH_HITS };
   }
 
   // Slow path: inspect title + h1 + breadcrumb + first chunk of body
-  // text for keyword density.
+  // text for keyword density. CSS attribute matchers are case-sensitive
+  // by default; the `i` flag (CSS Selectors L4, supported in Chrome 88+,
+  // far below the manifest's chrome 124 floor) matches `Breadcrumb`,
+  // `BREADCRUMB`, etc. without the substring-trick that v1 relied on.
   const title = doc.title || '';
   const h1 = doc.querySelector('h1')?.textContent || '';
-  // Breadcrumb selectors vary across Skilljar tenants; check a few.
   const breadcrumb =
-    doc.querySelector('.breadcrumb, [class*="breadcrumb"], nav[aria-label*="readcrumb"]')?.textContent || '';
+    doc.querySelector('.breadcrumb, [class*="breadcrumb" i], nav[aria-label*="breadcrumb" i]')?.textContent || '';
   const bodyHead = (doc.body?.textContent || '').slice(0, _AI_INSPECT_BODY_CHARS);
 
   const combined = `${title}\n${h1}\n${breadcrumb}\n${bodyHead}`;
@@ -204,6 +242,9 @@ if (typeof globalThis !== 'undefined' && typeof globalThis.module !== 'undefined
     detectAITrainingContent,
     PLATFORM_IDS,
     _AI_KEYWORDS,
+    _SHORT_KEYWORDS,
     _AI_KEYWORD_THRESHOLD,
+    _AI_INSPECT_BODY_CHARS,
+    _FAST_PATH_HITS,
   };
 }

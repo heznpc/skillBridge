@@ -38,13 +38,41 @@
   // refactor is deliberately deferred. For now the heuristic is
   // intentionally generous (anthropic-host fast path + 2 keyword
   // matches in any of title/h1/breadcrumb/body-head).
+  //
+  // Known follow-up (separate PR): SPA route changes do not re-evaluate
+  // the gate. If the first page rejects, the extension stays paused for
+  // the tab's lifetime even after navigating into an AI lesson on the
+  // same tenant. Re-evaluation on pushState/popstate is being designed.
   try {
-    const verdict = window._sbPlatform?.detectAITrainingContent?.() || { isAI: true };
-    if (!verdict.isAI) {
-      console.info(
+    // `??` (not `||`) so an explicit `{ isAI: false }` is honored — only
+    // an actually-missing call falls through to the gate-missing default.
+    // The default warns LOUDLY so a future content-script wiring regression
+    // (e.g. platform.js removed from manifest.content_scripts[].js) is
+    // observable in production rather than silently bypassed.
+    const verdict = window._sbPlatform?.detectAITrainingContent?.() ?? {
+      isAI: true,
+      reason: 'gate-missing',
+      hits: 0,
+    };
+    if (verdict.reason === 'gate-missing') {
+      // `console.warn` is preserved by the production minifier (see
+      // scripts/build-bundle.js PROD_PURE). `console.info` is dropped.
+      console.warn(
+        '[SkillBridge] AI-content gate is not wired (window._sbPlatform missing). ' +
+          'Check manifest.content_scripts[].js includes src/lib/platform.js. ' +
+          'Failing open: extension will activate as if no gate existed.',
+      );
+    }
+    // Defensive: only an explicit `false` pauses. Future signature drift
+    // (e.g. detector returning `{ isAI: undefined }` for a pending async
+    // lookup) MUST NOT silently pause the extension on real AI pages.
+    if (verdict.isAI === false) {
+      console.warn(
         `[SkillBridge] Non-AI Skilljar tenant detected (${verdict.reason}). ` +
           `Extension paused on this site — gated to AI-training content per ` +
-          `POSITIONING non-goal "Adding other Skilljar customers".`,
+          `POSITIONING non-goal "Adding other Skilljar customers". ` +
+          `Reload after navigating to an AI-keyword-rich page if you believe ` +
+          `this was a false negative (SPA route changes do not re-evaluate yet).`,
       );
       return;
     }
