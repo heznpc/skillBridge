@@ -28,9 +28,9 @@ jobs:
         (github.event.inputs.job == 'dom-health' || github.event.inputs.job == 'all')
       || github.event.schedule == '0 9 * * 1'
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e  # v6.4.0
         with:
           node-version-file: '.nvmrc'
 
@@ -42,7 +42,7 @@ jobs:
 
       - name: Open issue if selectors missing
         if: failure()
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b  # v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
         with:
           script: |
             const fs = require('fs');
@@ -83,9 +83,9 @@ jobs:
         (github.event.inputs.job == 'dict-freshness' || github.event.inputs.job == 'all')
       || github.event.schedule == '0 9 1 * *'
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e  # v6.4.0
         with:
           node-version-file: '.nvmrc'
 
@@ -97,7 +97,7 @@ jobs:
 
       - name: Open issue if dictionaries stale
         if: failure()
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b  # v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
         with:
           script: |
             const fs = require('fs');
@@ -148,9 +148,9 @@ jobs:
         (github.event.inputs.job == 'dep-audit' || github.event.inputs.job == 'all')
       || github.event.schedule == '0 9 * * 3'
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e  # v6.4.0
         with:
           node-version-file: '.nvmrc'
 
@@ -184,7 +184,7 @@ jobs:
 
       - name: Open issue if audit findings
         if: steps.npm-audit.outputs.audit_exit != '0' || steps.puter-check.outputs.puter_match == 'false'
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b  # v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
         with:
           script: |
             const fs = require('fs');
