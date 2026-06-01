@@ -2267,6 +2267,18 @@ html.si18n-dark .si18n-exam-banner {
   overflow-y: auto;
 }
 
+/* Spaced-review mode toggle ("Review due (N)" ↔ "All cards") */
+.si18n-fc-mode {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.si18n-fc-mode .si18n-fc-btn {
+  font-size: 12px;
+  padding: 4px 12px;
+}
+
 .si18n-flashcard-card {
   perspective: 800px;
   width: 100%;
