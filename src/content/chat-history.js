@@ -185,7 +185,9 @@
       sb._chat.closeSubPanel();
       return;
     }
-    if (state.flashcardPanelOpen) sb._chat.closeSubPanel();
+    if (state.flashcardPanelOpen || state.bookmarksPanelOpen || state.recentPanelOpen) {
+      sb._chat.closeSubPanel();
+    }
 
     state.historyPanelOpen = true;
     state.savedChatHTML = chatPanel.innerHTML;

@@ -21,6 +21,8 @@
     savedChatHTML: null,
     historyPanelOpen: false,
     flashcardPanelOpen: false,
+    bookmarksPanelOpen: false,
+    recentPanelOpen: false,
   };
   const _state = sb._chat.state;
 
@@ -111,23 +113,36 @@
   function getSidebarHTML() {
     return `
       <div class="si18n-header">
-        <button class="si18n-history-btn" id="si18n-history-btn" title="${sb.t(A11Y_LABELS.chatHistory)}" aria-label="${sb.t(A11Y_LABELS.chatHistory)}">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-          </svg>
-        </button>
-        <button class="si18n-history-btn" id="si18n-fc-btn" title="${sb.t(FLASHCARD_LABELS.openFlashcards)}" aria-label="${sb.t(FLASHCARD_LABELS.openFlashcards)}">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
-          </svg>
-        </button>
-        <button class="si18n-history-btn" id="si18n-pdf-btn" title="${sb.t(PDF_EXPORT_LABELS.title)}" aria-label="${sb.t(PDF_EXPORT_LABELS.title)}">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/>
+        <button class="si18n-tools-btn" id="si18n-tools-btn" title="${sb.t(MENU_LABELS.tools)}" aria-label="${sb.t(MENU_LABELS.tools)}" aria-haspopup="true" aria-expanded="false">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
           </svg>
         </button>
         <span class="si18n-header-title">SkillBridge Tutor</span>
         <button class="si18n-close" id="si18n-close" aria-label="${sb.t(A11Y_LABELS.closeSidebar)}">&times;</button>
+      </div>
+
+      <div class="si18n-tools-menu" id="si18n-tools-menu" role="menu" hidden>
+        <button class="si18n-tools-item" id="si18n-recent-btn" role="menuitem" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><polyline points="12 7 12 12 15 14"/></svg>
+          <span>${sb.t(RESUME_LABELS.openRecent)}</span>
+        </button>
+        <button class="si18n-tools-item" id="si18n-bm-btn" role="menuitem" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+          <span>${sb.t(BOOKMARK_LABELS.openBookmarks)}</span>
+        </button>
+        <button class="si18n-tools-item" id="si18n-fc-btn" role="menuitem" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          <span>${sb.t(FLASHCARD_LABELS.openFlashcards)}</span>
+        </button>
+        <button class="si18n-tools-item" id="si18n-history-btn" role="menuitem" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>${sb.t(A11Y_LABELS.chatHistory)}</span>
+        </button>
+        <button class="si18n-tools-item" id="si18n-pdf-btn" role="menuitem" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
+          <span>${sb.t(PDF_EXPORT_LABELS.title)}</span>
+        </button>
       </div>
 
       <div class="si18n-panel si18n-panel-chat" id="si18n-panel-chat">
@@ -154,9 +169,24 @@
 
   function bindSidebarEvents() {
     document.getElementById('si18n-close')?.addEventListener('click', toggleSidebar);
+    const toolsBtn = document.getElementById('si18n-tools-btn');
+    const toolsMenu = document.getElementById('si18n-tools-menu');
+    toolsBtn?.addEventListener('click', () => {
+      const willOpen = !!toolsMenu?.hidden;
+      if (toolsMenu) toolsMenu.hidden = !willOpen;
+      toolsBtn.setAttribute('aria-expanded', String(willOpen));
+    });
+    // Selecting any tool closes the menu (the click still reaches the item's
+    // own handler, which opens the corresponding panel).
+    toolsMenu?.addEventListener('click', () => {
+      toolsMenu.hidden = true;
+      toolsBtn?.setAttribute('aria-expanded', 'false');
+    });
     document.getElementById('si18n-history-btn')?.addEventListener('click', () => sb._chat.toggleHistoryPanel?.());
     document.getElementById('si18n-fc-btn')?.addEventListener('click', () => sb._chat.toggleFlashcardPanel?.());
     document.getElementById('si18n-pdf-btn')?.addEventListener('click', exportLessonPDF);
+    document.getElementById('si18n-bm-btn')?.addEventListener('click', () => sb._chat.toggleBookmarksPanel?.());
+    document.getElementById('si18n-recent-btn')?.addEventListener('click', () => sb._chat.toggleRecentPanel?.());
     bindChatInputEvents();
     bindExampleQuestions();
   }
@@ -382,6 +412,8 @@
     _state.savedChatHTML = null;
     _state.historyPanelOpen = false;
     _state.flashcardPanelOpen = false;
+    _state.bookmarksPanelOpen = false;
+    _state.recentPanelOpen = false;
     bindChatInputEvents();
   }
 

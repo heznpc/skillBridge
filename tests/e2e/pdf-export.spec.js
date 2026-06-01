@@ -69,6 +69,9 @@ test.describe('SkillBridge — PDF export sanitization', () => {
     //
     // `window.open` spawns a popup that Playwright tracks as a new Page.
     // Promise.all + waitForEvent('popup') captures it without racing.
+    // PDF export now lives in the consolidated "Tools" menu, so open it first
+    // (the button is hidden until the menu is expanded).
+    await page.click('#si18n-tools-btn');
     const [popup] = await Promise.all([page.waitForEvent('popup', { timeout: 5_000 }), page.click('#si18n-pdf-btn')]);
     expect(popup, 'window.open must spawn a popup').toBeTruthy();
     // Give document.write a beat to land.

@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.36] - 2026-06-01
+
+### Added — Learning companion (local-only, free)
+- **Spaced-repetition flashcards** — per-card due dates (Leitner box 0→1d / 1→3d / 2→7d) and a "Review due (N)" mode that shows only cards due now.
+- **Bookmarks** — bookmark a lesson at its scroll position; list and jump back from the Tools menu.
+- **Continue / Recent** — auto-tracks visited lessons + scroll position across courses; resume from the Tools menu.
+- **In-lesson reading aid** — a top reading-progress bar and a table of contents built from the lesson's headings.
+- All client-side (`chrome.storage.local`); no server, no paid API, device-local.
+
+### Changed — Tutor sidebar
+- Consolidated the five header icons (history / flashcards / PDF / bookmarks / continue) into a single **Tools** menu so the chat is the focus.
+
 ## [3.5.35] - 2026-06-01
 
 ### Changed — Extension icon redesign
