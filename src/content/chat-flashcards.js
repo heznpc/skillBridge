@@ -38,16 +38,49 @@
   }
   const _state = sb._chat.state;
 
-  // Local state.
-  let flashcardCards = [];
+  // Spaced-repetition intervals (days) indexed by Leitner box after a ✓.
+  // box 0 (new) → 1d, box 1 (learning) → 3d, box 2 (mastered) → 7d.
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const INTERVAL_DAYS = [1, 3, 7];
+
+  // Local state. Boxes/dues are keyed by the card's English term so they
+  // survive deck rebuilds and the all↔due mode swap.
+  let allCards = []; // full deck for the current course/lang
+  let flashcardCards = []; // active list (all cards, or only due cards)
   let flashcardIndex = 0;
-  let flashcardBoxes = {};
+  let flashcardBoxes = {}; // en → box (0/1/2)
+  let flashcardDues = {}; // en → due timestamp (ms); absent ⇒ due now
+  let reviewMode = false; // true ⇒ flashcardCards is filtered to due cards
   let _matchedCourseSlug = null;
   // Raw per-section JSON cache for section-specific flashcards (only the
   // premium-language dictionaries have section keys; the flattened
   // staticDict drops the section level).
   let _rawSectionsCache = null;
   let _rawSectionsLang = null;
+
+  // ============================================================
+  // SCHEDULING HELPERS
+  // ============================================================
+
+  function isDue(en) {
+    const due = flashcardDues[en];
+    return due == null || due <= Date.now();
+  }
+
+  function dueCount() {
+    let n = 0;
+    for (const c of allCards) if (isDue(c.en)) n++;
+    return n;
+  }
+
+  function activeList() {
+    return reviewMode ? allCards.filter((c) => isDue(c.en)) : allCards.slice();
+  }
+
+  function rebuildActive() {
+    flashcardCards = activeList();
+    if (flashcardIndex >= flashcardCards.length) flashcardIndex = 0;
+  }
 
   // ============================================================
   // PANEL TOGGLE
@@ -63,12 +96,16 @@
     }
     // Close history if open — they share `savedChatHTML`, so closing first
     // restores the chat panel before we save it again.
-    if (_state.historyPanelOpen) sb._chat.closeSubPanel();
+    if (_state.historyPanelOpen || _state.bookmarksPanelOpen || _state.recentPanelOpen) {
+      sb._chat.closeSubPanel();
+    }
 
     _state.flashcardPanelOpen = true;
     _state.savedChatHTML = chatPanel.innerHTML;
 
-    flashcardCards = loadFlashcardsForCourse();
+    allCards = loadFlashcardsForCourse();
+    reviewMode = false;
+    flashcardCards = allCards.slice();
     flashcardIndex = 0;
     loadFlashcardProgress();
 
@@ -84,7 +121,7 @@
       </div>
       <div class="si18n-flashcard-container" id="si18n-fc-container">
         ${
-          flashcardCards.length === 0
+          allCards.length === 0
             ? `<div class="si18n-history-empty">${sb.t(FLASHCARD_LABELS.empty)}</div>`
             : renderFlashcard()
         }
@@ -94,7 +131,10 @@
     document.getElementById('si18n-fc-back')?.addEventListener('click', closeFlashcardPanel);
     document.getElementById('si18n-fc-reset')?.addEventListener('click', () => {
       flashcardBoxes = {};
+      flashcardDues = {};
+      reviewMode = false;
       flashcardIndex = 0;
+      rebuildActive();
       saveFlashcardProgress();
       refreshFlashcard();
     });
@@ -149,8 +189,9 @@
                 _rawSectionsLang = lang;
                 // Re-run with warm cache and update panel.
                 if (_state.flashcardPanelOpen) {
-                  flashcardCards = loadFlashcardsForCourse();
+                  allCards = loadFlashcardsForCourse();
                   flashcardIndex = 0;
+                  rebuildActive();
                   refreshFlashcard();
                 }
               })
@@ -185,15 +226,35 @@
   // RENDER + EVENTS
   // ============================================================
 
+  function modeToggleRow() {
+    const label = reviewMode ? sb.t(FLASHCARD_LABELS.studyAll) : `${sb.t(FLASHCARD_LABELS.reviewDue)} (${dueCount()})`;
+    return `
+      <div class="si18n-fc-mode">
+        <button class="si18n-fc-btn" id="si18n-fc-mode-toggle">${sb.escapeHtml(label)}</button>
+      </div>
+    `;
+  }
+
   function renderFlashcard() {
-    if (flashcardCards.length === 0) return '';
+    if (allCards.length === 0) return '';
+
+    // In review mode with nothing due, keep the toggle so the user can
+    // switch back to the full deck.
+    if (flashcardCards.length === 0) {
+      return `
+        ${modeToggleRow()}
+        <div class="si18n-history-empty">${sb.t(FLASHCARD_LABELS.allCaughtUp)}</div>
+      `;
+    }
+
     const card = flashcardCards[flashcardIndex];
-    const box = flashcardBoxes[flashcardIndex] || 0;
+    const box = flashcardBoxes[card.en] || 0;
     const boxLabelKeys = [FLASHCARD_LABELS.boxNew, FLASHCARD_LABELS.boxLearning, FLASHCARD_LABELS.mastered];
     const boxClasses = ['si18n-fc-new', 'si18n-fc-learning', 'si18n-fc-done'];
     const countByBox = [0, 0, 0];
-    for (let i = 0; i < flashcardCards.length; i++) countByBox[flashcardBoxes[i] || 0]++;
+    for (const c of allCards) countByBox[flashcardBoxes[c.en] || 0]++;
     return `
+      ${modeToggleRow()}
       <div class="si18n-flashcard-card" id="si18n-fc-card" role="button" tabindex="0" aria-label="${sb.t(FLASHCARD_LABELS.flip)}">
         <div class="si18n-flashcard-inner">
           <div class="si18n-flashcard-front">${sb.escapeHtml(card.en)}</div>
@@ -222,13 +283,42 @@
     const container = document.getElementById('si18n-fc-container');
     if (!container) return;
     container.innerHTML =
-      flashcardCards.length === 0
+      allCards.length === 0
         ? `<div class="si18n-history-empty">${sb.t(FLASHCARD_LABELS.empty)}</div>`
         : renderFlashcard();
     bindFlashcardEvents();
   }
 
+  // Mark the current card: promote (✓) or reset (✗) its Leitner box and
+  // schedule the next due date, then advance.
+  function markCurrent(correct) {
+    const card = flashcardCards[flashcardIndex];
+    if (!card) return;
+    const cur = flashcardBoxes[card.en] || 0;
+    const box = correct ? Math.min(cur + 1, 2) : 0;
+    flashcardBoxes[card.en] = box;
+    flashcardDues[card.en] = Date.now() + INTERVAL_DAYS[box] * DAY_MS;
+    saveFlashcardProgress();
+
+    if (reviewMode) {
+      // The marked card drops out of the due list; rebuilding keeps the
+      // index pointing at the next due card (or clamps to the new length).
+      rebuildActive();
+    } else if (flashcardIndex < flashcardCards.length - 1) {
+      flashcardIndex++;
+    }
+    refreshFlashcard();
+  }
+
   function bindFlashcardEvents() {
+    document.getElementById('si18n-fc-mode-toggle')?.addEventListener('click', () => {
+      reviewMode = !reviewMode;
+      flashcardIndex = 0;
+      rebuildActive();
+      saveFlashcardProgress();
+      refreshFlashcard();
+    });
+
     const card = document.getElementById('si18n-fc-card');
     card?.addEventListener('click', () => card.classList.toggle('si18n-card-flipped'));
     card?.addEventListener('keydown', (e) => {
@@ -251,20 +341,8 @@
         refreshFlashcard();
       }
     });
-    document.getElementById('si18n-fc-box-up')?.addEventListener('click', () => {
-      const cur = flashcardBoxes[flashcardIndex] || 0;
-      flashcardBoxes[flashcardIndex] = Math.min(cur + 1, 2);
-      saveFlashcardProgress();
-      // Auto-advance to next card after marking.
-      if (flashcardIndex < flashcardCards.length - 1) flashcardIndex++;
-      refreshFlashcard();
-    });
-    document.getElementById('si18n-fc-box-down')?.addEventListener('click', () => {
-      flashcardBoxes[flashcardIndex] = 0;
-      saveFlashcardProgress();
-      if (flashcardIndex < flashcardCards.length - 1) flashcardIndex++;
-      refreshFlashcard();
-    });
+    document.getElementById('si18n-fc-box-up')?.addEventListener('click', () => markCurrent(true));
+    document.getElementById('si18n-fc-box-down')?.addEventListener('click', () => markCurrent(false));
   }
 
   // ============================================================
@@ -284,13 +362,9 @@
 
   function saveFlashcardProgress() {
     const key = _flashcardStorageKey();
-    const stableBoxes = {};
-    for (const [idx, box] of Object.entries(flashcardBoxes)) {
-      const card = flashcardCards[idx];
-      if (card) stableBoxes[card.en] = box;
-    }
     const data = {};
-    data[key] = { boxes: stableBoxes, index: flashcardIndex };
+    // boxes/dues are already keyed by stable English term.
+    data[key] = { boxes: flashcardBoxes, dues: flashcardDues, index: flashcardIndex };
     _flashcardSaveQueue = _flashcardSaveQueue
       .catch(() => {}) // a prior failure shouldn't block the next write
       .then(() => new Promise((resolve) => chrome.storage.local.set(data, resolve)));
@@ -300,14 +374,11 @@
     const key = _flashcardStorageKey();
     chrome.storage.local.get([key], (result) => {
       const saved = result[key];
-      flashcardBoxes = {};
-      if (saved?.boxes) {
-        // Restore by matching english text back to current card indices.
-        for (let i = 0; i < flashcardCards.length; i++) {
-          const box = saved.boxes[flashcardCards[i].en];
-          if (box !== undefined) flashcardBoxes[i] = box;
-        }
-      }
+      // Pre-v3.5.35 data stored `boxes` keyed by English term already (no
+      // `dues`), so it loads forward without migration: missing dues ⇒ due now.
+      flashcardBoxes = saved?.boxes && typeof saved.boxes === 'object' ? { ...saved.boxes } : {};
+      flashcardDues = saved?.dues && typeof saved.dues === 'object' ? { ...saved.dues } : {};
+      rebuildActive();
       if (saved?.index != null && saved.index < flashcardCards.length) {
         flashcardIndex = saved.index;
       }

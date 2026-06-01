@@ -80,6 +80,10 @@ export default [
         SHORTCUT_LABELS: 'readonly',
         SHORTCUT_DESCRIPTIONS: 'readonly',
         FLASHCARD_LABELS: 'readonly',
+        BOOKMARK_LABELS: 'readonly',
+        RESUME_LABELS: 'readonly',
+        TOC_LABELS: 'readonly',
+        MENU_LABELS: 'readonly',
         PDF_EXPORT_LABELS: 'readonly',
         TERM_PREVIEW_LABELS: 'readonly',
         FLASHCARD_COURSE_MAP: 'readonly',
@@ -98,7 +102,7 @@ export default [
       'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }],
       'no-console': 'off', // Extension uses console for debugging
       'no-undef': 'error',
-      'eqeqeq': ['error', 'always', { null: 'ignore' }],
+      eqeqeq: ['error', 'always', { null: 'ignore' }],
       'no-var': 'error',
       'prefer-const': ['warn', { destructuring: 'all' }],
 
@@ -107,9 +111,9 @@ export default [
       // without an explicit `eslint-disable` that surfaces in review.
       // CodeQL default-setup catches the same categories more deeply —
       // these give a faster local signal.
-      'no-implied-eval': 'error',       // bans setTimeout(string), setInterval(string)
-      'no-new-func': 'error',           // bans new Function('...')
-      'no-script-url': 'error',         // bans href="javascript:..."
+      'no-implied-eval': 'error', // bans setTimeout(string), setInterval(string)
+      'no-new-func': 'error', // bans new Function('...')
+      'no-script-url': 'error', // bans href="javascript:..."
       'no-prototype-builtins': 'error', // forces Object.hasOwn / hasOwnProperty.call
     },
   },
@@ -184,6 +188,14 @@ export default [
     },
   },
   {
-    ignores: ['dist/**', 'node_modules/**', 'src/bridge/puter.js', 'store-assets/**', 'test-results/**', 'playwright-report/**', 'eslint.config.mjs'],
+    ignores: [
+      'dist/**',
+      'node_modules/**',
+      'src/bridge/puter.js',
+      'store-assets/**',
+      'test-results/**',
+      'playwright-report/**',
+      'eslint.config.mjs',
+    ],
   },
 ];
