@@ -16,12 +16,11 @@ name: Academy course catalog drift watcher
 # after the existing issue closes and drift recurs.
 
 on:
-  # TODO(2026-05-21): cron paused — Skilljar page structure changed, scraper
-  # broken since 2026-05-16 (5 days, 8 consecutive fails). Re-enable after
-  # fixing selectors in a dedicated session. Manual dispatch still available.
-  # Original cadence: '15 */12 * * *' (every 12h)
-  # schedule:
-  #   - cron: '15 */12 * * *'
+  # Re-enabled 2026-06-01: the scraper parses the current catalog correctly
+  # again (check-academy-courses.js passes after wiring the new course), so the
+  # 12-hour watch behind POSITIONING.md's "new course -> 48h" SLA is restored.
+  schedule:
+    - cron: '15 */12 * * *'
   workflow_dispatch: # manual trigger from Actions UI
 
 permissions:

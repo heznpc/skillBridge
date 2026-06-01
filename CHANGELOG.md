@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.39] - 2026-06-01
+
+### Security
+- **Page bridge + AI tutor scoped to `anthropic.skilljar.com`.** The Puter postMessage bridge (Gemini verification + Claude tutor) uses a nonce that any page-world script can read, so it must not run on Skilljar tenants we don't control. The bridge and the tutor sidebar now initialize only on the trusted Anthropic host; other AI-detected Skilljar tenants still get the dictionary + Google Translate, just not the bridge.
+
+### Fixed
+- Example-question chips lost their click handlers after opening and closing a sub-panel (History / Flashcards / Bookmarks / Continue) — `closeSubPanel` now re-binds them alongside the chat input.
+
+### Changed
+- Wired `ai-fluency-for-small-businesses` (18th live course) into `FLASHCARD_COURSE_MAP`, clearing the Academy course-drift check, and re-enabled the 12-hour drift cron (the catalog scraper parses correctly again).
+- Store listing updated to 18 courses; `RELEASE_CHECKLIST.md` refreshed for the current state (icon resolved, v3.5.39 artifacts).
+
 ## [3.5.38] - 2026-06-01
 
 ### Fixed — translation rendering & dark-mode polish (from a live debugging pass on anthropic.skilljar.com)

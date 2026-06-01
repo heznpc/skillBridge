@@ -1311,6 +1311,7 @@ const FLASHCARD_COURSE_MAP = {
   'ai-fluency-for-educators': ['aiFluencyEdu'],
   'ai-fluency-for-students': ['aiFluencyStudent'],
   'ai-fluency-for-nonprofits': ['aiFluencyNonprofit'],
+  'ai-fluency-for-small-businesses': ['aiFluency'],
   'teaching-ai-fluency': ['teachingAI'],
   // Other
   'ai-capabilities': ['aiCapabilities'],

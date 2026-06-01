@@ -521,8 +521,20 @@
 
       window._sb.injectHeaderLanguageSelect?.();
       window._sb.injectDarkModeToggle?.();
-      window._sb.injectSidebar?.();
-      window._sb.injectFloatingButton?.();
+      // The Puter page bridge and AI tutor only run on the trusted Anthropic
+      // host. Other Skilljar tenants (activated via the AI-content gate) still
+      // get dictionary + Google Translate, but not the bridge — its postMessage
+      // nonce is readable by any page-world script, so we never expose it on
+      // tenants we don't control.
+      const _host = (location.hostname || '').replace(/\.$/, '').replace(/^www\./, '');
+      // localhost / 127.0.0.1 is the E2E fixture host only — the bundled
+      // manifest matches `*.skilljar.com` exclusively, so the content script
+      // never runs on localhost in a real install (no production attack surface).
+      const isTrustedHost = _host === 'anthropic.skilljar.com' || _host === 'localhost' || _host === '127.0.0.1';
+      if (isTrustedHost) {
+        window._sb.injectSidebar?.();
+        window._sb.injectFloatingButton?.();
+      }
 
       isReady = true;
 
@@ -566,9 +578,11 @@
         }
       });
 
-      translator.initialize().catch((err) => {
-        console.warn('[SkillBridge] Bridge init failed (AI features unavailable):', err);
-      });
+      if (isTrustedHost) {
+        translator.initialize().catch((err) => {
+          console.warn('[SkillBridge] Bridge init failed (AI features unavailable):', err);
+        });
+      }
 
       if (typeof YouTubeSubtitleManager !== 'undefined') {
         subtitleManager = new YouTubeSubtitleManager(currentLang);

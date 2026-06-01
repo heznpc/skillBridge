@@ -458,6 +458,10 @@
     _state.bookmarksPanelOpen = false;
     _state.recentPanelOpen = false;
     bindChatInputEvents();
+    // Example-question chips may still be in the restored chat HTML; their
+    // click handlers must be re-bound too (closeSubPanel previously only
+    // re-bound the input).
+    bindExampleQuestions();
   }
 
   // ============================================================
