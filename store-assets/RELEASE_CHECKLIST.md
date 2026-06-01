@@ -72,8 +72,7 @@ Open https://chrome.google.com/webstore/devconsole/a4725d38-81e7-41f5-bf21-5c11f
 | Summary | paste from `store-assets/STORE_LISTING.md` "Summary" section |
 | Description | paste from `store-assets/STORE_LISTING.md` "Description" section |
 | Privacy policy URL | `https://heznpc.github.io/skillBridge/privacy` |
-| Korean listing | paste from `store-assets/STORE_LISTING-ko.md` |
-| Japanese listing | paste from `store-assets/STORE_LISTING-ja.md` |
+| Locale | **English only** — single CWS listing, shown to every user regardless of browser language (localized ko/ja listings were dropped to avoid drift) |
 | Icon (128×128) | upload current `assets/icons/icon128.png` (half-sun + bridge). ⚠️ the **live listing still shows the OLD coral radial-spark icon** — the store-listing graphic is a separate asset from the package and must be re-uploaded here, or the infringing mark stays live. |
 | Promo tile + screenshots | upload current set (no change unless step 2 ran) |
 
