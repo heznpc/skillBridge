@@ -58,14 +58,13 @@ narrowed.
   Fluency series share terminology, so it reuses the existing deck rather than
   a new `aiFluencySmallBiz` section (no dict gap). `check:academy` +
   `check:dict-coverage` both pass; the 12h drift cron is re-enabled.
-- [ ] **CWS listing refresh (multilingual) — upload to dashboard.**
-  Repo-side copy is ready: `store-assets/STORE_LISTING.md` rewritten on
-  certificate-accessibility framing (v3.5.34), plus localized
-  `STORE_LISTING-ko.md` and `STORE_LISTING-ja.md`. Remaining work is
-  human-only: paste each into the CWS dashboard's locale slots, refresh
-  screenshots, write the "What's new" entry. Other 8 premium-language
-  listings (de / es / fr / pt-BR / ru / vi / zh-CN / zh-TW) deferred to
-  "Next" — Korea + Japan unblock the highest-leverage outreach first.
+- [ ] **CWS listing refresh — upload to dashboard.** Repo-side copy is ready:
+  `store-assets/STORE_LISTING.md` rewritten on a global + engineering-craft
+  framing (v3.5.39). **English-only, single listing** — localized ko/ja
+  listings were dropped (every locale falls back to EN; hand-maintaining
+  parallel copies caused course-count drift, see #158). Remaining work is
+  human-only: paste summary/description, refresh screenshots, write the
+  "What's new" entry, fix the privacy-tab items (see RELEASE_CHECKLIST 3b).
 - [ ] **Trademark resolution.** We've been contacted about the name.
   Until either safe use is confirmed or we rebrand, public outreach is on
   hold. **Blocks Ambassador application and Korea-language blog posts** —
@@ -93,13 +92,11 @@ narrowed.
 
 ## Next (this month)
 
-- [ ] **CWS listing — other 8 premium-language translations.** Currently
-  shipped: en / ko / ja. Remaining: de / es / fr / pt-BR / ru / vi /
-  zh-CN / zh-TW. Use `STORE_LISTING-ko.md` as the reference for tone
-  and structure (cert-first framing, pillar order matches POSITIONING).
-  Defer-not-cancel because Korea + Japan unblock the highest-leverage
-  outreach first; the other 8 are nice-to-have for credibility once
-  multilingual store metadata is live.
+- ~~**CWS listing — multilingual translations.**~~ Dropped (v3.5.39): the CWS
+  listing is English-only. Every locale falls back to EN, and hand-maintaining
+  parallel localized listings caused drift (#158) for marginal per-market gain.
+  The extension UI stays localized in 11 languages; only the store metadata is
+  EN-only.
 - [ ] **YouTube `_BG_YT_CLIENT_VERSION` auto-bump GH Action.** Currently
   manual every few weeks (see comment in `src/background/background.js`).
   Cron workflow that pings InnerTube and opens a PR when stale. Same
