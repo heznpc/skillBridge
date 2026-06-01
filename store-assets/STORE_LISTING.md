@@ -1,15 +1,11 @@
-# Chrome Web Store — Store Listing (v3.5.37)
+# Chrome Web Store — Store Listing (v3.5.39)
 
-Localized listings live alongside this file:
+This is the single Chrome Web Store listing (English / default locale — shown to
+every user regardless of browser language). The store copy is intentionally
+English-only to avoid listing drift; the extension UI itself is localized in 11
+premium languages.
 
-- Korean — [STORE_LISTING-ko.md](STORE_LISTING-ko.md)
-- Japanese — [STORE_LISTING-ja.md](STORE_LISTING-ja.md)
-
-Other premium languages (de / es / fr / pt-BR / ru / vi / zh-CN / zh-TW)
-are tracked in TODO.md and will follow once the Korean and Japanese
-listings are validated in the CWS dashboard.
-
-## What's New (v3.5.37) — paste into the CWS "What's new" field
+## What's New (v3.5.39) — paste into the CWS "What's new" field
 
 - 🃏 Spaced-repetition flashcards — a new "Review due" mode shows only the cards due now (cards come back at the right time).
 - 🔖 Bookmarks — save a lesson at your exact scroll position and jump back anytime.
@@ -24,13 +20,13 @@ SkillBridge — AI Course Translator with in-page AI tutor
 
 ## Summary (max 132 chars)
 
-Translate the free AI courses on anthropic.skilljar.com in 32 languages. Curated terminology + in-page AI tutor. No API key, no signup.
+Take Anthropic's free AI courses in 32 languages — accurate AI terminology, an in-page AI tutor, exam-safe. No API key, no signup.
 
 ## Description (for Store listing)
 
-The free AI courses hosted at anthropic.skilljar.com — covering prompt engineering, AI safety, the Claude API, MCP, and more — are world-class learning material, but only available in English. SkillBridge is how non-English learners actually finish a course and earn the certificate.
+Anthropic's free AI courses at anthropic.skilljar.com — prompt engineering, AI safety, the Claude API, MCP, and more — are world-class, but English-only. SkillBridge translates them into 32 languages, right inside the page, so you can actually follow along and finish.
 
-This is not a generic translator. SkillBridge ships hand-curated terminology dictionaries for 11 premium languages so "Prompt" stays "프롬프트" (Korean) instead of "신속한" (a common mistranslation), and an in-page AI tutor that knows which lesson you're on — so when you get stuck, you can ask in your own language and the answer fits the slide you're actually looking at.
+This is not generic page-translate. SkillBridge ships hand-curated AI terminology dictionaries so the words that matter stay correct — "Prompt" stays a prompt, not the literal mistranslation machine translators produce in most languages — then verifies tricky sentences with an LLM in the background. On top sits an in-page AI tutor that knows the exact lesson you're on: get stuck, ask in your own language, and the answer fits the slide in front of you.
 
 🎓 FINISH IN YOUR LANGUAGE
 Every text element on the page is translated — headings, paragraphs, lists, navigation, course cards, progress labels, video subtitles, and code comments. Interactive elements stay intact so progress tracking and quiz submission keep working.
