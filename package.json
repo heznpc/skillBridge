@@ -1,6 +1,6 @@
 {
   "name": "skillbridge",
-  "version": "3.5.35",
+  "version": "3.5.36",
   "private": true,
   "scripts": {
     "test": "jest --verbose",
