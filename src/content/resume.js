@@ -64,11 +64,37 @@
   // PERSISTENCE (chrome.storage.local)
   // ============================================================
 
+  // `chrome.runtime.id` goes undefined the moment the extension context is
+  // invalidated (dev reload, or an auto-update while this tab stays open).
+  // After that, touching `chrome.storage.*` throws "Extension context
+  // invalidated" synchronously. The old code called it unguarded, so a visit
+  // recorded right after an update surfaced an uncaught exception. Bail
+  // quietly instead — there is no live extension to persist to anyway.
+  function extensionAlive() {
+    try {
+      return !!chrome.runtime?.id;
+    } catch {
+      return false;
+    }
+  }
+
   function loadRecent(cb) {
-    chrome.storage.local.get([STORAGE_KEY], (res) => {
-      recent = Array.isArray(res[STORAGE_KEY]) ? res[STORAGE_KEY] : [];
+    if (!extensionAlive()) {
       if (cb) cb();
-    });
+      return;
+    }
+    try {
+      chrome.storage.local.get([STORAGE_KEY], (res) => {
+        if (chrome.runtime.lastError) {
+          if (cb) cb();
+          return;
+        }
+        recent = Array.isArray(res[STORAGE_KEY]) ? res[STORAGE_KEY] : [];
+        if (cb) cb();
+      });
+    } catch {
+      if (cb) cb();
+    }
   }
 
   let _saveQueue = Promise.resolve();
@@ -77,7 +103,23 @@
     data[STORAGE_KEY] = recent;
     _saveQueue = _saveQueue
       .catch(() => {})
-      .then(() => new Promise((resolve) => chrome.storage.local.set(data, resolve)));
+      .then(
+        () =>
+          new Promise((resolve) => {
+            if (!extensionAlive()) {
+              resolve();
+              return;
+            }
+            try {
+              chrome.storage.local.set(data, () => {
+                void chrome.runtime.lastError; // read to clear, ignore
+                resolve();
+              });
+            } catch {
+              resolve();
+            }
+          }),
+      );
   }
 
   // ============================================================

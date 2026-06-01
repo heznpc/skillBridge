@@ -242,6 +242,49 @@
     if (sendBtn) sendBtn.textContent = sb.t(SEND_LABELS);
     const askLabel = document.querySelector('.si18n-ask-tutor-label');
     if (askLabel) askLabel.textContent = sb.t(ASK_TUTOR_LABELS);
+
+    // The sidebar chrome is built once and was previously not re-localized, so
+    // switching language after the sidebar existed left the tools button, the
+    // tools-menu items and the example-question chips frozen at their
+    // build-time language. Re-apply them here.
+    const toolsBtn = document.getElementById('si18n-tools-btn');
+    if (toolsBtn) {
+      const toolsLabel = sb.t(MENU_LABELS.tools);
+      toolsBtn.title = toolsLabel;
+      toolsBtn.setAttribute('aria-label', toolsLabel);
+    }
+    const closeBtn = document.getElementById('si18n-close');
+    if (closeBtn) closeBtn.setAttribute('aria-label', sb.t(A11Y_LABELS.closeSidebar));
+
+    const menuItems = [
+      ['si18n-recent-btn', sb.t(RESUME_LABELS.openRecent)],
+      ['si18n-bm-btn', sb.t(BOOKMARK_LABELS.openBookmarks)],
+      ['si18n-fc-btn', sb.t(FLASHCARD_LABELS.openFlashcards)],
+      ['si18n-history-btn', sb.t(A11Y_LABELS.chatHistory)],
+      ['si18n-pdf-btn', sb.t(PDF_EXPORT_LABELS.title)],
+    ];
+    for (const [id, label] of menuItems) {
+      const span = document.getElementById(id)?.querySelector('span');
+      if (span) span.textContent = label;
+    }
+
+    // Example-question chips are removed after the first one is clicked, so
+    // only rebuild while the container is still present. Build via DOM nodes
+    // (not innerHTML); the click handler is delegated on the container, so
+    // replacing the children keeps it bound.
+    const exampleContainer = document.getElementById('si18n-example-questions');
+    if (exampleContainer) {
+      const questions = sb.t(EXAMPLE_QUESTIONS) || EXAMPLE_QUESTIONS['en'];
+      exampleContainer.replaceChildren(
+        ...questions.map((q) => {
+          const chip = document.createElement('button');
+          chip.className = 'si18n-example-q';
+          chip.dataset.question = q;
+          chip.textContent = q;
+          return chip;
+        }),
+      );
+    }
   }
 
   // ============================================================
