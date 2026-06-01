@@ -527,7 +527,10 @@
       // nonce is readable by any page-world script, so we never expose it on
       // tenants we don't control.
       const _host = (location.hostname || '').replace(/\.$/, '').replace(/^www\./, '');
-      const isTrustedHost = _host === 'anthropic.skilljar.com';
+      // localhost / 127.0.0.1 is the E2E fixture host only — the bundled
+      // manifest matches `*.skilljar.com` exclusively, so the content script
+      // never runs on localhost in a real install (no production attack surface).
+      const isTrustedHost = _host === 'anthropic.skilljar.com' || _host === 'localhost' || _host === '127.0.0.1';
       if (isTrustedHost) {
         window._sb.injectSidebar?.();
         window._sb.injectFloatingButton?.();
