@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.35] - 2026-06-01
+
+### Changed — Extension icon redesign
+- Replaced `assets/icons/icon{16,32,48,128}.png` with a new mark: a rising half-sun over the SkillBridge bridge. Solid semicircle sun (no radiating rays), distinct palette. Tightened framing so the bridge and sun read clearly at 16px.
+
 ## [3.5.34] - 2026-05-29
 
 ### Added — Italian as 11th Premium language (PR #140)
