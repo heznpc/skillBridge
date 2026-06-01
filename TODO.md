@@ -1,7 +1,7 @@
 # SkillBridge TODO
 
 > Strategy & scope: see [POSITIONING.md](POSITIONING.md).
-> Last refreshed: 2026-05-15 (v3.5.34 + positioning rewrite — certificate-first, Korea-weighted)
+> Last refreshed: 2026-06-01 (v3.5.39 — learning companion shipped; bridge/tutor scoped to anthropic.skilljar.com)
 
 Items below are concrete engineering / ops work. Anything strategic — what
 markets we enter, what we charge, what features we accept — belongs in
@@ -11,7 +11,7 @@ The "Now" section tracks the [Blockers before outreach](POSITIONING.md#blockers-
 gate — these have to clear before any Korea / Japan growth push or
 Ambassador submission is worth the user-facing effort.
 
-## Learning companion — local-only & free (active: v3.5.36)
+## Learning companion — local-only & free (shipped: v3.5.36–3.5.39)
 
 Native Academy tracks enrollment/completion but skips learner conveniences:
 no global resume, course-level bookmark only (with no list view anywhere),
@@ -23,15 +23,15 @@ narrowed.
 
 - [x] **SRS scheduling for flashcards** (v3.5.36). Per-card due dates
   (box 0→1d / 1→3d / 2→7d) + "Review due (N)" mode. `chat-flashcards.js`.
-- [ ] **Lesson / position bookmarks.** Mark a specific lesson + scroll/video
-  position; bookmark list in the sidebar. (Native bookmark is course-level
-  only and has no aggregation view.)
-- [ ] **Global resume ("이어보기").** Track last-visited lesson + exact
-  position across courses; quick-resume launcher on the catalog / sidebar.
-  (Native home is a flat catalog; Resume is per-course only.)
-- [ ] **"My learning" overlay.** Bookmarks + resume + recently-viewed in one
-  friendly panel. (Native "Registrations" is a dense admin table.)
-- [ ] **In-lesson TOC + reading-progress bar.** DOM-only, no storage.
+- [x] **Lesson / position bookmarks** (v3.5.36). Mark a specific lesson +
+  scroll position; bookmark list in the sidebar. `bookmarks.js`.
+- [x] **Global resume ("이어보기")** (v3.5.36). Last-visited lesson + exact
+  position tracked across courses (SPA-safe URL poll); Continue/Recent
+  launcher in the sidebar. `resume.js`.
+- [x] **"My learning" overlay** (v3.5.36). Bookmarks + Continue + Recent are
+  grouped under the single "Tools" menu in the tutor header. `sidebar-chat.js`.
+- [x] **In-lesson TOC + reading-progress bar** (v3.5.36). DOM-only, no storage.
+  `reading-aid.js`.
 - [ ] **Highlights / notes.** Per-lesson, local.
 - [ ] (optional) **"Report wrong term"** — local queue + export. GitHub
   auto-link deferred (learner audience ≠ GitHub users).
@@ -42,23 +42,22 @@ narrowed.
   Puter.js stays the only model; free fallback only.
 - Any server-side feature.
 
-### Release / ops (v3.5.36)
+### Release / ops (v3.5.36–3.5.39)
 - [x] Icon redesign (v3.5.35, on `main`) — distinct mark.
-- [ ] Bundle the features above into `release/3.5.36`: version bump +
-  `npm run docs` resync + PR + `npm run build:zip`.
+- [x] Bundle the features above into releases (v3.5.36–3.5.39, all on `main`):
+  version bumps + `npm run docs` resync + PRs + `npm run build:bundle:zip`.
+  `store-assets/skillbridge-bundled.zip` rebuilt at 3.5.39.
 - [ ] **Upload the built zip to the CWS dashboard** (human-only). Store is
-  stuck at 1.0.1; everything since is repo-only.
+  stuck at 1.0.1; everything since is repo-only. See
+  [store-assets/RELEASE_CHECKLIST.md](store-assets/RELEASE_CHECKLIST.md).
 
 ## Now (Ambassador / outreach blockers)
 
-- [ ] **Add `ai-fluency-for-small-businesses` dictionary section.** The
-  academy-courses-drift watcher's first run (2026-05-14) flagged this 18th
-  course as unknown to `FLASHCARD_COURSE_MAP`. Add an `aiFluencySmallBiz`
-  section to all 10 premium-language dictionaries in `src/data/` (clone
-  `aiFluencyNonprofit` as a template — the AI Fluency series share
-  terminology). Add the slug row to `FLASHCARD_COURSE_MAP`. `npm run
-  check:dict-coverage` + `npm run check:academy` must both pass.
-  **Korea-first** — Korean translation lands first, others same week.
+- [x] **Wire `ai-fluency-for-small-businesses` (18th course)** (v3.5.39).
+  Mapped in `FLASHCARD_COURSE_MAP` to the shared `aiFluency` deck — the AI
+  Fluency series share terminology, so it reuses the existing deck rather than
+  a new `aiFluencySmallBiz` section (no dict gap). `check:academy` +
+  `check:dict-coverage` both pass; the 12h drift cron is re-enabled.
 - [ ] **CWS listing refresh (multilingual) — upload to dashboard.**
   Repo-side copy is ready: `store-assets/STORE_LISTING.md` rewritten on
   certificate-accessibility framing (v3.5.34), plus localized

@@ -20,7 +20,11 @@ Everything code-side is ready and pre-built.
 - ✅ `manifest.json` v3.5.39 + `package.json` + 11 `src/data/*.json` `_meta.version` all bumped
 - ✅ `CHANGELOG.md` v3.5.34–3.5.39 sections written (PRs #135–#157 consolidated)
 - ✅ `store-assets/skillbridge-bundled.zip` (minified, **rebuilt at v3.5.39** via `npm run build:bundle:zip`) — **this is the CWS upload artifact**
-- ✅ `store-assets/skillbridge.zip` (636 KB, raw source) — alternative upload if the bundled fails review
+- ⚠️ `store-assets/skillbridge.zip` (raw source) — fallback only if the bundled
+  build is rejected in review. **Run `npm run build:zip` immediately before
+  uploading it** — this artifact is gitignored, is not rebuilt by
+  `build:bundle:zip`, and will otherwise lag behind `manifest.json` (it was
+  found stale at 3.5.38 once while the bundle was 3.5.39).
 - ✅ All 11 Premium `_locales/*/messages.json` have `extDescription` nominative form
 - ✅ Nominative-use sweep clean (`SkillBridge — AI Course Translator`, no Anthropic-as-product-modifier)
 - ✅ Privacy URL `/privacy` (lowercase) — verified 200 from Googlebot UA
