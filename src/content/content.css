@@ -1669,15 +1669,31 @@ html.si18n-dark .si18n-history-detail .si18n-chat-bubble code {
   background: rgba(255, 255, 255, 0.08) !important;
   color: #e0e0e0 !important;
 }
-/* Floating button in dark mode */
+/* Floating button in dark mode.
+   Was #1a1a1a on a near-black page (≈#0e0e0e) with a muted grey icon — the
+   launcher visually disappeared, so dark-mode users couldn't find the AI
+   Tutor entry point. Use a lightened tint of the brand accent with a white
+   icon and a soft light ring so it clearly reads against the dark canvas. */
 html.si18n-dark #skillbridge-fab {
-  background: #1a1a1a !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
-  color: #b0b0b0 !important;
+  background: #6b6f9e !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55) !important;
 }
 html.si18n-dark #skillbridge-fab:hover {
-  background: #252525 !important;
-  color: #dedede !important;
+  background: #7c80b3 !important;
+  color: #ffffff !important;
+}
+
+/* Course-author "course roadmap" widget — its `.crm` wrapper ships a fixed
+   cream background, so in dark mode it rendered as a bright card floating on
+   the near-black page. Re-skin the wrapper + heading; the step cards
+   (.crm-c1…c5) carry their own colours and white text, so leave those. */
+html.si18n-dark .crm {
+  background: #1a1a1a !important;
+}
+html.si18n-dark .crm-title {
+  color: #ededed !important;
 }
 
 /* --- Enrolled Course Page — curriculum, lessons, progress --- */
