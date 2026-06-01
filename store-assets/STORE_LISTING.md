@@ -1,4 +1,4 @@
-# Chrome Web Store — Store Listing (v3.5.34)
+# Chrome Web Store — Store Listing (v3.5.37)
 
 Localized listings live alongside this file:
 
@@ -8,6 +8,15 @@ Localized listings live alongside this file:
 Other premium languages (de / es / fr / pt-BR / ru / vi / zh-CN / zh-TW)
 are tracked in TODO.md and will follow once the Korean and Japanese
 listings are validated in the CWS dashboard.
+
+## What's New (v3.5.37) — paste into the CWS "What's new" field
+
+- 🃏 Spaced-repetition flashcards — a new "Review due" mode shows only the cards due now (cards come back at the right time).
+- 🔖 Bookmarks — save a lesson at your exact scroll position and jump back anytime.
+- ⏩ Continue / Recent — resume across courses right where you left off.
+- 📑 In-lesson outline + reading-progress bar for long lessons.
+- 🧰 Tidier tutor — history, flashcards, bookmarks, Continue, and PDF export are grouped in one "Tools" menu.
+- 🎨 New extension icon.
 
 ## Title (max 75 chars)
 
@@ -21,7 +30,7 @@ Translate the free AI courses on anthropic.skilljar.com in 32 languages. Curated
 
 The free AI courses hosted at anthropic.skilljar.com — covering prompt engineering, AI safety, the Claude API, MCP, and more — are world-class learning material, but only available in English. SkillBridge is how non-English learners actually finish a course and earn the certificate.
 
-This is not a generic translator. SkillBridge ships hand-curated terminology dictionaries for 10 premium languages so "Prompt" stays "프롬프트" (Korean) instead of "신속한" (a common mistranslation), and an in-page AI tutor that knows which lesson you're on — so when you get stuck, you can ask in your own language and the answer fits the slide you're actually looking at.
+This is not a generic translator. SkillBridge ships hand-curated terminology dictionaries for 11 premium languages so "Prompt" stays "프롬프트" (Korean) instead of "신속한" (a common mistranslation), and an in-page AI tutor that knows which lesson you're on — so when you get stuck, you can ask in your own language and the answer fits the slide you're actually looking at.
 
 🎓 FINISH IN YOUR LANGUAGE
 Every text element on the page is translated — headings, paragraphs, lists, navigation, course cards, progress labels, video subtitles, and code comments. Interactive elements stay intact so progress tracking and quiz submission keep working.
@@ -29,14 +38,20 @@ Every text element on the page is translated — headings, paragraphs, lists, na
 🤖 IN-PAGE AI TUTOR (powered by Claude Sonnet 4.6 via Puter.js)
 A sidebar chatbot that knows which course and lesson you're on. Ask questions in your language; get streaming answers grounded in the current lesson. No API key, no signup, no payment.
 
-🃏 COURSE-SPECIFIC VOCABULARY FLASHCARDS
-Flashcard decks generated from the curated dictionary for the course you're currently viewing. 3-box review system (New → Learning → Mastered) saved locally.
+🃏 SPACED-REPETITION FLASHCARDS
+Vocabulary decks generated from the curated dictionary for the course you're viewing. Spaced-repetition scheduling means a card you mark comes back at the right time (1 / 3 / 7 days), and a "Review due" mode shows only the cards due now. Saved locally.
 
 📝 SELECT-AND-ASK
 Select any text in the lesson and click "Ask Tutor" for an explanation in your language. The tutor sees the full lesson context.
 
 💬 CONVERSATION HISTORY
 Chat history is saved locally (IndexedDB), grouped by chapter. Review past Q&A across sessions without losing context.
+
+🔖 BOOKMARKS & CONTINUE
+Bookmark any lesson at the exact spot you stopped, and pick up across courses with "Continue" — SkillBridge remembers the lessons you've visited and your scroll position, so you jump straight back. All local.
+
+📑 IN-LESSON OUTLINE & READING PROGRESS
+A table of contents built from the lesson's headings (jump to any section) plus a reading-progress bar, so you always know how far you've read — handy on long lessons.
 
 🎓 EXAM MODE & CERTIFICATION SAFETY (the rule that makes this safe to use)
 Course quizzes: answer choices are NEVER translated, so your selection matches the canonical English answer. The AI Tutor switches to exam-safe mode.
