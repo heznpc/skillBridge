@@ -110,6 +110,12 @@
     SKILLJAR_SELECTORS.faqTitle,
     `${SKILLJAR_SELECTORS.faqPost} p`,
     'div.title',
+    // Course-author "course roadmap" widget (embedded HTML block). Plain divs
+    // with text that `div.title` doesn't match — without these the roadmap
+    // heading and step cards stayed English while the rest of the lesson
+    // translated.
+    '.crm-title',
+    '.crm-card-h',
     `${SKILLJAR_SELECTORS.lessonRow} div.title, ${SKILLJAR_SELECTORS.lessonRow} .lesson-wrapper div`,
     SKILLJAR_SELECTORS.focusLink,
     SKILLJAR_SELECTORS.sectionTitle,
@@ -708,27 +714,44 @@
       return;
     }
 
-    const textNodes = [];
-    for (const node of el.childNodes) {
-      if (node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0) {
-        textNodes.push(node);
-      }
+    // `newText` is the translation of the element's ENTIRE visible text,
+    // including any text that lives inside inline children (<strong>, <a>,
+    // <em>, …). We must therefore consider every descendant text node — not
+    // just the element's direct text-node children.
+    //
+    // The previous version only collected direct-child text nodes, so a block
+    // like `<p><strong>Estimated time:</strong> 15 minutes</p>` left the
+    // <strong> text untranslated and wrote the full translation into the
+    // trailing text node, rendering "Estimated time:예상 시간: 15분" — the
+    // English original and its translation duplicated side by side. Any
+    // paragraph with a bold/linked lead-in hit this.
+    //
+    // Writing the whole translation into the FIRST meaningful descendant text
+    // node and clearing every other one removes the duplication while keeping
+    // the inline elements in place (links stay clickable, the wrapping
+    // <strong> survives). Code/pre/script/style text is preserved untouched,
+    // so inline <code> fragments are never overwritten.
+    const meaningful = getTextNodes(el);
+    if (meaningful.length === 0) {
+      el.textContent = newText;
+      return;
     }
+    const target = meaningful[0];
 
-    if (textNodes.length === 1) {
-      textNodes[0].textContent = newText;
-    } else if (textNodes.length > 1) {
-      textNodes[0].textContent = newText;
-      for (let i = 1; i < textNodes.length; i++) textNodes[i].textContent = '';
-    } else {
-      const deepTextNodes = getTextNodes(el);
-      if (deepTextNodes.length > 0) {
-        deepTextNodes[0].textContent = newText;
-        for (let i = 1; i < deepTextNodes.length; i++) deepTextNodes[i].textContent = '';
-      } else {
-        el.textContent = newText;
-      }
+    // Blank ALL other descendant text nodes — not just the ones getTextNodes
+    // returns. getTextNodes skips sub-2-char nodes (punctuation), but those
+    // can still hold real original text inside a short inline tag (e.g.
+    // `<b>A</b>`) that would otherwise leak in next to the translation.
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+    const toBlank = [];
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      if (node === target) continue;
+      if (node.parentElement?.closest('code, pre, script, style')) continue;
+      toBlank.push(node);
     }
+    target.textContent = newText;
+    for (const node of toBlank) node.textContent = '';
   }
 
   // Local copy — gt-queue.js has its own (private to the GT pipeline).

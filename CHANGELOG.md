@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.38] - 2026-06-01
+
+### Fixed — translation rendering & dark-mode polish (from a live debugging pass on anthropic.skilljar.com)
+- **No more duplicated text on inline lead-ins** — a paragraph like `<strong>Estimated time:</strong> 15 minutes` rendered as "Estimated time:예상 시간: 15분" (English original + translation side by side). `safeReplaceText` now writes the translation into the first descendant text node and clears every other one (code/pre preserved, inline elements like `<strong>`/`<a>` kept so links stay clickable), so any block with a bold/linked lead-in translates cleanly.
+- **Dark-mode floating button is visible again** — the AI Tutor launcher was `#1a1a1a` on a near-black page and effectively disappeared; it now uses a lightened accent with a white icon and a soft ring.
+- **"Course roadmap" widget translates** — the embedded `.crm-title` / `.crm-card-h` blocks were not in the translatable selector set (heading and step cards stayed English); they are now covered, and the `.crm` wrapper is re-skinned in dark mode instead of staying bright cream.
+- **No uncaught exception after an extension update** — `resume.js` now guards its `chrome.storage.local` calls against an invalidated context ("Extension context invalidated"), which previously surfaced as an uncaught error when a visit was recorded right after a reload/update.
+- **Language switch re-localizes the whole sidebar** — switching language after the Tutor sidebar was built left the Tools button, the tools-menu items and the example-question chips frozen at their build-time language; `updateLocalizedLabels` now re-applies all of them.
+
 ## [3.5.37] - 2026-06-01
 
 ### Fixed — learning-companion robustness (from code review)
