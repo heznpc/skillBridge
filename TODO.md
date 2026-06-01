@@ -11,6 +11,44 @@ The "Now" section tracks the [Blockers before outreach](POSITIONING.md#blockers-
 gate — these have to clear before any Korea / Japan growth push or
 Ambassador submission is worth the user-facing effort.
 
+## Learning companion — local-only & free (active: v3.5.36)
+
+Native Academy tracks enrollment/completion but skips learner conveniences:
+no global resume, course-level bookmark only (with no list view anywhere),
+no notes, no in-lesson navigation. Everything below is client-side,
+`chrome.storage.local` only — no server, no paid API. Consequence: state is
+device-local (no cross-device sync, which would need a server). Unlike
+translation, these help **all** learners incl. English — audience isn't
+narrowed.
+
+- [x] **SRS scheduling for flashcards** (v3.5.36). Per-card due dates
+  (box 0→1d / 1→3d / 2→7d) + "Review due (N)" mode. `chat-flashcards.js`.
+- [ ] **Lesson / position bookmarks.** Mark a specific lesson + scroll/video
+  position; bookmark list in the sidebar. (Native bookmark is course-level
+  only and has no aggregation view.)
+- [ ] **Global resume ("이어보기").** Track last-visited lesson + exact
+  position across courses; quick-resume launcher on the catalog / sidebar.
+  (Native home is a flat catalog; Resume is per-course only.)
+- [ ] **"My learning" overlay.** Bookmarks + resume + recently-viewed in one
+  friendly panel. (Native "Registrations" is a dense admin table.)
+- [ ] **In-lesson TOC + reading-progress bar.** DOM-only, no storage.
+- [ ] **Highlights / notes.** Per-lesson, local.
+- [ ] (optional) **"Report wrong term"** — local queue + export. GitHub
+  auto-link deferred (learner audience ≠ GitHub users).
+
+### Excluded by the free + local-only constraint
+- Cross-device sync of bookmarks/notes (needs a server) — device-local only.
+- Multi-model picker via user API keys (breaks free / no-key). Claude via
+  Puter.js stays the only model; free fallback only.
+- Any server-side feature.
+
+### Release / ops (v3.5.36)
+- [x] Icon redesign (v3.5.35, on `main`) — distinct mark.
+- [ ] Bundle the features above into `release/3.5.36`: version bump +
+  `npm run docs` resync + PR + `npm run build:zip`.
+- [ ] **Upload the built zip to the CWS dashboard** (human-only). Store is
+  stuck at 1.0.1; everything since is repo-only.
+
 ## Now (Ambassador / outreach blockers)
 
 - [ ] **Add `ai-fluency-for-small-businesses` dictionary section.** The
