@@ -22,6 +22,7 @@
     historyPanelOpen: false,
     flashcardPanelOpen: false,
     bookmarksPanelOpen: false,
+    recentPanelOpen: false,
   };
   const _state = sb._chat.state;
 
@@ -132,6 +133,11 @@
             <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
           </svg>
         </button>
+        <button class="si18n-history-btn" id="si18n-recent-btn" title="${sb.t(RESUME_LABELS.openRecent)}" aria-label="${sb.t(RESUME_LABELS.openRecent)}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><polyline points="12 7 12 12 15 14"/>
+          </svg>
+        </button>
         <span class="si18n-header-title">SkillBridge Tutor</span>
         <button class="si18n-close" id="si18n-close" aria-label="${sb.t(A11Y_LABELS.closeSidebar)}">&times;</button>
       </div>
@@ -164,6 +170,7 @@
     document.getElementById('si18n-fc-btn')?.addEventListener('click', () => sb._chat.toggleFlashcardPanel?.());
     document.getElementById('si18n-pdf-btn')?.addEventListener('click', exportLessonPDF);
     document.getElementById('si18n-bm-btn')?.addEventListener('click', () => sb._chat.toggleBookmarksPanel?.());
+    document.getElementById('si18n-recent-btn')?.addEventListener('click', () => sb._chat.toggleRecentPanel?.());
     bindChatInputEvents();
     bindExampleQuestions();
   }
@@ -390,6 +397,7 @@
     _state.historyPanelOpen = false;
     _state.flashcardPanelOpen = false;
     _state.bookmarksPanelOpen = false;
+    _state.recentPanelOpen = false;
     bindChatInputEvents();
   }
 

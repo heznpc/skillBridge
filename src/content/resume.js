@@ -1,0 +1,214 @@
+/**
+ * SkillBridge — Continue / Recent lessons panel.
+ *
+ * Native Academy has no global "continue where you left off": the logged-in
+ * home is a flat catalog and Resume is per-course only. This auto-tracks
+ * visited lessons + scroll position across courses (local-only) and surfaces
+ * a "Continue" sidebar sub-panel to jump straight back.
+ *
+ * Local-only: `chrome.storage.local` under `sb_recent`; scroll restore via
+ * sessionStorage (`sb_resume_restore`) across the navigation. No server/sync.
+ *
+ * Loaded after sidebar-chat.js (provides `_sb._chat.state` + `closeSubPanel`),
+ * parallels chat-history / chat-flashcards / bookmarks. The sidebar "recent"
+ * button calls `_sb._chat.toggleRecentPanel`.
+ */
+
+(function () {
+  'use strict';
+
+  const sb = window._sb;
+  if (!sb) {
+    console.warn('[SkillBridge] resume: _sb not ready');
+    return;
+  }
+  if (!sb._chat || !sb._chat.state || !sb._chat.closeSubPanel) {
+    console.warn('[SkillBridge] resume: _sb._chat not ready (sidebar-chat.js missing?)');
+    return;
+  }
+  const _state = sb._chat.state;
+
+  const STORAGE_KEY = 'sb_recent';
+  const RESTORE_KEY = 'sb_resume_restore';
+  const MAX_RECENT = 20;
+  // A lesson page is a course slug followed by a numeric lesson id, e.g.
+  // /claude-101/383389. Course pages (/claude-101) and the catalog (/) are
+  // intentionally skipped so the recent list stays lesson-only.
+  const LESSON_PATH = /\/[^/]+\/\d+/;
+
+  let recent = [];
+
+  // ============================================================
+  // SCROLL RESTORE (runs once on load if we arrived from a "continue" click)
+  // ============================================================
+
+  try {
+    const raw = window.sessionStorage.getItem(RESTORE_KEY);
+    if (raw) {
+      window.sessionStorage.removeItem(RESTORE_KEY);
+      const r = JSON.parse(raw);
+      if (r && r.url === location.href && typeof r.scrollY === 'number') {
+        setTimeout(() => window.scrollTo({ top: r.scrollY, behavior: 'smooth' }), 700);
+      }
+    }
+  } catch (_e) {
+    /* sessionStorage unavailable or malformed — ignore */
+  }
+
+  // ============================================================
+  // PERSISTENCE (chrome.storage.local)
+  // ============================================================
+
+  function loadRecent(cb) {
+    chrome.storage.local.get([STORAGE_KEY], (res) => {
+      recent = Array.isArray(res[STORAGE_KEY]) ? res[STORAGE_KEY] : [];
+      if (cb) cb();
+    });
+  }
+
+  let _saveQueue = Promise.resolve();
+  function saveRecent() {
+    const data = {};
+    data[STORAGE_KEY] = recent;
+    _saveQueue = _saveQueue
+      .catch(() => {})
+      .then(() => new Promise((resolve) => chrome.storage.local.set(data, resolve)));
+  }
+
+  // ============================================================
+  // TRACKING
+  // ============================================================
+
+  function isLessonPage() {
+    return LESSON_PATH.test(location.pathname);
+  }
+
+  function recordVisit() {
+    if (!isLessonPage()) return;
+    const url = location.href;
+    const title = document.querySelector('h1')?.textContent?.trim() || document.title || url;
+    // Preserve last-left scroll position when revisiting a lesson.
+    const prev = recent.find((r) => r.url === url);
+    const scrollY = prev ? prev.scrollY : 0;
+    recent = recent.filter((r) => r.url !== url);
+    recent.unshift({ url, title, scrollY, ts: Date.now() });
+    if (recent.length > MAX_RECENT) recent.length = MAX_RECENT;
+    saveRecent();
+  }
+
+  function saveCurrentScroll() {
+    if (!isLessonPage()) return;
+    const entry = recent.find((r) => r.url === location.href);
+    if (!entry) return;
+    entry.scrollY = Math.round(window.scrollY);
+    entry.ts = Date.now();
+    saveRecent();
+  }
+
+  // Persist scroll position when the user leaves / backgrounds the page.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') saveCurrentScroll();
+  });
+  window.addEventListener('pagehide', saveCurrentScroll);
+
+  // ============================================================
+  // ACTIONS
+  // ============================================================
+
+  function openRecent(i) {
+    const r = recent[i];
+    if (!r) return;
+    try {
+      window.sessionStorage.setItem(RESTORE_KEY, JSON.stringify({ url: r.url, scrollY: r.scrollY }));
+    } catch (_e) {
+      /* ignore — navigation still works, just without scroll restore */
+    }
+    if (r.url === location.href) {
+      window.scrollTo({ top: r.scrollY, behavior: 'smooth' });
+    } else {
+      location.href = r.url;
+    }
+  }
+
+  function removeAt(i) {
+    if (i < 0 || i >= recent.length) return;
+    recent.splice(i, 1);
+    saveRecent();
+    renderList();
+  }
+
+  // ============================================================
+  // PANEL
+  // ============================================================
+
+  function toggleRecentPanel() {
+    const chatPanel = document.getElementById('si18n-panel-chat');
+    if (!chatPanel) return;
+
+    if (_state.recentPanelOpen) {
+      sb._chat.closeSubPanel();
+      return;
+    }
+    if (_state.historyPanelOpen || _state.flashcardPanelOpen || _state.bookmarksPanelOpen) {
+      sb._chat.closeSubPanel();
+    }
+
+    _state.recentPanelOpen = true;
+    _state.savedChatHTML = chatPanel.innerHTML;
+
+    chatPanel.replaceChildren();
+    chatPanel.insertAdjacentHTML(
+      'afterbegin',
+      `
+      <div class="si18n-history-header">
+        <button class="si18n-history-back" id="si18n-recent-back" aria-label="${sb.t(A11Y_LABELS.backToChat)}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <span class="si18n-history-title">${sb.t(RESUME_LABELS.title)}</span>
+      </div>
+      <div class="si18n-history-list" id="si18n-recent-list"></div>
+    `,
+    );
+
+    document.getElementById('si18n-recent-back')?.addEventListener('click', () => sb._chat.closeSubPanel());
+    loadRecent(renderList);
+  }
+
+  function rowsHTML() {
+    if (recent.length === 0) {
+      return `<div class="si18n-history-empty">${sb.t(RESUME_LABELS.empty)}</div>`;
+    }
+    return recent
+      .map(
+        (r, i) => `
+      <div class="si18n-bm-item">
+        <button class="si18n-bm-open" data-i="${i}" title="${sb.escapeHtml(r.url)}">
+          <span class="si18n-bm-title">${sb.escapeHtml(r.title)}</span>
+        </button>
+        <button class="si18n-bm-remove" data-i="${i}" aria-label="${sb.t(BOOKMARK_LABELS.remove)}">&times;</button>
+      </div>`,
+      )
+      .join('');
+  }
+
+  function renderList() {
+    const list = document.getElementById('si18n-recent-list');
+    if (!list) return;
+    list.replaceChildren();
+    list.insertAdjacentHTML('afterbegin', rowsHTML());
+    list
+      .querySelectorAll('.si18n-bm-open')
+      .forEach((el) => el.addEventListener('click', () => openRecent(Number(el.dataset.i))));
+    list
+      .querySelectorAll('.si18n-bm-remove')
+      .forEach((el) => el.addEventListener('click', () => removeAt(Number(el.dataset.i))));
+  }
+
+  // ============================================================
+  // INIT + EXPORT
+  // ============================================================
+
+  // Load existing recents, then record this visit (no-op off lesson pages).
+  loadRecent(recordVisit);
+
+  sb.toggleRecentPanel = toggleRecentPanel;
+  sb._chat.toggleRecentPanel = toggleRecentPanel;
+})();

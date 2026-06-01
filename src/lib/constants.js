@@ -1139,6 +1139,48 @@ const BOOKMARK_LABELS = {
   },
 };
 
+const RESUME_LABELS = {
+  title: {
+    en: 'Continue',
+    ko: '이어보기',
+    ja: '続きから',
+    'zh-CN': '继续学习',
+    'zh-TW': '繼續學習',
+    es: 'Continuar',
+    fr: 'Reprendre',
+    de: 'Fortsetzen',
+    'pt-BR': 'Continuar',
+    ru: 'Продолжить',
+    vi: 'Tiếp tục',
+  },
+  openRecent: {
+    en: 'Recent lessons',
+    ko: '최근 레슨',
+    ja: '最近のレッスン',
+    'zh-CN': '最近的课程',
+    'zh-TW': '最近的課程',
+    es: 'Lecciones recientes',
+    fr: 'Leçons récentes',
+    de: 'Letzte Lektionen',
+    'pt-BR': 'Lições recentes',
+    ru: 'Недавние уроки',
+    vi: 'Bài học gần đây',
+  },
+  empty: {
+    en: 'No recent lessons yet.',
+    ko: '아직 최근 레슨이 없어요.',
+    ja: '最近のレッスンはまだありません。',
+    'zh-CN': '还没有最近的课程。',
+    'zh-TW': '還沒有最近的課程。',
+    es: 'Aún no hay lecciones recientes.',
+    fr: 'Aucune leçon récente pour le moment.',
+    de: 'Noch keine kürzlichen Lektionen.',
+    'pt-BR': 'Nenhuma lição recente ainda.',
+    ru: 'Недавних уроков пока нет.',
+    vi: 'Chưa có bài học gần đây.',
+  },
+};
+
 const PDF_EXPORT_LABELS = {
   title: {
     en: 'Export lesson as PDF',
