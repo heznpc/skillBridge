@@ -2395,6 +2395,61 @@ html.si18n-dark .si18n-exam-banner {
   opacity: 0.85;
 }
 
+/* Consolidated tutor "tools" menu (history / flashcards / bookmarks / continue / PDF) */
+.si18n-tools-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  padding: 4px;
+  border-radius: 6px;
+}
+
+.si18n-tools-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.si18n-tools-menu {
+  position: absolute;
+  top: 48px;
+  left: 8px;
+  z-index: 10;
+  min-width: 190px;
+  padding: 6px;
+  background: var(--si18n-surface);
+  color: var(--si18n-text);
+  border: 1px solid var(--si18n-border);
+  border-radius: var(--si18n-radius);
+  box-shadow: var(--si18n-shadow);
+}
+
+.si18n-tools-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+
+.si18n-tools-item:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.si18n-tools-item svg {
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
 .si18n-flashcard-card {
   perspective: 800px;
   width: 100%;

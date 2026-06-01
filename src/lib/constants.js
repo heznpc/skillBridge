@@ -1197,6 +1197,22 @@ const TOC_LABELS = {
   },
 };
 
+const MENU_LABELS = {
+  tools: {
+    en: 'Tools',
+    ko: '도구',
+    ja: 'ツール',
+    'zh-CN': '工具',
+    'zh-TW': '工具',
+    es: 'Herramientas',
+    fr: 'Outils',
+    de: 'Werkzeuge',
+    'pt-BR': 'Ferramentas',
+    ru: 'Инструменты',
+    vi: 'Công cụ',
+  },
+};
+
 const PDF_EXPORT_LABELS = {
   title: {
     en: 'Export lesson as PDF',
