@@ -42,6 +42,7 @@ Break the language barrier on these free AI courses. <!-- LANG_COUNT_START -->32
 - [Features](#features)
 - [Installation](#installation)
 - [How It Works](#how-it-works)
+- [Architecture & Decisions](#architecture--engineering-decisions)
 - [Supported Languages](#supported-languages)
 - [Privacy & Security](#privacy--security)
 - [Tech Stack](#tech-stack)
@@ -203,6 +204,26 @@ Page text
 
 Translation requests are sent to Google Translate and Gemini/Claude APIs via [Puter.js](https://docs.puter.com/). SkillBridge does not operate any servers — but text is transmitted to these third-party services for translation and AI features. No account or API key is required. See our [Privacy Policy](PRIVACY_POLICY.md) for full details.
 
+## Architecture & engineering decisions
+
+The interesting part of SkillBridge is the constraints, not the feature count. A few decisions worth calling out:
+
+**Why a multi-stage pipeline, not "just call an LLM."**
+Translating a whole course page on every navigation has to be fast *and* correct, so each stage above earns its place: the curated dictionary fixes the terms generic MT gets wrong ("Prompt" → "프롬프트", never "신속한") at zero latency; the IndexedDB cache makes re-visits instant; Google Translate covers the long tail at ~200ms; and the LLM verification pass runs **in the background** on complex sentences only — so AI cost and latency never sit on the critical path. Cheapest correct stage first, most expensive last.
+
+**Reliability & safety are designed in, not bolted on.**
+- **Exam-safe by default** — on proctored certification exams the extension *disables itself entirely*, and on quizzes answer choices are never translated. A learning aid must not be mistakable for a cheating tool.
+- **Invariants over hope** — brand/tech terms ("Claude", "Cowork", "Subagent") are protected by a dictionary and restored *after* machine translation, rather than trusting the translator to leave them alone.
+- **Guarding against external drift** — the target site is a third party we don't control, so CI watchers detect when the platform adds a course or changes its DOM selectors and open an issue automatically, instead of letting users hit silent breakage.
+- **Defensive content scripts** — idempotent injection guards and URL polling, because the host app navigates via SPA (content scripts can fire more than once — or not at all — per navigation).
+
+**What I deliberately did *not* build (and why).**
+- **No servers / no backend** — everything runs client-side; translation and AI go straight to third parties via Puter.js. This is what keeps it free forever and privacy-preserving, at the deliberate cost of cross-device sync.
+- **No telemetry or analytics by default** — opt-in only, error stacks only; marketing convenience never outweighs the privacy promise.
+- **No A/B framework, no paid tier** — both imply infrastructure (traffic, segmentation, billing) that a free, server-less project shouldn't fake.
+
+The full "things we will not do" list is kept public on purpose in [POSITIONING.md](POSITIONING.md).
+
 ## Supported Languages
 
 ### Premium — Curated Dictionary + Google Translate + AI Verification
@@ -248,7 +269,7 @@ See our full [Privacy Policy](PRIVACY_POLICY.md).
 | Quality Verification | Gemini 2.0 Flash via [Puter.js](https://docs.puter.com/) |
 | Protected Terms | Auto-correction of GT brand/tech term errors per language (Cowork, Dispatch, Computer Use, Subagent, etc.) |
 | AI Tutor | Claude Sonnet 4.6 via Puter.js |
-| Curated Dictionaries | Hand-tuned JSON (570+ × 10 languages) |
+| Curated Dictionaries | Hand-tuned JSON (570+ × 11 languages) |
 | Translation Cache | IndexedDB |
 | CJK Font Rendering | Google Fonts Noto Sans |
 
