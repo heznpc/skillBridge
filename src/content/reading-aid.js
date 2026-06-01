@@ -13,6 +13,11 @@
 (function () {
   'use strict';
 
+  // Content scripts can re-fire on SPA navigation (see content.js); bail so we
+  // don't append a second progress bar / TOC toggle or start a second timer.
+  if (window.__sbReadingAid) return;
+  window.__sbReadingAid = true;
+
   // A lesson page is a course slug + numeric lesson id (e.g. /claude-101/383389).
   const LESSON_PATH = /\/[^/]+\/\d+/;
 

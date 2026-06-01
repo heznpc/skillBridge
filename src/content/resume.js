@@ -17,6 +17,11 @@
 (function () {
   'use strict';
 
+  // Content scripts can re-fire on SPA navigation (see content.js); bail so we
+  // don't double-bind listeners or double-record visits.
+  if (window.__sbResume) return;
+  window.__sbResume = true;
+
   const sb = window._sb;
   if (!sb) {
     console.warn('[SkillBridge] resume: _sb not ready');
@@ -96,20 +101,46 @@
     saveRecent();
   }
 
-  function saveCurrentScroll() {
-    if (!isLessonPage()) return;
-    const entry = recent.find((r) => r.url === location.href);
-    if (!entry) return;
-    entry.scrollY = Math.round(window.scrollY);
-    entry.ts = Date.now();
+  // Keep the current lesson's scroll position up to date (debounced persist).
+  // Keyed to location.href *at scroll time*, so SPA navigation never writes one
+  // lesson's scroll onto another.
+  let rafPending = false;
+  let saveTimer = null;
+  function onScroll() {
+    if (rafPending) return;
+    rafPending = true;
+    requestAnimationFrame(() => {
+      rafPending = false;
+      if (!isLessonPage()) return;
+      const entry = recent.find((r) => r.url === location.href);
+      if (!entry) return;
+      entry.scrollY = Math.round(window.scrollY);
+      entry.ts = Date.now();
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(saveRecent, 800);
+    });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  // Flush any pending scroll write when the user leaves / backgrounds the page.
+  function flushScroll() {
+    clearTimeout(saveTimer);
     saveRecent();
   }
-
-  // Persist scroll position when the user leaves / backgrounds the page.
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') saveCurrentScroll();
+    if (document.visibilityState === 'hidden') flushScroll();
   });
-  window.addEventListener('pagehide', saveCurrentScroll);
+  window.addEventListener('pagehide', flushScroll);
+
+  // Skilljar swaps lessons client-side (pushState, no reload) and content
+  // scripts may not re-run — poll the URL and record lessons reached via in-app
+  // navigation. (reading-aid.js polls the same way.)
+  let lastSeenUrl = location.href;
+  setInterval(() => {
+    if (location.href === lastSeenUrl) return;
+    lastSeenUrl = location.href;
+    recordVisit();
+  }, 1000);
 
   // ============================================================
   // ACTIONS
