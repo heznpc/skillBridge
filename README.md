@@ -17,7 +17,7 @@
 
 **Translate the free AI courses at [anthropic.skilljar.com](https://anthropic.skilljar.com/) into your language — instantly.**
 
-Break the language barrier on these free AI courses. <!-- LANG_COUNT_START -->32 languages<!-- LANG_COUNT_END --> supported. The extension auto-activates on `anthropic.skilljar.com` and on any other Skilljar-hosted AI course it detects; non-AI Skilljar tenants are paused automatically.
+Break the language barrier on these free AI courses. <!-- LANG_COUNT_START -->32 languages<!-- LANG_COUNT_END --> supported. The extension auto-activates on `anthropic.skilljar.com` and on any other Skilljar-hosted AI course it detects (translation only on those — the AI Tutor runs on `anthropic.skilljar.com` exclusively); non-AI Skilljar tenants are paused automatically.
 
 [Install](#installation) · [Features](#features) · [Report Bug](https://github.com/heznpc/skillbridge/issues) · [Request Feature](https://github.com/heznpc/skillbridge/issues) · [Contributing](CONTRIBUTING.md)
 
@@ -91,7 +91,7 @@ Every text element on the page is translated, with AI-specific terms handled cor
 
 ### 🤖 AI Tutor
 
-A sidebar chatbot powered by **Claude Sonnet 4.6** via [Puter.js](https://docs.puter.com/). It knows which course and lesson you're on. Ask questions in your language, get streaming answers.
+A sidebar chatbot powered by **Claude Sonnet 4.6** via [Puter.js](https://docs.puter.com/). It knows which course and lesson you're on. Ask questions in your language, get streaming answers. The tutor and the Puter page bridge it relies on run **only on `anthropic.skilljar.com`** — on other detected Skilljar AI tenants the extension still translates (curated dictionary + Google Translate), but the AI Tutor stays off (its bridge nonce is readable by page-world scripts, so we never expose it on tenants we don't control).
 
 ### 🎬 Auto-Subtitles
 
