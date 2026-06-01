@@ -86,7 +86,7 @@
   function recordVisit() {
     if (!isLessonPage()) return;
     const url = location.href;
-    const title = document.querySelector('h1')?.textContent?.trim() || document.title || url;
+    const title = (document.title || '').trim() || document.querySelector('h1')?.textContent?.trim() || url;
     // Preserve last-left scroll position when revisiting a lesson.
     const prev = recent.find((r) => r.url === url);
     const scrollY = prev ? prev.scrollY : 0;

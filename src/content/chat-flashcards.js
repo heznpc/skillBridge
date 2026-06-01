@@ -96,7 +96,9 @@
     }
     // Close history if open — they share `savedChatHTML`, so closing first
     // restores the chat panel before we save it again.
-    if (_state.historyPanelOpen) sb._chat.closeSubPanel();
+    if (_state.historyPanelOpen || _state.bookmarksPanelOpen || _state.recentPanelOpen) {
+      sb._chat.closeSubPanel();
+    }
 
     _state.flashcardPanelOpen = true;
     _state.savedChatHTML = chatPanel.innerHTML;

@@ -79,7 +79,7 @@
 
   function addCurrent() {
     const url = location.href;
-    const title = document.querySelector('h1')?.textContent?.trim() || document.title || url;
+    const title = (document.title || '').trim() || document.querySelector('h1')?.textContent?.trim() || url;
     // De-dupe by URL (re-bookmarking a lesson updates its position + bumps it
     // to the top).
     bookmarks = bookmarks.filter((b) => b.url !== url);
@@ -125,7 +125,9 @@
     }
     // Another sub-panel may be open; restore the chat first so savedChatHTML
     // captures the chat, not the other panel.
-    if (_state.historyPanelOpen || _state.flashcardPanelOpen) sb._chat.closeSubPanel();
+    if (_state.historyPanelOpen || _state.flashcardPanelOpen || _state.recentPanelOpen) {
+      sb._chat.closeSubPanel();
+    }
 
     _state.bookmarksPanelOpen = true;
     _state.savedChatHTML = chatPanel.innerHTML;
