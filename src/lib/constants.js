@@ -1181,6 +1181,22 @@ const RESUME_LABELS = {
   },
 };
 
+const TOC_LABELS = {
+  contents: {
+    en: 'Contents',
+    ko: '목차',
+    ja: '目次',
+    'zh-CN': '目录',
+    'zh-TW': '目錄',
+    es: 'Contenido',
+    fr: 'Sommaire',
+    de: 'Inhalt',
+    'pt-BR': 'Conteúdo',
+    ru: 'Содержание',
+    vi: 'Mục lục',
+  },
+};
+
 const PDF_EXPORT_LABELS = {
   title: {
     en: 'Export lesson as PDF',
