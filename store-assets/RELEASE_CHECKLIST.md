@@ -1,14 +1,15 @@
-# Release Checklist — v3.5.34 re-publication
+# Release Checklist — v3.5.39 re-publication
 
-> Refreshed 2026-05-29. The previous revision predated the v2 icon revert (PR #144),
-> the manifest version bump to 3.5.34, and the CWS-drift watcher. This is the source
-> of truth for the next dashboard upload.
+> Refreshed 2026-06-01 for v3.5.39. Since the last revision: the non-infringing
+> icon shipped (v3.5.35), the learning-companion features + Tools menu landed
+> (v3.5.36–3.5.39), and the page bridge / AI tutor was scoped to
+> anthropic.skilljar.com. This is the source of truth for the next dashboard upload.
 
-CWS listing as of 2026-05-29 (verified via `npm run check:cws-drift`):
-- Published: **v1.0.1** (uploaded 2026-03-10, 80 days ago)
-- Local: **v3.5.34**
-- Drift score: **20,533** (threshold: 5) → drift watcher will open a tracking issue
-- 11 PRs landed since the published version — none of them have reached users
+CWS listing status:
+- Published: **v1.0.1** (uploaded 2026-03-10)
+- Local: **v3.5.39**
+- Many PRs (#135–#156) have landed since the published version — none have reached users yet
+- `npm run check:cws-drift` intentionally fails until the dashboard is updated
 
 The remaining publish steps cross trust boundaries the automation can't cross
 (your hands on the dashboard, the icon design decision, the public-variable toggle).
@@ -16,36 +17,27 @@ Everything code-side is ready and pre-built.
 
 ## What's already prepared (no further action needed)
 
-- ✅ `manifest.json` v3.5.34 + `package.json` + 11 `src/data/*.json` `_meta.version` all bumped
+- ✅ `manifest.json` v3.5.39 + `package.json` + 11 `src/data/*.json` `_meta.version` all bumped
 - ✅ `CHANGELOG.md` v3.5.34 section written (PR #135, #136, #137, #138, #139, #140, #142, #145 consolidated)
-- ✅ `store-assets/skillbridge-bundled.zip` (2.9 MB, minified) — **this is the CWS upload artifact**
+- ✅ `store-assets/skillbridge-bundled.zip` (minified, **rebuilt at v3.5.39** via `npm run build:bundle:zip`) — **this is the CWS upload artifact**
 - ✅ `store-assets/skillbridge.zip` (636 KB, raw source) — alternative upload if the bundled fails review
 - ✅ All 11 Premium `_locales/*/messages.json` have `extDescription` nominative form
 - ✅ Nominative-use sweep clean (`SkillBridge — AI Course Translator`, no Anthropic-as-product-modifier)
 - ✅ Privacy URL `/privacy` (lowercase) — verified 200 from Googlebot UA
-- ✅ Tests 482/482, ESLint + Prettier clean, all check-* scripts clean
+- ✅ Tests 488/488 + 17 e2e, ESLint + Prettier clean, all check-* scripts clean (incl. `check:academy`)
 - ✅ AI-content gate wired into `manifest.json:content_scripts[].js` (PR #145 hotfix)
 - ✅ CWS-drift watcher will keep this from drifting 3 months again
 - ✅ Italian dictionary live (PR #140) — timed with Anthropic Milan office opening 2026-05-27
 
 ## What needs your hands
 
-### 1. Icon decision
+### 1. Icon — resolved
 
-Status: **unresolved**. v1 icons (the Claude-mark-adjacent design that triggered
-the trademark complaint) are currently on `main` — PR #143's v2 redesign was
-merged then reverted (PR #144) at your request because the visual asset went
-in without your approval.
-
-Options for this release:
-
-| Option | Description | Trade-off |
-|---|---|---|
-| A | Upload v3.5.34 with v1 icon as-is | Trademark complaint may recur on the same icon |
-| B | Design v3 icon yourself (Figma/Canva), drop PNGs into `assets/icons/`, then ship | Slowest. Cleanest. Full control. |
-| C | Ask me for 3 v3 SVG drafts in a separate PR (no auto-merge); pick one | Faster than B, you keep the call. |
-
-If A, skip to step 3. If B/C, finish that step first then return here.
+Status: **resolved**. The non-infringing icon shipped in v3.5.35 (a rising
+half-sun over the SkillBridge bridge — no Claude-mark / radial spark). The
+`assets/icons/icon{16,32,48,128}.png` on `main` are the current set; upload
+`assets/icons/icon128.png` in step 3. Because the icon changed, re-capture the
+screenshots in step 2.
 
 ### 2. Re-capture screenshots (only if you re-designed the icon)
 
