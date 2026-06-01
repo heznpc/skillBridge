@@ -27,7 +27,13 @@ Everything code-side is ready and pre-built.
   found stale at 3.5.38 once while the bundle was 3.5.39).
 - ✅ All 11 Premium `_locales/*/messages.json` have `extDescription` nominative form
 - ✅ Nominative-use sweep clean (`SkillBridge — AI Course Translator`, no Anthropic-as-product-modifier)
-- ✅ Privacy URL `/privacy` (lowercase) — verified 200 from Googlebot UA
+- ✅ Privacy URL is `https://heznpc.github.io/skillBridge/privacy` — **capital "B"**.
+  GitHub Pages repo-path segments are case-sensitive: the lowercase
+  `/skillbridge/privacy` returns **404** (verified 2026-06-02), which the CWS
+  dashboard rejects with "개인정보처리방침 링크에 연결할 수 없습니다 / Cannot
+  connect to the privacy policy link". `github.com` links are case-insensitive,
+  so the homepage/support URLs are fine lowercase — only the `github.io` URL
+  must be capital-B.
 - ✅ Tests 488/488 + 17 e2e, ESLint + Prettier clean, all check-* scripts clean (incl. `check:academy`)
 - ✅ AI-content gate wired into `manifest.json:content_scripts[].js` (PR #145 hotfix)
 - ✅ CWS-drift watcher will keep this from drifting 3 months again
@@ -68,8 +74,41 @@ Open https://chrome.google.com/webstore/devconsole/a4725d38-81e7-41f5-bf21-5c11f
 | Privacy policy URL | `https://heznpc.github.io/skillBridge/privacy` |
 | Korean listing | paste from `store-assets/STORE_LISTING-ko.md` |
 | Japanese listing | paste from `store-assets/STORE_LISTING-ja.md` |
-| Icon (128×128) | upload current `assets/icons/icon128.png` |
+| Icon (128×128) | upload current `assets/icons/icon128.png` (half-sun + bridge). ⚠️ the **live listing still shows the OLD coral radial-spark icon** — the store-listing graphic is a separate asset from the package and must be re-uploaded here, or the infringing mark stays live. |
 | Promo tile + screenshots | upload current set (no change unless step 2 ran) |
+
+### 3b. Privacy tab (this is what blocked the last submit)
+
+Open the "개인정보 보호 / Privacy practices" tab. The published v1.0.1 answers are
+stale against v3.5.39 — fix these:
+
+- **Privacy policy URL** — must be the **capital-B** `github.io` URL (see the
+  Privacy-URL note above). The lowercase form 404s and the dashboard refuses to
+  submit ("개인정보처리방침 링크에 연결할 수 없습니다").
+- **"Are you using remote code?" → NO.** v1.0.1 loaded Puter.js from
+  `https://js.puter.com/v2/` (remote code → MV3 detailed review / delay).
+  v3.5.39 bundles it as `src/bridge/puter.js` and loads it via
+  `chrome.runtime.getURL` (`translator.js` sets `script.dataset.puterUrl =
+  chrome.runtime.getURL('src/bridge/puter.js')`); there is no remote fallback
+  (`page-bridge.js`: `if (!_puterUrl) reject`). So no remote code is loaded.
+  **Only flip this to NO after the v3.5.39 package is uploaded** — answering NO
+  while the published build still loads remote Puter would be a false statement.
+  (Puter's runtime calls to `api.puter.com` are data transfer, not remote code —
+  disclosed under data usage below.)
+- **Data usage → check "Website content".** Page text is sent to Google
+  Translate and lesson context (≤2,000 chars) is sent via Puter to Gemini/Claude.
+  Leaving it unchecked while the description says page text is sent off-device is
+  an inconsistency reviewers reject. Local-only data (bookmarks, resume,
+  flashcards, settings — `chrome.storage.local`, never leaves the device) is
+  NOT "collected", so location / browsing history / user activity stay unchecked.
+  Keep the three confirmations checked (transfer to a service provider to perform
+  the requested feature is an approved use case, not a sale).
+- **Permission justifications** — paste from `STORE_LISTING.md` "Permission
+  Justifications". v3.5.39 declares `storage` + `alarms` + four hosts
+  (`*.skilljar.com`, `*.youtube.com`, `translate.googleapis.com`,
+  `api.github.com`). The old `activeTab` / `tabs` justification fields disappear
+  after upload (those permissions are no longer in the manifest); `alarms` and
+  `api.github.com` are new and need a line each.
 
 ### 4. Flip CWS_PUBLICATION_PAUSED off (only if currently set)
 
