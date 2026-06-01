@@ -208,7 +208,13 @@
                 }
               }
             }
-            if (sectionEntries.length > 0) return sectionEntries;
+            if (sectionEntries.length > 0) {
+              // The same term can appear in multiple sections, but box/due
+              // state is keyed by English term — collapse duplicates to one
+              // card so marking one doesn't move the others.
+              const seen = new Set();
+              return sectionEntries.filter((c) => !seen.has(c.en) && seen.add(c.en));
+            }
           }
         } catch (_ignored) {
           /* fall through to all entries */

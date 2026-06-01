@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.37] - 2026-06-01
+
+### Fixed — learning-companion robustness (from code review)
+- **No more duplicate UI on SPA navigation** — `reading-aid.js` and `resume.js` now guard against re-injection (content scripts can fire multiple times), so the reading-progress bar / TOC and the visit listeners are created only once.
+- **Continue / Recent now tracks in-app navigation** — `resume.js` polls the URL (like reading-aid) and records lessons reached via Skilljar's client-side navigation, not just full reloads; scroll position is kept per-lesson (keyed to the URL at scroll time) so resuming returns to where you left off.
+- **Flashcards de-duplicate by term** — a term appearing in multiple sections no longer produces colliding cards (box/due state is keyed by the English term).
+
 ## [3.5.36] - 2026-06-01
 
 ### Added — Learning companion (local-only, free)
