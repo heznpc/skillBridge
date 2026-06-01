@@ -18,7 +18,7 @@ Everything code-side is ready and pre-built.
 ## What's already prepared (no further action needed)
 
 - ✅ `manifest.json` v3.5.39 + `package.json` + 11 `src/data/*.json` `_meta.version` all bumped
-- ✅ `CHANGELOG.md` v3.5.34 section written (PR #135, #136, #137, #138, #139, #140, #142, #145 consolidated)
+- ✅ `CHANGELOG.md` v3.5.34–3.5.39 sections written (PRs #135–#157 consolidated)
 - ✅ `store-assets/skillbridge-bundled.zip` (minified, **rebuilt at v3.5.39** via `npm run build:bundle:zip`) — **this is the CWS upload artifact**
 - ✅ `store-assets/skillbridge.zip` (636 KB, raw source) — alternative upload if the bundled fails review
 - ✅ All 11 Premium `_locales/*/messages.json` have `extDescription` nominative form
@@ -96,7 +96,7 @@ the `cws-drift.yml` workflow via `workflow_dispatch` — it should report `OK`
 
 ## If trademark complaint comes back
 
-If Tracer / Anthropic IP enforcement files another complaint against v3.5.34:
+If Tracer / Anthropic IP enforcement files another complaint against v3.5.39:
 1. Check whether it cites the icon (then return to step 1 option B/C) or the
    listing copy (then re-sweep `store-assets/STORE_LISTING*.md` for any
    residual brand-as-product-modifier phrasing).
@@ -108,5 +108,5 @@ If Tracer / Anthropic IP enforcement files another complaint against v3.5.34:
 
 Drafts are queued in `store-assets/promotion/` (see `x-thread-italian.md` and
 `plugin-directory-submission.md`). Do not post until the CWS listing reflects
-v3.5.34 — posting before would point users at a listing missing all the work
+v3.5.39 — posting before would point users at a listing missing all the work
 the post talks about.
