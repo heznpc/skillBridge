@@ -2279,6 +2279,49 @@ html.si18n-dark .si18n-exam-banner {
   padding: 4px 12px;
 }
 
+/* Bookmarks list (lesson + scroll-position bookmarks) */
+.si18n-bm-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.si18n-bm-open {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  padding: 0;
+}
+
+.si18n-bm-title {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.si18n-bm-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.5;
+  font-size: 18px;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+.si18n-bm-remove:hover {
+  opacity: 1;
+}
+
 .si18n-flashcard-card {
   perspective: 800px;
   width: 100%;
