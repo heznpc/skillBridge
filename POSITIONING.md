@@ -27,6 +27,17 @@ REDACTED — internal only, never on any public surface.)
   listings were dropped; the in-product UI stays localized in 11 languages). If a
   localized listing is ever revisited, Japanese and Korean (each ~#6 by
   language/region) are the first candidates — not a priority now.
+- **Why Italy is #1 — a verified organic-referral mechanism** (web-verified
+  2026-06-02). Italy's top install rank traces to an external, multilingual
+  developer blog whose Anthropic-Academy article explicitly recommends SkillBridge
+  and links the store (article published 2026-03-12 = Italy's first-install date,
+  updated 2026-04-26; the site publishes in the same ~10 languages as the
+  non-English install long-tail). The replicable lever this proves: **non-English
+  Academy content → "great, but it's English-only" demand → SkillBridge as the
+  linked solution → sustained installs** (Italy shows sustained growth, not a
+  launch burst). This is the highest-confidence growth signal in the data. Source
+  person / URL is **REDACTED** — internal & outreach use only, never on a public
+  surface.
 - **Security / privacy as a first-class differentiator** (was a "safety
   footnote"). *Directional, market-pulse web sources — re-verify before citing
   publicly:* Anthropic's own Claude-in-Chrome extension reportedly shipped with a
