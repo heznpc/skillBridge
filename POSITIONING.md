@@ -8,30 +8,43 @@ not for individual feature debates.
 ## Update 2026-06-02 — first-party data + market-pulse (supersedes conflicts below)
 
 First-party CWS data (full ~12-week curve since the 2026-03-09 launch) and a
-market-pulse correct several assumptions in this doc. Where this block conflicts
-with sections below, **this block wins** until the doc is re-locked. (Raw
-install/active numbers are REDACTED — internal only, never on any public surface.)
+market-pulse inform this update. The first-party numbers below are verified
+directly against the CWS console CSV exports (2026-06-02); the external market
+claims (security environment, plugin directory) are from the market-pulse's web
+sources and are **not yet independently re-verified in-repo** — treated as
+directional, flagged inline. Where this block conflicts with sections below,
+**this block wins** until the doc is re-locked. (Raw install/active numbers are
+REDACTED — internal only, never on any public surface.)
 
-- **Global, not Korea-first.** The real install base is Europe-led (FR / IT / ES /
-  en-US / RU on top; Korean ~0), globally distributed, and accelerating (the most
-  recent month was the biggest). The "Korea-first operational definition" below is
-  **demoted to a watch-list**, not the priority weighting. Default framing is
-  global / English-default — a single English CWS listing (ko/ja store listings
-  were dropped); Korea/Japan stay localized *in-product* (11-language UI) but are
-  not the marketing spearhead.
-- **Security / privacy is now a first-class differentiator** (was a "safety
-  footnote"). The environment shifted: Anthropic's own Claude-in-Chrome extension
-  shipped with a cross-plugin hijack flaw; community-plugin malware is an
-  acknowledged risk; Snyk flagged ~13% of agent-skills packages with critical
-  issues. SkillBridge's posture — free, client-side, no API key, **no agentic
+- **Global, not Korea-first** (verified vs CSV). The base is **globally
+  distributed with no dominant market**: top install regions are Italy, the **US**,
+  France, Japan, Brazil, then Korea, Germany, Spain (top install *language* is
+  en-US). It is accelerating (the most recent month was the biggest). So the
+  "Korea-first operational definition" below is **demoted to a watch-list** — but
+  note the earlier "Europe-led / Korean ~0 / US minor" read was **wrong**: the US
+  is a **top-2 market** and Korea is mid-pack (~#6), not negligible. Default
+  framing is global / English-default — a single English CWS listing (ko/ja store
+  listings were dropped; the in-product UI stays localized in 11 languages). If a
+  localized listing is ever revisited, Japanese and Korean (each ~#6 by
+  language/region) are the first candidates — not a priority now.
+- **Security / privacy as a first-class differentiator** (was a "safety
+  footnote"). *Directional, market-pulse web sources — re-verify before citing
+  publicly:* Anthropic's own Claude-in-Chrome extension reportedly shipped with a
+  cross-plugin hijack flaw; community-plugin malware is an acknowledged risk; Snyk
+  reportedly flagged ~13% of agent-skills packages with critical issues. Either
+  way, SkillBridge's posture — free, client-side, no API key, **no agentic
   action**, exam-disable — is a real trust edge and a fit for an "Anthropic
   Verified"–type review bar. Pursue that bar with the client-side-integrity
   posture intact (no server, stays free).
-- **Distribution is multi-channel; CWS is one of N.** The US-locale trademark
-  removal (2026-05-12) proved single-channel risk, yet growth held (Europe base).
-  Track-1 first surface = the official plugin directory
-  (clau.de/plugin-directory-submission → anthropics/claude-plugins-community);
-  CWS re-publication is **parallel-not-gating**.
+- **Distribution is multi-channel; CWS is one of N** (verified vs CSV). The
+  US-locale trademark removal (2026-05-12) cut the US install rate by roughly half
+  (US is a top-2 market, so this was a **real loss**, not negligible), yet
+  **aggregate** growth kept accelerating because other markets carried it —
+  single-channel risk is proven but was not existential. Track-1 first surface =
+  the official plugin directory (clau.de/plugin-directory-submission →
+  anthropics/claude-plugins-community); CWS re-publication — **including US
+  re-listing, which has real upside given the US is top-2** — is worthwhile but
+  **parallel-not-gating**.
 - **ChatGPT / Claude surface is real, not hypothetical.** chatgpt.com referrers
   show up in first-party page-view data. Treat the cross-assistant surface as a
   first-class channel in repositioning rather than assuming Chrome is the only home.
@@ -71,9 +84,10 @@ install/active numbers are REDACTED — internal only, never on any public surfa
   the **US locale** was removed (2026-05-12, trademark — the old radial-spark icon),
   not a global delisting. The non-infringing icon (half-sun + bridge) has since
   shipped on `main`. Re-publication of v3.5.39 + US re-listing is worthwhile but
-  **parallel-not-gating** — first-party data shows growth continued (Europe-led)
-  straight through the US removal. CWS is one channel of several (see the
-  2026-06-02 update block; plugin directory is the track-1 first surface).
+  **parallel-not-gating** — first-party data shows *aggregate* growth continued
+  straight through the US removal (carried by a globally-distributed base; the US
+  itself is top-2 and lost ~half its install rate). CWS is one channel of several
+  (see the 2026-06-02 update block; plugin directory is the track-1 first surface).
 
 ## Position (one sentence)
 
