@@ -5,6 +5,47 @@ When a feature request, dependency choice, or scope expansion lands, check
 it against this file first. Update only with deliberate strategic shifts —
 not for individual feature debates.
 
+## Update 2026-06-02 — first-party data + market-pulse (supersedes conflicts below)
+
+First-party CWS data (full ~12-week curve since the 2026-03-09 launch) and a
+market-pulse correct several assumptions in this doc. Where this block conflicts
+with sections below, **this block wins** until the doc is re-locked. (Raw
+install/active numbers are REDACTED — internal only, never on any public surface.)
+
+- **Global, not Korea-first.** The real install base is Europe-led (FR / IT / ES /
+  en-US / RU on top; Korean ~0), globally distributed, and accelerating (the most
+  recent month was the biggest). The "Korea-first operational definition" below is
+  **demoted to a watch-list**, not the priority weighting. Default framing is
+  global / English-default — a single English CWS listing (ko/ja store listings
+  were dropped); Korea/Japan stay localized *in-product* (11-language UI) but are
+  not the marketing spearhead.
+- **Security / privacy is now a first-class differentiator** (was a "safety
+  footnote"). The environment shifted: Anthropic's own Claude-in-Chrome extension
+  shipped with a cross-plugin hijack flaw; community-plugin malware is an
+  acknowledged risk; Snyk flagged ~13% of agent-skills packages with critical
+  issues. SkillBridge's posture — free, client-side, no API key, **no agentic
+  action**, exam-disable — is a real trust edge and a fit for an "Anthropic
+  Verified"–type review bar. Pursue that bar with the client-side-integrity
+  posture intact (no server, stays free).
+- **Distribution is multi-channel; CWS is one of N.** The US-locale trademark
+  removal (2026-05-12) proved single-channel risk, yet growth held (Europe base).
+  Track-1 first surface = the official plugin directory
+  (clau.de/plugin-directory-submission → anthropics/claude-plugins-community);
+  CWS re-publication is **parallel-not-gating**.
+- **ChatGPT / Claude surface is real, not hypothetical.** chatgpt.com referrers
+  show up in first-party page-view data. Treat the cross-assistant surface as a
+  first-class channel in repositioning rather than assuming Chrome is the only home.
+- **Competitor landscape = different layers.** Claude-in-Chrome (1st-party,
+  agentic browser agent) and Skill Viewer / SkillKit (skill authoring & viewing)
+  are adjacent layers; there is still **no direct competitor** to "Academy in-page
+  translation + in-course tutor". Don't chase their lanes (authoring pivot,
+  any-MOOC translation, paid tiers) — those violate the non-goals below.
+- **Stale facts corrected:** the non-infringing icon (half-sun + bridge) shipped
+  on `main` (v3.5.35); the CWS removal is **US-locale-only** (not a global
+  delisting, not "registry-side stale"); the privacy-policy URL is
+  **case-sensitive, capital-B** `https://heznpc.github.io/skillBridge/privacy`
+  (the lowercase form 404s).
+
 ## Market snapshot (2026-05-15)
 
 - Anthropic Academy launched **2026-03-02**. 18 free courses (catalog watcher
@@ -26,12 +67,13 @@ not for individual feature debates.
 - The dominant fallback is Chrome's built-in translate (with Gemini Nano
   on-device since 2025). Free, ubiquitous, but no AI terminology fidelity,
   no tutor, no exam mode.
-- SkillBridge CWS: **listing removed pending icon redesign.** Re-publication
-  is the gating prerequisite for any growth push (see "Blockers before
-  outreach"). Until the new icon ships and the listing is re-approved, all
-  marketing motion is on hold by design — installs through the store are
-  not available, only the manual / developer-mode path documented in the
-  README.
+- SkillBridge CWS (corrected 2026-06-02): the listing is **live (v1.0.1)**; only
+  the **US locale** was removed (2026-05-12, trademark — the old radial-spark icon),
+  not a global delisting. The non-infringing icon (half-sun + bridge) has since
+  shipped on `main`. Re-publication of v3.5.39 + US re-listing is worthwhile but
+  **parallel-not-gating** — first-party data shows growth continued (Europe-led)
+  straight through the US removal. CWS is one channel of several (see the
+  2026-06-02 update block; plugin directory is the track-1 first surface).
 
 ## Position (one sentence)
 
@@ -179,20 +221,16 @@ or an Ambassador application is worth the user-facing effort. Pillars
 above are about *what* the product is; this section is about *what has to
 be true before we tell anyone*.
 
-1. **Re-publication after icon redesign**. The CWS listing was removed
-   pending an icon redesign. Until the new icon ships and the listing
-   is re-approved, there is no store install path and no public landing
-   surface to point new users at — every other outreach motion is
-   downstream of this. Korean and Japanese localized listings (already
-   drafted under `store-assets/`) ship in the same re-publication so the
-   Korea-first outreach feels native from day one, rather than racing a
-   generic English listing later. **As of 2026-05-25**: the supporting
-   work — listing copy nominative-use sweep, name rewrite to
-   "SkillBridge — AI Course Translator", privacy URL fix to lowercase
-   `/privacy`, audit-followup hardening — has all landed (PRs #137 +
-   #138). The remaining blocker is purely the icon design itself, plus
-   the dashboard upload steps documented in
-   `store-assets/RELEASE_CHECKLIST.md`.
+1. **Re-publication of v3.5.39 + US re-listing** (downgraded from gating —
+   see 2026-06-02 update). The listing is live (only the US locale was removed
+   2026-05-12), so there *is* a store install path for most of the world; this is
+   no longer a hard gate on all outreach. **As of 2026-06-02**: the supporting
+   work is done — non-infringing icon shipped (v3.5.35, half-sun + bridge), listing
+   copy reframed global/English-only (ko/ja listings dropped), name is "SkillBridge
+   — AI Course Translator". The privacy-policy URL must be the **capital-B**
+   `https://heznpc.github.io/skillBridge/privacy` (the lowercase form 404s and
+   blocks dashboard submission). Remaining = the dashboard upload + privacy-tab
+   steps in `store-assets/RELEASE_CHECKLIST.md` (§3, §3b).
 2. **Ambassador application**. Open program, deliberately scoped at
    community builders. SkillBridge fits the profile (free, single-
    audience, demonstrated traction). Application drafted, submission
