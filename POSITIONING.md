@@ -30,8 +30,10 @@ REDACTED — internal only, never on any public surface.)
 - **Why Italy is #1 — a verified organic-referral mechanism** (web-verified
   2026-06-02). Italy's top install rank traces to an external, multilingual
   developer blog whose Anthropic-Academy article explicitly recommends SkillBridge
-  and links the store (article published 2026-03-12 = Italy's first-install date,
-  updated 2026-04-26; the site publishes in the same ~10 languages as the
+  and links the store (article published 2026-03-12 = Italy's first-install date;
+  a living article — page metadata `dateModified` is 2026-06-02, body text reads
+  "Updated April 2026"; both confirmed by raw-HTML re-fetch, not a summary; the
+  site publishes in the same ~10 languages as the
   non-English install long-tail). The replicable lever this proves: **non-English
   Academy content → "great, but it's English-only" demand → SkillBridge as the
   linked solution → sustained installs** (Italy shows sustained growth, not a
@@ -39,21 +41,29 @@ REDACTED — internal only, never on any public surface.)
   person / URL is **REDACTED** — internal & outreach use only, never on a public
   surface.
 - **Security / privacy as a first-class differentiator** (was a "safety
-  footnote"). *Directional, market-pulse web sources — re-verify before citing
-  publicly:* Anthropic's own Claude-in-Chrome extension reportedly shipped with a
-  cross-plugin hijack flaw; community-plugin malware is an acknowledged risk; Snyk
-  reportedly flagged ~13% of agent-skills packages with critical issues. Either
-  way, SkillBridge's posture — free, client-side, no API key, **no agentic
-  action**, exam-disable — is a real trust edge and a fit for an "Anthropic
-  Verified"–type review bar. Pursue that bar with the client-side-integrity
-  posture intact (no server, stays free).
+  footnote"). *Primary-verified 2026-06-02 — sources read directly this session,
+  not inherited from a prior session:* Anthropic's own Claude-in-Chrome extension
+  shipped the **"ClaudeBleed"** flaw — any extension (even zero-permission) could
+  hijack the agent and exfiltrate Gmail / Drive / GitHub; only **partially** patched
+  in **v1.0.70 (2026-05-06)**, the origin-trust boundary stays exploitable in
+  privileged mode (LayerX, pub. 2026-05-07). Separately, Snyk's **ToxicSkills**
+  audit (scan 2026-02-05) found **13.4%** of 3,984 skills carry a critical issue
+  (36.8% any flaw, 76 confirmed malicious) — but the scope is **ClawHub + skills.sh
+  (the OpenClaw / Claude Code / Cursor skill supply chain), explicitly NOT
+  Anthropic's plugin marketplace**. Do **not** phrase this as "Anthropic 13%" — that
+  would be a factual error. Either way, SkillBridge's posture — free, client-side,
+  no API key, **no agentic action**, exam-disable — is a real trust edge and a fit
+  for an "Anthropic Verified"–type review bar. Pursue that bar with the
+  client-side-integrity posture intact (no server, stays free).
 - **Distribution is multi-channel; CWS is one of N** (verified vs CSV). The
   US-locale trademark removal (2026-05-12) cut the US install rate by roughly half
   (US is a top-2 market, so this was a **real loss**, not negligible), yet
   **aggregate** growth kept accelerating because other markets carried it —
   single-channel risk is proven but was not existential. Track-1 first surface =
-  the official plugin directory (clau.de/plugin-directory-submission →
-  anthropics/claude-plugins-community); CWS re-publication — **including US
+  the official plugin directory (submit via clau.de/plugin-directory-submission;
+  reviewed into **anthropics/claude-plugins-official** — Anthropic-curated, ~29k★,
+  repo created 2025-11-20 per gh-api, *not* the secondary-sourced "launched
+  2026-05-22"; broader pool in -community, created 2026-03-20); CWS re-publication — **including US
   re-listing, which has real upside given the US is top-2** — is worthwhile but
   **parallel-not-gating**.
 - **ChatGPT / Claude surface is real, not hypothetical.** chatgpt.com referrers
