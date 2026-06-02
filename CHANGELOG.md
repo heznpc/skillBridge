@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+- **Italian locale was ~51% Spanish.** `src/data/it.json` had been built from `es.json` and only partially re-translated — 632 of its long strings were byte-identical Spanish, and the `_protected` brand map mistranslated `Claude → Claudio`, `Anthropic → Antropico`, `Claude Code → Codice Claudio`, silently breaking runtime brand-term restoration for Italian (our #1 install market). Re-translated every contaminated string from the English source via the same Google Translate endpoint the extension uses, restored brand/technical terms to canonical English, and rebuilt `_protected` with the correct Italian wrong-forms. Italian↔Spanish overlap is now 0.1% (parity with the other 10 locales).
+
+### Added
+- **Locale cross-contamination guard** (`scripts/check-locale-contamination.js`, `npm run check:locales`, wired into CI). Fails when any locale shares >8% of its long strings with another — the bug class the key/shape checks (`check-i18n`, `check-dict-coverage`) cannot see because they only verify structure, not language. Clean locales sit at ≤2.1%; the contaminated Italian file was 51%.
+
 ## [3.5.39] - 2026-06-01
 
 ### Security

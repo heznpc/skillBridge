@@ -17,6 +17,7 @@
     "check:dicts": "node scripts/check-dicts.js",
     "check:sync": "node scripts/check-bg-sync.js",
     "check:i18n": "node scripts/check-i18n-keys.js",
+    "check:locales": "node scripts/check-locale-contamination.js",
     "check:dict-coverage": "node scripts/check-dict-coverage.js",
     "check:academy": "node scripts/check-academy-courses.js",
     "check:cws-drift": "node scripts/check-cws-drift.js",
