@@ -1,0 +1,151 @@
+{
+  "_meta": {
+    "source": "FLASHCARD_COURSE_MAP in src/lib/constants.js",
+    "courseCount": 16,
+    "languages": [
+      "de",
+      "es",
+      "fr",
+      "it",
+      "ja",
+      "ko",
+      "pt-BR",
+      "ru",
+      "vi",
+      "zh-CN",
+      "zh-TW"
+    ]
+  },
+  "courses": [
+    {
+      "block": "claude101",
+      "title": "Claude 101",
+      "slugs": [
+        "claude-101"
+      ]
+    },
+    {
+      "block": "claudeCode",
+      "title": "Claude Code in Action",
+      "slugs": [
+        "claude-code",
+        "claude-code-101",
+        "claude-code-in-action"
+      ]
+    },
+    {
+      "block": "agentSkills",
+      "title": "Introduction to Agent Skills",
+      "slugs": [
+        "agent-skills",
+        "introduction-to-agent-skills"
+      ]
+    },
+    {
+      "block": "claudeCowork",
+      "title": "Introduction to Claude Cowork",
+      "slugs": [
+        "claude-cowork",
+        "introduction-to-claude-cowork"
+      ]
+    },
+    {
+      "block": "subagents",
+      "title": "Introduction to Subagents",
+      "slugs": [
+        "introduction-to-subagents",
+        "subagents"
+      ]
+    },
+    {
+      "block": "aiFluency",
+      "title": "AI Fluency: Framework & Foundations",
+      "slugs": [
+        "ai-fluency",
+        "ai-fluency-for-small-businesses",
+        "ai-fluency-framework",
+        "ai-fluency-framework-foundations"
+      ]
+    },
+    {
+      "block": "mcpIntro",
+      "title": "Introduction to Model Context Protocol",
+      "slugs": [
+        "introduction-to-model-context-protocol",
+        "model-context-protocol"
+      ]
+    },
+    {
+      "block": "mcpAdvanced",
+      "title": "Model Context Protocol: Advanced Topics",
+      "slugs": [
+        "mcp-advanced",
+        "model-context-protocol",
+        "model-context-protocol-advanced",
+        "model-context-protocol-advanced-topics"
+      ]
+    },
+    {
+      "block": "aiCapabilities",
+      "title": "AI Capabilities and Limitations",
+      "slugs": [
+        "ai-capabilities",
+        "ai-capabilities-and-limitations"
+      ]
+    },
+    {
+      "block": "claudeAPI",
+      "title": "Building with the Claude API",
+      "slugs": [
+        "claude-api",
+        "claude-with-the-anthropic-api"
+      ]
+    },
+    {
+      "block": "aiFluencyEdu",
+      "title": "AI Fluency for Educators",
+      "slugs": [
+        "ai-fluency-for-educators"
+      ]
+    },
+    {
+      "block": "aiFluencyStudent",
+      "title": "AI Fluency for Students",
+      "slugs": [
+        "ai-fluency-for-students"
+      ]
+    },
+    {
+      "block": "aiFluencyNonprofit",
+      "title": "AI Fluency for Nonprofits",
+      "slugs": [
+        "ai-fluency-for-nonprofits"
+      ]
+    },
+    {
+      "block": "cloudDeployment",
+      "title": "Claude with Cloud Providers (Bedrock / Vertex AI)",
+      "slugs": [
+        "amazon-bedrock",
+        "claude-in-amazon-bedrock",
+        "claude-with-google-vertex",
+        "google-vertex"
+      ]
+    },
+    {
+      "block": "extendedThinking",
+      "title": "Extended Thinking with Claude",
+      "slugs": [
+        "claude-api",
+        "claude-with-the-anthropic-api"
+      ]
+    },
+    {
+      "block": "teachingAI",
+      "title": "Teaching AI Fluency",
+      "slugs": [
+        "teaching-ai-fluency"
+      ]
+    }
+  ]
+}

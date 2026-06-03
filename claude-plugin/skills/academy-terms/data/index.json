@@ -1,0 +1,33 @@
+{
+  "plugin": "skillbridge-academy-terms",
+  "generatedBy": "scripts/build-plugin.js",
+  "sourceVersion": "3.5.39",
+  "languages": [
+    "de",
+    "es",
+    "fr",
+    "it",
+    "ja",
+    "ko",
+    "pt-BR",
+    "ru",
+    "vi",
+    "zh-CN",
+    "zh-TW"
+  ],
+  "files": [
+    "courses.json",
+    "terms.de.json",
+    "terms.es.json",
+    "terms.fr.json",
+    "terms.it.json",
+    "terms.ja.json",
+    "terms.ko.json",
+    "terms.pt-BR.json",
+    "terms.ru.json",
+    "terms.vi.json",
+    "terms.zh-CN.json",
+    "terms.zh-TW.json"
+  ],
+  "note": "Derived from src/data/*.json and src/lib/constants.js — do not edit by hand. Run `npm run build:plugin`."
+}
