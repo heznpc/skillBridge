@@ -127,55 +127,16 @@ jobs:
               labels: ['cws-drift', 'release', 'priority:high'],
             });
 
-      - name: Open drift-watcher-degraded issue (idempotent)
-        # CWS serves different markup to GH-runner IPs than to interactive
-        # browsers (parser miss + 'soft-fail' status). The script still
-        # works locally — `npm run check:cws-drift` from a developer
-        # machine returns the correct result. CI surface needs its own
-        # heads-up so this degradation doesn't go silent.
+      - name: Note soft-fail (log only — do NOT open an issue)
+        # On GitHub-runner IPs the CWS listing is bot-detected and served
+        # different markup, so the script soft-fails (parser-miss) on
+        # essentially every scheduled run. That is a permanent, known
+        # condition — not new signal — so opening a "degraded watcher" issue
+        # each time was pure recurring noise (see #149). We log it to the run
+        # annotations instead. The authoritative drift check is
+        # `npm run check:cws-drift` from a developer machine, which works
+        # (it correctly reports drift/ok off-CI).
         if: steps.check.outputs.status == 'soft-fail'
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b  # v7
-        with:
-          script: |
-            const fs = require('fs');
-            let report;
-            try { report = JSON.parse(fs.readFileSync('drift-report.json', 'utf8')); }
-            catch { report = { status: 'parse-fail' }; }
-
-            const title = '⚠️ CWS drift watcher degraded (parser/network miss on CI runner)';
-            const existing = await github.rest.issues.listForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open',
-            });
-            if (existing.data.some(i => i.title === title)) {
-              core.info('A drift-watcher-degraded issue is already open; skipping.');
-              return;
-            }
-
-            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-            const body = [
-              '`scripts/check-cws-drift.js` could not extract the published version from the CWS listing when run on a GitHub Actions runner. The script soft-failed by design (network blip or page-format change), but that means the CI surface is no longer giving an authoritative drift answer.',
-              '',
-              '**Soft-fail report**:',
-              '```json',
-              JSON.stringify(report, null, 2),
-              '```',
-              '',
-              '**Likely causes** (in order of probability):',
-              '1. CWS serves different markup to GH-runner IPs than to interactive browsers (bot detection). Workaround: run `npm run check:cws-drift` from a developer machine.',
-              '2. CWS frontend layout changed — the inline-JS metadata blob no longer matches the script\'s primary regex. Fix: update the patterns in `extractPublishedVersion` / `extractLastUpdated`.',
-              '3. Transient network blip on the runner. Self-resolves on next scheduled run.',
-              '',
-              '**Action**: run `npm run check:cws-drift` locally. If it returns a real status (ok/drift), close this issue — the next scheduled CI run will re-open it only if the soft-fail persists.',
-              '',
-              `Workflow run: ${runUrl}`,
-            ].join('\n');
-
-            await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title,
-              body,
-              labels: ['cws-drift', 'tooling', 'priority:medium'],
-            });
+        run: |
+          echo "::notice title=CWS drift soft-fail::CWS bot-detects CI runner IPs, so the drift check cannot read the listing here. This is expected and not actionable on CI. Run 'npm run check:cws-drift' locally for an authoritative answer."
+          cat drift-report.json || true
