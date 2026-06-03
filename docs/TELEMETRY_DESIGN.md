@@ -5,6 +5,19 @@
 **Drafted**: 2026-05-15
 **Position**: outreach blocker #4 in [POSITIONING.md](../POSITIONING.md#blockers-before-outreach)
 
+> ⚠️ **2026-06-03 — sink decision under review; do NOT implement "Option A" as written.**
+> A design-spike re-review found the recommended sink (a maintainer-operated
+> Cloudflare Worker + D1) **contradicts the public "No servers / no backend —
+> everything runs client-side" claim** in `README.md:221`, and stands up infra
+> the maintainer would own and could be billed for — both against the project's
+> non-goals. The *what-to-measure* and *opt-in UX* sections below remain sound,
+> but the **sink is being re-decided** (candidates: a client-side Puter.kv
+> deposit the user has already consented to for the AI tutor, or a fully
+> local-only metrics + manual-export model). Whichever is chosen, the public
+> "no telemetry of any kind" lines in `PRIVACY_POLICY.md` and `README.md` must be
+> rewritten in the same change. Decision pending owner discussion — see the B-3
+> thread.
+
 ## Why this exists
 
 Two operational gaps make this a marketing prerequisite, not a nice-to-have:
