@@ -83,44 +83,37 @@ function readJson(file) {
 }
 
 /**
- * Read FLASHCARD_COURSE_MAP out of constants.js without evaluating the file.
- * constants.js is content-script source (no CommonJS export), so we slice the
- * `const FLASHCARD_COURSE_MAP = { ... };` literal out by text and JSON-parse
- * it after normalizing JS-object syntax (single quotes, unquoted keys,
- * trailing commas, comments) into strict JSON. The map is a flat literal of
- * string -> string[], so this is safe and keeps one source of truth without
- * dynamic code execution.
+ * Read FLASHCARD_COURSE_MAP out of constants.js by evaluating the real literal,
+ * the same way scripts/check-academy-courses.js (loadKnownSlugs) and
+ * scripts/check-dict-coverage.js read it. constants.js is content-script source
+ * that references SKILLJAR_SELECTORS at load, so we stub that with a Proxy and
+ * run the file in an isolated Function scope to get the actual evaluated object.
+ *
+ * This replaces an earlier regex-into-JSON normalizer that text-mangled the
+ * source (strip `//`, `'`->`"`, quote bare keys, drop trailing commas): that
+ * approach silently breaks on any value the JS literal legitimately allows but
+ * the regexes don't anticipate — an apostrophe or `//` inside a string value, a
+ * block comment, or a brace inside a comment. Evaluating the literal can't drift
+ * from what the extension actually loads.
  */
 function loadCourseMap() {
+  // Security note: `new Function` here is NOT a code-injection surface. The only
+  // interpolated value is the contents of our own first-party src/lib/constants.js,
+  // read from disk at build time — not user/network input. Anyone who could tamper
+  // with it already controls the shipped content-script source, so evaluating it
+  // adds no marginal risk. This mirrors the accepted pattern in
+  // scripts/check-academy-courses.js (loadKnownSlugs) and check-dict-coverage.js.
   const src = fs.readFileSync(CONSTANTS_PATH, 'utf8');
-  const start = src.indexOf('const FLASHCARD_COURSE_MAP = {');
-  if (start === -1) {
-    throw new Error('FLASHCARD_COURSE_MAP not found in constants.js');
+  // constants.js only references SKILLJAR_SELECTORS at module scope; its values
+  // don't affect FLASHCARD_COURSE_MAP, so a "" -> Proxy stub is sufficient.
+  const stub = 'const SKILLJAR_SELECTORS = new Proxy({}, { get: () => "" });';
+  const map = new Function(
+    `${stub}\n${src}\nreturn typeof FLASHCARD_COURSE_MAP !== 'undefined' ? FLASHCARD_COURSE_MAP : null;`,
+  )();
+  if (!map || typeof map !== 'object') {
+    throw new Error('FLASHCARD_COURSE_MAP not found (or not an object) in constants.js');
   }
-  const open = src.indexOf('{', start);
-  // Walk braces to find the matching close.
-  let depth = 0;
-  let end = -1;
-  for (let i = open; i < src.length; i++) {
-    if (src[i] === '{') depth++;
-    else if (src[i] === '}') {
-      depth--;
-      if (depth === 0) {
-        end = i;
-        break;
-      }
-    }
-  }
-  if (end === -1) throw new Error('Could not find end of FLASHCARD_COURSE_MAP literal');
-
-  const literal = src
-    .slice(open, end + 1)
-    .replace(/\/\/[^\n]*/g, '') // strip line comments
-    .replace(/'/g, '"') // single -> double quotes
-    .replace(/([{,]\s*)([A-Za-z_$][\w$]*)\s*:/g, '$1"$2":') // quote bare keys
-    .replace(/,(\s*[}\]])/g, '$1'); // drop trailing commas
-
-  return JSON.parse(literal);
+  return map;
 }
 
 /** Build the per-language flattened dictionary for one source file. */
@@ -236,6 +229,17 @@ function main() {
         stale = true;
       }
     }
+    // Orphan detection: a generated file on disk with no current source (e.g. a
+    // language dropped/renamed in src/data) is not in `outputs`, so the loop
+    // above never compares it and it would otherwise be silently rubber-stamped.
+    if (fs.existsSync(OUT_DIR)) {
+      for (const name of fs.readdirSync(OUT_DIR)) {
+        if (name.endsWith('.json') && !(name in outputs)) {
+          console.error(`  [ORPHAN] ${path.relative(ROOT, path.join(OUT_DIR, name))} — no source; run build:plugin`);
+          stale = true;
+        }
+      }
+    }
     if (stale) {
       console.error('\nPlugin data is stale. Run `npm run build:plugin` and commit the result.');
       process.exit(1);
@@ -245,6 +249,14 @@ function main() {
   }
 
   fs.mkdirSync(OUT_DIR, { recursive: true });
+  // Remove orphan generated files (e.g. a language dropped from src/data) so the
+  // output dir exactly matches the current source set.
+  for (const name of fs.readdirSync(OUT_DIR)) {
+    if (name.endsWith('.json') && !(name in outputs)) {
+      fs.rmSync(path.join(OUT_DIR, name));
+      console.log(`  removed orphan ${path.relative(ROOT, path.join(OUT_DIR, name))}`);
+    }
+  }
   for (const [name, content] of Object.entries(outputs)) {
     fs.writeFileSync(path.join(OUT_DIR, name), content);
     console.log(`  wrote ${path.relative(ROOT, path.join(OUT_DIR, name))}`);
