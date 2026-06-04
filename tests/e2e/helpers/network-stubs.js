@@ -88,14 +88,16 @@ const GT_KO = {
   'Key concepts': '핵심 개념',
   'A prompt is the input you give to Claude. Better prompts produce better responses.':
     '프롬프트는 Claude에게 주는 입력입니다. 더 나은 프롬프트는 더 나은 응답을 만듭니다.',
-  // DELIBERATELY mistranslated entry. "Anthropic" → "인류학적" and
+  // DELIBERATELY mistranslated entry. "Anthropic" → "앤스로픽" and
   // "Claude" → "클로드" are exactly the GT mistakes the
   // src/data/ko.json `_protected` map exists to fix. protected-terms.js
   // runs `restoreProtectedTerms()` on every GT batch result before it
   // reaches the DOM, so the user should see "Anthropic" + "Claude" — NOT
   // the wrong forms below. tests/e2e/protected-terms.spec.js asserts
-  // exactly that.
-  'Anthropic released Claude as a frontier model.': '인류학적은 클로드를 프런티어 모델로 출시했습니다.',
+  // exactly that. (NB: 앤스로픽 is a transliteration, not a real word — the
+  // ambiguous common-word wrong-forms like 인류학적/인류 were removed from the
+  // dictionary because they corrupt correct prose; see protected-terms.test.js.)
+  'Anthropic released Claude as a frontier model.': '앤스로픽은 클로드를 프런티어 모델로 출시했습니다.',
   // Code-comment fixture (tests/e2e/code-comments.spec.js). The Python
   // `# This is a Claude prompt example` comment gets translated by
   // translateCodeComments — the line's leading `# ` is preserved

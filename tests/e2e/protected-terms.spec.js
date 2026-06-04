@@ -3,8 +3,8 @@
  *
  * `protected-terms.js` is the post-processing pass that fixes Google
  * Translate's brand-name / technical-term mistakes ("Anthropic" →
- * "인류학적" gets restored back to "Anthropic", "Claude" → "클로드" gets
- * restored back to "Claude", etc). The 24 unit tests in
+ * "앤스로픽" gets restored back to "Anthropic", "Claude" → "클로드" gets
+ * restored back to "Claude", etc). The unit tests in
  * `tests/protected-terms.test.js` cover the function in isolation. But
  * the function only matters if `gt-queue.js` actually invokes it on every
  * GT result before the DOM write — and there's been no end-to-end proof
@@ -19,7 +19,7 @@
  * mistranslation.
  *
  * Three assertions, ranked by importance:
- *   1. Wrong forms ("인류학적", "클로드") are NOT in the DOM.
+ *   1. Wrong forms ("앤스로픽", "클로드") are NOT in the DOM.
  *   2. Correct forms ("Anthropic", "Claude") ARE in the DOM.
  *   3. The surrounding Korean translation is intact (proving we didn't
  *      accidentally revert the WHOLE GT result).
@@ -81,7 +81,7 @@ test.describe('SkillBridge — protected terms restoration', () => {
     // 1. The wrong forms the GT stub deliberately returned must NOT make it
     //    to the user. If protected-terms.js's `restoreProtectedTerms` was
     //    bypassed or no longer hooked into gt-queue.js, these would land.
-    expect.soft(pt.pProtected, '인류학적 (anthropological) wrong form').not.toContain('인류학적');
+    expect.soft(pt.pProtected, '앤스로픽 (Anthropic transliteration) wrong form').not.toContain('앤스로픽');
     expect.soft(pt.pProtected, '클로드 wrong form').not.toContain('클로드');
 
     // 2. The English brand names must appear in their correct form, restored

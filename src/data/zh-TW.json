@@ -1131,69 +1131,22 @@
     "Peer learning strategies": "同儕學習策略"
   },
   "_protected": {
-    "Claude Code": [
-      "克勞德代碼"
-    ],
-    "Claude": [
-      "克勞德",
-      "克洛德"
-    ],
-    "Anthropic": [
-      "人類學", "安特羅皮克", "人為的", "人類的", "人為", "擬人"
-    ],
-    "Anthropic Academy": [
-      "Anthropic Academy"
-    ],
-    "Enterprise": [
-      "企業"
-    ],
-    "Personal": [
-      "個人"
-    ],
-    "Plugin": [
-      "外掛程式"
-    ],
-    "Plugins": [
-      "外掛程式"
-    ],
-    "skill": [
-      "技能"
-    ],
-    "skills": [
-      "技能"
-    ],
-    "Skills": [
-      "技能"
-    ],
-    "SKILL.md": [
-      "SKILL.md"
-    ],
-    "frontmatter": [
-      "前言"
-    ],
-    "CLAUDE.md": [
-      "CLAUDE.md"
-    ],
-    "YAML": [
-      "YAML"
-    ],
-    "slash command": [
-      "斜線命令"
-    ],
-    "subagent": [
-      "子代理"
-    ],
-    "hook": [
-      "鉤子",
-      "掛鉤"
-    ],
-    "hooks": [
-      "鉤子",
-      "掛鉤"
-    ],
-    "Cowork": ["協作", "共同工作"],
-    "Dispatch": ["調度", "分派"],
-    "Computer Use": ["電腦使用", "計算機使用"]
+    "Claude Code": ["克勞德代碼"],
+    "Claude": ["克勞德", "克洛德"],
+    "Anthropic": ["安特羅皮克"],
+    "Anthropic Academy": ["Anthropic Academy"],
+    "Plugin": ["外掛程式"],
+    "Plugins": ["外掛程式"],
+    "skill": ["技能"],
+    "skills": ["技能"],
+    "Skills": ["技能"],
+    "SKILL.md": ["SKILL.md"],
+    "CLAUDE.md": ["CLAUDE.md"],
+    "YAML": ["YAML"],
+    "slash command": ["斜線命令"],
+    "subagent": ["子代理"],
+    "hook": ["鉤子", "掛鉤"],
+    "hooks": ["鉤子", "掛鉤"]
   },
   "exam_ui": {
     "Pass": "通過",

@@ -1131,69 +1131,22 @@
     "Peer learning strategies": "同伴学习策略"
   },
   "_protected": {
-    "Claude Code": [
-      "克洛德代码"
-    ],
-    "Claude": [
-      "克洛德",
-      "克劳德"
-    ],
-    "Anthropic": [
-      "人类学", "安特罗皮克", "人为的", "人类的", "人为", "拟人"
-    ],
-    "Anthropic Academy": [
-      "Anthropic Academy"
-    ],
-    "Enterprise": [
-      "企业"
-    ],
-    "Personal": [
-      "个人"
-    ],
-    "Plugin": [
-      "插件"
-    ],
-    "Plugins": [
-      "插件"
-    ],
-    "skill": [
-      "技能"
-    ],
-    "skills": [
-      "技能"
-    ],
-    "Skills": [
-      "技能"
-    ],
-    "SKILL.md": [
-      "SKILL.md"
-    ],
-    "frontmatter": [
-      "前言"
-    ],
-    "CLAUDE.md": [
-      "CLAUDE.md"
-    ],
-    "YAML": [
-      "YAML"
-    ],
-    "slash command": [
-      "斜杠命令"
-    ],
-    "subagent": [
-      "子代理"
-    ],
-    "hook": [
-      "钩子",
-      "挂钩"
-    ],
-    "hooks": [
-      "钩子",
-      "挂钩"
-    ],
-    "Cowork": ["协作", "共同工作"],
-    "Dispatch": ["调度", "分派"],
-    "Computer Use": ["电脑使用", "计算机使用"]
+    "Claude Code": ["克洛德代码"],
+    "Claude": ["克洛德", "克劳德"],
+    "Anthropic": ["安特罗皮克"],
+    "Anthropic Academy": ["Anthropic Academy"],
+    "Plugin": ["插件"],
+    "Plugins": ["插件"],
+    "skill": ["技能"],
+    "skills": ["技能"],
+    "Skills": ["技能"],
+    "SKILL.md": ["SKILL.md"],
+    "CLAUDE.md": ["CLAUDE.md"],
+    "YAML": ["YAML"],
+    "slash command": ["斜杠命令"],
+    "subagent": ["子代理"],
+    "hook": ["钩子", "挂钩"],
+    "hooks": ["钩子", "挂钩"]
   },
   "exam_ui": {
     "Pass": "通过",

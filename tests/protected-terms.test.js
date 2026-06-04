@@ -191,3 +191,56 @@ describe('Protected Terms System (real production code)', () => {
     });
   });
 });
+
+// Regression guard for the corruption class documented in protected-terms.js:
+// restoreProtectedTerms does an unanchored replaceAll with no CJK word boundary,
+// so any _protected wrong-form that is itself a common standalone word silently
+// corrupts correct prose (e.g. 클라우드 "Cloud" -> Claude, 인류 "humanity" ->
+// Anthropic, 大型企业 "large enterprise" -> 大型Enterprise). This runs against the
+// REAL shipped src/data/*.json (not a fixture), so it fails if a dangerous
+// wrong-form is ever (re-)introduced into a CJK dictionary's _protected section.
+describe('no corruption of correct CJK prose (real shipped dictionaries)', () => {
+  // Each sentence is ordinary target-language prose containing a word that used
+  // to be a dangerous wrong-form. After the fix it must pass through untouched.
+  const cases = {
+    ko: [
+      '클라우드 컴퓨팅은 확장 가능합니다', // Cloud (was -> Claude)
+      '인류의 미래를 생각합니다', // humanity (was -> Anthropic)
+      '대기업 환경에서 일합니다', // large enterprise (was -> 대Enterprise)
+      '기술자가 필요합니다', // technician (was -> skill자)
+      '우리는 협업합니다', // collaborate (was -> Cowork)
+      '문서의 앞부분을 읽으세요', // front part (was -> frontmatter)
+      '개인적인 의견입니다', // personal opinion (was -> Personal)
+    ],
+    ja: [
+      '人類の未来を考える', // humanity (was -> Anthropic)
+      '個人的な意見です', // personal (was -> Personal)
+      '共同作業のスペース', // joint work (was -> Cowork)
+    ],
+    'zh-CN': [
+      '人类的未来', // humanity (was -> Anthropic)
+      '大型企业环境', // large enterprise (was -> Enterprise)
+      '任务调度系统', // task scheduling (was -> Dispatch)
+      '个人观点', // personal view (was -> Personal)
+      '团队协作', // team collaboration (was -> Cowork)
+    ],
+    'zh-TW': [
+      '人類的未來', // humanity (was -> Anthropic)
+      '大型企業環境', // large enterprise (was -> Enterprise)
+      '任務調度系統', // task scheduling (was -> Dispatch)
+      '個人觀點', // personal view (was -> Personal)
+      '團隊協作', // team collaboration (was -> Cowork)
+    ],
+  };
+
+  for (const [lang, sentences] of Object.entries(cases)) {
+    test(`${lang}: correct prose is not corrupted by protected-term restoration`, () => {
+      const dict = require(`../src/data/${lang}.json`);
+      resetProtectedTerms();
+      buildProtectedTermsMap(lang, fakeTranslator(dict._protected));
+      for (const sentence of sentences) {
+        expect(restoreProtectedTerms(sentence)).toBe(sentence);
+      }
+    });
+  }
+});
