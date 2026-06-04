@@ -550,14 +550,23 @@ RULES:
         return;
       }
 
-      // Gemini provided an improved translation
-      // Sanity check: result should be similar length (not an explanation)
+      // Anything past the OK gate is supposed to be an IMPROVED translation.
+      // Verify only runs on source text >= GEMINI_MIN_TEXT (80 chars), so a
+      // result that is empty or far SHORTER than the source is not a
+      // translation — it's a stray affirmation Gemini didn't phrase as a bare
+      // "OK" ("Okay", "OK입니다", "“OK”", "OK, looks good"), an apology, or
+      // whitespace. Rendering it would replace the correct Google translation
+      // with garbage (and an empty result blanks the element). The upper bound +
+      // prompt-echo markers catch the opposite failure (a returned explanation).
+      // In all of these, keep the Google translation rather than rendering.
+      const tooShort = trimResult.length < Math.max(15, original.length * 0.25);
       if (
+        !trimResult ||
+        tooShort ||
         trimResult.length > original.length * 5 ||
         trimResult.includes('ORIGINAL') ||
         trimResult.includes('GOOGLE TRANSLATE')
       ) {
-        // Likely returned the prompt format, ignore
         await this._cacheTranslation(original, googleTranslation, targetLang);
         this._notifyUpdate(original, googleTranslation, targetLang, false);
         return;
