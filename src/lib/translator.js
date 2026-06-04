@@ -536,8 +536,15 @@ RULES:
 
       const trimResult = result.trim();
 
-      // If Gemini says "OK", the Google translation is good — cache it
-      if (trimResult === 'OK' || trimResult === 'ok' || trimResult === '"OK"') {
+      // If Gemini says "OK", the Google translation is good — cache it.
+      // The model is asked to reply EXACTLY "OK", but LLMs routinely add
+      // trailing punctuation or quotes ("OK.", "OK!", '"OK"'). Normalize
+      // surrounding quotes/whitespace + trailing .!  and case before matching,
+      // so an affirmation isn't mistaken for an "improved translation" and
+      // cached/rendered verbatim — which would replace a correct translation
+      // with the literal string "OK.".
+      const okCheck = trimResult.replace(/^["'\s]+|["'\s.!]+$/g, '').toLowerCase();
+      if (okCheck === 'ok') {
         await this._cacheTranslation(original, googleTranslation, targetLang);
         this._notifyUpdate(original, googleTranslation, targetLang, false);
         return;

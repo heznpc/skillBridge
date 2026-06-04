@@ -299,3 +299,35 @@ describe('chatStream — bridge-not-ready propagates as a rejection', () => {
     await expect(t.chatStream('hello', 'ko', '', () => {}, {})).rejects.toThrow('Bridge not ready');
   });
 });
+
+describe('_verifySingle — Gemini "OK" affirmation is not cached as a translation', () => {
+  function harness(geminiReply) {
+    const t = new SkilljarTranslator();
+    const cached = [];
+    t._sendRequest = async () => geminiReply;
+    t._cacheTranslation = async (original, translation, lang) => {
+      cached.push({ original, translation, lang });
+    };
+    t._notifyUpdate = () => {};
+    return { t, cached };
+  }
+
+  // Gemini is asked to reply EXACTLY "OK" but routinely adds punctuation/quotes.
+  // Each of these must be read as "Google translation is good" → the GOOGLE
+  // translation gets cached, NOT the affirmation string itself.
+  for (const reply of ['OK', 'ok', '"OK"', 'OK.', 'OK!', ' OK ', 'ok.']) {
+    test(`reply ${JSON.stringify(reply)} caches the Google translation, not the reply`, async () => {
+      const { t, cached } = harness(reply);
+      await t._verifySingle({ original: 'Hello', googleTranslation: '안녕하세요', targetLang: 'ko' });
+      expect(cached).toHaveLength(1);
+      expect(cached[0].translation).toBe('안녕하세요');
+    });
+  }
+
+  test('a genuinely improved translation is still cached as the improvement', async () => {
+    const { t, cached } = harness('안녕하십니까');
+    await t._verifySingle({ original: 'Hello', googleTranslation: '안녕하세요', targetLang: 'ko' });
+    expect(cached).toHaveLength(1);
+    expect(cached[0].translation).toBe('안녕하십니까');
+  });
+});
