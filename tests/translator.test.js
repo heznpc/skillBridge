@@ -300,34 +300,69 @@ describe('chatStream — bridge-not-ready propagates as a rejection', () => {
   });
 });
 
-describe('_verifySingle — Gemini "OK" affirmation is not cached as a translation', () => {
+describe('_verifySingle — a non-translation Gemini reply never replaces the GT result', () => {
+  // Verify only runs on source text >= GEMINI_MIN_TEXT (80 chars), so the tests
+  // use a realistic long source — that's the regime the length guard targets and
+  // the regime production actually hits. (The earlier version of this block used
+  // a 5-char 'Hello' source, which is unreachable in production and let short
+  // affirmations look fine.)
+  const ORIGINAL = 'Anthropic released the Claude model family to help developers build safe and reliable AI agents.';
+  const GT =
+    '앤트로픽은 개발자가 안전하고 신뢰할 수 있는 AI 에이전트를 구축하도록 돕기 위해 Claude 모델 제품군을 출시했습니다.';
+
   function harness(geminiReply) {
     const t = new SkilljarTranslator();
     const cached = [];
+    const notified = [];
     t._sendRequest = async () => geminiReply;
     t._cacheTranslation = async (original, translation, lang) => {
       cached.push({ original, translation, lang });
     };
-    t._notifyUpdate = () => {};
-    return { t, cached };
+    t._notifyUpdate = (original, translation, lang, wasImproved) => {
+      notified.push({ original, translation, lang, wasImproved });
+    };
+    return { t, cached, notified };
   }
 
-  // Gemini is asked to reply EXACTLY "OK" but routinely adds punctuation/quotes.
-  // Each of these must be read as "Google translation is good" → the GOOGLE
-  // translation gets cached, NOT the affirmation string itself.
-  for (const reply of ['OK', 'ok', '"OK"', 'OK.', 'OK!', ' OK ', 'ok.']) {
-    test(`reply ${JSON.stringify(reply)} caches the Google translation, not the reply`, async () => {
-      const { t, cached } = harness(reply);
-      await t._verifySingle({ original: 'Hello', googleTranslation: '안녕하세요', targetLang: 'ko' });
+  // Replies that mean "the Google translation is good" (bare OK + variants) AND
+  // replies that are stray affirmations / junk Gemini emits instead of a clean
+  // OK or a real translation. NONE of these may be cached or rendered as the
+  // translation — the user must keep the correct Google output. The second group
+  // is exactly what shipped broken before the length guard.
+  const keepGtReplies = [
+    'OK',
+    'ok.',
+    '"OK"', // clean OK forms (handled by the OK normalizer)
+    'OK?',
+    'OK,',
+    'Okay',
+    'OK입니다',
+    '“OK”', // curly-quoted
+    '- OK',
+    'OK, looks good',
+    '   ', // whitespace-only must NOT blank the element
+  ];
+  for (const reply of keepGtReplies) {
+    test(`reply ${JSON.stringify(reply)} keeps the Google translation (not cached/rendered as the reply)`, async () => {
+      const { t, cached, notified } = harness(reply);
+      await t._verifySingle({ original: ORIGINAL, googleTranslation: GT, targetLang: 'ko' });
+      // The GT result is what gets cached...
       expect(cached).toHaveLength(1);
-      expect(cached[0].translation).toBe('안녕하세요');
+      expect(cached[0].translation).toBe(GT);
+      // ...and the render notification is wasImproved=false (so content.js does
+      // NOT call safeReplaceText — the reply string never reaches the DOM).
+      expect(notified).toHaveLength(1);
+      expect(notified[0].translation).toBe(GT);
+      expect(notified[0].wasImproved).toBe(false);
     });
   }
 
-  test('a genuinely improved translation is still cached as the improvement', async () => {
-    const { t, cached } = harness('안녕하십니까');
-    await t._verifySingle({ original: 'Hello', googleTranslation: '안녕하세요', targetLang: 'ko' });
-    expect(cached).toHaveLength(1);
-    expect(cached[0].translation).toBe('안녕하십니까');
+  test('a genuine, full-length improved translation IS cached and rendered as the improvement', async () => {
+    const improved =
+      '앤트로픽은 개발자들이 안전하고 신뢰할 수 있는 AI 에이전트를 만들 수 있도록 돕고자 Claude 모델 제품군을 공개했습니다.';
+    const { t, cached, notified } = harness(improved);
+    await t._verifySingle({ original: ORIGINAL, googleTranslation: GT, targetLang: 'ko' });
+    expect(cached[0].translation).toBe(improved);
+    expect(notified[0].wasImproved).toBe(true);
   });
 });
