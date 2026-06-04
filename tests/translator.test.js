@@ -287,3 +287,15 @@ describe('Language JSON files', () => {
     });
   });
 });
+
+describe('chatStream — bridge-not-ready propagates as a rejection', () => {
+  test('rejects (does not silently resolve to a string) when the bridge is not ready', async () => {
+    const t = new SkilljarTranslator();
+    t.isReady = false;
+    // The sole caller (sidebar-chat) discards chatStream's return value and
+    // relies on a thrown error to render the error bubble + retry button. If
+    // this resolves to a string instead, the "thinking…" spinner is stranded
+    // forever with no error and no retry.
+    await expect(t.chatStream('hello', 'ko', '', () => {}, {})).rejects.toThrow('Bridge not ready');
+  });
+});
