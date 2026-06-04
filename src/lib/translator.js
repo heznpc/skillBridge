@@ -735,11 +735,15 @@ User: ${userMessage}`;
         );
       });
     } catch (err) {
+      // Synchronous setup failures (most importantly `!this.isReady` — the Puter
+      // bridge hasn't finished its handshake) must PROPAGATE, not resolve to a
+      // string. The sole caller (sidebar-chat) discards chatStream's return value
+      // and relies on a thrown error to render the error bubble + retry button;
+      // returning a string here left the "thinking…" spinner stranded forever
+      // with no error and no retry. (Promise-path failures — timeout, abort,
+      // success:false — already reject and are unaffected.)
       console.error('[SkillBridge] Chat stream error:', err);
-      return (
-        (typeof CHAT_ERROR_LABELS !== 'undefined' && CHAT_ERROR_LABELS[targetLang]) ||
-        'Sorry, I could not generate a response. Please try again.'
-      );
+      throw err;
     }
   }
 
