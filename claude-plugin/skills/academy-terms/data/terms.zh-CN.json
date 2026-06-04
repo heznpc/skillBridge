@@ -16,21 +16,10 @@
       "克劳德"
     ],
     "Anthropic": [
-      "人类学",
-      "安特罗皮克",
-      "人为的",
-      "人类的",
-      "人为",
-      "拟人"
+      "安特罗皮克"
     ],
     "Anthropic Academy": [
       "Anthropic Academy"
-    ],
-    "Enterprise": [
-      "企业"
-    ],
-    "Personal": [
-      "个人"
     ],
     "Plugin": [
       "插件"
@@ -49,9 +38,6 @@
     ],
     "SKILL.md": [
       "SKILL.md"
-    ],
-    "frontmatter": [
-      "前言"
     ],
     "CLAUDE.md": [
       "CLAUDE.md"
@@ -72,18 +58,6 @@
     "hooks": [
       "钩子",
       "挂钩"
-    ],
-    "Cowork": [
-      "协作",
-      "共同工作"
-    ],
-    "Dispatch": [
-      "调度",
-      "分派"
-    ],
-    "Computer Use": [
-      "电脑使用",
-      "计算机使用"
     ]
   },
   "terms": {

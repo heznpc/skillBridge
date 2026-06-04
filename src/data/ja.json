@@ -1131,66 +1131,27 @@
     "Peer learning strategies": "ピアラーニング戦略"
   },
   "_protected": {
-    "Claude Code": [
-      "クロードコード"
-    ],
-    "Claude": [
-      "クロード"
-    ],
-    "Anthropic": [
-      "アンスロピック", "人間", "人間的", "人為的", "人類の"
-    ],
-    "Anthropic Academy": [
-      "Anthropic Academy"
-    ],
-    "Enterprise": [
-      "エンタープライズ"
-    ],
-    "Personal": [
-      "個人"
-    ],
-    "Plugin": [
-      "プラグイン"
-    ],
-    "Plugins": [
-      "プラグイン"
-    ],
-    "skill": [
-      "スキル"
-    ],
-    "skills": [
-      "スキル"
-    ],
-    "Skills": [
-      "スキル"
-    ],
-    "SKILL.md": [
-      "SKILL.md"
-    ],
-    "frontmatter": [
-      "フロントマター"
-    ],
-    "CLAUDE.md": [
-      "CLAUDE.md"
-    ],
-    "YAML": [
-      "YAML"
-    ],
-    "slash command": [
-      "スラッシュコマンド"
-    ],
-    "subagent": [
-      "サブエージェント"
-    ],
-    "hook": [
-      "フック"
-    ],
-    "hooks": [
-      "フック"
-    ],
-    "Cowork": ["コワーク", "共同作業"],
-    "Dispatch": ["ディスパッチ", "派遣"],
-    "Computer Use": ["コンピュータ使用", "コンピュータユース"]
+    "Claude Code": ["クロードコード"],
+    "Claude": ["クロード"],
+    "Anthropic": ["アンスロピック"],
+    "Anthropic Academy": ["Anthropic Academy"],
+    "Enterprise": ["エンタープライズ"],
+    "Plugin": ["プラグイン"],
+    "Plugins": ["プラグイン"],
+    "skill": ["スキル"],
+    "skills": ["スキル"],
+    "Skills": ["スキル"],
+    "SKILL.md": ["SKILL.md"],
+    "frontmatter": ["フロントマター"],
+    "CLAUDE.md": ["CLAUDE.md"],
+    "YAML": ["YAML"],
+    "slash command": ["スラッシュコマンド"],
+    "subagent": ["サブエージェント"],
+    "hook": ["フック"],
+    "hooks": ["フック"],
+    "Cowork": ["コワーク"],
+    "Dispatch": ["ディスパッチ"],
+    "Computer Use": ["コンピュータユース"]
   },
   "exam_ui": {
     "Pass": "合格",
