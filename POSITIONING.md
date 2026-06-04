@@ -60,12 +60,16 @@ REDACTED — internal only, never on any public surface.)
   (US is a top-2 market, so this was a **real loss**, not negligible), yet
   **aggregate** growth kept accelerating because other markets carried it —
   single-channel risk is proven but was not existential. Track-1 first surface =
-  the official plugin directory (submit via clau.de/plugin-directory-submission;
-  reviewed into **anthropics/claude-plugins-official** — Anthropic-curated, ~29k★,
-  repo created 2025-11-20 per gh-api, *not* the secondary-sourced "launched
-  2026-05-22"; broader pool in -community, created 2026-03-20); CWS re-publication — **including US
-  re-listing, which has real upside given the US is top-2** — is worthwhile but
-  **parallel-not-gating**.
+  the plugin directory, but the submittable artifact is the **companion
+  `skillbridge-academy-terms` Claude Code Skill** (built 2026-06-03, in
+  `claude-plugin/`), NOT the Chrome extension — an extension can't be a directory
+  plugin (different runtime, confirmed by the 2026-06-03 spike). Submit via
+  clau.de/plugin-directory-submission → it lands in **`anthropics/claude-plugins-community`**
+  (the submittable pool, created 2026-03-20). NOTE: **`claude-plugins-official`**
+  (~29k★, created 2025-11-20) is Anthropic-curated with **no application process —
+  NOT a submittable target**; treat any -official listing as unforecastable upside.
+  CWS re-publication — **including US re-listing, which has real upside given the US
+  is top-2** — is worthwhile but **parallel-not-gating**.
 - **ChatGPT / Claude surface is real, not hypothetical.** chatgpt.com referrers
   show up in first-party page-view data. Treat the cross-assistant surface as a
   first-class channel in repositioning rather than assuming Chrome is the only home.
