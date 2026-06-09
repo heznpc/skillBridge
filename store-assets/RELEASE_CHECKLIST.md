@@ -148,7 +148,6 @@ If Tracer / Anthropic IP enforcement files another complaint against v3.5.39:
 
 ## SNS launch (separate session, after listing is live)
 
-Drafts are queued in `store-assets/promotion/` (see `x-thread-italian.md` and
-`plugin-directory-submission.md`). Do not post until the CWS listing reflects
-v3.5.39 — posting before would point users at a listing missing all the work
-the post talks about.
+SNS launch drafts are kept outside this repo (internal). Do not post until the
+CWS listing reflects v3.5.39 — posting before would point users at a listing
+missing all the work the post talks about.

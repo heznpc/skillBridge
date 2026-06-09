@@ -7,10 +7,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Fixed
-- **Italian locale was ~51% Spanish.** `src/data/it.json` had been built from `es.json` and only partially re-translated — 632 of its long strings were byte-identical Spanish, and the `_protected` brand map mistranslated `Claude → Claudio`, `Anthropic → Antropico`, `Claude Code → Codice Claudio`, silently breaking runtime brand-term restoration for Italian (our #1 install market). Re-translated every contaminated string from the English source via the same Google Translate endpoint the extension uses, restored brand/technical terms to canonical English, and rebuilt `_protected` with the correct Italian wrong-forms. Italian↔Spanish overlap is now 0.1% (parity with the other 10 locales).
+- **Italian locale was ~51% Spanish.** `src/data/it.json` had been built from `es.json` and only partially re-translated — 632 of its long strings were byte-identical Spanish, and the `_protected` brand map mistranslated `Claude → Claudio`, `Anthropic → Antropico`, `Claude Code → Codice Claudio`, silently breaking runtime brand-term restoration for Italian (our #1 install market). Re-translated every contaminated string from the English source via the same Google Translate endpoint the extension uses, restored brand/technical terms to canonical English, and rebuilt `_protected` with the correct Italian wrong-forms. Italian↔Spanish overlap is now 0.1% (parity with the other 10 locales). (#166, #167)
+- **Protected-term restoration corrupted correct CJK prose.** Across ko/ja/zh-CN/zh-TW, common words were mapped as brand "wrong-forms" (클라우드→Claude, 인류→Anthropic, 企业→Enterprise, …), so `restoreProtectedTerms` rewrote correct translations into wrong English (e.g. "클라우드 컴퓨팅" → "Claude 컴퓨팅"). Removed the ambiguous common-word wrong-forms; intended brand restoration (클로드→Claude, etc.) still works. (#172)
+- **AI tutor spinner could hang forever** when the Puter bridge wasn't ready — `chatStream` resolved to a discarded error string instead of throwing, so the caller never rendered the error+retry. It now rejects on bridge-not-ready. (#174)
+- **Gemini verify could render a non-translation as the translation.** A short affirmation ("Okay", "OK입니다", "OK?") or whitespace reply fell through and was cached/shown in place of the correct translation (an empty reply blanked the element). Added a length guard so anything far shorter than the source keeps the Google translation. (#175, #176)
 
 ### Added
-- **Locale cross-contamination guard** (`scripts/check-locale-contamination.js`, `npm run check:locales`, wired into CI). Fails when any locale shares >8% of its long strings with another — the bug class the key/shape checks (`check-i18n`, `check-dict-coverage`) cannot see because they only verify structure, not language. Clean locales sit at ≤2.1%; the contaminated Italian file was 51%.
+- **Locale cross-contamination guard** (`scripts/check-locale-contamination.js`, `npm run check:locales`, wired into CI). Fails when any locale shares >8% of its long strings with another — the bug class the key/shape checks (`check-i18n`, `check-dict-coverage`) cannot see because they only verify structure, not language. Clean locales sit at ≤2.1%; the contaminated Italian file was 51%. (#166)
+- **`skillbridge-academy-terms` companion Claude Code plugin** (`claude-plugin/`) re-exposing the curated Academy terminology dictionary for Claude Code / Cowork. Its data is generated from `src/data/*.json` and kept in sync by CI (`npm run check:plugin`). (#170)
+
+### Changed
+- **build-plugin generator** now reads `FLASHCARD_COURSE_MAP` via the same evaluation the sibling checkers use (was a fragile regex parse of the source); `--check` also detects orphan output files. (#171)
+- **jest** no longer warns about a Haste name collision from `dist/` builds (`modulePathIgnorePatterns`). (#179)
+- **Privacy policy** permission table realigned with the manifest (removed the stale `tabs` entry, disclosed `api.github.com`); language count corrected to 32. (#180)
 
 ## [3.5.39] - 2026-06-01
 
