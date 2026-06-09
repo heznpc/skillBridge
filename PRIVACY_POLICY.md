@@ -4,7 +4,7 @@
 
 ## Overview
 
-SkillBridge is a browser extension that translates the free AI course pages hosted at [anthropic.skilljar.com](https://anthropic.skilljar.com/) into 30+ languages and provides an in-page AI learning assistant. It is designed with privacy in mind — SkillBridge does not operate any servers, does not require accounts, and does not use analytics or tracking.
+SkillBridge is a browser extension that translates the free AI course pages hosted at [anthropic.skilljar.com](https://anthropic.skilljar.com/) into 32 languages and provides an in-page AI learning assistant. It is designed with privacy in mind — SkillBridge does not operate any servers, does not require accounts, and does not use analytics or tracking.
 
 ## Data Stored Locally (Never Leaves Your Device)
 
@@ -37,11 +37,11 @@ All requests to Gemini and Claude are routed through [Puter.js](https://docs.put
 | Permission | Purpose |
 |---|---|
 | `storage` | Save user preferences (selected language, dark mode, auto-translate) and cached translations |
-| `tabs` | Detect navigation events for auto-translation and send language-change messages from the popup |
 | `alarms` | Run periodic maintenance (24h cache cleanup, 7d update check) without waking the user |
 | `*.skilljar.com` | Translate course pages at anthropic.skilljar.com |
 | `*.youtube.com` | Auto-activate translated subtitles on course videos |
 | `translate.googleapis.com` | Send text to Google Translate API |
+| `api.github.com` | Check the GitHub Releases API for new-version notifications (no user data sent) |
 
 ## Data Retention
 
