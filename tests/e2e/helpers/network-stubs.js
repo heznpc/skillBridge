@@ -236,4 +236,4 @@ async function registerStubs(context) {
   });
 }
 
-module.exports = { registerStubs, startFixtureServer, stopFixtureServer, FIXTURE_HTML, GT_KO };
+module.exports = { registerStubs, startFixtureServer, stopFixtureServer, FIXTURE_HTML, GT_KO, buildGTResponse };

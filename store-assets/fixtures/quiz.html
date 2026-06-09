@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- The (invisible) <title> carries two AI keywords — "Claude" + "prompt
+       engineering" — so the extension's AI-content gate (≥2 keywords across
+       title/h1/breadcrumb/body) activates on this otherwise sparse quiz page,
+       just as the real anthropic.skilljar.com tenant does. Without it the
+       extension pauses ("non-AI tenant") and nothing translates. -->
+  <title>Building with the Claude API — Prompt Engineering Quiz</title>
+  <!--
+    STORE-SCREENSHOT FIXTURE for the exam-safe scene. Served at a /quiz path so
+    detectExamPage() trips on the URL; .quiz-form + .answer-option are redundant
+    DOM fallbacks. Same generic "Academy" chrome as lesson.html (trademark-safe).
+    The exam-safe contract: title + question translate, answer options DO NOT.
+  -->
+  <style>
+    :root { --ink:#1c1917; --muted:#6b6560; --accent:#e07a5f; --navy:#3d405b; --line:#e7e5e4; --bg:#fafaf9; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:var(--ink); background:var(--bg); }
+    .site-header { background:var(--navy); color:#fff; display:flex; align-items:center; padding:0 28px; height:58px; }
+    .site-header .logo { display:flex; align-items:center; gap:10px; font-weight:700; font-size:16px; }
+    .site-header .logo .dot { width:22px; height:22px; border-radius:6px; background:linear-gradient(135deg,#e07a5f,#f2cc8f); }
+    #header-right { margin-left:auto; display:flex; align-items:center; gap:18px; }
+    .header-links-container { display:flex; gap:18px; }
+    .header-links-container a { color:#e9e9f0; text-decoration:none; font-size:14px; }
+    #si18n-header-lang select { padding:6px 10px; border-radius:7px; border:1px solid #5a5d77; background:#2e3047; color:#fff; font-size:13px; }
+    main { max-width:760px; margin:40px auto; padding:0 28px; }
+    .eyebrow { color:var(--accent); font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:.08em; }
+    h1 { font-size:28px; margin:6px 0 18px; }
+    #quiz-question { font-size:18px; line-height:1.5; margin:0 0 22px; font-weight:600; }
+    .quiz-form { display:flex; flex-direction:column; gap:12px; }
+    .answer-option { display:flex; align-items:center; gap:12px; padding:15px 18px; background:#fff;
+      border:1px solid var(--line); border-radius:12px; font-size:15px; cursor:pointer; }
+    .answer-option:hover { border-color:var(--accent); }
+    .answer-option input { accent-color:var(--accent); width:17px; height:17px; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <span class="logo"><span class="dot"></span>Academy</span>
+    <div id="header-right">
+      <div class="header-links-container">
+        <a href="#">Catalog</a>
+        <a href="#">My Courses</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="lesson-main">
+    <div class="eyebrow">Knowledge check</div>
+    <h1 id="quiz-title">Claude Fundamentals Quiz</h1>
+    <p id="quiz-question">Which model is best suited for fast, high-volume classification tasks?</p>
+
+    <form class="quiz-form" id="quiz-form">
+      <label class="answer-option" id="answer-a"><input type="radio" name="answer" value="a" />Claude Opus — for the longest reasoning chains</label>
+      <label class="answer-option" id="answer-b"><input type="radio" name="answer" value="b" />Claude Haiku — for high-throughput, low-latency tasks</label>
+      <label class="answer-option" id="answer-c"><input type="radio" name="answer" value="c" />Claude Sonnet — balanced general-purpose model</label>
+      <label class="answer-option" id="answer-d"><input type="radio" name="answer" value="d" />None of the above</label>
+    </form>
+  </main>
+</body>
+</html>

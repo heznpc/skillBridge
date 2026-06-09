@@ -291,6 +291,36 @@ async function evalInContentWorld(context, op, arg) {
               window._sb.toggleSidebar();
               return true;
             },
+            // ── Store-asset capture ops (additive; unused by the E2E specs) ──
+            // Open/close the flashcard sub-panel (sidebar must be open first).
+            toggleFlashcardPanel: () => {
+              window._sb.toggleFlashcardPanel();
+              return true;
+            },
+            // Show the first-run onboarding banner — the genuine in-product
+            // language picker, used for the "language selection" screenshot.
+            showWelcomeBanner: (lang) => {
+              window._sb.showWelcomeBanner(lang || 'ko');
+              return true;
+            },
+            // Suppress onboarding so it doesn't obscure other scenes: remove any
+            // banner already shown and mark it seen so the delayed one never fires.
+            suppressOnboarding: () => {
+              document.getElementById('si18n-welcome-banner')?.remove();
+              try {
+                chrome.storage.local.set({ welcomeShown: true });
+              } catch (_e) {
+                /* storage may be unavailable in some contexts */
+              }
+              return true;
+            },
+            // Remove transient clutter right before a screenshot: the per-lesson
+            // term-preview popover and any in-flight GT verify spinners ("•••").
+            cleanForCapture: () => {
+              document.getElementById('si18n-term-preview')?.remove();
+              document.querySelectorAll('.si18n-verify-spinner').forEach((el) => el.remove());
+              return true;
+            },
             toggleHistoryPanel: () => {
               window._sb._chat.toggleHistoryPanel();
               return true;
@@ -508,4 +538,4 @@ async function evalInContentWorld(context, op, arg) {
   );
 }
 
-module.exports = { launchExtension, closeExtension, evalInContentWorld, EXTENSION_SRC };
+module.exports = { launchExtension, closeExtension, evalInContentWorld, EXTENSION_SRC, makePatchedExtension };

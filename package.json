@@ -29,7 +29,9 @@
     "format": "prettier --write 'src/**/*.{js,css,html}' 'tests/**/*.js' 'scripts/**/*.js'",
     "format:check": "prettier --check 'src/**/*.{js,css,html}' 'tests/**/*.js' 'scripts/**/*.js'",
     "build:bundle": "node scripts/build-bundle.js",
-    "build:bundle:zip": "npm run build:bundle && cd dist/bundled && rm -f ../../store-assets/skillbridge-bundled.zip && zip -r ../../store-assets/skillbridge-bundled.zip . -x '*.DS_Store'"
+    "build:bundle:zip": "npm run build:bundle && cd dist/bundled && rm -f ../../store-assets/skillbridge-bundled.zip && zip -r ../../store-assets/skillbridge-bundled.zip . -x '*.DS_Store'",
+    "capture:store": "node scripts/store-assets/capture.js",
+    "capture:install": "playwright install chromium"
   },
   "jest": {
     "testPathIgnorePatterns": [
