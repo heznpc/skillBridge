@@ -71,6 +71,15 @@
     const linksContainer = headerRight.querySelector(SKILLJAR_SELECTORS.headerLinks);
     if (!linksContainer) return;
 
+    // Header controls are *blend-in* components and stay in the light DOM by
+    // design (decided during the 2026-06 shadow migration, #188–#192): this
+    // wrapper deliberately borrows Skilljar's own `headerheight align-vertical`
+    // classes so the selector sits exactly like a native header item. Shadow-
+    // isolating it would cut off those borrowed styles and force us to
+    // replicate the host header's metrics by hand — brittle against Skilljar
+    // header changes, for no benefit (no host-CSS leak ever observed here).
+    // Overlay components with their own visual identity (FAB, sidebar, TOC)
+    // are the ones that live in the #skillbridge-root shadow root.
     const wrapper = document.createElement('div');
     wrapper.id = 'si18n-header-lang';
     wrapper.className = 'headerheight align-vertical';
