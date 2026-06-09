@@ -194,6 +194,11 @@ body.si18n-lang-ko,
   right: 24px;
   width: 48px;
   height: 48px;
+  /* Reset the host-page button box model so the icon centers regardless of
+     Skilljar's base `button` rule (which adds padding: 12px 24px). */
+  box-sizing: border-box;
+  padding: 0;
+  min-width: 0;
   border-radius: 50%;
   background: var(--si18n-accent);
   color: white;
@@ -205,6 +210,17 @@ body.si18n-lang-ko,
   z-index: 99999;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: none;
+}
+
+/* The FAB's chat-bubble <svg> carries width/height="24" presentation attributes,
+   but the host page's SVG sizing reset overrides them to width:0, and as a
+   shrinkable flex item (flex: 0 1 auto) it then collapses to 0px wide — the icon
+   vanished and the FAB looked like an empty circle. Pin an explicit size and
+   stop it from shrinking. Verified live on anthropic.skilljar.com. */
+#skillbridge-fab svg {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
 }
 
 #skillbridge-fab:hover {
