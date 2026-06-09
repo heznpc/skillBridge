@@ -220,7 +220,7 @@ Translating a whole course page on every navigation has to be fast *and* correct
 
 **What I deliberately did *not* build (and why).**
 - **No servers / no backend** — everything runs client-side; translation and AI go straight to third parties via Puter.js. This is what keeps it free forever and privacy-preserving, at the deliberate cost of cross-device sync.
-- **No telemetry or analytics by default** — opt-in only, error stacks only; marketing convenience never outweighs the privacy promise.
+- **No telemetry or analytics** — nothing is collected, not even opt-in error reports; marketing convenience never outweighs the privacy promise.
 - **No A/B framework, no paid tier** — both imply infrastructure (traffic, segmentation, billing) that a free, server-less project shouldn't fake.
 
 The full "things we will not do" list is kept public on purpose in [POSITIONING.md](POSITIONING.md).
