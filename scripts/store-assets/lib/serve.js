@@ -46,19 +46,17 @@ const FIXTURE_CSP =
  */
 function serveDirectory(dir, opts = {}) {
   const root = path.resolve(dir);
-  // Confine any resolved path to `root` — defeats `../` traversal from the
-  // request URL (the path-injection sink CodeQL flags). Leading slashes are
-  // stripped so an absolute-looking request can't override `root`.
-  const within = (p) => p === root || p.startsWith(root + path.sep);
   return new Promise((resolve) => {
     const server = http.createServer((req, res) => {
       const urlPath = decodeURIComponent((req.url || '/').split('?')[0]);
-      const rel = (urlPath === '/' ? 'index.html' : urlPath).replace(/^\/+/, '') || 'index.html';
-      let filePath = path.resolve(root, rel);
-      if (!within(filePath) || !fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
-        filePath = opts.fallback ? path.resolve(root, opts.fallback) : null;
+      // Path-traversal sanitizer (CodeQL js/path-injection): normalize, then
+      // strip any leading `../` segments so the join can't escape `root`.
+      const rel = path.normalize(urlPath === '/' ? '/index.html' : urlPath).replace(/^(\.\.(\/|\\|$))+/, '');
+      let filePath = path.join(root, rel);
+      if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
+        filePath = opts.fallback ? path.join(root, opts.fallback) : null;
       }
-      if (!filePath || !within(filePath) || !fs.existsSync(filePath)) {
+      if (!filePath || !fs.existsSync(filePath)) {
         res.writeHead(404, { 'Content-Type': 'text/plain' });
         res.end('Not found');
         return;
