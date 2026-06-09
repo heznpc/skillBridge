@@ -1,17 +1,19 @@
-# Chrome Web Store — Store Listing (v3.5.39)
+# Chrome Web Store — Store Listing (v3.5.40)
 
 This is the single Chrome Web Store listing (English / default locale — shown to
 every user regardless of browser language). The store copy is intentionally
 English-only to avoid listing drift; the extension UI itself is localized in 11
 premium languages.
 
-## What's New (v3.5.39) — paste into the CWS "What's new" field
+## What's New (v3.5.40) — paste into the CWS "What's new" field
 
 - 🃏 Spaced-repetition flashcards — a new "Review due" mode shows only the cards due now (cards come back at the right time).
 - 🔖 Bookmarks — save a lesson at your exact scroll position and jump back anytime.
 - ⏩ Continue / Recent — resume across courses right where you left off.
 - 📑 In-lesson outline + reading-progress bar for long lessons.
 - 🧰 Tidier tutor — history, flashcards, bookmarks, Continue, and PDF export are grouped in one "Tools" menu.
+- 🛠️ Polish — the AI-tutor button icon renders on every page, suggestion chips line up with the chat, and brand terms no longer show up doubled like "Claude(Claude)".
+- 🧱 Sturdier UI — SkillBridge's panels are now isolated from the host site's styles, so Academy site updates can't visually break them.
 - 🎨 New extension icon.
 
 ## Title (max 75 chars)
