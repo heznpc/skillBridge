@@ -45,14 +45,20 @@ const FIXTURE_CSP =
  * @returns {Promise<{baseUrl: string, close: () => Promise<void>}>}
  */
 function serveDirectory(dir, opts = {}) {
+  const root = path.resolve(dir);
+  // Confine any resolved path to `root` — defeats `../` traversal from the
+  // request URL (the path-injection sink CodeQL flags). Leading slashes are
+  // stripped so an absolute-looking request can't override `root`.
+  const within = (p) => p === root || p.startsWith(root + path.sep);
   return new Promise((resolve) => {
     const server = http.createServer((req, res) => {
       const urlPath = decodeURIComponent((req.url || '/').split('?')[0]);
-      let filePath = path.join(dir, urlPath === '/' ? 'index.html' : urlPath);
-      if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
-        filePath = opts.fallback ? path.join(dir, opts.fallback) : null;
+      const rel = (urlPath === '/' ? 'index.html' : urlPath).replace(/^\/+/, '') || 'index.html';
+      let filePath = path.resolve(root, rel);
+      if (!within(filePath) || !fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
+        filePath = opts.fallback ? path.resolve(root, opts.fallback) : null;
       }
-      if (!filePath || !fs.existsSync(filePath)) {
+      if (!filePath || !within(filePath) || !fs.existsSync(filePath)) {
         res.writeHead(404, { 'Content-Type': 'text/plain' });
         res.end('Not found');
         return;
