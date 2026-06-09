@@ -79,7 +79,7 @@
 
   function addCurrent() {
     const url = location.href;
-    const title = (document.title || '').trim() || document.querySelector('h1')?.textContent?.trim() || url;
+    const title = (document.title || '').trim() || sb.$('h1')?.textContent?.trim() || url;
     // De-dupe by URL (re-bookmarking a lesson updates its position + bumps it
     // to the top).
     bookmarks = bookmarks.filter((b) => b.url !== url);
@@ -116,7 +116,7 @@
   // ============================================================
 
   function toggleBookmarksPanel() {
-    const chatPanel = document.getElementById('si18n-panel-chat');
+    const chatPanel = sb.$id('si18n-panel-chat');
     if (!chatPanel) return;
 
     if (_state.bookmarksPanelOpen) {
@@ -145,8 +145,8 @@
     `,
     );
 
-    document.getElementById('si18n-bm-back')?.addEventListener('click', () => sb._chat.closeSubPanel());
-    document.getElementById('si18n-bm-add')?.addEventListener('click', addCurrent);
+    sb.$id('si18n-bm-back')?.addEventListener('click', () => sb._chat.closeSubPanel());
+    sb.$id('si18n-bm-add')?.addEventListener('click', addCurrent);
     loadBookmarks(renderList);
   }
 
@@ -168,7 +168,7 @@
   }
 
   function renderList() {
-    const list = document.getElementById('si18n-bm-list');
+    const list = sb.$id('si18n-bm-list');
     if (!list) return;
     list.replaceChildren();
     list.insertAdjacentHTML('afterbegin', rowsHTML());
