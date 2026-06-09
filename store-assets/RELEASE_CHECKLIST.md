@@ -49,17 +49,24 @@ half-sun over the SkillBridge bridge — no Claude-mark / radial spark). The
 `assets/icons/icon128.png` in step 3. Because the icon changed, re-capture the
 screenshots in step 2.
 
-### 2. Re-capture screenshots (only if you re-designed the icon)
+### 2. Regenerate store screenshots (one command)
 
-If the icon changed, the screenshots that include the toolbar icon need refresh:
-- `assets/screenshots/01-lesson-translated.png`
-- `assets/screenshots/catalog-translated.png`
-- `assets/screenshots/skillbridge-demo.gif`
-- `store-assets/screenshot-01-lesson.png`
-- `store-assets/screenshot-02-catalog.png`
+Don't hand-capture. `npm run capture:store` drives the **built bundle** with
+Playwright and regenerates the full CWS set into `store-assets/`:
 
-Lesson body / Skilljar header — no Anthropic logo blur needed; the rename + URL-
-anchor sweep handled the trademark exposure on that front.
+- `01-translate.png` … `05-exam-safe.png` (1280×800) — translate before/after,
+  language picker, in-page AI tutor, flashcards, exam-safe answers
+- `promo-tile-440x280.png` — small promo tile
+- `demo.webm` — demo screencast (CWS takes a YouTube link, not a file — upload it and paste the URL)
+- `description.md` — copy/paste Title / Summary / Description / What's new
+
+Edit which states are captured in `store.config.js`, and the listing copy in
+`store-assets/STORE_LISTING.md`. The run doubles as a real-bundle smoke test (a
+screenshot only appears if that feature rendered). Captures are login-free and
+deterministic — a frozen Korean translation map, neutral "Academy" fixtures (no
+Anthropic logo), and a composited "unofficial / not affiliated" disclaimer band
+on every shot. (`assets/screenshots/*` README/marketing images are separate and
+still hand-made.)
 
 ### 3. Upload to CWS dev console
 
@@ -74,7 +81,7 @@ Open https://chrome.google.com/webstore/devconsole/a4725d38-81e7-41f5-bf21-5c11f
 | Privacy policy URL | `https://heznpc.github.io/skillBridge/privacy` |
 | Locale | **English only** — single CWS listing, shown to every user regardless of browser language (localized ko/ja listings were dropped to avoid drift) |
 | Icon (128×128) | upload current `assets/icons/icon128.png` (half-sun + bridge). ⚠️ the **live listing still shows the OLD coral radial-spark icon** — the store-listing graphic is a separate asset from the package and must be re-uploaded here, or the infringing mark stays live. |
-| Promo tile + screenshots | upload current set (no change unless step 2 ran) |
+| Promo tile + screenshots | `store-assets/promo-tile-440x280.png` + `store-assets/01-translate.png`…`05-exam-safe.png` (regenerate with `npm run capture:store`) |
 
 ### 3b. Privacy tab (this is what blocked the last submit)
 
