@@ -2,7 +2,7 @@
 
 <img src="assets/icons/icon128.png" alt="SkillBridge" width="90" />
 
-# SkillBridge — AI Course Translator <!-- VERSION_START -->v3.5.39<!-- VERSION_END -->
+# SkillBridge — AI Course Translator <!-- VERSION_START -->v3.5.40<!-- VERSION_END -->
 
 > Available in multiple languages at the [project landing page](https://heznpc.github.io/skillBridge/).
 
@@ -145,11 +145,11 @@ Generic translation tools often **mistranslate brand names and technical terms**
 
 ## Installation
 
-> **Status: live as v1.0.1; re-publication of the current v3.5.39 pending.**
+> **Status: live as v1.0.1; re-publication of the current v3.5.40 pending.**
 > The Chrome Web Store listing is available in all locales **except the United
 > States**, where it was removed on 2026-05-12 over a trademark issue with the
 > old icon (since redesigned on `main`). The published store build is v1.0.1;
-> `main` is the up-to-date release (v3.5.39). For the latest version — and for
+> `main` is the up-to-date release (v3.5.40). For the latest version — and for
 > US users until re-listing — install via the manual / developer-mode path below.
 
 ### Chrome / Edge / Chromium browsers
