@@ -979,7 +979,11 @@ html.si18n-dark .si18n-example-q:hover {
   border-bottom: 1px solid var(--si18n-border, #e7e5e4);
 }
 
-.si18n-history-back {
+/* Header icon buttons (back arrow + clear/reset). Both must set their own
+   `background: none` — the host page's `button, .button { background: #0164cc }`
+   rule otherwise leaks through and renders them in Skilljar's blue. */
+.si18n-history-back,
+.si18n-history-clear {
   background: none;
   border: none;
   margin: 0;
@@ -998,11 +1002,13 @@ html.si18n-dark .si18n-example-q:hover {
     color 0.15s;
 }
 
-.si18n-history-back svg {
+.si18n-history-back svg,
+.si18n-history-clear svg {
   display: block;
 }
 
-.si18n-history-back:hover {
+.si18n-history-back:hover,
+.si18n-history-clear:hover {
   background: rgba(0, 0, 0, 0.08);
   color: var(--si18n-text, #1c1917);
 }
