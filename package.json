@@ -36,6 +36,9 @@
       "/node_modules/",
       "/dist/",
       "/tests/e2e/"
+    ],
+    "modulePathIgnorePatterns": [
+      "/dist/"
     ]
   },
   "devDependencies": {
