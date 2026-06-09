@@ -145,11 +145,12 @@ Generic translation tools often **mistranslate brand names and technical terms**
 
 ## Installation
 
-> **Status: pending re-publication after icon redesign.** The Chrome Web
-> Store listing was removed pending an icon redesign and is not currently
-> available. Install via the manual / developer-mode path below — the
-> code in `main` is the up-to-date release. The store listing will be
-> restored once the new icon ships.
+> **Status: live as v1.0.1; re-publication of the current v3.5.39 pending.**
+> The Chrome Web Store listing is available in all locales **except the United
+> States**, where it was removed on 2026-05-12 over a trademark issue with the
+> old icon (since redesigned on `main`). The published store build is v1.0.1;
+> `main` is the up-to-date release (v3.5.39). For the latest version — and for
+> US users until re-listing — install via the manual / developer-mode path below.
 
 ### Chrome / Edge / Chromium browsers
 
@@ -236,7 +237,7 @@ The full "things we will not do" list is kept public on purpose in [POSITIONING.
 | 🇹🇼 中文繁體 (Chinese Traditional) | `zh-TW` | 570+ entries |
 | 🇪🇸 Español (Spanish) | `es` | 570+ entries |
 | 🇫🇷 Français (French) | `fr` | 570+ entries |
-| 🇮🇹 Italiano (Italian) | `it` | 570+ entries (v1 — Spanish-derived, native review welcome) |
+| 🇮🇹 Italiano (Italian) | `it` | 570+ entries (re-translated from English; native review welcome) |
 | 🇩🇪 Deutsch (German) | `de` | 570+ entries |
 | 🇧🇷 Português (Brazilian) | `pt-BR` | 570+ entries |
 | 🇷🇺 Русский (Russian) | `ru` | 570+ entries |
