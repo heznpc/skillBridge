@@ -13,6 +13,7 @@
   let _protectedTermsSorted = [];
   let _protectedTermsLang = null;
   let _protectedKeepEnglish = '';
+  let _selfDupRe = null;
 
   /**
    * Build the map of wrong->correct term replacements for the given language.
@@ -45,6 +46,19 @@
     _protectedTermsSorted = Object.entries(map).sort((a, b) => b[0].length - a[0].length);
     const terms = Object.keys(protectedEntries);
     _protectedKeepEnglish = terms.length > 0 ? terms.join(', ') : DEFAULT_PROTECTED_TERMS;
+
+    // Precompile a regex that collapses Google-Translate gloss self-duplicates.
+    // GT often appends the English term in parens when translating a proper
+    // noun ("Claude" → "클로드(Claude)"); restoring the transliteration then
+    // yields "Claude(Claude)". Match a canonical term immediately followed by
+    // "(same term)" via a backreference, so ONLY an exact self-duplication
+    // collapses — never legitimate prose or code like `fn(fn)` (fn isn't a
+    // canonical term). Longest-first so "Claude Code" wins over "Claude".
+    const canonical = terms
+      .filter((t) => typeof t === 'string' && t.length > 0)
+      .map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      .sort((a, b) => b.length - a.length);
+    _selfDupRe = canonical.length ? new RegExp('(' + canonical.join('|') + ')\\s*[(（]\\s*\\1\\s*[)）]', 'g') : null;
   }
 
   /**
@@ -71,6 +85,11 @@
     let result = text;
     for (const [wrong, correct] of _protectedTermsSorted) {
       if (result.includes(wrong)) result = result.replaceAll(wrong, correct);
+    }
+    // Collapse "Claude(Claude)"-style GT gloss duplicates the restore above can
+    // produce. Cheap paren guard keeps the common (no-paren) node off the regex.
+    if (_selfDupRe && (result.indexOf('(') !== -1 || result.indexOf('（') !== -1)) {
+      result = result.replace(_selfDupRe, '$1');
     }
     return result;
   }
