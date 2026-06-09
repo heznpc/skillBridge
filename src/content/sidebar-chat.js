@@ -43,11 +43,96 @@
   }
 
   // ============================================================
+  // SHADOW UI ROOT — style isolation from the host page
+  // ============================================================
+  // Skilljar styles bare element selectors (button {}, svg {}, input {}, …)
+  // that leak into our injected controls whenever they don't set those
+  // properties themselves — the FAB icon collapsed (#182) and the reset button
+  // turned host-blue (#185) exactly this way. Instead of chasing each leak, we
+  // host our injected UI inside an OPEN shadow root: the page stylesheet cannot
+  // reach in (shadow encapsulation), so that leak class becomes impossible.
+  //
+  // Two boundary facts shape the design:
+  //   - Ancestor state selectors (html.si18n-dark, body.si18n-lang-*) do NOT
+  //     cross into the shadow, so we mirror those classes onto the shadow HOST
+  //     and the shadow CSS targets them via :host(...).
+  //   - CSS custom properties (--si18n-*) DO inherit through the boundary, so
+  //     var() references keep resolving from :root.
+  //
+  // Migration is staged: the FAB moves in first; the sidebar and the other
+  // body-injected UI follow. content.css still styles the light-DOM UI in the
+  // meantime — its now-superseded #skillbridge-fab rules are inert (page CSS
+  // cannot style shadow content) and get removed in the final cleanup stage.
+  function getUiRoot() {
+    if (sb._uiHost && sb._uiHost.isConnected) return sb._uiHost.shadowRoot;
+    const host = document.createElement('div');
+    host.id = 'skillbridge-root';
+    host.attachShadow({ mode: 'open' });
+    syncHostThemeClasses(host);
+    document.body.appendChild(host);
+    sb._uiHost = host;
+    return host.shadowRoot;
+  }
+
+  // Mirror host-page theme/locale state onto the shadow host so shadow CSS can
+  // react via :host(.si18n-dark) / :host(.si18n-lang-xx). Kept in sync because
+  // the dark toggle and language switch flip these classes after first paint.
+  function syncHostThemeClasses(host) {
+    const apply = () => {
+      host.classList.toggle('si18n-dark', document.documentElement.classList.contains('si18n-dark'));
+      for (const c of [...host.classList]) {
+        if (c.startsWith('si18n-lang-') || c === 'si18n-rtl') host.classList.remove(c);
+      }
+      for (const c of document.body.classList) {
+        if (c.startsWith('si18n-lang-') || c === 'si18n-rtl') host.classList.add(c);
+      }
+    };
+    apply();
+    const obs = new MutationObserver(apply);
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    obs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  // FAB styles relocated from content.css into the shadow root, with the
+  // ancestor theme selectors rewritten to :host(...) form. These supersede
+  // content.css's #skillbridge-fab rules, which can no longer reach the button.
+  const FAB_SHADOW_CSS = `
+    #skillbridge-fab { position: fixed; bottom: 24px; right: 24px; width: 48px; height: 48px; padding: 0; border-radius: 50%; background: var(--si18n-accent, #3d405b); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 16px rgba(61, 64, 91, 0.35); z-index: 99999; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: none; }
+    #skillbridge-fab svg { flex-shrink: 0; width: 24px; height: 24px; }
+    #skillbridge-fab:hover { transform: scale(1.08); box-shadow: 0 6px 24px rgba(61, 64, 91, 0.45); }
+    #skillbridge-fab.hidden { transform: scale(0); opacity: 0; pointer-events: none; }
+    #skillbridge-fab:focus-visible { outline: 2px solid var(--si18n-primary, #e07a5f); outline-offset: 2px; }
+    #skillbridge-fab.si18n-fab-pulse { animation: si18n-fab-pulse 2s ease-in-out 3; }
+    @keyframes si18n-fab-pulse {
+      0%, 100% { box-shadow: 0 4px 16px rgba(61, 64, 91, 0.35); }
+      50% { box-shadow: 0 4px 24px rgba(61, 64, 91, 0.55), 0 0 0 8px rgba(61, 64, 91, 0.1); }
+    }
+    :host(.si18n-dark) #skillbridge-fab { background: #6b6f9e; border: 1px solid rgba(255, 255, 255, 0.22); color: #fff; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55); }
+    :host(.si18n-dark) #skillbridge-fab:hover { background: #7c80b3; color: #fff; }
+    :host(:is(.si18n-lang-ar, .si18n-lang-he)) #skillbridge-fab { right: auto; left: 24px; }
+    @media (prefers-reduced-motion: reduce) {
+      #skillbridge-fab { transition-duration: 0.01ms; }
+      #skillbridge-fab.si18n-fab-pulse { animation-duration: 0.01ms; animation-iteration-count: 1; }
+    }
+    @media (max-width: 600px) {
+      #skillbridge-fab { bottom: 16px; right: 16px; }
+      :host(:is(.si18n-lang-ar, .si18n-lang-he)) #skillbridge-fab { left: 16px; right: auto; }
+    }
+  `;
+
+  // ============================================================
   // FLOATING BUTTON
   // ============================================================
 
   function injectFloatingButton() {
-    if (document.getElementById('skillbridge-fab')) return;
+    const root = getUiRoot();
+    if (root.getElementById('skillbridge-fab')) return;
+    if (!root.querySelector('style[data-sb-fab]')) {
+      const style = document.createElement('style');
+      style.setAttribute('data-sb-fab', '');
+      style.textContent = FAB_SHADOW_CSS;
+      root.appendChild(style);
+    }
     const btn = document.createElement('button');
     btn.id = 'skillbridge-fab';
     btn.setAttribute('role', 'button');
@@ -70,7 +155,7 @@
         toggleSidebar();
       }
     });
-    document.body.appendChild(btn);
+    root.appendChild(btn);
 
     // Pulse animation on first visit to draw attention
     chrome.storage.local.get(['fabSeen'], (result) => {
@@ -470,7 +555,8 @@
 
   function toggleSidebar() {
     const sidebar = document.getElementById('skillbridge-sidebar');
-    const fab = document.getElementById('skillbridge-fab');
+    // FAB now lives in the shadow UI root (#skillbridge-root); look it up there.
+    const fab = sb._uiHost ? sb._uiHost.shadowRoot.getElementById('skillbridge-fab') : null;
     sb.sidebarVisible = !sb.sidebarVisible;
     // If we're closing, cancel any in-flight chat — the user clearly
     // doesn't want the answer anymore and we shouldn't keep saving
@@ -626,6 +712,9 @@
   sb.injectSidebar = injectSidebar;
   sb.injectFloatingButton = injectFloatingButton;
   sb.toggleSidebar = toggleSidebar;
+  // Shared shadow UI root accessor — later migration stages move more
+  // body-injected UI into this same root and query it via sb.uiRoot().
+  sb.uiRoot = getUiRoot;
   sb.updateLocalizedLabels = updateLocalizedLabels;
   // `sb.toggleFlashcardPanel` is set by chat-flashcards.js since v3.5.27;
   // keyboard-shortcuts.js's call-site reads through that namespace handle.
