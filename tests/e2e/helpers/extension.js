@@ -500,8 +500,8 @@ async function evalInContentWorld(context, op, arg) {
             //   CHAT_STREAM_CHUNK events → onChunk → formatResponse →
             //   bubble.innerHTML update → CHAT_STREAM_END → saveConversation.
             sendChat: (text) => {
-              const input = document.getElementById('si18n-chat-input');
-              const sendBtn = document.getElementById('si18n-chat-send');
+              const input = window._sb.$id('si18n-chat-input');
+              const sendBtn = window._sb.$id('si18n-chat-send');
               if (!input || !sendBtn) {
                 return { error: 'chat UI not present — open sidebar first' };
               }
@@ -528,7 +528,7 @@ async function evalInContentWorld(context, op, arg) {
             // asserts both expected questions appear, proving the
             // saveConversation → IDB → loadHistoryList round-trip works.
             readHistoryList: () => {
-              const items = document.querySelectorAll('.si18n-history-item');
+              const items = (window._sb._uiHost?.shadowRoot || document).querySelectorAll('.si18n-history-item');
               return Array.from(items).map((el) => ({
                 id: el.dataset.id,
                 question: el.querySelector('.si18n-history-item-q')?.textContent.trim() || '',
@@ -539,14 +539,14 @@ async function evalInContentWorld(context, op, arg) {
             // assert the original question and bot-answer text are present
             // (proves IDB read of a single record by primary key works).
             openHistoryDetail: (id) => {
-              const item = document.querySelector(`.si18n-history-item[data-id="${id}"]`);
+              const item = window._sb.$(`.si18n-history-item[data-id="${id}"]`);
               if (!item) return { error: 'no item with id=' + id };
               item.click();
               return { ok: true };
             },
             // Read the detail-view content after openHistoryDetail.
             readHistoryDetail: () => {
-              const detail = document.querySelector('.si18n-history-detail');
+              const detail = window._sb.$('.si18n-history-detail');
               if (!detail) return { present: false };
               return {
                 present: true,
@@ -559,7 +559,9 @@ async function evalInContentWorld(context, op, arg) {
             // user bubble with the typed text exists and (b) a bot bubble
             // with the streamed-and-formatted response exists.
             readChatLog: () => {
-              const msgs = document.querySelectorAll('#si18n-chat-messages .si18n-chat-msg');
+              const msgs = (window._sb._uiHost?.shadowRoot || document).querySelectorAll(
+                '#si18n-chat-messages .si18n-chat-msg',
+              );
               return Array.from(msgs).map((m) => {
                 const role = m.classList.contains('si18n-chat-user')
                   ? 'user'

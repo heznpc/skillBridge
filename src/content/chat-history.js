@@ -57,7 +57,7 @@
   async function saveConversation(question, answer, lang) {
     try {
       const db = await openHistoryDb();
-      const chapter = document.querySelector('h1')?.textContent?.trim() || 'Unknown';
+      const chapter = sb.$('h1')?.textContent?.trim() || 'Unknown';
       const entry = {
         question,
         answer,
@@ -165,7 +165,7 @@
       const tx = db.transaction(HISTORY_STORE, 'readwrite');
       tx.objectStore(HISTORY_STORE).clear();
       tx.oncomplete = () => {
-        const listEl = document.getElementById('si18n-history-list');
+        const listEl = sb.$id('si18n-history-list');
         if (listEl) {
           listEl.innerHTML = `<div class="si18n-history-empty">${sb.t(HISTORY_LABELS.historyCleared)}</div>`;
         }
@@ -176,7 +176,7 @@
   }
 
   function toggleHistoryPanel() {
-    const chatPanel = document.getElementById('si18n-panel-chat');
+    const chatPanel = sb.$id('si18n-panel-chat');
     if (!chatPanel) return;
 
     const state = sb._chat.state;
@@ -205,15 +205,15 @@
       </div>
     `;
 
-    document.getElementById('si18n-history-back')?.addEventListener('click', sb._chat.closeSubPanel);
-    document.getElementById('si18n-history-clear')?.addEventListener('click', () => {
+    sb.$id('si18n-history-back')?.addEventListener('click', sb._chat.closeSubPanel);
+    sb.$id('si18n-history-clear')?.addEventListener('click', () => {
       if (confirm(sb.t(HISTORY_LABELS.clearHistory) + '?')) clearAllHistory();
     });
     loadHistoryList();
   }
 
   async function loadHistoryList() {
-    const listEl = document.getElementById('si18n-history-list');
+    const listEl = sb.$id('si18n-history-list');
     if (!listEl) return;
 
     const conversations = await getConversations();
@@ -268,7 +268,7 @@
       req.onsuccess = () => {
         const conv = req.result;
         if (!conv) return;
-        const listEl = document.getElementById('si18n-history-list');
+        const listEl = sb.$id('si18n-history-list');
         if (!listEl) return;
         const time = conv.timestamp ? new Date(conv.timestamp).toLocaleString() : '';
         const chapter = conv.chapter ? sb.escapeHtml(conv.chapter) : '';
