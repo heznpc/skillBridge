@@ -1,6 +1,6 @@
 # Privacy Policy — SkillBridge
 
-**Last updated:** April 11, 2026
+**Last updated:** June 9, 2026
 
 ## Overview
 

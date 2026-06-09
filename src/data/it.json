@@ -3,8 +3,8 @@
     "lang": "it",
     "langName": "Italiano",
     "version": "3.5.39",
-    "lastUpdated": "2026-05-25",
-    "translation_provenance": "v1 — derived from src/data/es.json via Spanish→Italian regex transformation (Romance proximity ~80%). Native Italian PRs welcome to replace any section wholesale; structural keys must remain identical to other premium dictionaries (enforced by scripts/check-dict-coverage.js)."
+    "lastUpdated": "2026-06-03",
+    "translation_provenance": "Re-translated from the English source via Google Translate (2026-06), with brand/technical terms restored to canonical English; Italian↔Spanish overlap is now 0.1% (parity with the other 10 locales). Earlier v1 was a Spanish-derived regex transform — fully replaced. Structural keys must remain identical to other premium dictionaries (enforced by scripts/check-dict-coverage.js); native Italian PRs welcome."
   },
   "ui": {
     "Anthropic Academy": "Anthropic Academy",

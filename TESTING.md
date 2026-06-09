@@ -70,14 +70,21 @@ tests/protected-terms.test.js → re-implements logic (legacy pattern)
 | `format-response.test.js` | ~18 | Markdown-to-HTML conversion, XSS escaping, heading/list/inline formatting |
 | `glossary-checker.test.js` | ~10 | Cross-language glossary consistency, protected terms validation |
 
-### What is NOT tested (known gaps)
+### Tested end-to-end (Playwright, in CI)
 
-- DOM manipulation (`content.js` — 30+ functions)
-- Background service worker (`background.js` — rate limiter, fetchWithRetry)
-- Chrome API interactions (message passing, storage, tabs)
-- YouTube subtitle logic (`youtube-subtitles.js`)
-- Puter.js bridge (`page-bridge.js`)
-- E2E flows (page load → translate → restore)
+A Playwright E2E suite loads the built extension into headed Chromium (xvfb in
+CI — see the `e2e` job in `.github/workflows/ci.yml`) and exercises the
+integrated flows: page load → translate → restore, SPA navigation, lazy
+translation, IndexedDB cache, protected-term restoration, tutor streaming +
+cancel, exam-mode safety, code-comment translation, and PDF-export
+sanitization. Specs live in `tests/e2e/` (`npm run test:e2e`).
+
+### Thin coverage / known gaps
+
+- Unit-level coverage of `content.js` DOM helpers and `background.js` internals
+  beyond what the E2E suite exercises
+- Real YouTube iframe caption activation (E2E can't drive the embedded player)
+- Visual / dark-mode QA, mobile layout, long-session memory — manual only
 
 ---
 
