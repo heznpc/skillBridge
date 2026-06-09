@@ -481,6 +481,10 @@ body.si18n-lang-ko,
   flex-wrap: wrap;
   gap: 6px;
   padding: 4px 0 8px;
+  /* Align the chips with the bot bubble's left edge instead of the messages
+     gutter: the bubble sits past the 28px avatar + 8px row gap, so indent the
+     chips by the same 36px. Logical property keeps it correct under RTL. */
+  padding-inline-start: 36px;
 }
 .si18n-example-q {
   background: var(--si18n-bg);
