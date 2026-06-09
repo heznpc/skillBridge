@@ -291,6 +291,26 @@ async function evalInContentWorld(context, op, arg) {
               window._sb.toggleSidebar();
               return true;
             },
+            // Inject the FAB and report whether it is shadow-isolated + its
+            // computed style. Used by shadow-isolation.spec.js to prove host
+            // page CSS cannot reach the FAB inside #skillbridge-root's shadow.
+            fabProbe: () => {
+              if (!window._sb || !window._sb.injectFloatingButton) return { ok: false };
+              window._sb.injectFloatingButton();
+              const host = document.getElementById('skillbridge-root');
+              const fab = host && host.shadowRoot && host.shadowRoot.getElementById('skillbridge-fab');
+              if (!fab) return { ok: false };
+              const cs = window.getComputedStyle(fab);
+              const svg = fab.querySelector('svg');
+              const r = svg && svg.getBoundingClientRect();
+              return {
+                ok: true,
+                inLightDom: !!document.getElementById('skillbridge-fab'),
+                inShadow: fab.getRootNode() === host.shadowRoot,
+                background: cs.backgroundColor,
+                svgWidth: r ? Math.round(r.width) : null,
+              };
+            },
             // ── Store-asset capture ops (additive; unused by the E2E specs) ──
             // Open/close the flashcard sub-panel (sidebar must be open first).
             toggleFlashcardPanel: () => {
