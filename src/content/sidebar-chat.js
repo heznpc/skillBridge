@@ -68,6 +68,10 @@
     const host = document.createElement('div');
     host.id = 'skillbridge-root';
     host.attachShadow({ mode: 'open' });
+    // Adopt the transformed content.css so UI that moves into this root is
+    // styled from the single source. The FAB keeps a small inline <style> as
+    // immediate/critical CSS (the adopted sheet loads async via fetch).
+    window._sbShadowCss?.ensureShadowStylesheet(host.shadowRoot);
     syncHostThemeClasses(host);
     document.body.appendChild(host);
     sb._uiHost = host;

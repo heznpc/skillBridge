@@ -311,6 +311,35 @@ async function evalInContentWorld(context, op, arg) {
                 svgWidth: r ? Math.round(r.width) : null,
               };
             },
+            // Await the transformed content.css sheet + report adoption. Proves
+            // the runtime fetch → transform → adoptedStyleSheets path works.
+            shadowSheetReady: async () => {
+              if (!window._sbShadowCss) return { ok: false };
+              const sheet = await window._sbShadowCss.loadShadowSheet();
+              const host = document.getElementById('skillbridge-root');
+              const root = host && host.shadowRoot;
+              if (root) window._sbShadowCss.ensureShadowStylesheet(root);
+              await new Promise((r) => setTimeout(r, 0));
+              let hasHostDark = false;
+              try {
+                if (sheet) {
+                  for (const rule of sheet.cssRules) {
+                    if (rule.selectorText && rule.selectorText.includes(':host(.si18n-dark)')) {
+                      hasHostDark = true;
+                      break;
+                    }
+                  }
+                }
+              } catch (_e) {
+                /* cssRules can throw on cross-origin sheets; ours is same-origin */
+              }
+              return {
+                ok: true,
+                sheetLoaded: !!sheet,
+                adopted: root ? root.adoptedStyleSheets.length : 0,
+                hasHostDark,
+              };
+            },
             // ── Store-asset capture ops (additive; unused by the E2E specs) ──
             // Open/close the flashcard sub-panel (sidebar must be open first).
             toggleFlashcardPanel: () => {

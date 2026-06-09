@@ -68,4 +68,15 @@ test.describe('SkillBridge — shadow UI isolation', () => {
     expect(probe.background).toBe('rgb(61, 64, 91)'); // brand navy, not host blue
     expect(probe.svgWidth).toBe(24); // chat-bubble icon intact, not collapsed to 0
   });
+
+  test('content.css is fetched, transformed, and adopted into the shadow root', async () => {
+    const r = await evalInContentWorld(extCtx.context, 'shadowSheetReady');
+    expect(r.ok).toBe(true);
+    expect(r.sheetLoaded).toBe(true);
+    // The transform rewrote html.si18n-dark → :host(.si18n-dark) so dark mode
+    // still themes the shadowed UI.
+    expect(r.hasHostDark).toBe(true);
+    // …and the shared sheet is adopted into #skillbridge-root's shadow root.
+    expect(r.adopted).toBeGreaterThanOrEqual(1);
+  });
 });
