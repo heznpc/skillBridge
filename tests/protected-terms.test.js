@@ -192,6 +192,44 @@ describe('Protected Terms System (real production code)', () => {
   });
 });
 
+describe('GT gloss self-duplication collapse', () => {
+  beforeEach(() => {
+    resetProtectedTerms();
+    buildProtectedTermsMap('ko', fakeTranslator(koProtected));
+  });
+
+  test('collapses the restore-induced dup: "클로드(Claude)" → "Claude"', () => {
+    // GT emits "클로드(Claude)"; restore turns 클로드→Claude → "Claude(Claude)";
+    // the collapse then yields a single "Claude".
+    expect(restoreProtectedTerms('클로드(Claude)를 사용하세요')).toBe('Claude를 사용하세요');
+  });
+
+  test('collapses an already-duplicated "Claude(Claude)"', () => {
+    expect(restoreProtectedTerms('Claude(Claude)')).toBe('Claude');
+  });
+
+  test('collapses with a space before the paren: "클로드 (Claude)"', () => {
+    expect(restoreProtectedTerms('클로드 (Claude)')).toBe('Claude');
+  });
+
+  test('collapses fullwidth parens: "클로드（Claude）"', () => {
+    expect(restoreProtectedTerms('클로드（Claude）')).toBe('Claude');
+  });
+
+  test('longer canonical term wins: "Claude Code(Claude Code)" → "Claude Code"', () => {
+    expect(restoreProtectedTerms('Claude Code(Claude Code)')).toBe('Claude Code');
+  });
+
+  test('does NOT collapse a paren holding different text: "Claude (the assistant)"', () => {
+    expect(restoreProtectedTerms('Claude (the assistant)')).toBe('Claude (the assistant)');
+  });
+
+  test('does NOT touch non-canonical self-dup like code "fn(fn)"', () => {
+    // "fn" is not a protected term, so it never enters the collapse alternation.
+    expect(restoreProtectedTerms('fn(fn)')).toBe('fn(fn)');
+  });
+});
+
 // Regression guard for the corruption class documented in protected-terms.js:
 // restoreProtectedTerms does an unanchored replaceAll with no CJK word boundary,
 // so any _protected wrong-form that is itself a common standalone word silently
