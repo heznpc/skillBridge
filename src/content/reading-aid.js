@@ -106,9 +106,17 @@
   let mounted = false;
   function mount() {
     if (mounted || !document.body) return;
+    // The TOC toggle + panel are interactive controls that inherit the host
+    // page's button/list styles, so mount them in the shadow UI root (style
+    // isolation; also auto-excludes them from the translation walk). The 3px
+    // reading-progress bar stays in the light DOM on purpose: it has no
+    // host-leak surface, and #si18n-progress-bar is shared with banners.js
+    // (translation progress) through a load-order-sensitive lookup — relocating
+    // it would risk a duplicate bar for no isolation benefit.
     document.body.appendChild(bar);
-    document.body.appendChild(toggle);
-    document.body.appendChild(panel);
+    const root = (window._sb && window._sb.uiRoot && window._sb.uiRoot()) || document.body;
+    root.appendChild(toggle);
+    root.appendChild(panel);
     window.addEventListener('scroll', onScroll, { passive: true });
     mounted = true;
   }
