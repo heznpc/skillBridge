@@ -100,7 +100,14 @@
     "Introduction to subagents": "Einführung in Subagents",
     "Learn how to use and create sub-agents in Claude Code to manage context, delegate tasks, and build specialized workflows that keep your main conversation clean and focused.": "Lernen Sie, wie Sie Sub-Agents in Claude Code verwenden und erstellen, um Kontext zu verwalten, Aufgaben zu delegieren und spezialisierte Workflows zu erstellen, die Ihre Hauptkonversation sauber und fokussiert halten.",
     "AI Capabilities and Limitations": "AI-Fähigkeiten und -Grenzen",
-    "Understand how modern generative AI systems behave, identify types of unexpected outputs, and implement targeted fixes.": "Verstehen Sie das Verhalten moderner generativer AI-Systeme, identifizieren Sie Arten unerwarteter Ausgaben und implementieren Sie gezielte Korrekturen."
+    "Understand how modern generative AI systems behave, identify types of unexpected outputs, and implement targeted fixes.": "Verstehen Sie das Verhalten moderner generativer AI-Systeme, identifizieren Sie Arten unerwarteter Ausgaben und implementieren Sie gezielte Korrekturen.",
+    "Claude Platform 101": "Claude Platform 101",
+    "This course teaches developers to build on the Claude Developer Platform from the ground up, whether you've made a few API calls or have only used Claude through a chat window.": "Dieser Kurs bringt Entwicklern von Grund auf bei, auf der Claude Developer Platform zu entwickeln — egal, ob Sie schon ein paar API-Aufrufe gemacht oder Claude bisher nur im Chat-Fenster genutzt haben.",
+    "There's a wide gap between chatting with Claude in a browser tab and building Claude into something you ship. A chat answers a question and the thread ends there. An application sends Claude structured requests, hands it tools, lets it act on real systems, and runs that loop for one user or a million. The Claude Developer Platform exists to close that gap, and it's a different skill from prompting. Getting value out of it means understanding what's in a request, how an agent decides what to do, and where the costs and limits live.": "Zwischen dem Chatten mit Claude im Browser-Tab und dem Einbauen von Claude in ein Produkt, das Sie ausliefern, liegt eine große Lücke. Ein Chat beantwortet eine Frage, und dort endet der Faden. Eine Anwendung schickt Claude strukturierte Anfragen, gibt ihm Werkzeuge an die Hand, lässt ihn auf echten Systemen handeln und betreibt diese Schleife für einen Nutzer oder eine Million. Die Claude Developer Platform existiert, um diese Lücke zu schließen — und das ist eine andere Fähigkeit als Prompting. Wert daraus zu ziehen heißt zu verstehen, was in einer Anfrage steckt, wie ein Agent entscheidet, was zu tun ist, und wo Kosten und Grenzen liegen.",
+    "This course teaches developers to build on the Claude Developer Platform from the ground up, whether you've made a few API calls or have only used Claude through a chat window. We start from first principles: what an API request contains, what an agent loop is, how the context window bounds what Claude can see, and how tools and permissions decide what it can do. The techniques later in the course then land as understanding instead of a list of calls to copy.": "Dieser Kurs bringt Entwicklern von Grund auf bei, auf der Claude Developer Platform zu entwickeln — egal, ob Sie schon ein paar API-Aufrufe gemacht oder Claude bisher nur im Chat-Fenster genutzt haben. Wir beginnen bei den Grundprinzipien: was eine API-Anfrage enthält, was eine Agenten-Schleife ist, wie das Kontextfenster begrenzt, was Claude sehen kann, und wie Werkzeuge und Berechtigungen entscheiden, was er tun darf. Die späteren Techniken des Kurses setzen sich dann als Verständnis fest statt als Liste von Aufrufen zum Abschreiben.",
+    "You'll send your first request and read the response, then choose the right model for a job (Opus, Sonnet, or Haiku) and weigh the cost-and-latency trade-off on your own examples instead of guessing. From there you'll build the agent loop by hand to see how Claude acts, observes, and decides, then collapse that hand-written loop with the SDK's Tool Runner once you understand what it does for you. You'll give Claude reach through tool use, let it reason through hard problems with extended thinking, and keep spend predictable with workspaces, limits, and the Console Workbench.": "Sie senden Ihre erste Anfrage und lesen die Antwort, wählen dann das richtige Modell für die Aufgabe (Opus, Sonnet oder Haiku) und wägen den Kosten-Latenz-Kompromiss an eigenen Beispielen ab, statt zu raten. Danach bauen Sie die Agenten-Schleife von Hand, um zu sehen, wie Claude handelt, beobachtet und entscheidet — und ersetzen diese handgeschriebene Schleife durch den Tool Runner des SDK, sobald Sie verstanden haben, was er Ihnen abnimmt. Sie geben Claude über Tool-Nutzung Reichweite, lassen ihn mit Extended Thinking schwierige Probleme durchdenken und halten die Ausgaben mit Workspaces, Limits und der Console Workbench planbar.",
+    "The middle of the course extends an agent beyond your own code: Anthropic's built-in tools (web search, code execution, web fetch) that run on Anthropic's infrastructure, Skills that package a procedure once and reuse it across calls, MCP servers that connect Claude to third-party tools without writing a schema, and the context-management patterns that keep a long-running agent inside the window and affordable past turn ten.": "Der mittlere Teil des Kurses erweitert einen Agenten über Ihren eigenen Code hinaus: Anthropics integrierte Werkzeuge (Websuche, Code-Ausführung, Web-Abruf), die auf Anthropics Infrastruktur laufen; Fähigkeiten, die einen Ablauf einmal verpacken und über Aufrufe hinweg wiederverwenden; MCP-Server, die Claude ohne Schema-Schreiben mit Drittanbieter-Werkzeugen verbinden; und die Kontext-Verwaltungsmuster, die einen langlaufenden Agenten im Fenster halten und auch nach dem zehnten Zug bezahlbar machen.",
+    "The final section hands work off. You'll learn when to run your own loop and when to let Anthropic run a sandboxed, managed agent for you, then build one end to end, consuming the event stream as Anthropic runs the loop and reports back. A standalone lesson shows you how to build with the API using Claude Code itself, which is also why the rest of the course matters: you need to know what good code looks like to review what an agent writes for you. Every lesson ends with a runnable demo, so you finish each one with working code.": "Der letzte Abschnitt gibt Arbeit ab. Sie lernen, wann Sie Ihre eigene Schleife betreiben und wann Sie Anthropic einen sandboxed Managed Agent für sich laufen lassen — und bauen dann einen von Anfang bis Ende, wobei Sie den Ereignisstrom konsumieren, während Anthropic die Schleife ausführt und berichtet. Eine eigenständige Lektion zeigt, wie man mit der API über Claude Code selbst entwickelt — auch deshalb zählt der Rest des Kurses: Sie müssen wissen, wie guter Code aussieht, um zu prüfen, was ein Agent für Sie schreibt. Jede Lektion endet mit einer lauffähigen Demo, sodass Sie jede mit funktionierendem Code abschließen."
   },
   "faq": {
     "Data and Privacy": "Daten und Datenschutz",
@@ -1129,6 +1136,29 @@
     "Measuring teaching effectiveness": "Wirksamkeit des Unterrichts messen",
     "Resource library for instructors": "Ressourcenbibliothek für Lehrpersonen",
     "Peer learning strategies": "Strategien für das Lernen unter Gleichaltrigen"
+  },
+  "claudePlatform": {
+    "What is the Claude Developer Platform?": "Was ist die Claude Developer Platform?",
+    "Your first API call": "Ihr erster API-Aufruf",
+    "Choosing the right model": "Das richtige Modell wählen",
+    "The agent loop explained": "Die Agenten-Schleife erklärt",
+    "What is tool use?": "Was ist Tool-Nutzung?",
+    "What is thinking?": "Was ist Thinking?",
+    "Built-in tools": "Integrierte Werkzeuge",
+    "Skills": "Fähigkeiten",
+    "MCP": "MCP",
+    "Context management": "Kontext-Verwaltung",
+    "What are managed agents?": "Was sind Managed Agents?",
+    "Building your first managed agent": "Ihren ersten Managed Agent erstellen",
+    "Building with Claude Code": "Mit Claude Code entwickeln",
+    "Claude Platform 101 Quiz": "Claude Platform 101 Quiz",
+    "Teaching your Agent": "Ihrem Agenten beibringen",
+    "Extending your Agent": "Ihren Agenten erweitern",
+    "Managed Agents": "Managed Agents",
+    "Data and Privacy": "Daten und Datenschutz",
+    "Who this is for": "Für wen dieser Kurs ist",
+    "Recommended prerequisites": "Empfohlene Vorkenntnisse",
+    "Course sections": "Kursabschnitte"
   },
   "_protected": {
     "Claude Code": [

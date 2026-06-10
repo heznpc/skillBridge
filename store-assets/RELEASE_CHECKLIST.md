@@ -52,7 +52,9 @@ screenshots in step 2.
 ### 2. Regenerate store screenshots (one command)
 
 Don't hand-capture. `npm run capture:store` drives the **built bundle** with
-Playwright and regenerates the full CWS set into `store-assets/`:
+Playwright and regenerates the full CWS set into `store-assets/` — or run it
+with **zero local setup**: Actions → "Capture store assets" → Run workflow →
+download the `store-assets` artifact:
 
 - `01-translate.png` … `05-exam-safe.png` (1280×800) — translate before/after,
   language picker, in-page AI tutor, flashcards, exam-safe answers
