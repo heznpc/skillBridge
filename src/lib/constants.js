@@ -463,6 +463,7 @@ const EXAMPLE_QUESTIONS = {
     'Đố tôi về bài học này',
     'Tóm tắt bài học này',
   ],
+<<<<<<< HEAD
 };
 
 const DASHBOARD_LABELS = {
@@ -544,6 +545,8 @@ const DASHBOARD_LABELS = {
     ru: 'Пока пусто — откройте урок, и ваш прогресс появится здесь.',
     vi: 'Chưa có gì — hãy xem một bài học và tiến độ của bạn sẽ hiển thị ở đây.',
   },
+=======
+>>>>>>> origin/main
 };
 
 const A11Y_LABELS = {
