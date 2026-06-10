@@ -1,0 +1,91 @@
+name: Capture store assets
+
+# Regenerates the CWS listing assets (5 scenes + promo tile + demo webm +
+# description.md) from the BUILT bundle entirely in CI — no local browser
+# needed: Actions tab → "Capture store assets" → Run workflow → download the
+# `store-assets` artifact. shotkit runs build:bundle first and drives the
+# shipped bundle, so a green run doubles as a real-bundle smoke test.
+
+on:
+  workflow_dispatch:
+    inputs:
+      scene:
+        description: 'Only this scene/tile/demo (comma-separated; empty = all)'
+        required: false
+        default: ''
+      video:
+        description: 'Record the demo screencast (webm)'
+        type: boolean
+        default: true
+      headless:
+        description: 'Run headless instead of under xvfb (experimental)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e  # v6.4.0
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Cache the Chromium binary so re-runs skip the ~120MB download.
+      # Same key scheme as ci.yml's e2e job.
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Install xvfb (always) + Playwright Chromium (conditional)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" != "true" ]; then
+            npx playwright install --with-deps chromium
+          else
+            npx playwright install-deps chromium
+          fi
+
+      # Inputs flow via env (never interpolated into the script) — workflow-
+      # injection-safe per GitHub's guidance.
+      - name: Capture
+        env:
+          SCENE: ${{ inputs.scene }}
+          VIDEO: ${{ inputs.video }}
+          HEADLESS: ${{ inputs.headless }}
+        run: |
+          ARGS=()
+          if [ -n "$SCENE" ]; then ARGS+=(--scene "$SCENE"); fi
+          if [ "$VIDEO" != "true" ]; then ARGS+=(--no-video); fi
+          if [ "$HEADLESS" = "true" ]; then
+            HEADED=0 npx shotkit --json "${ARGS[@]}" | tee shotkit-result.json
+          else
+            xvfb-run -a npx shotkit --json "${ARGS[@]}" | tee shotkit-result.json
+          fi
+          { echo "### shotkit assets"
+            node -e "const r=require('./shotkit-result.json'); console.log(r.produced.map(p=>'- \`'+p.split('/').pop()+'\`').join('\n'))"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload assets
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: store-assets
+          path: |
+            store-assets/*.png
+            store-assets/*.webm
+            store-assets/description.md
+          if-no-files-found: error
