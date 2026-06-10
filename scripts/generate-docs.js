@@ -11,6 +11,7 @@
  *   <!-- LANG_COUNT_START -->...<!-- LANG_COUNT_END -->
  *   <!-- PREMIUM_LANGS_START -->...<!-- PREMIUM_LANGS_END -->
  *   <!-- FEATURES_START -->...<!-- FEATURES_END -->
+ *   <!-- LOCALE_QA_START -->...<!-- LOCALE_QA_END -->  (per-locale QA table from src/data/*.json _meta)
  *
  * Usage:  node scripts/generate-docs.js
  */
@@ -126,6 +127,40 @@ function buildLangTagsHtml(langs) {
 // The script only updates version/lang counts/premium list; feature cards are maintained
 // manually but wrapped in markers so they *could* be generated in the future.
 
+// Per-locale QA table — generated from each dictionary's _meta so the README
+// table can never drift from the machine-readable QA state. `lastAudited` is
+// stamped by the pre-release LLM dictionary audit (see RELEASE_CHECKLIST step 0);
+// `nativeReview` flips to "reviewed" when a native speaker completes a pass
+// (recruiting: issue #202).
+function countLeaves(obj) {
+  let n = 0;
+  for (const [k, v] of Object.entries(obj)) {
+    if (k === '_meta' || k === '_protected') continue;
+    if (typeof v === 'string') n++;
+    else if (v && typeof v === 'object' && !Array.isArray(v)) n += countLeaves(v);
+  }
+  return n;
+}
+function buildLocaleQaTable() {
+  const rows = [];
+  for (const { code, label } of premiumLangs) {
+    const dict = JSON.parse(fs.readFileSync(path.join(ROOT, `src/data/${code}.json`), 'utf8'));
+    const m = dict._meta || {};
+    const review =
+      m.nativeReview === 'reviewed'
+        ? '✅ reviewed'
+        : '🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202)';
+    rows.push(
+      `| ${label} | \`${code}\` | ${countLeaves(dict)} | ${m.lastUpdated || '—'} | ${m.lastAudited || '—'} | ${review} |`,
+    );
+  }
+  return [
+    '| Language | Code | Entries | Last curated | Last LLM audit | Native review |',
+    '|---|---|---:|---|---|---|',
+    ...rows,
+  ].join('\n');
+}
+
 // ---------------------------------------------------------------------------
 // 4. Replace between markers
 // ---------------------------------------------------------------------------
@@ -156,6 +191,7 @@ let readme = fs.readFileSync(readmePath, 'utf8');
 
 readme = replaceBetweenMarkers(readme, 'VERSION', `v${version}`);
 readme = replaceBetweenMarkers(readme, 'LANG_COUNT', `${translatedCount} languages`);
+readme = replaceBetweenMarkers(readme, 'LOCALE_QA', '\n' + buildLocaleQaTable() + '\n');
 
 fs.writeFileSync(readmePath, readme, 'utf8');
 

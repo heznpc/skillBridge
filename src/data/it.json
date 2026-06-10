@@ -4,7 +4,9 @@
     "langName": "Italiano",
     "version": "3.5.40",
     "lastUpdated": "2026-06-03",
-    "translation_provenance": "Re-translated from the English source via Google Translate (2026-06), with brand/technical terms restored to canonical English; Italian↔Spanish overlap is now 0.1% (parity with the other 10 locales). Earlier v1 was a Spanish-derived regex transform — fully replaced. Structural keys must remain identical to other premium dictionaries (enforced by scripts/check-dict-coverage.js); native Italian PRs welcome."
+    "translation_provenance": "Re-translated from the English source via Google Translate (2026-06), with brand/technical terms restored to canonical English; Italian↔Spanish overlap is now 0.1% (parity with the other 10 locales). Earlier v1 was a Spanish-derived regex transform — fully replaced. Structural keys must remain identical to other premium dictionaries (enforced by scripts/check-dict-coverage.js); native Italian PRs welcome.",
+    "lastAudited": "2026-06-10",
+    "nativeReview": "recruiting"
   },
   "ui": {
     "Anthropic Academy": "Anthropic Academy",
