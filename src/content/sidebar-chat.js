@@ -59,10 +59,10 @@
   //   - CSS custom properties (--si18n-*) DO inherit through the boundary, so
   //     var() references keep resolving from :root.
   //
-  // Migration is staged: the FAB moves in first; the sidebar and the other
-  // body-injected UI follow. content.css still styles the light-DOM UI in the
-  // meantime — its now-superseded #skillbridge-fab rules are inert (page CSS
-  // cannot style shadow content) and get removed in the final cleanup stage.
+  // The FAB, sidebar, and TOC live here; blend-in components (header
+  // controls) stay in the light DOM by design. Shadow UI is styled by the
+  // adopted, :host()-transformed content.css (see shadow-css.js) — except the
+  // FAB, whose inline critical style below is its single source of truth.
   function getUiRoot() {
     if (sb._uiHost && sb._uiHost.isConnected) return sb._uiHost.shadowRoot;
     const host = document.createElement('div');
@@ -92,7 +92,16 @@
       }
     };
     apply();
-    const obs = new MutationObserver(apply);
+    // Self-disconnect when the host leaves the DOM (host-page swap): a fresh
+    // host from getUiRoot() brings its own observer, so the old one must not
+    // linger and keep mutating a detached node.
+    const obs = new MutationObserver(() => {
+      if (!host.isConnected) {
+        obs.disconnect();
+        return;
+      }
+      apply();
+    });
     obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     obs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
   }
@@ -103,12 +112,20 @@
   // sb.$id / sb.$ instead of document.getElementById / querySelector so a
   // single call resolves correctly regardless of which side an element is on
   // during the staged migration.
-  sb.$id = (id) => (sb._uiHost && sb._uiHost.shadowRoot.getElementById(id)) || document.getElementById(id);
-  sb.$ = (sel) => (sb._uiHost && sb._uiHost.shadowRoot.querySelector(sel)) || document.querySelector(sel);
+  // isConnected guard: if the host was ever detached (host-page DOM swap), a
+  // lookup must not return elements from the dead root — fall through to the
+  // light DOM (null there reads as "not present", which handlers treat as a
+  // no-op) until getUiRoot() builds a fresh host.
+  sb.$id = (id) =>
+    (sb._uiHost && sb._uiHost.isConnected && sb._uiHost.shadowRoot.getElementById(id)) || document.getElementById(id);
+  sb.$ = (sel) =>
+    (sb._uiHost && sb._uiHost.isConnected && sb._uiHost.shadowRoot.querySelector(sel)) || document.querySelector(sel);
 
-  // FAB styles relocated from content.css into the shadow root, with the
-  // ancestor theme selectors rewritten to :host(...) form. These supersede
-  // content.css's #skillbridge-fab rules, which can no longer reach the button.
+  // The SINGLE source of truth for FAB styling (content.css carries no
+  // #skillbridge-fab rules — see the note there). Inline rather than relying
+  // on the adopted content.css sheet because adoption is async (fetch) and the
+  // FAB must never flash unstyled. Ancestor theme selectors are written in
+  // :host(...) form; the shadow host mirrors the html/body state classes.
   const FAB_SHADOW_CSS = `
     #skillbridge-fab { position: fixed; bottom: 24px; right: 24px; width: 48px; height: 48px; padding: 0; border-radius: 50%; background: var(--si18n-accent, #3d405b); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 16px rgba(61, 64, 91, 0.35); z-index: 99999; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: none; }
     #skillbridge-fab svg { flex-shrink: 0; width: 24px; height: 24px; }
@@ -570,8 +587,7 @@
 
   function toggleSidebar() {
     const sidebar = sb.$id('skillbridge-sidebar');
-    // FAB now lives in the shadow UI root (#skillbridge-root); look it up there.
-    const fab = sb._uiHost ? sb._uiHost.shadowRoot.getElementById('skillbridge-fab') : null;
+    const fab = sb.$id('skillbridge-fab');
     sb.sidebarVisible = !sb.sidebarVisible;
     // If we're closing, cancel any in-flight chat — the user clearly
     // doesn't want the answer anymore and we shouldn't keep saving
