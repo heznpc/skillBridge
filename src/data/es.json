@@ -78,7 +78,7 @@
     "Building with the Claude API": "Construyendo con la API de Claude",
     "This comprehensive course covers the full spectrum of working with Anthropic models using the Claude API": "Este curso completo cubre el espectro completo del trabajo con modelos de Anthropic usando la API de Claude",
     "Introduction to Model Context Protocol": "Introducción a Model Context Protocol",
-    "Learn to build Model Context Protocol servers and clients from scratch using Python. Master MCP's three core primitives—tools, resources, and prompts—to connect Claude with external services": "Aprende a construir servidores y clientes de Model Context Protocol desde cero usando Python. Domina los tres primitivos centrales de MCP (herramientas, recursos e indicaciones) para conectar Claude con servicios externos",
+    "Learn to build Model Context Protocol servers and clients from scratch using Python. Master MCP's three core primitives—tools, resources, and prompts—to connect Claude with external services": "Aprende a construir servidores y clientes de Model Context Protocol desde cero usando Python. Domina los tres primitivos centrales de MCP (herramientas, recursos y prompts) para conectar Claude con servicios externos",
     "AI Fluency for educators": "Fluidez en IA para educadores",
     "This course empowers faculty, instructional designers, and educational leaders to apply AI Fluency into their own teaching practice and institutional strategy.": "Este curso capacita a profesores, diseñadores instruccionales y líderes educativos para aplicar la Fluidez en IA en su propia práctica docente y estrategia institucional.",
     "AI Fluency for students": "Fluidez en IA para estudiantes",
@@ -693,7 +693,7 @@
     "Estimated time for this module: 10-15 minutes": "Tiempo estimado para este módulo: 10-15 minutos",
     "Welcome! This video introduces you to this course's focus: developing meaningful collaboration with AI rather than just learning about AI technology. We explain that this course explores how to build a lasting framework for working with AI systems that goes beyond simple and temporary tips and tricks. We explain what we mean by AI Fluency: it is the ability to collaborate with AI in ways that are effective, efficient, ethical, and safe. We also outline the course structure, which covers each of the AI Fluency core competencies (the 4Ds) as well as key technical and practical concepts. By the end of the course, you'll have a framework for thoughtful AI interaction, confidence in choosing when and how to work with AI effectively, practical collaboration skills, and the ability to evaluate and disseminate AI-assisted work responsibly.": "¡Bienvenido! Este video presenta el enfoque del curso: desarrollar una colaboración significativa con la IA en lugar de solo aprender sobre tecnología de IA. Explicamos cómo este curso explora la construcción de un marco duradero para trabajar con sistemas de IA que va más allá de consejos simples y temporales. Explicamos lo que queremos decir con Fluidez en IA: es la capacidad de colaborar con la IA de manera efectiva, eficiente, ética y segura. También describimos la estructura del curso, que cubre cada una de las competencias centrales de Fluidez en IA (las 4D) así como conceptos técnicos y prácticos clave. Al final del curso, tendrás un marco para la interacción reflexiva con IA, confianza para elegir cuándo y cómo trabajar con IA de manera efectiva, habilidades prácticas de colaboración y la capacidad de evaluar y difundir trabajo asistido por IA de manera responsable.",
     "The AI Fluency Framework centers on the \"4D\" competencies of Delegation, Description, Discernment and Diligence": "El Marco de Fluidez en IA se centra en las competencias \"4D\" de Delegación, Descripción, Discernimiento y Diligencia",
-    "In the next lesson, we'll explore why AI Fluency matters in today's rapidly evolving technological landscape. We'll introduce three key ways people collaborate with AI (Automation, Augmentation, and Agency) and the core competencies of the AI Fluency Framework: the \"4Ds\" of Delegation, Description, Discernment, and Diligence.": "En la próxima lección, exploraremos por qué la Fluidez en IA importa en el panorama tecnológico actual en rápida evolución. Presentaremos tres formas clave en que las personas colaboran con la IA (Automatización, Aumentación y Agencia) y las competencias centrales del Marco de Fluidez en IA: las \"4D\" de Delegación, Descripción, Discernimiento y Diligencia.",
+    "In the next lesson, we'll explore why AI Fluency matters in today's rapidly evolving technological landscape. We'll introduce three key ways people collaborate with AI (Automation, Augmentation, and Agency) and the core competencies of the AI Fluency Framework: the \"4Ds\" of Delegation, Description, Discernment, and Diligence.": "En la próxima lección, exploraremos por qué la Fluidez en IA importa en el panorama tecnológico actual en rápida evolución. Presentaremos tres formas clave en que las personas colaboran con la IA (Automatización, Aumento y Agencia) y las competencias centrales del Marco de Fluidez en IA: las \"4D\" de Delegación, Descripción, Discernimiento y Diligencia.",
     "As you progress through the course, we'd love to hear from you about how you are using concepts from the course in your life, work, or classes and any feedback you may have.": "A medida que avances en el curso, nos encantaría saber cómo estás utilizando los conceptos del curso en tu vida, trabajo o clases, y cualquier comentario que puedas tener."
   },
   "common": {
@@ -1019,7 +1019,7 @@
     "Best practices for production": "Mejores prácticas para producción"
   },
   "aiFluencyEdu": {
-    "AI Fluency for educators": "Competencia en AI para educadores",
+    "AI Fluency for educators": "Fluidez en IA para educadores",
     "Adapting AI concepts for the classroom": "Adaptación de conceptos de AI para el aula",
     "Teaching strategies for AI literacy": "Estrategias de enseñanza para la alfabetización en AI",
     "Lesson planning with AI tools": "Planificación de clases con herramientas de AI",
@@ -1041,7 +1041,7 @@
     "Community of practice": "Comunidad de práctica"
   },
   "aiFluencyStudent": {
-    "AI Fluency for students": "Competencia en AI para estudiantes",
+    "AI Fluency for students": "Fluidez en IA para estudiantes",
     "What is AI and how does it work?": "¿Qué es la AI y cómo funciona?",
     "Using AI responsibly": "Uso responsable de la AI",
     "AI as a learning tool": "AI como herramienta de aprendizaje",
@@ -1058,7 +1058,7 @@
     "Reflection and self-assessment": "Reflexión y autoevaluación"
   },
   "aiFluencyNonprofit": {
-    "AI Fluency for nonprofits": "Competencia en AI para organizaciones sin fines de lucro",
+    "AI Fluency for nonprofits": "Fluidez en IA para organizaciones sin fines de lucro",
     "AI for mission-driven organizations": "AI para organizaciones con misión social",
     "Donor engagement with AI": "Participación de donantes con AI",
     "Grant writing with AI assistance": "Redacción de subvenciones con asistencia de AI",
