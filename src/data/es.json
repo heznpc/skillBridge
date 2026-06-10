@@ -1143,32 +1143,11 @@
     "Anthropic Academy": [
       "Anthropic Academy"
     ],
-    "Enterprise": [
-      "Empresa"
-    ],
     "Personal": [
       "Personal"
     ],
-    "Plugin": [
-      "complemento"
-    ],
-    "Plugins": [
-      "complementos"
-    ],
-    "skill": [
-      "habilidad"
-    ],
-    "skills": [
-      "habilidades"
-    ],
-    "Skills": [
-      "Habilidades"
-    ],
     "SKILL.md": [
       "SKILL.md"
-    ],
-    "frontmatter": [
-      "preámbulo"
     ],
     "CLAUDE.md": [
       "CLAUDE.md"
@@ -1182,15 +1161,9 @@
     "subagent": [
       "subagente"
     ],
-    "hook": [
-      "gancho"
-    ],
-    "hooks": [
-      "ganchos"
-    ],
-    "Cowork": ["cotrabajo", "trabajo conjunto"],
-    "Dispatch": ["despacho", "envío"],
-    "Computer Use": ["uso del computador", "uso de la computadora"]
+    "Cowork": [
+      "cotrabajo"
+    ]
   },
   "exam_ui": {
     "Pass": "Aprobado",
