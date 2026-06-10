@@ -23,6 +23,7 @@
     flashcardPanelOpen: false,
     bookmarksPanelOpen: false,
     recentPanelOpen: false,
+    dashboardPanelOpen: false,
   };
   const _state = sb._chat.state;
 
@@ -240,6 +241,10 @@
       </div>
 
       <div class="si18n-tools-menu" id="si18n-tools-menu" role="menu" hidden>
+        <button class="si18n-tools-item" id="si18n-dash-btn" role="menuitem" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <span>${sb.t(MENU_LABELS.dashboard)}</span>
+        </button>
         <button class="si18n-tools-item" id="si18n-recent-btn" role="menuitem" type="button">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><polyline points="12 7 12 12 15 14"/></svg>
           <span>${sb.t(RESUME_LABELS.openRecent)}</span>
@@ -304,6 +309,7 @@
     sb.$id('si18n-pdf-btn')?.addEventListener('click', exportLessonPDF);
     sb.$id('si18n-bm-btn')?.addEventListener('click', () => sb._chat.toggleBookmarksPanel?.());
     sb.$id('si18n-recent-btn')?.addEventListener('click', () => sb._chat.toggleRecentPanel?.());
+    sb.$id('si18n-dash-btn')?.addEventListener('click', () => sb._chat.toggleDashboardPanel?.());
     bindChatInputEvents();
     bindExampleQuestions();
   }
@@ -574,6 +580,7 @@
     _state.flashcardPanelOpen = false;
     _state.bookmarksPanelOpen = false;
     _state.recentPanelOpen = false;
+    _state.dashboardPanelOpen = false;
     bindChatInputEvents();
     // Example-question chips may still be in the restored chat HTML; their
     // click handlers must be re-bound too (closeSubPanel previously only

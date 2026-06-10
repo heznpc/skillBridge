@@ -370,6 +370,16 @@ async function evalInContentWorld(context, op, arg) {
               document.querySelectorAll('.si18n-verify-spinner').forEach((el) => el.remove());
               return true;
             },
+            toggleDashboardPanel: () => {
+              window._sb._chat.toggleDashboardPanel();
+              return true;
+            },
+            readDashboard: () => {
+              const root = window._sb._uiHost?.shadowRoot || document;
+              const title = root.querySelector('.si18n-history-title')?.textContent?.trim() || '';
+              const stats = root.querySelectorAll('.si18n-dash-stat').length;
+              return { title, stats };
+            },
             toggleHistoryPanel: () => {
               window._sb._chat.toggleHistoryPanel();
               return true;
