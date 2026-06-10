@@ -269,6 +269,51 @@ describe('no corruption of correct CJK prose (real shipped dictionaries)', () =>
       '個人觀點', // personal view (was -> Personal)
       '團隊協作', // team collaboration (was -> Cowork)
     ],
+    // Latin/Cyrillic/Vietnamese locales — same bug class, swept later than the
+    // CJK four. Each sentence is ordinary prose using the language's everyday
+    // word that had been registered as a brand "wrong-form".
+    es: [
+      'estas habilidades de comunicación', // skills (was -> skills)
+      'el envío de mensajes', // sending (was -> Dispatch)
+      'un complemento útil', // add-on (was -> Plugin)
+      'el trabajo conjunto del equipo', // joint work (was -> Cowork)
+    ],
+    fr: [
+      'les compétences nécessaires', // skills (was -> skills)
+      "l'extension de navigateur", // extension (was -> Plugin)
+      'le travail collaboratif', // collaborative work (was -> Cowork)
+      'le préambule du document', // preamble (was -> frontmatter)
+    ],
+    it: [
+      'le competenze che svilupperai', // skills (was -> skills)
+      'Collegare gli strumenti', // to connect (was -> Plugin)
+      "l'abilità di scrivere", // ability (was -> skill)
+      'la questione principale del corso', // main issue (was -> frontmatter)
+    ],
+    de: [
+      'die Zusammenarbeit im Unternehmen', // collaboration + company (was -> Cowork/Enterprise)
+      'diese Fähigkeiten sind wichtig', // abilities (was -> Skills)
+      'eine nützliche Erweiterung', // extension (was -> Plugin)
+      'Da ist ein Haken', // there's a catch (was -> hook)
+    ],
+    'pt-BR': [
+      'essas habilidades de comunicação', // skills (was -> skills)
+      'o envio de mensagens', // sending (was -> Dispatch)
+      'o trabalho conjunto da equipe', // joint work (was -> Cowork)
+      'Pessoal, vamos começar', // folks (was -> Personal)
+    ],
+    ru: [
+      'эти навыки общения', // skills (was -> skills)
+      'Совместная работа команды', // joint work (was -> Cowork)
+      'Отправка сообщений', // sending (was -> Dispatch)
+      'Персональный подход', // personal (was -> Personal)
+    ],
+    vi: [
+      'những kỹ năng giao tiếp', // skills (was -> skills)
+      'phần đầu của bài học', // the beginning (was -> frontmatter)
+      'Doanh nghiệp phát triển', // business (was -> Enterprise)
+      'cộng tác với nhau', // collaborate (was -> Cowork)
+    ],
   };
 
   for (const [lang, sentences] of Object.entries(cases)) {

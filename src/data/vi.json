@@ -1143,32 +1143,8 @@
     "Anthropic Academy": [
       "Anthropic Academy"
     ],
-    "Enterprise": [
-      "Doanh nghiệp"
-    ],
-    "Personal": [
-      "Cá nhân"
-    ],
-    "Plugin": [
-      "phần bổ trợ"
-    ],
-    "Plugins": [
-      "phần bổ trợ"
-    ],
-    "skill": [
-      "kỹ năng"
-    ],
-    "skills": [
-      "kỹ năng"
-    ],
-    "Skills": [
-      "Kỹ năng"
-    ],
     "SKILL.md": [
       "SKILL.md"
-    ],
-    "frontmatter": [
-      "phần đầu"
     ],
     "CLAUDE.md": [
       "CLAUDE.md"
@@ -1181,16 +1157,7 @@
     ],
     "subagent": [
       "tác tử phụ"
-    ],
-    "hook": [
-      "móc"
-    ],
-    "hooks": [
-      "móc"
-    ],
-    "Cowork": ["cộng tác", "làm việc chung"],
-    "Dispatch": ["gửi đi", "phân phối"],
-    "Computer Use": ["sử dụng máy tính"]
+    ]
   },
   "exam_ui": {
     "Pass": "Đạt",
