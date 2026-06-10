@@ -60,8 +60,11 @@
         return sheet;
       })
       .catch((err) => {
-        // Non-fatal: components that move into the shadow keep a small inline
-        // critical style, so a failed adopt degrades rather than breaks.
+        // Non-fatal — but reset the cache so the next ensureShadowStylesheet
+        // call retries instead of pinning the failure for the page's lifetime.
+        // (The fetch targets a local chrome-extension:// resource, so failures
+        // are edge cases like an invalidated extension context.)
+        _sheetPromise = null;
         console.warn('[SkillBridge] shadow stylesheet load failed:', err && err.message);
         return null;
       });

@@ -170,7 +170,6 @@ body.si18n-lang-ko,
 }
 
 /* Global focus styles for all SkillBridge interactive elements */
-#skillbridge-fab:focus-visible,
 .si18n-close:focus-visible,
 .si18n-history-btn:focus-visible,
 .si18n-history-back:focus-visible,
@@ -187,67 +186,12 @@ body.si18n-lang-ko,
   outline-offset: 2px;
 }
 
-/* Floating Action Button */
-#skillbridge-fab {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  width: 48px;
-  height: 48px;
-  /* Override the host page's base `button` padding (Skilljar uses 12px 24px)
-     so the icon stays centered. */
-  padding: 0;
-  border-radius: 50%;
-  background: var(--si18n-accent);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 4px 16px rgba(61, 64, 91, 0.35);
-  z-index: 99999;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: none;
-}
-
-/* The FAB's chat-bubble <svg> sizes itself only via width/height="24"
-   *presentation attributes*, which have specificity 0 — so a host page's
-   `svg { width: ... }` author rule overrides them to 0 and the icon vanishes,
-   leaving an empty circle. Pin the size explicitly (this is the load-bearing
-   fix) and keep it from shrinking as cheap insurance against host flex resets.
-   Verified live on anthropic.skilljar.com. */
-#skillbridge-fab svg {
-  flex-shrink: 0;
-  width: 24px;
-  height: 24px;
-}
-
-#skillbridge-fab:hover {
-  transform: scale(1.08);
-  box-shadow: 0 6px 24px rgba(61, 64, 91, 0.45);
-}
-
-#skillbridge-fab.hidden {
-  transform: scale(0);
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* First-visit pulse animation to draw attention */
-#skillbridge-fab.si18n-fab-pulse {
-  animation: si18n-fab-pulse 2s ease-in-out 3;
-}
-@keyframes si18n-fab-pulse {
-  0%,
-  100% {
-    box-shadow: 0 4px 16px rgba(61, 64, 91, 0.35);
-  }
-  50% {
-    box-shadow:
-      0 4px 24px rgba(61, 64, 91, 0.55),
-      0 0 0 8px rgba(61, 64, 91, 0.1);
-  }
-}
+/* Floating Action Button — styled entirely by FAB_SHADOW_CSS in
+   sidebar-chat.js. The FAB lives in the #skillbridge-root shadow root and its
+   inline <style> is the single source of truth (including dark/RTL/responsive
+   and reduced-motion variants); keep no #skillbridge-fab rules here, or this
+   sheet — which is also adopted into the same shadow root — would create a
+   second competing source. */
 
 /* Chatbot widget — bottom-right popup */
 .skillbridge-sidebar {
@@ -1694,21 +1638,8 @@ html.si18n-dark .si18n-history-detail .si18n-chat-bubble code {
   background: rgba(255, 255, 255, 0.08) !important;
   color: #e0e0e0 !important;
 }
-/* Floating button in dark mode.
-   Was #1a1a1a on a near-black page (≈#0e0e0e) with a muted grey icon — the
-   launcher visually disappeared, so dark-mode users couldn't find the AI
-   Tutor entry point. Use a lightened tint of the brand accent with a white
-   icon and a soft light ring so it clearly reads against the dark canvas. */
-html.si18n-dark #skillbridge-fab {
-  background: #6b6f9e !important;
-  border: 1px solid rgba(255, 255, 255, 0.22) !important;
-  color: #ffffff !important;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55) !important;
-}
-html.si18n-dark #skillbridge-fab:hover {
-  background: #7c80b3 !important;
-  color: #ffffff !important;
-}
+/* (Dark-mode FAB styling lives in FAB_SHADOW_CSS — see the note at the
+   Floating Action Button section above.) */
 
 /* Course-author "course roadmap" widget — its `.crm` wrapper ships a fixed
    cream background, so in dark mode it rendered as a bright card floating on
@@ -2363,8 +2294,12 @@ html.si18n-dark .si18n-exam-banner {
   opacity: 1;
 }
 
-/* In-lesson reading aid: top progress bar + table of contents */
-#si18n-progress-bar {
+/* In-lesson reading aid: top progress bar + table of contents.
+   The reading bar has its OWN id — it used to reuse #si18n-progress-bar and
+   collided with the translation-progress bar (banners.js): this later rule's
+   `width: 0` overrode that bar's `width: 100%`, leaving the translation bar
+   invisible everywhere. */
+#si18n-reading-bar {
   position: fixed;
   top: 0;
   left: 0;
@@ -2665,12 +2600,6 @@ body:is(.si18n-lang-ar, .si18n-lang-he) .skillbridge-sidebar {
   left: 24px;
 }
 
-/* FAB button — bottom-left */
-body:is(.si18n-lang-ar, .si18n-lang-he) #skillbridge-fab {
-  right: auto;
-  left: 24px;
-}
-
 /* Header — keep flex layout but switch direction */
 body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-header {
   direction: rtl;
@@ -2846,10 +2775,6 @@ body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-dark-toggle-btn {
     left: 0;
     right: 0;
   }
-  body:is(.si18n-lang-ar, .si18n-lang-he) #skillbridge-fab {
-    left: 16px;
-    right: auto;
-  }
 }
 
 /* ============================================================
@@ -2857,7 +2782,6 @@ body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-dark-toggle-btn {
    ============================================================ */
 
 @media (prefers-reduced-motion: reduce) {
-  #skillbridge-fab,
   .skillbridge-sidebar,
   .skillbridge-sidebar.open,
   #si18n-welcome-banner,
@@ -2871,7 +2795,6 @@ body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-dark-toggle-btn {
     transition-duration: 0.01ms !important;
   }
 
-  #skillbridge-fab.si18n-fab-pulse,
   .si18n-streaming-cursor::after,
   .si18n-thinking-dots .si18n-dot,
   .si18n-verify-spinner .si18n-dot,
@@ -2920,10 +2843,6 @@ body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-dark-toggle-btn {
   }
   .skillbridge-sidebar.open {
     transform: translateY(0);
-  }
-  #skillbridge-fab {
-    bottom: 16px;
-    right: 16px;
   }
   #si18n-welcome-banner {
     max-width: calc(100vw - 32px);

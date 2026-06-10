@@ -40,7 +40,11 @@
   // ============================================================
 
   const bar = document.createElement('div');
-  bar.id = 'si18n-progress-bar';
+  // Own id — NOT #si18n-progress-bar (the translation-progress bar in
+  // banners.js). Sharing that id made banners' getElementById grab whichever
+  // bar mounted first, and the two same-specificity CSS blocks overrode each
+  // other (the reading bar's `width: 0` killed the translation bar globally).
+  bar.id = 'si18n-reading-bar';
   bar.setAttribute('aria-hidden', 'true');
 
   let rafPending = false;
@@ -109,10 +113,8 @@
     // The TOC toggle + panel are interactive controls that inherit the host
     // page's button/list styles, so mount them in the shadow UI root (style
     // isolation; also auto-excludes them from the translation walk). The 3px
-    // reading-progress bar stays in the light DOM on purpose: it has no
-    // host-leak surface, and #si18n-progress-bar is shared with banners.js
-    // (translation progress) through a load-order-sensitive lookup — relocating
-    // it would risk a duplicate bar for no isolation benefit.
+    // reading bar stays in the light DOM: it's a plain non-interactive div
+    // with no host-leak surface, so isolation buys nothing.
     document.body.appendChild(bar);
     const root = (window._sb && window._sb.uiRoot && window._sb.uiRoot()) || document.body;
     root.appendChild(toggle);
