@@ -100,7 +100,14 @@
     "Introduction to subagents": "subagents 简介",
     "Learn how to use and create sub-agents in Claude Code to manage context, delegate tasks, and build specialized workflows that keep your main conversation clean and focused.": "学习如何在 Claude Code 中使用和创建 sub-agent 来管理上下文、委托任务，并构建保持主对话简洁专注的专业工作流。",
     "AI Capabilities and Limitations": "AI 的能力与局限性",
-    "Understand how modern generative AI systems behave, identify types of unexpected outputs, and implement targeted fixes.": "了解现代生成式 AI 系统的行为方式，识别意外输出的类型，并实施有针对性的修复。"
+    "Understand how modern generative AI systems behave, identify types of unexpected outputs, and implement targeted fixes.": "了解现代生成式 AI 系统的行为方式，识别意外输出的类型，并实施有针对性的修复。",
+    "Claude Platform 101": "Claude Platform 101",
+    "This course teaches developers to build on the Claude Developer Platform from the ground up, whether you've made a few API calls or have only used Claude through a chat window.": "本课程从零开始教开发者在 Claude Developer Platform 上进行构建，无论您调用过几次 API，还是只通过聊天窗口使用过 Claude。",
+    "There's a wide gap between chatting with Claude in a browser tab and building Claude into something you ship. A chat answers a question and the thread ends there. An application sends Claude structured requests, hands it tools, lets it act on real systems, and runs that loop for one user or a million. The Claude Developer Platform exists to close that gap, and it's a different skill from prompting. Getting value out of it means understanding what's in a request, how an agent decides what to do, and where the costs and limits live.": "在浏览器标签页里与 Claude 聊天，和把 Claude 构建进可发布的产品之间存在巨大差距。聊天回答完一个问题就结束了，而应用程序会向 Claude 发送结构化请求、交给它工具、让它在真实系统上行动，并为一个用户或一百万用户运行这个循环。Claude Developer Platform 正是为弥合这一差距而存在，这与提示词编写是不同的技能。要从中获得价值，需要理解请求中包含什么、智能体如何决定要做什么，以及成本和限制在哪里。",
+    "This course teaches developers to build on the Claude Developer Platform from the ground up, whether you've made a few API calls or have only used Claude through a chat window. We start from first principles: what an API request contains, what an agent loop is, how the context window bounds what Claude can see, and how tools and permissions decide what it can do. The techniques later in the course then land as understanding instead of a list of calls to copy.": "本课程从零开始教开发者在 Claude Developer Platform 上进行构建，无论您调用过几次 API，还是只通过聊天窗口使用过 Claude。我们从第一性原理出发：API 请求包含什么、什么是智能体循环、上下文窗口如何限定 Claude 能看到的范围、工具和权限如何决定它能做什么。这样课程后面的技巧就会成为真正的理解，而不是一份照抄的调用清单。",
+    "You'll send your first request and read the response, then choose the right model for a job (Opus, Sonnet, or Haiku) and weigh the cost-and-latency trade-off on your own examples instead of guessing. From there you'll build the agent loop by hand to see how Claude acts, observes, and decides, then collapse that hand-written loop with the SDK's Tool Runner once you understand what it does for you. You'll give Claude reach through tool use, let it reason through hard problems with extended thinking, and keep spend predictable with workspaces, limits, and the Console Workbench.": "您将发送第一个请求并读取响应，然后为任务选择合适的模型（Opus、Sonnet 或 Haiku），用自己的示例而不是靠猜测来权衡成本与延迟。接着您将手工构建智能体循环，观察 Claude 如何行动、观察和决策，在理解 SDK 的 Tool Runner 替您做了什么之后，再用它收拢那个手写循环。您将通过工具使用扩大 Claude 的能力范围，用扩展思考让它推理难题，并通过工作区、限额和 Console Workbench 让支出保持可预测。",
+    "The middle of the course extends an agent beyond your own code: Anthropic's built-in tools (web search, code execution, web fetch) that run on Anthropic's infrastructure, Skills that package a procedure once and reuse it across calls, MCP servers that connect Claude to third-party tools without writing a schema, and the context-management patterns that keep a long-running agent inside the window and affordable past turn ten.": "课程中段将智能体扩展到您自己的代码之外：在 Anthropic 基础设施上运行的内置工具（网页搜索、代码执行、网页抓取）、把流程打包一次即可跨调用复用的技能、无需编写 schema 就能把 Claude 连接到第三方工具的 MCP 服务器，以及让长时间运行的智能体保持在窗口之内、过了第十轮依然负担得起的上下文管理模式。",
+    "The final section hands work off. You'll learn when to run your own loop and when to let Anthropic run a sandboxed, managed agent for you, then build one end to end, consuming the event stream as Anthropic runs the loop and reports back. A standalone lesson shows you how to build with the API using Claude Code itself, which is also why the rest of the course matters: you need to know what good code looks like to review what an agent writes for you. Every lesson ends with a runnable demo, so you finish each one with working code.": "最后一部分是交接工作。您将学习什么时候自己运行循环、什么时候让 Anthropic 为您运行沙箱化的 Managed Agent，然后端到端构建一个，并在 Anthropic 运行循环并回报时消费事件流。一节独立课程展示如何用 Claude Code 本身来基于 API 构建——这也是课程其余部分之所以重要的原因：要审查智能体替您写的代码，您得知道好代码长什么样。每节课都以可运行的演示结尾，因此每学完一课您都会带着能跑的代码离开。"
   },
   "faq": {
     "Data and Privacy": "数据和隐私",
@@ -1129,6 +1136,29 @@
     "Measuring teaching effectiveness": "衡量教学效果",
     "Resource library for instructors": "讲师资源库",
     "Peer learning strategies": "同伴学习策略"
+  },
+  "claudePlatform": {
+    "What is the Claude Developer Platform?": "Claude Developer Platform 是什么？",
+    "Your first API call": "您的第一次 API 调用",
+    "Choosing the right model": "选择合适的模型",
+    "The agent loop explained": "智能体循环详解",
+    "What is tool use?": "什么是工具使用？",
+    "What is thinking?": "什么是思考功能？",
+    "Built-in tools": "内置工具",
+    "Skills": "技能",
+    "MCP": "MCP",
+    "Context management": "上下文管理",
+    "What are managed agents?": "什么是 Managed Agents？",
+    "Building your first managed agent": "构建您的第一个 Managed Agent",
+    "Building with Claude Code": "使用 Claude Code 构建",
+    "Claude Platform 101 Quiz": "Claude Platform 101 测验",
+    "Teaching your Agent": "教导您的智能体",
+    "Extending your Agent": "扩展您的智能体",
+    "Managed Agents": "Managed Agents",
+    "Data and Privacy": "数据与隐私",
+    "Who this is for": "适合人群",
+    "Recommended prerequisites": "推荐的预备知识",
+    "Course sections": "课程章节"
   },
   "_protected": {
     "Claude Code": ["克洛德代码"],

@@ -1304,6 +1304,8 @@ const FLASHCARD_COURSE_MAP = {
   'claude-in-amazon-bedrock': ['cloudDeployment'],
   'google-vertex': ['cloudDeployment'],
   'claude-with-google-vertex': ['cloudDeployment'],
+  // Claude Developer Platform
+  'claude-platform-101': ['claudePlatform'],
   // AI Fluency courses
   'ai-fluency': ['aiFluency'],
   'ai-fluency-framework': ['aiFluency'],
