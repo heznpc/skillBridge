@@ -434,3 +434,21 @@ By contributing, you agree that your contributions will be licensed under the [M
 Open a [Discussion](../../discussions) or file an issue. We're happy to help you get started!
 
 > 💡 **This document is in English only.** Want to translate it into your language? That PR is welcome too!
+
+## Native language reviewers
+
+The premium dictionaries are curated and LLM-audited, but **no locale has had
+a native-speaker pass yet** — and that's the highest-leverage contribution a
+non-coder can make here. One pass takes ~1–2 hours:
+
+1. Open `src/data/<your-locale>.json`. Every key is the English source string;
+   every value is the translation. Skim for wrong meaning, unnatural register,
+   brand terms that should stay English (Claude, Anthropic, MCP, Claude Code,
+   Managed Agents, …), and the same English term rendered inconsistently.
+2. Send corrections as a PR (JSON value edits only — CI guards the structure,
+   so you cannot break anything), or just open an issue listing them.
+3. Your locale's `_meta.nativeReview` flips to `"reviewed"` and you're credited
+   in the README's Terminology QA table.
+
+Claim a locale on [issue #202](https://github.com/heznpc/skillBridge/issues/202).
+The QA model around your review is described in `docs/TRANSLATION_QA.md`.

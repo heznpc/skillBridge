@@ -249,6 +249,44 @@ The full "things we will not do" list is kept public on purpose in [POSITIONING.
 
 > Want to add your language as Premium? Contribute a curated dictionary — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
+### Terminology QA — how accuracy is enforced, not just promised
+
+New Academy content is covered by a standing pipeline, not by hand-checking:
+a CI watcher polls the live catalog twice a day and **fails loudly + opens an
+issue** the moment a course appears that the dictionaries don't cover; the
+course gets wired into all 11 premium dictionaries; structural CI gates
+(`check:i18n`, `check:dict-coverage`, `check:locales`) and a real-dictionary
+regression suite guard every merge after that. Proven turnaround: on
+**2026-06-10** the watcher flagged the brand-new *Claude Platform 101* course
+in the morning ([#196](https://github.com/heznpc/skillBridge/issues/196)) and
+all 11 locales were wired the same day
+([#201](https://github.com/heznpc/skillBridge/pull/201)).
+
+Beyond structure, dictionary *content* goes through layered review — CI gates
+catch shape/contamination drift on every PR, a full per-locale LLM audit runs
+before every store release (see `docs/TRANSLATION_QA.md`), and native-speaker
+review is the final layer:
+
+<!-- LOCALE_QA_START -->
+| Language | Code | Entries | Last curated | Last LLM audit | Native review |
+|---|---|---:|---|---|---|
+| 한국어 | `ko` | 1129 | 2026-04-02 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| 日本語 | `ja` | 1129 | 2026-04-02 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| 中文(简体) | `zh-CN` | 1129 | 2026-04-02 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| 中文(繁體) | `zh-TW` | 1129 | 2026-04-02 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Español | `es` | 1129 | 2026-04-02 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Français | `fr` | 1129 | 2026-04-02 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Italiano | `it` | 1129 | 2026-06-03 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Deutsch | `de` | 1129 | 2026-04-02 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Português (BR) | `pt-BR` | 1129 | 2026-04-02 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Русский | `ru` | 1129 | 2026-04-02 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Tiếng Việt | `vi` | 1129 | 2026-04-02 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+<!-- LOCALE_QA_END -->
+
+🙋 **Native speakers wanted** — a first native pass on your locale takes
+~1–2 hours, needs no coding, and gets you credited here. See
+[#202](https://github.com/heznpc/skillBridge/issues/202).
+
 ## Privacy & Security
 
 SkillBridge is designed with privacy first:

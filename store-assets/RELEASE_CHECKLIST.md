@@ -41,6 +41,15 @@ Everything code-side is ready and pre-built.
 
 ## What needs your hands
 
+### 0. Pre-release dictionary audit (LLM) — release convention
+
+Before every store submission, run the full per-locale LLM dictionary audit
+(one reviewer per premium locale over all entries; re-verify every finding
+against the file before fixing — the 2026-06-10 audit caught `Slack → "Lento"`
+-class errors that all structural gates miss). After fixes land, stamp each
+dictionary's `_meta.lastAudited` and run `npm run docs` so the README QA table
+reflects it. Three-layer QA model: `docs/TRANSLATION_QA.md`.
+
 ### 1. Icon — resolved
 
 Status: **resolved**. The non-infringing icon shipped in v3.5.35 (a rising
