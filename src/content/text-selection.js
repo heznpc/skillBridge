@@ -89,7 +89,7 @@
   }
 
   function insertQuoteInChat(quoteText) {
-    const inputWrap = document.querySelector('.si18n-chat-input-wrap');
+    const inputWrap = sb.$('.si18n-chat-input-wrap');
     if (!inputWrap) return;
 
     inputWrap.parentNode.querySelector('.si18n-chat-quote')?.remove();
