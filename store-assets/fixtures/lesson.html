@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Academy — Lesson</title>
+  <!--
+    STORE-SCREENSHOT FIXTURE (not the E2E assertion fixture).
+
+    Trademark-safe by construction: the platform chrome is a GENERIC "Academy"
+    (no Anthropic logo, no "official" branding) so a screenshot can't be mistaken
+    for an Anthropic-operated site. Course content references Claude/Anthropic
+    only nominatively (the extension's real purpose is translating such courses),
+    and every captured screenshot also carries the harness disclaimer band.
+
+    Structure mirrors Skilljar enough that the extension injects its real header
+    controls: #header-right + .header-links-container (language <select> + dark
+    toggle) and #lesson-main. Strings reuse the E2E GT_KO map where possible;
+    the few extras live in store-assets/fixtures/gt-frozen.ko.json.
+  -->
+  <style>
+    :root { --ink:#1c1917; --muted:#6b6560; --accent:#e07a5f; --navy:#3d405b; --line:#e7e5e4; --bg:#fafaf9; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:var(--ink); background:var(--bg); }
+
+    /* Skilljar-shaped header so the extension injects its lang select + dark toggle */
+    .site-header { background:var(--navy); color:#fff; display:flex; align-items:center; padding:0 28px; height:58px; }
+    .site-header .logo { display:flex; align-items:center; gap:10px; font-weight:700; font-size:16px; }
+    .site-header .logo .dot { width:22px; height:22px; border-radius:6px; background:linear-gradient(135deg,#e07a5f,#f2cc8f); }
+    #header-right { margin-left:auto; display:flex; align-items:center; gap:18px; }
+    .header-links-container { display:flex; gap:18px; }
+    .header-links-container a { color:#e9e9f0; text-decoration:none; font-size:14px; }
+    /* The extension's injected #si18n-header-lang sits left of the links */
+    #si18n-header-lang select { padding:6px 10px; border-radius:7px; border:1px solid #5a5d77; background:#2e3047; color:#fff; font-size:13px; }
+
+    .layout { display:grid; grid-template-columns:260px 1fr; max-width:1180px; margin:0 auto; }
+    aside { border-right:1px solid var(--line); padding:26px 20px; background:#fff; min-height:742px; }
+    aside .course { font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); font-weight:700; }
+    aside ol { margin:14px 0 0; padding-left:18px; color:var(--muted); font-size:14px; line-height:2; }
+    aside ol li.active { color:var(--accent); font-weight:600; }
+    main { padding:34px 44px; }
+    .eyebrow { color:var(--accent); font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:.08em; }
+    h1 { font-size:32px; margin:6px 0 14px; line-height:1.2; }
+    h2 { font-size:21px; margin:28px 0 8px; }
+    p { line-height:1.65; margin:0 0 14px; max-width:62ch; }
+    ul { line-height:1.9; max-width:62ch; }
+    pre { background:#1c1917; color:#e9e7e3; padding:16px 18px; border-radius:10px; overflow:auto; font-size:13px; max-width:62ch; }
+    pre .cmt { color:#9fb89f; }
+    .progress { height:4px; background:var(--line); border-radius:4px; margin-top:24px; max-width:62ch; }
+    .progress > span { display:block; height:100%; width:28%; background:var(--accent); border-radius:4px; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <span class="logo"><span class="dot"></span>Academy</span>
+    <div id="header-right">
+      <div class="header-links-container">
+        <a href="#">Catalog</a>
+        <a href="#">My Courses</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside>
+      <div class="course">Building with the Claude API</div>
+      <ol>
+        <li>Getting started</li>
+        <li class="active">Introduction to Claude</li>
+        <li>Messages and roles</li>
+        <li>Streaming responses</li>
+        <li>Tool use</li>
+      </ol>
+    </aside>
+
+    <main id="lesson-main">
+      <div class="eyebrow">Lesson 2</div>
+      <h1>Introduction to Claude</h1>
+      <h2>Course overview</h2>
+      <p id="p-1">This lesson covers prompt engineering fundamentals and how Claude processes user requests.</p>
+      <p id="p-2">Anthropic builds AI tools for developers and researchers.</p>
+
+      <ul>
+        <li id="li-1">Understand the Claude model family</li>
+        <li id="li-2">Write effective prompts</li>
+        <li id="li-3">Handle long context conversations</li>
+      </ul>
+
+      <h2>Key concepts</h2>
+      <p id="p-3">A prompt is the input you give to Claude. Better prompts produce better responses.</p>
+
+      <pre><code><span class="cmt"># This is a Claude prompt example</span>
+def ask(client, question):
+    return client.messages.create(model="claude", messages=[{"role": "user", "content": question}])</code></pre>
+
+      <div class="progress"><span></span></div>
+    </main>
+  </div>
+</body>
+</html>

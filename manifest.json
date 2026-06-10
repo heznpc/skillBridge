@@ -2,15 +2,12 @@
   "manifest_version": 3,
   "name": "__MSG_extName__",
   "description": "__MSG_extDescription__",
-  "version": "3.5.39",
+  "version": "3.5.40",
   "minimum_chrome_version": "124",
   "author": "SkillBridge Contributors",
   "homepage_url": "https://github.com/heznpc/skillbridge",
   "default_locale": "en",
-  "permissions": [
-    "storage",
-    "alarms"
-  ],
+  "permissions": ["storage", "alarms"],
   "host_permissions": [
     "https://*.skilljar.com/*",
     "https://*.youtube.com/*",
@@ -28,7 +25,32 @@
   "content_scripts": [
     {
       "matches": ["https://*.skilljar.com/*"],
-      "js": ["src/lib/browser-polyfill.js", "src/lib/log.js", "src/lib/platform.js", "src/lib/selectors.js", "src/lib/constants.js", "src/lib/translator.js", "src/lib/youtube-subtitles.js", "src/lib/protected-terms.js", "src/lib/gemini-block.js", "src/content/content.js", "src/content/gt-queue.js", "src/content/banners.js", "src/content/code-comments.js", "src/content/header-controls.js", "src/content/text-selection.js", "src/content/chat-render.js", "src/content/sidebar-chat.js", "src/content/chat-history.js", "src/content/chat-flashcards.js", "src/content/bookmarks.js", "src/content/resume.js", "src/content/reading-aid.js", "src/content/keyboard-shortcuts.js"],
+      "js": [
+        "src/lib/browser-polyfill.js",
+        "src/lib/log.js",
+        "src/lib/platform.js",
+        "src/lib/selectors.js",
+        "src/lib/constants.js",
+        "src/lib/translator.js",
+        "src/lib/youtube-subtitles.js",
+        "src/lib/protected-terms.js",
+        "src/lib/gemini-block.js",
+        "src/content/content.js",
+        "src/content/gt-queue.js",
+        "src/content/banners.js",
+        "src/content/code-comments.js",
+        "src/content/header-controls.js",
+        "src/content/text-selection.js",
+        "src/content/chat-render.js",
+        "src/content/shadow-css.js",
+        "src/content/sidebar-chat.js",
+        "src/content/chat-history.js",
+        "src/content/chat-flashcards.js",
+        "src/content/bookmarks.js",
+        "src/content/resume.js",
+        "src/content/reading-aid.js",
+        "src/content/keyboard-shortcuts.js"
+      ],
       "css": ["src/content/content.css"],
       "run_at": "document_idle"
     }
@@ -43,7 +65,14 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["src/lib/page-bridge.js", "src/data/*", "src/bridge/puter.js", "assets/icons/*", "src/shared/constants.json"],
+      "resources": [
+        "src/lib/page-bridge.js",
+        "src/data/*",
+        "src/bridge/puter.js",
+        "assets/icons/*",
+        "src/shared/constants.json",
+        "src/content/content.css"
+      ],
       "matches": ["https://*.skilljar.com/*"]
     }
   ]

@@ -2,7 +2,7 @@
   "_meta": {
     "lang": "pt-BR",
     "langName": "Português (BR)",
-    "version": "3.5.39",
+    "version": "3.5.40",
     "lastUpdated": "2026-04-02"
   },
   "ui": {
@@ -1144,32 +1144,8 @@
     "Anthropic Academy": [
       "Anthropic Academy"
     ],
-    "Enterprise": [
-      "Empresa"
-    ],
-    "Personal": [
-      "Pessoal"
-    ],
-    "Plugin": [
-      "complemento"
-    ],
-    "Plugins": [
-      "complementos"
-    ],
-    "skill": [
-      "habilidade"
-    ],
-    "skills": [
-      "habilidades"
-    ],
-    "Skills": [
-      "Habilidades"
-    ],
     "SKILL.md": [
       "SKILL.md"
-    ],
-    "frontmatter": [
-      "preâmbulo"
     ],
     "CLAUDE.md": [
       "CLAUDE.md"
@@ -1183,15 +1159,9 @@
     "subagent": [
       "subagente"
     ],
-    "hook": [
-      "gancho"
-    ],
-    "hooks": [
-      "ganchos"
-    ],
-    "Cowork": ["cotrabalho", "trabalho conjunto"],
-    "Dispatch": ["despacho", "envio"],
-    "Computer Use": ["uso do computador"]
+    "Cowork": [
+      "cotrabalho"
+    ]
   },
   "exam_ui": {
     "Pass": "Aprovado",

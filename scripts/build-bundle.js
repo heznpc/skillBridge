@@ -81,6 +81,12 @@ async function build() {
   bundledManifest.content_scripts[0].js = ['content.bundle.js'];
   bundledManifest.content_scripts[0].css = ['content.bundle.css'];
   bundledManifest.background.service_worker = 'background.bundle.js';
+  // The shadow UI fetches content.css via web_accessible_resources to adopt it
+  // into the shadow root. In the bundle that file is content.bundle.css, so
+  // remap the dev path (src/content/content.css) accordingly.
+  for (const entry of bundledManifest.web_accessible_resources || []) {
+    entry.resources = entry.resources.map((r) => (r === 'src/content/content.css' ? 'content.bundle.css' : r));
+  }
   fs.writeFileSync(path.join(DIST, 'manifest.json'), JSON.stringify(bundledManifest, null, 2));
 
   // Clean up temp entry

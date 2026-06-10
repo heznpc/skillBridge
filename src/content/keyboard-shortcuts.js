@@ -80,7 +80,7 @@
     if (e.key === '/' && !isInput && !ctrl && !e.metaKey && !e.shiftKey && !e.altKey) {
       if (sb.sidebarVisible) {
         e.preventDefault();
-        document.getElementById('si18n-chat-input')?.focus();
+        sb.$id('si18n-chat-input')?.focus();
       }
     }
   }
@@ -90,7 +90,7 @@
   // ============================================================
 
   function isHelpVisible() {
-    return !!document.getElementById('si18n-shortcuts-overlay');
+    return !!sb.$id('si18n-shortcuts-overlay');
   }
 
   function toggleHelpOverlay() {
@@ -103,7 +103,7 @@
       clearTimeout(removeTimer);
       removeTimer = null;
     }
-    document.getElementById('si18n-shortcuts-overlay')?.remove();
+    sb.$id('si18n-shortcuts-overlay')?.remove();
 
     const overlay = document.createElement('div');
     overlay.id = 'si18n-shortcuts-overlay';
@@ -136,7 +136,7 @@
   }
 
   function hideHelpOverlay() {
-    const overlay = document.getElementById('si18n-shortcuts-overlay');
+    const overlay = sb.$id('si18n-shortcuts-overlay');
     if (!overlay) return;
     overlay.classList.remove('visible');
     if (removeTimer) clearTimeout(removeTimer);

@@ -2,7 +2,7 @@
   "_meta": {
     "lang": "pt-BR",
     "langName": "Português (BR)",
-    "sourceVersion": "3.5.39",
+    "sourceVersion": "3.5.40",
     "sourceLastUpdated": "2026-04-02",
     "generatedFrom": "src/data/pt-BR.json",
     "termCount": 999
@@ -21,32 +21,8 @@
     "Anthropic Academy": [
       "Anthropic Academy"
     ],
-    "Enterprise": [
-      "Empresa"
-    ],
-    "Personal": [
-      "Pessoal"
-    ],
-    "Plugin": [
-      "complemento"
-    ],
-    "Plugins": [
-      "complementos"
-    ],
-    "skill": [
-      "habilidade"
-    ],
-    "skills": [
-      "habilidades"
-    ],
-    "Skills": [
-      "Habilidades"
-    ],
     "SKILL.md": [
       "SKILL.md"
-    ],
-    "frontmatter": [
-      "preâmbulo"
     ],
     "CLAUDE.md": [
       "CLAUDE.md"
@@ -60,22 +36,8 @@
     "subagent": [
       "subagente"
     ],
-    "hook": [
-      "gancho"
-    ],
-    "hooks": [
-      "ganchos"
-    ],
     "Cowork": [
-      "cotrabalho",
-      "trabalho conjunto"
-    ],
-    "Dispatch": [
-      "despacho",
-      "envio"
-    ],
-    "Computer Use": [
-      "uso do computador"
+      "cotrabalho"
     ]
   },
   "terms": {

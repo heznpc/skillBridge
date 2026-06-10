@@ -2,7 +2,7 @@
   "_meta": {
     "lang": "vi",
     "langName": "Tiếng Việt",
-    "sourceVersion": "3.5.39",
+    "sourceVersion": "3.5.40",
     "sourceLastUpdated": "2026-04-02",
     "generatedFrom": "src/data/vi.json",
     "termCount": 999
@@ -20,32 +20,8 @@
     "Anthropic Academy": [
       "Anthropic Academy"
     ],
-    "Enterprise": [
-      "Doanh nghiệp"
-    ],
-    "Personal": [
-      "Cá nhân"
-    ],
-    "Plugin": [
-      "phần bổ trợ"
-    ],
-    "Plugins": [
-      "phần bổ trợ"
-    ],
-    "skill": [
-      "kỹ năng"
-    ],
-    "skills": [
-      "kỹ năng"
-    ],
-    "Skills": [
-      "Kỹ năng"
-    ],
     "SKILL.md": [
       "SKILL.md"
-    ],
-    "frontmatter": [
-      "phần đầu"
     ],
     "CLAUDE.md": [
       "CLAUDE.md"
@@ -58,23 +34,6 @@
     ],
     "subagent": [
       "tác tử phụ"
-    ],
-    "hook": [
-      "móc"
-    ],
-    "hooks": [
-      "móc"
-    ],
-    "Cowork": [
-      "cộng tác",
-      "làm việc chung"
-    ],
-    "Dispatch": [
-      "gửi đi",
-      "phân phối"
-    ],
-    "Computer Use": [
-      "sử dụng máy tính"
     ]
   },
   "terms": {
@@ -93,8 +52,8 @@
     "Real World Prompting": "Kỹ thuật Prompting thực tế",
     "Master the art of prompting Claude for real-world applications": "Làm chủ nghệ thuật prompting Claude cho các ứng dụng thực tế",
     "Prompt Engineering Interactive Tutorial": "Hướng dẫn tương tác về Kỹ thuật Prompt",
-    "An interactive, hands-on tutorial for learning prompt engineering techniques with Claude.": "Một hướng dẫn tương tác, thực hành để học các kỹ thuật kỹ thuật prompt với Claude.",
-    "An interactive, hands-on tutorial for learning prompt engineering techniques with Claude": "Một hướng dẫn tương tác, thực hành để học các kỹ thuật kỹ thuật prompt với Claude",
+    "An interactive, hands-on tutorial for learning prompt engineering techniques with Claude.": "Một hướng dẫn tương tác, thực hành để học các kỹ thuật prompt với Claude.",
+    "An interactive, hands-on tutorial for learning prompt engineering techniques with Claude": "Một hướng dẫn tương tác, thực hành để học các kỹ thuật prompt với Claude",
     "Claude for Enterprise: Admin Essentials": "Claude cho Doanh nghiệp: Kiến thức cần thiết cho Quản trị viên",
     "Master essential administrative skills for deploying and managing Claude in your organization": "Làm chủ các kỹ năng quản trị cần thiết để triển khai và quản lý Claude trong tổ chức của bạn",
     "Anthropic API Foundations": "Nền tảng API Anthropic",

@@ -1,14 +1,14 @@
-# Release Checklist — v3.5.39 re-publication
+# Release Checklist — v3.5.40 re-publication
 
-> Refreshed 2026-06-01 for v3.5.39. Since the last revision: the non-infringing
+> Refreshed 2026-06-10 for v3.5.40 (post shadow-DOM migration + live-debug fixes). Since the last revision: the non-infringing
 > icon shipped (v3.5.35), the learning-companion features + Tools menu landed
 > (v3.5.36–3.5.39), and the page bridge / AI tutor was scoped to
 > anthropic.skilljar.com. This is the source of truth for the next dashboard upload.
 
 CWS listing status:
 - Published: **v1.0.1** (uploaded 2026-03-10)
-- Local: **v3.5.39**
-- Many PRs (#135–#156) have landed since the published version — none have reached users yet
+- Local: **v3.5.40**
+- Many PRs (#135–#194) have landed since the published version — none have reached users yet
 - `npm run check:cws-drift` intentionally fails until the dashboard is updated
 
 The remaining publish steps cross trust boundaries the automation can't cross
@@ -17,9 +17,9 @@ Everything code-side is ready and pre-built.
 
 ## What's already prepared (no further action needed)
 
-- ✅ `manifest.json` v3.5.39 + `package.json` + 11 `src/data/*.json` `_meta.version` all bumped
-- ✅ `CHANGELOG.md` v3.5.34–3.5.39 sections written (PRs #135–#157 consolidated)
-- ✅ `store-assets/skillbridge-bundled.zip` (minified, **rebuilt at v3.5.39** via `npm run build:bundle:zip`) — **this is the CWS upload artifact**
+- ✅ `manifest.json` v3.5.40 + `package.json` + 11 `src/data/*.json` `_meta.version` all bumped
+- ✅ `CHANGELOG.md` v3.5.34–3.5.40 sections written (PRs #135–#194 consolidated)
+- ✅ `store-assets/skillbridge-bundled.zip` (minified, **rebuilt at v3.5.40** via `npm run build:bundle:zip`) — **this is the CWS upload artifact**
 - ⚠️ `store-assets/skillbridge.zip` (raw source) — fallback only if the bundled
   build is rejected in review. **Run `npm run build:zip` immediately before
   uploading it** — this artifact is gitignored, is not rebuilt by
@@ -34,7 +34,7 @@ Everything code-side is ready and pre-built.
   connect to the privacy policy link". `github.com` links are case-insensitive,
   so the homepage/support URLs are fine lowercase — only the `github.io` URL
   must be capital-B.
-- ✅ Tests 488/488 + 17 e2e, ESLint + Prettier clean, all check-* scripts clean (incl. `check:academy`)
+- ✅ Tests 520/520 + 19 e2e, ESLint + Prettier clean, all check-* scripts clean (incl. `check:academy`)
 - ✅ AI-content gate wired into `manifest.json:content_scripts[].js` (PR #145 hotfix)
 - ✅ CWS-drift watcher will keep this from drifting 3 months again
 - ✅ Italian dictionary live (PR #140) — timed with Anthropic Milan office opening 2026-05-27
@@ -49,17 +49,24 @@ half-sun over the SkillBridge bridge — no Claude-mark / radial spark). The
 `assets/icons/icon128.png` in step 3. Because the icon changed, re-capture the
 screenshots in step 2.
 
-### 2. Re-capture screenshots (only if you re-designed the icon)
+### 2. Regenerate store screenshots (one command)
 
-If the icon changed, the screenshots that include the toolbar icon need refresh:
-- `assets/screenshots/01-lesson-translated.png`
-- `assets/screenshots/catalog-translated.png`
-- `assets/screenshots/skillbridge-demo.gif`
-- `store-assets/screenshot-01-lesson.png`
-- `store-assets/screenshot-02-catalog.png`
+Don't hand-capture. `npm run capture:store` drives the **built bundle** with
+Playwright and regenerates the full CWS set into `store-assets/`:
 
-Lesson body / Skilljar header — no Anthropic logo blur needed; the rename + URL-
-anchor sweep handled the trademark exposure on that front.
+- `01-translate.png` … `05-exam-safe.png` (1280×800) — translate before/after,
+  language picker, in-page AI tutor, flashcards, exam-safe answers
+- `promo-tile-440x280.png` — small promo tile
+- `demo.webm` — demo screencast (CWS takes a YouTube link, not a file — upload it and paste the URL)
+- `description.md` — copy/paste Title / Summary / Description / What's new
+
+Edit which states are captured in `store.config.js`, and the listing copy in
+`store-assets/STORE_LISTING.md`. The run doubles as a real-bundle smoke test (a
+screenshot only appears if that feature rendered). Captures are login-free and
+deterministic — a frozen Korean translation map, neutral "Academy" fixtures (no
+Anthropic logo), and a composited "unofficial / not affiliated" disclaimer band
+on every shot. (`assets/screenshots/*` README/marketing images are separate and
+still hand-made.)
 
 ### 3. Upload to CWS dev console
 
@@ -74,23 +81,23 @@ Open https://chrome.google.com/webstore/devconsole/a4725d38-81e7-41f5-bf21-5c11f
 | Privacy policy URL | `https://heznpc.github.io/skillBridge/privacy` |
 | Locale | **English only** — single CWS listing, shown to every user regardless of browser language (localized ko/ja listings were dropped to avoid drift) |
 | Icon (128×128) | upload current `assets/icons/icon128.png` (half-sun + bridge). ⚠️ the **live listing still shows the OLD coral radial-spark icon** — the store-listing graphic is a separate asset from the package and must be re-uploaded here, or the infringing mark stays live. |
-| Promo tile + screenshots | upload current set (no change unless step 2 ran) |
+| Promo tile + screenshots | `store-assets/promo-tile-440x280.png` + `store-assets/01-translate.png`…`05-exam-safe.png` (regenerate with `npm run capture:store`) |
 
 ### 3b. Privacy tab (this is what blocked the last submit)
 
 Open the "개인정보 보호 / Privacy practices" tab. The published v1.0.1 answers are
-stale against v3.5.39 — fix these:
+stale against v3.5.40 — fix these:
 
 - **Privacy policy URL** — must be the **capital-B** `github.io` URL (see the
   Privacy-URL note above). The lowercase form 404s and the dashboard refuses to
   submit ("개인정보처리방침 링크에 연결할 수 없습니다").
 - **"Are you using remote code?" → NO.** v1.0.1 loaded Puter.js from
   `https://js.puter.com/v2/` (remote code → MV3 detailed review / delay).
-  v3.5.39 bundles it as `src/bridge/puter.js` and loads it via
+  v3.5.39+ bundles it as `src/bridge/puter.js` and loads it via
   `chrome.runtime.getURL` (`translator.js` sets `script.dataset.puterUrl =
   chrome.runtime.getURL('src/bridge/puter.js')`); there is no remote fallback
   (`page-bridge.js`: `if (!_puterUrl) reject`). So no remote code is loaded.
-  **Only flip this to NO after the v3.5.39 package is uploaded** — answering NO
+  **Only flip this to NO after the v3.5.40 package is uploaded** — answering NO
   while the published build still loads remote Puter would be a false statement.
   (Puter's runtime calls to `api.puter.com` are data transfer, not remote code —
   disclosed under data usage below.)
@@ -103,7 +110,7 @@ stale against v3.5.39 — fix these:
   Keep the three confirmations checked (transfer to a service provider to perform
   the requested feature is an approved use case, not a sale).
 - **Permission justifications** — paste from `STORE_LISTING.md` "Permission
-  Justifications". v3.5.39 declares `storage` + `alarms` + four hosts
+  Justifications". v3.5.40 declares `storage` + `alarms` + four hosts
   (`*.skilljar.com`, `*.youtube.com`, `translate.googleapis.com`,
   `api.github.com`). The old `activeTab` / `tabs` justification fields disappear
   after upload (those permissions are no longer in the manifest); `alarms` and
@@ -138,7 +145,7 @@ the `cws-drift.yml` workflow via `workflow_dispatch` — it should report `OK`
 
 ## If trademark complaint comes back
 
-If Tracer / Anthropic IP enforcement files another complaint against v3.5.39:
+If Tracer / Anthropic IP enforcement files another complaint against v3.5.40:
 1. Check whether it cites the icon (then return to step 1 option B/C) or the
    listing copy (then re-sweep `store-assets/STORE_LISTING*.md` for any
    residual brand-as-product-modifier phrasing).
@@ -148,7 +155,6 @@ If Tracer / Anthropic IP enforcement files another complaint against v3.5.39:
 
 ## SNS launch (separate session, after listing is live)
 
-Drafts are queued in `store-assets/promotion/` (see `x-thread-italian.md` and
-`plugin-directory-submission.md`). Do not post until the CWS listing reflects
-v3.5.39 — posting before would point users at a listing missing all the work
-the post talks about.
+SNS launch drafts are kept outside this repo (internal). Do not post until the
+CWS listing reflects v3.5.40 — posting before would point users at a listing
+missing all the work the post talks about.

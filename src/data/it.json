@@ -2,9 +2,9 @@
   "_meta": {
     "lang": "it",
     "langName": "Italiano",
-    "version": "3.5.39",
-    "lastUpdated": "2026-05-25",
-    "translation_provenance": "v1 — derived from src/data/es.json via Spanish→Italian regex transformation (Romance proximity ~80%). Native Italian PRs welcome to replace any section wholesale; structural keys must remain identical to other premium dictionaries (enforced by scripts/check-dict-coverage.js)."
+    "version": "3.5.40",
+    "lastUpdated": "2026-06-03",
+    "translation_provenance": "Re-translated from the English source via Google Translate (2026-06), with brand/technical terms restored to canonical English; Italian↔Spanish overlap is now 0.1% (parity with the other 10 locales). Earlier v1 was a Spanish-derived regex transform — fully replaced. Structural keys must remain identical to other premium dictionaries (enforced by scripts/check-dict-coverage.js); native Italian PRs welcome."
   },
   "ui": {
     "Anthropic Academy": "Anthropic Academy",
@@ -53,8 +53,8 @@
     "Saved": "Salvato"
   },
   "catalog": {
-    "Anthropic courses": "Percorsi antropici",
-    "Anthropic Courses": "Corsi Antropici",
+    "Anthropic courses": "Corsi di Anthropic",
+    "Anthropic Courses": "Corsi di Anthropic",
     "Anthropic Academy / Courses": "Anthropic Academy / Corsi",
     "Claude Code in Action": "Codice Claude in azione",
     "Integrate Claude Code into your development workflow": "Integra Claude Code nel tuo flusso di lavoro di sviluppo",
@@ -65,11 +65,11 @@
     "AI Fluency: Framework & Foundations": "Conoscenza dell'intelligenza artificiale: struttura e fondamenti",
     "Learn to collaborate with AI systems effectively, efficiently, ethically, and safely": "Impara a collaborare con i sistemi di intelligenza artificiale in modo efficace, efficiente, etico e sicuro",
     "Learn to collaborate with AI systems effectively, efficiently, ethically, and safely.": "Impara a collaborare con i sistemi di intelligenza artificiale in modo efficace, efficiente, etico e sicuro.",
-    "Real World Prompting": "Suggerimenti nel mondo reale",
+    "Real World Prompting": "Prompting nel mondo reale",
     "Master the art of prompting Claude for real-world applications": "Padroneggia l'arte di suggerire a Claude applicazioni nel mondo reale",
-    "Prompt Engineering Interactive Tutorial": "Tutorial interattivo di ingegneria rapida",
-    "An interactive, hands-on tutorial for learning prompt engineering techniques with Claude.": "Un tutorial interattivo e pratico per apprendere le tecniche di ingegneria rapida con Claude.",
-    "An interactive, hands-on tutorial for learning prompt engineering techniques with Claude": "Un tutorial pratico e interattivo per apprendere le tecniche di ingegneria rapida con Claude",
+    "Prompt Engineering Interactive Tutorial": "Tutorial interattivo di ingegneria dei prompt",
+    "An interactive, hands-on tutorial for learning prompt engineering techniques with Claude.": "Un tutorial interattivo e pratico per apprendere le tecniche di ingegneria dei prompt con Claude.",
+    "An interactive, hands-on tutorial for learning prompt engineering techniques with Claude": "Un tutorial pratico e interattivo per apprendere le tecniche di ingegneria dei prompt con Claude",
     "Claude for Enterprise: Admin Essentials": "Claude per le aziende: elementi essenziali per l'amministrazione",
     "Master essential administrative skills for deploying and managing Claude in your organization": "Padroneggia le skills amministrative essenziali per l'implementazione e la gestione di Claude nella tua organizzazione",
     "Anthropic API Foundations": "Fondazioni API antropiche",
@@ -77,7 +77,7 @@
     "Extended Thinking with Claude": "Pensiero esteso con Claude",
     "Learn how to leverage Claude's extended thinking capabilities": "Scopri come sfruttare le capacità di pensiero estese di Claude",
     "Building with the Claude API": "Costruire con l'API Claude",
-    "This comprehensive course covers the full spectrum of working with Anthropic models using the Claude API": "Questo corso completo copre l'intero spettro del lavoro con i modelli antropici utilizzando l'API Claude",
+    "This comprehensive course covers the full spectrum of working with Anthropic models using the Claude API": "Questo corso completo copre l'intero spettro del lavoro con i modelli di Anthropic utilizzando l'API Claude",
     "Introduction to Model Context Protocol": "Introduzione al protocollo del contesto del modello",
     "Learn to build Model Context Protocol servers and clients from scratch using Python. Master MCP's three core primitives—tools, resources, and prompts—to connect Claude with external services": "Impara a creare server e client Model Context Protocol da zero utilizzando Python. Le tre primitive principali di Master MCP (strumenti, risorse e istruzioni) per connettere Claude con servizi esterni",
     "AI Fluency for educators": "Fluidità dell'intelligenza artificiale per gli educatori",
@@ -89,7 +89,7 @@
     "Claude with Amazon Bedrock": "Claude con Amazon Bedrock",
     "As part of an accreditation program created for AWS, Anthropic launched a first-of-its-kind training for AWS employees. Here's the full course so you can follow along.": "Nell'ambito di un programma di accreditamento creato per AWS, Anthropic ha lanciato una formazione unica nel suo genere per i dipendenti AWS. Ecco il corso completo così puoi seguirlo.",
     "Claude with Google Cloud's Vertex AI": "Claude con Vertex AI di Google Cloud",
-    "This comprehensive course covers the full spectrum of working with Anthropic models through Google Cloud's Vertex AI.": "Questo corso completo copre l'intero spettro del lavoro con i modelli antropici attraverso Vertex AI di Google Cloud.",
+    "This comprehensive course covers the full spectrum of working with Anthropic models through Google Cloud's Vertex AI.": "Questo corso completo copre l'intero spettro del lavoro con i modelli di Anthropic attraverso Vertex AI di Google Cloud.",
     "Teaching AI Fluency": "Insegnare la fluidità dell'intelligenza artificiale",
     "This course empowers academic faculty, instructional designers, and others to teach and assess AI Fluency in instructor-led settings.": "Questo corso consente a docenti accademici, progettisti didattici e altri soggetti di insegnare e valutare la fluidità dell'intelligenza artificiale in contesti guidati da istruttori.",
     "AI Fluency for nonprofits": "Conoscenza dell'intelligenza artificiale per le organizzazioni non profit",
@@ -659,8 +659,8 @@
     "Estimated Time: 20 minutes": "Tempo stimato: 20 minuti",
     "Understand the ethical implications of AI collaboration": "Comprendere le implicazioni etiche della collaborazione con l'intelligenza artificiale",
     "Understand the importance of transparency in AI work": "Comprendere l’importanza della trasparenza nel lavoro dell’IA",
-    "Recognize your responsibility in AI interactions and outputs": "Riconosci la tua responsskill nelle interazioni e nei risultati dell'IA",
-    "Video: A closer look at diligence explores Deployment Diligence - The ability to take informed responsibility for the outputs you use or share. Key concepts include: Verify facts, Check for biases, Ensure accuracy": "Video: uno sguardo più attento alla diligenza esplora la diligenza della distribuzione: la capacità di assumersi la responsskill informata dei risultati utilizzati o condivisi. I concetti chiave includono: verificare i fatti, verificare la presenza di errori, garantire l'accuratezza",
+    "Recognize your responsibility in AI interactions and outputs": "Riconosci la tua responsabilità nelle interazioni e nei risultati dell'IA",
+    "Video: A closer look at diligence explores Deployment Diligence - The ability to take informed responsibility for the outputs you use or share. Key concepts include: Verify facts, Check for biases, Ensure accuracy": "Video: uno sguardo più attento alla diligenza esplora la diligenza della distribuzione: la capacità di assumersi la responsabilità informata dei risultati utilizzati o condivisi. I concetti chiave includono: verificare i fatti, verificare la presenza di errori, garantire l'accuratezza",
     "Estimated time: 15 minutes": "Tempo stimato: 15 minuti",
     "Consolidate key learnings from the course": "Consolidare gli apprendimenti chiave del corso",
     "Connect AI Fluency to your continuing development": "Connetti AI Fluency al tuo sviluppo continuo",
@@ -707,7 +707,7 @@
     "Note": "Nota",
     "Important": "Importante",
     "Warning": "Avvertimento",
-    "Tip": "Mancia",
+    "Tip": "Consiglio",
     "Learn more": "Saperne di più",
     "Get started": "Inizia",
     "Read more": "Per saperne di più",
@@ -751,14 +751,14 @@
     "Lessons": "Lezioni",
     "About": "Di",
     "Resources": "Risorse",
-    "Slack": "Lento",
-    "Notion": "Nozione",
+    "Slack": "Slack",
+    "Notion": "Notion",
     "Salesforce": "Salesforce",
     "Jira": "Jira",
     "name": "nome",
     "description": "descrizione",
     "trigger": "grilletto",
-    "SKILL.md": "ABILITÀ.md",
+    "SKILL.md": "SKILL.md",
     "Enterprise": "Enterprise",
     "Personal": "Personal",
     "Project": "Progetto",
@@ -961,7 +961,7 @@
     "Response streaming": "Streaming di risposte",
     "Structured output formats": "Formati di output strutturati",
     "Max tokens configuration": "Configurazione dei token massimi",
-    "Prompt Engineering": "Ingegneria rapida",
+    "Prompt Engineering": "Ingegneria dei prompt",
     "Prompt engineering with XML tags": "Progettazione rapida con tag XML",
     "XML tag structure": "Struttura dei tag XML",
     "Chain of thought prompting": "Catena di pensieri che stimolano",
@@ -998,7 +998,7 @@
     "PDF processing": "Elaborazione PDF",
     "Multi-modal inputs": "Input multimodali",
     "Document extraction": "Estrazione documenti",
-    "Prompt Caching": "Caching rapido",
+    "Prompt Caching": "Caching dei prompt",
     "Cache control headers": "Intestazioni di controllo della cache",
     "Cache breakpoints": "Punti di interruzione della cache",
     "Cached token pricing": "Prezzi dei token memorizzati nella cache",
@@ -1133,54 +1133,19 @@
   },
   "_protected": {
     "Claude Code": [
-      "Codice Claudio",
-      "Código Claude"
+      "Codice Claudio"
     ],
     "Claude": [
       "Claudio"
     ],
     "Anthropic": [
-      "Antropico",
-      "Antrópico"
+      "Antropico"
     ],
     "Anthropic Academy": [
-      "Accademia Antropica",
-      "Anthropic Academy"
-    ],
-    "Enterprise": [
-      "Impresa",
-      "Empresa"
-    ],
-    "Personal": [
-      "Personale",
-      "Personal"
-    ],
-    "Plugin": [
-      "Collegare",
-      "complemento"
-    ],
-    "Plugins": [
-      "Plugin",
-      "complementos"
-    ],
-    "skill": [
-      "abilità",
-      "habilidad"
-    ],
-    "skills": [
-      "competenze",
-      "habilidades"
-    ],
-    "Skills": [
-      "Competenze",
-      "Habilidades"
+      "Accademia Antropica"
     ],
     "SKILL.md": [
       "SKILL.md"
-    ],
-    "frontmatter": [
-      "questione principale",
-      "preámbulo"
     ],
     "CLAUDE.md": [
       "CLAUDE.md"
@@ -1189,34 +1154,10 @@
       "YAML"
     ],
     "slash command": [
-      "comando barra",
-      "comando de barra"
+      "comando barra"
     ],
     "subagent": [
       "subagente"
-    ],
-    "hook": [
-      "gancio",
-      "gancho"
-    ],
-    "hooks": [
-      "ganci",
-      "ganchos"
-    ],
-    "Cowork": [
-      "Collaborazione",
-      "cotrabajo",
-      "trabajo conjunto"
-    ],
-    "Dispatch": [
-      "Spedizione",
-      "despacho",
-      "envío"
-    ],
-    "Computer Use": [
-      "Uso del computer",
-      "uso del computador",
-      "uso de la computadora"
     ]
   },
   "exam_ui": {

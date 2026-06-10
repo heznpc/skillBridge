@@ -28,8 +28,14 @@ playwright/.cache/
 # Media files (not part of the extension)
 *.mp4
 *.gif
+*.webm
 *.png
 !assets/**/*.png
+# Store screenshots + promo tile ARE tracked deliverables (like the icons above)
+!store-assets/*.png
+
+# Generated store-listing copy (source of truth: store-assets/STORE_LISTING.md)
+store-assets/description.md
 
 # Stray files in root
 /content.css

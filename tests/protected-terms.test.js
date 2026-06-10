@@ -192,6 +192,44 @@ describe('Protected Terms System (real production code)', () => {
   });
 });
 
+describe('GT gloss self-duplication collapse', () => {
+  beforeEach(() => {
+    resetProtectedTerms();
+    buildProtectedTermsMap('ko', fakeTranslator(koProtected));
+  });
+
+  test('collapses the restore-induced dup: "클로드(Claude)" → "Claude"', () => {
+    // GT emits "클로드(Claude)"; restore turns 클로드→Claude → "Claude(Claude)";
+    // the collapse then yields a single "Claude".
+    expect(restoreProtectedTerms('클로드(Claude)를 사용하세요')).toBe('Claude를 사용하세요');
+  });
+
+  test('collapses an already-duplicated "Claude(Claude)"', () => {
+    expect(restoreProtectedTerms('Claude(Claude)')).toBe('Claude');
+  });
+
+  test('collapses with a space before the paren: "클로드 (Claude)"', () => {
+    expect(restoreProtectedTerms('클로드 (Claude)')).toBe('Claude');
+  });
+
+  test('collapses fullwidth parens: "클로드（Claude）"', () => {
+    expect(restoreProtectedTerms('클로드（Claude）')).toBe('Claude');
+  });
+
+  test('longer canonical term wins: "Claude Code(Claude Code)" → "Claude Code"', () => {
+    expect(restoreProtectedTerms('Claude Code(Claude Code)')).toBe('Claude Code');
+  });
+
+  test('does NOT collapse a paren holding different text: "Claude (the assistant)"', () => {
+    expect(restoreProtectedTerms('Claude (the assistant)')).toBe('Claude (the assistant)');
+  });
+
+  test('does NOT touch non-canonical self-dup like code "fn(fn)"', () => {
+    // "fn" is not a protected term, so it never enters the collapse alternation.
+    expect(restoreProtectedTerms('fn(fn)')).toBe('fn(fn)');
+  });
+});
+
 // Regression guard for the corruption class documented in protected-terms.js:
 // restoreProtectedTerms does an unanchored replaceAll with no CJK word boundary,
 // so any _protected wrong-form that is itself a common standalone word silently
@@ -230,6 +268,51 @@ describe('no corruption of correct CJK prose (real shipped dictionaries)', () =>
       '任務調度系統', // task scheduling (was -> Dispatch)
       '個人觀點', // personal view (was -> Personal)
       '團隊協作', // team collaboration (was -> Cowork)
+    ],
+    // Latin/Cyrillic/Vietnamese locales — same bug class, swept later than the
+    // CJK four. Each sentence is ordinary prose using the language's everyday
+    // word that had been registered as a brand "wrong-form".
+    es: [
+      'estas habilidades de comunicación', // skills (was -> skills)
+      'el envío de mensajes', // sending (was -> Dispatch)
+      'un complemento útil', // add-on (was -> Plugin)
+      'el trabajo conjunto del equipo', // joint work (was -> Cowork)
+    ],
+    fr: [
+      'les compétences nécessaires', // skills (was -> skills)
+      "l'extension de navigateur", // extension (was -> Plugin)
+      'le travail collaboratif', // collaborative work (was -> Cowork)
+      'le préambule du document', // preamble (was -> frontmatter)
+    ],
+    it: [
+      'le competenze che svilupperai', // skills (was -> skills)
+      'Collegare gli strumenti', // to connect (was -> Plugin)
+      "l'abilità di scrivere", // ability (was -> skill)
+      'la questione principale del corso', // main issue (was -> frontmatter)
+    ],
+    de: [
+      'die Zusammenarbeit im Unternehmen', // collaboration + company (was -> Cowork/Enterprise)
+      'diese Fähigkeiten sind wichtig', // abilities (was -> Skills)
+      'eine nützliche Erweiterung', // extension (was -> Plugin)
+      'Da ist ein Haken', // there's a catch (was -> hook)
+    ],
+    'pt-BR': [
+      'essas habilidades de comunicação', // skills (was -> skills)
+      'o envio de mensagens', // sending (was -> Dispatch)
+      'o trabalho conjunto da equipe', // joint work (was -> Cowork)
+      'Pessoal, vamos começar', // folks (was -> Personal)
+    ],
+    ru: [
+      'эти навыки общения', // skills (was -> skills)
+      'Совместная работа команды', // joint work (was -> Cowork)
+      'Отправка сообщений', // sending (was -> Dispatch)
+      'Персональный подход', // personal (was -> Personal)
+    ],
+    vi: [
+      'những kỹ năng giao tiếp', // skills (was -> skills)
+      'phần đầu của bài học', // the beginning (was -> frontmatter)
+      'Doanh nghiệp phát triển', // business (was -> Enterprise)
+      'cộng tác với nhau', // collaborate (was -> Cowork)
     ],
   };
 

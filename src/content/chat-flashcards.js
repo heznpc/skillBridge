@@ -87,7 +87,7 @@
   // ============================================================
 
   function toggleFlashcardPanel() {
-    const chatPanel = document.getElementById('si18n-panel-chat');
+    const chatPanel = sb.$id('si18n-panel-chat');
     if (!chatPanel) return;
 
     if (_state.flashcardPanelOpen) {
@@ -128,8 +128,8 @@
       </div>
     `;
 
-    document.getElementById('si18n-fc-back')?.addEventListener('click', closeFlashcardPanel);
-    document.getElementById('si18n-fc-reset')?.addEventListener('click', () => {
+    sb.$id('si18n-fc-back')?.addEventListener('click', closeFlashcardPanel);
+    sb.$id('si18n-fc-reset')?.addEventListener('click', () => {
       flashcardBoxes = {};
       flashcardDues = {};
       reviewMode = false;
@@ -286,7 +286,7 @@
   }
 
   function refreshFlashcard() {
-    const container = document.getElementById('si18n-fc-container');
+    const container = sb.$id('si18n-fc-container');
     if (!container) return;
     container.innerHTML =
       allCards.length === 0
@@ -317,7 +317,7 @@
   }
 
   function bindFlashcardEvents() {
-    document.getElementById('si18n-fc-mode-toggle')?.addEventListener('click', () => {
+    sb.$id('si18n-fc-mode-toggle')?.addEventListener('click', () => {
       reviewMode = !reviewMode;
       flashcardIndex = 0;
       rebuildActive();
@@ -325,7 +325,7 @@
       refreshFlashcard();
     });
 
-    const card = document.getElementById('si18n-fc-card');
+    const card = sb.$id('si18n-fc-card');
     card?.addEventListener('click', () => card.classList.toggle('si18n-card-flipped'));
     card?.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
@@ -333,22 +333,22 @@
         card.classList.toggle('si18n-card-flipped');
       }
     });
-    document.getElementById('si18n-fc-prev')?.addEventListener('click', () => {
+    sb.$id('si18n-fc-prev')?.addEventListener('click', () => {
       if (flashcardIndex > 0) {
         flashcardIndex--;
         saveFlashcardProgress();
         refreshFlashcard();
       }
     });
-    document.getElementById('si18n-fc-next')?.addEventListener('click', () => {
+    sb.$id('si18n-fc-next')?.addEventListener('click', () => {
       if (flashcardIndex < flashcardCards.length - 1) {
         flashcardIndex++;
         saveFlashcardProgress();
         refreshFlashcard();
       }
     });
-    document.getElementById('si18n-fc-box-up')?.addEventListener('click', () => markCurrent(true));
-    document.getElementById('si18n-fc-box-down')?.addEventListener('click', () => markCurrent(false));
+    sb.$id('si18n-fc-box-up')?.addEventListener('click', () => markCurrent(true));
+    sb.$id('si18n-fc-box-down')?.addEventListener('click', () => markCurrent(false));
   }
 
   // ============================================================

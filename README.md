@@ -2,7 +2,7 @@
 
 <img src="assets/icons/icon128.png" alt="SkillBridge" width="90" />
 
-# SkillBridge — AI Course Translator <!-- VERSION_START -->v3.5.39<!-- VERSION_END -->
+# SkillBridge — AI Course Translator <!-- VERSION_START -->v3.5.40<!-- VERSION_END -->
 
 > Available in multiple languages at the [project landing page](https://heznpc.github.io/skillBridge/).
 
@@ -145,11 +145,12 @@ Generic translation tools often **mistranslate brand names and technical terms**
 
 ## Installation
 
-> **Status: pending re-publication after icon redesign.** The Chrome Web
-> Store listing was removed pending an icon redesign and is not currently
-> available. Install via the manual / developer-mode path below — the
-> code in `main` is the up-to-date release. The store listing will be
-> restored once the new icon ships.
+> **Status: live as v1.0.1; re-publication of the current v3.5.40 pending.**
+> The Chrome Web Store listing is available in all locales **except the United
+> States**, where it was removed on 2026-05-12 over a trademark issue with the
+> old icon (since redesigned on `main`). The published store build is v1.0.1;
+> `main` is the up-to-date release (v3.5.40). For the latest version — and for
+> US users until re-listing — install via the manual / developer-mode path below.
 
 ### Chrome / Edge / Chromium browsers
 
@@ -219,7 +220,7 @@ Translating a whole course page on every navigation has to be fast *and* correct
 
 **What I deliberately did *not* build (and why).**
 - **No servers / no backend** — everything runs client-side; translation and AI go straight to third parties via Puter.js. This is what keeps it free forever and privacy-preserving, at the deliberate cost of cross-device sync.
-- **No telemetry or analytics by default** — opt-in only, error stacks only; marketing convenience never outweighs the privacy promise.
+- **No telemetry or analytics** — nothing is collected, not even opt-in error reports; marketing convenience never outweighs the privacy promise.
 - **No A/B framework, no paid tier** — both imply infrastructure (traffic, segmentation, billing) that a free, server-less project shouldn't fake.
 
 The full "things we will not do" list is kept public on purpose in [POSITIONING.md](POSITIONING.md).
@@ -236,7 +237,7 @@ The full "things we will not do" list is kept public on purpose in [POSITIONING.
 | 🇹🇼 中文繁體 (Chinese Traditional) | `zh-TW` | 570+ entries |
 | 🇪🇸 Español (Spanish) | `es` | 570+ entries |
 | 🇫🇷 Français (French) | `fr` | 570+ entries |
-| 🇮🇹 Italiano (Italian) | `it` | 570+ entries (v1 — Spanish-derived, native review welcome) |
+| 🇮🇹 Italiano (Italian) | `it` | 570+ entries (re-translated from English; native review welcome) |
 | 🇩🇪 Deutsch (German) | `de` | 570+ entries |
 | 🇧🇷 Português (Brazilian) | `pt-BR` | 570+ entries |
 | 🇷🇺 Русский (Russian) | `ru` | 570+ entries |

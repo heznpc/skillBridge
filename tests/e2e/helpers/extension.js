@@ -291,6 +291,85 @@ async function evalInContentWorld(context, op, arg) {
               window._sb.toggleSidebar();
               return true;
             },
+            // Inject the FAB and report whether it is shadow-isolated + its
+            // computed style. Used by shadow-isolation.spec.js to prove host
+            // page CSS cannot reach the FAB inside #skillbridge-root's shadow.
+            fabProbe: () => {
+              if (!window._sb || !window._sb.injectFloatingButton) return { ok: false };
+              window._sb.injectFloatingButton();
+              const host = document.getElementById('skillbridge-root');
+              const fab = host && host.shadowRoot && host.shadowRoot.getElementById('skillbridge-fab');
+              if (!fab) return { ok: false };
+              const cs = window.getComputedStyle(fab);
+              const svg = fab.querySelector('svg');
+              const r = svg && svg.getBoundingClientRect();
+              return {
+                ok: true,
+                inLightDom: !!document.getElementById('skillbridge-fab'),
+                inShadow: fab.getRootNode() === host.shadowRoot,
+                background: cs.backgroundColor,
+                svgWidth: r ? Math.round(r.width) : null,
+              };
+            },
+            // Await the transformed content.css sheet + report adoption. Proves
+            // the runtime fetch → transform → adoptedStyleSheets path works.
+            shadowSheetReady: async () => {
+              if (!window._sbShadowCss) return { ok: false };
+              const sheet = await window._sbShadowCss.loadShadowSheet();
+              const host = document.getElementById('skillbridge-root');
+              const root = host && host.shadowRoot;
+              if (root) window._sbShadowCss.ensureShadowStylesheet(root);
+              await new Promise((r) => setTimeout(r, 0));
+              let hasHostDark = false;
+              try {
+                if (sheet) {
+                  for (const rule of sheet.cssRules) {
+                    if (rule.selectorText && rule.selectorText.includes(':host(.si18n-dark)')) {
+                      hasHostDark = true;
+                      break;
+                    }
+                  }
+                }
+              } catch (_e) {
+                /* cssRules can throw on cross-origin sheets; ours is same-origin */
+              }
+              return {
+                ok: true,
+                sheetLoaded: !!sheet,
+                adopted: root ? root.adoptedStyleSheets.length : 0,
+                hasHostDark,
+              };
+            },
+            // ── Store-asset capture ops (additive; unused by the E2E specs) ──
+            // Open/close the flashcard sub-panel (sidebar must be open first).
+            toggleFlashcardPanel: () => {
+              window._sb.toggleFlashcardPanel();
+              return true;
+            },
+            // Show the first-run onboarding banner — the genuine in-product
+            // language picker, used for the "language selection" screenshot.
+            showWelcomeBanner: (lang) => {
+              window._sb.showWelcomeBanner(lang || 'ko');
+              return true;
+            },
+            // Suppress onboarding so it doesn't obscure other scenes: remove any
+            // banner already shown and mark it seen so the delayed one never fires.
+            suppressOnboarding: () => {
+              document.getElementById('si18n-welcome-banner')?.remove();
+              try {
+                chrome.storage.local.set({ welcomeShown: true });
+              } catch (_e) {
+                /* storage may be unavailable in some contexts */
+              }
+              return true;
+            },
+            // Remove transient clutter right before a screenshot: the per-lesson
+            // term-preview popover and any in-flight GT verify spinners ("•••").
+            cleanForCapture: () => {
+              document.getElementById('si18n-term-preview')?.remove();
+              document.querySelectorAll('.si18n-verify-spinner').forEach((el) => el.remove());
+              return true;
+            },
             toggleHistoryPanel: () => {
               window._sb._chat.toggleHistoryPanel();
               return true;
@@ -421,8 +500,8 @@ async function evalInContentWorld(context, op, arg) {
             //   CHAT_STREAM_CHUNK events → onChunk → formatResponse →
             //   bubble.innerHTML update → CHAT_STREAM_END → saveConversation.
             sendChat: (text) => {
-              const input = document.getElementById('si18n-chat-input');
-              const sendBtn = document.getElementById('si18n-chat-send');
+              const input = window._sb.$id('si18n-chat-input');
+              const sendBtn = window._sb.$id('si18n-chat-send');
               if (!input || !sendBtn) {
                 return { error: 'chat UI not present — open sidebar first' };
               }
@@ -449,7 +528,7 @@ async function evalInContentWorld(context, op, arg) {
             // asserts both expected questions appear, proving the
             // saveConversation → IDB → loadHistoryList round-trip works.
             readHistoryList: () => {
-              const items = document.querySelectorAll('.si18n-history-item');
+              const items = (window._sb._uiHost?.shadowRoot || document).querySelectorAll('.si18n-history-item');
               return Array.from(items).map((el) => ({
                 id: el.dataset.id,
                 question: el.querySelector('.si18n-history-item-q')?.textContent.trim() || '',
@@ -460,14 +539,14 @@ async function evalInContentWorld(context, op, arg) {
             // assert the original question and bot-answer text are present
             // (proves IDB read of a single record by primary key works).
             openHistoryDetail: (id) => {
-              const item = document.querySelector(`.si18n-history-item[data-id="${id}"]`);
+              const item = window._sb.$(`.si18n-history-item[data-id="${id}"]`);
               if (!item) return { error: 'no item with id=' + id };
               item.click();
               return { ok: true };
             },
             // Read the detail-view content after openHistoryDetail.
             readHistoryDetail: () => {
-              const detail = document.querySelector('.si18n-history-detail');
+              const detail = window._sb.$('.si18n-history-detail');
               if (!detail) return { present: false };
               return {
                 present: true,
@@ -480,7 +559,9 @@ async function evalInContentWorld(context, op, arg) {
             // user bubble with the typed text exists and (b) a bot bubble
             // with the streamed-and-formatted response exists.
             readChatLog: () => {
-              const msgs = document.querySelectorAll('#si18n-chat-messages .si18n-chat-msg');
+              const msgs = (window._sb._uiHost?.shadowRoot || document).querySelectorAll(
+                '#si18n-chat-messages .si18n-chat-msg',
+              );
               return Array.from(msgs).map((m) => {
                 const role = m.classList.contains('si18n-chat-user')
                   ? 'user'
@@ -508,4 +589,4 @@ async function evalInContentWorld(context, op, arg) {
   );
 }
 
-module.exports = { launchExtension, closeExtension, evalInContentWorld, EXTENSION_SRC };
+module.exports = { launchExtension, closeExtension, evalInContentWorld, EXTENSION_SRC, makePatchedExtension };

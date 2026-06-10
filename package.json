@@ -1,6 +1,6 @@
 {
   "name": "skillbridge",
-  "version": "3.5.39",
+  "version": "3.5.40",
   "private": true,
   "scripts": {
     "test": "jest --verbose",
@@ -29,18 +29,24 @@
     "format": "prettier --write 'src/**/*.{js,css,html}' 'tests/**/*.js' 'scripts/**/*.js'",
     "format:check": "prettier --check 'src/**/*.{js,css,html}' 'tests/**/*.js' 'scripts/**/*.js'",
     "build:bundle": "node scripts/build-bundle.js",
-    "build:bundle:zip": "npm run build:bundle && cd dist/bundled && rm -f ../../store-assets/skillbridge-bundled.zip && zip -r ../../store-assets/skillbridge-bundled.zip . -x '*.DS_Store'"
+    "build:bundle:zip": "npm run build:bundle && cd dist/bundled && rm -f ../../store-assets/skillbridge-bundled.zip && zip -r ../../store-assets/skillbridge-bundled.zip . -x '*.DS_Store'",
+    "capture:store": "shotkit",
+    "capture:install": "playwright install chromium"
   },
   "jest": {
     "testPathIgnorePatterns": [
       "/node_modules/",
       "/dist/",
       "/tests/e2e/"
+    ],
+    "modulePathIgnorePatterns": [
+      "/dist/"
     ]
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.60.0",
+    "@starter-series/shotkit": "github:starter-series/shotkit#v1.0.0",
     "esbuild": "^0.28.0",
     "eslint": "^10.4.1",
     "eslint-config-prettier": "^10.1.8",

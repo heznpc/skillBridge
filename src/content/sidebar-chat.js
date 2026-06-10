@@ -43,11 +43,126 @@
   }
 
   // ============================================================
+  // SHADOW UI ROOT — style isolation from the host page
+  // ============================================================
+  // Skilljar styles bare element selectors (button {}, svg {}, input {}, …)
+  // that leak into our injected controls whenever they don't set those
+  // properties themselves — the FAB icon collapsed (#182) and the reset button
+  // turned host-blue (#185) exactly this way. Instead of chasing each leak, we
+  // host our injected UI inside an OPEN shadow root: the page stylesheet cannot
+  // reach in (shadow encapsulation), so that leak class becomes impossible.
+  //
+  // Two boundary facts shape the design:
+  //   - Ancestor state selectors (html.si18n-dark, body.si18n-lang-*) do NOT
+  //     cross into the shadow, so we mirror those classes onto the shadow HOST
+  //     and the shadow CSS targets them via :host(...).
+  //   - CSS custom properties (--si18n-*) DO inherit through the boundary, so
+  //     var() references keep resolving from :root.
+  //
+  // The FAB, sidebar, and TOC live here; blend-in components (header
+  // controls) stay in the light DOM by design. Shadow UI is styled by the
+  // adopted, :host()-transformed content.css (see shadow-css.js) — except the
+  // FAB, whose inline critical style below is its single source of truth.
+  function getUiRoot() {
+    if (sb._uiHost && sb._uiHost.isConnected) return sb._uiHost.shadowRoot;
+    const host = document.createElement('div');
+    host.id = 'skillbridge-root';
+    host.attachShadow({ mode: 'open' });
+    // Adopt the transformed content.css so UI that moves into this root is
+    // styled from the single source. The FAB keeps a small inline <style> as
+    // immediate/critical CSS (the adopted sheet loads async via fetch).
+    window._sbShadowCss?.ensureShadowStylesheet(host.shadowRoot);
+    syncHostThemeClasses(host);
+    document.body.appendChild(host);
+    sb._uiHost = host;
+    return host.shadowRoot;
+  }
+
+  // Mirror host-page theme/locale state onto the shadow host so shadow CSS can
+  // react via :host(.si18n-dark) / :host(.si18n-lang-xx). Kept in sync because
+  // the dark toggle and language switch flip these classes after first paint.
+  function syncHostThemeClasses(host) {
+    const apply = () => {
+      host.classList.toggle('si18n-dark', document.documentElement.classList.contains('si18n-dark'));
+      for (const c of [...host.classList]) {
+        if (c.startsWith('si18n-lang-') || c === 'si18n-rtl') host.classList.remove(c);
+      }
+      for (const c of document.body.classList) {
+        if (c.startsWith('si18n-lang-') || c === 'si18n-rtl') host.classList.add(c);
+      }
+    };
+    apply();
+    // Self-disconnect when the host leaves the DOM (host-page swap): a fresh
+    // host from getUiRoot() brings its own observer, so the old one must not
+    // linger and keep mutating a detached node.
+    const obs = new MutationObserver(() => {
+      if (!host.isConnected) {
+        obs.disconnect();
+        return;
+      }
+      apply();
+    });
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    obs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  // Shadow-aware element lookups. Query the shadow UI root first (the sidebar
+  // and FAB live there), then fall back to the light DOM for host-page UI and
+  // for components not yet migrated into the shadow root. Every module calls
+  // sb.$id / sb.$ instead of document.getElementById / querySelector so a
+  // single call resolves correctly regardless of which side an element is on
+  // during the staged migration.
+  // isConnected guard: if the host was ever detached (host-page DOM swap), a
+  // lookup must not return elements from the dead root — fall through to the
+  // light DOM (null there reads as "not present", which handlers treat as a
+  // no-op) until getUiRoot() builds a fresh host.
+  sb.$id = (id) =>
+    (sb._uiHost && sb._uiHost.isConnected && sb._uiHost.shadowRoot.getElementById(id)) || document.getElementById(id);
+  sb.$ = (sel) =>
+    (sb._uiHost && sb._uiHost.isConnected && sb._uiHost.shadowRoot.querySelector(sel)) || document.querySelector(sel);
+
+  // The SINGLE source of truth for FAB styling (content.css carries no
+  // #skillbridge-fab rules — see the note there). Inline rather than relying
+  // on the adopted content.css sheet because adoption is async (fetch) and the
+  // FAB must never flash unstyled. Ancestor theme selectors are written in
+  // :host(...) form; the shadow host mirrors the html/body state classes.
+  const FAB_SHADOW_CSS = `
+    #skillbridge-fab { position: fixed; bottom: 24px; right: 24px; width: 48px; height: 48px; padding: 0; border-radius: 50%; background: var(--si18n-accent, #3d405b); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 16px rgba(61, 64, 91, 0.35); z-index: 99999; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: none; }
+    #skillbridge-fab svg { flex-shrink: 0; width: 24px; height: 24px; }
+    #skillbridge-fab:hover { transform: scale(1.08); box-shadow: 0 6px 24px rgba(61, 64, 91, 0.45); }
+    #skillbridge-fab.hidden { transform: scale(0); opacity: 0; pointer-events: none; }
+    #skillbridge-fab:focus-visible { outline: 2px solid var(--si18n-primary, #e07a5f); outline-offset: 2px; }
+    #skillbridge-fab.si18n-fab-pulse { animation: si18n-fab-pulse 2s ease-in-out 3; }
+    @keyframes si18n-fab-pulse {
+      0%, 100% { box-shadow: 0 4px 16px rgba(61, 64, 91, 0.35); }
+      50% { box-shadow: 0 4px 24px rgba(61, 64, 91, 0.55), 0 0 0 8px rgba(61, 64, 91, 0.1); }
+    }
+    :host(.si18n-dark) #skillbridge-fab { background: #6b6f9e; border: 1px solid rgba(255, 255, 255, 0.22); color: #fff; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55); }
+    :host(.si18n-dark) #skillbridge-fab:hover { background: #7c80b3; color: #fff; }
+    :host(:is(.si18n-lang-ar, .si18n-lang-he)) #skillbridge-fab { right: auto; left: 24px; }
+    @media (prefers-reduced-motion: reduce) {
+      #skillbridge-fab { transition-duration: 0.01ms; }
+      #skillbridge-fab.si18n-fab-pulse { animation-duration: 0.01ms; animation-iteration-count: 1; }
+    }
+    @media (max-width: 600px) {
+      #skillbridge-fab { bottom: 16px; right: 16px; }
+      :host(:is(.si18n-lang-ar, .si18n-lang-he)) #skillbridge-fab { left: 16px; right: auto; }
+    }
+  `;
+
+  // ============================================================
   // FLOATING BUTTON
   // ============================================================
 
   function injectFloatingButton() {
-    if (document.getElementById('skillbridge-fab')) return;
+    const root = getUiRoot();
+    if (root.getElementById('skillbridge-fab')) return;
+    if (!root.querySelector('style[data-sb-fab]')) {
+      const style = document.createElement('style');
+      style.setAttribute('data-sb-fab', '');
+      style.textContent = FAB_SHADOW_CSS;
+      root.appendChild(style);
+    }
     const btn = document.createElement('button');
     btn.id = 'skillbridge-fab';
     btn.setAttribute('role', 'button');
@@ -70,7 +185,7 @@
         toggleSidebar();
       }
     });
-    document.body.appendChild(btn);
+    root.appendChild(btn);
 
     // Pulse animation on first visit to draw attention
     chrome.storage.local.get(['fabSeen'], (result) => {
@@ -86,7 +201,7 @@
   // ============================================================
 
   function injectSidebar() {
-    if (document.getElementById('skillbridge-sidebar')) return;
+    if (sb.$id('skillbridge-sidebar')) return;
     const sidebar = document.createElement('div');
     sidebar.id = 'skillbridge-sidebar';
     sidebar.className = 'skillbridge-sidebar';
@@ -94,7 +209,9 @@
     sidebar.setAttribute('aria-modal', 'true');
     sidebar.setAttribute('aria-label', 'SkillBridge Tutor');
     sidebar.innerHTML = getSidebarHTML();
-    document.body.appendChild(sidebar);
+    // Mount inside the shadow UI root so the host page's CSS can't reach the
+    // sidebar; it's styled by the adopted (transformed) content.css.
+    getUiRoot().appendChild(sidebar);
     setTimeout(bindSidebarEvents, SKILLBRIDGE_DELAYS.SIDEBAR_BIND);
     sb.initAskTutorButton?.();
   }
@@ -168,9 +285,9 @@
   }
 
   function bindSidebarEvents() {
-    document.getElementById('si18n-close')?.addEventListener('click', toggleSidebar);
-    const toolsBtn = document.getElementById('si18n-tools-btn');
-    const toolsMenu = document.getElementById('si18n-tools-menu');
+    sb.$id('si18n-close')?.addEventListener('click', toggleSidebar);
+    const toolsBtn = sb.$id('si18n-tools-btn');
+    const toolsMenu = sb.$id('si18n-tools-menu');
     toolsBtn?.addEventListener('click', () => {
       const willOpen = !!toolsMenu?.hidden;
       if (toolsMenu) toolsMenu.hidden = !willOpen;
@@ -182,22 +299,22 @@
       toolsMenu.hidden = true;
       toolsBtn?.setAttribute('aria-expanded', 'false');
     });
-    document.getElementById('si18n-history-btn')?.addEventListener('click', () => sb._chat.toggleHistoryPanel?.());
-    document.getElementById('si18n-fc-btn')?.addEventListener('click', () => sb._chat.toggleFlashcardPanel?.());
-    document.getElementById('si18n-pdf-btn')?.addEventListener('click', exportLessonPDF);
-    document.getElementById('si18n-bm-btn')?.addEventListener('click', () => sb._chat.toggleBookmarksPanel?.());
-    document.getElementById('si18n-recent-btn')?.addEventListener('click', () => sb._chat.toggleRecentPanel?.());
+    sb.$id('si18n-history-btn')?.addEventListener('click', () => sb._chat.toggleHistoryPanel?.());
+    sb.$id('si18n-fc-btn')?.addEventListener('click', () => sb._chat.toggleFlashcardPanel?.());
+    sb.$id('si18n-pdf-btn')?.addEventListener('click', exportLessonPDF);
+    sb.$id('si18n-bm-btn')?.addEventListener('click', () => sb._chat.toggleBookmarksPanel?.());
+    sb.$id('si18n-recent-btn')?.addEventListener('click', () => sb._chat.toggleRecentPanel?.());
     bindChatInputEvents();
     bindExampleQuestions();
   }
 
   function bindExampleQuestions() {
-    const container = document.getElementById('si18n-example-questions');
+    const container = sb.$id('si18n-example-questions');
     if (!container) return;
     container.addEventListener('click', (e) => {
       const btn = e.target.closest('.si18n-example-q');
       if (!btn) return;
-      const input = document.getElementById('si18n-chat-input');
+      const input = sb.$id('si18n-chat-input');
       if (input) {
         input.value = btn.dataset.question;
         container.remove();
@@ -207,7 +324,7 @@
   }
 
   function bindChatInputEvents() {
-    const chatInput = document.getElementById('si18n-chat-input');
+    const chatInput = sb.$id('si18n-chat-input');
     let isComposing = false;
 
     chatInput?.addEventListener('compositionstart', () => {
@@ -217,7 +334,7 @@
       isComposing = false;
     });
 
-    document.getElementById('si18n-chat-send')?.addEventListener('click', sendChatMessage);
+    sb.$id('si18n-chat-send')?.addEventListener('click', sendChatMessage);
     chatInput?.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey && !isComposing && !e.isComposing) {
         e.preventDefault();
@@ -227,33 +344,33 @@
   }
 
   function updateLocalizedLabels() {
-    const headerLangSelect = document.getElementById('si18n-header-lang-select');
+    const headerLangSelect = sb.$id('si18n-header-lang-select');
     if (headerLangSelect) headerLangSelect.value = sb.currentLang;
 
-    const messagesEl = document.getElementById('si18n-chat-messages');
+    const messagesEl = sb.$id('si18n-chat-messages');
     if (!messagesEl) return;
     const firstBubble = messagesEl.querySelector('.si18n-chat-bot .si18n-chat-bubble');
     if (firstBubble && messagesEl.children.length <= 2) {
       firstBubble.textContent = getTutorGreeting();
     }
-    const chatInput = document.getElementById('si18n-chat-input');
+    const chatInput = sb.$id('si18n-chat-input');
     if (chatInput) chatInput.placeholder = sb.t(CHAT_PLACEHOLDERS);
-    const sendBtn = document.getElementById('si18n-chat-send');
+    const sendBtn = sb.$id('si18n-chat-send');
     if (sendBtn) sendBtn.textContent = sb.t(SEND_LABELS);
-    const askLabel = document.querySelector('.si18n-ask-tutor-label');
+    const askLabel = sb.$('.si18n-ask-tutor-label');
     if (askLabel) askLabel.textContent = sb.t(ASK_TUTOR_LABELS);
 
     // The sidebar chrome is built once and was previously not re-localized, so
     // switching language after the sidebar existed left the tools button, the
     // tools-menu items and the example-question chips frozen at their
     // build-time language. Re-apply them here.
-    const toolsBtn = document.getElementById('si18n-tools-btn');
+    const toolsBtn = sb.$id('si18n-tools-btn');
     if (toolsBtn) {
       const toolsLabel = sb.t(MENU_LABELS.tools);
       toolsBtn.title = toolsLabel;
       toolsBtn.setAttribute('aria-label', toolsLabel);
     }
-    const closeBtn = document.getElementById('si18n-close');
+    const closeBtn = sb.$id('si18n-close');
     if (closeBtn) closeBtn.setAttribute('aria-label', sb.t(A11Y_LABELS.closeSidebar));
 
     const menuItems = [
@@ -264,7 +381,7 @@
       ['si18n-pdf-btn', sb.t(PDF_EXPORT_LABELS.title)],
     ];
     for (const [id, label] of menuItems) {
-      const span = document.getElementById(id)?.querySelector('span');
+      const span = sb.$id(id)?.querySelector('span');
       if (span) span.textContent = label;
     }
 
@@ -272,7 +389,7 @@
     // only rebuild while the container is still present. Build via DOM nodes
     // (not innerHTML); the click handler is delegated on the container, so
     // replacing the children keeps it bound.
-    const exampleContainer = document.getElementById('si18n-example-questions');
+    const exampleContainer = sb.$id('si18n-example-questions');
     if (exampleContainer) {
       const questions = sb.t(EXAMPLE_QUESTIONS) || EXAMPLE_QUESTIONS['en'];
       exampleContainer.replaceChildren(
@@ -301,8 +418,8 @@
 
   async function sendChatMessage() {
     if (isSending) return;
-    const input = document.getElementById('si18n-chat-input');
-    const messages = document.getElementById('si18n-chat-messages');
+    const input = sb.$id('si18n-chat-input');
+    const messages = sb.$id('si18n-chat-messages');
     const text = input.value.trim();
     if (!text) return;
 
@@ -310,7 +427,7 @@
 
     // Offline guard — show localized message instead of hitting the network
     if (sb.isOffline) {
-      const messages = document.getElementById('si18n-chat-messages');
+      const messages = sb.$id('si18n-chat-messages');
       messages.insertAdjacentHTML(
         'beforeend',
         `
@@ -325,7 +442,7 @@
       return;
     }
 
-    const quoteEl = document.querySelector('.si18n-chat-quote');
+    const quoteEl = sb.$('.si18n-chat-quote');
     const quotedText = quoteEl?.textContent?.replace('\u00d7', '').trim() || '';
     if (quoteEl) quoteEl.remove();
 
@@ -365,8 +482,8 @@
 
     const fullQuestion = quotedText ? `[Regarding this text: "${quotedText}"]\n\n${text}` : text;
     const context = sb.getPageContext();
-    const bubble = document.querySelector(`#${loadingId} .si18n-chat-bubble`);
-    const sendBtn = document.getElementById('si18n-chat-send');
+    const bubble = sb.$(`#${loadingId} .si18n-chat-bubble`);
+    const sendBtn = sb.$id('si18n-chat-send');
     if (sendBtn) sendBtn.disabled = true;
 
     // Cancel any in-flight stream first; user pressing send while one is
@@ -422,7 +539,7 @@
         retryBtn.title = sb.t(A11Y_LABELS.retry);
         retryBtn.addEventListener('click', () => {
           bubble.closest('.si18n-chat-msg')?.remove();
-          const inp = document.getElementById('si18n-chat-input');
+          const inp = sb.$id('si18n-chat-input');
           if (inp) {
             inp.value = text;
             sendChatMessage();
@@ -446,7 +563,7 @@
   // ============================================================
 
   function closeSubPanel() {
-    const chatPanel = document.getElementById('si18n-panel-chat');
+    const chatPanel = sb.$id('si18n-panel-chat');
     if (!chatPanel || !_state.savedChatHTML) return;
     // The chat bubble that was streaming is about to be replaced — abort
     // the stream so its onChunk callback doesn't write into a detached node.
@@ -469,8 +586,8 @@
   // ============================================================
 
   function toggleSidebar() {
-    const sidebar = document.getElementById('skillbridge-sidebar');
-    const fab = document.getElementById('skillbridge-fab');
+    const sidebar = sb.$id('skillbridge-sidebar');
+    const fab = sb.$id('skillbridge-fab');
     sb.sidebarVisible = !sb.sidebarVisible;
     // If we're closing, cancel any in-flight chat — the user clearly
     // doesn't want the answer anymore and we shouldn't keep saving
@@ -482,7 +599,7 @@
     if (sb.sidebarVisible) {
       // Show exam warning immediately when sidebar opens on exam page
       if (sb.isExamPage) {
-        const messages = document.getElementById('si18n-chat-messages');
+        const messages = sb.$id('si18n-chat-messages');
         if (messages && !messages.querySelector('.si18n-exam-warning')) {
           messages.insertAdjacentHTML(
             'beforeend',
@@ -498,7 +615,7 @@
 
       // Focus the chat input when sidebar opens
       setTimeout(() => {
-        const chatInput = document.getElementById('si18n-chat-input');
+        const chatInput = sb.$id('si18n-chat-input');
         if (chatInput) chatInput.focus();
       }, SKILLBRIDGE_DELAYS.SIDEBAR_BIND);
 
@@ -515,7 +632,7 @@
 
   function trapFocus(e) {
     if (e.key !== 'Tab') return;
-    const sidebar = document.getElementById('skillbridge-sidebar');
+    const sidebar = sb.$id('skillbridge-sidebar');
     if (!sidebar) return;
 
     const focusable = sidebar.querySelectorAll(
@@ -544,10 +661,10 @@
   // ============================================================
 
   function exportLessonPDF() {
-    const lessonContent = document.querySelector(SKILLJAR_SELECTORS.lessonContent) || document.querySelector('main');
+    const lessonContent = sb.$(SKILLJAR_SELECTORS.lessonContent) || sb.$('main');
     if (!lessonContent) return;
 
-    const title = document.querySelector('h1')?.textContent?.trim() || 'SkillBridge Lesson';
+    const title = sb.$('h1')?.textContent?.trim() || 'SkillBridge Lesson';
     const langName = sb.translator?.supportedLanguages?.[sb.currentLang] || sb.currentLang;
 
     const printWindow = window.open('', '_blank');
@@ -626,6 +743,9 @@
   sb.injectSidebar = injectSidebar;
   sb.injectFloatingButton = injectFloatingButton;
   sb.toggleSidebar = toggleSidebar;
+  // Shared shadow UI root accessor — later migration stages move more
+  // body-injected UI into this same root and query it via sb.uiRoot().
+  sb.uiRoot = getUiRoot;
   sb.updateLocalizedLabels = updateLocalizedLabels;
   // `sb.toggleFlashcardPanel` is set by chat-flashcards.js since v3.5.27;
   // keyboard-shortcuts.js's call-site reads through that namespace handle.
