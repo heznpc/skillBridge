@@ -20,32 +20,8 @@
     "Anthropic Academy": [
       "Anthropic Academy"
     ],
-    "Enterprise": [
-      "Entreprise"
-    ],
-    "Personal": [
-      "Personnel"
-    ],
-    "Plugin": [
-      "extension"
-    ],
-    "Plugins": [
-      "extensions"
-    ],
-    "skill": [
-      "compétence"
-    ],
-    "skills": [
-      "compétences"
-    ],
-    "Skills": [
-      "Compétences"
-    ],
     "SKILL.md": [
       "SKILL.md"
-    ],
-    "frontmatter": [
-      "préambule"
     ],
     "CLAUDE.md": [
       "CLAUDE.md"
@@ -59,22 +35,8 @@
     "subagent": [
       "sous-agent"
     ],
-    "hook": [
-      "crochet"
-    ],
-    "hooks": [
-      "crochets"
-    ],
     "Cowork": [
-      "cotravail",
-      "travail collaboratif"
-    ],
-    "Dispatch": [
-      "envoi",
-      "répartition"
-    ],
-    "Computer Use": [
-      "utilisation de l'ordinateur"
+      "cotravail"
     ]
   },
   "terms": {

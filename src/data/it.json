@@ -1133,54 +1133,19 @@
   },
   "_protected": {
     "Claude Code": [
-      "Codice Claudio",
-      "Código Claude"
+      "Codice Claudio"
     ],
     "Claude": [
       "Claudio"
     ],
     "Anthropic": [
-      "Antropico",
-      "Antrópico"
+      "Antropico"
     ],
     "Anthropic Academy": [
-      "Accademia Antropica",
-      "Anthropic Academy"
-    ],
-    "Enterprise": [
-      "Impresa",
-      "Empresa"
-    ],
-    "Personal": [
-      "Personale",
-      "Personal"
-    ],
-    "Plugin": [
-      "Collegare",
-      "complemento"
-    ],
-    "Plugins": [
-      "Plugin",
-      "complementos"
-    ],
-    "skill": [
-      "abilità",
-      "habilidad"
-    ],
-    "skills": [
-      "competenze",
-      "habilidades"
-    ],
-    "Skills": [
-      "Competenze",
-      "Habilidades"
+      "Accademia Antropica"
     ],
     "SKILL.md": [
       "SKILL.md"
-    ],
-    "frontmatter": [
-      "questione principale",
-      "preámbulo"
     ],
     "CLAUDE.md": [
       "CLAUDE.md"
@@ -1189,34 +1154,10 @@
       "YAML"
     ],
     "slash command": [
-      "comando barra",
-      "comando de barra"
+      "comando barra"
     ],
     "subagent": [
       "subagente"
-    ],
-    "hook": [
-      "gancio",
-      "gancho"
-    ],
-    "hooks": [
-      "ganci",
-      "ganchos"
-    ],
-    "Cowork": [
-      "Collaborazione",
-      "cotrabajo",
-      "trabajo conjunto"
-    ],
-    "Dispatch": [
-      "Spedizione",
-      "despacho",
-      "envío"
-    ],
-    "Computer Use": [
-      "Uso del computer",
-      "uso del computador",
-      "uso de la computadora"
     ]
   },
   "exam_ui": {
