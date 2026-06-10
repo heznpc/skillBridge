@@ -125,7 +125,7 @@
     }
     // Another sub-panel may be open; restore the chat first so savedChatHTML
     // captures the chat, not the other panel.
-    if (_state.historyPanelOpen || _state.flashcardPanelOpen || _state.recentPanelOpen) {
+    if (_state.historyPanelOpen || _state.flashcardPanelOpen || _state.recentPanelOpen || _state.dashboardPanelOpen) {
       sb._chat.closeSubPanel();
     }
 

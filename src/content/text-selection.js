@@ -106,7 +106,7 @@
       quoteEl.remove();
     });
 
-    const input = document.getElementById('si18n-chat-input');
+    const input = sb.$id('si18n-chat-input');
     if (input) {
       input.focus();
       input.placeholder = sb.t(QUOTE_PLACEHOLDERS);

@@ -3008,3 +3008,50 @@ html.si18n-dark .si18n-tp-en {
 html.si18n-dark .si18n-tp-tr {
   color: #888;
 }
+
+/* ============================================================
+   LOCAL PROGRESS DASHBOARD (Tools ▸ My progress)
+   ============================================================ */
+
+.si18n-dash-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 4px 0 12px;
+}
+
+.si18n-dash-stat {
+  background: var(--si18n-bg);
+  border: 1px solid var(--si18n-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.si18n-dash-num {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--si18n-accent);
+}
+
+.si18n-dash-label {
+  font-size: 11px;
+  color: var(--si18n-text-secondary);
+}
+
+.si18n-dash-recent-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--si18n-text-secondary);
+  margin: 6px 0 4px;
+}
+
+html.si18n-dark .si18n-dash-stat {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+html.si18n-dark .si18n-dash-num {
+  color: #aab0e0;
+}

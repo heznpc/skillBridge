@@ -185,7 +185,7 @@
       sb._chat.closeSubPanel();
       return;
     }
-    if (state.flashcardPanelOpen || state.bookmarksPanelOpen || state.recentPanelOpen) {
+    if (state.flashcardPanelOpen || state.bookmarksPanelOpen || state.recentPanelOpen || state.dashboardPanelOpen) {
       sb._chat.closeSubPanel();
     }
 

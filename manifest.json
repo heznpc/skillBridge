@@ -48,6 +48,7 @@
         "src/content/chat-flashcards.js",
         "src/content/bookmarks.js",
         "src/content/resume.js",
+        "src/content/dashboard.js",
         "src/content/reading-aid.js",
         "src/content/keyboard-shortcuts.js"
       ],
