@@ -3,7 +3,9 @@
     "lang": "fr",
     "langName": "Français",
     "version": "3.5.40",
-    "lastUpdated": "2026-04-02"
+    "lastUpdated": "2026-04-02",
+    "lastAudited": "2026-06-10",
+    "nativeReview": "recruiting"
   },
   "ui": {
     "Anthropic Academy": "Anthropic Academy",
