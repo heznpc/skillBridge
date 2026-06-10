@@ -82,6 +82,7 @@ export default [
         FLASHCARD_LABELS: 'readonly',
         BOOKMARK_LABELS: 'readonly',
         RESUME_LABELS: 'readonly',
+        DASHBOARD_LABELS: 'readonly',
         TOC_LABELS: 'readonly',
         MENU_LABELS: 'readonly',
         PDF_EXPORT_LABELS: 'readonly',

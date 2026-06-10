@@ -215,14 +215,19 @@
   // ============================================================
 
   function toggleRecentPanel() {
-    const chatPanel = document.getElementById('si18n-panel-chat');
+    const chatPanel = sb.$id('si18n-panel-chat');
     if (!chatPanel) return;
 
     if (_state.recentPanelOpen) {
       sb._chat.closeSubPanel();
       return;
     }
-    if (_state.historyPanelOpen || _state.flashcardPanelOpen || _state.bookmarksPanelOpen) {
+    if (
+      _state.historyPanelOpen ||
+      _state.flashcardPanelOpen ||
+      _state.bookmarksPanelOpen ||
+      _state.dashboardPanelOpen
+    ) {
       sb._chat.closeSubPanel();
     }
 
@@ -241,7 +246,7 @@
     `,
     );
 
-    document.getElementById('si18n-recent-back')?.addEventListener('click', () => sb._chat.closeSubPanel());
+    sb.$id('si18n-recent-back')?.addEventListener('click', () => sb._chat.closeSubPanel());
     loadRecent(renderList);
   }
 
@@ -263,7 +268,7 @@
   }
 
   function renderList() {
-    const list = document.getElementById('si18n-recent-list');
+    const list = sb.$id('si18n-recent-list');
     if (!list) return;
     list.replaceChildren();
     list.insertAdjacentHTML('afterbegin', rowsHTML());
