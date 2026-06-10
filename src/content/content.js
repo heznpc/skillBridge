@@ -791,12 +791,45 @@
     if (isExamPage) {
       return `Certification Exam: ${title}. Page type: exam/assessment. DO NOT help with answers.`;
     }
-    const headings = Array.from(document.querySelectorAll('h1, h2, h3, h4'))
-      .map((h) => h.textContent.trim())
-      .slice(0, 5)
+    // Heading map with the section the user is currently reading marked —
+    // gives the tutor a table of contents plus "you are here".
+    const hs = Array.from(document.querySelectorAll('h1, h2, h3, h4'));
+    let currentIdx = -1;
+    for (let i = 0; i < hs.length; i++) {
+      if (hs[i].getBoundingClientRect().top <= 80) currentIdx = i;
+    }
+    const headings = hs
+      .slice(0, 8)
+      .map((h, i) => (i === currentIdx ? `▶ ${h.textContent.trim()}` : h.textContent.trim()))
       .join(', ');
     const lessonBody = document.querySelector('#lesson-main, .lesson-content, .course-content, main');
-    const bodyText = lessonBody ? lessonBody.innerText.replace(/\s+/g, ' ').trim().slice(0, 2000) : '';
+    // Viewport-centred extract: long lessons used to send only the FIRST
+    // 2,000 chars, so questions about anything past the fold had no grounding.
+    // Now: a short lesson opening for global context + the text from the block
+    // the user is actually looking at. Hard-capped at 2,000 chars total — the
+    // privacy policy discloses "≤2,000 chars of lesson context" and that cap
+    // must hold no matter how the pieces combine.
+    let bodyText = '';
+    if (lessonBody) {
+      const flat = lessonBody.innerText.replace(/\s+/g, ' ').trim();
+      const blocks = Array.from(lessonBody.querySelectorAll('p, li, h2, h3, h4, pre, td'));
+      const vpIdx = blocks.findIndex((el) => el.getBoundingClientRect().bottom > 0);
+      if (vpIdx > 0) {
+        let current = '';
+        for (let i = Math.max(0, vpIdx - 1); i < blocks.length && current.length < 1500; i++) {
+          current += blocks[i].innerText.replace(/\s+/g, ' ').trim() + ' ';
+        }
+        current = current.trim().slice(0, 1500);
+        const opening = flat.slice(0, 400);
+        bodyText =
+          current && !opening.includes(current.slice(0, 80))
+            ? `${opening}\n\n[User is currently viewing:]\n${current}`
+            : flat.slice(0, 2000);
+      } else {
+        bodyText = flat.slice(0, 2000);
+      }
+      bodyText = bodyText.slice(0, 2000);
+    }
     return `Course: ${title}. Sections: ${headings}${bodyText ? `\n\nLesson content:\n${bodyText}` : ''}`;
   }
 

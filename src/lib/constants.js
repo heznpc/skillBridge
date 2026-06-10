@@ -422,17 +422,47 @@ const ONBOARDING_LABELS = {
 };
 
 const EXAMPLE_QUESTIONS = {
-  en: ['Explain this concept simply', 'What are the key takeaways?', 'Give me a practical example'],
-  ko: ['이 개념을 쉽게 설명해줘', '핵심 포인트가 뭐야?', '실제 예시를 들어줘'],
-  ja: ['この概念を簡単に説明して', '重要なポイントは？', '実例を教えて'],
-  'zh-CN': ['简单解释一下这个概念', '关键要点是什么？', '给我一个实际例子'],
-  'zh-TW': ['簡單解釋一下這個概念', '關鍵要點是什麼？', '給我一個實際例子'],
-  es: ['Explica este concepto de forma simple', '¿Cuáles son los puntos clave?', 'Dame un ejemplo práctico'],
-  fr: ['Explique ce concept simplement', 'Quels sont les points clés ?', 'Donne-moi un exemple pratique'],
-  de: ['Erkläre dieses Konzept einfach', 'Was sind die wichtigsten Punkte?', 'Gib mir ein praktisches Beispiel'],
-  'pt-BR': ['Explique este conceito de forma simples', 'Quais são os pontos-chave?', 'Me dê um exemplo prático'],
-  ru: ['Объясни эту концепцию простыми словами', 'Какие ключевые выводы?', 'Приведи практический пример'],
-  vi: ['Giải thích khái niệm này một cách đơn giản', 'Những điểm chính là gì?', 'Cho tôi một ví dụ thực tế'],
+  en: ['Explain this concept simply', 'What are the key takeaways?', 'Quiz me on this lesson', 'Summarize this lesson'],
+  ko: ['이 개념을 쉽게 설명해줘', '핵심 포인트가 뭐야?', '이 레슨으로 퀴즈 내줘', '이 레슨 요약해줘'],
+  ja: ['この概念を簡単に説明して', '重要なポイントは？', 'このレッスンでクイズを出して', 'このレッスンを要約して'],
+  'zh-CN': ['简单解释一下这个概念', '关键要点是什么？', '就这节课考考我', '总结一下这节课'],
+  'zh-TW': ['簡單解釋一下這個概念', '關鍵要點是什麼？', '就這節課考考我', '總結一下這節課'],
+  es: [
+    'Explica este concepto de forma simple',
+    '¿Cuáles son los puntos clave?',
+    'Hazme un quiz sobre esta lección',
+    'Resume esta lección',
+  ],
+  fr: [
+    'Explique ce concept simplement',
+    'Quels sont les points clés ?',
+    'Fais-moi un quiz sur cette leçon',
+    'Résume cette leçon',
+  ],
+  de: [
+    'Erkläre dieses Konzept einfach',
+    'Was sind die wichtigsten Punkte?',
+    'Frag mich zu dieser Lektion ab',
+    'Fasse diese Lektion zusammen',
+  ],
+  'pt-BR': [
+    'Explique este conceito de forma simples',
+    'Quais são os pontos-chave?',
+    'Me faça um quiz sobre esta lição',
+    'Resuma esta lição',
+  ],
+  ru: [
+    'Объясни эту концепцию простыми словами',
+    'Какие ключевые выводы?',
+    'Проверь меня по этому уроку',
+    'Кратко изложи этот урок',
+  ],
+  vi: [
+    'Giải thích khái niệm này một cách đơn giản',
+    'Những điểm chính là gì?',
+    'Đố tôi về bài học này',
+    'Tóm tắt bài học này',
+  ],
 };
 
 const A11Y_LABELS = {
