@@ -48,10 +48,10 @@
     "@playwright/test": "^1.60.0",
     "@starter-series/shotkit": "^1.1.1",
     "esbuild": "^0.28.1",
-    "eslint": "^10.4.1",
+    "eslint": "^10.5.0",
     "eslint-config-prettier": "^10.1.8",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
-    "prettier": "^3.8.3"
+    "prettier": "^3.8.4"
   }
 }
