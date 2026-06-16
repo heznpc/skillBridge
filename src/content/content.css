@@ -280,6 +280,48 @@ body.si18n-lang-ko,
   overflow: hidden;
 }
 
+/* Language panel — sidebar body on translation-only hosts (claude.com tutorials) */
+.si18n-panel-lang {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 14px;
+  gap: 10px;
+}
+
+.si18n-lang-panel-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.si18n-sidebar-lang-select {
+  width: 100%;
+  padding: 9px 10px;
+  font-size: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 8px;
+  background: white;
+  color: #1a1a1a;
+  cursor: pointer;
+}
+
+.si18n-sidebar-lang-select:focus {
+  outline: none;
+  border-color: #d97757;
+  box-shadow: 0 0 0 3px rgba(217, 119, 87, 0.18);
+}
+
+html.si18n-dark .si18n-lang-panel-label {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+html.si18n-dark .si18n-sidebar-lang-select {
+  background: #2a2a2a;
+  color: #e8e8e8;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
 /* Chat */
 .si18n-chat-messages {
   flex: 1;

@@ -298,14 +298,16 @@ describe('getHostCapabilities', () => {
     expect(getHostCapabilities('localhost').contentScope).toBeNull();
   });
 
-  test('claude.com is translation-only: scoped, reading aid on, no bridge/sidebar/header/keyboard/exam', () => {
+  test('claude.com: scoped translation + reading aid + sidebar/FAB for the language picker, but NO bridge/header/keyboard/exam', () => {
     const c = getHostCapabilities('claude.com');
     expect(c.platform).toBe(PLATFORM_IDS.CLAUDE_TUTORIALS);
     expect(c.contentScope).toBe(CLAUDE_TUTORIAL_CONTENT_SCOPE);
     expect(c.readingAid).toBe(true);
+    // Sidebar + FAB inject so the user can pick a language on-page; the sidebar
+    // renders a language panel (not the AI-tutor chat) because bridge is false.
+    expect(c.sidebar).toBe(true);
+    expect(c.fab).toBe(true);
     expect(c.bridge).toBe(false);
-    expect(c.sidebar).toBe(false);
-    expect(c.fab).toBe(false);
     expect(c.headerControls).toBe(false);
     expect(c.keyboardShortcuts).toBe(false);
     expect(c.examDetection).toBe(false);

@@ -133,15 +133,17 @@ const _CAPS_SKILLJAR_TENANT = Object.freeze({
   examDetection: true,
   youtubeSubtitles: true,
 });
-// claude.com tutorials: scoped translation + reading aid only. No bridge, no
-// sidebar/FAB, no Skilljar header injection, no global keyboard listener, no
-// Skilljar exam detection.
+// claude.com tutorials: scoped translation + reading aid + an on-page language
+// control. The sidebar/FAB DO inject (for the language picker + bridge-free
+// Tools menu), but bridge:false means the sidebar renders a language panel
+// instead of the AI-tutor chat. Still no Skilljar header injection, no global
+// keyboard listener, no Skilljar exam detection.
 const _CAPS_CLAUDE_TUTORIALS = Object.freeze({
   platform: PLATFORM_IDS.CLAUDE_TUTORIALS,
   trusted: false,
   contentScope: CLAUDE_TUTORIAL_CONTENT_SCOPE,
-  sidebar: false,
-  fab: false,
+  sidebar: true,
+  fab: true,
   bridge: false,
   headerControls: false,
   keyboardShortcuts: false,

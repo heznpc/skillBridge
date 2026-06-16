@@ -47,6 +47,7 @@ export default [
         AVAILABLE_LANGUAGES: 'readonly',
         AVAILABLE_LANGUAGE_CODES: 'readonly',
         SUPPORTED_LANGUAGE_MAP: 'readonly',
+        CHOOSE_LANGUAGE_LABEL: 'readonly',
         SKILLJAR_SELECTORS: 'readonly',
         DEFAULT_PROTECTED_TERMS: 'readonly',
         YOUTUBE_CLIENT_VERSION: 'readonly',

@@ -168,13 +168,23 @@
     btn.id = 'skillbridge-fab';
     btn.setAttribute('role', 'button');
     btn.setAttribute('tabindex', '0');
-    btn.setAttribute('aria-label', sb.t(A11Y_LABELS.openTutor));
-    btn.innerHTML = `
+    // On translation-only hosts (claude.com tutorials — no AI-tutor bridge) the
+    // FAB opens a language picker, so label + icon say "language", not "tutor".
+    const translateOnly = sb.hostCaps?.bridge === false;
+    const fabLabel = sb.t(translateOnly ? CHOOSE_LANGUAGE_LABEL : A11Y_LABELS.openTutor);
+    btn.setAttribute('aria-label', fabLabel);
+    btn.innerHTML = translateOnly
+      ? `
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+      </svg>
+    `
+      : `
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
       </svg>
     `;
-    btn.title = sb.t(A11Y_LABELS.openTutor);
+    btn.title = fabLabel;
     btn.addEventListener('click', () => {
       btn.classList.remove('si18n-fab-pulse');
       toggleSidebar();
@@ -214,7 +224,8 @@
     // sidebar; it's styled by the adopted (transformed) content.css.
     getUiRoot().appendChild(sidebar);
     setTimeout(bindSidebarEvents, SKILLBRIDGE_DELAYS.SIDEBAR_BIND);
-    sb.initAskTutorButton?.();
+    // Ask-Tutor feeds the chat — only wire it where the tutor bridge exists.
+    if (sb.hostCaps?.bridge !== false) sb.initAskTutorButton?.();
   }
 
   function getTutorGreeting() {
@@ -229,6 +240,7 @@
   }
 
   function getSidebarHTML() {
+    const translateOnly = sb.hostCaps?.bridge === false;
     return `
       <div class="si18n-header">
         <button class="si18n-tools-btn" id="si18n-tools-btn" title="${sb.t(MENU_LABELS.tools)}" aria-label="${sb.t(MENU_LABELS.tools)}" aria-haspopup="true" aria-expanded="false">
@@ -236,7 +248,7 @@
             <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
           </svg>
         </button>
-        <span class="si18n-header-title">SkillBridge Tutor</span>
+        <span class="si18n-header-title">${translateOnly ? 'SkillBridge' : 'SkillBridge Tutor'}</span>
         <button class="si18n-close" id="si18n-close" aria-label="${sb.t(A11Y_LABELS.closeSidebar)}">&times;</button>
       </div>
 
@@ -267,6 +279,12 @@
         </button>
       </div>
 
+      ${translateOnly ? langPanelHTML() : chatPanelHTML()}
+    `;
+  }
+
+  function chatPanelHTML() {
+    return `
       <div class="si18n-panel si18n-panel-chat" id="si18n-panel-chat">
         <div class="si18n-chat-messages" id="si18n-chat-messages" role="log" aria-live="polite">
           <div class="si18n-chat-msg si18n-chat-bot">
@@ -285,6 +303,22 @@
             rows="1"></textarea>
           <button id="si18n-chat-send" class="si18n-chat-send-btn">${sb.t(SEND_LABELS)}</button>
         </div>
+      </div>
+    `;
+  }
+
+  // Translation-only hosts (claude.com tutorials): the sidebar body is a
+  // language picker instead of the AI-tutor chat. sb.switchLanguage is
+  // bridge-free, so this works without the Puter/Gemini bridge.
+  function langPanelHTML() {
+    const options = AVAILABLE_LANGUAGES.map(
+      (l) =>
+        `<option value="${l.code}"${l.code === sb.currentLang ? ' selected' : ''}>${sb.escapeHtml(l.label)}</option>`,
+    ).join('');
+    return `
+      <div class="si18n-panel si18n-panel-lang" id="si18n-panel-lang">
+        <label class="si18n-lang-panel-label" for="si18n-sidebar-lang-select">${sb.escapeHtml(sb.t(CHOOSE_LANGUAGE_LABEL))}</label>
+        <select id="si18n-sidebar-lang-select" class="si18n-sidebar-lang-select">${options}</select>
       </div>
     `;
   }
@@ -310,8 +344,17 @@
     sb.$id('si18n-bm-btn')?.addEventListener('click', () => sb._chat.toggleBookmarksPanel?.());
     sb.$id('si18n-recent-btn')?.addEventListener('click', () => sb._chat.toggleRecentPanel?.());
     sb.$id('si18n-dash-btn')?.addEventListener('click', () => sb._chat.toggleDashboardPanel?.());
-    bindChatInputEvents();
-    bindExampleQuestions();
+    if (sb.hostCaps?.bridge === false) {
+      // Translation-only host: wire the language picker instead of the chat.
+      sb.$id('si18n-sidebar-lang-select')?.addEventListener('change', (e) => {
+        sb.switchLanguage(e.target.value).catch((err) =>
+          console.error('[SkillBridge] Sidebar language change error:', err),
+        );
+      });
+    } else {
+      bindChatInputEvents();
+      bindExampleQuestions();
+    }
   }
 
   function bindExampleQuestions() {

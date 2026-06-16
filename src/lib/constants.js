@@ -558,6 +558,11 @@ const DASHBOARD_LABELS = {
   },
 };
 
+// Flat {code: label} map derived from the onboarding "Choose Language" CTA, so
+// the sidebar language panel + the translate-only FAB reuse those existing
+// translations instead of duplicating a new label set.
+const CHOOSE_LANGUAGE_LABEL = Object.fromEntries(Object.entries(ONBOARDING_LABELS).map(([code, v]) => [code, v.cta]));
+
 const A11Y_LABELS = {
   toggleDark: {
     en: 'Toggle dark mode',
