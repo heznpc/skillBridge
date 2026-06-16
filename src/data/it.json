@@ -1165,13 +1165,14 @@
   },
   "_protected": {
     "Claude Code": [
+      "Codice Claude",
       "Codice Claudio"
     ],
     "Claude": [
-      "Claudio"
+      "Claude"
     ],
     "Anthropic": [
-      "Antropico"
+      "Anthropic"
     ],
     "Anthropic Academy": [
       "Accademia Antropica"
@@ -1184,12 +1185,6 @@
     ],
     "YAML": [
       "YAML"
-    ],
-    "slash command": [
-      "comando barra"
-    ],
-    "subagent": [
-      "subagente"
     ]
   },
   "exam_ui": {

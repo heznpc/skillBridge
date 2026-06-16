@@ -1163,28 +1163,62 @@
     "Course sections": "과정 구성"
   },
   "_protected": {
-    "Claude Code": ["클로드 코드", "클로드 Code", "클로우드 코드"],
-    "Claude": ["클로드", "클로우드"],
-    "Anthropic Academy": ["앤스로픽 아카데미", "앤트로픽 아카데미", "안트로픽 아카데미"],
-    "Anthropic": ["앤스로픽", "앤트로픽", "안트로픽"],
-    "Enterprise > Personal > Project > Plugins": ["기업 > 개인 > 프로젝트 > 플러그인", "엔터프라이즈 > 개인 > 프로젝트 > 플러그인"],
-    "Enterprise → Personal → Project → Plugins": ["기업 → 개인 → 프로젝트 → 플러그인", "엔터프라이즈 → 개인 → 프로젝트 → 플러그인"],
-    "Plugin": ["플러그인"],
-    "Plugins": ["플러그인들"],
-    "skill": ["스킬"],
-    "skills": ["스킬들"],
-    "Skills": ["스킬들"],
-    "SKILL.md": ["스킬.md", "기술.md"],
-    "frontmatter": ["프론트매터"],
-    "CLAUDE.md": ["클로드.md"],
-    "YAML": ["야멜"],
-    "slash command": ["슬래시 명령"],
-    "subagent": ["하위 에이전트", "서브에이전트"],
-    "hook": ["후크"],
-    "hooks": ["후크들", "후크"],
-    "Cowork": ["코워크"],
-    "Dispatch": ["디스패치"],
-    "Computer Use": ["컴퓨터 유즈"]
+    "Claude Code": [
+      "클로드 코드",
+      "클로드 Code",
+      "클로우드 코드"
+    ],
+    "Claude": [
+      "클로드",
+      "클로우드"
+    ],
+    "Anthropic Academy": [
+      "앤스로픽 아카데미",
+      "앤트로픽 아카데미",
+      "안트로픽 아카데미"
+    ],
+    "Anthropic": [
+      "앤스로픽",
+      "앤트로픽",
+      "안트로픽"
+    ],
+    "Enterprise > Personal > Project > Plugins": [
+      "Enterprise > Personal > Project > Plugins"
+    ],
+    "Enterprise → Personal → Project → Plugins": [
+      "Enterprise → Personal → Project → Plugins"
+    ],
+    "Plugin": [
+      "Plugin"
+    ],
+    "Plugins": [
+      "Plugins"
+    ],
+    "Skills": [
+      "Skills"
+    ],
+    "SKILL.md": [
+      "스킬.md",
+      "기술.md"
+    ],
+    "frontmatter": [
+      "frontmatter"
+    ],
+    "CLAUDE.md": [
+      "클로드.md"
+    ],
+    "YAML": [
+      "야멜"
+    ],
+    "Cowork": [
+      "코워크"
+    ],
+    "Dispatch": [
+      "Dispatch"
+    ],
+    "Computer Use": [
+      "컴퓨터 유즈"
+    ]
   },
   "exam_ui": {
     "Pass": "합격",
