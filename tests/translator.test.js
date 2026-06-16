@@ -6,7 +6,7 @@
  * browser globals just enough to instantiate it.
  */
 
-/* global describe, test, expect, beforeEach */
+/* global describe, test, expect, beforeEach, afterEach, jest */
 
 // ── Minimal browser mocks ──────────────────────────────────────
 global.chrome = { runtime: { getURL: (p) => p } };
@@ -143,6 +143,49 @@ describe('SkilljarTranslator', () => {
 
     test('handles multi-word sentences', () => {
       expect(translator.staticLookup('Claude is an AI assistant')).toBe('Claude는 AI 어시스턴트입니다');
+    });
+  });
+
+  describe('loadStaticTranslations', () => {
+    let originalFetch;
+    let warnSpy;
+
+    beforeEach(() => {
+      originalFetch = global.fetch;
+      translator.staticDict = { Hello: '안녕하세요' };
+      translator._lowerDict = { hello: '안녕하세요' };
+      translator._protectedTerms = { Claude: ['클로드'] };
+    });
+
+    afterEach(() => {
+      global.fetch = originalFetch;
+      warnSpy?.mockRestore();
+      warnSpy = null;
+    });
+
+    test('clears all static dictionary state when a language file is missing', async () => {
+      global.fetch = jest.fn(async () => ({ ok: false }));
+
+      await translator.loadStaticTranslations('nl');
+
+      expect(translator.staticDict).toEqual({});
+      expect(translator._lowerDict).toEqual({});
+      expect(translator.getProtectedTerms()).toEqual({});
+      expect(translator.staticLookup('HELLO')).toBeNull();
+    });
+
+    test('clears all static dictionary state when loading throws', async () => {
+      warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      global.fetch = jest.fn(async () => {
+        throw new Error('network down');
+      });
+
+      await translator.loadStaticTranslations('nl');
+
+      expect(translator.staticDict).toEqual({});
+      expect(translator._lowerDict).toEqual({});
+      expect(translator.getProtectedTerms()).toEqual({});
+      expect(translator.staticLookup('HELLO')).toBeNull();
     });
   });
 

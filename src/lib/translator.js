@@ -15,6 +15,10 @@ class SkilljarTranslator {
   constructor() {
     /** @type {Record<string, string>} Merged flat dictionary from JSON */
     this.staticDict = {};
+    /** @type {Record<string, string>} Lowercase lookup mirror of staticDict */
+    this._lowerDict = {};
+    /** @type {Record<string, string[]>} Protected terms loaded from JSON */
+    this._protectedTerms = {};
     /** @type {boolean} True once the page bridge is ready (Gemini + AI Tutor) */
     this.isReady = false;
     /** @type {Map<string, function>} Pending request callbacks keyed by ID */
@@ -142,6 +146,12 @@ class SkilljarTranslator {
 
   // ==================== STATIC DICTIONARY ====================
 
+  _clearStaticTranslations() {
+    this.staticDict = {};
+    this._lowerDict = {};
+    this._protectedTerms = {};
+  }
+
   /**
    * Load static translation JSON for a given language.
    * Populates {@link staticDict} and internal protected-terms map.
@@ -153,7 +163,7 @@ class SkilljarTranslator {
       const url = chrome.runtime.getURL(`src/data/${lang}.json`);
       const resp = await fetch(url);
       if (!resp.ok) {
-        this.staticDict = {};
+        this._clearStaticTranslations();
         return;
       }
       const data = await resp.json();
@@ -180,7 +190,7 @@ class SkilljarTranslator {
       }
     } catch (err) {
       console.warn('[SkillBridge] Failed to load static translations:', err);
-      this.staticDict = {};
+      this._clearStaticTranslations();
     }
   }
 
