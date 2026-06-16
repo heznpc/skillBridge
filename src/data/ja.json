@@ -1163,27 +1163,39 @@
     "Course sections": "コースセクション"
   },
   "_protected": {
-    "Claude Code": ["クロードコード"],
-    "Claude": ["クロード"],
-    "Anthropic": ["アンスロピック"],
-    "Anthropic Academy": ["Anthropic Academy"],
-    "Enterprise": ["エンタープライズ"],
-    "Plugin": ["プラグイン"],
-    "Plugins": ["プラグイン"],
-    "skill": ["スキル"],
-    "skills": ["スキル"],
-    "Skills": ["スキル"],
-    "SKILL.md": ["SKILL.md"],
-    "frontmatter": ["フロントマター"],
-    "CLAUDE.md": ["CLAUDE.md"],
-    "YAML": ["YAML"],
-    "slash command": ["スラッシュコマンド"],
-    "subagent": ["サブエージェント"],
-    "hook": ["フック"],
-    "hooks": ["フック"],
-    "Cowork": ["コワーク"],
-    "Dispatch": ["ディスパッチ"],
-    "Computer Use": ["コンピュータユース"]
+    "Claude Code": [
+      "クロードコード"
+    ],
+    "Claude": [
+      "クロード"
+    ],
+    "Anthropic": [
+      "アンスロピック"
+    ],
+    "Anthropic Academy": [
+      "Anthropic Academy"
+    ],
+    "Skills": [
+      "Skills"
+    ],
+    "SKILL.md": [
+      "SKILL.md"
+    ],
+    "frontmatter": [
+      "フロントマター"
+    ],
+    "CLAUDE.md": [
+      "CLAUDE.md"
+    ],
+    "YAML": [
+      "YAML"
+    ],
+    "Cowork": [
+      "コワーク"
+    ],
+    "Computer Use": [
+      "コンピュータユース"
+    ]
   },
   "exam_ui": {
     "Pass": "合格",
