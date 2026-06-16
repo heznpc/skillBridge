@@ -24,7 +24,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://*.skilljar.com/*"],
+      "matches": ["https://*.skilljar.com/*", "https://claude.com/resources/tutorials/*"],
       "js": [
         "src/lib/browser-polyfill.js",
         "src/lib/log.js",
@@ -75,6 +75,10 @@
         "src/content/content.css"
       ],
       "matches": ["https://*.skilljar.com/*"]
+    },
+    {
+      "resources": ["src/data/*", "src/content/content.css"],
+      "matches": ["https://claude.com/*"]
     }
   ]
 }

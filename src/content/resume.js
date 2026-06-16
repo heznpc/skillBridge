@@ -38,8 +38,11 @@
   const MAX_RECENT = 20;
   // A lesson page is a course slug followed by a numeric lesson id, e.g.
   // /claude-101/383389. Course pages (/claude-101) and the catalog (/) are
-  // intentionally skipped so the recent list stays lesson-only.
+  // intentionally skipped so the recent list stays lesson-only. On scoped
+  // hosts (claude.com tutorials) a lesson is identified by its content root —
+  // kept in lock-step with reading-aid.js's isLessonPage().
   const LESSON_PATH = /\/[^/]+\/\d+/;
+  const _scope = sb.hostCaps && sb.hostCaps.contentScope;
 
   let recent = [];
 
@@ -127,6 +130,8 @@
   // ============================================================
 
   function isLessonPage() {
+    // Scoped hosts: a lesson is present iff its content root is in the DOM.
+    if (_scope) return !!document.querySelector(_scope);
     return LESSON_PATH.test(location.pathname);
   }
 

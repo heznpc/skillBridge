@@ -32,8 +32,11 @@
 
 /* ---- Korean ---- */
 
-/* Base — all text uses Noto Sans KR */
-[lang='ko'] body,
+/* Base — all text uses Noto Sans KR.
+   NOT `[lang='ko'] body` — the extension sets <html lang='ko'> itself, and on
+   scoped hosts (claude.com tutorials) that attribute selector would restyle the
+   whole page font. The lang class is applied to the translation target only
+   (document.body on Skilljar, the lesson root on scoped hosts), so key on it. */
 body.si18n-lang-ko,
 .si18n-lang-ko {
   font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif !important;
