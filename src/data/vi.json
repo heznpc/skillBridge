@@ -1164,7 +1164,7 @@
   },
   "_protected": {
     "Claude Code": [
-      "Mã Claude"
+      "Claude Code"
     ],
     "Claude": [
       "Claude"
@@ -1183,12 +1183,6 @@
     ],
     "YAML": [
       "YAML"
-    ],
-    "slash command": [
-      "lệnh gạch chéo"
-    ],
-    "subagent": [
-      "tác tử phụ"
     ]
   },
   "exam_ui": {

@@ -21,20 +21,8 @@
     "Anthropic Academy": [
       "Anthropic Academy"
     ],
-    "Plugin": [
-      "外掛程式"
-    ],
-    "Plugins": [
-      "外掛程式"
-    ],
-    "skill": [
-      "技能"
-    ],
-    "skills": [
-      "技能"
-    ],
     "Skills": [
-      "技能"
+      "Skills"
     ],
     "SKILL.md": [
       "SKILL.md"
@@ -44,20 +32,6 @@
     ],
     "YAML": [
       "YAML"
-    ],
-    "slash command": [
-      "斜線命令"
-    ],
-    "subagent": [
-      "子代理"
-    ],
-    "hook": [
-      "鉤子",
-      "掛鉤"
-    ],
-    "hooks": [
-      "鉤子",
-      "掛鉤"
     ]
   },
   "terms": {

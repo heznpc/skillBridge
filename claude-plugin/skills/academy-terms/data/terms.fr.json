@@ -9,13 +9,13 @@
   },
   "protected": {
     "Claude Code": [
-      "Code Claude"
+      "Claude Code"
     ],
     "Claude": [
       "Claude"
     ],
     "Anthropic": [
-      "Anthropique"
+      "Anthropic"
     ],
     "Anthropic Academy": [
       "Anthropic Academy"
@@ -29,14 +29,8 @@
     "YAML": [
       "YAML"
     ],
-    "slash command": [
-      "commande slash"
-    ],
-    "subagent": [
-      "sous-agent"
-    ],
     "Cowork": [
-      "cotravail"
+      "Cowork"
     ]
   },
   "terms": {

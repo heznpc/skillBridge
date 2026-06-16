@@ -28,34 +28,26 @@
       "안트로픽"
     ],
     "Enterprise > Personal > Project > Plugins": [
-      "기업 > 개인 > 프로젝트 > 플러그인",
-      "엔터프라이즈 > 개인 > 프로젝트 > 플러그인"
+      "Enterprise > Personal > Project > Plugins"
     ],
     "Enterprise → Personal → Project → Plugins": [
-      "기업 → 개인 → 프로젝트 → 플러그인",
-      "엔터프라이즈 → 개인 → 프로젝트 → 플러그인"
+      "Enterprise → Personal → Project → Plugins"
     ],
     "Plugin": [
-      "플러그인"
+      "Plugin"
     ],
     "Plugins": [
-      "플러그인들"
-    ],
-    "skill": [
-      "스킬"
-    ],
-    "skills": [
-      "스킬들"
+      "Plugins"
     ],
     "Skills": [
-      "스킬들"
+      "Skills"
     ],
     "SKILL.md": [
       "스킬.md",
       "기술.md"
     ],
     "frontmatter": [
-      "프론트매터"
+      "frontmatter"
     ],
     "CLAUDE.md": [
       "클로드.md"
@@ -63,25 +55,11 @@
     "YAML": [
       "야멜"
     ],
-    "slash command": [
-      "슬래시 명령"
-    ],
-    "subagent": [
-      "하위 에이전트",
-      "서브에이전트"
-    ],
-    "hook": [
-      "후크"
-    ],
-    "hooks": [
-      "후크들",
-      "후크"
-    ],
     "Cowork": [
       "코워크"
     ],
     "Dispatch": [
-      "디스패치"
+      "Dispatch"
     ],
     "Computer Use": [
       "컴퓨터 유즈"

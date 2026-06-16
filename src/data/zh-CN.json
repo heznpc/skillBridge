@@ -1163,22 +1163,31 @@
     "Course sections": "课程章节"
   },
   "_protected": {
-    "Claude Code": ["克洛德代码"],
-    "Claude": ["克洛德", "克劳德"],
-    "Anthropic": ["安特罗皮克"],
-    "Anthropic Academy": ["Anthropic Academy"],
-    "Plugin": ["插件"],
-    "Plugins": ["插件"],
-    "skill": ["技能"],
-    "skills": ["技能"],
-    "Skills": ["技能"],
-    "SKILL.md": ["SKILL.md"],
-    "CLAUDE.md": ["CLAUDE.md"],
-    "YAML": ["YAML"],
-    "slash command": ["斜杠命令"],
-    "subagent": ["子代理"],
-    "hook": ["钩子", "挂钩"],
-    "hooks": ["钩子", "挂钩"]
+    "Claude Code": [
+      "克洛德代码"
+    ],
+    "Claude": [
+      "克洛德",
+      "克劳德"
+    ],
+    "Anthropic": [
+      "安特罗皮克"
+    ],
+    "Anthropic Academy": [
+      "Anthropic Academy"
+    ],
+    "Skills": [
+      "Skills"
+    ],
+    "SKILL.md": [
+      "SKILL.md"
+    ],
+    "CLAUDE.md": [
+      "CLAUDE.md"
+    ],
+    "YAML": [
+      "YAML"
+    ]
   },
   "exam_ui": {
     "Pass": "通过",

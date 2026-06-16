@@ -20,12 +20,6 @@
     "Anthropic Academy": [
       "Антропик Академия"
     ],
-    "Plugin": [
-      "Плагин"
-    ],
-    "Plugins": [
-      "Плагины"
-    ],
     "SKILL.md": [
       "SKILL.md"
     ],
@@ -35,23 +29,8 @@
     "YAML": [
       "YAML"
     ],
-    "slash command": [
-      "слэш-команда"
-    ],
-    "subagent": [
-      "субагент"
-    ],
-    "hook": [
-      "хук"
-    ],
-    "hooks": [
-      "хуки"
-    ],
     "Cowork": [
       "Коворк"
-    ],
-    "Dispatch": [
-      "Диспетчеризация"
     ]
   },
   "terms": {
