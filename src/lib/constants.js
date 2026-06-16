@@ -172,6 +172,7 @@ const PREMIUM_LANGUAGES = [
   { code: 'pt-BR', label: 'Português (BR)' },
   { code: 'ru', label: 'Русский' },
   { code: 'vi', label: 'Tiếng Việt' },
+  { code: 'id', label: 'Bahasa Indonesia' },
 ];
 
 const AVAILABLE_LANGUAGES = [
@@ -190,7 +191,6 @@ const AVAILABLE_LANGUAGES = [
   { code: 'ar', label: 'العربية' },
   { code: 'hi', label: 'हिन्दी' },
   { code: 'th', label: 'ภาษาไทย' },
-  { code: 'id', label: 'Bahasa Indonesia' },
   { code: 'ms', label: 'Bahasa Melayu' },
   { code: 'tl', label: 'Filipino' },
   { code: 'bn', label: 'বাংলা' },

@@ -54,9 +54,10 @@ describe('SkilljarTranslator', () => {
       expect(translator.premiumLanguages).toContain('zh-CN');
     });
 
-    test('has all 11 premium languages (Italian added v3.5.34)', () => {
-      expect(translator.premiumLanguages).toHaveLength(11);
+    test('has all 12 premium languages (Indonesian added v3.5.41)', () => {
+      expect(translator.premiumLanguages).toHaveLength(12);
       expect(translator.premiumLanguages).toContain('it');
+      expect(translator.premiumLanguages).toContain('id');
     });
 
     test('supportedLanguages includes 30+ languages', () => {
