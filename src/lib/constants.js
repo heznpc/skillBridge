@@ -74,6 +74,8 @@ const EXAM_SKIP_SELECTORS = [
 const EXAM_BANNER_LABELS = {
   en: 'Exam mode — answer choices are not translated to preserve accuracy.',
   ko: '시험 모드 — 정확성을 위해 답안 선택지는 번역되지 않습니다.',
+  id: 'Mode ujian — pilihan jawaban tidak diterjemahkan demi menjaga akurasi.',
+  it: "Modalità esame — le opzioni di risposta non vengono tradotte per preservare l'accuratezza.",
   ja: '試験モード — 正確性のため、回答選択肢は翻訳されません。',
   'zh-CN': '考试模式 — 为确保准确性，答案选项不会被翻译。',
   'zh-TW': '考試模式 — 為確保準確性，答案選項不會被翻譯。',
@@ -88,6 +90,8 @@ const EXAM_BANNER_LABELS = {
 const TUTOR_EXAM_LABELS = {
   en: "I can't help with exam answers directly, but I can explain concepts after you submit.",
   ko: '시험 답안은 직접 도와드릴 수 없지만, 제출 후 개념 설명은 가능합니다.',
+  id: 'Saya tidak bisa membantu jawaban ujian secara langsung, tetapi saya bisa menjelaskan konsepnya setelah Anda mengirim jawaban.',
+  it: "Non posso aiutarti direttamente con le risposte dell'esame, ma posso spiegarti i concetti dopo che hai inviato.",
   ja: '試験の回答は直接お手伝いできませんが、提出後にコンセプトを説明できます。',
   'zh-CN': '我不能直接帮助回答考试题目，但提交后可以解释相关概念。',
   'zh-TW': '我無法直接協助回答考試題目，但提交後可以解釋相關概念。',
@@ -270,6 +274,8 @@ const YT_LANG_NAME_MAP = Object.fromEntries(
 const TUTOR_GREETINGS = {
   en: "Hi! I'm your AI learning assistant. Ask me anything about this course.",
   ko: '안녕하세요! AI 학습 도우미입니다. 이 과정에 대해 무엇이든 물어보세요.',
+  id: 'Hai! Saya asisten belajar AI Anda. Tanyakan apa saja tentang kursus ini.',
+  it: 'Ciao! Sono il tuo assistente di apprendimento AI. Chiedimi qualsiasi cosa su questo corso.',
   ja: 'こんにちは！AI学習アシスタントです。このコースについて何でも聞いてください。',
   'zh-CN': '你好！我是你的AI学习助手。关于这门课程，有什么都可以问我。',
   'zh-TW': '你好！我是你的AI學習助手。關於這門課程，有什麼都可以問我。',
@@ -284,6 +290,8 @@ const TUTOR_GREETINGS = {
 const SEND_LABELS = {
   en: 'Send',
   ko: '전송',
+  id: 'Kirim',
+  it: 'Invia',
   ja: '送信',
   'zh-CN': '发送',
   'zh-TW': '傳送',
@@ -298,6 +306,8 @@ const SEND_LABELS = {
 const ASK_TUTOR_LABELS = {
   en: 'Ask Tutor',
   ko: '튜터에게 질문',
+  id: 'Tanya Tutor',
+  it: 'Chiedi al tutor',
   ja: 'チューターに質問',
   'zh-CN': '问导师',
   'zh-TW': '問導師',
@@ -312,6 +322,8 @@ const ASK_TUTOR_LABELS = {
 const CHAT_PLACEHOLDERS = {
   en: 'Ask about the course content...',
   ko: '강의 내용에 대해 질문하세요...',
+  id: 'Tanyakan tentang konten kursus...',
+  it: 'Fai una domanda sul contenuto del corso...',
   ja: 'コースの内容について質問してください...',
   'zh-CN': '关于课程内容，请提问...',
   'zh-TW': '關於課程內容，請提問...',
@@ -326,6 +338,8 @@ const CHAT_PLACEHOLDERS = {
 const QUOTE_PLACEHOLDERS = {
   en: 'Ask about this text...',
   ko: '선택한 텍스트에 대해 질문하세요...',
+  id: 'Tanyakan tentang teks ini...',
+  it: 'Fai una domanda su questo testo...',
   ja: '選択したテキストについて質問...',
   'zh-CN': '关于这段文字提问...',
   'zh-TW': '關於這段文字提問...',
@@ -419,6 +433,18 @@ const ONBOARDING_LABELS = {
     cta: 'Chọn ngôn ngữ',
     dismiss: 'Đã hiểu',
   },
+  id: {
+    title: 'SkillBridge siap',
+    body: 'Terjemahkan halaman ini ke 30+ bahasa dan dapatkan bantuan AI saat Anda belajar.',
+    cta: 'Pilih Bahasa',
+    dismiss: 'Mengerti',
+  },
+  it: {
+    title: 'SkillBridge è pronto',
+    body: "Traduci questa pagina in oltre 30 lingue e ricevi aiuto basato sull'IA mentre impari.",
+    cta: 'Scegli la lingua',
+    dismiss: 'Capito',
+  },
 };
 
 const EXAMPLE_QUESTIONS = {
@@ -475,6 +501,7 @@ const DASHBOARD_LABELS = {
   title: {
     en: 'My progress',
     ko: '내 학습 현황',
+    id: 'Kemajuan saya',
     ja: '学習の進捗',
     'zh-CN': '我的进度',
     'zh-TW': '我的進度',
@@ -489,6 +516,7 @@ const DASHBOARD_LABELS = {
   lessons: {
     en: 'Lessons visited',
     ko: '방문한 레슨',
+    id: 'Pelajaran dikunjungi',
     ja: '訪れたレッスン',
     'zh-CN': '学过的课',
     'zh-TW': '學過的課',
@@ -503,6 +531,7 @@ const DASHBOARD_LABELS = {
   bookmarks: {
     en: 'Bookmarks',
     ko: '북마크',
+    id: 'Markah',
     ja: 'ブックマーク',
     'zh-CN': '书签',
     'zh-TW': '書籤',
@@ -517,6 +546,7 @@ const DASHBOARD_LABELS = {
   decks: {
     en: 'Flashcard decks',
     ko: '플래시카드 덱',
+    id: 'Set kartu flash',
     ja: 'フラッシュカードのデッキ',
     'zh-CN': '抽认卡组',
     'zh-TW': '閃卡組',
@@ -531,6 +561,7 @@ const DASHBOARD_LABELS = {
   mastered: {
     en: 'Cards mastered',
     ko: '완료한 카드',
+    id: 'Kartu dikuasai',
     ja: '習得したカード',
     'zh-CN': '已掌握的卡片',
     'zh-TW': '已掌握的卡片',
@@ -545,6 +576,7 @@ const DASHBOARD_LABELS = {
   empty: {
     en: 'Nothing yet — visit a lesson and your progress will show up here.',
     ko: '아직 데이터가 없습니다 — 레슨을 방문하면 여기에 진행 상황이 표시됩니다.',
+    id: 'Belum ada apa-apa — kunjungi sebuah pelajaran dan kemajuan Anda akan muncul di sini.',
     ja: 'まだデータがありません — レッスンを訪れると進捗がここに表示されます。',
     'zh-CN': '暂无数据 — 学习一节课后，您的进度会显示在这里。',
     'zh-TW': '暫無資料 — 學習一節課後，您的進度會顯示在這裡。',
@@ -567,6 +599,8 @@ const A11Y_LABELS = {
   toggleDark: {
     en: 'Toggle dark mode',
     ko: '다크 모드 전환',
+    id: 'Alihkan mode gelap',
+    it: 'Attiva/disattiva modalità scura',
     ja: 'ダークモード切替',
     'zh-CN': '切换暗色模式',
     'zh-TW': '切換暗色模式',
@@ -580,6 +614,8 @@ const A11Y_LABELS = {
   chatHistory: {
     en: 'Chat history',
     ko: '대화 기록',
+    id: 'Riwayat Obrolan',
+    it: 'Cronologia chat',
     ja: '会話履歴',
     'zh-CN': '聊天记录',
     'zh-TW': '聊天記錄',
@@ -593,6 +629,8 @@ const A11Y_LABELS = {
   closeSidebar: {
     en: 'Close sidebar',
     ko: '사이드바 닫기',
+    id: 'Tutup bilah sisi',
+    it: 'Chiudi barra laterale',
     ja: 'サイドバーを閉じる',
     'zh-CN': '关闭侧栏',
     'zh-TW': '關閉側欄',
@@ -606,6 +644,8 @@ const A11Y_LABELS = {
   openTutor: {
     en: 'Open AI Tutor',
     ko: 'AI 튜터 열기',
+    id: 'Buka AI Tutor',
+    it: 'Apri AI Tutor',
     ja: 'AIチューターを開く',
     'zh-CN': '打开AI导师',
     'zh-TW': '開啟AI導師',
@@ -619,6 +659,8 @@ const A11Y_LABELS = {
   retry: {
     en: 'Retry',
     ko: '재시도',
+    id: 'Coba lagi',
+    it: 'Riprova',
     ja: '再試行',
     'zh-CN': '重试',
     'zh-TW': '重試',
@@ -632,6 +674,8 @@ const A11Y_LABELS = {
   loading: {
     en: 'Loading',
     ko: '로딩 중',
+    id: 'Memuat',
+    it: 'Caricamento',
     ja: '読み込み中',
     'zh-CN': '加载中',
     'zh-TW': '載入中',
@@ -645,6 +689,8 @@ const A11Y_LABELS = {
   backToChat: {
     en: 'Back to chat',
     ko: '채팅으로 돌아가기',
+    id: 'Kembali ke obrolan',
+    it: 'Torna alla chat',
     ja: 'チャットに戻る',
     'zh-CN': '返回聊天',
     'zh-TW': '返回聊天',
@@ -658,6 +704,8 @@ const A11Y_LABELS = {
   removeQuote: {
     en: 'Remove quote',
     ko: '인용 제거',
+    id: 'Hapus kutipan',
+    it: 'Rimuovi citazione',
     ja: '引用を削除',
     'zh-CN': '移除引用',
     'zh-TW': '移除引用',
@@ -673,6 +721,8 @@ const A11Y_LABELS = {
 const PROGRESS_LABELS = {
   en: 'Translating…',
   ko: '번역 중…',
+  id: 'Menerjemahkan…',
+  it: 'Traduzione in corso…',
   ja: '翻訳中…',
   'zh-CN': '翻译中…',
   'zh-TW': '翻譯中…',
@@ -687,6 +737,8 @@ const PROGRESS_LABELS = {
 const CHAT_ERROR_LABELS = {
   en: 'Sorry, an error occurred.',
   ko: '죄송합니다. 응답 중 오류가 발생했습니다.',
+  id: 'Maaf, terjadi kesalahan.',
+  it: 'Spiacenti, si è verificato un errore.',
   ja: '申し訳ありません。エラーが発生しました。',
   'zh-CN': '抱歉，发生了错误。',
   'zh-TW': '抱歉，發生了錯誤。',
@@ -701,6 +753,8 @@ const CHAT_ERROR_LABELS = {
 const OFFLINE_LABELS = {
   en: 'Offline — using cached translations only',
   ko: '오프라인 — 캐시된 번역만 사용 중',
+  id: 'Offline — hanya menggunakan terjemahan tersimpan',
+  it: 'Offline — vengono usate solo le traduzioni in cache',
   ja: 'オフライン — キャッシュされた翻訳のみ使用中',
   'zh-CN': '离线 — 仅使用缓存翻译',
   'zh-TW': '離線 — 僅使用快取翻譯',
@@ -715,6 +769,8 @@ const OFFLINE_LABELS = {
 const BRIDGE_UNAVAILABLE_LABELS = {
   en: 'AI features unavailable — refresh the page to retry',
   ko: 'AI 기능을 사용할 수 없습니다 — 페이지를 새로고침하여 다시 시도해주세요',
+  id: 'Fitur AI tidak tersedia — muat ulang halaman untuk mencoba lagi',
+  it: 'Funzioni AI non disponibili — aggiorna la pagina per riprovare',
   ja: 'AI機能が利用できません — ページを再読み込みして再試行してください',
   'zh-CN': 'AI 功能不可用 — 刷新页面以重试',
   'zh-TW': 'AI 功能無法使用 — 重新整理頁面以重試',
@@ -729,6 +785,8 @@ const BRIDGE_UNAVAILABLE_LABELS = {
 const STORAGE_WARNING_LABELS = {
   en: 'Storage almost full — old translations will be cleared automatically',
   ko: '저장 공간 부족 — 오래된 번역이 자동으로 삭제됩니다',
+  id: 'Penyimpanan hampir penuh — terjemahan lama akan dihapus secara otomatis',
+  it: 'Spazio di archiviazione quasi pieno — le vecchie traduzioni verranno eliminate automaticamente',
   ja: 'ストレージがほぼ満杯です — 古い翻訳が自動的に削除されます',
   'zh-CN': '存储空间即将满 — 旧翻译将自动清除',
   'zh-TW': '儲存空間即將滿 — 舊翻譯將自動清除',
@@ -743,6 +801,8 @@ const STORAGE_WARNING_LABELS = {
 const TUTOR_OFFLINE_LABELS = {
   en: 'AI Tutor is unavailable offline. Please check your connection.',
   ko: 'AI 튜터는 오프라인에서 사용할 수 없습니다. 인터넷 연결을 확인해주세요.',
+  id: 'AI Tutor tidak tersedia saat offline. Silakan periksa koneksi Anda.',
+  it: 'AI Tutor non è disponibile offline. Controlla la tua connessione.',
   ja: 'AIチューターはオフラインでは利用できません。接続を確認してください。',
   'zh-CN': 'AI导师在离线状态下不可用。请检查您的网络连接。',
   'zh-TW': 'AI導師在離線狀態下不可用。請檢查您的網路連線。',
@@ -758,6 +818,8 @@ const HISTORY_LABELS = {
   title: {
     en: 'Chat History',
     ko: '대화 기록',
+    id: 'Riwayat Obrolan',
+    it: 'Cronologia chat',
     ja: '会話履歴',
     'zh-CN': '聊天记录',
     'zh-TW': '聊天記錄',
@@ -771,6 +833,8 @@ const HISTORY_LABELS = {
   loading: {
     en: 'Loading...',
     ko: '불러오는 중...',
+    id: 'Memuat...',
+    it: 'Caricamento...',
     ja: '読み込み中...',
     'zh-CN': '加载中...',
     'zh-TW': '載入中...',
@@ -784,6 +848,8 @@ const HISTORY_LABELS = {
   empty: {
     en: 'No conversations yet',
     ko: '대화 기록이 없습니다',
+    id: 'Belum ada percakapan',
+    it: 'Ancora nessuna conversazione',
     ja: 'まだ会話がありません',
     'zh-CN': '暂无对话',
     'zh-TW': '暫無對話',
@@ -797,6 +863,8 @@ const HISTORY_LABELS = {
   clearHistory: {
     en: 'Clear History',
     ko: '기록 삭제',
+    id: 'Hapus Riwayat',
+    it: 'Cancella cronologia',
     ja: '履歴を削除',
     'zh-CN': '清除记录',
     'zh-TW': '清除記錄',
@@ -810,6 +878,8 @@ const HISTORY_LABELS = {
   historyCleared: {
     en: 'History cleared',
     ko: '기록이 삭제되었습니다',
+    id: 'Riwayat dihapus',
+    it: 'Cronologia cancellata',
     ja: '履歴を削除しました',
     'zh-CN': '记录已清除',
     'zh-TW': '記錄已清除',
@@ -831,6 +901,8 @@ const POPUP_LABELS = {
   targetLang: {
     en: 'Target Language',
     ko: '번역 언어',
+    id: 'Bahasa Tujuan',
+    it: 'Lingua di destinazione',
     ja: '翻訳言語',
     'zh-CN': '目标语言',
     'zh-TW': '目標語言',
@@ -843,6 +915,8 @@ const POPUP_LABELS = {
   },
   premiumTier: {
     en: '\u2605 Premium (Static Dict + AI Verify)',
+    id: '\u2605 Premium (Kamus Statis + Verifikasi AI)',
+    it: '\u2605 Premium (Dizionario statico + Verifica AI)',
     ko: '\u2605 프리미엄 (정적 사전 + AI 검증)',
     ja: '\u2605 プレミアム（静的辞書＋AI検証）',
     'zh-CN': '\u2605 高级（静态词典＋AI验证）',
@@ -857,6 +931,8 @@ const POPUP_LABELS = {
   standardTier: {
     en: 'Google Translate + AI Verify',
     ko: 'Google 번역 + AI 검증',
+    id: 'Google Translate + Verifikasi AI',
+    it: 'Google Translate + Verifica AI',
     ja: 'Google翻訳＋AI検証',
     'zh-CN': 'Google翻译＋AI验证',
     'zh-TW': 'Google翻譯＋AI驗證',
@@ -870,6 +946,8 @@ const POPUP_LABELS = {
   openSidebar: {
     en: 'Open AI Tutor Sidebar',
     ko: 'AI 튜터 사이드바 열기',
+    id: 'Buka Bilah Sisi AI Tutor',
+    it: 'Apri barra laterale AI Tutor',
     ja: 'AI\u30c1\u30e5\u30fc\u30bf\u30fc\u3092\u958b\u304f',
     'zh-CN': '\u6253\u5f00AI\u5bfc\u5e08\u4fa7\u680f',
     'zh-TW': '開啟AI導師側欄',
@@ -882,6 +960,8 @@ const POPUP_LABELS = {
   },
   autoTranslate: {
     en: 'Auto-translate on page load',
+    id: 'Terjemahkan otomatis saat halaman dimuat',
+    it: 'Traduci automaticamente al caricamento della pagina',
     ko: '\ud398\uc774\uc9c0 \ub85c\ub4dc \uc2dc \uc790\ub3d9 \ubc88\uc5ed',
     ja: '\u30da\u30fc\u30b8\u8aad\u307f\u8fbc\u307f\u6642\u306b\u81ea\u52d5\u7ffb\u8a33',
     'zh-CN': '\u9875\u9762\u52a0\u8f7d\u65f6\u81ea\u52a8\u7ffb\u8bd1',
@@ -896,6 +976,8 @@ const POPUP_LABELS = {
   englishOriginal: {
     en: 'English (Original)',
     ko: 'English (Original)',
+    id: 'English (Original)',
+    it: 'English (Original)',
     ja: 'English (Original)',
     'zh-CN': 'English (Original)',
     'zh-TW': 'English (Original)',
@@ -908,6 +990,8 @@ const POPUP_LABELS = {
   },
   refreshPage: {
     en: 'Please refresh the Skilljar page',
+    id: 'Silakan muat ulang halaman Skilljar',
+    it: 'Aggiorna la pagina Skilljar',
     ko: 'Skilljar \ud398\uc774\uc9c0\ub97c \uc0c8\ub85c\uace0\uce68\ud574\uc8fc\uc138\uc694',
     ja: 'Skilljar\u30da\u30fc\u30b8\u3092\u66f4\u65b0\u3057\u3066\u304f\u3060\u3055\u3044',
     'zh-CN': '\u8bf7\u5237\u65b0Skilljar\u9875\u9762',
@@ -932,6 +1016,8 @@ const SHORTCUT_LABELS = {
   title: {
     en: 'Keyboard Shortcuts',
     ko: '키보드 단축키',
+    id: 'Pintasan Keyboard',
+    it: 'Scorciatoie da tastiera',
     ja: 'キーボードショートカット',
     'zh-CN': '键盘快捷键',
     'zh-TW': '鍵盤快捷鍵',
@@ -948,6 +1034,8 @@ const SHORTCUT_DESCRIPTIONS = {
   toggleSidebar: {
     en: 'Toggle AI Tutor',
     ko: 'AI 튜터 열기/닫기',
+    id: 'Alihkan AI Tutor',
+    it: 'Attiva/disattiva AI Tutor',
     ja: 'AIチューター切替',
     'zh-CN': '切换AI导师',
     'zh-TW': '切換AI導師',
@@ -961,6 +1049,8 @@ const SHORTCUT_DESCRIPTIONS = {
   toggleFlashcards: {
     en: 'Vocabulary cards',
     ko: '어휘 카드',
+    id: 'Kartu Kosakata',
+    it: 'Schede di vocabolario',
     ja: '語彙カード',
     'zh-CN': '词汇卡片',
     'zh-TW': '詞彙卡片',
@@ -974,6 +1064,8 @@ const SHORTCUT_DESCRIPTIONS = {
   toggleDarkMode: {
     en: 'Toggle dark mode',
     ko: '다크 모드 전환',
+    id: 'Alihkan mode gelap',
+    it: 'Attiva/disattiva modalità scura',
     ja: 'ダークモード切替',
     'zh-CN': '切换暗色模式',
     'zh-TW': '切換暗色模式',
@@ -987,6 +1079,8 @@ const SHORTCUT_DESCRIPTIONS = {
   showHelp: {
     en: 'Show shortcuts',
     ko: '단축키 도움말',
+    id: 'Tampilkan pintasan',
+    it: 'Mostra scorciatoie',
     ja: 'ショートカット表示',
     'zh-CN': '显示快捷键',
     'zh-TW': '顯示快捷鍵',
@@ -1000,6 +1094,8 @@ const SHORTCUT_DESCRIPTIONS = {
   close: {
     en: 'Close panel',
     ko: '패널 닫기',
+    id: 'Tutup panel',
+    it: 'Chiudi pannello',
     ja: 'パネルを閉じる',
     'zh-CN': '关闭面板',
     'zh-TW': '關閉面板',
@@ -1013,6 +1109,8 @@ const SHORTCUT_DESCRIPTIONS = {
   focusChat: {
     en: 'Focus chat input',
     ko: '채팅 입력 포커스',
+    id: 'Fokuskan input obrolan',
+    it: "Metti a fuoco l'input della chat",
     ja: 'チャット入力にフォーカス',
     'zh-CN': '聚焦聊天输入',
     'zh-TW': '聚焦聊天輸入',
@@ -1031,6 +1129,8 @@ const FLASHCARD_LABELS = {
   title: {
     en: 'Vocabulary Cards',
     ko: '어휘 카드',
+    id: 'Kartu Kosakata',
+    it: 'Schede di vocabolario',
     ja: '語彙カード',
     'zh-CN': '词汇卡片',
     'zh-TW': '詞彙卡片',
@@ -1044,6 +1144,8 @@ const FLASHCARD_LABELS = {
   reviewDue: {
     en: 'Review due',
     ko: '복습할 카드',
+    id: 'Perlu diulas',
+    it: 'Da ripassare',
     ja: '復習する単語',
     'zh-CN': '待复习',
     'zh-TW': '待複習',
@@ -1057,6 +1159,8 @@ const FLASHCARD_LABELS = {
   studyAll: {
     en: 'All cards',
     ko: '전체 카드',
+    id: 'Semua kartu',
+    it: 'Tutte le schede',
     ja: 'すべて',
     'zh-CN': '全部卡片',
     'zh-TW': '全部卡片',
@@ -1070,6 +1174,8 @@ const FLASHCARD_LABELS = {
   allCaughtUp: {
     en: 'All caught up — nothing to review right now.',
     ko: '복습 완료 — 지금 볼 카드가 없어요.',
+    id: 'Semua sudah selesai — tidak ada yang perlu diulas saat ini.',
+    it: 'Tutto in pari — niente da ripassare al momento.',
     ja: '復習完了 — いま見るカードはありません。',
     'zh-CN': '已全部复习 — 暂无待复习卡片。',
     'zh-TW': '已全部複習 — 暫無待複習卡片。',
@@ -1083,6 +1189,8 @@ const FLASHCARD_LABELS = {
   flip: {
     en: 'Flip',
     ko: '뒤집기',
+    id: 'Balik',
+    it: 'Gira',
     ja: 'めくる',
     'zh-CN': '翻转',
     'zh-TW': '翻轉',
@@ -1096,6 +1204,8 @@ const FLASHCARD_LABELS = {
   next: {
     en: 'Next',
     ko: '다음',
+    id: 'Berikutnya',
+    it: 'Avanti',
     ja: '次へ',
     'zh-CN': '下一个',
     'zh-TW': '下一個',
@@ -1109,6 +1219,8 @@ const FLASHCARD_LABELS = {
   prev: {
     en: 'Previous',
     ko: '이전',
+    id: 'Sebelumnya',
+    it: 'Indietro',
     ja: '前へ',
     'zh-CN': '上一个',
     'zh-TW': '上一個',
@@ -1122,6 +1234,8 @@ const FLASHCARD_LABELS = {
   boxNew: {
     en: 'New',
     ko: '새로운',
+    id: 'Baru',
+    it: 'Nuove',
     ja: '新規',
     'zh-CN': '新',
     'zh-TW': '新',
@@ -1135,6 +1249,8 @@ const FLASHCARD_LABELS = {
   boxLearning: {
     en: 'Learning',
     ko: '학습 중',
+    id: 'Sedang dipelajari',
+    it: 'In apprendimento',
     ja: '学習中',
     'zh-CN': '学习中',
     'zh-TW': '學習中',
@@ -1148,6 +1264,8 @@ const FLASHCARD_LABELS = {
   mastered: {
     en: 'Mastered',
     ko: '숙지 완료',
+    id: 'Dikuasai',
+    it: 'Padroneggiate',
     ja: '習得済み',
     'zh-CN': '已掌握',
     'zh-TW': '已掌握',
@@ -1161,6 +1279,8 @@ const FLASHCARD_LABELS = {
   reset: {
     en: 'Reset Progress',
     ko: '진행 초기화',
+    id: 'Atur Ulang Kemajuan',
+    it: 'Reimposta i progressi',
     ja: '進捗リセット',
     'zh-CN': '重置进度',
     'zh-TW': '重置進度',
@@ -1174,6 +1294,8 @@ const FLASHCARD_LABELS = {
   empty: {
     en: 'No vocabulary for this page',
     ko: '이 페이지의 어휘가 없습니다',
+    id: 'Tidak ada kosakata untuk halaman ini',
+    it: 'Nessun vocabolo per questa pagina',
     ja: 'このページの語彙はありません',
     'zh-CN': '此页面没有词汇',
     'zh-TW': '此頁面沒有詞彙',
@@ -1187,6 +1309,8 @@ const FLASHCARD_LABELS = {
   openFlashcards: {
     en: 'Vocabulary flashcards',
     ko: '어휘 플래시카드',
+    id: 'Kartu flash kosakata',
+    it: 'Flashcard di vocabolario',
     ja: '語彙フラッシュカード',
     'zh-CN': '词汇闪卡',
     'zh-TW': '詞彙閃卡',
@@ -1203,6 +1327,8 @@ const BOOKMARK_LABELS = {
   title: {
     en: 'Bookmarks',
     ko: '책갈피',
+    id: 'Markah',
+    it: 'Segnalibri',
     ja: 'ブックマーク',
     'zh-CN': '书签',
     'zh-TW': '書籤',
@@ -1216,6 +1342,8 @@ const BOOKMARK_LABELS = {
   openBookmarks: {
     en: 'Bookmarks',
     ko: '책갈피',
+    id: 'Markah',
+    it: 'Segnalibri',
     ja: 'ブックマーク',
     'zh-CN': '书签',
     'zh-TW': '書籤',
@@ -1229,6 +1357,8 @@ const BOOKMARK_LABELS = {
   addThis: {
     en: 'Bookmark this lesson',
     ko: '이 레슨 책갈피',
+    id: 'Tandai pelajaran ini',
+    it: 'Aggiungi questa lezione ai segnalibri',
     ja: 'このレッスンをブックマーク',
     'zh-CN': '收藏此课程',
     'zh-TW': '收藏此課程',
@@ -1242,6 +1372,8 @@ const BOOKMARK_LABELS = {
   empty: {
     en: 'No bookmarks yet.',
     ko: '아직 책갈피가 없어요.',
+    id: 'Belum ada markah.',
+    it: 'Ancora nessun segnalibro.',
     ja: 'ブックマークはまだありません。',
     'zh-CN': '还没有书签。',
     'zh-TW': '還沒有書籤。',
@@ -1255,6 +1387,8 @@ const BOOKMARK_LABELS = {
   remove: {
     en: 'Remove',
     ko: '삭제',
+    id: 'Hapus',
+    it: 'Rimuovi',
     ja: '削除',
     'zh-CN': '删除',
     'zh-TW': '刪除',
@@ -1271,6 +1405,8 @@ const RESUME_LABELS = {
   title: {
     en: 'Continue',
     ko: '이어보기',
+    id: 'Lanjutkan',
+    it: 'Continua',
     ja: '続きから',
     'zh-CN': '继续学习',
     'zh-TW': '繼續學習',
@@ -1284,6 +1420,8 @@ const RESUME_LABELS = {
   openRecent: {
     en: 'Recent lessons',
     ko: '최근 레슨',
+    id: 'Pelajaran terbaru',
+    it: 'Lezioni recenti',
     ja: '最近のレッスン',
     'zh-CN': '最近的课程',
     'zh-TW': '最近的課程',
@@ -1297,6 +1435,8 @@ const RESUME_LABELS = {
   empty: {
     en: 'No recent lessons yet.',
     ko: '아직 최근 레슨이 없어요.',
+    id: 'Belum ada pelajaran terbaru.',
+    it: 'Ancora nessuna lezione recente.',
     ja: '最近のレッスンはまだありません。',
     'zh-CN': '还没有最近的课程。',
     'zh-TW': '還沒有最近的課程。',
@@ -1313,6 +1453,8 @@ const TOC_LABELS = {
   contents: {
     en: 'Contents',
     ko: '목차',
+    id: 'Daftar Isi',
+    it: 'Indice',
     ja: '目次',
     'zh-CN': '目录',
     'zh-TW': '目錄',
@@ -1329,6 +1471,7 @@ const MENU_LABELS = {
   dashboard: {
     en: 'My progress',
     ko: '내 학습 현황',
+    id: 'Kemajuan saya',
     ja: '学習の進捗',
     'zh-CN': '我的进度',
     'zh-TW': '我的進度',
@@ -1343,6 +1486,8 @@ const MENU_LABELS = {
   tools: {
     en: 'Tools',
     ko: '도구',
+    id: 'Alat',
+    it: 'Strumenti',
     ja: 'ツール',
     'zh-CN': '工具',
     'zh-TW': '工具',
@@ -1359,6 +1504,8 @@ const PDF_EXPORT_LABELS = {
   title: {
     en: 'Export lesson as PDF',
     ko: '레슨을 PDF로 내보내기',
+    id: 'Ekspor pelajaran sebagai PDF',
+    it: 'Esporta la lezione in PDF',
     ja: 'レッスンをPDFでエクスポート',
     'zh-CN': '将课程导出为PDF',
     'zh-TW': '將課程匯出為PDF',
@@ -1372,6 +1519,8 @@ const PDF_EXPORT_LABELS = {
   blocked: {
     en: 'PDF export was blocked by your browser. Allow popups for this site and try again.',
     ko: 'PDF 내보내기가 브라우저에 의해 차단되었습니다. 이 사이트의 팝업을 허용하고 다시 시도하세요.',
+    id: 'Ekspor PDF diblokir oleh browser Anda. Izinkan pop-up untuk situs ini dan coba lagi.',
+    it: "L'esportazione PDF è stata bloccata dal browser. Consenti i popup per questo sito e riprova.",
     ja: 'PDFエクスポートがブラウザによってブロックされました。このサイトのポップアップを許可して再試行してください。',
     'zh-CN': '浏览器已阻止 PDF 导出。请允许此网站的弹出窗口，然后重试。',
     'zh-TW': '瀏覽器已封鎖 PDF 匯出。請允許此網站的彈出視窗後再試一次。',
@@ -1388,6 +1537,8 @@ const TERM_PREVIEW_LABELS = {
   title: {
     en: 'Key terms',
     ko: '핵심 용어',
+    id: 'Istilah kunci',
+    it: 'Termini chiave',
     ja: 'キーワード',
     'zh-CN': '关键术语',
     'zh-TW': '關鍵術語',
@@ -1401,6 +1552,8 @@ const TERM_PREVIEW_LABELS = {
   viewAll: {
     en: 'View all',
     ko: '전체 보기',
+    id: 'Lihat semua',
+    it: 'Vedi tutti',
     ja: 'すべて表示',
     'zh-CN': '查看全部',
     'zh-TW': '查看全部',
@@ -1479,6 +1632,8 @@ const CODE_COMMENT_PATTERNS = [
 const COMMENT_TRANSLATE_LABELS = {
   en: 'Translate code comments',
   ko: '코드 주석 번역',
+  id: 'Terjemahkan komentar kode',
+  it: 'Traduci i commenti del codice',
   ja: 'コードコメントを翻訳',
   'zh-CN': '翻译代码注释',
   'zh-TW': '翻譯程式碼註解',
