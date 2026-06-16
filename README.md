@@ -281,6 +281,7 @@ review is the final layer:
 | Português (BR) | `pt-BR` | 1129 | 2026-04-02 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
 | Русский | `ru` | 1129 | 2026-04-02 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
 | Tiếng Việt | `vi` | 1129 | 2026-04-02 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Bahasa Indonesia | `id` | 1129 | 2026-06-17 | 2026-06-17 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
 <!-- LOCALE_QA_END -->
 
 🙋 **Native speakers wanted** — a first native pass on your locale takes
