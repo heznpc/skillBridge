@@ -333,3 +333,29 @@ describe('no corruption of correct CJK prose (real shipped dictionaries)', () =>
     });
   }
 });
+
+describe('restore engine — substring/boundary safety', () => {
+  beforeEach(() => resetProtectedTerms());
+
+  test('drops a wrong-form that is a substring of its own correct term (no self-corruption)', () => {
+    // "subagen" ⊂ "subagent": unanchored replaceAll would yield "subagentt".
+    buildProtectedTermsMap('id', fakeTranslator({ subagent: ['subagen'], subagents: ['subagen'] }));
+    expect(restoreProtectedTerms('Buat subagent baru')).toBe('Buat subagent baru');
+    expect(restoreProtectedTerms('Daftar subagents di sini')).toBe('Daftar subagents di sini');
+  });
+
+  test('Latin wrong-form is letter-boundary-anchored — never corrupts a longer word containing it', () => {
+    buildProtectedTermsMap('xx', fakeTranslator({ Plugin: ['plug'] }));
+    expect(restoreProtectedTerms('a plughole and a plug')).toBe('a plughole and a Plugin');
+  });
+
+  test('Latin standalone restoration still fires', () => {
+    buildProtectedTermsMap('fr', fakeTranslator({ 'slash command': ['commande slash'] }));
+    expect(restoreProtectedTerms('Tapez la commande slash.')).toBe('Tapez la slash command.');
+  });
+
+  test('CJK restoration is preserved when adjacent to a particle (CJK keeps substring matching)', () => {
+    buildProtectedTermsMap('ko', fakeTranslator({ Claude: ['클로드'] }));
+    expect(restoreProtectedTerms('클로드는 유용합니다')).toBe('Claude는 유용합니다');
+  });
+});

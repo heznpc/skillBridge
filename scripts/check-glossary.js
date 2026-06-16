@@ -68,6 +68,17 @@ for (const [lang, data] of Object.entries(languages)) {
         console.log(`  WARN  [${lang}] _protected."${correct}" lists itself as a wrong form (no-op)`);
         warnings++;
         check1Issues++;
+        continue;
+      }
+      // Substring corruption: a wrong-form contained in its own correct term
+      // rewrites the correct term itself at restore time (unanchored replaceAll),
+      // e.g. "subagen" inside "subagent" → "subagentt". Hard error.
+      if (typeof wrong === 'string' && wrong.length > 0 && correct.includes(wrong)) {
+        console.log(
+          `  ERROR [${lang}] _protected."${correct}" wrong-form "${wrong}" is a substring of the correct term — corrupts it on restore`,
+        );
+        errors++;
+        check1Issues++;
       }
     }
   }
