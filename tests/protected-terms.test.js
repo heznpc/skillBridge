@@ -314,6 +314,12 @@ describe('no corruption of correct CJK prose (real shipped dictionaries)', () =>
       'Doanh nghiệp phát triển', // business (was -> Enterprise)
       'cộng tác với nhau', // collaborate (was -> Cowork)
     ],
+    id: [
+      'Perusahaan ini berkembang pesat', // company (breaks if Enterprise -> Perusahaan is ever added)
+      'keterampilan komunikasi yang penting', // skills (breaks if skills -> keterampilan)
+      'Pasang kait pada dinding itu', // hook/hanger (breaks if hook -> kait)
+      'kami menjalin kerja sama yang erat', // collaboration (breaks if Cowork -> kerja sama)
+    ],
   };
 
   for (const [lang, sentences] of Object.entries(cases)) {

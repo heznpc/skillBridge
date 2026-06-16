@@ -20,8 +20,11 @@
     "Computer Use": [
       "Penggunaan Komputer"
     ],
-    "slash command": [
-      "perintah garis miring"
+    "subagent": [
+      "subagen"
+    ],
+    "subagents": [
+      "subagen"
     ]
   },
   "terms": {
@@ -66,7 +69,7 @@
     "This course empowers academic faculty, instructional designers, and others to teach and assess AI Fluency in instructor-led settings.": "Kursus ini memberdayakan dosen akademik, perancang instruksional, dan pihak lainnya untuk mengajarkan dan menilai Kefasihan AI dalam lingkungan yang dipandu instruktur.",
     "AI Fluency for nonprofits": "Kefasihan AI untuk organisasi nirlaba",
     "This course empowers nonprofit professionals to develop AI fluency in order to increase organizational impact and efficiency while staying true to their mission and values.": "Kursus ini memberdayakan para profesional nirlaba untuk mengembangkan kefasihan AI guna meningkatkan dampak dan efisiensi organisasi sambil tetap setia pada misi dan nilai-nilai mereka.",
-    "Introduction to agent skills": "Pengantar agent skills",
+    "Introduction to agent skills": "Pengantar Agent Skills",
     "Learn how to build, configure, and share Skills in Claude Code — reusable markdown instructions that Claude automatically applies to the right tasks at the right time. This course takes you from creating your first Skill to distributing them across teams and troubleshooting common issues.": "Pelajari cara membangun, mengonfigurasi, dan membagikan Skills di Claude Code — instruksi markdown yang dapat digunakan kembali dan secara otomatis diterapkan Claude pada tugas yang tepat di waktu yang tepat. Kursus ini membawa Anda dari membuat Skill pertama hingga mendistribusikannya ke berbagai tim dan menangani masalah-masalah umum.",
     "Introduction to Claude Cowork": "Pengantar Claude Cowork",
     "This hands-on course covers the Cowork task loop, plugins and skills, file and research workflows, and how to steer multi-step work responsibly — so you're productive in your first week.": "Kursus praktis ini mencakup loop tugas Cowork, plugins dan skills, alur kerja berkas dan riset, serta cara mengarahkan pekerjaan multi-langkah secara bertanggung jawab — sehingga Anda produktif sejak minggu pertama.",
@@ -711,8 +714,8 @@
     "Computer Use": "Computer Use",
     "Subagent": "Subagent",
     "Subagents": "Subagents",
-    "task loop": "task loop",
-    "progressive disclosure": "progressive disclosure",
+    "task loop": "loop tugas",
+    "progressive disclosure": "pengungkapan bertahap",
     "What is MCP?": "Apa itu MCP?",
     "Why MCP matters": "Mengapa MCP penting",
     "MCP architecture overview": "Ikhtisar arsitektur MCP",
