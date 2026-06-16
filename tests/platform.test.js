@@ -25,6 +25,8 @@ const {
   detectPlatform,
   isPlatformSupported,
   detectAITrainingContent,
+  getHostCapabilities,
+  CLAUDE_TUTORIAL_CONTENT_SCOPE,
   PLATFORM_IDS,
   _AI_KEYWORDS,
   _SHORT_KEYWORDS,
@@ -277,5 +279,70 @@ describe('AI keyword list invariants', () => {
     expect(_SHORT_KEYWORDS.has('mcp')).toBe(true);
     expect(_SHORT_KEYWORDS.has('llm')).toBe(true);
     expect(_SHORT_KEYWORDS.has('rag')).toBe(true);
+  });
+});
+
+describe('getHostCapabilities', () => {
+  test('anthropic.skilljar.com is a full-feature trusted host (bridge + document-wide)', () => {
+    const c = getHostCapabilities('anthropic.skilljar.com');
+    expect(c.trusted).toBe(true);
+    expect(c.bridge).toBe(true);
+    expect(c.sidebar).toBe(true);
+    expect(c.contentScope).toBeNull();
+    expect(c.readingAid).toBe(true);
+  });
+
+  test('localhost / 127.0.0.1 (E2E fixture) get the full profile too', () => {
+    expect(getHostCapabilities('localhost').bridge).toBe(true);
+    expect(getHostCapabilities('127.0.0.1').sidebar).toBe(true);
+    expect(getHostCapabilities('localhost').contentScope).toBeNull();
+  });
+
+  test('claude.com is translation-only: scoped, reading aid on, no bridge/sidebar/header/keyboard/exam', () => {
+    const c = getHostCapabilities('claude.com');
+    expect(c.platform).toBe(PLATFORM_IDS.CLAUDE_TUTORIALS);
+    expect(c.contentScope).toBe(CLAUDE_TUTORIAL_CONTENT_SCOPE);
+    expect(c.readingAid).toBe(true);
+    expect(c.bridge).toBe(false);
+    expect(c.sidebar).toBe(false);
+    expect(c.fab).toBe(false);
+    expect(c.headerControls).toBe(false);
+    expect(c.keyboardShortcuts).toBe(false);
+    expect(c.examDetection).toBe(false);
+    expect(c.youtubeSubtitles).toBe(false);
+  });
+
+  test('www. and trailing-dot variants of claude.com resolve identically', () => {
+    expect(getHostCapabilities('www.claude.com').contentScope).toBe(CLAUDE_TUTORIAL_CONTENT_SCOPE);
+    expect(getHostCapabilities('claude.com.').contentScope).toBe(CLAUDE_TUTORIAL_CONTENT_SCOPE);
+  });
+
+  test('claude.com subdomains are NOT claude-tutorials — docs/code are different surfaces', () => {
+    expect(getHostCapabilities('platform.claude.com').platform).toBe(PLATFORM_IDS.UNKNOWN);
+    expect(getHostCapabilities('code.claude.com').contentScope).toBeNull();
+  });
+
+  test('other *.skilljar.com tenants: header + reading aid, but no bridge/sidebar', () => {
+    const c = getHostCapabilities('acme.skilljar.com');
+    expect(c.platform).toBe(PLATFORM_IDS.SKILLJAR);
+    expect(c.trusted).toBe(false);
+    expect(c.bridge).toBe(false);
+    expect(c.sidebar).toBe(false);
+    expect(c.headerControls).toBe(true);
+    expect(c.readingAid).toBe(true);
+    expect(c.contentScope).toBeNull();
+  });
+
+  test('unknown hosts get no capabilities', () => {
+    const c = getHostCapabilities('example.com');
+    expect(c.platform).toBe(PLATFORM_IDS.UNKNOWN);
+    expect(c.readingAid).toBe(false);
+    expect(c.contentScope).toBeNull();
+    expect(c.bridge).toBe(false);
+  });
+
+  test('profiles are frozen so a caller cannot mutate them', () => {
+    expect(Object.isFrozen(getHostCapabilities('claude.com'))).toBe(true);
+    expect(Object.isFrozen(getHostCapabilities('anthropic.skilljar.com'))).toBe(true);
   });
 });

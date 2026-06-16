@@ -19,6 +19,10 @@
 
 const PLATFORM_IDS = Object.freeze({
   SKILLJAR: 'skilljar',
+  // claude.com/resources/tutorials/* — Anthropic's native (Webflow) tutorial
+  // pages. A translation-only host: scoped lesson translation + reading aid,
+  // but no AI-tutor bridge/sidebar (see getHostCapabilities below).
+  CLAUDE_TUTORIALS: 'claude-tutorials',
   // Future ids — registered here so call sites can branch on them today
   // even though the selector maps are not yet provided.
   ANTHROPIC_DOCS: 'anthropic-docs',
@@ -29,6 +33,9 @@ const PLATFORM_IDS = Object.freeze({
 
 const PLATFORM_PATTERNS = [
   { id: PLATFORM_IDS.SKILLJAR, hostPattern: /(^|\.)skilljar\.com$/ },
+  // Exact apex host only — platform.claude.com (docs) and code.claude.com are
+  // different surfaces and must NOT match.
+  { id: PLATFORM_IDS.CLAUDE_TUTORIALS, hostPattern: /^claude\.com$/ },
   // Anthropic docs / academy may eventually self-host the courses; the
   // selector layer for this id is intentionally not implemented yet.
   { id: PLATFORM_IDS.ANTHROPIC_DOCS, hostPattern: /(^|\.)anthropic\.com$/ },
@@ -57,7 +64,110 @@ function detectPlatform(host) {
  * false instead of running against an unknown DOM and creating noise.
  */
 function isPlatformSupported(id) {
-  return id === PLATFORM_IDS.SKILLJAR;
+  return id === PLATFORM_IDS.SKILLJAR || id === PLATFORM_IDS.CLAUDE_TUTORIALS;
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Per-host capability profile (v3.5.41)
+//
+// Adding claude.com tutorials as a second translatable surface means the
+// content script now runs on a host with a completely different DOM and no
+// AI-tutor bridge. Rather than scatter `host === 'x'` checks across ~10
+// content scripts, every host-specific behaviour reads ONE frozen profile,
+// threaded through as `window._sb.hostCaps`:
+//   - contentScope        — CSS root(s) to confine translation + reading aid
+//                           to (null = whole document, the Skilljar default)
+//   - sidebar / fab / bridge        — the AI-tutor surface (trusted hosts only)
+//   - headerControls / keyboardShortcuts / readingAid / examDetection /
+//     youtubeSubtitles            — per-host feature toggles
+//
+// NOTE: this gates FEATURES, not translation *activation*. Whether a page
+// translates at all still flows through detectAITrainingContent() — claude.com
+// tutorials pass it naturally (saturated with Claude/Anthropic keywords).
+// ────────────────────────────────────────────────────────────────────
+
+// claude.com tutorials are a small lesson island in a large Webflow marketing
+// shell; translation + reading aid scope to these two roots so the ~230-element
+// shell (global nav, footer, related-tutorial cards) is never touched.
+const CLAUDE_TUTORIAL_CONTENT_SCOPE = '.hero_tutorial_post_content, #tutorial_content';
+
+const _CAPS_NONE = Object.freeze({
+  platform: PLATFORM_IDS.UNKNOWN,
+  trusted: false,
+  contentScope: null,
+  sidebar: false,
+  fab: false,
+  bridge: false,
+  headerControls: false,
+  keyboardShortcuts: false,
+  readingAid: false,
+  examDetection: false,
+  youtubeSubtitles: false,
+});
+// anthropic.skilljar.com + the localhost/127.0.0.1 E2E fixture: full feature set.
+const _CAPS_FULL = Object.freeze({
+  platform: PLATFORM_IDS.SKILLJAR,
+  trusted: true,
+  contentScope: null,
+  sidebar: true,
+  fab: true,
+  bridge: true,
+  headerControls: true,
+  keyboardShortcuts: true,
+  readingAid: true,
+  examDetection: true,
+  youtubeSubtitles: true,
+});
+// Other *.skilljar.com tenants (admitted only when detectAITrainingContent
+// passes): translation + header controls + reading aid, but no tutor bridge/FAB.
+const _CAPS_SKILLJAR_TENANT = Object.freeze({
+  platform: PLATFORM_IDS.SKILLJAR,
+  trusted: false,
+  contentScope: null,
+  sidebar: false,
+  fab: false,
+  bridge: false,
+  headerControls: true,
+  keyboardShortcuts: true,
+  readingAid: true,
+  examDetection: true,
+  youtubeSubtitles: true,
+});
+// claude.com tutorials: scoped translation + reading aid only. No bridge, no
+// sidebar/FAB, no Skilljar header injection, no global keyboard listener, no
+// Skilljar exam detection.
+const _CAPS_CLAUDE_TUTORIALS = Object.freeze({
+  platform: PLATFORM_IDS.CLAUDE_TUTORIALS,
+  trusted: false,
+  contentScope: CLAUDE_TUTORIAL_CONTENT_SCOPE,
+  sidebar: false,
+  fab: false,
+  bridge: false,
+  headerControls: false,
+  keyboardShortcuts: false,
+  readingAid: true,
+  examDetection: false,
+  youtubeSubtitles: false,
+});
+
+/**
+ * Returns the frozen capability profile for a host — the single source of
+ * truth for which features may run where. `host` defaults to location.hostname.
+ * Normalizes a trailing dot (FQDN form) and a leading `www.`; browser-set
+ * hostnames are already lowercased.
+ * @param {string} [host]
+ * @returns {Readonly<object>}
+ */
+function getHostCapabilities(host) {
+  const h = (host || (typeof location !== 'undefined' ? location.hostname : '') || '')
+    .replace(/\.$/, '')
+    .replace(/^www\./, '');
+  if (h === 'anthropic.skilljar.com' || h === 'localhost' || h === '127.0.0.1') return _CAPS_FULL;
+  if (h === 'claude.com') return _CAPS_CLAUDE_TUTORIALS;
+  // Delegate Skilljar-host classification to detectPlatform so the host regex
+  // lives in exactly one place (PLATFORM_PATTERNS).
+  if (detectPlatform(h) === PLATFORM_IDS.SKILLJAR) return _CAPS_SKILLJAR_TENANT;
+  return _CAPS_NONE;
 }
 
 // ────────────────────────────────────────────────────────────────────
@@ -228,6 +338,7 @@ if (typeof window !== 'undefined') {
     detectPlatform,
     isPlatformSupported,
     detectAITrainingContent,
+    getHostCapabilities,
     PLATFORM_IDS,
   };
 }
@@ -240,6 +351,8 @@ if (typeof globalThis !== 'undefined' && typeof globalThis.module !== 'undefined
     detectPlatform,
     isPlatformSupported,
     detectAITrainingContent,
+    getHostCapabilities,
+    CLAUDE_TUTORIAL_CONTENT_SCOPE,
     PLATFORM_IDS,
     _AI_KEYWORDS,
     _SHORT_KEYWORDS,
