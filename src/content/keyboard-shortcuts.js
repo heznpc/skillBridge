@@ -155,8 +155,13 @@
     return parts.join(' + ');
   }
 
-  // Initialize
-  document.addEventListener('keydown', handleKeydown);
+  // Initialize — only on hosts that expose the controls these shortcuts drive
+  // (sidebar / dark mode / flashcards). Skipped on claude.com tutorials, where
+  // there is no such UI and the preventDefault would only swallow the host
+  // page's own keyboard shortcuts.
+  if (sb.hostCaps?.keyboardShortcuts !== false) {
+    document.addEventListener('keydown', handleKeydown);
+  }
 
   // Export
   sb.toggleShortcutsHelp = toggleHelpOverlay;

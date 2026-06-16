@@ -508,7 +508,7 @@
       if (stored.darkMode) document.documentElement.classList.add('si18n-dark');
       commentTranslateEnabled = !!stored.commentTranslate;
       currentLang = stored.targetLanguage || 'en';
-      isExamPage = detectExamPage();
+      isExamPage = sb.hostCaps.examDetection ? detectExamPage() : false;
 
       translator = new SkilljarTranslator();
 
@@ -519,20 +519,22 @@
         }
       }
 
-      window._sb.injectHeaderLanguageSelect?.();
-      window._sb.injectDarkModeToggle?.();
-      // The Puter page bridge and AI tutor only run on the trusted Anthropic
-      // host. Other Skilljar tenants (activated via the AI-content gate) still
-      // get dictionary + Google Translate, but not the bridge — its postMessage
-      // nonce is readable by any page-world script, so we never expose it on
-      // tenants we don't control.
-      const _host = (location.hostname || '').replace(/\.$/, '').replace(/^www\./, '');
-      // localhost / 127.0.0.1 is the E2E fixture host only — the bundled
-      // manifest matches `*.skilljar.com` exclusively, so the content script
-      // never runs on localhost in a real install (no production attack surface).
-      const isTrustedHost = _host === 'anthropic.skilljar.com' || _host === 'localhost' || _host === '127.0.0.1';
-      if (isTrustedHost) {
+      // Header language <select> + dark-mode toggle anchor on Skilljar's nav
+      // (#header-right). Gated so they never fire on claude.com tutorials,
+      // whose Webflow nav has no such anchor.
+      if (sb.hostCaps.headerControls) {
+        window._sb.injectHeaderLanguageSelect?.();
+        window._sb.injectDarkModeToggle?.();
+      }
+      // The AI-tutor sidebar / FAB / Puter bridge run only on trusted hosts
+      // (anthropic.skilljar.com + the localhost E2E fixture). Other Skilljar
+      // tenants get dictionary + Google Translate but not the bridge (its
+      // postMessage nonce is readable by any page-world script); claude.com
+      // tutorials are translation-only. See getHostCapabilities (platform.js).
+      if (sb.hostCaps.sidebar) {
         window._sb.injectSidebar?.();
+      }
+      if (sb.hostCaps.fab) {
         window._sb.injectFloatingButton?.();
       }
 
@@ -578,13 +580,13 @@
         }
       });
 
-      if (isTrustedHost) {
+      if (sb.hostCaps.bridge) {
         translator.initialize().catch((err) => {
           console.warn('[SkillBridge] Bridge init failed (AI features unavailable):', err);
         });
       }
 
-      if (typeof YouTubeSubtitleManager !== 'undefined') {
+      if (sb.hostCaps.youtubeSubtitles && typeof YouTubeSubtitleManager !== 'undefined') {
         subtitleManager = new YouTubeSubtitleManager(currentLang);
         subtitleManager.initialize().catch((err) => {
           console.warn('[SkillBridge] YouTube subtitle init failed:', err);
@@ -604,8 +606,14 @@
     } catch (err) {
       console.error('[SkillBridge] Init error:', err);
       isReady = true;
-      window._sb.injectSidebar?.();
-      window._sb.injectFloatingButton?.();
+      // Mirror the trusted-host gate above: never inject the tutor UI on a
+      // translation-only host (claude.com) just because init threw.
+      if (sb.hostCaps.sidebar) {
+        window._sb.injectSidebar?.();
+      }
+      if (sb.hostCaps.fab) {
+        window._sb.injectFloatingButton?.();
+      }
     }
   }
 
@@ -706,20 +714,22 @@
   }
 
   function updateLangClass(lang) {
-    const body = document.body;
-    if (!body) return;
-    // Collect first, then remove (safe iteration)
-    const toRemove = [...body.classList].filter((cls) => cls.startsWith('si18n-lang-'));
-    for (const cls of toRemove) body.classList.remove(cls);
-    // Set html lang for screen readers and font selection
+    // html lang (screen readers) + dir (RTL) are page-level semantics — set on
+    // the document regardless of scope.
     document.documentElement.lang = lang || 'en';
-    // Set dir attribute for RTL languages (Arabic, Hebrew)
     const rtlLangs = ['ar', 'he'];
     document.documentElement.dir = rtlLangs.includes(lang) ? 'rtl' : 'ltr';
-    if (lang && lang !== 'en') {
-      body.classList.add(`si18n-lang-${lang}`);
-      injectGoogleFonts(lang);
+    // Apply the font/lang class to the translation target(s). On document-wide
+    // hosts that's <body>; on scoped hosts (claude.com tutorials) it's the
+    // lesson root(s) only, so the surrounding marketing shell keeps Anthropic's
+    // own typography instead of being restyled into the CJK font stack.
+    const scope = sb.translationScope;
+    const targets = scope ? Array.from(document.querySelectorAll(scope)) : document.body ? [document.body] : [];
+    for (const el of targets) {
+      for (const cls of [...el.classList].filter((c) => c.startsWith('si18n-lang-'))) el.classList.remove(cls);
+      if (lang && lang !== 'en') el.classList.add(`si18n-lang-${lang}`);
     }
+    if (lang && lang !== 'en') injectGoogleFonts(lang);
   }
 
   function safeReplaceText(el, newText) {
@@ -844,6 +854,29 @@
   // Skilljar selector dictionary.
   sb.translatableSelector = TRANSLATABLE_SELECTOR;
   sb.excludeSelector = EXCLUDE_SELECTOR;
+  // Per-host capability profile — the single source of truth (platform.js) for
+  // which features may run on this host. Threaded as sb.hostCaps so every
+  // host-specific behaviour reads one place instead of ad-hoc host compares.
+  // contentScope confines the translation walk + reading aid to the lesson
+  // root(s) on claude.com tutorials; null (Skilljar, localhost E2E) = document.
+  // Fail open to full features if platform.js somehow didn't load (mirrors the
+  // AI-content gate's fail-open) so Skilljar is never silently degraded.
+  sb.hostCaps = (window._sbPlatform && window._sbPlatform.getHostCapabilities
+    ? window._sbPlatform.getHostCapabilities(location.hostname)
+    : null) || {
+    platform: 'skilljar',
+    trusted: true,
+    contentScope: null,
+    sidebar: true,
+    fab: true,
+    bridge: true,
+    headerControls: true,
+    keyboardShortcuts: true,
+    readingAid: true,
+    examDetection: true,
+    youtubeSubtitles: true,
+  };
+  sb.translationScope = sb.hostCaps.contentScope;
 
   // ============================================================
   // DOM OBSERVER (with cleanup)
@@ -912,9 +945,15 @@
           }
         }
 
+        // Honour the per-host content scope: on claude.com tutorials only
+        // translate freshly-inserted nodes that live inside the lesson root,
+        // never the surrounding marketing shell. null scope = no restriction.
+        const scope = sb.translationScope;
+        const scoped = scope ? elements.filter((el) => el.closest(scope)) : elements;
+
         const gtCandidates = [];
 
-        for (const el of elements) {
+        for (const el of scoped) {
           if (el.closest(EXCLUDE_SELECTOR)) continue;
           const result = sb._gt.processOneElement(el, currentLang);
           if (result === 'gt') gtCandidates.push(el);
@@ -943,8 +982,9 @@
     // user has already left.
     window._sb.cancelActiveStream?.();
 
-    // If user navigated to a certification exam page, tear down
-    if (CERT_DISABLE_PATTERNS.some((p) => p.test(href))) {
+    // If user navigated to a Skilljar certification exam page, tear down.
+    // Skipped on hosts without Skilljar exams (claude.com tutorials).
+    if (sb.hostCaps.examDetection && CERT_DISABLE_PATTERNS.some((p) => p.test(href))) {
       domObserver?.disconnect();
       restoreOriginal();
       document.getElementById('si18n-exam-banner')?.remove();
@@ -963,8 +1003,9 @@
       }
     }
 
-    // Re-detect exam mode for the new page
-    isExamPage = detectExamPage();
+    // Re-detect exam mode for the new page (Skilljar hosts only — claude.com
+    // tutorials have no Skilljar exams, so honour examDetection here too).
+    isExamPage = sb.hostCaps.examDetection ? detectExamPage() : false;
 
     // Re-apply translations for new content
     if (currentLang !== 'en' && translator && isReady) {

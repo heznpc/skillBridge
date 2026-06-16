@@ -126,8 +126,13 @@
    */
   async function translateCodeComments(targetLang) {
     if (!sb.translator || targetLang === 'en') return;
-    const codeEls = document.querySelectorAll('pre code, pre.code, .code-block code');
-    await Promise.all(Array.from(codeEls).map((el) => _translateOneCodeBlock(el, targetLang)));
+    // Honour the per-host content scope (e.g. claude.com tutorials) so code
+    // comments in the surrounding marketing shell are never translated.
+    const scope = sb.translationScope;
+    const codeEls = Array.from(document.querySelectorAll('pre code, pre.code, .code-block code')).filter(
+      (el) => !scope || el.closest(scope),
+    );
+    await Promise.all(codeEls.map((el) => _translateOneCodeBlock(el, targetLang)));
   }
 
   // Register into _sb namespace

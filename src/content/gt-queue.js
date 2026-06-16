@@ -100,7 +100,24 @@
     const examSkip = sb.isExamPage ? EXAM_SKIP_SELECTORS.join(', ') : null;
     const TRANSLATABLE_SELECTOR = sb.translatableSelector;
     const EXCLUDE_SELECTOR = sb.excludeSelector;
+    // On scoped hosts (e.g. claude.com tutorials) restrict the walk to the
+    // lesson root(s); otherwise walk the whole document (Skilljar default).
+    const scope = sb.translationScope;
+    // One-time signal if a scoped host's lesson root is absent (e.g. claude.com
+    // re-skinned its Webflow markup): translation silently does nothing, so
+    // surface it instead of failing dark. console.warn survives the prod minifier.
+    if (scope && !document.querySelector(scope) && !sb._scopeWarned) {
+      sb._scopeWarned = true;
+      console.warn(
+        '[SkillBridge] translation scope',
+        scope,
+        'matched no elements — page structure may have changed; skipping.',
+      );
+    }
     return Array.from(document.querySelectorAll(TRANSLATABLE_SELECTOR)).filter((el) => {
+      // On scoped hosts keep only elements inside the lesson root(s); mirrors
+      // the debounce path in content.js (closest()-filter form).
+      if (scope && !el.closest(scope)) return false;
       if (el.closest(EXCLUDE_SELECTOR)) return false;
       // On exam pages, skip answer choice elements.
       if (examSkip && el.matches(examSkip)) return false;
@@ -175,7 +192,9 @@
     window._protectedTerms.buildProtectedTermsMap(targetLang, translator);
     sb.updateLangClass(targetLang);
     // Re-detect exam page (DOM may have loaded since init).
-    if (!sb.isExamPage) sb.isExamPage = sb.detectExamPage();
+    // Honour the per-host examDetection capability (claude.com tutorials skip
+    // Skilljar exam detection). Fail open if hostCaps is somehow unset.
+    if (sb.hostCaps?.examDetection !== false && !sb.isExamPage) sb.isExamPage = sb.detectExamPage();
     if (sb.isExamPage && targetLang !== 'en') sb.showExamBanner?.();
 
     const elements = getTranslatableElements();

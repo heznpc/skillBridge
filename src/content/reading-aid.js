@@ -18,21 +18,40 @@
   if (window.__sbReadingAid) return;
   window.__sbReadingAid = true;
 
-  // A lesson page is a course slug + numeric lesson id (e.g. /claude-101/383389).
+  // Reading aid is host-gated (see getHostCapabilities): Skilljar lessons and
+  // claude.com tutorials get it; unknown hosts don't (avoids an unconditional
+  // 1s timer on a third-party page).
+  const _caps = (window._sb && window._sb.hostCaps) || null;
+  if (_caps && _caps.readingAid === false) return;
+
+  // A Skilljar lesson page is a course slug + numeric lesson id (e.g.
+  // /claude-101/383389). On scoped hosts (claude.com tutorials) the lesson is
+  // identified by the presence of its content root instead.
   const LESSON_PATH = /\/[^/]+\/\d+/;
+  const _scope = _caps && _caps.contentScope;
 
   function label(map, fallback) {
     const sb = window._sb;
     return (sb && sb.t && sb.t(map)) || fallback;
   }
 
-  function contentRoot() {
-    return (
+  // The lesson container(s): the scoped root(s) on claude.com, else Skilljar's
+  // lesson body (falling back to <main>). An array so the TOC builds from the
+  // lesson headings only, never the surrounding page chrome.
+  function lessonRoots() {
+    if (_scope) return Array.from(document.querySelectorAll(_scope));
+    const r =
       document.querySelector(SKILLJAR_SELECTORS.lessonMain) ||
       document.querySelector(SKILLJAR_SELECTORS.lessonContent) ||
       document.querySelector(SKILLJAR_SELECTORS.courseContent) ||
-      document.querySelector('main')
-    );
+      document.querySelector('main');
+    return r ? [r] : [];
+  }
+
+  function isLessonPage() {
+    // Scoped hosts: a lesson is present iff its content root is in the DOM.
+    if (_scope) return !!document.querySelector(_scope);
+    return LESSON_PATH.test(location.pathname);
   }
 
   // ============================================================
@@ -80,8 +99,9 @@
   });
 
   function buildTOC() {
-    const root = contentRoot();
-    const heads = root ? Array.from(root.querySelectorAll('h2, h3')).filter((h) => h.textContent.trim()) : [];
+    const heads = lessonRoots()
+      .flatMap((root) => Array.from(root.querySelectorAll('h2, h3')))
+      .filter((h) => h.textContent.trim());
     panel.replaceChildren();
     // A TOC only earns its place once there are a couple of sections.
     if (heads.length < 2) {
@@ -124,7 +144,7 @@
   }
 
   function refresh() {
-    if (!LESSON_PATH.test(location.pathname)) {
+    if (!isLessonPage()) {
       // Off a lesson page (catalog / course page): hide the aids.
       if (mounted) {
         bar.style.width = '0%';
