@@ -1,10 +1,10 @@
 # Privacy Policy — SkillBridge
 
-**Last updated:** June 9, 2026
+**Last updated:** June 18, 2026
 
 ## Overview
 
-SkillBridge is a browser extension that translates the free AI course pages hosted at [anthropic.skilljar.com](https://anthropic.skilljar.com/) into 32 languages and provides an in-page AI learning assistant. It is designed with privacy in mind — SkillBridge does not operate any servers, does not require accounts, and does not use analytics or tracking.
+SkillBridge is a browser extension that translates the free AI course pages on Skilljar ([anthropic.skilljar.com](https://anthropic.skilljar.com/) and other detected Skilljar AI-course tenants) and Claude tutorial pages at `claude.com/resources/tutorials` into 32 languages, and provides an in-page AI learning assistant. It is designed with privacy in mind — SkillBridge does not operate any servers, does not require accounts, and does not use analytics or tracking.
 
 ## Data Stored Locally (Never Leaves Your Device)
 
@@ -28,7 +28,7 @@ All requests to Gemini and Claude are routed through [Puter.js](https://docs.put
 ## Data NOT Collected
 
 - No personal information (name, email, etc.)
-- No browsing history outside of course pages at anthropic.skilljar.com
+- No browsing history outside the pages the extension runs on (Skilljar AI-course pages and `claude.com/resources/tutorials`)
 - No analytics, telemetry, or tracking of any kind
 - No advertising or marketing data
 
@@ -38,7 +38,8 @@ All requests to Gemini and Claude are routed through [Puter.js](https://docs.put
 |---|---|
 | `storage` | Save user preferences (selected language, dark mode, auto-translate) and cached translations |
 | `alarms` | Run periodic maintenance (24h cache cleanup, 7d update check) without waking the user |
-| `*.skilljar.com` | Translate course pages at anthropic.skilljar.com |
+| `*.skilljar.com` | Translate AI-course pages on Skilljar (anthropic.skilljar.com and other detected Skilljar AI tenants) |
+| `claude.com/resources/tutorials` (content script) | Translate Claude tutorial pages |
 | `*.youtube.com` | Auto-activate translated subtitles on course videos |
 | `translate.googleapis.com` | Send text to Google Translate API |
 | `api.github.com` | Check the GitHub Releases API for new-version notifications (no user data sent) |
