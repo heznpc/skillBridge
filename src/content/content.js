@@ -675,6 +675,13 @@
       }
 
       await translator.loadStaticTranslations(newLang);
+      // A newer switchLanguage() can run while we await the dictionary load
+      // (disk/cache timing resolves loads out of order). currentLang is set
+      // synchronously to the latest request, so if it no longer equals this
+      // call's target the call is stale — bail rather than paint a now-wrong
+      // language over the page. bumpLangGeneration() above guards the verify
+      // queue; this guards the static-apply path it doesn't cover.
+      if (currentLang !== newLang) return;
       sb._gt.applyStaticTranslations(newLang);
       window._sb.updateLocalizedLabels?.();
       if (subtitleManager) subtitleManager.setLanguage(newLang);

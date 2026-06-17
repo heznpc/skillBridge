@@ -283,6 +283,41 @@ async function evalInContentWorld(context, op, arg) {
               await window._sb.switchLanguage(lang);
               return true;
             },
+            // Deterministically reproduce the static-apply language-switch race:
+            // force the FIRST (slow) language's dictionary load to resolve AFTER
+            // the second (fast) one, then record which langs actually reach
+            // applyStaticTranslations. A stale apply (the slow lang painting over
+            // the page after the user already switched) shows up as the slow lang
+            // appearing in `appliedWith`. Patches the translator/gt ONLY for the
+            // duration of the op (restored in finally) — no production change.
+            rapidSwitchRace: async (arg) => {
+              const sb = window._sb;
+              const tr = sb.translator;
+              const gt = sb._gt;
+              const slowLang = arg[0];
+              const fastLang = arg[1];
+              const origLoad = tr.loadStaticTranslations.bind(tr);
+              const origApply = gt.applyStaticTranslations.bind(gt);
+              const appliedWith = [];
+              gt.applyStaticTranslations = (lang) => {
+                appliedWith.push(lang);
+                return origApply(lang);
+              };
+              tr.loadStaticTranslations = async (lang) => {
+                const r = await origLoad(lang);
+                if (lang === slowLang) await new Promise((res) => setTimeout(res, 400));
+                return r;
+              };
+              try {
+                sb.switchLanguage(slowLang); // no await — starts the slow path
+                await sb.switchLanguage(fastLang); // fast path applies first
+                await new Promise((res) => setTimeout(res, 700)); // let the slow load resolve + (bail|apply)
+              } finally {
+                tr.loadStaticTranslations = origLoad;
+                gt.applyStaticTranslations = origApply;
+              }
+              return { appliedWith, currentLang: sb.currentLang };
+            },
             injectSidebar: () => {
               window._sb.injectSidebar();
               return true;
