@@ -11,7 +11,7 @@ SkillBridge is a browser extension that translates the free AI course pages host
 - **User preferences** — Selected language, dark mode, auto-translate settings are saved in `chrome.storage.local`.
 - **Translation cache** — Previously translated text is cached in your browser's IndexedDB (`skillbridge-cache`) for up to 30 days to improve performance. This data never leaves your device.
 - **Conversation history** — AI Tutor chat history is stored in IndexedDB (`skillbridge-tutor`) on your device. This data never leaves your device.
-- **Curated dictionaries** — 570+ hand-curated translation entries per premium language are bundled within the extension package itself.
+- **Curated dictionaries** — 1,100+ hand-curated translation entries per premium language are bundled within the extension package itself.
 
 ## Data Sent to Third-Party Services
 
