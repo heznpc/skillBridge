@@ -628,9 +628,14 @@
       restoreOriginal();
       return;
     }
-    if (Object.keys(translator.staticDict).length === 0) {
-      await translator.loadStaticTranslations(targetLang);
-    }
+    // Always load the TARGET language's dictionary. The old `length === 0` guard
+    // skipped the load whenever ANY dictionary was already populated, so a popup
+    // re-translate to a different language applied the previously-loaded dict.
+    await translator.loadStaticTranslations(targetLang);
+    // Same out-of-order-load guard as switchLanguage(): a newer request may have
+    // run while we awaited; currentLang is the synchronous source of truth for the
+    // latest target, so bail rather than paint a now-stale language.
+    if (currentLang !== targetLang) return;
     sb._gt.applyStaticTranslations(targetLang);
   }
 
@@ -957,6 +962,13 @@
         // never the surrounding marketing shell. null scope = no restriction.
         const scope = sb.translationScope;
         const scoped = scope ? elements.filter((el) => el.closest(scope)) : elements;
+
+        // The freshly-inserted nodes may BE a late-rendered quiz (SPA/AJAX) on a
+        // page whose URL never matched an exam pattern, so detectExamPage() was
+        // false at init. Re-detect here (it checks the quiz DOM shape, which now
+        // exists) so processOneElement's answer-skip chokepoint actually fires —
+        // otherwise late answer choices get translated, cached, and Gemini-verified.
+        if (sb.hostCaps?.examDetection !== false && !sb.isExamPage) sb.isExamPage = sb.detectExamPage();
 
         const gtCandidates = [];
 

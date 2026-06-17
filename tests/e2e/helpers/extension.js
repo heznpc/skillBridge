@@ -309,7 +309,9 @@ async function evalInContentWorld(context, op, arg) {
                 return r;
               };
               try {
-                sb.switchLanguage(slowLang); // no await — starts the slow path
+                // no await — starts the slow path; swallow rejection so a stubbed
+                // load failure can't surface as an unhandled rejection.
+                sb.switchLanguage(slowLang).catch(() => {});
                 await sb.switchLanguage(fastLang); // fast path applies first
                 await new Promise((res) => setTimeout(res, 700)); // let the slow load resolve + (bail|apply)
               } finally {
