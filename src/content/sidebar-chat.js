@@ -740,19 +740,40 @@
     // which point inline scripts had already executed. Sanitize the
     // cloned DOM tree first; serialize the cleaned tree into the new doc.
     const lessonClone = lessonContent.cloneNode(true);
-    const DANGEROUS_TAGS = 'script, iframe, object, embed, link[rel="import"], style';
+    const DANGEROUS_TAGS = 'script, iframe, object, embed, link[rel="import"], style, base, meta';
     lessonClone.querySelectorAll(DANGEROUS_TAGS).forEach((el) => el.remove());
     // Strip the extension's own UI elements that may be inside the lesson.
     lessonClone
       .querySelectorAll('[class*="si18n"], [id*="si18n"], [class*="skillbridge"]')
       .forEach((el) => el.remove());
-    // Strip inline event handlers (onclick, onload, …) that survived as
-    // attributes; cloneNode preserves them.
+    // Strip inline event handlers + dangerous URL schemes from every attribute
+    // (cloneNode preserves both). The scheme check normalizes the value first:
+    // browsers ignore ASCII whitespace + C0 control chars INSIDE a URL scheme, so
+    // "java&#x09;script:" — which the DOM parser has already decoded to a real tab —
+    // resolves to "javascript:" and would slip through a naive /^javascript:/ test.
+    // data: is blocked on NAVIGABLE attributes (href/xlink:href/formaction/action/
+    // ping) but allowed on `src` so legitimate inline data:image content survives.
+    const NAV_URL_ATTRS = new Set(['href', 'xlink:href', 'formaction', 'action', 'ping']);
+    const dangerousScheme = (value, blockData) => {
+      const v = String(value)
+        // Strip the full C0-control + space range: browsers ignore these inside a
+        // URL scheme, so a tab-obfuscated "java\tscript:" collapses to "javascript:"
+        // before the scheme test. Stripping control chars is the point of this rule.
+        // eslint-disable-next-line no-control-regex
+        .replace(/[\u0000-\u0020]+/g, '')
+        .toLowerCase();
+      return /^(?:javascript|vbscript):/.test(v) || (blockData && v.startsWith('data:'));
+    };
     lessonClone.querySelectorAll('*').forEach((el) => {
       for (const attr of [...el.attributes]) {
-        if (attr.name.toLowerCase().startsWith('on')) el.removeAttribute(attr.name);
-        // Reject javascript: URLs.
-        if ((attr.name === 'href' || attr.name === 'src') && /^\s*javascript:/i.test(attr.value)) {
+        const name = attr.name.toLowerCase();
+        if (name.startsWith('on')) {
+          el.removeAttribute(attr.name);
+        } else if (
+          NAV_URL_ATTRS.has(name)
+            ? dangerousScheme(attr.value, true)
+            : name === 'src' && dangerousScheme(attr.value, false)
+        ) {
           el.removeAttribute(attr.name);
         }
       }

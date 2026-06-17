@@ -83,6 +83,9 @@ def hello():
     <iframe id="pdf-xss-iframe" src="about:blank"></iframe>
     <p id="pdf-xss-onclick" onclick="window.__pdfExportXssRan = true">click me</p>
     <a id="pdf-xss-href" href="javascript:window.__pdfExportXssRan = true">js link</a>
+    <a id="pdf-xss-ctrl" href="java&#9;script:window.__pdfExportXssRan = true">ctrl-char link</a>
+    <a id="pdf-xss-xlink" xlink:href="javascript:window.__pdfExportXssRan = true">xlink link</a>
+    <form id="pdf-xss-form" action="#"><button id="pdf-xss-formaction" type="submit" formaction="javascript:window.__pdfExportXssRan = true">submit</button></form>
   </main>
 
   <footer>
