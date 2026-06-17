@@ -13,16 +13,16 @@
  * `_xmlToHtml` is exposed on `_geminiBlock` specifically for this file.
  */
 
-/* global describe, test, expect, beforeAll */
+/* global describe, test, expect, beforeAll, jest */
 
 const fs = require('fs');
 const path = require('path');
 
 const fakeWindow = {};
 const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'gemini-block.js'), 'utf8');
-new Function('window', src)(fakeWindow);
+new Function('window', 'SKILLBRIDGE_MODELS', src)(fakeWindow, { GEMINI: 'gemini-test' });
 
-const { _xmlToHtml: xmlToHtml, hasInlineTags, escapeHtml } = fakeWindow._geminiBlock;
+const { _xmlToHtml: xmlToHtml, hasInlineTags, escapeHtml, queueGeminiBlockTranslation } = fakeWindow._geminiBlock;
 
 // jsdom's document.baseURI defaults to about:blank — fine for our absolute
 // URL checks (http: / https: / mailto: still get a parseable result).
@@ -223,6 +223,42 @@ describe('hasInlineTags', () => {
   test('returns false for empty element', () => {
     const div = document.createElement('div');
     expect(hasInlineTags(div)).toBe(false);
+  });
+});
+
+describe('queueGeminiBlockTranslation — protected terms', () => {
+  test('restores protected terms before writing Gemini block HTML', async () => {
+    fakeWindow._protectedTerms = {
+      getKeepEnglishTerms: () => 'Claude, Anthropic',
+      restoreProtectedTerms: (text) => text.replaceAll('클로드', 'Claude'),
+    };
+
+    const el = document.createElement('p');
+    el.innerHTML = 'Use <strong>Claude</strong> in protected examples.';
+    document.body.appendChild(el);
+
+    const translator = {
+      supportedLanguages: { ko: 'Korean' },
+      _sendRequest: jest.fn().mockResolvedValue('보호된 예시에서 <x1>클로드</x1>를 사용하세요.'),
+      _cacheTranslation: jest.fn(),
+    };
+
+    queueGeminiBlockTranslation(el, 'ko', {
+      translator,
+      originalTexts: new Map(),
+      isLikelyEnglish: () => true,
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(el.innerHTML).toContain('<strong>Claude</strong>');
+    expect(el.innerHTML).not.toContain('클로드');
+    expect(translator._cacheTranslation).toHaveBeenCalledWith(
+      'Use Claude in protected examples.',
+      '보호된 예시에서 Claude를 사용하세요.',
+      'ko',
+    );
   });
 });
 

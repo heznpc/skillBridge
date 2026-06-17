@@ -256,7 +256,7 @@ RULES:
       })
       .then((result) => {
         if (!result) return;
-        const trimmed = result.trim();
+        const trimmed = window._protectedTerms.restoreProtectedTerms(result.trim());
         if (trimmed.length > xml.length * 3) return;
         if (trimmed.includes('SOURCE') || trimmed.includes('RULES:')) return;
         // Refusal guard: if the source had placeholders, the reply must too —
