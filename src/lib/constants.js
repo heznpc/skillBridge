@@ -14,8 +14,13 @@ const SKILLBRIDGE_MODELS = {
 
 // ==================== DEFAULTS ====================
 
-const DEFAULT_PROTECTED_TERMS =
-  'API, SDK, Claude, Anthropic, Claude Code, Cowork, Dispatch, Computer Use, Subagent, Enterprise, Personal, Plugin, skill, SKILL.md, frontmatter';
+// Gemini "keep-English" fallback, used by getKeepEnglishTerms() only when a locale
+// has no _protected keys. Brand/product/file-format proper nouns ONLY — generic
+// concept words (skill, Subagent, Enterprise, Personal, Plugin, Dispatch) were
+// dropped here to match PR #218, which removed them from the per-locale _protected
+// blocks because they are translated natively per locale (see docs/TRANSLATION_RULES.md
+// §1). Keeping them would tell Gemini to keep ordinary words English.
+const DEFAULT_PROTECTED_TERMS = 'API, SDK, Claude, Anthropic, Claude Code, Cowork, Computer Use, SKILL.md, frontmatter';
 
 // YouTube InnerTube client version — update periodically as needed
 // Source of truth: src/shared/constants.json (keep in sync; validated by scripts/check-bg-sync.js)
