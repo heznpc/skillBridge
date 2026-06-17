@@ -114,6 +114,19 @@ test.describe('SkillBridge — PDF export sanitization', () => {
     // 5. No `javascript:` URLs survived as `href` values.
     expect.soft(html).not.toMatch(/href\s*=\s*["']?javascript:/i);
 
+    // 6. Obfuscated / namespaced / form URL schemes are stripped too. The old
+    //    blocklist only tested /^\s*javascript:/ on href|src, so it missed
+    //    control-char obfuscation (java&#9;script:), xlink:href, and formaction.
+    //    Assert the SPECIFIC dangerous attributes were removed from the elements.
+    const stripped = await popup.evaluate(() => ({
+      ctrl: document.getElementById('pdf-xss-ctrl')?.getAttribute('href') ?? null,
+      xlink: document.getElementById('pdf-xss-xlink')?.getAttribute('xlink:href') ?? null,
+      formaction: document.getElementById('pdf-xss-formaction')?.getAttribute('formaction') ?? null,
+    }));
+    expect.soft(stripped.ctrl, 'tab-obfuscated javascript: href must be stripped').toBeNull();
+    expect.soft(stripped.xlink, 'xlink:href javascript: must be stripped').toBeNull();
+    expect.soft(stripped.formaction, 'formaction javascript: must be stripped').toBeNull();
+
     await popup.close();
   });
 });
