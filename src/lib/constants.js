@@ -364,10 +364,12 @@ const BANNER_UI = {
   'zh-TW': { prompt: '將此頁面翻譯為', confirm: '翻譯', dismiss: '關閉' },
   es: { prompt: '¿Traducir esta página a', confirm: 'Traducir', dismiss: 'Cerrar' },
   fr: { prompt: 'Traduire cette page en', confirm: 'Traduire', dismiss: 'Fermer' },
+  it: { prompt: 'Traduci questa pagina in', confirm: 'Traduci', dismiss: 'Chiudi' },
   de: { prompt: 'Diese Seite übersetzen auf', confirm: 'Übersetzen', dismiss: 'Schließen' },
   'pt-BR': { prompt: 'Traduzir esta página para', confirm: 'Traduzir', dismiss: 'Fechar' },
   ru: { prompt: 'Перевести эту страницу на', confirm: 'Перевести', dismiss: 'Закрыть' },
   vi: { prompt: 'Dịch trang này sang', confirm: 'Dịch', dismiss: 'Đóng' },
+  id: { prompt: 'Terjemahkan halaman ini ke', confirm: 'Terjemahkan', dismiss: 'Tutup' },
 };
 
 // Onboarding banner for ALL first-time visitors (including English speakers)
@@ -499,6 +501,12 @@ const EXAMPLE_QUESTIONS = {
     'Quali sono i punti chiave?',
     'Fammi un quiz su questa lezione',
     'Riassumi questa lezione',
+  ],
+  id: [
+    'Jelaskan konsep ini secara sederhana',
+    'Apa poin-poin pentingnya?',
+    'Beri saya kuis tentang pelajaran ini',
+    'Ringkas pelajaran ini',
   ],
 };
 

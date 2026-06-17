@@ -99,6 +99,12 @@ function matchExports(src) {
 let dicts;
 try {
   const names = matchExports(constantsSrc);
+  // matchExports targets the *_LABELS/UI/QUESTIONS/... dicts, but we also need
+  // PREMIUM_LANGUAGE_CODES to derive the expected-language set (below) from the
+  // source of truth instead of a hand-maintained list that goes stale.
+  if (/\bconst PREMIUM_LANGUAGE_CODES\b/.test(constantsSrc) && !names.includes('PREMIUM_LANGUAGE_CODES')) {
+    names.push('PREMIUM_LANGUAGE_CODES');
+  }
   // Both source files reference `window` at the top; provide a stub so the
   // top-level `if (typeof window !== 'undefined')` guards don't trip.
   const runner = new Function('window', `${selectorsSrc}\n${constantsSrc}\nreturn { ${names.join(', ')} };`);
@@ -109,7 +115,16 @@ try {
   process.exit(errors > 0 ? 1 : 0);
 }
 
-const expectedLangs = new Set(['en', 'ko', 'ja', 'zh-CN', 'zh-TW', 'es', 'fr', 'de', 'pt-BR', 'ru', 'vi']);
+// English + every premium-dictionary language. Derived from PREMIUM_LANGUAGE_CODES
+// so it self-updates when a premium locale is added — the previous hand-coded list
+// was en+10 and silently missed the it/id UI labels. Falls back to the full 12 if
+// the constant can't be loaded.
+const PREMIUM_FALLBACK = ['ko', 'ja', 'zh-CN', 'zh-TW', 'es', 'fr', 'it', 'de', 'pt-BR', 'ru', 'vi', 'id'];
+const premiumCodes =
+  Array.isArray(dicts.PREMIUM_LANGUAGE_CODES) && dicts.PREMIUM_LANGUAGE_CODES.length
+    ? dicts.PREMIUM_LANGUAGE_CODES
+    : PREMIUM_FALLBACK;
+const expectedLangs = new Set(['en', ...premiumCodes]);
 
 /**
  * Validate a flat lang map: { en: 'x', ko: 'x', ... }.
