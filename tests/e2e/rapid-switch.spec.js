@@ -133,4 +133,22 @@ test.describe('SkillBridge — rapid language switch race', () => {
     // catches that, but here's the explicit safety net.
     expect.soft(pt.h1, 'H1 must not retain English fragments').not.toContain('Introduction');
   });
+
+  test('a stale dictionary load resolving out of order does NOT paint the previous language', async () => {
+    // The GT-queue race above is guarded by gtGeneration. The static-APPLY path
+    // has a separate window: switchLanguage(slow) awaits its dictionary load while
+    // switchLanguage(fast) runs and applies; if the slow load then resolves it must
+    // NOT call applyStaticTranslations(slow) and paint a now-stale language over the
+    // page. The op forces the slow lang's load to resolve LAST and records which
+    // langs actually reach applyStaticTranslations.
+    await evalInContentWorld(extCtx.context, 'switchLanguage', 'en'); // reset
+    const result = await evalInContentWorld(extCtx.context, 'rapidSwitchRace', ['ko', 'ja']);
+
+    // currentLang settled on the fast/last request.
+    expect(result.currentLang).toBe('ja');
+    // The stale 'ko' apply must NOT have run after the user moved to 'ja'.
+    expect(result.appliedWith, `appliedWith was ${JSON.stringify(result.appliedWith)}`).not.toContain('ko');
+    // ...and the fast lang WAS applied, proving the op exercised the path.
+    expect(result.appliedWith).toContain('ja');
+  });
 });
