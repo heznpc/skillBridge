@@ -693,13 +693,20 @@
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
 
+    // The sidebar mounts in an OPEN shadow root, so document.activeElement returns
+    // the shadow HOST (#skillbridge-root), never the inner element — the trap
+    // comparison would be permanently false and focus would escape the modal.
+    // Read the focused node from the sidebar's own root (the shadow root in
+    // production; document if it is ever light-DOM mounted).
+    const active = sidebar.getRootNode().activeElement;
+
     if (e.shiftKey) {
-      if (document.activeElement === first) {
+      if (active === first) {
         e.preventDefault();
         last.focus();
       }
     } else {
-      if (document.activeElement === last) {
+      if (active === last) {
         e.preventDefault();
         first.focus();
       }
