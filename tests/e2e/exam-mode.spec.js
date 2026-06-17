@@ -110,4 +110,33 @@ test.describe('SkillBridge — exam-mode flow', () => {
     expect(after.answers[2]).toContain('balanced general-purpose model');
     expect(after.answers[3]).toContain('None of the above');
   });
+
+  test('step C: an answer-option inserted AFTER the initial pass (SPA quiz render) stays English', async () => {
+    // step B covers answers present at load (filtered by getTranslatableElements).
+    // This locks the shared chokepoint in processOneElement: a Skilljar quiz that
+    // renders its answers LATE (SPA) must not leak them via the MutationObserver
+    // path. Insert a new .answer-option whose text the GT stub WOULD translate (the
+    // question string — step B showed it becomes Korean), then assert the mutation
+    // observer left it English. Language is already 'ko' from step B.
+    const probe = 'Which model is best suited for fast, high-volume classification tasks?';
+    await page.evaluate((txt) => {
+      const form = document.querySelector('.quiz-form') || document.body;
+      // Mirror the fixture's real answer shape: <label class="answer-option"> — a
+      // <label> matches TRANSLATABLE_SELECTOR (a bare <div> does not, which is why
+      // the shape matters), so the mutation path actually reaches processOneElement.
+      const opt = document.createElement('label');
+      opt.className = 'answer-option';
+      opt.id = 'sb-late-answer';
+      opt.textContent = txt;
+      form.appendChild(opt);
+    }, probe);
+
+    // Let the MutationObserver → debounce → (would-be) GT batch run.
+    await page.waitForTimeout(2500);
+
+    const text = await page.evaluate(() => document.getElementById('sb-late-answer')?.textContent || '');
+    // No Hangul: the late-inserted answer was skipped at the chokepoint, not translated.
+    expect(/[가-힯]/.test(text), `late-inserted answer must stay English (got "${text}")`).toBe(false);
+    expect(text).toContain('high-volume classification');
+  });
 });

@@ -152,6 +152,19 @@
     if (!fullText || fullText.length < 2) return null;
     if (!isLikelyEnglish(fullText)) return null;
 
+    // Exam/quiz safety CHOKEPOINT: never translate answer-choice elements, no
+    // matter which entry path reached us. getTranslatableElements() filters only
+    // the STATIC scan; the DOM-mutation path (content.js debounceTranslateNew) and
+    // the lazy IntersectionObserver call processOneElement() directly on freshly
+    // inserted nodes, so a Skilljar quiz that renders its answers AFTER the initial
+    // pass would otherwise translate them — violating the exam contract and then
+    // caching the leaked text + sending it to Gemini. Bailing here keeps exam text
+    // out of the GT queue, the IndexedDB cache, and the verify path entirely.
+    if (sb.isExamPage) {
+      const examSkip = EXAM_SKIP_SELECTORS.join(', ');
+      if (el.matches(examSkip) || el.closest(examSkip)) return null;
+    }
+
     const originalTexts = sb.originalTexts;
     if (!originalTexts.has(el)) {
       originalTexts.set(el, el.innerHTML);
