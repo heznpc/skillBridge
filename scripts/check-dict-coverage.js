@@ -273,6 +273,40 @@ if (check6Issues === 0) {
   log.pass('All catalog entries are translated everywhere or intentional passthrough everywhere');
 }
 
+// ==================== CHECK 7: protected terms stay English in section values ====================
+// Each dict's `_protected` map keys are the canonical English brand / product /
+// code terms that must survive translation (the runtime restores them). If a
+// curated section uses one of those terms as a KEY, its VALUE must stay English
+// too — otherwise the dictionary ships the very mistranslation _protected exists
+// to undo (e.g. ko translating "Anthropic Academy" → "Anthropic 아카데미", or
+// ja/zh translating the "Skills" platform feature). Per-locale: a term protected
+// in ja need not be protected in de, so each dict is checked against ITS OWN
+// _protected set, which is also why this is false-positive-free.
+
+console.log('\n--- Check 7: protected terms stay English in section values ---');
+let check7Issues = 0;
+for (const lang of languages) {
+  const protectedTerms = new Set(Object.keys(dicts[lang]._protected || {}));
+  if (protectedTerms.size === 0) continue;
+  for (const section of Object.keys(dicts[lang])) {
+    if (SKIP_PARITY_SECTIONS.has(section)) continue; // _meta, _protected
+    const obj = dicts[lang][section];
+    if (!obj || typeof obj !== 'object') continue;
+    for (const [key, value] of Object.entries(obj)) {
+      if (protectedTerms.has(key) && value !== key) {
+        check7Issues++;
+        log.fail(
+          `${lang}: ${JSON.stringify(section)}.${JSON.stringify(key)} = ${JSON.stringify(value)} ` +
+            `translates a _protected term — must stay ${JSON.stringify(key)}`,
+        );
+      }
+    }
+  }
+}
+if (check7Issues === 0) {
+  log.pass('No dictionary translates a term registered in its own _protected map');
+}
+
 // ==================== SUMMARY ====================
 
 console.log(`\n${errors} error(s), ${warnings} warning(s)`);
