@@ -29,10 +29,10 @@
 </head>
 <body>
   <h1>Privacy Policy</h1>
-  <p class="updated"><strong>Last updated:</strong> March 16, 2026</p>
+  <p class="updated"><strong>Last updated:</strong> June 18, 2026</p>
 
   <h2>Overview</h2>
-  <p>SkillBridge is a browser extension that translates the free AI course pages hosted at <a href="https://anthropic.skilljar.com/">anthropic.skilljar.com</a> into 30+ languages and provides an in-page AI learning assistant. It is designed with privacy in mind — SkillBridge does not operate any servers, does not require accounts, and does not use analytics or tracking.</p>
+  <p>SkillBridge is a browser extension that translates the free AI course pages on Skilljar (<a href="https://anthropic.skilljar.com/">anthropic.skilljar.com</a> and other detected Skilljar AI-course tenants) and Claude tutorial pages at <code>claude.com/resources/tutorials</code> into 30+ languages, and provides an in-page AI learning assistant. It is designed with privacy in mind — SkillBridge does not operate any servers, does not require accounts, and does not use analytics or tracking.</p>
 
   <h2>Data Stored Locally (Never Leaves Your Device)</h2>
   <ul>
@@ -70,7 +70,7 @@
   <h2>Data NOT Collected</h2>
   <ul>
     <li>No personal information (name, email, etc.)</li>
-    <li>No browsing history outside of course pages at anthropic.skilljar.com</li>
+    <li>No browsing history outside the pages the extension runs on (Skilljar AI-course pages and <code>claude.com/resources/tutorials</code>)</li>
     <li>No analytics, telemetry, or tracking of any kind</li>
     <li>No advertising or marketing data</li>
   </ul>
@@ -78,12 +78,13 @@
   <h2>Permissions</h2>
   <table>
     <tr><th>Permission</th><th>Purpose</th></tr>
-    <tr><td><code>storage</code></td><td>Save user preferences (selected language, dark mode, auto-translate)</td></tr>
-    <tr><td><code>activeTab</code></td><td>Access the current tab to translate page content</td></tr>
-    <tr><td><code>tabs</code></td><td>Detect navigation events for auto-translation</td></tr>
-    <tr><td><code>*.skilljar.com</code></td><td>Translate course pages at anthropic.skilljar.com</td></tr>
+    <tr><td><code>storage</code></td><td>Save user preferences (selected language, dark mode, auto-translate) and cached translations</td></tr>
+    <tr><td><code>alarms</code></td><td>Run periodic maintenance (cache cleanup, update check) without waking the user</td></tr>
+    <tr><td><code>*.skilljar.com</code></td><td>Translate AI-course pages on Skilljar (anthropic.skilljar.com and other detected Skilljar AI tenants)</td></tr>
+    <tr><td><code>claude.com/resources/tutorials</code></td><td>Translate Claude tutorial pages</td></tr>
     <tr><td><code>*.youtube.com</code></td><td>Auto-activate translated subtitles on course videos</td></tr>
     <tr><td><code>translate.googleapis.com</code></td><td>Send text to Google Translate API</td></tr>
+    <tr><td><code>api.github.com</code></td><td>Check the GitHub Releases API for new-version notifications (no user data sent)</td></tr>
   </table>
 
   <h2>Data Retention</h2>
