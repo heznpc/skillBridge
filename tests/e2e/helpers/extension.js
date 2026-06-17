@@ -452,6 +452,26 @@ async function evalInContentWorld(context, op, arg) {
             // Whether content.js's detectExamPage() flipped isExamPage true.
             // Read via the `_sb.isExamPage` getter content.js exposes.
             examStatus: () => ({ isExamPage: !!(window._sb && window._sb.isExamPage) }),
+            // Whether the YouTube subtitle manager is currently live. Read via
+            // the read-only `_sb.hasSubtitleManager` seam content.js exposes; used
+            // by youtube-lifecycle.spec.js to assert teardown/rebuild on cert nav.
+            subtitleStatus: () => ({ active: !!(window._sb && window._sb.hasSubtitleManager) }),
+            // Open the keyboard-shortcuts help overlay and report its a11y
+            // attributes — used by a11y.spec.js to lock dialog semantics.
+            shortcutsOverlayA11y: () => {
+              window._sb.toggleShortcutsHelp();
+              const panel = document.querySelector('#si18n-shortcuts-overlay .si18n-shortcuts-panel');
+              const title = document.getElementById('si18n-shortcuts-title');
+              const close = document.querySelector('#si18n-shortcuts-overlay .si18n-shortcuts-close');
+              return {
+                role: panel ? panel.getAttribute('role') : null,
+                ariaModal: panel ? panel.getAttribute('aria-modal') : null,
+                ariaLabelledby: panel ? panel.getAttribute('aria-labelledby') : null,
+                titleId: title ? title.id : null,
+                titleText: title ? title.textContent : null,
+                closeAriaLabel: close ? close.getAttribute('aria-label') : null,
+              };
+            },
             // Diagnostic: probe translator IDB cache state directly.
             // Returns the count of entries + the verifyQueue length +
             // whether _db is open. Used by idb-cache.spec.js to verify

@@ -108,10 +108,10 @@
     const overlay = document.createElement('div');
     overlay.id = 'si18n-shortcuts-overlay';
     overlay.innerHTML = `
-      <div class="si18n-shortcuts-panel">
+      <div class="si18n-shortcuts-panel" role="dialog" aria-modal="true" aria-labelledby="si18n-shortcuts-title">
         <div class="si18n-shortcuts-header">
-          <span>${sb.escapeHtml(sb.t(SHORTCUT_LABELS.title))}</span>
-          <button class="si18n-shortcuts-close">&times;</button>
+          <span id="si18n-shortcuts-title">${sb.escapeHtml(sb.t(SHORTCUT_LABELS.title))}</span>
+          <button class="si18n-shortcuts-close" aria-label="${sb.escapeHtml(sb.t(SHORTCUT_LABELS.close))}">&times;</button>
         </div>
         <div class="si18n-shortcuts-body">
           ${SHORTCUTS.map(
