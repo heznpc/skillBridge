@@ -358,4 +358,18 @@ describe('restore engine — substring/boundary safety', () => {
     buildProtectedTermsMap('ko', fakeTranslator({ Claude: ['클로드'] }));
     expect(restoreProtectedTerms('클로드는 유용합니다')).toBe('Claude는 유용합니다');
   });
+
+  test('CJK interpunct guard — a foreign person name (Claude Monet) is NOT corrupted', () => {
+    // 克洛德 = both "Claude" (product) AND the given name of 克洛德·莫奈 (Claude Monet).
+    // The middle dot (·/・) marks a foreign-name boundary, so the restore must skip it.
+    buildProtectedTermsMap('zh-CN', fakeTranslator({ Claude: ['克洛德', '克劳德'] }));
+    expect(restoreProtectedTerms('克洛德·莫奈是印象派画家')).toBe('克洛德·莫奈是印象派画家');
+    buildProtectedTermsMap('ja', fakeTranslator({ Claude: ['クロード'] }));
+    expect(restoreProtectedTerms('クロード・モネは画家です')).toBe('クロード・モネは画家です');
+  });
+
+  test('CJK interpunct guard — the standalone product term still restores', () => {
+    buildProtectedTermsMap('zh-CN', fakeTranslator({ Claude: ['克洛德'] }));
+    expect(restoreProtectedTerms('克洛德是一个 AI 助手')).toBe('Claude是一个 AI 助手');
+  });
 });
