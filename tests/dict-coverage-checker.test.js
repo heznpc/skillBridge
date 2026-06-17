@@ -119,6 +119,34 @@ describe('check-dict-coverage.js — fault injection', () => {
     }
   });
 
+  test('Check 6 fails when a catalog entry is translated in some dicts but English in others', () => {
+    const tmpDir = makeMutatedDataDir((d) => {
+      // Regress one locale's catalog course title back to its English key while
+      // the others keep their translation — the exact partial-translation shape
+      // that left Bedrock/Vertex titles English in 7 of 12 catalogs.
+      const key = 'Claude with Amazon Bedrock';
+      d.ko.catalog[key] = key;
+    });
+    try {
+      const r = run({ SB_DICT_DIR_OVERRIDE: tmpDir });
+      expect(r.code).toBe(1);
+      expect(r.out).toMatch(/Check 6/);
+      expect(r.out).toMatch(/Amazon Bedrock/);
+      expect(r.out).toMatch(/partial translation/);
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  test('Check 6 does NOT flag a catalog entry that is passthrough in every dict', () => {
+    // "Claude 101" is value==key in all 12 dicts by design (proper noun). The
+    // check must treat uniform passthrough as correct, not partial translation.
+    const r = run({});
+    expect(r.code).toBe(0);
+    expect(r.out).toContain('Check 6');
+    expect(r.out).toContain('0 error(s)');
+  });
+
   test('_protected key divergence between languages is allowed (NOT flagged)', () => {
     const tmpDir = makeMutatedDataDir((d) => {
       d.ko._protected['Brand-new-Korean-only-wrong-form'] = 'Claude';
