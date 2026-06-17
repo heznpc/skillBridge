@@ -28,6 +28,7 @@
 - [ ] Page translates after selecting language
 - [ ] Switch to English restores original
 - [ ] Protected terms stay in English
+- [ ] Dictionary edits follow [docs/TRANSLATION_RULES.md](../docs/TRANSLATION_RULES.md) — values-not-keys, the `_protected` prose-collision test, concept-vs-product-name
 
 **AI Tutor**
 - [ ] Sidebar opens, streaming response works
