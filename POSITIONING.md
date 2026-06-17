@@ -129,7 +129,7 @@ the needle on completion, not just translation surface area.
 1. **Timing window**. Academy is 2.5 months old. The narrative "if you want
    to finish Academy in your language, install SkillBridge" is still up
    for grabs. In 3–6 months it gets harder to dislodge an incumbent.
-2. **Defensible moat**. 570+ hand-curated terms × 11 premium languages,
+2. **Defensible moat**. 1,100+ hand-curated terms × 12 premium languages,
    plus mother-language AI tutoring that knows the current lesson, is the
    asset competitors won't replicate. They optimize for breadth (any-site
    translation); we optimize for a niche they have no incentive to serve.
