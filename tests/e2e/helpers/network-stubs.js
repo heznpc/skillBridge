@@ -102,7 +102,10 @@ const GT_KO = {
   // `# This is a Claude prompt example` comment gets translated by
   // translateCodeComments — the line's leading `# ` is preserved
   // automatically by the regex, only the trimmed text reaches GT.
-  'This is a Claude prompt example': 'Claude 프롬프트 예시',
+  // Deliberately mistranslate "Claude" here as well: code-comments.js is a
+  // separate write path from the main GT queue, so it must run protected-term
+  // restoration on its own before splicing the translated comment into HTML.
+  'This is a Claude prompt example': '클로드 프롬프트 예시',
   // Cache E2E (tests/e2e/idb-cache.spec.js). The string is deliberately
   // NOT in any static dictionary so the first lookup misses → GT call;
   // the second lookup must hit the IDB cache the verify queue wrote.

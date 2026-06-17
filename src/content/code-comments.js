@@ -99,8 +99,10 @@
       if (result.text === match[1].trim() || result.source === 'original') continue;
       hasTranslation = true;
 
-      // Escape before splicing into innerHTML — GT output is untrusted text.
-      const safeText = sb.escapeHtml(result.text);
+      // Restore protected brand/API terms before escaping and splicing into
+      // innerHTML — code-comment translation bypasses the main GT queue.
+      const restored = window._protectedTerms.restoreProtectedTerms(result.text);
+      const safeText = sb.escapeHtml(restored);
 
       let replacement;
       if (type === 'line') {
@@ -126,6 +128,7 @@
    */
   async function translateCodeComments(targetLang) {
     if (!sb.translator || targetLang === 'en') return;
+    window._protectedTerms.buildProtectedTermsMap(targetLang, sb.translator);
     // Honour the per-host content scope (e.g. claude.com tutorials) so code
     // comments in the surrounding marketing shell are never translated.
     const scope = sb.translationScope;
