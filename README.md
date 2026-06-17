@@ -59,7 +59,7 @@ Generic translators make it worse, not better:
 | | Google Translate (page) | SkillBridge |
 |---|---|---|
 | AI terminology | ❌ "Prompt" → "신속한" (wrong) | ✅ "Prompt" → "프롬프트" (correct) |
-| Technical accuracy | ❌ Generic machine translation | ✅ 570+ curated terms + AI verification |
+| Technical accuracy | ❌ Generic machine translation | ✅ 1,100+ curated terms + AI verification |
 | Context-aware help | ❌ None | ✅ AI tutor answers questions about the lesson |
 | Video subtitles | ❌ Separate manual toggle | ✅ Auto-translated subtitles |
 | UI preservation | ❌ Breaks checkboxes, progress bars | ✅ All interactive elements preserved |
@@ -189,7 +189,7 @@ SkillBridge uses a **multi-stage translation engine** that prioritizes speed and
 ```
 Page text
   │
-  ├─ 570+ curated term dictionary ──→ Instant (AI terms translated correctly)
+  ├─ 1,100+ curated term dictionary ──→ Instant (AI terms translated correctly)
   │
   ├─ Local cache (IndexedDB) ───────→ Instant (previously verified)
   │
@@ -214,7 +214,7 @@ Translating a whole course page on every navigation has to be fast *and* correct
 
 **Reliability & safety are designed in, not bolted on.**
 - **Exam-safe by default** — on proctored certification exams the extension *disables itself entirely*, and on quizzes answer choices are never translated. A learning aid must not be mistakable for a cheating tool.
-- **Invariants over hope** — brand/tech terms ("Claude", "Cowork", "Subagent") are protected by a dictionary and restored *after* machine translation, rather than trusting the translator to leave them alone.
+- **Invariants over hope** — brand/product terms ("Claude", "Cowork", "Agent Skills") are protected by a dictionary and restored *after* machine translation, rather than trusting the translator to leave them alone. (Generic concept words like "subagent" are translated natively per locale — see [docs/TRANSLATION_RULES.md](docs/TRANSLATION_RULES.md).)
 - **Guarding against external drift** — the target site is a third party we don't control, so CI watchers detect when the platform adds a course or changes its DOM selectors and open an issue automatically, instead of letting users hit silent breakage.
 - **Defensive content scripts** — idempotent injection guards and URL polling, because the host app navigates via SPA (content scripts can fire more than once — or not at all — per navigation).
 
@@ -231,21 +231,22 @@ The full "things we will not do" list is kept public on purpose in [POSITIONING.
 
 | Language | Code | Dictionary |
 |----------|------|------------|
-| 🇰🇷 한국어 (Korean) | `ko` | 570+ entries |
-| 🇯🇵 日本語 (Japanese) | `ja` | 570+ entries |
-| 🇨🇳 中文简体 (Chinese Simplified) | `zh-CN` | 570+ entries |
-| 🇹🇼 中文繁體 (Chinese Traditional) | `zh-TW` | 570+ entries |
-| 🇪🇸 Español (Spanish) | `es` | 570+ entries |
-| 🇫🇷 Français (French) | `fr` | 570+ entries |
-| 🇮🇹 Italiano (Italian) | `it` | 570+ entries (re-translated from English; native review welcome) |
-| 🇩🇪 Deutsch (German) | `de` | 570+ entries |
-| 🇧🇷 Português (Brazilian) | `pt-BR` | 570+ entries |
-| 🇷🇺 Русский (Russian) | `ru` | 570+ entries |
-| 🇻🇳 Tiếng Việt (Vietnamese) | `vi` | 570+ entries |
+| 🇰🇷 한국어 (Korean) | `ko` | 1,100+ entries |
+| 🇯🇵 日本語 (Japanese) | `ja` | 1,100+ entries |
+| 🇨🇳 中文简体 (Chinese Simplified) | `zh-CN` | 1,100+ entries |
+| 🇹🇼 中文繁體 (Chinese Traditional) | `zh-TW` | 1,100+ entries |
+| 🇪🇸 Español (Spanish) | `es` | 1,100+ entries |
+| 🇫🇷 Français (French) | `fr` | 1,100+ entries |
+| 🇮🇹 Italiano (Italian) | `it` | 1,100+ entries (re-translated from English; native review welcome) |
+| 🇩🇪 Deutsch (German) | `de` | 1,100+ entries |
+| 🇧🇷 Português (Brazilian) | `pt-BR` | 1,100+ entries |
+| 🇷🇺 Русский (Russian) | `ru` | 1,100+ entries |
+| 🇻🇳 Tiếng Việt (Vietnamese) | `vi` | 1,100+ entries |
+| 🇮🇩 Bahasa Indonesia | `id` | 1,100+ entries |
 
 ### Standard — Google Translate + AI Verification
 
-🇵🇹 Português (PT) · 🇳🇱 Nederlands · 🇵🇱 Polski · 🇺🇦 Українська · 🇨🇿 Čeština · 🇸🇪 Svenska · 🇩🇰 Dansk · 🇫🇮 Suomi · 🇳🇴 Norsk · 🇹🇷 Türkçe · 🇸🇦 العربية · 🇮🇳 हिन्दी · 🇹🇭 ภาษาไทย · 🇮🇩 Bahasa Indonesia · 🇲🇾 Bahasa Melayu · 🇵🇭 Filipino · 🇧🇩 বাংলা · 🇮🇱 עברית · 🇷🇴 Română · 🇭🇺 Magyar · 🇬🇷 Ελληνικά
+🇵🇹 Português (PT) · 🇳🇱 Nederlands · 🇵🇱 Polski · 🇺🇦 Українська · 🇨🇿 Čeština · 🇸🇪 Svenska · 🇩🇰 Dansk · 🇫🇮 Suomi · 🇳🇴 Norsk · 🇹🇷 Türkçe · 🇸🇦 العربية · 🇮🇳 हिन्दी · 🇹🇭 ภาษาไทย · 🇲🇾 Bahasa Melayu · 🇵🇭 Filipino · 🇧🇩 বাংলা · 🇮🇱 עברית · 🇷🇴 Română · 🇭🇺 Magyar · 🇬🇷 Ελληνικά
 
 > Want to add your language as Premium? Contribute a curated dictionary — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -254,7 +255,7 @@ The full "things we will not do" list is kept public on purpose in [POSITIONING.
 New Academy content is covered by a standing pipeline, not by hand-checking:
 a CI watcher polls the live catalog twice a day and **fails loudly + opens an
 issue** the moment a course appears that the dictionaries don't cover; the
-course gets wired into all 11 premium dictionaries; structural CI gates
+course gets wired into all 12 premium dictionaries; structural CI gates
 (`check:i18n`, `check:dict-coverage`, `check:locales`) and a real-dictionary
 regression suite guard every merge after that. Proven turnaround: on
 **2026-06-10** the watcher flagged the brand-new *Claude Platform 101* course
@@ -307,9 +308,9 @@ See our full [Privacy Policy](PRIVACY_POLICY.md).
 | Page Translation | Google Translate API |
 | Inline Tag Translation | Gemini 2.0 Flash (preserves `<strong>`, `<a>`, `<code>`) |
 | Quality Verification | Gemini 2.0 Flash via [Puter.js](https://docs.puter.com/) |
-| Protected Terms | Auto-correction of GT brand/tech term errors per language (Cowork, Dispatch, Computer Use, Subagent, etc.) |
+| Protected Terms | Auto-correction of GT brand/product term errors per language (Claude, Cowork, Computer Use, Agent Skills, etc.) |
 | AI Tutor | Claude Sonnet 4.6 via Puter.js |
-| Curated Dictionaries | Hand-tuned JSON (570+ × 11 languages) |
+| Curated Dictionaries | Hand-tuned JSON (1,100+ × 12 languages) |
 | Translation Cache | IndexedDB |
 | CJK Font Rendering | Google Fonts Noto Sans |
 
@@ -341,7 +342,7 @@ No. SkillBridge uses Google Translate (public API) and Puter.js (free tier) for 
 <details>
 <summary><strong>Why does my language show as "Standard" instead of "Premium"?</strong></summary>
 
-Premium languages have a hand-curated dictionary (570+ entries) that catches AI/ML term mistranslations. Standard languages rely on Google Translate + Gemini verification, which is still quite good. Want to promote your language? Contribute a dictionary — see <a href="CONTRIBUTING.md">CONTRIBUTING.md</a>.
+Premium languages have a hand-curated dictionary (1,100+ entries) that catches AI/ML term mistranslations. Standard languages rely on Google Translate + Gemini verification, which is still quite good. Want to promote your language? Contribute a dictionary — see <a href="CONTRIBUTING.md">CONTRIBUTING.md</a>.
 </details>
 
 <details>

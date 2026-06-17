@@ -144,12 +144,18 @@ skillbridge/
 
 **This is the single most impactful way to contribute.** You don't need to write any code — just edit a JSON file in your native language. Each dictionary improvement instantly helps every learner using that language.
 
+> 📐 **One read before you start: [docs/TRANSLATION_RULES.md](docs/TRANSLATION_RULES.md).**
+> It's the short rulebook for editing dictionaries — values-not-keys, the
+> concept-vs-product-name line, the `_protected` prose-collision test, and the
+> "don't guess framework terms" rule. Every rule there exists because breaking it has
+> silently corrupted real on-page text at least once.
+
 #### How the Dictionary Works
 
 Each language has a JSON file (`src/data/{lang}.json`) organized into sections:
 
 ```
-src/data/ko.json (Korean example — 570+ entries)
+src/data/ko.json (Korean example — 1,100+ entries; 12 premium locales, key-parity enforced)
 ├── _meta          → version info (don't edit)
 ├── ui             → navigation: "Next", "Previous", "Courses"
 ├── catalog        → course titles and descriptions (incl. Cowork, subagents, MCP Advanced)
@@ -159,7 +165,7 @@ src/data/ko.json (Korean example — 570+ entries)
 ├── aiFluency      → AI Fluency course content
 ├── faq            → FAQ page content
 ├── common         → shared terms: "Overview", "Submit", Cowork, Dispatch, etc.
-└── _protected     → terms GT mistranslates (incl. Cowork, Computer Use, Subagent)
+└── _protected     → GT mistranslations to auto-correct (rules: docs/TRANSLATION_RULES.md §2)
 ```
 
 > **How matching works:** The extension tries to match the **exact English text** of each element on the page against dictionary keys. If found, the curated translation is used instantly — no Google Translate, no delay. For text not in the dictionary, the system falls back to Google Translate → Gemini AI verification.
@@ -194,18 +200,25 @@ The most effective way to improve quality: browse any Anthropic Academy course p
 
 #### c) Fix Protected Terms — 🛡️ Stop GT from Breaking Brand Names
 
-The `_protected` section maps **correct English** → **known GT mistranslations**. After GT translates a sentence, the extension replaces these known errors with the correct term:
+The `_protected` section maps **correct English** → **known GT mistranslations**. After GT translates a sentence, the extension rewrites these known errors back to the correct term:
 
 ```json
 "_protected": {
-  "Claude Code": ["클로드 코드", "클로드 Code"],   // Korean
-  "Claude": ["クロード"],                          // Japanese
-  "Enterprise": ["企业"],                          // Chinese
-  "skill": ["기술", "스킬"]                         // Korean
+  "Claude Code": ["클로드 코드", "클로드 Code"],   // Korean — pure GT artifacts
+  "Claude": ["클로드"],                            // Korean — phonetic transliteration
+  "Cowork": ["코워크"]                             // Korean — a coined GT calque
 }
 ```
 
-If you notice GT consistently translating a brand/technical term wrong in your language, add the wrong form to the `_protected` section. The extension will auto-correct it after GT runs.
+> ⚠️ **`_protected` is a loaded gun.** Every wrong-form is rewritten **everywhere it
+> appears** on the page, so a wrong-form that is *also a real word or name* in your
+> language will corrupt legitimate prose. That is why `"skill": ["기술"]` and
+> `"Claude": ["Claudio"]` were **removed** — 기술 is the ordinary word for "skill" and
+> Claudio is a real given name. **Before adding any wrong-form, read
+> [docs/TRANSLATION_RULES.md](docs/TRANSLATION_RULES.md) §2 and apply the
+> prose-collision test:** *"can this string ever appear in correct prose as something
+> other than a mangled brand?"* If yes, don't add it — use a self-referential entry
+> (`"Claude": ["Claude"]`) instead of a risky mapping.
 
 #### d) Create a New Premium Language — 🏆 Big Impact
 
@@ -213,7 +226,7 @@ Want to promote a standard language (GT-only) to premium? Create `src/data/{lang
 
 1. Copy `src/data/ko.json` as a template
 2. Translate all entries into your language
-3. Adapt the `_protected` section with GT mistakes specific to your language
+3. Adapt the `_protected` section — GT mistakes specific to your language, **following [docs/TRANSLATION_RULES.md](docs/TRANSLATION_RULES.md) §2** (apply the prose-collision test to every wrong-form so you don't corrupt real prose)
 4. Add the language code to `PREMIUM_LANGUAGES` in `src/lib/constants.js`
 5. Test on actual Anthropic Academy pages
 6. Submit a PR — native speaker review is required

@@ -8,10 +8,10 @@ This doc is honest about what each layer does **and does not** guarantee.
 
 | Gate | Catches |
 |---|---|
-| `check:i18n` / `check:dict-coverage` | Key/section parity across all 11 dictionaries, `_meta.version` sync with the manifest |
+| `check:i18n` / `check:dict-coverage` | Key/section parity across all 12 dictionaries, `_meta.version` sync with the manifest |
 | `check:locales` | Cross-locale contamination — any locale sharing >8% of its long strings with another (the bug class behind the 2026-06 "Italian was 51% Spanish" incident) |
 | `check:glossary` / `validate` | `_protected` structure, value types, possibly-untranslated heuristics |
-| `tests/protected-terms.test.js` | Real-dictionary regression: ordinary prose in **all 11 locales** must survive protected-term restoration uncorrupted |
+| `tests/protected-terms.test.js` | Real-dictionary regression: ordinary prose in **all 12 locales** must survive protected-term restoration uncorrupted (incl. the CJK foreign-name interpunct guard — "克洛德·莫奈" stays intact) |
 | Academy drift watcher (cron, 2×/day) | A live course slug missing from `FLASHCARD_COURSE_MAP` — fails the run and auto-opens an issue |
 
 **Does not catch:** a translation that is structurally valid but semantically
