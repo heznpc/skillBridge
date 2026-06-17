@@ -139,4 +139,57 @@ test.describe('SkillBridge — exam-mode flow', () => {
     expect(/[가-힯]/.test(text), `late-inserted answer must stay English (got "${text}")`).toBe(false);
     expect(text).toContain('high-volume classification');
   });
+
+  test('step D: a quiz answer that renders LATE on a NON-exam URL re-trips exam mode and stays English', async () => {
+    // Steps A–C all run on /quiz, where detectExamPage trips on the URL at init,
+    // so isExamPage is already true before any answer is processed. They never
+    // exercise the OTHER chokepoint entry: a lesson on a plain (non-exam) URL whose
+    // quiz answers render AFTER the language switch. applyStaticTranslations re-detects
+    // exam mode, but only at switch time — by then this page has no quiz DOM, so it
+    // stays false. The mutation path (debounceTranslateNew) is the ONLY thing that can
+    // re-detect for answers inserted later; without that re-detect the chokepoint never
+    // fires and the answer leaks (translated, cached, Gemini-verified). This locks it.
+    await page.goto(`${fixture.baseUrl}/lesson`);
+    const deadline = Date.now() + 15_000;
+    while (Date.now() < deadline) {
+      const snap = await evalInContentWorld(extCtx.context, 'snapshot');
+      if (snap?.init && snap?.sb && snap?.methods?.gt) break;
+      await page.waitForTimeout(200);
+    }
+    // Precondition: a plain /lesson URL is NOT exam-detected at init. This is exactly
+    // what makes the mutation-path re-detect load-bearing — there is no URL signal.
+    const pre = await evalInContentWorld(extCtx.context, 'examStatus');
+    expect(pre.isExamPage, 'a /lesson URL must NOT be exam-detected at init').toBe(false);
+
+    // Switch to Korean and let applyStaticTranslations settle while the page still has
+    // NO quiz DOM — so its re-detect sees nothing and isExamPage stays false.
+    await evalInContentWorld(extCtx.context, 'switchLanguage', 'ko');
+    await page.waitForTimeout(1500);
+
+    // Now the quiz renders (SPA/AJAX). Use a string the GT stub DOES translate to
+    // Hangul ('Introduction to Claude' → 'Claude 소개'); an unknown string would come
+    // back as a non-Hangul [UNTRANSLATED:…] marker and false-pass the no-Hangul check.
+    await page.evaluate(() => {
+      const root = document.getElementById('lesson-main') || document.body;
+      const form = document.createElement('form');
+      form.className = 'quiz-form';
+      const opt = document.createElement('label');
+      opt.className = 'answer-option';
+      opt.id = 'sb-nonexam-answer';
+      opt.textContent = 'Introduction to Claude';
+      form.appendChild(opt);
+      root.appendChild(form);
+    });
+
+    // Let the MutationObserver → debounce → re-detect → (would-be) GT batch run.
+    await page.waitForTimeout(2500);
+
+    const text = await page.evaluate(() => document.getElementById('sb-nonexam-answer')?.textContent || '');
+    const post = await evalInContentWorld(extCtx.context, 'examStatus');
+    // The mutation path must have re-tripped exam mode from the freshly-rendered DOM…
+    expect(post.isExamPage, 'late quiz DOM must re-trip exam mode via the mutation path').toBe(true);
+    // …and skipped the answer at the chokepoint, leaving it English (no Hangul).
+    expect(/[가-힯]/.test(text), `non-exam-URL late answer must stay English (got "${text}")`).toBe(false);
+    expect(text).toBe('Introduction to Claude');
+  });
 });
