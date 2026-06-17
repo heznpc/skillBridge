@@ -95,8 +95,9 @@ narrowed.
 - ~~**CWS listing — multilingual translations.**~~ Dropped (v3.5.39): the CWS
   listing is English-only. Every locale falls back to EN, and hand-maintaining
   parallel localized listings caused drift (#158) for marginal per-market gain.
-  The extension UI stays localized in 11 languages; only the store metadata is
-  EN-only.
+  The in-product UI stays localized in 12 premium languages (and the browser-facing
+  extension name/description in the 33 `_locales/` Chrome-metadata locales); only the
+  Chrome Web Store *listing copy* (screenshots / long description) is EN-only.
 - [ ] **YouTube `_BG_YT_CLIENT_VERSION` auto-bump GH Action.** Currently
   manual every few weeks (see comment in `src/background/background.js`).
   Cron workflow that pings InnerTube and opens a PR when stale. Same

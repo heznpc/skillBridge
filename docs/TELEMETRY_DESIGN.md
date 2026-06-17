@@ -178,7 +178,7 @@ Approximate scope when this is approved:
 2. `src/background/background.js`: wire `chrome.runtime.onInstalled` + `chrome.runtime.setUninstallURL`, hook the global `self.addEventListener('error', ...)` for service worker errors.
 3. `src/content/content.js`: hook `window.addEventListener('error', ...)` and `window.addEventListener('unhandledrejection', ...)` — gated behind opt-in flag.
 4. `src/popup/popup.html` + `popup.js`: two new toggles, "Delete my data" button, "What we collect" link to privacy policy.
-5. `_locales/*/messages.json`: 11 premium-language strings for the new popup copy. **POSITIONING operating-principle gate**: "default reject" for new UI without all-11-language coverage.
+5. `_locales/*/messages.json`: new popup-copy strings (browser-metadata layer, all 33 `_locales/`). **POSITIONING operating-principle gate**: "default reject" for new in-product UI without all-12-premium-language coverage in the `src/lib/constants.js` `_LABELS` dicts.
 6. `docs/privacy.html`: the rewrite above.
 7. `tests/lib/telemetry.test.js`: ~10 unit tests covering payload sanitization, regex stripping, slug-hash determinism, opt-out clears `client_id`.
 8. `tests/e2e/telemetry.spec.js`: 1 scenario — toggle on, trigger an error, intercept the POST, assert payload shape and excluded-fields.

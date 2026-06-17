@@ -24,7 +24,7 @@ REDACTED — internal only, never on any public surface.)
   note the earlier "Europe-led / Korean ~0 / US minor" read was **wrong**: the US
   is a **top-2 market** and Korea is mid-pack (~#6), not negligible. Default
   framing is global / English-default — a single English CWS listing (ko/ja store
-  listings were dropped; the in-product UI stays localized in 11 languages). If a
+  listings were dropped; the in-product UI stays localized in 12 premium languages). If a
   localized listing is ever revisited, Japanese and Korean (each ~#6 by
   language/region) are the first candidates — not a priority now.
 - **Why Italy is #1 — a verified organic-referral mechanism** (web-verified
@@ -328,7 +328,7 @@ Once #1–#2 are cleared:
 - If a PR meaningfully improves the AI tutor's contextual awareness of
   the current lesson, default ship.
 - If a PR ships a new feature without updating the relevant `_LABELS`
-  dict to cover all 11 premium languages, default reject (we don't ship
+  dict to cover all 12 premium languages, default reject (we don't ship
   English-only UI in a "translate this for non-English speakers"
   product).
 - If two PRs conflict and one has measurable Korean-user impact, the
