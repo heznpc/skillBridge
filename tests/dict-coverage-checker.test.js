@@ -147,6 +147,41 @@ describe('check-dict-coverage.js — fault injection', () => {
     expect(r.out).toContain('0 error(s)');
   });
 
+  test('Check 7 fails when a dict translates a term in its own _protected map', () => {
+    const tmpDir = makeMutatedDataDir((d) => {
+      // ko's _protected map registers "Anthropic Academy" as a canonical English
+      // brand term. Translating it in a section is the exact inconsistency Check 7
+      // guards — the dict shipping the very mistranslation _protected exists to undo.
+      d.ko.ui['Anthropic Academy'] = 'Anthropic 아카데미';
+    });
+    try {
+      const r = run({ SB_DICT_DIR_OVERRIDE: tmpDir });
+      expect(r.code).toBe(1);
+      expect(r.out).toMatch(/Check 7/);
+      expect(r.out).toMatch(/Anthropic Academy/);
+      expect(r.out).toMatch(/_protected/);
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  test('Check 7 does NOT flag a translated term that is not protected in that locale', () => {
+    const tmpDir = makeMutatedDataDir((d) => {
+      // "Skills" is NOT in de's _protected (only ja/ko/zh), so de translating the
+      // platform "Skills" entry must NOT trip Check 7 — protection is per-locale.
+      if (d.de.claudePlatform && 'Skills' in d.de.claudePlatform) {
+        d.de.claudePlatform.Skills = 'Fähigkeiten';
+      }
+    });
+    try {
+      const r = run({ SB_DICT_DIR_OVERRIDE: tmpDir });
+      // de translating a non-(de-)protected term is allowed; no Check 7 error.
+      expect(r.out).not.toMatch(/de:.*Skills.*_protected/);
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
   test('_protected key divergence between languages is allowed (NOT flagged)', () => {
     const tmpDir = makeMutatedDataDir((d) => {
       d.ko._protected['Brand-new-Korean-only-wrong-form'] = 'Claude';
