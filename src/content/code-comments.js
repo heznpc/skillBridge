@@ -106,7 +106,9 @@
 
       let replacement;
       if (type === 'line') {
-        replacement = match[0].replace(match[1], safeText);
+        // Function replacement so `$`-sequences in the translated text ($&, $1,
+        // $`, …) are inserted literally, not interpreted by String.replace.
+        replacement = match[0].replace(match[1], () => safeText);
       } else {
         const opening = match[0].substring(0, match[0].indexOf(match[1]));
         const closing = match[0].substring(match[0].indexOf(match[1]) + match[1].length);
