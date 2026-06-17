@@ -72,7 +72,12 @@ test.describe('SkillBridge — PDF export sanitization', () => {
     // PDF export now lives in the consolidated "Tools" menu, so open it first
     // (the button is hidden until the menu is expanded).
     await page.click('#si18n-tools-btn');
-    const [popup] = await Promise.all([page.waitForEvent('popup', { timeout: 5_000 }), page.click('#si18n-pdf-btn')]);
+    // Wait for the PDF button to actually be visible before racing the popup —
+    // the Tools menu expands via a transition, and clicking before it settles
+    // can no-op (no window.open → popup never fires). The 5s popup timeout was
+    // also too tight under headless CI load; 15s matches the suite's other waits.
+    await page.waitForSelector('#si18n-pdf-btn', { state: 'visible', timeout: 5_000 });
+    const [popup] = await Promise.all([page.waitForEvent('popup', { timeout: 15_000 }), page.click('#si18n-pdf-btn')]);
     expect(popup, 'window.open must spawn a popup').toBeTruthy();
     // Give document.write a beat to land.
     await popup.waitForLoadState('domcontentloaded').catch(() => {});
