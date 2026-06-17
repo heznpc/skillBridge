@@ -48,29 +48,29 @@
         map[wrong] = correct;
       }
     }
-    // Sort longest-first AND precompile a Unicode letter-boundary matcher per
-    // wrong-form: `(?<!\p{L})form(?!\p{L})` stops a form from matching INSIDE a
-    // longer word in ANY script — Latin "Claudio" inside "Claudios", CJK "기술"
-    // (skill) inside "기술자" (technician) — the substring-corruption class the
-    // old blanket replaceAll could not avoid. Falls back to plain replaceAll if
-    // a form can't compile into a valid regex.
+    // Sort longest-first AND precompile a per-wrong-form matcher whose boundary
+    // rule depends on script (see the branch below): Latin/Cyrillic use a Unicode
+    // letter boundary so a form never matches inside a longer word ("Claudio" in
+    // "Claudios"); CJK/Kana/Hangul instead guard against a foreign-name interpunct
+    // so a person name like Claude Monet keeps its rendering. Falls back to plain
+    // replaceAll only if a form can't compile into a valid regex.
     _protectedTermsSorted = Object.entries(map)
       .sort((a, b) => b[0].length - a[0].length)
       .map(([wrong, correct]) => {
-        let re = null;
-        // Letter-boundary anchoring is only safe for space-separated scripts
-        // (Latin/Cyrillic/Greek/…). CJK + Kana + Hangul have NO word separators,
-        // so a protected term is routinely adjacent to particles/ideographs even
-        // when it SHOULD be restored — anchoring there would BREAK legitimate
-        // restoration. For CJK forms keep the literal replaceAll; their compound
-        // corruption stays a per-dictionary data concern (check-glossary flags it).
+        let re;
         const isCJK = /[぀-ヿ㐀-鿿가-힯豈-﫿ｦ-ￜ]/.test(wrong);
-        if (!isCJK) {
-          try {
-            re = new RegExp('(?<!\\p{L})' + wrong.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?!\\p{L})', 'gu');
-          } catch (_e) {
-            re = null; // invalid form → fall back to literal replaceAll below
-          }
+        const escaped = wrong.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        try {
+          // CJK/Kana/Hangul: NO letter boundary (would block 클로드는 → Claude는);
+          // instead guard against a foreign-name interpunct (·/・/･/‧) on either
+          // side, so "克洛德·莫奈" / "クロード・モネ" (Claude Monet) keep the person name
+          // while standalone product "克洛德" still restores. Space-separated names
+          // (ko/ru) are not covered. Latin/Cyrillic/… use a Unicode letter boundary.
+          re = isCJK
+            ? new RegExp('(?<![\\u00B7\\u30FB\\uFF65\\u2027])' + escaped + '(?![\\u00B7\\u30FB\\uFF65\\u2027])', 'gu')
+            : new RegExp('(?<!\\p{L})' + escaped + '(?!\\p{L})', 'gu');
+        } catch (_e) {
+          re = null; // invalid form → fall back to literal replaceAll below
         }
         return { wrong, correct, re };
       });
@@ -94,13 +94,15 @@
   /**
    * Fix mistranslated protected terms in the given text.
    *
-   * Matching is Unicode letter-boundary-anchored (see buildProtectedTermsMap),
-   * so a wrong-form no longer corrupts a longer word that merely CONTAINS it
-   * (Latin "subagen" in "subagent", CJK "기술"/skill in "기술자"/technician).
-   * What anchoring CANNOT resolve is a wrong-form that is a legitimate STANDALONE
-   * word in the target language (e.g. "Claudio" is both GT's mistranslation of
-   * "Claude" AND a real Italian name) — those must be removed from the
-   * per-language `_protected` block; check-glossary flags the worst offenders.
+   * Matching is script-aware (see buildProtectedTermsMap): Latin/Cyrillic forms
+   * are Unicode letter-boundary-anchored so a form never corrupts a longer word
+   * that merely CONTAINS it ("subagen" in "subagent"); CJK forms are guarded
+   * against a foreign-name interpunct so a person name (Claude Monet, written with
+   * a ·/・ separator) is preserved while the standalone product term restores.
+   * What neither guard resolves is a wrong-form that is a legitimate STANDALONE
+   * word/name in the target language (e.g. "Claudio" is both GT's mistranslation
+   * of "Claude" AND a real Italian name, or a space-separated foreign name like
+   * "클로드 모네") — those must be handled in the per-language `_protected` data.
    *
    * @param {string|null|undefined} text
    * @returns {string}
