@@ -95,7 +95,7 @@
     "This course empowers academic faculty, instructional designers, and others to teach and assess AI Fluency in instructor-led settings.": "Ce cours permet aux professeurs universitaires, aux concepteurs pédagogiques et à d'autres d'enseigner et d'évaluer la Maîtrise de l'IA dans des environnements dirigés par un instructeur.",
     "AI Fluency for nonprofits": "Maîtrise de l'IA pour les organisations à but non lucratif",
     "This course empowers nonprofit professionals to develop AI fluency in order to increase organizational impact and efficiency while staying true to their mission and values.": "Ce cours permet aux professionnels des organisations à but non lucratif de développer une maîtrise de l'IA afin d'augmenter l'impact et l'efficacité organisationnels tout en restant fidèles à leur mission et leurs valeurs.",
-    "Introduction to agent skills": "Introduction aux compétences d'agent",
+    "Introduction to agent skills": "Introduction à Agent Skills",
     "Learn how to build, configure, and share Skills in Claude Code — reusable markdown instructions that Claude automatically applies to the right tasks at the right time. This course takes you from creating your first Skill to distributing them across teams and troubleshooting common issues.": "Apprenez à créer, configurer et partager des Compétences dans Claude Code (des instructions markdown réutilisables que Claude applique automatiquement aux bonnes tâches au bon moment). Ce cours vous accompagne de la création de votre première Compétence jusqu'à leur distribution au sein des équipes et à la résolution des problèmes courants.",
     "Introduction to Claude Cowork": "Introduction à Claude Cowork",
     "This hands-on course covers the Cowork task loop, plugins and skills, file and research workflows, and how to steer multi-step work responsibly — so you're productive in your first week.": "Ce cours pratique couvre la boucle de tâches Cowork, les plugins et compétences, les flux de travail de fichiers et de recherche, et comment diriger le travail en plusieurs étapes de manière responsable.",
@@ -475,7 +475,7 @@
     "Security considerations": "Considérations de sécurité"
   },
   "agentSkills": {
-    "Introduction to agent skills": "Introduction aux skills d'agent",
+    "Introduction to agent skills": "Introduction à Agent Skills",
     "What are skills?": "Qu'est-ce que les skills ?",
     "Creating your first skill": "Créer votre première skill",
     "Configuration and multi-file skills": "Configuration et skills multi-fichiers",

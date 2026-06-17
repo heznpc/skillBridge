@@ -95,7 +95,7 @@
     "This course empowers academic faculty, instructional designers, and others to teach and assess AI Fluency in instructor-led settings.": "Khóa học này trao quyền cho giảng viên đại học, nhà thiết kế giảng dạy và những người khác để giảng dạy và đánh giá Thành thạo AI trong các môi trường do giảng viên hướng dẫn.",
     "AI Fluency for nonprofits": "Thành thạo AI cho tổ chức phi lợi nhuận",
     "This course empowers nonprofit professionals to develop AI fluency in order to increase organizational impact and efficiency while staying true to their mission and values.": "Khóa học này trao quyền cho các chuyên gia tổ chức phi lợi nhuận phát triển sự thành thạo AI nhằm tăng tác động và hiệu quả tổ chức trong khi vẫn trung thành với sứ mệnh và giá trị của họ.",
-    "Introduction to agent skills": "Giới thiệu về kỹ năng agent",
+    "Introduction to agent skills": "Giới thiệu về Agent Skills",
     "Learn how to build, configure, and share Skills in Claude Code — reusable markdown instructions that Claude automatically applies to the right tasks at the right time. This course takes you from creating your first Skill to distributing them across teams and troubleshooting common issues.": "Học cách xây dựng, cấu hình và chia sẻ Skills trong Claude Code — các hướng dẫn markdown có thể tái sử dụng mà Claude tự động áp dụng vào đúng tác vụ vào đúng thời điểm. Khóa học này đưa bạn từ việc tạo Skill đầu tiên đến phân phối chúng trong các nhóm và xử lý sự cố thường gặp.",
     "Introduction to Claude Cowork": "Giới thiệu về Claude Cowork",
     "This hands-on course covers the Cowork task loop, plugins and skills, file and research workflows, and how to steer multi-step work responsibly — so you're productive in your first week.": "Khóa học thực hành này bao gồm vòng lặp tác vụ Cowork, plugin và skill, quy trình làm việc với tệp và nghiên cứu, và cách điều hướng công việc nhiều bước một cách có trách nhiệm.",
@@ -475,7 +475,7 @@
     "Security considerations": "Cân nhắc bảo mật"
   },
   "agentSkills": {
-    "Introduction to agent skills": "Giới thiệu về kỹ năng agent",
+    "Introduction to agent skills": "Giới thiệu về Agent Skills",
     "What are skills?": "Skills là gì?",
     "Creating your first skill": "Tạo skill đầu tiên của bạn",
     "Configuration and multi-file skills": "Cấu hình và skill đa tệp",

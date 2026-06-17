@@ -95,7 +95,7 @@
     "This course empowers academic faculty, instructional designers, and others to teach and assess AI Fluency in instructor-led settings.": "このコースは、学術的教職員、インストラクショナルデザイナー、および他の人々がインストラクター主導の設定でAI流暢性を教え、評価できるようにします。",
     "AI Fluency for nonprofits": "非営利団体向けAI流暢性",
     "This course empowers nonprofit professionals to develop AI fluency in order to increase organizational impact and efficiency while staying true to their mission and values.": "このコースは、非営利団体の専門家がAI流暢性を開発し、ミッションと価値を守りながら組織の影響力と効率性を高めることができるようにします。",
-    "Introduction to agent skills": "エージェントスキルの紹介",
+    "Introduction to agent skills": "Agent Skills の紹介",
     "Learn how to build, configure, and share Skills in Claude Code — reusable markdown instructions that Claude automatically applies to the right tasks at the right time. This course takes you from creating your first Skill to distributing them across teams and troubleshooting common issues.": "Claude Codeでスキルをビルド、構成、共有する方法を学習します。Claudeが正しい時間に正しいタスクに自動的に適用する再利用可能なマークダウン指示です。このコースでは、最初のスキルの作成から、チーム全体への配布、一般的な問題のトラブルシューティングまでをカバーしています。",
     "Introduction to Claude Cowork": "Claude Cowork入門",
     "This hands-on course covers the Cowork task loop, plugins and skills, file and research workflows, and how to steer multi-step work responsibly — so you're productive in your first week.": "このハンズオンコースでは、Coworkタスクループ、プラグインとスキル、ファイルとリサーチのワークフロー、そしてマルチステップの作業を責任を持って進める方法をカバーします。",
@@ -475,7 +475,7 @@
     "Security considerations": "セキュリティに関する考慮事項"
   },
   "agentSkills": {
-    "Introduction to agent skills": "エージェントスキルの紹介",
+    "Introduction to agent skills": "Agent Skills の紹介",
     "What are skills?": "skillとは何ですか？",
     "Creating your first skill": "最初のskillを作成する",
     "Configuration and multi-file skills": "構成とマルチファイルskills",
