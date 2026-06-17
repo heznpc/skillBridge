@@ -282,6 +282,12 @@ if (check6Issues === 0) {
 // ja/zh translating the "Skills" platform feature). Per-locale: a term protected
 // in ja need not be protected in de, so each dict is checked against ITS OWN
 // _protected set, which is also why this is false-positive-free.
+//
+// SCOPE: this catches a protected term used as a standalone section KEY whose
+// value drifted off English. Protected terms EMBEDDED inside a longer key/value
+// (e.g. "Claude with Amazon Bedrock") are intentionally NOT scanned here — the
+// runtime restoreProtectedTerms pass owns that case; a substring scan would
+// false-positive on legitimate translations that correctly keep the brand token.
 
 console.log('\n--- Check 7: protected terms stay English in section values ---');
 let check7Issues = 0;
