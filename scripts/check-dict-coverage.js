@@ -237,6 +237,42 @@ if (check5Issues === 0) {
   log.pass(`All ${languages.length} dictionaries on version ${manifestVersion}`);
 }
 
+// ==================== CHECK 6: catalog entries translated consistently ====================
+// Within the `catalog` section (course titles), a key that is TRANSLATED
+// (value != key) in at least one dictionary but left == its English key in
+// another is a partial-translation gap: the same course title shows a curated
+// translation to some users and English fallback to others. A key that is
+// == key in EVERY dictionary is an intentional proper-noun passthrough (e.g.
+// "Claude 101") and is NOT flagged; nor is one translated everywhere. This
+// caught "Claude with Amazon Bedrock" / "Claude with Google Cloud's Vertex AI"
+// sitting English in 7 of 12 catalogs while cloudDeployment translated them.
+
+console.log('\n--- Check 6: catalog entries translated consistently across dictionaries ---');
+const CATALOG_SECTION = 'catalog';
+let check6Issues = 0;
+const catalogKeys = new Set(Object.keys(dicts[baselineLang][CATALOG_SECTION] || {}));
+for (const key of catalogKeys) {
+  const translatedIn = [];
+  const untranslatedIn = [];
+  for (const lang of languages) {
+    if (lang === 'en') continue; // en (if ever added) is the source — value == key is correct
+    const v = dicts[lang][CATALOG_SECTION]?.[key];
+    if (v === undefined) continue; // key parity is Check 2's job
+    if (v === key) untranslatedIn.push(lang);
+    else translatedIn.push(lang);
+  }
+  if (translatedIn.length > 0 && untranslatedIn.length > 0) {
+    check6Issues++;
+    log.fail(
+      `catalog key ${JSON.stringify(key)} translated in ${translatedIn.length} dict(s) but left English in ` +
+        `${untranslatedIn.length}: ${untranslatedIn.join(', ')} — partial translation (curate or mark as passthrough)`,
+    );
+  }
+}
+if (check6Issues === 0) {
+  log.pass('All catalog entries are translated everywhere or intentional passthrough everywhere');
+}
+
 // ==================== SUMMARY ====================
 
 console.log(`\n${errors} error(s), ${warnings} warning(s)`);

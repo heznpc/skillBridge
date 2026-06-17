@@ -1041,6 +1041,23 @@ const SHORTCUT_LABELS = {
     ru: 'Сочетания клавиш',
     vi: 'Phím tắt',
   },
+  // Accessible name for the overlay's × close button (the glyph alone is
+  // announced as "multiplication sign" by screen readers).
+  close: {
+    en: 'Close',
+    ko: '닫기',
+    id: 'Tutup',
+    it: 'Chiudi',
+    ja: '閉じる',
+    'zh-CN': '关闭',
+    'zh-TW': '關閉',
+    es: 'Cerrar',
+    fr: 'Fermer',
+    de: 'Schließen',
+    'pt-BR': 'Fechar',
+    ru: 'Закрыть',
+    vi: 'Đóng',
+  },
 };
 
 const SHORTCUT_DESCRIPTIONS = {

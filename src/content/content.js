@@ -227,6 +227,13 @@
     set isExamPage(v) {
       isExamPage = v;
     },
+    // Read-only observability seam for the YouTube subtitle-manager lifecycle
+    // (created at init, torn down on cert-page nav, rebuilt on return). No
+    // production consumer — it lets the e2e suite assert the manager is released
+    // and rebuilt across SPA route changes without exposing the manager itself.
+    get hasSubtitleManager() {
+      return subtitleManager !== null;
+    },
     get originalTexts() {
       return originalTexts;
     },
@@ -283,6 +290,20 @@
   // throw "Cannot read properties of undefined". The v3.5.16 E2E suite
   // (tests/e2e/golden-translation.spec.js) caught this on the first run.
   const sb = window._sb;
+
+  // Create the YouTube subtitle manager if this host supports it and one isn't
+  // already live. Idempotent: used at init AND when re-entering a video-capable
+  // lesson after a certification page tore the previous manager down (its
+  // MutationObserver + global 'message' listener are released by destroy(), so
+  // a fresh manager must be built rather than reusing the dead one).
+  function ensureSubtitleManager() {
+    if (subtitleManager || !sb.hostCaps?.youtubeSubtitles) return;
+    if (typeof YouTubeSubtitleManager === 'undefined') return;
+    subtitleManager = new YouTubeSubtitleManager(currentLang);
+    subtitleManager.initialize().catch((err) => {
+      console.warn('[SkillBridge] YouTube subtitle init failed:', err);
+    });
+  }
 
   // ============================================================
   // PER-LESSON TERM PREVIEW
@@ -586,12 +607,7 @@
         });
       }
 
-      if (sb.hostCaps.youtubeSubtitles && typeof YouTubeSubtitleManager !== 'undefined') {
-        subtitleManager = new YouTubeSubtitleManager(currentLang);
-        subtitleManager.initialize().catch((err) => {
-          console.warn('[SkillBridge] YouTube subtitle init failed:', err);
-        });
-      }
+      ensureSubtitleManager();
 
       if (!stored.welcomeShown) {
         if (currentLang !== 'en') {
@@ -1005,6 +1021,12 @@
     // Skipped on hosts without Skilljar exams (claude.com tutorials).
     if (sb.hostCaps.examDetection && CERT_DISABLE_PATTERNS.some((p) => p.test(href))) {
       domObserver?.disconnect();
+      // Release the subtitle manager's MutationObserver + global 'message'
+      // listener — they'd otherwise live on for the page's lifetime watching a
+      // cert page that has no videos. Null it so the re-enable path below rebuilds
+      // a fresh one when the user navigates back to a normal lesson.
+      subtitleManager?.destroy();
+      subtitleManager = null;
       restoreOriginal();
       document.getElementById('si18n-exam-banner')?.remove();
       console.info('[SkillBridge] Navigated to certification page — extension disabled.');
@@ -1021,6 +1043,11 @@
         /* observer already active */
       }
     }
+
+    // Rebuild the subtitle manager if a prior cert-page visit tore it down — a
+    // normal lesson can embed videos again. No-op when one is already live or
+    // the host doesn't support YouTube subtitles.
+    ensureSubtitleManager();
 
     // Re-detect exam mode for the new page (Skilljar hosts only — claude.com
     // tutorials have no Skilljar exams, so honour examDetection here too).
