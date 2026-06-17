@@ -459,6 +459,7 @@ async function evalInContentWorld(context, op, arg) {
             // Open the keyboard-shortcuts help overlay and report its a11y
             // attributes — used by a11y.spec.js to lock dialog semantics.
             shortcutsOverlayA11y: () => {
+              if (!window._sb || !window._sb.toggleShortcutsHelp) return { error: 'sb-not-ready' };
               window._sb.toggleShortcutsHelp();
               const panel = document.querySelector('#si18n-shortcuts-overlay .si18n-shortcuts-panel');
               const title = document.getElementById('si18n-shortcuts-title');
