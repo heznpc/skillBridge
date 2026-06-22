@@ -45,7 +45,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@playwright/test": "^1.60.0",
+    "@playwright/test": "^1.61.0",
     "@starter-series/shotkit": "^1.1.1",
     "esbuild": "^0.28.1",
     "eslint": "^10.5.0",
