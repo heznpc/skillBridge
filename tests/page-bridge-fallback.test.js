@@ -71,8 +71,10 @@ describe('_MODEL_FALLBACKS chain', () => {
     expect(_MODEL_FALLBACKS['claude-opus-4-6']).toBe('claude-opus-4-5');
   });
 
-  test('Gemini 2.0 Flash falls back to 1.5 Flash', () => {
-    expect(_MODEL_FALLBACKS['gemini-2.0-flash']).toBe('gemini-1.5-flash');
+  test('Gemini 2.0 Flash falls back to 2.0 Flash-Lite (1.5 was shut down 2026)', () => {
+    // gemini-1.5-flash 404s now (Gemini 1.5/1.0 line retired), so the fallback
+    // points at the live same-generation lighter sibling instead.
+    expect(_MODEL_FALLBACKS['gemini-2.0-flash']).toBe('gemini-2.0-flash-lite');
   });
 
   test('unknown models return undefined (caller treats as no fallback)', () => {
@@ -99,8 +101,8 @@ describe('page-world Puter exposure hardening', () => {
 describe('request model allowlist', () => {
   test('declares per-request allowlists for Gemini and Claude paths', () => {
     expect(src).toMatch(/const\s+_REQUEST_MODEL_ALLOWLIST\s*=/);
-    expect(src).toMatch(/TRANSLATE_REQUEST:\s*new Set\(\['gemini-2\.0-flash',\s*'gemini-1\.5-flash'\]\)/);
-    expect(src).toMatch(/VERIFY_REQUEST:\s*new Set\(\['gemini-2\.0-flash',\s*'gemini-1\.5-flash'\]\)/);
+    expect(src).toMatch(/TRANSLATE_REQUEST:\s*new Set\(\['gemini-2\.0-flash',\s*'gemini-2\.0-flash-lite'\]\)/);
+    expect(src).toMatch(/VERIFY_REQUEST:\s*new Set\(\['gemini-2\.0-flash',\s*'gemini-2\.0-flash-lite'\]\)/);
     expect(src).toMatch(/CHAT_REQUEST:\s*new Set\(\[/);
     expect(src).toMatch(/'claude-sonnet-4-6'/);
     expect(src).toMatch(/'claude-haiku-4-5'/);
