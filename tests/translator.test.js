@@ -224,6 +224,46 @@ describe('SkilljarTranslator', () => {
     });
   });
 
+  describe('translate protected-term restoration', () => {
+    beforeEach(() => {
+      global.window._protectedTerms = {
+        restoreProtectedTerms: (text) => text.replaceAll('클로드', 'Claude'),
+      };
+    });
+
+    afterEach(() => {
+      delete global.window._protectedTerms;
+    });
+
+    test('restores protected terms on static dictionary hits', async () => {
+      translator.staticDict = {
+        'This is a Claude prompt example': '클로드 프롬프트 예시',
+      };
+      translator._lowerDict = {
+        'this is a claude prompt example': '클로드 프롬프트 예시',
+      };
+
+      const result = await translator.translate('This is a Claude prompt example', 'ko');
+
+      expect(result).toEqual({ text: 'Claude 프롬프트 예시', source: 'static' });
+    });
+
+    test('restores protected terms on immediate Google results before verify queueing', async () => {
+      translator.cachedLookup = jest.fn(async () => null);
+      translator.googleTranslate = jest.fn(async () => '클로드 프롬프트 예시');
+      translator.queueGeminiVerify = jest.fn();
+
+      const result = await translator.translate('This is a Claude prompt example', 'ko');
+
+      expect(result).toEqual({ text: 'Claude 프롬프트 예시', source: 'google' });
+      expect(translator.queueGeminiVerify).toHaveBeenCalledWith(
+        'This is a Claude prompt example',
+        'Claude 프롬프트 예시',
+        'ko',
+      );
+    });
+  });
+
   describe('queueGeminiVerify heuristics', () => {
     test('isPremium returns true for premium languages (Italian promoted v3.5.34)', () => {
       expect(translator.premiumLanguages.includes('ko')).toBe(true);
