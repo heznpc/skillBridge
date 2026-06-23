@@ -101,12 +101,17 @@
     'claude-opus-4-8': 'claude-opus-4-7',
     'claude-opus-4-7': 'claude-opus-4-6',
     'claude-opus-4-6': 'claude-opus-4-5',
-    'gemini-2.0-flash': 'gemini-1.5-flash',
+    // 2026-06-24: gemini-1.5-flash was shut down (the whole Gemini 1.5/1.0 line
+    // 404s now), so the old fallback gave zero resilience — if gemini-2.0-flash
+    // were ever rejected, the retry would 404 too. Fall back to the live
+    // same-generation lighter sibling gemini-2.0-flash-lite (verified available
+    // on Puter). gemini-2.0-flash itself is still active and stays the primary.
+    'gemini-2.0-flash': 'gemini-2.0-flash-lite',
   };
 
   const _REQUEST_MODEL_ALLOWLIST = {
-    TRANSLATE_REQUEST: new Set(['gemini-2.0-flash', 'gemini-1.5-flash']),
-    VERIFY_REQUEST: new Set(['gemini-2.0-flash', 'gemini-1.5-flash']),
+    TRANSLATE_REQUEST: new Set(['gemini-2.0-flash', 'gemini-2.0-flash-lite']),
+    VERIFY_REQUEST: new Set(['gemini-2.0-flash', 'gemini-2.0-flash-lite']),
     CHAT_REQUEST: new Set([
       'claude-sonnet-4-6',
       'claude-sonnet-4-5',
