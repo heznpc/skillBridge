@@ -1,15 +1,98 @@
 # SkillBridge TODO
 
 > Strategy & scope: see [POSITIONING.md](POSITIONING.md).
-> Last refreshed: 2026-06-01 (v3.5.39 — learning companion shipped; bridge/tutor scoped to anthropic.skilljar.com)
+> Last refreshed: 2026-06-24 (v3.5.41 service-completion audit)
 
 Items below are concrete engineering / ops work. Anything strategic — what
 markets we enter, what we charge, what features we accept — belongs in
 POSITIONING.md, not here.
 
-The "Now" section tracks the [Blockers before outreach](POSITIONING.md#blockers-before-outreach)
-gate — these have to clear before any Korea / Japan growth push or
-Ambassador submission is worth the user-facing effort.
+The top board tracks the remaining work before the current `v3.5.41` code can
+be treated as the real public service, not just a repo-ready release candidate.
+Keep strategic market / pricing / partnership choices in POSITIONING.md.
+
+## Service completion board (v3.5.41)
+
+### P0 — must close before public release
+
+- [x] **Gemini verification model — verified live; dead fallback replaced.**
+  Audited 2026-06-24: `gemini-2.0-flash` (the runtime default in
+  `src/lib/constants.js`, used for verify/translate) is still **active** on Puter,
+  not retired (Puter's own model page shows no deprecation). The original framing
+  here — "retired primary, swap it" — was an *unverified premise* (its own DoD
+  said "after a real Puter acceptance smoke confirms the exact model id", and no
+  such smoke had run). The real defect was the **fallback**: `gemini-1.5-flash`
+  (in the page-bridge allowlist + `_MODEL_FALLBACKS`) was shut down — the whole
+  Gemini 1.5/1.0 line 404s now — so it gave zero resilience if the primary were
+  ever rejected. Fixed by pointing the fallback at the live same-generation
+  `gemini-2.0-flash-lite`; primary stays `gemini-2.0-flash`. The real Puter smoke
+  (next item) remains the only way to re-confirm exact model ids before a submit.
+
+- [ ] **Add an opt-in real Puter model smoke.** Current E2E swaps in a Puter
+  stub, so it proves the extension bridge contract but not real model
+  availability. Add a separate manual/opt-in smoke that loads the real bundled
+  `src/bridge/puter.js`, sends only a synthetic prompt, and classifies
+  auth/network/model failures clearly.
+  - DoD: smoke path is excluded from default CI unless an explicit env/session
+    is available; failure output says whether the issue is auth, network,
+    model alias rejection, or bridge breakage.
+  - Candidate command: `E2E_REAL_PUTER=1 E2E_HEADED=1 npx playwright test tests/e2e/tutor-chat-real.spec.js --workers=1`.
+
+- [~] **PR the E2E runner stabilization.** The five-stable-batch runner in
+  `scripts/run-e2e.js` is now PR'd (#241, runner-only); local `npm run test:e2e`
+  is green. Awaiting CI `e2e` job + merge.
+  - DoD: runner-only PR, local `npm run test:e2e` green, `git diff --check`
+    green, GitHub `e2e` job green.
+
+- [ ] **Run pre-release dictionary QA.** Before every store submission, run one
+  reviewer pass per 12 premium dictionaries, verify findings against
+  `src/data/*.json`, fix only confirmed semantic errors, stamp
+  `_meta.lastAudited`, and run `npm run docs`.
+  - DoD: README QA table reflects the refreshed audits; structural gates still
+    pass after semantic fixes.
+  - Verify: `npm run glossary`, `npm run validate`,
+    `npm run check:dict-coverage`, `npm run check:locales`, `npm run docs`.
+
+- [ ] **Build, smoke, and freeze the upload artifact.** Regenerate the bundled
+  extension immediately before upload, then run the real-bundle release smoke.
+  - DoD: `dist/bundled` is fresh, first-user smoke passes, bundled zip is
+    rebuilt, and generated store assets match the current icon/listing state.
+  - Verify: `npm run release:smoke`, then `npm run release:verify` before the
+    final upload window.
+
+- [ ] **Upload `v3.5.41` to CWS and fix the privacy tab.** The public listing is
+  still `v1.0.1`; local code is `v3.5.41`. Upload
+  `store-assets/skillbridge-bundled.zip`, refresh listing copy/media, set the
+  capital-B privacy URL, answer remote code = NO only after the new package is
+  uploaded, check Website content, and paste current permission
+  justifications.
+  - Owner-only: CWS dashboard access, privacy-practices form, review wait.
+  - DoD: CWS review submitted/accepted and `npm run check:cws-drift` no longer
+    fails for version drift.
+
+### P1 — quality gates before/around submission
+
+- [ ] **Regenerate and inspect store assets.** Run `npm run capture:store` or
+  the "Capture store assets" workflow, inspect screenshots/promo tile/listing
+  description, then upload the media to the store listing.
+- [ ] **Manual real-tab bundled-extension smoke.** Load `dist/bundled` in
+  Chrome and check translation, language switch, tutor open/chat, flashcards,
+  exam-safe disable, dark mode, and the known manual YouTube-caption gap.
+- [ ] **Publication pause/CD path check.** If `CWS_PUBLICATION_PAUSED` is set,
+  decide whether this release is manual-only or whether the variable should be
+  removed before relying on the CD upload path.
+
+### P2 — service quality after the store build is live
+
+- [ ] **Telemetry / feedback-loop decision.** The telemetry doc is still a
+  proposal, and the sink decision is unresolved because server-side telemetry
+  conflicts with the public no-backend constraint. Decide between local export,
+  opt-in error reporting, or no telemetry; update privacy copy in the same PR
+  if anything ships.
+- [ ] **YouTube `_BG_YT_CLIENT_VERSION` auto-bump GH Action.** Currently manual
+  every few weeks; copy the shipped drift-watcher pattern.
+- [ ] **Performance budget E2E.** Measure time from page load to translated H1
+  and fail future regressions against a declared budget.
 
 ## Learning companion — local-only & free (shipped: v3.5.36–3.5.39)
 
@@ -39,32 +122,21 @@ narrowed.
 ### Excluded by the free + local-only constraint
 - Cross-device sync of bookmarks/notes (needs a server) — device-local only.
 - Multi-model picker via user API keys (breaks free / no-key). Claude via
-  Puter.js stays the only model; free fallback only.
+  Puter.js stays the only tutor model; verification models remain internal
+  implementation details.
 - Any server-side feature.
 
-### Release / ops (v3.5.36–3.5.39)
+### Release / ops (feature train)
 - [x] Icon redesign (v3.5.35, on `main`) — distinct mark.
-- [x] Bundle the features above into releases (v3.5.36–3.5.39, all on `main`):
+- [x] Bundle the features above into releases (v3.5.36–3.5.41, all on `main`):
   version bumps + `npm run docs` resync + PRs + `npm run build:bundle:zip`.
-  `store-assets/skillbridge-bundled.zip` rebuilt at 3.5.39.
-- [ ] **Upload the built zip to the CWS dashboard** (human-only). Store is
-  stuck at 1.0.1; everything since is repo-only. See
+  `store-assets/skillbridge-bundled.zip` rebuilt at 3.5.41.
+- [ ] **Complete the service-completion board above before dashboard upload.**
+  Store is stuck at 1.0.1; everything since is repo-only. See
   [store-assets/RELEASE_CHECKLIST.md](store-assets/RELEASE_CHECKLIST.md).
 
-## Now (Ambassador / outreach blockers)
+## Outreach blockers (after store refresh)
 
-- [x] **Wire `ai-fluency-for-small-businesses` (18th course)** (v3.5.39).
-  Mapped in `FLASHCARD_COURSE_MAP` to the shared `aiFluency` deck — the AI
-  Fluency series share terminology, so it reuses the existing deck rather than
-  a new `aiFluencySmallBiz` section (no dict gap). `check:academy` +
-  `check:dict-coverage` both pass; the 12h drift cron is re-enabled.
-- [ ] **CWS listing refresh — upload to dashboard.** Repo-side copy is ready:
-  `store-assets/STORE_LISTING.md` rewritten on a global + engineering-craft
-  framing (v3.5.39). **English-only, single listing** — localized ko/ja
-  listings were dropped (every locale falls back to EN; hand-maintaining
-  parallel copies caused course-count drift, see #158). Remaining work is
-  human-only: paste summary/description, refresh screenshots, write the
-  "What's new" entry, fix the privacy-tab items (see RELEASE_CHECKLIST 3b).
 - [ ] **Trademark resolution.** We've been contacted about the name.
   Until either safe use is confirmed or we rebrand, public outreach is on
   hold. **Blocks Ambassador application and Korea-language blog posts** —
@@ -74,21 +146,6 @@ narrowed.
 - [ ] **Ambassador application.** Drafted; submission blocked on
   trademark resolution. Free, single-audience, traction-demonstrated — we
   fit the program profile.
-- [ ] **Anonymized opt-in telemetry** (promoted from Later). Marketing
-  ROI is unmeasurable without it. Hard constraints from POSITIONING.md:
-  off by default, explicit opt-in toggle in popup, error stacks only (no
-  PII, no user content, no full URLs, no learning history), 30-day
-  retention, user-purgeable. **Design proposal**:
-  [docs/TELEMETRY_DESIGN.md](docs/TELEMETRY_DESIGN.md) — open for review
-  before any code lands. Implementation is a separate PR. Blockers
-  documented in the design doc itself (trademark, Cloudflare ownership,
-  independent privacy review).
-- [ ] **Smoke-test the latest CWS bundle in an actual Chrome.** The 16-
-  scenario Playwright suite covers every documented README feature except
-  YouTube subtitles (real iframe needed) and dark mode toggle (UI-only).
-  A real-tab eyeball test on `dist/bundled` before each CWS push is still
-  valuable for CSS / visual regressions the assertion-based suite doesn't
-  see.
 
 ## Next (this month)
 
@@ -98,14 +155,6 @@ narrowed.
   The in-product UI stays localized in 12 premium languages (and the browser-facing
   extension name/description in the 33 `_locales/` Chrome-metadata locales); only the
   Chrome Web Store *listing copy* (screenshots / long description) is EN-only.
-- [ ] **YouTube `_BG_YT_CLIENT_VERSION` auto-bump GH Action.** Currently
-  manual every few weeks (see comment in `src/background/background.js`).
-  Cron workflow that pings InnerTube and opens a PR when stale. Same
-  pattern as the shipped `selectors-drift.yml` and `academy-courses-
-  drift.yml` — easy to copy.
-- [ ] **Performance budget E2E.** Measure time from page load → fully
-  translated H1. Sets a regression detector for any future refactor that
-  degrades cold-start. ~1h add to the suite.
 - [ ] **Head-to-head comparison content** (post-trademark, post-CWS-
   refresh). Specifically: AI terminology fidelity and certification
   pass-rate impact vs Chrome built-in translate. Anchors the
