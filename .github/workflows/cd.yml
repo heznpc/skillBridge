@@ -53,6 +53,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e  # v6.4.0
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
       - name: Check if deploy-relevant files changed
         id: changes
         run: |
@@ -113,15 +118,19 @@ jobs:
             echo "should_upload=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Build zip
+      - name: Install dependencies
+        if: steps.secrets.outputs.configured == 'true' && steps.tag_guard.outputs.should_upload != 'false'
+        run: npm ci
+
+      - name: Build bundled zip
         if: steps.secrets.outputs.configured == 'true' && steps.tag_guard.outputs.should_upload != 'false'
         run: |
           mkdir -p store-assets
-          zip -r store-assets/skillbridge.zip manifest.json _locales/ src/ assets/icons/ -x '*.DS_Store'
-          SIZE=$(du -h store-assets/skillbridge.zip | cut -f1)
-          echo "Built store-assets/skillbridge.zip ($SIZE)"
+          npm run build:bundle:zip
+          SIZE=$(du -h store-assets/skillbridge-bundled.zip | cut -f1)
+          echo "Built store-assets/skillbridge-bundled.zip ($SIZE)"
 
-      # SLSA build provenance for the .zip — generated *before* upload so
+      # SLSA build provenance for the bundled .zip — generated *before* upload so
       # the attestation is published whether or not CWS accepts the bundle.
       # Future Chrome Web Store / supply-chain reviewers can verify the
       # zip was built from this workflow run, in this repo, at this SHA.
@@ -129,13 +138,13 @@ jobs:
         if: steps.secrets.outputs.configured == 'true' && steps.tag_guard.outputs.should_upload != 'false'
         uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32  # v4.1.0
         with:
-          subject-path: store-assets/skillbridge.zip
+          subject-path: store-assets/skillbridge-bundled.zip
 
       - name: Upload to Chrome Web Store
         if: steps.secrets.outputs.configured == 'true' && steps.tag_guard.outputs.should_upload != 'false'
         uses: mnao305/chrome-extension-upload@fdfe79400af990f5145a319e834aee64907ccff4  # v6.0.0
         with:
-          file-path: store-assets/skillbridge.zip
+          file-path: store-assets/skillbridge-bundled.zip
           extension-id: ${{ secrets.CWS_EXTENSION_ID }}
           client-id: ${{ secrets.CWS_CLIENT_ID }}
           client-secret: ${{ secrets.CWS_CLIENT_SECRET }}
@@ -155,5 +164,5 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: skillbridge-v${{ steps.version.outputs.version }}
-          path: store-assets/skillbridge.zip
+          path: store-assets/skillbridge-bundled.zip
           retention-days: 14

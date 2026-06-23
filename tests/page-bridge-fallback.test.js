@@ -81,6 +81,39 @@ describe('_MODEL_FALLBACKS chain', () => {
   });
 });
 
+describe('page-world Puter exposure hardening', () => {
+  test('captures ai.chat into a closure and scrubs page-world Puter globals', () => {
+    expect(src).toMatch(/let\s+_puterChatImpl\s*=\s*null/);
+    expect(src).toMatch(/function\s+_captureAndHidePuter\s*\(\s*\)/);
+    expect(src).toMatch(/_puterChatImpl\s*=\s*chat\.bind\(puterApi\.ai\)/);
+    expect(src).toMatch(/Reflect\.deleteProperty\(globalThis,\s*name\)/);
+    expect(src).toMatch(/'puter',\s*'puterParent'/);
+  });
+
+  test('does not auto-load Puter before announcing bridge readiness', () => {
+    expect(src).toMatch(/type:\s*'BRIDGE_READY'/);
+    expect(src).not.toMatch(/loadPuter\(\)\s*\.then/);
+  });
+});
+
+describe('request model allowlist', () => {
+  test('declares per-request allowlists for Gemini and Claude paths', () => {
+    expect(src).toMatch(/const\s+_REQUEST_MODEL_ALLOWLIST\s*=/);
+    expect(src).toMatch(/TRANSLATE_REQUEST:\s*new Set\(\['gemini-2\.0-flash',\s*'gemini-1\.5-flash'\]\)/);
+    expect(src).toMatch(/VERIFY_REQUEST:\s*new Set\(\['gemini-2\.0-flash',\s*'gemini-1\.5-flash'\]\)/);
+    expect(src).toMatch(/CHAT_REQUEST:\s*new Set\(\[/);
+    expect(src).toMatch(/'claude-sonnet-4-6'/);
+    expect(src).toMatch(/'claude-haiku-4-5'/);
+  });
+
+  test('all page-provided model values pass through _selectModel', () => {
+    expect(src).toMatch(/callAI\(prompt,\s*data\.model,\s*'TRANSLATE_REQUEST'\)/);
+    expect(src).toMatch(/callAI\(prompt,\s*data\.model,\s*'VERIFY_REQUEST'\)/);
+    expect(src).toMatch(/_selectModel\('CHAT_REQUEST',\s*data\.model,\s*'claude-haiku-4-5'\)/);
+    expect(src).toMatch(/callAI\(prompt,\s*data\.model,\s*'CHAT_REQUEST',\s*'claude-haiku-4-5'\)/);
+  });
+});
+
 describe('_isModelError', () => {
   test('matches typical Puter / Anthropic deprecation messages', () => {
     expect(_isModelError({ message: 'model not found: claude-sonnet-4-6' })).toBe(true);

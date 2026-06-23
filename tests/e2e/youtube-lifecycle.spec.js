@@ -76,6 +76,22 @@ test.describe('SkillBridge — YouTube subtitle-manager lifecycle', () => {
     await page.waitForTimeout(300);
     const onCert = await evalInContentWorld(extCtx.context, 'subtitleStatus');
     expect(onCert.active, 'manager must be destroyed + nulled on cert-page nav').toBe(false);
+    const certUi = await evalInContentWorld(extCtx.context, 'certUiStatus');
+    expect(certUi).toMatchObject({
+      certDisabled: true,
+      host: false,
+      fab: false,
+      sidebar: false,
+      headerLang: false,
+      darkToggle: false,
+      askTutor: false,
+    });
+
+    // Popup/shortcut paths must not be able to resurrect the tutor UI while the
+    // tab remains on a certification route.
+    await evalInContentWorld(extCtx.context, 'toggleSidebar');
+    const afterToggle = await evalInContentWorld(extCtx.context, 'certUiStatus');
+    expect(afterToggle.sidebar, 'toggleSidebar must be a no-op while cert-disabled').toBe(false);
 
     // 3. Navigate back to a normal lesson — the manager must be rebuilt, or
     //    subtitles would stay dead for the rest of the SPA session.
@@ -86,5 +102,9 @@ test.describe('SkillBridge — YouTube subtitle-manager lifecycle', () => {
     await page.waitForTimeout(300);
     const afterReturn = await evalInContentWorld(extCtx.context, 'subtitleStatus');
     expect(afterReturn.active, 'manager must be rebuilt when returning to a normal lesson').toBe(true);
+    const returnUi = await evalInContentWorld(extCtx.context, 'certUiStatus');
+    expect(returnUi.certDisabled).toBe(false);
+    expect(returnUi.host).toBe(true);
+    expect(returnUi.fab).toBe(true);
   });
 });
