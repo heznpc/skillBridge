@@ -260,6 +260,39 @@ describe('queueGeminiBlockTranslation — protected terms', () => {
       'ko',
     );
   });
+
+  test('does not write stale Gemini block output after language generation changes', async () => {
+    fakeWindow._protectedTerms = {
+      getKeepEnglishTerms: () => 'Claude, Anthropic',
+      restoreProtectedTerms: (text) => text,
+    };
+
+    const el = document.createElement('p');
+    el.innerHTML = 'Use <strong>Claude</strong> in protected examples.';
+    document.body.appendChild(el);
+
+    const translator = {
+      supportedLanguages: { ko: 'Korean' },
+      _sendRequest: jest.fn().mockResolvedValue('오래된 <x1>Claude</x1> 응답'),
+      _cacheTranslation: jest.fn(),
+    };
+
+    queueGeminiBlockTranslation(el, 'ko', {
+      translator,
+      originalTexts: new Map(),
+      isLikelyEnglish: () => true,
+      generation: 1,
+      getGeneration: () => 2,
+      getCurrentLang: () => 'en',
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(el.innerHTML).toBe('Use <strong>Claude</strong> in protected examples.');
+    expect(el.classList.contains('si18n-verifying')).toBe(false);
+    expect(translator._cacheTranslation).not.toHaveBeenCalled();
+  });
 });
 
 describe('escapeHtml (direct, complementing tests/content-helpers.test.js)', () => {

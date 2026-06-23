@@ -222,7 +222,7 @@
     // with mismatched tagInfo on rapid SPA-nav re-fires.
     if (el.classList.contains('si18n-verifying')) return;
 
-    const { translator, originalTexts, isLikelyEnglish } = deps;
+    const { translator, originalTexts, isLikelyEnglish, generation, getGeneration, getCurrentLang } = deps;
     const { xml, tagInfo } = buildXmlForGemini(el);
     const pureText = el.textContent.trim();
 
@@ -271,6 +271,12 @@ RULES:
         // Bail if the element was detached while we awaited the model — otherwise
         // we'd cache el.textContent (the untranslated original) as the translation.
         if (!el?.parentNode) return;
+        const staleGeneration = generation !== undefined && getGeneration?.() !== generation;
+        const staleLanguage = typeof getCurrentLang === 'function' && getCurrentLang() !== targetLang;
+        if (staleGeneration || staleLanguage) {
+          el.classList.remove('si18n-verifying');
+          return;
+        }
 
         // Restore protected brand/API terms only after the guards pass, then write.
         const restored = window._protectedTerms.restoreProtectedTerms(trimmed);

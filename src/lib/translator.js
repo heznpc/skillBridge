@@ -214,6 +214,17 @@ class SkilljarTranslator {
     return this._protectedTerms || {};
   }
 
+  _restoreProtectedTerms(text) {
+    const restore = typeof window !== 'undefined' && window._protectedTerms?.restoreProtectedTerms;
+    if (typeof restore !== 'function') return text;
+    try {
+      return restore(text);
+    } catch (err) {
+      console.warn('[SkillBridge] Protected-term restoration failed:', err);
+      return text;
+    }
+  }
+
   /** @param {string} text @returns {string|null} */
   staticLookup(text) {
     if (!text) return null;
@@ -293,7 +304,7 @@ class SkilljarTranslator {
             resolve(null);
             return;
           }
-          resolve(entry.translation);
+          resolve(this._restoreProtectedTerms(entry.translation));
         };
         req.onerror = () => resolve(null);
       } catch (e) {
@@ -314,7 +325,8 @@ class SkilljarTranslator {
    */
   _cacheTranslation(text, translation, targetLang) {
     if (!this._db) return Promise.resolve();
-    if (!this._isValidTranslation(translation, text, targetLang)) {
+    const safeTranslation = this._restoreProtectedTerms(translation);
+    if (!this._isValidTranslation(safeTranslation, text, targetLang)) {
       console.warn('[SkillBridge] Skipping cache: translation failed shape check');
       return Promise.resolve();
     }
@@ -326,7 +338,7 @@ class SkilljarTranslator {
           id: `${targetLang}\t${text.trim()}`,
           lang: targetLang,
           original: text.trim(),
-          translation,
+          translation: safeTranslation,
           timestamp: Date.now(),
         });
         tx.oncomplete = () => resolve();
@@ -555,8 +567,9 @@ RULES:
       // with the literal string "OK.".
       const okCheck = trimResult.replace(/^["'\s]+|["'\s.!]+$/g, '').toLowerCase();
       if (okCheck === 'ok') {
-        await this._cacheTranslation(original, googleTranslation, targetLang);
-        this._notifyUpdate(original, googleTranslation, targetLang, false);
+        const safeGoogleTranslation = this._restoreProtectedTerms(googleTranslation);
+        await this._cacheTranslation(original, safeGoogleTranslation, targetLang);
+        this._notifyUpdate(original, safeGoogleTranslation, targetLang, false);
         return;
       }
 
@@ -577,19 +590,22 @@ RULES:
         trimResult.includes('ORIGINAL') ||
         trimResult.includes('GOOGLE TRANSLATE')
       ) {
-        await this._cacheTranslation(original, googleTranslation, targetLang);
-        this._notifyUpdate(original, googleTranslation, targetLang, false);
+        const safeGoogleTranslation = this._restoreProtectedTerms(googleTranslation);
+        await this._cacheTranslation(original, safeGoogleTranslation, targetLang);
+        this._notifyUpdate(original, safeGoogleTranslation, targetLang, false);
         return;
       }
 
       // Cache the improved translation
-      await this._cacheTranslation(original, trimResult, targetLang);
+      const safeTrimResult = this._restoreProtectedTerms(trimResult);
+      await this._cacheTranslation(original, safeTrimResult, targetLang);
 
-      this._notifyUpdate(original, trimResult, targetLang, true);
+      this._notifyUpdate(original, safeTrimResult, targetLang, true);
     } catch (err) {
       console.warn(`[SkillBridge] Gemini verify failed for "${original.substring(0, 30)}...":`, err.message);
-      await this._cacheTranslation(original, googleTranslation, targetLang);
-      this._notifyUpdate(original, googleTranslation, targetLang, false);
+      const safeGoogleTranslation = this._restoreProtectedTerms(googleTranslation);
+      await this._cacheTranslation(original, safeGoogleTranslation, targetLang);
+      this._notifyUpdate(original, safeGoogleTranslation, targetLang, false);
     }
   }
 

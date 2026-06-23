@@ -4,10 +4,12 @@
  * Tests: gtLangCode, parseGTResponse, isYouTubeUrl, isAllowedFetchUrl, isNewerVersion
  */
 
-/* global describe, test, expect */
+/* global describe, test, expect, beforeEach, afterEach, jest */
 
 const fs = require('fs');
 const path = require('path');
+
+const runtimeMessageListeners = [];
 
 // Minimal chrome mock for background.js
 global.chrome = {
@@ -18,7 +20,7 @@ global.chrome = {
   tabs: { query: () => Promise.resolve([]) },
 };
 global.chrome.runtime.onInstalled = { addListener: () => {} };
-global.chrome.runtime.onMessage = { addListener: () => {} };
+global.chrome.runtime.onMessage = { addListener: (fn) => runtimeMessageListeners.push(fn) };
 
 const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'background', 'background.js'), 'utf8');
 
@@ -465,5 +467,55 @@ describe('registerAlarms', () => {
       { name: 'cache-cleanup', periodInMinutes: 1440 },
       { name: 'version-check', periodInMinutes: 10080 },
     ]);
+  });
+});
+
+describe('runtime message dispatch — GOOGLE_TRANSLATE rate-limit path', () => {
+  let originalFetch;
+
+  beforeEach(() => {
+    originalFetch = global.fetch;
+    _inflightGT.clear();
+    _rateLimiter.timestamps = [];
+    _rateLimiter.maxPerMin = 120;
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+    _inflightGT.clear();
+    _rateLimiter.timestamps = [];
+    _rateLimiter.maxPerMin = 120;
+  });
+
+  test('registered listener returns a rate-limit response before any GT fetch', () => {
+    const listener = runtimeMessageListeners[runtimeMessageListeners.length - 1];
+    expect(typeof listener).toBe('function');
+    global.fetch = jest.fn();
+    _rateLimiter.maxPerMin = 0;
+    const sendResponse = jest.fn();
+
+    const keepAlive = listener(
+      { type: 'GOOGLE_TRANSLATE', text: 'Hello', targetLang: 'ko', sourceLang: 'en' },
+      { id: 'test' },
+      sendResponse,
+    );
+
+    expect(keepAlive).toBe(true);
+    expect(sendResponse).toHaveBeenCalledWith({ ok: false, error: 'Rate limit exceeded' });
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  test('registered listener ignores messages from other extension senders', () => {
+    const listener = runtimeMessageListeners[runtimeMessageListeners.length - 1];
+    const sendResponse = jest.fn();
+
+    const keepAlive = listener(
+      { type: 'GOOGLE_TRANSLATE', text: 'Hello', targetLang: 'ko', sourceLang: 'en' },
+      { id: 'other-extension' },
+      sendResponse,
+    );
+
+    expect(keepAlive).toBeUndefined();
+    expect(sendResponse).not.toHaveBeenCalled();
   });
 });

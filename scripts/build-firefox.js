@@ -63,17 +63,12 @@ if (fs.existsSync(DIST_DIR)) {
 // Create dist/firefox directory
 fs.mkdirSync(DIST_DIR, { recursive: true });
 
-// Copy all extension files (excluding dist/, .git/, node_modules/)
-const EXCLUDE = new Set(['dist', '.git', 'node_modules', '.DS_Store', '.claude', '.idea', 'store-assets', '.github']);
-
 function copyDir(src, dest) {
   fs.mkdirSync(dest, { recursive: true });
   const entries = fs.readdirSync(src, { withFileTypes: true });
 
   for (const entry of entries) {
-    if (EXCLUDE.has(entry.name)) continue;
-    // Skip manifest.json — we write our own
-    if (entry.name === 'manifest.json' && src === ROOT) continue;
+    if (entry.name === '.DS_Store') continue;
 
     const srcPath = path.join(src, entry.name);
     const destPath = path.join(dest, entry.name);
@@ -86,7 +81,10 @@ function copyDir(src, dest) {
   }
 }
 
-copyDir(ROOT, DIST_DIR);
+for (const dir of ['_locales', 'src']) {
+  copyDir(path.join(ROOT, dir), path.join(DIST_DIR, dir));
+}
+copyDir(path.join(ROOT, 'assets', 'icons'), path.join(DIST_DIR, 'assets', 'icons'));
 
 // Write the Firefox-specific manifest
 fs.writeFileSync(path.join(DIST_DIR, 'manifest.json'), JSON.stringify(firefoxManifest, null, 2) + '\n');

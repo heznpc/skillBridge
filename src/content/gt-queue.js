@@ -386,7 +386,8 @@
               if (item.needsGemini) {
                 uncached.push(item);
               } else {
-                sb.safeReplaceText(item.el, cacheResults[i]);
+                const translated = window._protectedTerms.restoreProtectedTerms(cacheResults[i]);
+                sb.safeReplaceText(item.el, translated);
                 trackTranslatedElement(item.text, item.el);
               }
             }
@@ -459,14 +460,20 @@
       }
 
       // Flush any block-translation work queued during this generation.
-      // Stale items get filtered by parentNode + targetLang on the consumer.
-      for (const { el, targetLang } of geminiQueue) {
-        if (el && el.parentNode) {
-          window._geminiBlock.queueGeminiBlockTranslation(el, targetLang, {
-            translator,
-            originalTexts,
-            isLikelyEnglish,
-          });
+      // Stale generations are discarded here and re-checked by the consumer
+      // before it writes async Gemini output into the DOM.
+      if (gtGeneration === myGeneration) {
+        for (const { el, targetLang } of geminiQueue) {
+          if (el && el.parentNode) {
+            window._geminiBlock.queueGeminiBlockTranslation(el, targetLang, {
+              translator,
+              originalTexts,
+              isLikelyEnglish,
+              generation: myGeneration,
+              getGeneration: () => gtGeneration,
+              getCurrentLang: () => sb.currentLang,
+            });
+          }
         }
       }
     }

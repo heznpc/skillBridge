@@ -206,6 +206,24 @@ describe('SkilljarTranslator', () => {
     });
   });
 
+  describe('_restoreProtectedTerms', () => {
+    afterEach(() => {
+      delete global.window._protectedTerms;
+    });
+
+    test('delegates to the protected-terms runtime when available', () => {
+      global.window._protectedTerms = {
+        restoreProtectedTerms: (text) => text.replaceAll('클로드', 'Claude'),
+      };
+
+      expect(translator._restoreProtectedTerms('클로드를 사용하세요')).toBe('Claude를 사용하세요');
+    });
+
+    test('returns the original text if the runtime hook is missing', () => {
+      expect(translator._restoreProtectedTerms('클로드를 사용하세요')).toBe('클로드를 사용하세요');
+    });
+  });
+
   describe('queueGeminiVerify heuristics', () => {
     test('isPremium returns true for premium languages (Italian promoted v3.5.34)', () => {
       expect(translator.premiumLanguages.includes('ko')).toBe(true);
@@ -408,5 +426,26 @@ describe('_verifySingle — a non-translation Gemini reply never replaces the GT
     await t._verifySingle({ original: ORIGINAL, googleTranslation: GT, targetLang: 'ko' });
     expect(cached[0].translation).toBe(improved);
     expect(notified[0].wasImproved).toBe(true);
+  });
+
+  test('restores protected terms before caching or notifying an OK Google result', async () => {
+    global.window._protectedTerms = {
+      restoreProtectedTerms: (text) => text.replaceAll('앤스로픽', 'Anthropic').replaceAll('클로드', 'Claude'),
+    };
+
+    try {
+      const { t, cached, notified } = harness('OK');
+      const badGt = '앤스로픽은 클로드를 프런티어 모델로 출시했습니다.';
+
+      await t._verifySingle({ original: ORIGINAL, googleTranslation: badGt, targetLang: 'ko' });
+
+      expect(cached).toHaveLength(1);
+      expect(cached[0].translation).toBe('Anthropic은 Claude를 프런티어 모델로 출시했습니다.');
+      expect(notified[0].translation).toBe('Anthropic은 Claude를 프런티어 모델로 출시했습니다.');
+      expect(notified[0].translation).not.toContain('앤스로픽');
+      expect(notified[0].translation).not.toContain('클로드');
+    } finally {
+      delete global.window._protectedTerms;
+    }
   });
 });

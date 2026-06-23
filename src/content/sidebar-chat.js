@@ -65,6 +65,7 @@
   // adopted, :host()-transformed content.css (see shadow-css.js) — except the
   // FAB, whose inline critical style below is its single source of truth.
   function getUiRoot() {
+    if (sb.certDisabled) return null;
     if (sb._uiHost && sb._uiHost.isConnected) return sb._uiHost.shadowRoot;
     const host = document.createElement('div');
     host.id = 'skillbridge-root';
@@ -156,7 +157,9 @@
   // ============================================================
 
   function injectFloatingButton() {
+    if (sb.certDisabled) return;
     const root = getUiRoot();
+    if (!root) return;
     if (root.getElementById('skillbridge-fab')) return;
     if (!root.querySelector('style[data-sb-fab]')) {
       const style = document.createElement('style');
@@ -212,6 +215,7 @@
   // ============================================================
 
   function injectSidebar() {
+    if (sb.certDisabled) return;
     if (sb.$id('skillbridge-sidebar')) return;
     const sidebar = document.createElement('div');
     sidebar.id = 'skillbridge-sidebar';
@@ -222,7 +226,9 @@
     sidebar.innerHTML = getSidebarHTML();
     // Mount inside the shadow UI root so the host page's CSS can't reach the
     // sidebar; it's styled by the adopted (transformed) content.css.
-    getUiRoot().appendChild(sidebar);
+    const root = getUiRoot();
+    if (!root) return;
+    root.appendChild(sidebar);
     setTimeout(bindSidebarEvents, SKILLBRIDGE_DELAYS.SIDEBAR_BIND);
     // Ask-Tutor feeds the chat — only wire it where the tutor bridge exists.
     if (sb.hostCaps?.bridge !== false) sb.initAskTutorButton?.();
@@ -466,6 +472,7 @@
   }
 
   async function sendChatMessage() {
+    if (sb.certDisabled) return;
     if (isSending) return;
     const input = sb.$id('si18n-chat-input');
     const messages = sb.$id('si18n-chat-messages');
@@ -636,6 +643,7 @@
   // ============================================================
 
   function toggleSidebar() {
+    if (sb.certDisabled) return;
     const sidebar = sb.$id('skillbridge-sidebar');
     const fab = sb.$id('skillbridge-fab');
     sb.sidebarVisible = !sb.sidebarVisible;

@@ -1,12 +1,14 @@
-# Chrome Web Store — Store Listing (v3.5.40)
+# Chrome Web Store — Store Listing (v3.5.41)
 
 This is the single Chrome Web Store listing (English / default locale — shown to
 every user regardless of browser language). The store copy is intentionally
-English-only to avoid listing drift; the extension UI itself is localized in 11
+English-only to avoid listing drift; the extension UI itself is localized in 12
 premium languages.
 
-## What's New (v3.5.40) — paste into the CWS "What's new" field
+## What's New (v3.5.41) — paste into the CWS "What's new" field
 
+- 🌏 Indonesian is now a Premium language with the curated dictionary.
+- 🛡️ Protected terms are restored on cached translations too, so brand and technical terms stay correct on repeat visits.
 - 🃏 Spaced-repetition flashcards — a new "Review due" mode shows only the cards due now (cards come back at the right time).
 - 🔖 Bookmarks — save a lesson at your exact scroll position and jump back anytime.
 - ⏩ Continue / Recent — resume across courses right where you left off.
@@ -80,16 +82,16 @@ Full dark theme for the course site. Full right-to-left layout for Arabic and He
 ━━━━━━━━━━━━━━━━━━━
 
 SUPPORTED COURSES
-All 18 currently-published courses on anthropic.skilljar.com, with terminology coverage for any new course added within 48 hours (mechanically enforced by an open-source drift watcher that auto-opens an issue when a new slug appears). Course names referenced descriptively for compatibility:
-Claude 101 · Claude Code 101 · Claude Code in Action · Introduction to Claude Cowork · Introduction to Agent Skills · Introduction to Subagents · Building with the Claude API · Introduction to MCP · MCP: Advanced Topics · Claude with Amazon Bedrock · Claude with Google Vertex AI · AI Fluency: Framework & Foundations · AI Fluency for Students · AI Fluency for Educators · Teaching AI Fluency · AI Fluency for Nonprofits · AI Fluency for Small Businesses · AI Capabilities and Limitations
+All 19 currently-published courses on anthropic.skilljar.com, with terminology coverage for any new course added within 48 hours (mechanically enforced by an open-source drift watcher that auto-opens an issue when a new slug appears). Course names referenced descriptively for compatibility:
+Claude 101 · Claude Platform 101 · Claude Code 101 · Claude Code in Action · Introduction to Claude Cowork · Introduction to Agent Skills · Introduction to Subagents · Building with the Claude API · Introduction to MCP · MCP: Advanced Topics · Claude with Amazon Bedrock · Claude with Google Vertex AI · AI Fluency: Framework & Foundations · AI Fluency for Students · AI Fluency for Educators · Teaching AI Fluency · AI Fluency for Nonprofits · AI Fluency for Small Businesses · AI Capabilities and Limitations
 
 ━━━━━━━━━━━━━━━━━━━
 
 PREMIUM LANGUAGES (Curated Dictionary + Google Translate + AI Verification):
-🇰🇷 한국어 · 🇯🇵 日本語 · 🇨🇳 中文简体 · 🇹🇼 中文繁體 · 🇪🇸 Español · 🇫🇷 Français · 🇮🇹 Italiano · 🇩🇪 Deutsch · 🇧🇷 Português (BR) · 🇷🇺 Русский · 🇻🇳 Tiếng Việt
+🇰🇷 한국어 · 🇯🇵 日本語 · 🇨🇳 中文简体 · 🇹🇼 中文繁體 · 🇪🇸 Español · 🇫🇷 Français · 🇮🇹 Italiano · 🇩🇪 Deutsch · 🇧🇷 Português (BR) · 🇷🇺 Русский · 🇻🇳 Tiếng Việt · 🇮🇩 Bahasa Indonesia
 
 STANDARD LANGUAGES (Google Translate + AI Verification):
-Português (PT) · Nederlands · Polski · Українська · Čeština · Svenska · Dansk · Suomi · Norsk · Türkçe · العربية · हिन्दी · ภาษาไทย · Bahasa Indonesia · Bahasa Melayu · Filipino · বাংলা · עברית · Română · Magyar · Ελληνικά
+Português (PT) · Nederlands · Polski · Українська · Čeština · Svenska · Dansk · Suomi · Norsk · Türkçe · العربية · हिन्दी · ภาษาไทย · Bahasa Melayu · Filipino · বাংলা · עברית · Română · Magyar · Ελληνικά
 
 ━━━━━━━━━━━━━━━━━━━
 

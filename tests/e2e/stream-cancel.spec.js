@@ -69,13 +69,17 @@ test.describe('SkillBridge — tutor stream cancel flow', () => {
   });
 
   test('cancelActiveStream mid-stream cleans up cursor + leaves partial text + allows next send', async () => {
-    // Stream is paced at 150ms/chunk × 3 chunks = ~450ms total.
+    // Pace this test slower than the happy-path tutor spec so the cancel
+    // window is deterministic under both headed and headless Chromium.
+    await evalInContentWorld(extCtx.context, 'setPuterChunkDelay', 400);
+
+    // Stream is paced at 400ms/chunk × 3 chunks = ~1200ms total.
     const send = await evalInContentWorld(extCtx.context, 'sendChat', 'Cancel-me prompt');
     expect(send?.ok).toBe(true);
 
     // Wait long enough for chunk 1 to land but NOT chunk 3.
-    // Chunk 1 should arrive around 150ms; we wait 250ms to be safe.
-    await page.waitForTimeout(250);
+    // Chunk 1 should arrive around 400ms; chunk 2 around 800ms.
+    await page.waitForTimeout(500);
 
     const cancel = await evalInContentWorld(extCtx.context, 'cancelStream');
     expect(cancel?.ok).toBe(true);
