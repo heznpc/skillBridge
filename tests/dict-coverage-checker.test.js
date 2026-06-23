@@ -39,6 +39,7 @@ describe('check-dict-coverage.js self-test', () => {
     expect(r.out).toContain('Check 1');
     expect(r.out).toContain('Check 2');
     expect(r.out).toContain('Check 5');
+    expect(r.out).toContain('Check 8');
     expect(r.out).toContain('0 error(s)');
   });
 
@@ -196,6 +197,21 @@ describe('check-dict-coverage.js — fault injection', () => {
       // mistranslation patterns. Script must NOT flag this.
       expect(r.code).toBe(0);
       expect(r.out).toContain('0 error(s)');
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  test('Check 8 fails when AI Fluency Diligence is rendered as industriousness in Japanese', () => {
+    const tmpDir = makeMutatedDataDir((d) => {
+      d.ja.aiFluency['Diligence'] = '勤勉さ';
+    });
+    try {
+      const r = run({ SB_DICT_DIR_OVERRIDE: tmpDir });
+      expect(r.code).toBe(1);
+      expect(r.out).toMatch(/Check 8/);
+      expect(r.out).toMatch(/Diligence/);
+      expect(r.out).toMatch(/勤勉/);
     } finally {
       fs.rmSync(tmpDir, { recursive: true, force: true });
     }

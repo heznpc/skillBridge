@@ -134,9 +134,28 @@ describe('Firefox build file copying', () => {
     expect(fs.existsSync(path.join(DIST_DIR, 'dist'))).toBe(false);
   });
 
+  test('does NOT copy repo-only development surfaces', () => {
+    for (const name of [
+      'tests',
+      'scripts',
+      'coverage',
+      'test-results',
+      '.playwright-mcp',
+      'package.json',
+      'package-lock.json',
+    ]) {
+      expect(fs.existsSync(path.join(DIST_DIR, name))).toBe(false);
+    }
+  });
+
   test('copies source JS files', () => {
     expect(fs.existsSync(path.join(DIST_DIR, 'src', 'background', 'background.js'))).toBe(true);
     expect(fs.existsSync(path.join(DIST_DIR, 'src', 'lib', 'constants.js'))).toBe(true);
     expect(fs.existsSync(path.join(DIST_DIR, 'src', 'content', 'content.js'))).toBe(true);
+  });
+
+  test('copies only extension icon assets from assets/', () => {
+    expect(fs.existsSync(path.join(DIST_DIR, 'assets', 'icons', 'icon128.png'))).toBe(true);
+    expect(fs.existsSync(path.join(DIST_DIR, 'assets', 'screenshots'))).toBe(false);
   });
 });

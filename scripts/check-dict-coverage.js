@@ -9,7 +9,7 @@
  * system; a missing course-section in even one language ships English
  * fallback to users in that language.
  *
- * Five checks (any error → exit 1; warnings are non-fatal):
+ * Eight checks (any error → exit 1; warnings are non-fatal):
  *
  *   1. Section parity across dictionaries
  *      Every dictionary in src/data/ has the same top-level section set.
@@ -40,6 +40,19 @@
  *      and they're all the same. generate-docs.js auto-syncs these but
  *      they can drift if docs aren't regenerated post-release; the check
  *      catches it before a CWS push.
+ *
+ *   6. Catalog entries translated consistently
+ *      A catalog key translated in some dictionaries must not remain English
+ *      in others unless it is a uniform passthrough everywhere.
+ *
+ *   7. Protected terms stay English in section values
+ *      A key registered in a locale's `_protected` map must not be translated
+ *      by that same locale's curated dictionary sections.
+ *
+ *   8. Framework-specific forbidden literal translations
+ *      Locks known semantic traps from TRANSLATION_RULES.md, such as AI
+ *      Fluency "Diligence" being due-diligence / informed responsibility,
+ *      not industriousness.
  *
  * Usage: node scripts/check-dict-coverage.js
  */
@@ -311,6 +324,47 @@ for (const lang of languages) {
 }
 if (check7Issues === 0) {
   log.pass('No dictionary translates a term registered in its own _protected map');
+}
+
+// ==================== CHECK 8: framework-specific forbidden literal translations ====================
+// Some course-framework terms are intentionally NOT translated by literal
+// dictionary sense. The canonical example from docs/TRANSLATION_RULES.md §6:
+// AI Fluency "Diligence" means due diligence / informed responsibility for
+// deployment outputs, not "industriousness". Structural parity checks cannot
+// catch this semantic regression, so pin the known trap mechanically.
+
+console.log('\n--- Check 8: framework-specific forbidden literal translations ---');
+const FORBIDDEN_FRAMEWORK_RENDERINGS = [
+  {
+    lang: 'ja',
+    source: /\bDiligence\b/i,
+    forbidden: /勤勉/,
+    forbiddenLabel: '勤勉',
+    expected: '検証 / 展開時の検証責任',
+  },
+];
+let check8Issues = 0;
+for (const rule of FORBIDDEN_FRAMEWORK_RENDERINGS) {
+  const dict = dicts[rule.lang];
+  if (!dict) continue;
+  for (const section of Object.keys(dict)) {
+    if (SKIP_PARITY_SECTIONS.has(section)) continue;
+    const obj = dict[section];
+    if (!obj || typeof obj !== 'object') continue;
+    for (const [key, value] of Object.entries(obj)) {
+      if (!rule.source.test(key)) continue;
+      if (rule.forbidden.test(String(value))) {
+        check8Issues++;
+        log.fail(
+          `${rule.lang}: ${JSON.stringify(section)}.${JSON.stringify(key)} = ${JSON.stringify(value)} ` +
+            `uses forbidden literal rendering ${rule.forbiddenLabel}; expected ${rule.expected}`,
+        );
+      }
+    }
+  }
+}
+if (check8Issues === 0) {
+  log.pass('No framework term uses a known forbidden literal rendering');
 }
 
 // ==================== SUMMARY ====================

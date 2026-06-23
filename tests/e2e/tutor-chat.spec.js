@@ -79,6 +79,17 @@ test.describe('SkillBridge — tutor chat flow', () => {
     if (fixture) await stopFixtureServer(fixture.server);
   });
 
+  async function waitForChatReady(timeoutMs = 10_000) {
+    const readyDeadline = Date.now() + timeoutMs;
+    let sendState = null;
+    while (Date.now() < readyDeadline) {
+      sendState = await evalInContentWorld(extCtx.context, 'chatSendState');
+      if (sendState?.present && !sendState.disabled) return sendState;
+      await page.waitForTimeout(100);
+    }
+    return sendState;
+  }
+
   test('streamed chat reply renders in the bot bubble end-to-end', async () => {
     const before = await evalInContentWorld(extCtx.context, 'readChatLog');
     // Before sending: only the initial tutor greeting bubble (if any).
@@ -121,7 +132,45 @@ test.describe('SkillBridge — tutor chat flow', () => {
 
     // No error bubble (CHAT_ERROR_LABELS) — would indicate the stream
     // threw or page-bridge couldn't load the Puter stub.
-    const errorishBubble = log.find((m) => m.html?.includes('role="alert"'));
+    const errorishBubble = log.find((m) => m.alert);
     expect(errorishBubble, 'should not render an error bubble').toBeUndefined();
+
+    const sendState = await waitForChatReady();
+    expect(sendState?.disabled).toBe(false);
+  });
+
+  test('failed chat renders retry control and retry succeeds', async () => {
+    await evalInContentWorld(extCtx.context, 'failNextPuterChat');
+
+    const send = await evalInContentWorld(extCtx.context, 'sendChat', 'Please fail once');
+    expect(send?.ok).toBe(true);
+
+    let log = [];
+    const errorDeadline = Date.now() + 10_000;
+    while (Date.now() < errorDeadline) {
+      log = await evalInContentWorld(extCtx.context, 'readChatLog');
+      if (log.some((m) => m.alert && m.html?.includes('si18n-retry-btn'))) break;
+      await page.waitForTimeout(150);
+    }
+    expect(log.some((m) => m.html?.includes('si18n-retry-btn'))).toBe(true);
+
+    const clicked = await evalInContentWorld(extCtx.context, 'clickRetryButton');
+    expect(clicked?.ok).toBe(true);
+
+    const retryDeadline = Date.now() + 10_000;
+    let botBubble = null;
+    while (Date.now() < retryDeadline) {
+      log = await evalInContentWorld(extCtx.context, 'readChatLog');
+      const botBubbles = log.filter((m) => m.role === 'bot');
+      botBubble = botBubbles[botBubbles.length - 1];
+      if (botBubble?.text?.includes('주는 입력입니다')) break;
+      await page.waitForTimeout(150);
+    }
+
+    expect(botBubble?.text).toContain('프롬프트');
+    expect(botBubble?.text).toContain('주는 입력입니다');
+
+    const sendState = await waitForChatReady();
+    expect(sendState?.disabled).toBe(false);
   });
 });

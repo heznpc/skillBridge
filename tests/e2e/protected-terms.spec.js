@@ -100,4 +100,37 @@ test.describe('SkillBridge — protected terms restoration', () => {
     expect(pt.h1).toBe('Claude 소개');
     expect(pt.p1).toContain('프롬프트 엔지니어링');
   });
+
+  test('cached GT mistranslations are restored before reaching the DOM', async () => {
+    await evalInContentWorld(extCtx.context, 'switchLanguage', 'en');
+
+    const original = 'Anthropic released Claude as a frontier model.';
+    const enDeadline = Date.now() + 10_000;
+    let before = await evalInContentWorld(extCtx.context, 'pageText');
+    while (Date.now() < enDeadline) {
+      before = await evalInContentWorld(extCtx.context, 'pageText');
+      if (before.pProtected === original) break;
+      await page.waitForTimeout(200);
+    }
+    expect(before.pProtected).toBe(original);
+
+    const seeded = await evalInContentWorld(extCtx.context, 'seedProtectedTermCache');
+    expect(seeded).toMatchObject({ ok: true });
+
+    await evalInContentWorld(extCtx.context, 'switchLanguage', 'ko');
+
+    const deadline = Date.now() + 10_000;
+    let pt = before;
+    while (Date.now() < deadline) {
+      pt = await evalInContentWorld(extCtx.context, 'pageText');
+      if (pt.pProtected && pt.pProtected !== before.pProtected) break;
+      await page.waitForTimeout(200);
+    }
+
+    expect.soft(pt.pProtected, 'cached 앤스로픽 wrong form').not.toContain('앤스로픽');
+    expect.soft(pt.pProtected, 'cached 클로드 wrong form').not.toContain('클로드');
+    expect(pt.pProtected).toContain('Anthropic');
+    expect(pt.pProtected).toContain('Claude');
+    expect(pt.pProtected).toContain('프런티어 모델로');
+  });
 });
