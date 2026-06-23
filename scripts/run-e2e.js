@@ -6,7 +6,7 @@
  * extension contexts over one long process. On local macOS runs with other
  * Chrome/Codex processes active, the OS can kill that process before the suite
  * reaches the later specs. The specs are independent by file, so run them in
- * stable batches while preserving the same total coverage.
+ * one spec file at a time while preserving the same total coverage.
  */
 
 const { spawnSync } = require('child_process');
@@ -19,31 +19,12 @@ const npxCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 const workers = process.env.E2E_WORKERS || '1';
 const tempPrefix = 'skillbridge-e2e-';
 const tempExtPrefix = 'skillbridge-e2e-ext-';
-
-const batches = [
-  [
-    'tests/e2e/a11y.spec.js',
-    'tests/e2e/first-user-flow.spec.js',
-    'tests/e2e/keyboard-shortcuts.spec.js',
-    'tests/e2e/shadow-isolation.spec.js',
-  ],
-  [
-    'tests/e2e/chat-history.spec.js',
-    'tests/e2e/code-comments.spec.js',
-    'tests/e2e/dashboard.spec.js',
-    'tests/e2e/exam-mode.spec.js',
-  ],
-  [
-    'tests/e2e/golden-translation.spec.js',
-    'tests/e2e/idb-cache.spec.js',
-    'tests/e2e/lazy-translate.spec.js',
-    'tests/e2e/offline-recovery.spec.js',
-    'tests/e2e/pdf-export.spec.js',
-    'tests/e2e/protected-terms.spec.js',
-  ],
-  ['tests/e2e/rapid-switch.spec.js', 'tests/e2e/spa-navigation.spec.js', 'tests/e2e/stream-cancel.spec.js'],
-  ['tests/e2e/tutor-chat.spec.js', 'tests/e2e/tutor-offline.spec.js', 'tests/e2e/youtube-lifecycle.spec.js'],
-];
+const e2eDir = path.join(__dirname, '..', 'tests', 'e2e');
+const batches = fs
+  .readdirSync(e2eDir)
+  .filter((file) => file.endsWith('.spec.js'))
+  .sort()
+  .map((file) => [path.join('tests', 'e2e', file)]);
 
 function run(cmd, args, options = {}) {
   const started = Date.now();
@@ -63,10 +44,33 @@ function run(cmd, args, options = {}) {
   }
 }
 
-function cleanupE2ETempState() {
-  if (process.platform !== 'win32') {
-    spawnSync('pkill', ['-TERM', '-f', path.join(os.tmpdir(), tempPrefix)], { stdio: 'ignore' });
+function killLingeringE2EProcesses() {
+  if (process.platform === 'win32') return;
+
+  const result = spawnSync('ps', ['-axo', 'pid=,command='], { encoding: 'utf8' });
+  if (result.status !== 0 || !result.stdout) return;
+
+  for (const line of result.stdout.split('\n')) {
+    const match = line.trim().match(/^(\d+)\s+(.+)$/);
+    if (!match) continue;
+
+    const pid = Number(match[1]);
+    const command = match[2];
+    if (!pid || pid === process.pid) continue;
+
+    const isTempBrowser = command.includes(tempPrefix) || command.includes(tempExtPrefix);
+    if (!isTempBrowser) continue;
+
+    try {
+      process.kill(pid, 'SIGTERM');
+    } catch (_err) {
+      // Already gone.
+    }
   }
+}
+
+function cleanupE2ETempState() {
+  killLingeringE2EProcesses();
   for (const name of fs.readdirSync(os.tmpdir())) {
     if (!name.startsWith(tempPrefix) && !name.startsWith(tempExtPrefix)) continue;
     try {

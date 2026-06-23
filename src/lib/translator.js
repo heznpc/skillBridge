@@ -636,7 +636,7 @@ RULES:
 
     // 1. Static dictionary (instant)
     const staticResult = this.staticLookup(text);
-    if (staticResult) return { text: staticResult, source: 'static' };
+    if (staticResult) return { text: this._restoreProtectedTerms(staticResult), source: 'static' };
 
     // 2. IndexedDB cache of Gemini-verified translations (instant)
     const cached = await this.cachedLookup(text, targetLang);
@@ -645,9 +645,10 @@ RULES:
     // 3. Google Translate (fast)
     const gtResult = await this.googleTranslate(text, targetLang);
     if (gtResult) {
+      const safeGtResult = this._restoreProtectedTerms(gtResult);
       // Queue background Gemini verification
-      this.queueGeminiVerify(text, gtResult, targetLang);
-      return { text: gtResult, source: 'google' };
+      this.queueGeminiVerify(text, safeGtResult, targetLang);
+      return { text: safeGtResult, source: 'google' };
     }
 
     return { text, source: 'original' };

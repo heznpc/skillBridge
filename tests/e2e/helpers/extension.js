@@ -64,12 +64,6 @@ function registerTempDir(dir) {
   if (cleanupHooksRegistered) return;
   cleanupHooksRegistered = true;
   process.once('exit', cleanupRegisteredTempDirs);
-  for (const signal of ['SIGINT', 'SIGTERM']) {
-    process.once(signal, () => {
-      cleanupRegisteredTempDirs();
-      process.exit(signal === 'SIGINT' ? 130 : 143);
-    });
-  }
 }
 
 /**
@@ -199,37 +193,61 @@ const PUTER_STREAM_STUB = `
 `;
 
 async function launchExtension() {
-  const EXTENSION_PATH = makePatchedExtension();
-  const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skillbridge-e2e-'));
-  registerTempDir(userDataDir);
+  let lastError = null;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const extensionPath = makePatchedExtension();
+    const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skillbridge-e2e-'));
+    registerTempDir(userDataDir);
+    let context = null;
 
-  // `channel: 'chromium'` forces the full Chromium browser (not the
-  // chromium-headless-shell that Playwright defaults to for headless runs).
-  // The shell strips out the extension subsystem entirely — service workers
-  // never register, MV3 onInstalled never fires, and the launch hangs on
-  // `waitForEvent('serviceworker')`. Full Chromium's new headless mode
-  // supports MV3 extensions while using far less memory for full-suite runs.
-  // E2E_HEADED=1 forces visible Chromium; useful locally for debugging.
-  const context = await chromium.launchPersistentContext(userDataDir, {
-    channel: 'chromium',
-    headless: process.env.E2E_HEADED === '1' ? false : true,
-    args: [
-      `--disable-extensions-except=${EXTENSION_PATH}`,
-      `--load-extension=${EXTENSION_PATH}`,
-      // Lets `--load-extension` take effect; Chromium 121+ guards it
-      // behind this feature flag by default.
-      '--disable-features=DisableLoadExtensionCommandLineSwitch',
-    ],
-  });
+    try {
+      // `channel: 'chromium'` forces the full Chromium browser (not the
+      // chromium-headless-shell that Playwright defaults to for headless runs).
+      // The shell strips out the extension subsystem entirely — service workers
+      // never register, MV3 onInstalled never fires, and the launch hangs on
+      // `waitForEvent('serviceworker')`. Full Chromium's new headless mode
+      // supports MV3 extensions while using far less memory for full-suite runs.
+      // E2E_HEADED=1 forces visible Chromium; useful locally for debugging.
+      context = await chromium.launchPersistentContext(userDataDir, {
+        channel: 'chromium',
+        headless: process.env.E2E_HEADED === '1' ? false : true,
+        args: [
+          `--disable-extensions-except=${extensionPath}`,
+          `--load-extension=${extensionPath}`,
+          '--no-first-run',
+          '--no-default-browser-check',
+          // Lets `--load-extension` take effect; Chromium 121+ guards it
+          // behind this feature flag by default.
+          '--disable-features=DisableLoadExtensionCommandLineSwitch',
+        ],
+      });
 
-  // Wait for the service worker to register so we can grab the extension ID.
-  let [serviceWorker] = context.serviceWorkers();
-  if (!serviceWorker) {
-    serviceWorker = await context.waitForEvent('serviceworker', { timeout: 45_000 });
+      // Wait for the service worker to register so we can grab the extension ID.
+      let [serviceWorker] = context.serviceWorkers();
+      if (!serviceWorker) {
+        serviceWorker = await context.waitForEvent('serviceworker', { timeout: 45_000 });
+      }
+      const extensionId = serviceWorker.url().split('/')[2];
+
+      return { context, extensionId, userDataDir, extensionPath };
+    } catch (err) {
+      lastError = err;
+      if (context) {
+        try {
+          await context.close();
+        } catch (_closeErr) {
+          // The browser may already be gone after a failed launch.
+        }
+      }
+      removeRegisteredTempDir(userDataDir);
+      removeRegisteredTempDir(extensionPath);
+      if (attempt < 3) {
+        await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
+      }
+    }
   }
-  const extensionId = serviceWorker.url().split('/')[2];
 
-  return { context, extensionId, userDataDir, extensionPath: EXTENSION_PATH };
+  throw lastError;
 }
 
 /**
@@ -432,11 +450,18 @@ async function evalInContentWorld(context, op, arg) {
                 // the runtime fetch → transform → adoptedStyleSheets path works.
                 shadowSheetReady: async () => {
                   if (!window._sbShadowCss) return { ok: false };
-                  const sheet = await window._sbShadowCss.loadShadowSheet();
+                  let sheet = null;
+                  for (let i = 0; i < 10; i++) {
+                    sheet = await window._sbShadowCss.loadShadowSheet();
+                    if (sheet) break;
+                    await new Promise((r) => setTimeout(r, 200));
+                  }
                   const host = document.getElementById('skillbridge-root');
                   const root = host && host.shadowRoot;
                   if (root) window._sbShadowCss.ensureShadowStylesheet(root);
-                  await new Promise((r) => setTimeout(r, 0));
+                  for (let i = 0; i < 10 && sheet && root && !root.adoptedStyleSheets.includes(sheet); i++) {
+                    await new Promise((r) => setTimeout(r, 50));
+                  }
                   let hasHostDark = false;
                   try {
                     if (sheet) {

@@ -42,10 +42,12 @@ test.describe('SkillBridge — exam-mode flow', () => {
     await registerStubs(extCtx.context);
     page = await extCtx.context.newPage();
     page.on('pageerror', (err) => console.log('[page:pageerror]', err.message));
+  });
 
+  async function gotoAndWait(path) {
     // /quiz triggers EXAM_URL_PATTERNS[0]. The fixture also has the DOM
     // shape that detectExamPage's DOM-path uses, as a redundancy.
-    await page.goto(`${fixture.baseUrl}/quiz`);
+    await page.goto(`${fixture.baseUrl}${path}`);
 
     const deadline = Date.now() + 15_000;
     let snap = null;
@@ -55,9 +57,9 @@ test.describe('SkillBridge — exam-mode flow', () => {
       await page.waitForTimeout(200);
     }
     if (!snap?.init || !snap?.sb) {
-      throw new Error(`SkillBridge didn't initialize on /quiz after 15s: ${JSON.stringify(snap)}`);
+      throw new Error(`SkillBridge didn't initialize on ${path} after 15s: ${JSON.stringify(snap)}`);
     }
-  });
+  }
 
   test.afterAll(async () => {
     if (extCtx) await closeExtension(extCtx);
@@ -65,11 +67,15 @@ test.describe('SkillBridge — exam-mode flow', () => {
   });
 
   test('step A: detectExamPage trips on /quiz URL + .quiz-form DOM', async () => {
+    await gotoAndWait('/quiz');
+
     const { isExamPage } = await evalInContentWorld(extCtx.context, 'examStatus');
     expect(isExamPage).toBe(true);
   });
 
   test('step B: switchLanguage(ko) translates question but NOT answer options', async () => {
+    await gotoAndWait('/quiz');
+
     const before = await evalInContentWorld(extCtx.context, 'quizText');
     expect(before.title).toBe('Claude Fundamentals Quiz');
     expect(before.question).toBe('Which model is best suited for fast, high-volume classification tasks?');
@@ -112,12 +118,15 @@ test.describe('SkillBridge — exam-mode flow', () => {
   });
 
   test('step C: an answer-option inserted AFTER the initial pass (SPA quiz render) stays English', async () => {
+    await gotoAndWait('/quiz');
+    await evalInContentWorld(extCtx.context, 'switchLanguage', 'ko');
+
     // step B covers answers present at load (filtered by getTranslatableElements).
     // This locks the shared chokepoint in processOneElement: a Skilljar quiz that
     // renders its answers LATE (SPA) must not leak them via the MutationObserver
     // path. Insert a new .answer-option whose text the GT stub WOULD translate (the
     // question string — step B showed it becomes Korean), then assert the mutation
-    // observer left it English. Language is already 'ko' from step B.
+    // observer left it English.
     const probe = 'Which model is best suited for fast, high-volume classification tasks?';
     await page.evaluate((txt) => {
       const form = document.querySelector('.quiz-form') || document.body;
@@ -149,13 +158,7 @@ test.describe('SkillBridge — exam-mode flow', () => {
     // stays false. The mutation path (debounceTranslateNew) is the ONLY thing that can
     // re-detect for answers inserted later; without that re-detect the chokepoint never
     // fires and the answer leaks (translated, cached, Gemini-verified). This locks it.
-    await page.goto(`${fixture.baseUrl}/lesson`);
-    const deadline = Date.now() + 15_000;
-    while (Date.now() < deadline) {
-      const snap = await evalInContentWorld(extCtx.context, 'snapshot');
-      if (snap?.init && snap?.sb && snap?.methods?.gt) break;
-      await page.waitForTimeout(200);
-    }
+    await gotoAndWait('/lesson');
     // Precondition: a plain /lesson URL is NOT exam-detected at init. This is exactly
     // what makes the mutation-path re-detect load-bearing — there is no URL signal.
     const pre = await evalInContentWorld(extCtx.context, 'examStatus');

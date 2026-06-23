@@ -176,7 +176,12 @@ function preflight({ includeFullE2e, includeStoreCapture }) {
   }
   runNpm('Build bundled upload zip', 'build:bundle:zip');
   verifyArtifacts();
-  if (includeFullE2e) runNpm('Full E2E suite', 'test:e2e');
+  if (includeFullE2e) {
+    runNpm('Full E2E suite', 'test:e2e');
+  } else {
+    console.log('\nFull E2E suite is reserved for npm run release:verify.');
+    console.log('Preflight covers upload-readiness plus the first-user install/translate path.');
+  }
 }
 
 try {
@@ -187,7 +192,7 @@ try {
   } else if (MODES.full) {
     preflight({ includeFullE2e: true, includeStoreCapture: true });
   } else {
-    preflight({ includeFullE2e: true, includeStoreCapture: false });
+    preflight({ includeFullE2e: false, includeStoreCapture: false });
   }
   console.log('\nRelease pipeline finished successfully.');
 } catch (err) {
