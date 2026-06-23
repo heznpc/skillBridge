@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.41] - 2026-06-23
+
+### Fixed
+- Protected-term restoration now also runs on IndexedDB cache hits and before verified translations are cached or sent to DOM update callbacks. A stale or un-restored cached Google Translate result can no longer reintroduce brand/technical-term mistranslations on repeat visits.
+
+### Changed
+- Firefox builds now copy only extension runtime assets (`_locales`, `src`, and `assets/icons`) instead of the whole repository. This keeps tests, scripts, coverage, Playwright artifacts, and package metadata out of `dist/firefox` and the Firefox zip.
+- Chrome Web Store release copy and checklist were refreshed for v3.5.41, 12 Premium dictionaries, and the current 19 live-course catalog check.
+
 ## [3.5.40] - 2026-06-10
 
 ### Fixed

@@ -15,9 +15,10 @@
  *      debugging; CI parallelizes for wall-time. Each spec has its own
  *      Chromium + extension load (~15s cold start), so two workers
  *      roughly halve the total e2e job time once we have 4+ specs.
- *   3. `timeout: 60_000` because the first launch (cold cache, extension
+ *   3. `timeout: 120_000` because the first launch (cold cache, extension
  *      install, service-worker registration) can take 5–10s before any
- *      page navigation is even possible.
+ *      page navigation is even possible; full-suite local runs can also
+ *      spend tens of seconds in Chromium process teardown between specs.
  *
  * Each spec is responsible for its own launch — see
  * tests/e2e/helpers/extension.js for the boilerplate. The default
@@ -39,7 +40,7 @@ module.exports = defineConfig({
   // specs; bumping further hits Chromium-instance memory ceilings on
   // ubuntu-latest's 2-vCPU / 7GB runners.
   workers: process.env.CI ? 2 : 1,
-  timeout: 60_000,
+  timeout: 120_000,
   expect: {
     // The translate path is async — give DOM-text assertions a slightly
     // wider window than the default 5s.

@@ -57,8 +57,10 @@ async function build() {
     minify: true,
   });
 
-  // Copy static assets
-  copyDir(path.join(ROOT, 'assets'), path.join(DIST, 'assets'));
+  // Copy only extension runtime assets. README/store screenshots are repo
+  // marketing artifacts, not package resources, and should not ship in the
+  // CWS upload bundle.
+  copyDir(path.join(ROOT, 'assets', 'icons'), path.join(DIST, 'assets', 'icons'));
   copyDir(path.join(ROOT, '_locales'), path.join(DIST, '_locales'));
   copyDir(path.join(ROOT, 'src/data'), path.join(DIST, 'src/data'));
 

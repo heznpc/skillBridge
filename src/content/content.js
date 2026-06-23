@@ -162,6 +162,7 @@
   let commentTranslateEnabled = false;
   const originalComments = new Map(); // el → original innerHTML for code elements
   let isOffline = !navigator.onLine;
+  let isCertDisabled = false;
   let _termPreviewShown = false;
 
   window.addEventListener('online', () => {
@@ -226,6 +227,9 @@
     },
     set isExamPage(v) {
       isExamPage = v;
+    },
+    get certDisabled() {
+      return isCertDisabled;
     },
     // Read-only observability seam for the YouTube subtitle-manager lifecycle
     // (created at init, torn down on cert-page nav, rebuilt on return). No
@@ -429,6 +433,11 @@
         '[SkillBridge] Content received `type`-shaped message — should this go to background?',
         request.type,
       );
+    }
+
+    if (isCertDisabled && !['ping', 'restoreOriginal', 'cacheCleanup'].includes(request?.action)) {
+      sendResponse({ success: false, error: 'SkillBridge disabled on certification pages' });
+      return false;
     }
 
     if (!isReady && request.action === 'translatePage') {
@@ -675,6 +684,44 @@
       if (el && el.parentNode) el.innerHTML = html;
     });
     originalComments.clear();
+  }
+
+  function teardownCertificationSurface() {
+    isCertDisabled = true;
+    window._sb.cancelActiveStream?.();
+    domObserver?.disconnect();
+    subtitleManager?.destroy();
+    subtitleManager = null;
+    restoreOriginal();
+    sidebarVisible = false;
+
+    // Remove every UI surface that could translate, open the tutor, or trigger
+    // page actions while the SPA tab is sitting on a proctored cert page.
+    const uiHost = document.getElementById('skillbridge-root');
+    if (uiHost) uiHost.remove();
+    sb._uiHost = null;
+    for (const sel of [
+      '#si18n-header-lang',
+      '#si18n-dark-toggle',
+      '#si18n-welcome-banner',
+      '#si18n-term-preview',
+      '#si18n-exam-banner',
+      '#si18n-reading-bar',
+      '.si18n-ask-tutor-btn',
+    ]) {
+      document.querySelectorAll(sel).forEach((el) => el.remove());
+    }
+  }
+
+  function reenableAfterCertificationSurface() {
+    if (!isCertDisabled) return;
+    isCertDisabled = false;
+    if (sb.hostCaps.headerControls) {
+      window._sb.injectHeaderLanguageSelect?.();
+      window._sb.injectDarkModeToggle?.();
+    }
+    if (sb.hostCaps.sidebar) window._sb.injectSidebar?.();
+    if (sb.hostCaps.fab) window._sb.injectFloatingButton?.();
   }
 
   async function switchLanguage(newLang, opts = {}) {
@@ -1020,18 +1067,12 @@
     // If user navigated to a Skilljar certification exam page, tear down.
     // Skipped on hosts without Skilljar exams (claude.com tutorials).
     if (sb.hostCaps.examDetection && CERT_DISABLE_PATTERNS.some((p) => p.test(href))) {
-      domObserver?.disconnect();
-      // Release the subtitle manager's MutationObserver + global 'message'
-      // listener — they'd otherwise live on for the page's lifetime watching a
-      // cert page that has no videos. Null it so the re-enable path below rebuilds
-      // a fresh one when the user navigates back to a normal lesson.
-      subtitleManager?.destroy();
-      subtitleManager = null;
-      restoreOriginal();
-      document.getElementById('si18n-exam-banner')?.remove();
+      teardownCertificationSurface();
       console.info('[SkillBridge] Navigated to certification page — extension disabled.');
       return;
     }
+
+    reenableAfterCertificationSurface();
 
     // Re-enable observer if it was disconnected (e.g., after visiting a cert page)
     if (!domObserver || !document.body) {

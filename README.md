@@ -145,11 +145,11 @@ Generic translation tools often **mistranslate brand names and technical terms**
 
 ## Installation
 
-> **Status: live as v1.0.1; re-publication of the current v3.5.40 pending.**
+> **Status: live as v1.0.1; re-publication of the current v3.5.41 pending.**
 > The Chrome Web Store listing is available in all locales **except the United
 > States**, where it was removed on 2026-05-12 over a trademark issue with the
 > old icon (since redesigned on `main`). The published store build is v1.0.1;
-> `main` is the up-to-date release (v3.5.40). For the latest version — and for
+> `main` is the up-to-date release (v3.5.41). For the latest version — and for
 > US users until re-listing — install via the manual / developer-mode path below.
 
 ### Chrome / Edge / Chromium browsers
@@ -260,7 +260,7 @@ course gets wired into all 12 premium dictionaries; structural CI gates
 regression suite guard every merge after that. Proven turnaround: on
 **2026-06-10** the watcher flagged the brand-new *Claude Platform 101* course
 in the morning ([#196](https://github.com/heznpc/skillBridge/issues/196)) and
-all 11 locales were wired the same day
+all premium locales at the time were wired the same day
 ([#201](https://github.com/heznpc/skillBridge/pull/201)).
 
 Beyond structure, dictionary *content* goes through layered review — CI gates

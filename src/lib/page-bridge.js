@@ -19,6 +19,7 @@
 
   let puterReady = false;
   let puterLoadPromise = null;
+  let _puterChatImpl = null;
 
   function log(...args) {
     console.warn('[SkillBridge PageBridge]', ...args);
@@ -103,26 +104,72 @@
     'gemini-2.0-flash': 'gemini-1.5-flash',
   };
 
+  const _REQUEST_MODEL_ALLOWLIST = {
+    TRANSLATE_REQUEST: new Set(['gemini-2.0-flash', 'gemini-1.5-flash']),
+    VERIFY_REQUEST: new Set(['gemini-2.0-flash', 'gemini-1.5-flash']),
+    CHAT_REQUEST: new Set([
+      'claude-sonnet-4-6',
+      'claude-sonnet-4-5',
+      'claude-haiku-4-5',
+      'claude-opus-4-8',
+      'claude-opus-4-7',
+      'claude-opus-4-6',
+      'claude-opus-4-5',
+    ]),
+  };
+
+  function _selectModel(requestType, requested, fallback) {
+    const allowed = _REQUEST_MODEL_ALLOWLIST[requestType];
+    return allowed && allowed.has(requested) ? requested : fallback;
+  }
+
   function _isModelError(err) {
     const msg = (err?.message || err?.error || String(err) || '').toLowerCase();
     return /\b(model|invalid|deprecated|unsupported|not[ _-]?found|404)\b/.test(msg);
   }
 
   async function _puterChat(prompt, opts) {
+    if (!_puterChatImpl) throw new Error('Puter chat unavailable');
     try {
-      return await puter.ai.chat(prompt, opts);
+      return await _puterChatImpl(prompt, opts);
     } catch (err) {
       const fallback = opts?.model && _MODEL_FALLBACKS[opts.model];
       if (!fallback || !_isModelError(err)) throw err;
       log(`Model "${opts.model}" rejected (${err?.message}); retrying with "${fallback}"`);
-      return await puter.ai.chat(prompt, { ...opts, model: fallback });
+      return await _puterChatImpl(prompt, { ...opts, model: fallback });
     }
+  }
+
+  function _captureAndHidePuter() {
+    const puterApi = globalThis.puter;
+    const chat = puterApi?.ai?.chat;
+    if (typeof chat !== 'function') return false;
+    _puterChatImpl = chat.bind(puterApi.ai);
+
+    // SkillBridge only needs ai.chat. Leaving the full SDK (`fs`, `apps`,
+    // `kv`, `workers`, auth helpers, etc.) on page-world `globalThis.puter`
+    // unnecessarily expands the blast radius of any same-page script/XSS on
+    // the trusted host. Capture the chat function, then remove the globals the
+    // bundled SDK creates. If deletion is blocked, fall back to setting the
+    // property to undefined; either way SkillBridge uses the closure above.
+    for (const name of ['puter', 'puterParent']) {
+      try {
+        if (!Reflect.deleteProperty(globalThis, name)) globalThis[name] = undefined;
+      } catch (_e) {
+        try {
+          globalThis[name] = undefined;
+        } catch (_ignored) {
+          /* best-effort global scrub */
+        }
+      }
+    }
+    return true;
   }
 
   function loadPuter() {
     if (puterLoadPromise) return puterLoadPromise;
     puterLoadPromise = new Promise((resolve, reject) => {
-      if (typeof puter !== 'undefined' && puter.ai) {
+      if (_puterChatImpl || _captureAndHidePuter()) {
         puterReady = true;
         resolve();
         return;
@@ -137,7 +184,7 @@
         let checks = 0;
         const interval = setInterval(() => {
           checks++;
-          if (typeof puter !== 'undefined' && puter.ai) {
+          if (_captureAndHidePuter()) {
             clearInterval(interval);
             puterReady = true;
             resolve();
@@ -156,9 +203,9 @@
   /**
    * Single-prompt call to puter.ai.chat (confirmed working format)
    */
-  async function callAI(prompt, model) {
+  async function callAI(prompt, model, requestType = 'VERIFY_REQUEST', fallbackModel = 'gemini-2.0-flash') {
     const response = await _puterChat(prompt, {
-      model: model || 'gemini-2.0-flash',
+      model: _selectModel(requestType, model, fallbackModel),
       stream: false,
     });
     if (typeof response === 'string') return response;
@@ -204,7 +251,7 @@
         if (!puterReady) await loadPuter();
         // systemPrompt already contains the full prompt including the text
         const prompt = data.systemPrompt || 'Translate to target language:\n' + data.text;
-        const result = await callAI(prompt, data.model);
+        const result = await callAI(prompt, data.model, 'TRANSLATE_REQUEST');
 
         window.postMessage(
           {
@@ -244,7 +291,7 @@
       try {
         if (!puterReady) await loadPuter();
         const prompt = data.systemPrompt;
-        const result = await callAI(prompt, data.model || 'gemini-2.0-flash');
+        const result = await callAI(prompt, data.model, 'VERIFY_REQUEST');
 
         window.postMessage(
           {
@@ -327,7 +374,7 @@
           const response = await _puterChat(prompt, {
             // SkillBridge is Claude-focused; default to Haiku as a cheap,
             // fast Claude fallback if content.js forgets to pass `model`.
-            model: data.model || 'claude-haiku-4-5',
+            model: _selectModel('CHAT_REQUEST', data.model, 'claude-haiku-4-5'),
             stream: true,
           });
 
@@ -371,7 +418,7 @@
           }
         } else {
           // Non-streaming fallback
-          const result = await callAI(prompt, data.model);
+          const result = await callAI(prompt, data.model, 'CHAT_REQUEST', 'claude-haiku-4-5');
           window.postMessage(
             {
               __skillbridge__: true,
@@ -406,18 +453,8 @@
     }
   });
 
-  loadPuter()
-    .then(() => {
-      window.postMessage(
-        { __skillbridge__: true, __nonce__: _bridgeNonce, type: 'BRIDGE_READY' },
-        window.location.origin,
-      );
-    })
-    .catch((err) => {
-      log('Auto-load failed:', err.message);
-      window.postMessage(
-        { __skillbridge__: true, __nonce__: _bridgeNonce, type: 'BRIDGE_ERROR', error: err.message },
-        window.location.origin,
-      );
-    });
+  // Signal that the bridge itself is installed. Puter is deliberately lazy-
+  // loaded on the first AI request so a passive page load does not expose the
+  // full SDK to page-world scripts before the user or verifier needs it.
+  window.postMessage({ __skillbridge__: true, __nonce__: _bridgeNonce, type: 'BRIDGE_READY' }, window.location.origin);
 })();
