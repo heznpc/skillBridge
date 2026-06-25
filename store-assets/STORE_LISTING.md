@@ -36,7 +36,7 @@ This is not generic page-translate. SkillBridge ships hand-curated AI terminolog
 Every text element on the page is translated — headings, paragraphs, lists, navigation, course cards, progress labels, video subtitles, and code comments. Interactive elements stay intact so progress tracking and quiz submission keep working. (Blocks that mix inline formatting — bold, links, code — are AI-translated and fill in after you sign in to the optional free tutor; plain text needs no account.)
 
 🤖 IN-PAGE AI TUTOR (powered by Claude Sonnet 4.6 via Puter.js)
-A sidebar chatbot that knows which course and lesson you're on. Ask questions in your language; get streaming answers grounded in the current lesson. Powered by Puter.js's free tier — no API key; you may be asked to sign in to a free Puter account the first time you open the tutor.
+A sidebar chatbot that knows which course and lesson you're on. Ask questions in your language; get streaming answers grounded in the current lesson. Powered by Puter.js's free tier — no API key; the first time you open the tutor, Puter may show a quick "verify you're human" window.
 
 🃏 SPACED-REPETITION FLASHCARDS
 Vocabulary decks generated from the curated dictionary for the course you're viewing. Spaced-repetition scheduling means a card you mark comes back at the right time (1 / 3 / 7 days), and a "Review due" mode shows only the cards due now. Saved locally.
@@ -98,7 +98,7 @@ Português (PT) · Nederlands · Polski · Українська · Čeština · 
 HOW IT WORKS
 1. Curated dictionary lookup (570+ entries) → instant, fully local
 2. Local cache (IndexedDB) → instant, stays on your device
-3. Inline HTML tags → Gemini 2.0 Flash translates with tag preservation (via Puter.js — needs a free sign-in)
+3. Inline HTML tags → Gemini 2.0 Flash translates with tag preservation (via Puter.js — needs a one-time Puter human-check)
 4. Plain text → Google Translate API (~200ms)
 5. AI quality check → Gemini 2.0 Flash verifies complex sentences in the background
 6. Protected Terms auto-fix → restores brand and technical terms
@@ -108,7 +108,7 @@ No data is stored on SkillBridge servers. Translation uses Google Translate and 
 ━━━━━━━━━━━━━━━━━━━
 
 🔒 PRIVACY & DATA
-No API keys needed. No account to translate (the optional AI tutor may ask for a free Puter sign-in). No analytics or tracking by default.
+No API keys needed. No account, email, or password to translate (the optional AI tutor may open a Puter human-check window). No analytics or tracking by default.
 
 SkillBridge does NOT operate any servers. To provide translation and AI features, data is sent to third parties:
 

@@ -84,6 +84,12 @@ sanitization. Specs live in `tests/e2e/` (`npm run test:e2e`).
 - Unit-level coverage of `content.js` DOM helpers and `background.js` internals
   beyond what the E2E suite exercises
 - Real YouTube iframe caption activation (E2E can't drive the embedded player)
+- **Real Puter tutor auth UX** — the signed-out tutor opens a `puter.com` window
+  gated by a Cloudflare "verify you're human" (Turnstile) check, so the real
+  auth flow **cannot be completed by automated E2E**. The suite stubs
+  `src/bridge/puter.js`, so it verifies the bridge contract (message shapes,
+  model allowlist, auth-gate skip) but NOT the live Puter sign-in. An opt-in
+  manual smoke can only observe the prompt, not pass the Turnstile.
 - Visual / dark-mode QA, mobile layout, long-session memory — manual only
 
 ---
@@ -181,7 +187,11 @@ Stored keys: `targetLanguage`, `autoTranslate`, `darkMode`, `welcomeShown`, `fab
 **Fix:**
 - Check the Network tab for failed Puter.js requests
 - Wait a minute and retry
-- The tutor requires a Puter.js account for the "user-pays" model
+- When signed out, the tutor opens a `puter.com` "verify you're human"
+  (Cloudflare Turnstile) window under Puter's free "user-pays" tier — no email
+  or password is entered at that step; complete the human-check to continue.
+  Translation never reaches this path (its background verify is auth-gated to
+  stay silent when signed out)
 
 ### Google Translate rate limiting
 

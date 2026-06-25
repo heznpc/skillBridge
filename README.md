@@ -194,7 +194,7 @@ Page text
   ├─ Local cache (IndexedDB) ───────→ Instant (previously verified)
   │
   ├─ Has inline HTML tags? (<strong>, <a>, <code>...)
-  │     └─ Yes → Gemini 2.0 Flash translates with tag preservation (needs a free tutor sign-in)
+  │     └─ Yes → Gemini 2.0 Flash translates with tag preservation (needs a one-time Puter human-check via the tutor)
   │
   └─ Plain text → Google Translate ─→ ~200ms
        │
@@ -203,7 +203,7 @@ Page text
        └─ Complex sentence? → Gemini 2.0 Flash verifies → corrects if needed
 ```
 
-Translation requests are sent to Google Translate and Gemini/Claude APIs via [Puter.js](https://docs.puter.com/). SkillBridge does not operate any servers — but text is transmitted to these third-party services for translation and AI features. No account or API key is required to translate; the optional AI tutor may ask you to sign in to a free Puter account. See our [Privacy Policy](PRIVACY_POLICY.md) for full details.
+Translation requests are sent to Google Translate and Gemini/Claude APIs via [Puter.js](https://docs.puter.com/). SkillBridge does not operate any servers — but text is transmitted to these third-party services for translation and AI features. No account, email, or password is required to translate; the optional AI tutor may open a Puter window to verify you're human. See our [Privacy Policy](PRIVACY_POLICY.md) for full details.
 
 ## Architecture & engineering decisions
 
@@ -295,7 +295,7 @@ SkillBridge is designed with privacy first:
 
 - **No data collection** — zero analytics, zero tracking, zero telemetry
 - **No SkillBridge servers** — we do not operate any servers. Translation and AI requests are sent to third-party services (Google Translate, Puter.js → Gemini/Claude)
-- **No account required to translate** — works immediately after install; the optional AI tutor may prompt a free Puter sign-in
+- **No account required to translate** — works immediately after install; the optional AI tutor may open a one-time Puter "verify you're human" window
 - **Local storage only** — translation cache (30-day TTL) and chat history are stored in your browser's IndexedDB. This data never leaves your device
 - **Open source** — every line of code is auditable right here
 
@@ -336,7 +336,7 @@ Yes! SkillBridge supports **Chrome**, **Firefox**, and **Edge** (plus Brave, Arc
 <details>
 <summary><strong>Do I need an API key or account?</strong></summary>
 
-Not for translation — it works out of the box via Google Translate with no account or API key, and the background Gemini quality check stays silent when you're signed out (it never prompts you). The optional **AI Tutor** uses [Puter.js](https://puter.com/) (free, no API key); the first time you open it, Puter may ask you to sign in to a free account under its "user-pays" model. So: read and translate with zero setup; the tutor is the one feature that may ask for a free Puter sign-in.
+Not for translation — it works out of the box via Google Translate with no account, email, API key, or password, and the background Gemini quality check stays silent when you're signed out (it never prompts you). The optional **AI Tutor** uses [Puter.js](https://puter.com/) (free, no API key); the first time you open it, Puter may show a window to verify you're human (its free "user-pays" tier). So: read and translate with zero setup; the tutor is the one feature that may open a brief Puter human-check.
 </details>
 
 <details>
