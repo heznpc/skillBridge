@@ -203,7 +203,7 @@ Page text
        └─ Complex sentence? → Gemini 2.0 Flash verifies → corrects if needed
 ```
 
-Translation requests are sent to Google Translate and Gemini/Claude APIs via [Puter.js](https://docs.puter.com/). SkillBridge does not operate any servers — but text is transmitted to these third-party services for translation and AI features. No account or API key is required. See our [Privacy Policy](PRIVACY_POLICY.md) for full details.
+Translation requests are sent to Google Translate and Gemini/Claude APIs via [Puter.js](https://docs.puter.com/). SkillBridge does not operate any servers — but text is transmitted to these third-party services for translation and AI features. No account or API key is required to translate; the optional AI tutor may ask you to sign in to a free Puter account. See our [Privacy Policy](PRIVACY_POLICY.md) for full details.
 
 ## Architecture & engineering decisions
 
@@ -295,7 +295,7 @@ SkillBridge is designed with privacy first:
 
 - **No data collection** — zero analytics, zero tracking, zero telemetry
 - **No SkillBridge servers** — we do not operate any servers. Translation and AI requests are sent to third-party services (Google Translate, Puter.js → Gemini/Claude)
-- **No accounts required** — works immediately after install
+- **No account required to translate** — works immediately after install; the optional AI tutor may prompt a free Puter sign-in
 - **Local storage only** — translation cache (30-day TTL) and chat history are stored in your browser's IndexedDB. This data never leaves your device
 - **Open source** — every line of code is auditable right here
 
