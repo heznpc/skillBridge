@@ -24,7 +24,7 @@ SkillBridge — AI Course Translator with in-page AI tutor
 
 ## Summary (max 132 chars)
 
-Take Anthropic's free AI courses in 32 languages — accurate AI terminology, an in-page AI tutor, exam-safe. No API key, no signup.
+Take Anthropic's free AI courses in 32 languages — accurate AI terminology, an in-page AI tutor, exam-safe. Free, no API key.
 
 ## Description (for Store listing)
 
@@ -36,7 +36,7 @@ This is not generic page-translate. SkillBridge ships hand-curated AI terminolog
 Every text element on the page is translated — headings, paragraphs, lists, navigation, course cards, progress labels, video subtitles, and code comments. Interactive elements stay intact so progress tracking and quiz submission keep working.
 
 🤖 IN-PAGE AI TUTOR (powered by Claude Sonnet 4.6 via Puter.js)
-A sidebar chatbot that knows which course and lesson you're on. Ask questions in your language; get streaming answers grounded in the current lesson. No API key, no signup, no payment.
+A sidebar chatbot that knows which course and lesson you're on. Ask questions in your language; get streaming answers grounded in the current lesson. Powered by Puter.js's free tier — no API key; you may be asked to sign in to a free Puter account the first time you open the tutor.
 
 🃏 SPACED-REPETITION FLASHCARDS
 Vocabulary decks generated from the curated dictionary for the course you're viewing. Spaced-repetition scheduling means a card you mark comes back at the right time (1 / 3 / 7 days), and a "Review due" mode shows only the cards due now. Saved locally.
@@ -108,7 +108,7 @@ No data is stored on SkillBridge servers. Translation uses Google Translate and 
 ━━━━━━━━━━━━━━━━━━━
 
 🔒 PRIVACY & DATA
-No API keys needed. No accounts. No analytics or tracking by default.
+No API keys needed. No account to translate (the optional AI tutor may ask for a free Puter sign-in). No analytics or tracking by default.
 
 SkillBridge does NOT operate any servers. To provide translation and AI features, data is sent to third parties:
 
