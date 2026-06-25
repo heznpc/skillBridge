@@ -84,7 +84,7 @@ still hand-made.)
 
 ### 3. Upload to CWS dev console
 
-Open https://chrome.google.com/webstore/devconsole/a4725d38-81e7-41f5-bf21-5c11fb825074
+Open the [Chrome Web Store developer console](https://chrome.google.com/webstore/devconsole/) and select the SkillBridge publisher (the per-publisher group id is intentionally omitted from this public doc).
 
 | Field | Value |
 |---|---|
