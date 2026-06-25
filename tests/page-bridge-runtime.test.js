@@ -50,7 +50,16 @@ describe('page-bridge runtime hardening', () => {
     sent = [];
     nonce = `runtime-nonce-${++nonceSeq}`;
     puterAuthToken = 'test-token';
-    chat = jest.fn(async (_prompt, opts) => ({ message: { content: `model=${opts.model}` } }));
+    chat = jest.fn(async (_prompt, opts) => {
+      if (opts.stream) {
+        return (async function* streamWithSdkSelfReference() {
+          yield { text: `stream-auth=${globalThis.puter?.authToken || 'none'}` };
+          await Promise.resolve();
+          yield { text: `stream-parent=${globalThis.puterParent?.leaked ? 'yes' : 'no'}` };
+        })();
+      }
+      return { message: { content: `model=${opts.model};auth=${globalThis.puter?.authToken || 'none'}` } };
+    });
 
     const loader = document.createElement('script');
     loader.id = '__skillbridge_loader__';
@@ -110,7 +119,7 @@ describe('page-bridge runtime hardening', () => {
       expect.objectContaining({ model: 'gemini-2.0-flash', stream: false }),
     );
     expect(sent.find((m) => m.type === 'VERIFY_RESPONSE')).toEqual(
-      expect.objectContaining({ id: 'verify-1', success: true, result: 'model=gemini-2.0-flash' }),
+      expect.objectContaining({ id: 'verify-1', success: true, result: 'model=gemini-2.0-flash;auth=test-token' }),
     );
     expect(globalThis.puter).toBeUndefined();
     expect(globalThis.puterParent).toBeUndefined();
@@ -136,8 +145,35 @@ describe('page-bridge runtime hardening', () => {
 
     expect(chat).toHaveBeenCalledWith('hello', expect.objectContaining({ model: 'claude-haiku-4-5', stream: false }));
     expect(sent.find((m) => m.type === 'CHAT_RESPONSE')).toEqual(
-      expect.objectContaining({ id: 'chat-1', success: true, result: 'model=claude-haiku-4-5' }),
+      expect.objectContaining({ id: 'chat-1', success: true, result: 'model=claude-haiku-4-5;auth=test-token' }),
     );
+  });
+
+  test('streaming CHAT_REQUEST keeps Puter globals available until the stream is consumed, then scrubs them', async () => {
+    window.dispatchEvent(
+      new window.MessageEvent('message', {
+        source: window,
+        data: {
+          __skillbridge__: true,
+          __nonce__: nonce,
+          type: 'CHAT_REQUEST',
+          id: 'chat-stream',
+          userMessage: 'stream please',
+          stream: true,
+          model: 'claude-haiku-4-5',
+        },
+      }),
+    );
+
+    await waitFor(() => sent.some((m) => m.type === 'CHAT_STREAM_END'));
+
+    const chunks = sent.filter((m) => m.type === 'CHAT_STREAM_CHUNK').map((m) => m.text);
+    expect(chunks).toEqual(['stream-auth=test-token', 'stream-parent=yes']);
+    expect(sent.find((m) => m.type === 'CHAT_STREAM_END')).toEqual(
+      expect.objectContaining({ id: 'chat-stream', success: true }),
+    );
+    expect(globalThis.puter).toBeUndefined();
+    expect(globalThis.puterParent).toBeUndefined();
   });
 
   // ── "No account required" guard ────────────────────────────────
