@@ -554,7 +554,18 @@ RULES:
 
       // Bridge round-trip can take seconds; re-check before writing result.
       if (_gen !== undefined && _gen !== this._langGeneration) return;
-      if (!result) return;
+
+      // Empty/absent result — the verify was skipped (the signed-out background
+      // path replies result:'') or the model returned nothing. Fall through to
+      // the "keep the Google translation" handling: cache it and notify so the
+      // verify SPINNER is cleared. A bare `return` here left the spinner pulsing
+      // forever on every signed-out verify (and on any genuinely-empty reply).
+      if (!result) {
+        const safeGoogleTranslation = this._restoreProtectedTerms(googleTranslation);
+        await this._cacheTranslation(original, safeGoogleTranslation, targetLang);
+        this._notifyUpdate(original, safeGoogleTranslation, targetLang, false);
+        return;
+      }
 
       const trimResult = result.trim();
 

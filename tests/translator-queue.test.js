@@ -196,3 +196,34 @@ describe('_kickVerifyQueue', () => {
     expect(runCount).toBe(1);
   });
 });
+
+describe('_verifySingle — empty result handling', () => {
+  // Regression: the page bridge replies result:'' for a signed-out VERIFY_REQUEST
+  // (the background auth gate). `_verifySingle` used to `if (!result) return;`
+  // WITHOUT notifying — and _notifyUpdate is what clears the verify spinner — so
+  // every signed-out verify left a 3-dot spinner pulsing forever. The empty-result
+  // path must keep the Google translation and notify, like the OK / too-short bails.
+  test('empty verify result keeps GT, caches it, and notifies (so the spinner clears)', async () => {
+    const translator = new SkilljarTranslator();
+    translator.supportedLanguages = { ko: 'Korean' };
+    translator._sendRequest = jest.fn().mockResolvedValue(''); // signed-out skip → ''
+    translator._cacheTranslation = jest.fn().mockResolvedValue(undefined);
+    translator._restoreProtectedTerms = (t) => t;
+
+    const updates = [];
+    translator.onTranslationUpdate((original, translation, lang, improved) =>
+      updates.push({ original, translation, lang, improved }),
+    );
+
+    const original = 'A reasonably long English sentence well past the verify length threshold for the test.';
+    const gt = '검증 길이 임계값을 충분히 넘는 한국어 번역 문장입니다 — 테스트용으로 길게 작성했습니다.';
+    await translator._verifySingle({ original, googleTranslation: gt, targetLang: 'ko', _gen: undefined });
+
+    // Notified exactly once with the GT translation (improved:false) — this is the
+    // callback that removes the verify spinner.
+    expect(updates).toHaveLength(1);
+    expect(updates[0]).toMatchObject({ original, translation: gt, improved: false });
+    // GT is cached (not left to re-verify-and-re-spin on every revisit).
+    expect(translator._cacheTranslation).toHaveBeenCalledWith(original, gt, 'ko');
+  });
+});
