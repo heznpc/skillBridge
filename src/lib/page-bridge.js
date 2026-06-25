@@ -291,7 +291,7 @@
         // Never trigger the SDK sign-in prompt from this background path —
         // keep the caller's Google-Translate text instead (see _replyUnauthedSkip).
         if (!_isPuterAuthed()) {
-          _replyUnauthedSkip('TRANSLATE_RESPONSE', data.id, data.text);
+          _replyUnauthedSkip('TRANSLATE_RESPONSE', data.id, data.text || '');
           return;
         }
         // systemPrompt already contains the full prompt including the text
