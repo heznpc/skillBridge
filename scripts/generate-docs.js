@@ -110,7 +110,7 @@ const version = manifest.version;
 // ---------------------------------------------------------------------------
 
 // Language count text (just the number + "languages" for flexible contexts)
-const langCountShort = `${translatedCount}+`;
+const langCountShort = `${translatedCount}`;
 
 // Premium languages — rendered as lang-tag spans for the landing page
 function buildLangTagsHtml(langs) {

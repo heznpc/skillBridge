@@ -20,6 +20,14 @@
   let puterReady = false;
   let puterLoadPromise = null;
   let _puterChatImpl = null;
+  let _puterApi = null;
+  let _puterParentApi = null;
+  let _puterParentCaptured = false;
+  let _puterGlobalDepth = 0;
+  let _puterPreviousGlobal = null;
+  let _puterPreviousParentGlobal = null;
+  let _puterPreviousHadGlobal = false;
+  let _puterPreviousHadParentGlobal = false;
   // Live read of the bundled Puter SDK's auth state, captured before the SDK
   // global is scrubbed. Background AI paths (verify / block-translate) gate on
   // this so a signed-out user never trips Puter's sign-in prompt (see
@@ -162,27 +170,135 @@
     return /\b(model|invalid|deprecated|unsupported|not[ _-]?found|404)\b/.test(msg);
   }
 
+  function _restoreGlobal(name, hadValue, previousValue) {
+    try {
+      if (hadValue) {
+        globalThis[name] = previousValue;
+      } else if (!Reflect.deleteProperty(globalThis, name)) {
+        globalThis[name] = undefined;
+      }
+    } catch (_e) {
+      try {
+        globalThis[name] = hadValue ? previousValue : undefined;
+      } catch (_ignored) {
+        /* best-effort global restore */
+      }
+    }
+  }
+
+  function _enterPuterCallGlobals() {
+    if (!_puterApi) return () => {};
+
+    if (_puterGlobalDepth === 0) {
+      _puterPreviousHadGlobal = Object.prototype.hasOwnProperty.call(globalThis, 'puter');
+      _puterPreviousHadParentGlobal = Object.prototype.hasOwnProperty.call(globalThis, 'puterParent');
+      _puterPreviousGlobal = globalThis.puter;
+      _puterPreviousParentGlobal = globalThis.puterParent;
+      globalThis.puter = _puterApi;
+      if (_puterParentCaptured) globalThis.puterParent = _puterParentApi;
+    }
+
+    _puterGlobalDepth++;
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      _puterGlobalDepth = Math.max(0, _puterGlobalDepth - 1);
+      if (_puterGlobalDepth !== 0) return;
+      _restoreGlobal('puter', _puterPreviousHadGlobal, _puterPreviousGlobal);
+      _restoreGlobal('puterParent', _puterPreviousHadParentGlobal, _puterPreviousParentGlobal);
+      _puterPreviousGlobal = null;
+      _puterPreviousParentGlobal = null;
+      _puterPreviousHadGlobal = false;
+      _puterPreviousHadParentGlobal = false;
+    };
+  }
+
+  function _wrapPuterStream(stream, releaseGlobals) {
+    const iterator = stream[Symbol.asyncIterator]();
+    let released = false;
+    const releaseOnce = () => {
+      if (released) return;
+      released = true;
+      releaseGlobals();
+    };
+
+    return {
+      [Symbol.asyncIterator]() {
+        return this;
+      },
+      async next(...args) {
+        try {
+          const result = await iterator.next(...args);
+          if (result?.done) releaseOnce();
+          return result;
+        } catch (err) {
+          releaseOnce();
+          throw err;
+        }
+      },
+      async return(...args) {
+        try {
+          if (typeof iterator.return === 'function') return await iterator.return(...args);
+          return { done: true };
+        } finally {
+          releaseOnce();
+        }
+      },
+      async throw(...args) {
+        try {
+          if (typeof iterator.throw === 'function') return await iterator.throw(...args);
+          throw args[0];
+        } finally {
+          releaseOnce();
+        }
+      },
+    };
+  }
+
+  function _holdGlobalsForStreamIfNeeded(response, opts, releaseGlobals) {
+    if (opts?.stream && response && typeof response[Symbol.asyncIterator] === 'function') {
+      return { response: _wrapPuterStream(response, releaseGlobals), streamHoldsGlobals: true };
+    }
+    return { response, streamHoldsGlobals: false };
+  }
+
   async function _puterChat(prompt, opts) {
     if (!_puterChatImpl) throw new Error('Puter chat unavailable');
+    const releaseGlobals = _enterPuterCallGlobals();
+    let streamHoldsGlobals = false;
     try {
-      return await _puterChatImpl(prompt, opts);
+      const first = await _puterChatImpl(prompt, opts);
+      const wrapped = _holdGlobalsForStreamIfNeeded(first, opts, releaseGlobals);
+      streamHoldsGlobals = wrapped.streamHoldsGlobals;
+      return wrapped.response;
     } catch (err) {
       const fallback = opts?.model && _MODEL_FALLBACKS[opts.model];
       if (!fallback || !_isModelError(err)) throw err;
       log(`Model "${opts.model}" rejected (${err?.message}); retrying with "${fallback}"`);
-      return await _puterChatImpl(prompt, { ...opts, model: fallback });
+      const retry = await _puterChatImpl(prompt, { ...opts, model: fallback });
+      const wrapped = _holdGlobalsForStreamIfNeeded(retry, opts, releaseGlobals);
+      streamHoldsGlobals = wrapped.streamHoldsGlobals;
+      return wrapped.response;
+    } finally {
+      if (!streamHoldsGlobals) releaseGlobals();
     }
   }
 
   function _captureAndHidePuter() {
     const puterApi = globalThis.puter;
+    const puterParentApi = globalThis.puterParent;
+    const puterParentCaptured = Object.prototype.hasOwnProperty.call(globalThis, 'puterParent');
     const chat = puterApi?.ai?.chat;
     if (typeof chat !== 'function') return false;
+    _puterApi = puterApi;
+    _puterParentApi = puterParentApi;
+    _puterParentCaptured = puterParentCaptured;
     _puterChatImpl = chat.bind(puterApi.ai);
     // Capture a live auth-state read BEFORE the global is scrubbed below. The
-    // closure keeps the SDK object reachable to page-bridge only (never re-exposed
-    // on globalThis), so this adds no XSS blast radius beyond the chat capture
-    // above, and it reflects sign-in that happens later via the AI Tutor.
+    // SDK object stays private to page-bridge except for the narrow _puterChat
+    // call/stream window, and it reflects sign-in that happens later via the
+    // AI Tutor.
     _puterAuthCheck = () => !!puterApi.authToken;
 
     // SkillBridge only needs ai.chat. Leaving the full SDK (`fs`, `apps`,
