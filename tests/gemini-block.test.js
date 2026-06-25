@@ -293,6 +293,43 @@ describe('queueGeminiBlockTranslation — protected terms', () => {
     expect(el.classList.contains('si18n-verifying')).toBe(false);
     expect(translator._cacheTranslation).not.toHaveBeenCalled();
   });
+
+  test('empty verify result (signed-out auth-skip) clears the dim and leaves the block in source form', async () => {
+    // Regression: the page bridge replies result:'' for a signed-out
+    // VERIFY_REQUEST (the background auth gate). The .then bail on `!result` used
+    // to return WITHOUT removing si18n-verifying, leaving every such block dimmed
+    // (opacity .85) forever for signed-out users. The finally must clear it.
+    fakeWindow._protectedTerms = {
+      getKeepEnglishTerms: () => 'Claude, Anthropic',
+      restoreProtectedTerms: (text) => text,
+    };
+
+    const el = document.createElement('p');
+    el.innerHTML = 'Use <strong>Claude</strong> in protected examples.';
+    document.body.appendChild(el);
+
+    const translator = {
+      supportedLanguages: { ko: 'Korean' },
+      _sendRequest: jest.fn().mockResolvedValue(''), // signed-out skip → empty
+      _cacheTranslation: jest.fn(),
+    };
+
+    queueGeminiBlockTranslation(el, 'ko', {
+      translator,
+      originalTexts: new Map(),
+      isLikelyEnglish: () => true,
+    });
+
+    // The dim is added synchronously while the request is in flight.
+    expect(el.classList.contains('si18n-verifying')).toBe(true);
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(el.classList.contains('si18n-verifying')).toBe(false); // dim cleared
+    expect(el.innerHTML).toBe('Use <strong>Claude</strong> in protected examples.'); // source kept
+    expect(translator._cacheTranslation).not.toHaveBeenCalled(); // nothing cached
+  });
 });
 
 describe('escapeHtml (direct, complementing tests/content-helpers.test.js)', () => {

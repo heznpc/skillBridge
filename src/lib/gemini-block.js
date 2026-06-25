@@ -255,41 +255,49 @@ RULES:
         model: SKILLBRIDGE_MODELS.GEMINI,
       })
       .then((result) => {
-        if (!result) return;
-        const trimmed = result.trim();
-        // Run the sanity/refusal guards on the RAW model output. Protected-term
-        // restoration (below) can GROW the text (a CJK transliteration → English,
-        // e.g. "클로드" → "Claude"), so restoring before this length guard could
-        // wrongly discard a valid reply.
-        if (trimmed.length > xml.length * 3) return;
-        if (trimmed.includes('SOURCE') || trimmed.includes('RULES:')) return;
-        // Refusal guard: if the source had placeholders, the reply must too —
-        // catches "I cannot translate this" responses that the substring
-        // checks above miss.
-        const hadTags = Object.keys(tagInfo).length > 0;
-        if (hadTags && !/<[xc]\d/.test(trimmed)) return;
-        // Bail if the element was detached while we awaited the model — otherwise
-        // we'd cache el.textContent (the untranslated original) as the translation.
-        if (!el?.parentNode) return;
-        const staleGeneration = generation !== undefined && getGeneration?.() !== generation;
-        const staleLanguage = typeof getCurrentLang === 'function' && getCurrentLang() !== targetLang;
-        if (staleGeneration || staleLanguage) {
-          el.classList.remove('si18n-verifying');
-          return;
-        }
-
-        // Restore protected brand/API terms only after the guards pass, then write.
-        const restored = window._protectedTerms.restoreProtectedTerms(trimmed);
         try {
-          el.innerHTML = xmlToHtml(restored, tagInfo);
-        } catch (sanitizeErr) {
-          console.warn('[SkillBridge] Gemini block sanitization failed:', sanitizeErr.message);
-          // Restore original HTML on failure
-          const orig = originalTexts.get(el);
-          if (orig) el.innerHTML = orig;
+          // Empty/absent result — model returned nothing, OR (since the
+          // background AI auth gate) the signed-out skip replies result:''. Bail
+          // and leave the block in its source form; the finally clears the dim.
+          if (!result) return;
+          const trimmed = result.trim();
+          // Run the sanity/refusal guards on the RAW model output. Protected-term
+          // restoration (below) can GROW the text (a CJK transliteration → English,
+          // e.g. "클로드" → "Claude"), so restoring before this length guard could
+          // wrongly discard a valid reply.
+          if (trimmed.length > xml.length * 3) return;
+          if (trimmed.includes('SOURCE') || trimmed.includes('RULES:')) return;
+          // Refusal guard: if the source had placeholders, the reply must too —
+          // catches "I cannot translate this" responses that the substring
+          // checks above miss.
+          const hadTags = Object.keys(tagInfo).length > 0;
+          if (hadTags && !/<[xc]\d/.test(trimmed)) return;
+          // Bail if the element was detached while we awaited the model — otherwise
+          // we'd cache el.textContent (the untranslated original) as the translation.
+          if (!el?.parentNode) return;
+          const staleGeneration = generation !== undefined && getGeneration?.() !== generation;
+          const staleLanguage = typeof getCurrentLang === 'function' && getCurrentLang() !== targetLang;
+          if (staleGeneration || staleLanguage) return;
+
+          // Restore protected brand/API terms only after the guards pass, then write.
+          const restored = window._protectedTerms.restoreProtectedTerms(trimmed);
+          try {
+            el.innerHTML = xmlToHtml(restored, tagInfo);
+          } catch (sanitizeErr) {
+            console.warn('[SkillBridge] Gemini block sanitization failed:', sanitizeErr.message);
+            // Restore original HTML on failure
+            const orig = originalTexts.get(el);
+            if (orig) el.innerHTML = orig;
+          }
+          translator._cacheTranslation(pureText, el.textContent.trim(), targetLang);
+        } finally {
+          // ALWAYS clear the in-progress dim, whichever guard bailed (empty/skipped
+          // result, length/refusal guards, stale generation, or success). Several
+          // bails used to `return` without this, and the signed-out auth-skip now
+          // hits the empty-result bail every time — leaving the block dimmed
+          // (content.css si18n-verifying, opacity .85) permanently.
+          if (el?.parentNode) el.classList.remove('si18n-verifying');
         }
-        el.classList.remove('si18n-verifying');
-        translator._cacheTranslation(pureText, el.textContent.trim(), targetLang);
       })
       .catch((err) => {
         console.warn('[SkillBridge] Gemini block translation failed:', err.message);
