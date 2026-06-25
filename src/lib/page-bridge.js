@@ -20,9 +20,38 @@
   let puterReady = false;
   let puterLoadPromise = null;
   let _puterChatImpl = null;
+  // Live read of the bundled Puter SDK's auth state, captured before the SDK
+  // global is scrubbed. Background AI paths (verify / block-translate) gate on
+  // this so a signed-out user never trips Puter's sign-in prompt (see
+  // _isPuterAuthed). null until the SDK is captured.
+  let _puterAuthCheck = null;
 
   function log(...args) {
     console.warn('[SkillBridge PageBridge]', ...args);
+  }
+
+  // Whether the bundled Puter SDK currently holds an auth token. Calling
+  // puter.ai.chat() while signed out (env "web") makes the SDK open its own
+  // sign-in prompt — which would contradict SkillBridge's "no account required"
+  // promise if it fired from a BACKGROUND path the user never invoked. Returns
+  // false (→ skip) whenever auth state is unknown, so we never prompt by surprise.
+  function _isPuterAuthed() {
+    try {
+      return _puterAuthCheck ? _puterAuthCheck() : false;
+    } catch (_e) {
+      return false;
+    }
+  }
+
+  // Reply that a background AI request was skipped because the user is signed
+  // out. success:true with a benign result keeps the caller's existing
+  // Google-Translate output (verify/block-translate both no-op on empty/echo),
+  // and crucially the SDK's auth prompt was never reached.
+  function _replyUnauthedSkip(type, id, result) {
+    window.postMessage(
+      { __skillbridge__: true, __nonce__: _bridgeNonce, type, id, success: true, result, skipped: 'unauthenticated' },
+      window.location.origin,
+    );
   }
 
   // Hard upper bound on request payload sizes. Real translations top out
@@ -150,6 +179,11 @@
     const chat = puterApi?.ai?.chat;
     if (typeof chat !== 'function') return false;
     _puterChatImpl = chat.bind(puterApi.ai);
+    // Capture a live auth-state read BEFORE the global is scrubbed below. The
+    // closure keeps the SDK object reachable to page-bridge only (never re-exposed
+    // on globalThis), so this adds no XSS blast radius beyond the chat capture
+    // above, and it reflects sign-in that happens later via the AI Tutor.
+    _puterAuthCheck = () => !!puterApi.authToken;
 
     // SkillBridge only needs ai.chat. Leaving the full SDK (`fs`, `apps`,
     // `kv`, `workers`, auth helpers, etc.) on page-world `globalThis.puter`
@@ -254,6 +288,12 @@
       }
       try {
         if (!puterReady) await loadPuter();
+        // Never trigger the SDK sign-in prompt from this background path —
+        // keep the caller's Google-Translate text instead (see _replyUnauthedSkip).
+        if (!_isPuterAuthed()) {
+          _replyUnauthedSkip('TRANSLATE_RESPONSE', data.id, data.text);
+          return;
+        }
         // systemPrompt already contains the full prompt including the text
         const prompt = data.systemPrompt || 'Translate to target language:\n' + data.text;
         const result = await callAI(prompt, data.model, 'TRANSLATE_REQUEST');
@@ -295,6 +335,12 @@
       }
       try {
         if (!puterReady) await loadPuter();
+        // Background quality check — must stay silent for signed-out users so it
+        // never opens Puter's sign-in prompt. The caller keeps its GT result.
+        if (!_isPuterAuthed()) {
+          _replyUnauthedSkip('VERIFY_RESPONSE', data.id, '');
+          return;
+        }
         const prompt = data.systemPrompt;
         const result = await callAI(prompt, data.model, 'VERIFY_REQUEST');
 

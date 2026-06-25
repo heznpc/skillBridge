@@ -198,6 +198,10 @@ async function registerStubs(context) {
     (function () {
       const STREAM_CHUNKS = ['안녕하세요! ', '프롬프트는 Claude에게 ', '주는 입력입니다.'];
       window.puter = {
+        // The page bridge gates background verify/translate on auth state to avoid
+        // tripping Puter's sign-in prompt for signed-out users; the e2e suite models
+        // a signed-in user so those paths run and stay under test.
+        authToken: 'e2e-stub-token',
         ai: {
           chat: async function (prompt, opts) {
             if (opts && opts.stream) {

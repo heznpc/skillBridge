@@ -39,6 +39,9 @@ describe('page-bridge runtime hardening', () => {
   let chat;
   let nonceSeq = 0;
   let nonce;
+  // Per-test Puter auth state. Default 'signed in' so the model-routing tests
+  // exercise the real chat path; the unauthenticated-skip tests set it null.
+  let puterAuthToken;
 
   beforeEach(() => {
     delete window.__SKILLBRIDGE_BRIDGE__;
@@ -46,6 +49,7 @@ describe('page-bridge runtime hardening', () => {
     delete globalThis.puterParent;
     sent = [];
     nonce = `runtime-nonce-${++nonceSeq}`;
+    puterAuthToken = 'test-token';
     chat = jest.fn(async (_prompt, opts) => ({ message: { content: `model=${opts.model}` } }));
 
     const loader = document.createElement('script');
@@ -66,7 +70,7 @@ describe('page-bridge runtime hardening', () => {
     document.head.appendChild = (node) => {
       const appended = originalAppendChild(node);
       if (node.tagName === 'SCRIPT') {
-        globalThis.puter = { ai: { chat } };
+        globalThis.puter = { ai: { chat }, authToken: puterAuthToken };
         globalThis.puterParent = { leaked: true };
         setTimeout(() => node.onload && node.onload(), 0);
       }
@@ -134,5 +138,90 @@ describe('page-bridge runtime hardening', () => {
     expect(sent.find((m) => m.type === 'CHAT_RESPONSE')).toEqual(
       expect.objectContaining({ id: 'chat-1', success: true, result: 'model=claude-haiku-4-5' }),
     );
+  });
+
+  // ── "No account required" guard ────────────────────────────────
+  // The bundled Puter SDK opens its own sign-in prompt when ai.chat() is called
+  // while signed out (env "web"). Background paths (verify / block-translate) run
+  // automatically during translation, so they MUST NOT reach ai.chat() for a
+  // signed-out user — otherwise the public "no account required" claim breaks.
+  // These exercise the REAL auth gate (not the e2e Puter stub, which is ungated).
+
+  test('VERIFY_REQUEST is skipped (no chat call, no auth prompt) when signed out', async () => {
+    puterAuthToken = null;
+    window.dispatchEvent(
+      new window.MessageEvent('message', {
+        source: window,
+        data: {
+          __skillbridge__: true,
+          __nonce__: nonce,
+          type: 'VERIFY_REQUEST',
+          id: 'verify-anon',
+          systemPrompt: 'verify this',
+          model: 'gemini-2.0-flash',
+        },
+      }),
+    );
+
+    await waitFor(() => sent.some((m) => m.type === 'VERIFY_RESPONSE'));
+
+    // ai.chat — the call that would trip Puter's sign-in prompt — never ran.
+    expect(chat).not.toHaveBeenCalled();
+    expect(sent.find((m) => m.type === 'VERIFY_RESPONSE')).toEqual(
+      expect.objectContaining({ id: 'verify-anon', success: true, result: '', skipped: 'unauthenticated' }),
+    );
+  });
+
+  test('TRANSLATE_REQUEST is skipped (keeps the GT text) when signed out', async () => {
+    puterAuthToken = null;
+    window.dispatchEvent(
+      new window.MessageEvent('message', {
+        source: window,
+        data: {
+          __skillbridge__: true,
+          __nonce__: nonce,
+          type: 'TRANSLATE_REQUEST',
+          id: 'tr-anon',
+          systemPrompt: 'translate this',
+          text: 'google-translate output',
+          model: 'gemini-2.0-flash',
+        },
+      }),
+    );
+
+    await waitFor(() => sent.some((m) => m.type === 'TRANSLATE_RESPONSE'));
+
+    expect(chat).not.toHaveBeenCalled();
+    expect(sent.find((m) => m.type === 'TRANSLATE_RESPONSE')).toEqual(
+      expect.objectContaining({
+        id: 'tr-anon',
+        success: true,
+        result: 'google-translate output',
+        skipped: 'unauthenticated',
+      }),
+    );
+  });
+
+  test('CHAT_REQUEST still runs when signed out — the tutor is a deliberate user action', async () => {
+    puterAuthToken = null;
+    window.dispatchEvent(
+      new window.MessageEvent('message', {
+        source: window,
+        data: {
+          __skillbridge__: true,
+          __nonce__: nonce,
+          type: 'CHAT_REQUEST',
+          id: 'chat-anon',
+          userMessage: 'hi',
+          stream: false,
+          model: 'claude-haiku-4-5',
+        },
+      }),
+    );
+
+    await waitFor(() => sent.some((m) => m.type === 'CHAT_RESPONSE'));
+
+    // CHAT is NOT gated — an explicit user action is allowed to authenticate.
+    expect(chat).toHaveBeenCalled();
   });
 });

@@ -336,7 +336,7 @@ Yes! SkillBridge supports **Chrome**, **Firefox**, and **Edge** (plus Brave, Arc
 <details>
 <summary><strong>Do I need an API key or account?</strong></summary>
 
-No. SkillBridge uses Google Translate (public API) and Puter.js (free tier) for AI features. Everything works out of the box.
+Not for translation — it works out of the box via Google Translate with no account or API key, and the background Gemini quality check stays silent when you're signed out (it never prompts you). The optional **AI Tutor** uses [Puter.js](https://puter.com/) (free, no API key); the first time you open it, Puter may ask you to sign in to a free account under its "user-pays" model. So: read and translate with zero setup; the tutor is the one feature that may ask for a free Puter sign-in.
 </details>
 
 <details>

@@ -151,6 +151,10 @@ const PUTER_STREAM_STUB = `
   // tutor-chat spec finishes under its 10s deadline.
   window.__sbE2eChunkDelayMs = 150;
   window.puter = {
+    // Models a signed-in user so the page bridge's auth gate lets the background
+    // verify/translate paths run (they skip for signed-out users to avoid Puter's
+    // sign-in prompt — see page-bridge.js _isPuterAuthed).
+    authToken: 'e2e-stub-token',
     ai: {
       chat: async function (prompt, opts) {
         const failAttr = 'data-sb-e2e-fail-chat-count';
