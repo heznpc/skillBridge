@@ -81,7 +81,7 @@ That's it.
 
 ### 🌐 Full Page Translation
 
-Every text element on the page is translated, with AI-specific terms handled correctly via curated dictionaries. Progress checkboxes, icons, navigation, and CJK fonts all stay intact.
+Every text element on the page is translated, with AI-specific terms handled correctly via curated dictionaries. Progress checkboxes, icons, navigation, and CJK fonts all stay intact. (Blocks that mix inline formatting — bold, links, inline code — are AI-translated, so they fill in once you sign in to the optional free tutor; plain text, headings, and lists translate with no account.)
 
 <div align="center">
 <img src="assets/screenshots/01-lesson-translated.png" alt="Lesson page with curriculum fully translated" width="720" />
@@ -194,7 +194,7 @@ Page text
   ├─ Local cache (IndexedDB) ───────→ Instant (previously verified)
   │
   ├─ Has inline HTML tags? (<strong>, <a>, <code>...)
-  │     └─ Yes → Gemini 2.0 Flash translates with tag preservation
+  │     └─ Yes → Gemini 2.0 Flash translates with tag preservation (needs a free tutor sign-in)
   │
   └─ Plain text → Google Translate ─→ ~200ms
        │
