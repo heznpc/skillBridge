@@ -33,7 +33,7 @@ Anthropic's free AI courses at anthropic.skilljar.com — prompt engineering, AI
 This is not generic page-translate. SkillBridge ships hand-curated AI terminology dictionaries so the words that matter stay correct — "Prompt" stays a prompt, not the literal mistranslation machine translators produce in most languages — then verifies tricky sentences with an LLM in the background. On top sits an in-page AI tutor that knows the exact lesson you're on: get stuck, ask in your own language, and the answer fits the slide in front of you.
 
 🎓 FINISH IN YOUR LANGUAGE
-Every text element on the page is translated — headings, paragraphs, lists, navigation, course cards, progress labels, video subtitles, and code comments. Interactive elements stay intact so progress tracking and quiz submission keep working.
+Every text element on the page is translated — headings, paragraphs, lists, navigation, course cards, progress labels, video subtitles, and code comments. Interactive elements stay intact so progress tracking and quiz submission keep working. (Blocks that mix inline formatting — bold, links, code — are AI-translated and fill in after you sign in to the optional free tutor; plain text needs no account.)
 
 🤖 IN-PAGE AI TUTOR (powered by Claude Sonnet 4.6 via Puter.js)
 A sidebar chatbot that knows which course and lesson you're on. Ask questions in your language; get streaming answers grounded in the current lesson. Powered by Puter.js's free tier — no API key; you may be asked to sign in to a free Puter account the first time you open the tutor.
@@ -98,7 +98,7 @@ Português (PT) · Nederlands · Polski · Українська · Čeština · 
 HOW IT WORKS
 1. Curated dictionary lookup (570+ entries) → instant, fully local
 2. Local cache (IndexedDB) → instant, stays on your device
-3. Inline HTML tags → Gemini 2.0 Flash translates with tag preservation (via Puter.js)
+3. Inline HTML tags → Gemini 2.0 Flash translates with tag preservation (via Puter.js — needs a free sign-in)
 4. Plain text → Google Translate API (~200ms)
 5. AI quality check → Gemini 2.0 Flash verifies complex sentences in the background
 6. Protected Terms auto-fix → restores brand and technical terms
