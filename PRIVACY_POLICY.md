@@ -4,7 +4,7 @@
 
 ## Overview
 
-SkillBridge is a browser extension that translates the free AI course pages on Skilljar ([anthropic.skilljar.com](https://anthropic.skilljar.com/) and other detected Skilljar AI-course tenants) and Claude tutorial pages at `claude.com/resources/tutorials` into 32 languages, and provides an in-page AI learning assistant. It is designed with privacy in mind — SkillBridge does not operate any servers, requires no account to translate (the optional in-page AI tutor uses Puter.js, which may ask you to sign in to a free account), and does not use analytics or tracking.
+SkillBridge is a browser extension that translates the free AI course pages on Skilljar ([anthropic.skilljar.com](https://anthropic.skilljar.com/) and other detected Skilljar AI-course tenants) and Claude tutorial pages at `claude.com/resources/tutorials` into 32 languages, and provides an in-page AI learning assistant. It is designed with privacy in mind — SkillBridge does not operate any servers, requires no account, email, or password to translate (the optional in-page AI tutor uses Puter.js, which may open a Puter window to verify you're human the first time you use it), and does not use analytics or tracking.
 
 ## Data Stored Locally (Never Leaves Your Device)
 
