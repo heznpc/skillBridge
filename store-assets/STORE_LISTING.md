@@ -82,8 +82,8 @@ Full dark theme for the course site. Full right-to-left layout for Arabic and He
 ━━━━━━━━━━━━━━━━━━━
 
 SUPPORTED COURSES
-All 19 currently-published courses on anthropic.skilljar.com, with terminology coverage for any new course added within 48 hours (mechanically enforced by an open-source drift watcher that auto-opens an issue when a new slug appears). Course names referenced descriptively for compatibility:
-Claude 101 · Claude Platform 101 · Claude Code 101 · Claude Code in Action · Introduction to Claude Cowork · Introduction to Agent Skills · Introduction to Subagents · Building with the Claude API · Introduction to MCP · MCP: Advanced Topics · Claude with Amazon Bedrock · Claude with Google Vertex AI · AI Fluency: Framework & Foundations · AI Fluency for Students · AI Fluency for Educators · Teaching AI Fluency · AI Fluency for Nonprofits · AI Fluency for Small Businesses · AI Capabilities and Limitations
+All 20 currently-published courses on anthropic.skilljar.com, with terminology coverage for any new course added within 48 hours (mechanically enforced by an open-source drift watcher that auto-opens an issue when a new slug appears). Course names referenced descriptively for compatibility:
+Claude 101 · Claude Platform 101 · Claude Code 101 · Claude Code in Action · Introduction to Claude Cowork · Introduction to Agent Skills · Introduction to Subagents · Building with the Claude API · Introduction to MCP · MCP: Advanced Topics · Claude with Amazon Bedrock · Claude with Google Vertex AI · AI Fluency: Framework & Foundations · AI Fluency for Builders · AI Fluency for Students · AI Fluency for Educators · Teaching AI Fluency · AI Fluency for Nonprofits · AI Fluency for Small Businesses · AI Capabilities and Limitations
 
 ━━━━━━━━━━━━━━━━━━━
 
@@ -100,7 +100,7 @@ HOW IT WORKS
 2. Local cache (IndexedDB) → instant, stays on your device
 3. Inline HTML tags → Gemini 2.0 Flash translates with tag preservation (via Puter.js — needs a one-time Puter human-check)
 4. Plain text → Google Translate API (~200ms)
-5. AI quality check → Gemini 2.0 Flash verifies complex sentences in the background
+5. AI quality check → Gemini 2.0 Flash verifies complex sentences when Puter auth is available; otherwise the Google Translate result stays in place
 6. Protected Terms auto-fix → restores brand and technical terms
 
 No data is stored on SkillBridge servers. Translation uses Google Translate and Puter.js — see Privacy Policy below for details.
@@ -113,7 +113,7 @@ No API keys needed. No account, email, or password to translate (the optional AI
 SkillBridge does NOT operate any servers. To provide translation and AI features, data is sent to third parties:
 
 • Google Translate — Page text is sent to Google's translation endpoint. Google's privacy policy applies.
-• Puter.js → Gemini 2.0 Flash — Translation text is sent via Puter.js for quality verification of complex sentences. Puter's privacy policy applies.
+• Puter.js → Gemini 2.0 Flash — Signed-in or human-checked sessions may send translation text via Puter.js for quality verification of complex sentences. Puter's privacy policy applies.
 • Puter.js → Claude Sonnet 4.6 — Chat messages and lesson context (up to 2,000 characters) are sent via Puter.js for AI tutoring. Puter's privacy policy applies.
 
 All settings, translation cache, and conversation history are stored locally in your browser (chrome.storage and IndexedDB). This data never leaves your device.
