@@ -176,6 +176,202 @@ describe('page-bridge runtime hardening', () => {
     expect(globalThis.puterParent).toBeUndefined();
   });
 
+  test('stream watchdog releases Puter globals even when the SDK stream never settles', async () => {
+    jest.useFakeTimers();
+    const iterator = {
+      next: jest.fn(() => new Promise(() => {})),
+      return: jest.fn(async () => ({ done: true })),
+    };
+    chat.mockImplementation(async () => ({
+      [Symbol.asyncIterator]() {
+        return iterator;
+      },
+    }));
+
+    try {
+      window.dispatchEvent(
+        new window.MessageEvent('message', {
+          source: window,
+          data: {
+            __skillbridge__: true,
+            __nonce__: nonce,
+            type: 'CHAT_REQUEST',
+            id: 'chat-hung-stream',
+            userMessage: 'stall please',
+            stream: true,
+            model: 'claude-haiku-4-5',
+          },
+        }),
+      );
+
+      await Promise.resolve();
+      jest.advanceTimersByTime(0);
+      await Promise.resolve();
+      jest.advanceTimersByTime(100);
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(globalThis.puter?.authToken).toBe('test-token');
+
+      jest.advanceTimersByTime(90_000);
+      await Promise.resolve();
+
+      expect(globalThis.puter).toBeUndefined();
+      expect(globalThis.puterParent).toBeUndefined();
+      expect(iterator.return).toHaveBeenCalledTimes(1);
+      expect(sent.some((m) => m.type === 'CHAT_STREAM_END')).toBe(false);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  test('CHAT_ABORT releases Puter globals for a hung SDK stream without waiting for the watchdog', async () => {
+    const iterator = {
+      next: jest.fn(() => new Promise(() => {})),
+      return: jest.fn(async () => ({ done: true })),
+    };
+    chat.mockImplementation(async () => ({
+      [Symbol.asyncIterator]() {
+        return iterator;
+      },
+    }));
+
+    window.dispatchEvent(
+      new window.MessageEvent('message', {
+        source: window,
+        data: {
+          __skillbridge__: true,
+          __nonce__: nonce,
+          type: 'CHAT_REQUEST',
+          id: 'chat-abort-hung',
+          userMessage: 'stall please',
+          stream: true,
+          model: 'claude-haiku-4-5',
+        },
+      }),
+    );
+
+    await waitFor(() => globalThis.puter?.authToken === 'test-token' && iterator.next.mock.calls.length === 1);
+
+    window.dispatchEvent(
+      new window.MessageEvent('message', {
+        source: window,
+        data: {
+          __skillbridge__: true,
+          __nonce__: nonce,
+          type: 'CHAT_ABORT',
+          id: 'chat-abort-hung',
+        },
+      }),
+    );
+
+    await waitFor(() => globalThis.puter === undefined && globalThis.puterParent === undefined);
+    expect(iterator.return).toHaveBeenCalledTimes(1);
+    expect(sent.some((m) => m.type === 'CHAT_STREAM_END')).toBe(false);
+  });
+
+  test('CHAT_ABORT while Puter is pending closes the returned stream without reading it', async () => {
+    let resolveChat;
+    const iterator = {
+      next: jest.fn(() => Promise.resolve({ done: true })),
+      return: jest.fn(async () => ({ done: true })),
+    };
+    chat.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveChat = resolve;
+        }),
+    );
+
+    window.dispatchEvent(
+      new window.MessageEvent('message', {
+        source: window,
+        data: {
+          __skillbridge__: true,
+          __nonce__: nonce,
+          type: 'CHAT_REQUEST',
+          id: 'chat-abort-pending',
+          userMessage: 'stall before stream',
+          stream: true,
+          model: 'claude-haiku-4-5',
+        },
+      }),
+    );
+
+    await waitFor(() => typeof resolveChat === 'function' && globalThis.puter?.authToken === 'test-token');
+
+    window.dispatchEvent(
+      new window.MessageEvent('message', {
+        source: window,
+        data: {
+          __skillbridge__: true,
+          __nonce__: nonce,
+          type: 'CHAT_ABORT',
+          id: 'chat-abort-pending',
+        },
+      }),
+    );
+
+    await waitFor(() => globalThis.puter === undefined && globalThis.puterParent === undefined);
+
+    resolveChat({
+      [Symbol.asyncIterator]() {
+        return iterator;
+      },
+    });
+
+    await waitFor(() => iterator.return.mock.calls.length === 1);
+    expect(iterator.next).not.toHaveBeenCalled();
+    expect(sent.some((m) => m.type === 'CHAT_STREAM_END')).toBe(false);
+  });
+
+  test('CHAT_ABORT suppresses fallback retry and error response after a pending model error', async () => {
+    let rejectChat;
+    chat.mockImplementation(
+      () =>
+        new Promise((_resolve, reject) => {
+          rejectChat = reject;
+        }),
+    );
+
+    window.dispatchEvent(
+      new window.MessageEvent('message', {
+        source: window,
+        data: {
+          __skillbridge__: true,
+          __nonce__: nonce,
+          type: 'CHAT_REQUEST',
+          id: 'chat-abort-error',
+          userMessage: 'fail after abort',
+          stream: true,
+          model: 'claude-sonnet-4-6',
+        },
+      }),
+    );
+
+    await waitFor(() => typeof rejectChat === 'function' && globalThis.puter?.authToken === 'test-token');
+
+    window.dispatchEvent(
+      new window.MessageEvent('message', {
+        source: window,
+        data: {
+          __skillbridge__: true,
+          __nonce__: nonce,
+          type: 'CHAT_ABORT',
+          id: 'chat-abort-error',
+        },
+      }),
+    );
+
+    await waitFor(() => globalThis.puter === undefined && globalThis.puterParent === undefined);
+    rejectChat(new Error('model not found'));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(chat).toHaveBeenCalledTimes(1);
+    expect(sent.some((m) => m.type === 'CHAT_RESPONSE')).toBe(false);
+    expect(sent.some((m) => m.type === 'CHAT_STREAM_END')).toBe(false);
+  });
+
   // ── "No account required" guard ────────────────────────────────
   // The bundled Puter SDK opens its own sign-in prompt when ai.chat() is called
   // while signed out (env "web"). Background paths (verify / block-translate) run

@@ -2,7 +2,7 @@
 
 > Refreshed 2026-06-23 for v3.5.41. Since the last dashboard-ready checklist:
 > Indonesian became a Premium language, the live Academy catalog check reports
-> 19 published courses wired into the 32-slug coverage map, and protected-term
+> 20 published courses wired into the 33-slug coverage map, and protected-term
 > restoration now also covers cached GT translations. This is the source of
 > truth for the next dashboard upload.
 

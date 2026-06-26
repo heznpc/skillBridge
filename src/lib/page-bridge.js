@@ -119,7 +119,13 @@
 
   function _handleAbort(id) {
     const entry = _activeStreams.get(id);
-    if (entry) entry.cancelled = true;
+    if (entry) {
+      entry.cancelled = true;
+      entry.closeStream?.();
+      entry.releasePuterGlobals?.();
+      entry.clearWatchdog?.();
+      _activeStreams.delete(id);
+    }
   }
 
   // Fallback chain — used when a primary model is rejected by Puter
@@ -217,13 +223,14 @@
   function _wrapPuterStream(stream, releaseGlobals) {
     const iterator = stream[Symbol.asyncIterator]();
     let released = false;
+    let closed = false;
     const releaseOnce = () => {
       if (released) return;
       released = true;
       releaseGlobals();
     };
 
-    return {
+    const wrapped = {
       [Symbol.asyncIterator]() {
         return this;
       },
@@ -238,6 +245,11 @@
         }
       },
       async return(...args) {
+        if (closed) {
+          releaseOnce();
+          return { done: true };
+        }
+        closed = true;
         try {
           if (typeof iterator.return === 'function') return await iterator.return(...args);
           return { done: true };
@@ -246,6 +258,7 @@
         }
       },
       async throw(...args) {
+        closed = true;
         try {
           if (typeof iterator.throw === 'function') return await iterator.throw(...args);
           throw args[0];
@@ -254,6 +267,11 @@
         }
       },
     };
+    Object.defineProperty(wrapped, '__skillbridgeReleaseGlobals', {
+      value: releaseOnce,
+      enumerable: false,
+    });
+    return wrapped;
   }
 
   function _holdGlobalsForStreamIfNeeded(response, opts, releaseGlobals) {
@@ -263,9 +281,10 @@
     return { response, streamHoldsGlobals: false };
   }
 
-  async function _puterChat(prompt, opts) {
+  async function _puterChat(prompt, opts, onReleaseReady, shouldCancel) {
     if (!_puterChatImpl) throw new Error('Puter chat unavailable');
     const releaseGlobals = _enterPuterCallGlobals();
+    if (typeof onReleaseReady === 'function') onReleaseReady(releaseGlobals);
     let streamHoldsGlobals = false;
     try {
       const first = await _puterChatImpl(prompt, opts);
@@ -274,6 +293,7 @@
       return wrapped.response;
     } catch (err) {
       const fallback = opts?.model && _MODEL_FALLBACKS[opts.model];
+      if (typeof shouldCancel === 'function' && shouldCancel()) throw err;
       if (!fallback || !_isModelError(err)) throw err;
       log(`Model "${opts.model}" rejected (${err?.message}); retrying with "${fallback}"`);
       const retry = await _puterChatImpl(prompt, { ...opts, model: fallback });
@@ -510,18 +530,29 @@
       // hang — but the cleanup path executes regardless because we
       // also clear from the timeout itself).
       let watchdog = null;
+      const _clearWatchdog = () => {
+        if (watchdog) {
+          clearTimeout(watchdog);
+          watchdog = null;
+        }
+      };
       const _armWatchdog = () => {
-        if (watchdog) clearTimeout(watchdog);
+        _clearWatchdog();
         watchdog = setTimeout(() => {
           if (streamEntry) {
             streamEntry.cancelled = true;
             // The for-await may still be waiting on next() forever —
-            // explicitly delete here so a stalled stream doesn't
-            // accumulate Map entries indefinitely.
+            // explicitly release Puter globals and delete here so a
+            // stalled stream doesn't expose the SDK or accumulate Map
+            // entries indefinitely.
+            streamEntry.closeStream?.();
+            streamEntry.releasePuterGlobals?.();
             _activeStreams.delete(data.id);
           }
+          watchdog = null;
         }, _CHAT_STREAM_BRIDGE_TIMEOUT_MS);
       };
+      if (streamEntry) streamEntry.clearWatchdog = _clearWatchdog;
 
       try {
         if (!puterReady) await loadPuter();
@@ -538,12 +569,39 @@
         if (data.stream) {
           _armWatchdog();
           // Streaming mode — send chunks via postMessage
-          const response = await _puterChat(prompt, {
-            // SkillBridge is Claude-focused; default to Haiku as a cheap,
-            // fast Claude fallback if content.js forgets to pass `model`.
-            model: _selectModel('CHAT_REQUEST', data.model, 'claude-haiku-4-5'),
-            stream: true,
-          });
+          const response = await _puterChat(
+            prompt,
+            {
+              // SkillBridge is Claude-focused; default to Haiku as a cheap,
+              // fast Claude fallback if content.js forgets to pass `model`.
+              model: _selectModel('CHAT_REQUEST', data.model, 'claude-haiku-4-5'),
+              stream: true,
+            },
+            (releaseGlobals) => {
+              streamEntry.releasePuterGlobals = releaseGlobals;
+            },
+            () => streamEntry.cancelled,
+          );
+          streamEntry.closeStream = () => {
+            try {
+              const closed = response?.return?.();
+              if (closed && typeof closed.catch === 'function') return closed.catch(() => undefined);
+              return closed;
+            } catch (_) {
+              return undefined;
+            }
+          };
+          if (streamEntry.cancelled) {
+            // Abort may land while `_puterChat` is waiting on Puter's first
+            // response. Do not enter the iterator after cancellation; close it
+            // immediately when the SDK exposes a return hook.
+            try {
+              await streamEntry.closeStream?.();
+            } catch (_) {
+              // best-effort upstream cancellation only
+            }
+            return;
+          }
 
           for await (const chunk of response) {
             // Bail on cancellation — breaking out of for-await calls the
@@ -599,6 +657,9 @@
           );
         }
       } catch (err) {
+        if (streamEntry?.cancelled) {
+          return;
+        }
         const errMsg = err?.error || err?.message || String(err);
         log('Chat error:', errMsg);
         window.postMessage(
@@ -614,7 +675,7 @@
           window.location.origin,
         );
       } finally {
-        if (watchdog) clearTimeout(watchdog);
+        _clearWatchdog();
         if (streamEntry) _activeStreams.delete(data.id);
       }
     }

@@ -200,7 +200,7 @@ Page text
        │
        ├─ Protected Terms auto-fix ─→ Restores brand/tech terms GT mistranslates
        │
-       └─ Complex sentence? → Gemini 2.0 Flash verifies → corrects if needed
+       └─ Complex sentence? → Gemini 2.0 Flash verifies when Puter auth is available → otherwise GT text stays in place
 ```
 
 Translation requests are sent to Google Translate and Gemini/Claude APIs via [Puter.js](https://docs.puter.com/). SkillBridge does not operate any servers — but text is transmitted to these third-party services for translation and AI features. No account, email, or password is required to translate; the optional AI tutor may open a Puter window to verify you're human. See our [Privacy Policy](PRIVACY_POLICY.md) for full details.
@@ -307,7 +307,7 @@ See our full [Privacy Policy](PRIVACY_POLICY.md).
 |-----------|-----------|
 | Page Translation | Google Translate API |
 | Inline Tag Translation | Gemini 2.0 Flash (preserves `<strong>`, `<a>`, `<code>`) |
-| Quality Verification | Gemini 2.0 Flash via [Puter.js](https://docs.puter.com/) |
+| Quality Verification | Gemini 2.0 Flash via [Puter.js](https://docs.puter.com/) when Puter auth is available |
 | Protected Terms | Auto-correction of GT brand/product term errors per language (Claude, Cowork, Computer Use, Agent Skills, etc.) |
 | AI Tutor | Claude Sonnet 4.6 via Puter.js |
 | Curated Dictionaries | Hand-tuned JSON (1,100+ × 12 languages) |

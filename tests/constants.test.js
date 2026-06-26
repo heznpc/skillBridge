@@ -19,7 +19,7 @@ const constants = new Function(`${selectorsSrc}\n${constantsSrc}; return {
   YOUTUBE_CLIENT_VERSION, SKILLBRIDGE_MODEL_LABELS,
   SHORTCUT_LABELS, SHORTCUT_DESCRIPTIONS,
   EXAM_URL_PATTERNS, EXAM_SKIP_SELECTORS, EXAM_BANNER_LABELS, TUTOR_EXAM_LABELS,
-  CERT_DISABLE_PATTERNS,
+  CERT_DISABLE_PATTERNS, FLASHCARD_COURSE_MAP,
   SKILLJAR_SELECTORS,
 };`)();
 
@@ -33,6 +33,7 @@ const {
   DEFAULT_PROTECTED_TERMS,
   SHORTCUT_LABELS,
   SHORTCUT_DESCRIPTIONS,
+  FLASHCARD_COURSE_MAP,
 } = constants;
 
 describe('SKILLBRIDGE_MODELS', () => {
@@ -240,6 +241,12 @@ describe('CERT_DISABLE_PATTERNS', () => {
     for (const url of certOnly) {
       expect(EXAM_URL_PATTERNS.some((p) => p.test(url))).toBe(false);
     }
+  });
+});
+
+describe('FLASHCARD_COURSE_MAP', () => {
+  test('maps the AI Fluency for Builders live course to the generic AI Fluency deck', () => {
+    expect(FLASHCARD_COURSE_MAP['ai-fluency-for-builders']).toEqual(['aiFluency']);
   });
 });
 
