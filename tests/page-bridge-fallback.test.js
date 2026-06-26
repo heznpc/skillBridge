@@ -282,7 +282,22 @@ describe('CHAT_ABORT wiring (M-1 regression guard)', () => {
   });
 
   test('clears the watchdog in finally (no timer leak)', () => {
-    expect(src).toMatch(/if\s*\(\s*watchdog\s*\)\s*clearTimeout\s*\(\s*watchdog\s*\)/);
+    expect(src).toMatch(/const\s+_clearWatchdog\s*=\s*\(\)\s*=>\s*\{/);
+    expect(src).toMatch(/clearTimeout\s*\(\s*watchdog\s*\)/);
+    expect(src).toMatch(/finally\s*\{[\s\S]*?_clearWatchdog\s*\(\s*\)/);
+  });
+
+  test('releases Puter globals from abort and watchdog even if the stream is hung', () => {
+    expect(src).toMatch(/entry\.closeStream\?\.\(\s*\)/);
+    expect(src).toMatch(/entry\.releasePuterGlobals\?\.\(\s*\)/);
+    expect(src).toMatch(/streamEntry\.closeStream\?\.\(\s*\)/);
+    expect(src).toMatch(/streamEntry\.releasePuterGlobals\?\.\(\s*\)/);
+    expect(src).toMatch(/onReleaseReady/);
+  });
+
+  test('skips fallback retry and error responses after a stream is cancelled', () => {
+    expect(src).toMatch(/shouldCancel\s*\)/);
+    expect(src).toMatch(/streamEntry\?\.cancelled[\s\S]*?return;/);
   });
 
   // ── Audit V15: cancelled check between loadPuter and _puterChat ──
