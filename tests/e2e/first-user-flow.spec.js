@@ -95,5 +95,16 @@ test.describe('SkillBridge — first-user release smoke', () => {
 
     const afterReloadBanner = await evalInContentWorld(extCtx.context, 'welcomeBannerState');
     expect(afterReloadBanner.present).toBe(false);
+
+    await evalInContentWorld(extCtx.context, 'switchLanguage', 'en');
+    await evalInContentWorld(extCtx.context, 'showWelcomeBanner', 'en');
+    const englishIntro = await evalInContentWorld(extCtx.context, 'welcomeBannerState');
+    expect(englishIntro.text).toContain('SkillBridge is ready');
+
+    const changed = await evalInContentWorld(extCtx.context, 'changeWelcomeLanguage', 'ko');
+    expect(changed).toEqual({ ok: true });
+    const afterIntroChange = await evalInContentWorld(extCtx.context, 'welcomeBannerState');
+    expect(afterIntroChange.text).toContain('SkillBridge is ready');
+    expect(afterIntroChange.text).not.toMatch(/^Korean\b/);
   });
 });

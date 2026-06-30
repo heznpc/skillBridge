@@ -130,7 +130,7 @@
       banner.innerHTML = `
         <span class="si18n-banner-icon">\u{1F310}</span>
         <div class="si18n-banner-text">
-          ${ui.prompt} <strong>${langLabel}</strong>
+          ${ui.prompt} <strong data-sb-selected-lang>${langLabel}</strong>
           <select id="si18n-banner-lang">${langOptions}</select>
         </div>
         <div class="si18n-banner-actions">
@@ -185,7 +185,7 @@
 
     document.getElementById('si18n-banner-lang')?.addEventListener('change', (e) => {
       const newLabel = AVAILABLE_LANGUAGES.find((l) => l.code === e.target.value)?.label || e.target.value;
-      const textEl = banner.querySelector('.si18n-banner-text strong');
+      const textEl = banner.querySelector('[data-sb-selected-lang]');
       if (textEl) textEl.textContent = newLabel;
     });
   }

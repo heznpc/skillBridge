@@ -129,7 +129,7 @@
   // FAB must never flash unstyled. Ancestor theme selectors are written in
   // :host(...) form; the shadow host mirrors the html/body state classes.
   const FAB_SHADOW_CSS = `
-    #skillbridge-fab { position: fixed; bottom: 24px; right: 24px; width: 48px; height: 48px; padding: 0; border-radius: 50%; background: var(--si18n-accent, #3d405b); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 16px rgba(61, 64, 91, 0.35); z-index: 99999; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: none; }
+    #skillbridge-fab { position: fixed; bottom: 24px; right: 24px; width: 48px; height: 48px; padding: 0; border-radius: 50%; background: var(--si18n-accent, #3d405b); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 16px rgba(61, 64, 91, 0.35); z-index: 99999; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s, color 0.3s; border: none; }
     #skillbridge-fab svg { flex-shrink: 0; width: 24px; height: 24px; }
     #skillbridge-fab:hover { transform: scale(1.08); box-shadow: 0 6px 24px rgba(61, 64, 91, 0.45); }
     #skillbridge-fab.hidden { transform: scale(0); opacity: 0; pointer-events: none; }
@@ -594,7 +594,10 @@
         retryBtn.textContent = '\u21bb';
         retryBtn.title = sb.t(A11Y_LABELS.retry);
         retryBtn.addEventListener('click', () => {
-          bubble.closest('.si18n-chat-msg')?.remove();
+          const failedBotMsg = bubble.closest('.si18n-chat-msg');
+          const failedUserMsg = failedBotMsg?.previousElementSibling;
+          if (failedUserMsg?.classList.contains('si18n-chat-user')) failedUserMsg.remove();
+          failedBotMsg?.remove();
           const inp = sb.$id('si18n-chat-input');
           if (inp) {
             inp.value = text;
