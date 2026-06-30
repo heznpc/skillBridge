@@ -149,6 +149,60 @@ describe('page-bridge runtime hardening', () => {
     );
   });
 
+  // Regression guard for the permanent-scrub defect fixed in #250.
+  //
+  // The bundled Puter SDK dereferences `globalThis.puter` UNGUARDED at call time
+  // (its driver/request path reads `globalThis.puter.apiCallLogger`,
+  // `.driverRequestInfo`, `._puterRequestId`). An earlier build (50e4490) scrubbed
+  // `globalThis.puter` permanently right after binding `ai.chat`, so every REAL
+  // chat/verify call threw `TypeError` the instant the SDK reached for the global —
+  // a total break of the AI Tutor that the other stubs hide because they read the
+  // global with optional chaining (`globalThis.puter?.authToken`), which softly
+  // yields `undefined` instead of throwing.
+  //
+  // This stub mirrors the SDK's HARD dependency: it dereferences the global without
+  // a guard, so it throws if `globalThis.puter` is absent at the moment `ai.chat`
+  // runs. The bridge must keep the global reachable for the duration of the call
+  // (re-exposed by `_enterPuterCallGlobals`, released in `finally`) — otherwise this
+  // comes back as `success:false`. Asserting the success path pins that contract.
+  test('regression: bridge keeps globalThis.puter reachable for an unguarded SDK deref at chat call-time (#250)', async () => {
+    chat.mockImplementation(async (_prompt, opts) => {
+      // NOT optional-chained, on purpose — this is what the bundled SDK does.
+      const token = globalThis.puter.authToken;
+      return { message: { content: `model=${opts.model};auth=${token}` } };
+    });
+
+    window.dispatchEvent(
+      new window.MessageEvent('message', {
+        source: window,
+        data: {
+          __skillbridge__: true,
+          __nonce__: nonce,
+          type: 'CHAT_REQUEST',
+          id: 'chat-sdk-deref',
+          userMessage: 'hi',
+          stream: false,
+          model: 'claude-haiku-4-5',
+        },
+      }),
+    );
+
+    await waitFor(() => sent.some((m) => m.type === 'CHAT_RESPONSE'));
+
+    // If a future change re-scrubs the global before the call, the unguarded deref
+    // above throws and this lands as { success: false, result: 'Error: ...' }.
+    expect(sent.find((m) => m.type === 'CHAT_RESPONSE')).toEqual(
+      expect.objectContaining({
+        id: 'chat-sdk-deref',
+        success: true,
+        result: 'model=claude-haiku-4-5;auth=test-token',
+      }),
+    );
+    // And the call window closes: the global is scrubbed again once chat resolves.
+    expect(globalThis.puter).toBeUndefined();
+    expect(globalThis.puterParent).toBeUndefined();
+  });
+
   test('streaming CHAT_REQUEST keeps Puter globals available until the stream is consumed, then scrubs them', async () => {
     window.dispatchEvent(
       new window.MessageEvent('message', {
