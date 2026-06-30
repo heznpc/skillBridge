@@ -1,13 +1,16 @@
 /**
  * SkillBridge — keyboard-shortcuts behavioral E2E.
  *
- * keyboard-shortcuts.js binds a document-level keydown handler offering three
- * global shortcuts (the modifier is Cmd on macOS, Ctrl elsewhere — mirrored
+ * keyboard-shortcuts.js binds a document-level keydown handler offering global
+ * shortcuts (the modifier is Cmd on macOS, Ctrl elsewhere — mirrored
  * here via process.platform so the test exercises the same branch the handler
  * takes on the host OS):
  *
+ *   - Mod+Shift+S  → toggle the tutor sidebar
+ *   - Mod+Shift+F  → open the sidebar and toggle the flashcards panel
  *   - Mod+Shift+/  → toggle the shortcuts help overlay
  *   - Escape       → close the overlay when it's open
+ *   - /            → focus the chat input when the sidebar is open
  *   - Mod+Shift+L  → toggle dark mode (si18n-dark class on <html>)
  *
  * a11y.spec.js covers the overlay's ARIA shape; this spec covers that the key
@@ -60,6 +63,14 @@ test.describe('SkillBridge — keyboard shortcuts', () => {
   });
 
   const overlayPresent = () => page.evaluate(() => !!document.getElementById('si18n-shortcuts-overlay'));
+  const snapshot = () => evalInContentWorld(extCtx.context, 'snapshot');
+  const sidebarVisible = async () => (await snapshot()).sidebarVisible;
+  const flashcardsVisible = async () => (await snapshot()).methods.chat.state.flashcardPanelOpen;
+  const chatInputFocused = () =>
+    page.evaluate(() => {
+      const root = document.getElementById('skillbridge-root')?.shadowRoot;
+      return root?.activeElement?.id === 'si18n-chat-input';
+    });
 
   test('Mod+Shift+/ opens the shortcuts overlay and Escape closes it', async () => {
     expect(await overlayPresent(), 'overlay should not be open before the shortcut').toBe(false);
@@ -84,5 +95,35 @@ test.describe('SkillBridge — keyboard shortcuts', () => {
     // not a one-way set.
     await page.keyboard.press(`${MOD}+Shift+KeyL`);
     await expect.poll(isDark, { timeout: 3_000 }).toBe(before);
+  });
+
+  test('Mod+Shift+S toggles the tutor sidebar and Escape closes it', async () => {
+    if (await sidebarVisible()) {
+      await page.keyboard.press(`${MOD}+Shift+KeyS`);
+      await expect.poll(sidebarVisible, { timeout: 3_000 }).toBe(false);
+    }
+
+    await page.keyboard.press(`${MOD}+Shift+KeyS`);
+    await expect.poll(sidebarVisible, { timeout: 3_000 }).toBe(true);
+
+    await page.keyboard.press('Escape');
+    await expect.poll(sidebarVisible, { timeout: 3_000 }).toBe(false);
+  });
+
+  test('Mod+Shift+F opens flashcards and / focuses chat when sidebar is open', async () => {
+    if (await sidebarVisible()) {
+      await page.keyboard.press('Escape');
+      await expect.poll(sidebarVisible, { timeout: 3_000 }).toBe(false);
+    }
+
+    await page.keyboard.press(`${MOD}+Shift+KeyF`);
+    await expect.poll(sidebarVisible, { timeout: 3_000 }).toBe(true);
+    await expect.poll(flashcardsVisible, { timeout: 3_000 }).toBe(true);
+
+    await page.keyboard.press(`${MOD}+Shift+KeyF`);
+    await expect.poll(flashcardsVisible, { timeout: 3_000 }).toBe(false);
+
+    await page.keyboard.press('Slash');
+    await expect.poll(chatInputFocused, { timeout: 3_000 }).toBe(true);
   });
 });

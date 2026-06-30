@@ -26,6 +26,7 @@ const { chromium } = require('@playwright/test');
 const ROOT = path.join(__dirname, '..', '..', '..');
 const EXTENSION_SRC = path.join(ROOT, 'dist', 'bundled');
 const TEMP_DIRS = new Set();
+const SERVICE_WORKER_READY_TIMEOUT_MS = 20_000;
 
 function buildBundleForE2E() {
   execFileSync(process.execPath, [path.join(ROOT, 'scripts', 'build-bundle.js')], {
@@ -227,9 +228,12 @@ async function launchExtension() {
       });
 
       // Wait for the service worker to register so we can grab the extension ID.
+      // A bad persistent-context launch usually never produces the worker; keep
+      // each attempt comfortably below Playwright's 120s beforeAll timeout so
+      // the helper can retry instead of letting the hook expire.
       let [serviceWorker] = context.serviceWorkers();
       if (!serviceWorker) {
-        serviceWorker = await context.waitForEvent('serviceworker', { timeout: 45_000 });
+        serviceWorker = await context.waitForEvent('serviceworker', { timeout: SERVICE_WORKER_READY_TIMEOUT_MS });
       }
       const extensionId = serviceWorker.url().split('/')[2];
 
@@ -310,7 +314,7 @@ async function evalInContentWorld(context, op, arg) {
   for (let attempt = 0; attempt < 3; attempt++) {
     let sw = context.serviceWorkers()[0];
     if (!sw) {
-      sw = await context.waitForEvent('serviceworker', { timeout: 45_000 });
+      sw = await context.waitForEvent('serviceworker', { timeout: SERVICE_WORKER_READY_TIMEOUT_MS });
     }
     try {
       return await sw.evaluate(
@@ -507,6 +511,13 @@ async function evalInContentWorld(context, op, arg) {
                     selectedLang: select?.value || null,
                     text: banner?.textContent?.replace(/\s+/g, ' ').trim() || '',
                   };
+                },
+                changeWelcomeLanguage: (lang) => {
+                  const select = document.getElementById('si18n-banner-lang');
+                  if (!select) return { error: 'welcome banner select missing' };
+                  select.value = lang || 'ko';
+                  select.dispatchEvent(new window.Event('change', { bubbles: true }));
+                  return { ok: true };
                 },
                 acceptWelcomeLanguage: (lang) => {
                   const select = document.getElementById('si18n-banner-lang');
