@@ -24,6 +24,7 @@ const batches = [
     'tests/e2e/a11y.spec.js',
     'tests/e2e/first-user-flow.spec.js',
     'tests/e2e/keyboard-shortcuts.spec.js',
+    'tests/e2e/viewport-polish.spec.js',
     'tests/e2e/shadow-isolation.spec.js',
   ],
   [
@@ -37,6 +38,7 @@ const batches = [
     'tests/e2e/idb-cache.spec.js',
     'tests/e2e/lazy-translate.spec.js',
     'tests/e2e/offline-recovery.spec.js',
+    'tests/e2e/performance-budget.spec.js',
     'tests/e2e/pdf-export.spec.js',
     'tests/e2e/protected-terms.spec.js',
   ],
