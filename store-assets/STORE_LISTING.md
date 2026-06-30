@@ -142,7 +142,7 @@ Saves user preferences such as selected language, dark mode, and auto-translate 
 Schedules background maintenance tasks (cache trim, YouTube client version refresh) without keeping the service worker alive unnecessarily.
 
 ### Host permission: *.skilljar.com
-Required to inject content scripts that translate the course pages at anthropic.skilljar.com (and other Skilljar-hosted course content if extended in the future).
+Required to inject content scripts that translate the course pages at anthropic.skilljar.com and other detected Skilljar-hosted AI-course tenants (translation only outside the trusted primary host).
 
 ### Host permission: *.youtube.com
 Required to auto-activate translated subtitles on course videos embedded from YouTube.

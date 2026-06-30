@@ -294,11 +294,12 @@ content.js ←──window._sb──→ header-controls.js
 
 The CI workflow (`.github/workflows/ci.yml`) runs on every push to `main` and on PRs:
 
-1. **Validate** — checks `manifest.json` and all `src/data/*.json` for valid JSON, required fields (`_meta`), and empty values
-2. **Lint** — ESLint with warnings-only mode (max 50 warnings)
+1. **Validate** — checks manifest, translation JSON, glossary consistency, i18n keys, locale contamination, dictionary coverage, shared constants, dictionary freshness, plugin sync, and live Skilljar selectors
+2. **Build** — builds the Firefox artifact and bundled Chrome artifact
 3. **Test** — runs all Jest tests
+4. **E2E** — loads the built extension into Chromium and runs the Playwright suite
 
-The CD workflow (`.github/workflows/cd.yml`) triggers on push to `main` when `src/**`, `_locales/**`, or `manifest.json` change — it builds a zip and uploads to Chrome Web Store.
+The CWS CD workflow (`.github/workflows/cd.yml`) runs after successful CI on `main` or by manual dispatch, then applies its own deploy-relevant file gate. Live publish is blocked unless CWS secrets are configured, `CWS_PUBLICATION_PAUSED` is off (or manually forced), the secret listing target matches SkillBridge, and `CWS_DASHBOARD_READY_VERSION` equals the manifest version. Draft uploads (`publish=false`) do not create the live `cws-v*` deployed tag.
 
 ---
 
