@@ -97,8 +97,9 @@ Keep strategic market / pricing / partnership choices in POSITIONING.md.
   if anything ships.
 - [ ] **YouTube `_BG_YT_CLIENT_VERSION` auto-bump GH Action.** Currently manual
   every few weeks; copy the shipped drift-watcher pattern.
-- [ ] **Performance budget E2E.** Measure time from page load to translated H1
-  and fail future regressions against a declared budget.
+- [x] **Performance budget E2E.** Measure visible H1/body translation and
+  below-fold lazy translation against declared CI-safe budgets
+  (`tests/e2e/performance-budget.spec.js`).
 
 ## Learning companion — local-only & free (shipped: v3.5.36–3.5.39)
 

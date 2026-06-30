@@ -634,6 +634,37 @@ async function evalInContentWorld(context, op, arg) {
                     closeAriaLabel: close ? close.getAttribute('aria-label') : null,
                   };
                 },
+                uiLayoutProbe: () => {
+                  const host = document.getElementById('skillbridge-root');
+                  const root = host?.shadowRoot || document;
+                  const readBox = (el) => {
+                    if (!el) return null;
+                    const rect = el.getBoundingClientRect();
+                    const style = window.getComputedStyle(el);
+                    return {
+                      left: rect.left,
+                      top: rect.top,
+                      right: rect.right,
+                      bottom: rect.bottom,
+                      width: rect.width,
+                      height: rect.height,
+                      display: style.display,
+                      visibility: style.visibility,
+                      overflowX: style.overflowX,
+                    };
+                  };
+                  const doc = document.documentElement;
+                  const body = document.body;
+                  return {
+                    viewport: { width: window.innerWidth, height: window.innerHeight },
+                    overflowX: Math.max(doc?.scrollWidth || 0, body?.scrollWidth || 0) - window.innerWidth,
+                    sidebar: readBox(root.getElementById('skillbridge-sidebar')),
+                    flashcardCard: readBox(root.querySelector('.si18n-flashcard-card')),
+                    flashcardFront: readBox(root.querySelector('.si18n-flashcard-front')),
+                    flashcardBack: readBox(root.querySelector('.si18n-flashcard-back')),
+                    shortcutsPanel: readBox(document.querySelector('#si18n-shortcuts-overlay .si18n-shortcuts-panel')),
+                  };
+                },
                 // Diagnostic: probe translator IDB cache state directly.
                 // Returns the count of entries + the verifyQueue length +
                 // whether _db is open. Used by idb-cache.spec.js to verify
