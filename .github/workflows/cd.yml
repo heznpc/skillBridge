@@ -10,7 +10,7 @@ on:
       publish:
         description: 'Publish after upload (true = live, false = draft only)'
         required: false
-        default: 'true'
+        default: 'false'
       force:
         description: 'Skip file-change check and deploy regardless'
         required: false
@@ -31,13 +31,11 @@ jobs:
     runs-on: ubuntu-latest
     # Job-level gate. The first half is the existing trigger filter
     # (manual dispatch or successful CI). The second half is the
-    # publication-pause guard: while the CWS listing is removed pending
-    # icon redesign (see README.md "Installation" + POSITIONING.md
-    # "Blockers before outreach"), every push to manifest.json / src/*
-    # would otherwise fail with HTTP 400 from CWS and bury real
-    # regressions under red Xs. Flip the repo variable
-    # `CWS_PUBLICATION_PAUSED` to `false` (or unset) on re-publication
-    # day, or pass `force=true` via workflow_dispatch to bypass once.
+    # publication-pause guard: every push to manifest.json / src/* would
+    # otherwise try to publish before the dashboard-only listing/privacy/media
+    # fields are refreshed. Flip `CWS_PUBLICATION_PAUSED` off only after the
+    # dashboard is ready, then set `CWS_DASHBOARD_READY_VERSION` to the manifest
+    # version. Manual `force=true` still bypasses the pause for one-off recovery.
     if: >-
       (github.event_name == 'workflow_dispatch'
         || github.event.workflow_run.conclusion == 'success')
@@ -103,12 +101,70 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Deploying v$VERSION"
 
+      - name: Resolve publish mode
+        if: steps.secrets.outputs.configured == 'true'
+        id: publish_mode
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_PUBLISH: ${{ github.event.inputs.publish || 'false' }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            PUBLISH="$INPUT_PUBLISH"
+          else
+            PUBLISH="true"
+          fi
+          echo "publish=$PUBLISH" >> "$GITHUB_OUTPUT"
+          echo "publish=$PUBLISH"
+
+      - name: Check CWS target is SkillBridge
+        if: steps.secrets.outputs.configured == 'true'
+        env:
+          CWS_EXTENSION_ID: ${{ secrets.CWS_EXTENSION_ID }}
+        run: |
+          EXPECTED_ID=$(node - <<'NODE'
+          const fs = require('fs');
+          const src = fs.readFileSync('scripts/check-cws-drift.js', 'utf8');
+          const match = src.match(/const CWS_EXTENSION_ID = '([^']+)'/);
+          if (!match) {
+            console.error('Could not read the expected SkillBridge CWS listing id from scripts/check-cws-drift.js');
+            process.exit(1);
+          }
+          process.stdout.write(match[1]);
+          NODE
+          )
+          if [ "$CWS_EXTENSION_ID" != "$EXPECTED_ID" ]; then
+            echo "::error::CWS_EXTENSION_ID does not match the SkillBridge listing used by scripts/check-cws-drift.js. Refusing to upload; check repo secrets for cross-project contamination."
+            exit 1
+          fi
+
+      - name: Check dashboard-ready version before live publish
+        if: steps.secrets.outputs.configured == 'true'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          PUBLISH_LIVE: ${{ steps.publish_mode.outputs.publish }}
+          DASHBOARD_READY_VERSION: ${{ vars.CWS_DASHBOARD_READY_VERSION }}
+        run: |
+          if [ "$PUBLISH_LIVE" != "true" ]; then
+            echo "Draft upload requested; dashboard-ready version guard is not required."
+            exit 0
+          fi
+          if [ "$DASHBOARD_READY_VERSION" != "$VERSION" ]; then
+            echo "::error::Set repo variable CWS_DASHBOARD_READY_VERSION=$VERSION after refreshing CWS listing copy, screenshots, icon, and privacy practices. Refusing live publish while dashboard-visible fields may be stale."
+            exit 1
+          fi
+
       - name: Skip if version was already deployed
         if: steps.secrets.outputs.configured == 'true' && github.event.inputs.force != 'true'
         id: tag_guard
         env:
           VERSION: ${{ steps.version.outputs.version }}
+          PUBLISH_LIVE: ${{ steps.publish_mode.outputs.publish }}
         run: |
+          if [ "$PUBLISH_LIVE" != "true" ]; then
+            echo "Draft upload requested; skipping live cws-v tag guard."
+            echo "should_upload=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           TAG="cws-v${VERSION}"
           git fetch --tags --depth=1 origin "refs/tags/${TAG}:refs/tags/${TAG}" 2>/dev/null || true
           if git rev-parse --verify --quiet "refs/tags/${TAG}" >/dev/null; then
@@ -149,10 +205,10 @@ jobs:
           client-id: ${{ secrets.CWS_CLIENT_ID }}
           client-secret: ${{ secrets.CWS_CLIENT_SECRET }}
           refresh-token: ${{ secrets.CWS_REFRESH_TOKEN }}
-          publish: ${{ github.event.inputs.publish || 'true' }}
+          publish: ${{ steps.publish_mode.outputs.publish }}
 
-      - name: Tag version on successful upload
-        if: steps.secrets.outputs.configured == 'true' && steps.tag_guard.outputs.should_upload != 'false'
+      - name: Tag version on successful live publish
+        if: steps.secrets.outputs.configured == 'true' && steps.tag_guard.outputs.should_upload != 'false' && steps.publish_mode.outputs.publish == 'true'
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |

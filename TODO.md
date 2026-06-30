@@ -80,7 +80,13 @@ Keep strategic market / pricing / partnership choices in POSITIONING.md.
   exam-safe disable, dark mode, and the known manual YouTube-caption gap.
 - [ ] **Publication pause/CD path check.** If `CWS_PUBLICATION_PAUSED` is set,
   decide whether this release is manual-only or whether the variable should be
-  removed before relying on the CD upload path.
+  removed before relying on the CD upload path. Before live publish, set
+  `CWS_DASHBOARD_READY_VERSION` to the manifest version only after the CWS
+  dashboard listing/media/privacy fields are refreshed.
+- [ ] **Migrate CWS CD off the v1.1 upload action.** The current pinned upload
+  action still uses the older Chrome Web Store upload/publish API surface. Keep
+  the new dashboard-ready and target-listing guards, but replace the action with
+  the current CWS API path before the older endpoint support window closes.
 
 ### P2 — service quality after the store build is live
 
