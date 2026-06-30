@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!isSkilljar) return;
 
   const stored = await chrome.storage.local.get(['targetLanguage', 'autoTranslate']);
-  const lang = stored.targetLanguage || 'en';
+  let lang = stored.targetLanguage || 'en';
 
   function t(map) {
     return map[lang] || map['en'];
@@ -41,17 +41,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Build language select dynamically from constants
   const langSelect = document.getElementById('lang-select');
-  buildLanguageOptions(langSelect, t);
-  langSelect.value = lang;
-
-  // Apply i18n labels
-  document.getElementById('lang-label').textContent = t(POPUP_LABELS.targetLang);
   const sidebarBtn = document.getElementById('sidebar-btn');
-  sidebarBtn.textContent = t(POPUP_LABELS.openSidebar);
-  document.getElementById('auto-translate-label').textContent = t(POPUP_LABELS.autoTranslate);
-
   const autoTranslate = document.getElementById('auto-translate');
   const status = document.getElementById('status');
+  const commentTranslate = document.getElementById('comment-translate');
+  const commentLabel = document.getElementById('comment-translate-label');
+
+  function renderPopupLabels() {
+    const selectedLang = langSelect.value || lang;
+    langSelect.textContent = '';
+    buildLanguageOptions(langSelect, t);
+    langSelect.value = selectedLang;
+    document.getElementById('lang-label').textContent = t(POPUP_LABELS.targetLang);
+    sidebarBtn.textContent = t(POPUP_LABELS.openSidebar);
+    document.getElementById('auto-translate-label').textContent = t(POPUP_LABELS.autoTranslate);
+    if (commentLabel) commentLabel.textContent = t(COMMENT_TRANSLATE_LABELS);
+  }
+
+  renderPopupLabels();
+  langSelect.value = lang;
 
   if (stored.autoTranslate) autoTranslate.checked = true;
 
@@ -75,8 +83,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Language change → immediate translate (same behavior as header selector)
   langSelect.addEventListener('change', () => {
     const newLang = langSelect.value;
+    lang = newLang;
     chrome.storage.local.set({ targetLanguage: newLang, autoTranslate: newLang !== 'en' });
     safeSendMessage(tab.id, { action: 'setLanguage', language: newLang });
+    renderPopupLabels();
     autoTranslate.checked = newLang !== 'en';
   });
 
@@ -92,10 +102,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // Code comment translation toggle
-  const commentTranslate = document.getElementById('comment-translate');
-  const commentLabel = document.getElementById('comment-translate-label');
-  if (commentLabel) commentLabel.textContent = t(COMMENT_TRANSLATE_LABELS);
-
   chrome.storage.local.get(['commentTranslate'], (result) => {
     if (result.commentTranslate) commentTranslate.checked = true;
   });

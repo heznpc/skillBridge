@@ -169,6 +169,8 @@ test.describe('SkillBridge — tutor chat flow', () => {
 
     expect(botBubble?.text).toContain('프롬프트');
     expect(botBubble?.text).toContain('주는 입력입니다');
+    const userBubbles = log.filter((m) => m.role === 'user' && m.text.includes('Please fail once'));
+    expect(userBubbles, 'retry should replace the failed user/error pair, not duplicate the question').toHaveLength(1);
 
     const sendState = await waitForChatReady();
     expect(sendState?.disabled).toBe(false);
