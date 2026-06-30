@@ -109,7 +109,7 @@ A full dark theme for the entire Academy site — header, sidebar, lesson conten
 
 ### ⌨️ Keyboard Shortcuts
 
-`Ctrl+Shift+S` toggle sidebar, `Ctrl+Shift+L` dark mode, `Ctrl+Shift+/` help overlay, `Escape` close, `/` focus chat.
+`Ctrl+Shift+S` toggle sidebar, `Ctrl+Shift+F` flashcards, `Ctrl+Shift+L` dark mode, `Ctrl+Shift+/` help overlay, `Escape` close, `/` focus chat.
 
 ### 📖 Per-Lesson Term Preview
 

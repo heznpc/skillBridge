@@ -133,14 +133,29 @@ stale against v3.5.41 — fix these:
 ### 4. Flip CWS_PUBLICATION_PAUSED off (only if currently set)
 
 ```
+gh variable set CWS_DASHBOARD_READY_VERSION --body 3.5.41
 gh variable list | grep CWS_PUBLICATION_PAUSED && gh variable delete CWS_PUBLICATION_PAUSED
 ```
 
-The flag was added in PR #133 to prevent the CD workflow from publishing while
-the trademark complaint was unresolved. If it's still set, CD will skip the
-upload step; deleting it re-enables CD's CWS upload path on the next push. The
-workflow builds and uploads the same bundled artifact named in step 3:
+Set `CWS_DASHBOARD_READY_VERSION` only after steps 3 and 3b are complete:
+listing copy, icon, screenshots, promo tile, privacy URL, privacy-practices
+answers, and permission justifications should all match this checklist. The CD
+workflow refuses a live publish unless that variable equals `manifest.json`
+version, so the package cannot race ahead of stale dashboard-visible fields.
+
+The pause flag was added in PR #133 to prevent the CD workflow from publishing
+while the trademark complaint was unresolved. If it's still set, CD will skip
+the upload step; deleting it re-enables CD's CWS upload path on the next push.
+The workflow builds and uploads the same bundled artifact named in step 3:
 `store-assets/skillbridge-bundled.zip`.
+
+Safety rails in the CD workflow:
+
+- `CWS_EXTENSION_ID` must match the SkillBridge listing used by
+  `scripts/check-cws-drift.js`, so a cross-project secret cannot upload the zip
+  to the wrong listing.
+- Manual `publish=false` runs are draft-only and do not create the live
+  `cws-v*` deployed tag; only a successful live publish does.
 
 If the variable is already absent, skip.
 
