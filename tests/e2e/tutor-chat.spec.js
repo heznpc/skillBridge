@@ -1,8 +1,8 @@
 /**
  * SkillBridge — AI Tutor chat E2E.
  *
- * Locks in the third POSITIONING.md pillar — "contextual AI tutor with
- * zero friction." The README, the CWS listing, and POSITIONING.md all
+ * Locks in the third product pillar — "contextual AI tutor with
+ * zero friction." The README and the CWS listing both
  * lead with the tutor; v3.5.9 (stream cancel) and v3.5.11 (sanitizer XSS)
  * both fixed bugs along this exact path. Until now there's been zero
  * automated coverage of:

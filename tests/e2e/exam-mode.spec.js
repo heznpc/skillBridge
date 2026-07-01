@@ -1,7 +1,7 @@
 /**
  * SkillBridge — Exam-mode E2E.
  *
- * POSITIONING.md lists "exam awareness" as one of the three product
+ * "Exam awareness" is one of the three product
  * pillars: quiz answer choices are NEVER translated, and proctored
  * certification exams disable the extension entirely. If this contract
  * silently breaks, students get translated answer labels and could be

@@ -2,7 +2,7 @@
 /**
  * SkillBridge — Academy Course Catalog Drift Check
  *
- * Closes the last gap in POSITIONING.md's first pillar
+ * Closes the last gap in the product's first pillar
  * ("AI terminology fidelity — new Academy course → terminology update
  *  within 48 hours"). The dict-coverage check already enforces per-course
  * parity ONCE a course is wired into FLASHCARD_COURSE_MAP. But until this
@@ -181,7 +181,7 @@ async function main() {
       '### All live slugs\n',
       ...liveSlugs.map((s) => `- ${knownSlugs.has(s) ? '✅' : '🆕'} \`${s}\``),
       '',
-      '### Required follow-up (POSITIONING.md pillar #1, 48h SLA)\n',
+      '### Required follow-up (48h terminology SLA)\n',
       '1. Add a section for each new course to all 10 premium-language dictionaries in `src/data/`.',
       '2. Map the slug(s) into `FLASHCARD_COURSE_MAP` in `src/lib/constants.js`.',
       '3. `npm run check:dict-coverage` must pass before the issue closes.',

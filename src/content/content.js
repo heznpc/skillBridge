@@ -70,7 +70,7 @@
       console.warn(
         `[SkillBridge] Non-AI Skilljar tenant detected (${verdict.reason}). ` +
           `Extension paused on this site — gated to AI-training content per ` +
-          `POSITIONING non-goal "Adding other Skilljar customers". ` +
+          `the standing non-goal "Adding other Skilljar customers". ` +
           `Reload after navigating to an AI-keyword-rich page if you believe ` +
           `this was a false negative (SPA route changes do not re-evaluate yet).`,
       );

@@ -2,7 +2,7 @@
 /**
  * SkillBridge — Dictionary Coverage Check
  *
- * Enforces POSITIONING.md's first product pillar — "AI terminology fidelity"
+ * Enforces the product's first pillar — "AI terminology fidelity"
  * — at the mechanical level. The positioning commits to "every premium
  * language has a hand-curated dictionary; new Academy course → terminology
  * update within 48 hours." Without this script that commitment is honor-

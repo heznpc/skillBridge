@@ -1,6 +1,6 @@
 /**
  * Self-test for `scripts/check-academy-courses.js`. The script enforces
- * POSITIONING.md's first pillar at the catalog-discovery level
+ * the product's first pillar at the catalog-discovery level
  * (a silent regression would void the 48h SLA the workflow advertises),
  * so we exercise both the parser in isolation AND the end-to-end CLI
  * against fixtures.
@@ -169,6 +169,6 @@ describe('CLI behavior (against fixtures)', () => {
     expect(r.status).toBe(1);
     const report = fs.readFileSync(path.join(cwd, 'academy-courses-report.txt'), 'utf8');
     expect(report).toMatch(/totally-new-course/);
-    expect(report).toMatch(/POSITIONING\.md pillar #1/);
+    expect(report).toMatch(/48h terminology SLA/);
   });
 });

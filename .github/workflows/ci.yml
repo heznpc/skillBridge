@@ -49,7 +49,7 @@ jobs:
       - name: Check locale cross-contamination (wrong-language values)
         run: node scripts/check-locale-contamination.js
 
-      - name: Check dictionary coverage (POSITIONING.md "48h" SLA)
+      - name: Check dictionary coverage (48h terminology SLA)
         run: node scripts/check-dict-coverage.js
 
       - name: Check shared constants sync
