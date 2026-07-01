@@ -5,7 +5,7 @@ name: Academy course catalog drift watcher
 # opens an issue when a new course slug appears that is not wired
 # into `FLASHCARD_COURSE_MAP` in `src/lib/constants.js`.
 #
-# This is the load-bearing automation behind POSITIONING.md's first
+# This is the load-bearing automation behind the product's first
 # pillar — "AI terminology fidelity — new Academy course → terminology
 # update within 48 hours." Before this workflow, the SLA was honor-
 # system: Anthropic could publish a course on Monday morning and we
@@ -18,7 +18,7 @@ name: Academy course catalog drift watcher
 on:
   # Re-enabled 2026-06-01: the scraper parses the current catalog correctly
   # again (check-academy-courses.js passes after wiring the new course), so the
-  # 12-hour watch behind POSITIONING.md's "new course -> 48h" SLA is restored.
+  # 12-hour watch behind the "new course -> 48h" SLA is restored.
   schedule:
     - cron: '15 */12 * * *'
   workflow_dispatch: # manual trigger from Actions UI
@@ -74,7 +74,7 @@ jobs:
             const body = [
               '`scripts/check-academy-courses.js` found one or more course slugs on https://anthropic.skilljar.com/ that are not present in `FLASHCARD_COURSE_MAP` (`src/lib/constants.js`).',
               '',
-              '**Why this matters**: POSITIONING.md pillar #1 commits to "AI terminology fidelity — new Academy course → terminology update within 48 hours." A slug that exists on the live site but not in our map ships the English fallback to non-English users for that course.',
+              '**Why this matters**: the product's first pillar commits to "AI terminology fidelity — new Academy course → terminology update within 48 hours." A slug that exists on the live site but not in our map ships the English fallback to non-English users for that course.',
               '',
               '**Action**:',
               '1. For each new slug below, add a course section to all 10 premium-language dictionaries in `src/data/` (use a sibling section like `aiFluencyEdu` as a template).',

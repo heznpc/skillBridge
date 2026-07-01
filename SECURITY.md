@@ -27,8 +27,7 @@ an alternate intake channel within 72 hours.
   is the single chokepoint — bugs there are critical).
 - **Exam-mode safety bypass** — anything that lets the extension
   translate proctored exam content or quiz answer choices in
-  violation of the "Things we will not do" section of
-  `POSITIONING.md`.
+  violation of the standing "things we will not do" list (see TODO.md).
 - **Supply-chain compromise** — tampering with `src/bridge/puter.js`
   (hash-checked by `.github/workflows/maintenance.yml`), an npm
   devDependency, or a GitHub Action used in this repo.

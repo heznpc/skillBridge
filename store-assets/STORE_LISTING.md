@@ -122,7 +122,7 @@ Full privacy policy: https://heznpc.github.io/skillBridge/privacy
 
 📖 OPEN SOURCE
 https://github.com/heznpc/skillbridge
-MIT License — contributions welcome. Strategy, scope, and the "things we will not do" list are public in POSITIONING.md.
+MIT License — contributions welcome. The "things we will not do" list is public in the repo's TODO.md.
 
 ⚠️ DISCLAIMER
 SkillBridge is an unofficial, independent community project. It is not affiliated with, endorsed by, or sponsored by Anthropic or Skilljar. References to "Anthropic", "Claude", "Skilljar", and the URL anthropic.skilljar.com are nominative — they describe the third-party platform and content this extension translates. All trademarks remain the property of their respective owners.

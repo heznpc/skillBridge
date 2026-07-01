@@ -46,7 +46,7 @@ Break the language barrier on these free AI courses. <!-- LANG_COUNT_START -->32
 - [Supported Languages](#supported-languages)
 - [Privacy & Security](#privacy--security)
 - [Tech Stack](#tech-stack)
-- [Contributing](#contributing) · [Positioning & Scope](POSITIONING.md)
+- [Contributing](#contributing)
 - [FAQ](#faq)
 - [License](#license)
 
@@ -223,7 +223,7 @@ Translating a whole course page on every navigation has to be fast *and* correct
 - **No telemetry or analytics** — nothing is collected, not even opt-in error reports; marketing convenience never outweighs the privacy promise.
 - **No A/B framework, no paid tier** — both imply infrastructure (traffic, segmentation, billing) that a free, server-less project shouldn't fake.
 
-The full "things we will not do" list is kept public on purpose in [POSITIONING.md](POSITIONING.md).
+The full "things we will not do" list is kept public on purpose in [TODO.md](TODO.md).
 
 ## Supported Languages
 
