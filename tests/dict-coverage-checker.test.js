@@ -1,6 +1,6 @@
 /**
  * Self-test for `scripts/check-dict-coverage.js`. The script enforces the
- * POSITIONING.md "48h × 11 languages" SLA, so a silent regression in the
+ * "48h × 11 languages" terminology SLA, so a silent regression in the
  * script itself (e.g. checks accidentally short-circuiting) would void
  * that whole defense.
  *

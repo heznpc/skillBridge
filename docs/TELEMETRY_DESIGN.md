@@ -3,7 +3,7 @@
 **Status**: design proposal, not implemented. Open for review before any code lands.
 **Owner**: heznpc
 **Drafted**: 2026-05-15
-**Position**: outreach blocker #4 in [POSITIONING.md](../POSITIONING.md#blockers-before-outreach)
+**Position**: outreach blocker #4 (from the positioning doc, removed 2026-07-02 — POSITIONING references below are historical)
 
 > ⚠️ **2026-06-03 — sink decision under review; do NOT implement "Option A" as written.**
 > A design-spike re-review found the recommended sink (a maintainer-operated

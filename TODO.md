@@ -1,15 +1,13 @@
 # SkillBridge TODO
 
-> Strategy & scope: see [POSITIONING.md](POSITIONING.md).
 > Last refreshed: 2026-06-24 (v3.5.41 service-completion audit)
 
 Items below are concrete engineering / ops work. Anything strategic — what
-markets we enter, what we charge, what features we accept — belongs in
-POSITIONING.md, not here.
+markets we enter, what we charge, what features we accept — is an owner
+decision made directly, not tracked here.
 
 The top board tracks the remaining work before the current `v3.5.41` code can
 be treated as the real public service, not just a repo-ready release candidate.
-Keep strategic market / pricing / partnership choices in POSITIONING.md.
 
 ## Service completion board (v3.5.41)
 
@@ -148,8 +146,7 @@ narrowed.
   Until either safe use is confirmed or we rebrand, public outreach is on
   hold. **Blocks Ambassador application and Korea-language blog posts** —
   a takedown after a growth push erases the acquisition we paid for.
-  *(Owner: human, not engineering. Once decision is made, reflect in
-  POSITIONING.md "Blockers before outreach" #2.)*
+  *(Owner: human, not engineering.)*
 - [ ] **Ambassador application.** Drafted; submission blocked on
   trademark resolution. Free, single-audience, traction-demonstrated — we
   fit the program profile.
@@ -178,8 +175,8 @@ narrowed.
 - [ ] **`tsconfig` strict ratchet.** Currently `strict: false` to avoid
   surfacing pre-existing nullability warnings. Tighten file-by-file as
   JSDoc gets added.
-- [ ] **Puter.js fallback layer** (only triggered by sunset condition,
-  see POSITIONING.md). If Puter signals instability, we revisit the "no
+- [ ] **Puter.js fallback layer** (only triggered by the standing
+  sunset condition). If Puter signals instability, we revisit the "no
   API key" rule. Design exists in head only; not started.
 
 ## Done — shipped this cycle (2026-05-11 → 05-15)
@@ -212,14 +209,14 @@ scenarios). Added `selectors-drift` watcher (6h cron + auto-issued GitHub
 issue on Skilljar DOM change). Added `academy-courses-drift` watcher (12h
 cron + auto-issued issue when a new course slug appears on
 `anthropic.skilljar.com/` that isn't wired into `FLASHCARD_COURSE_MAP` —
-closes the last gap in POSITIONING.md pillar #3's 48-hour SLA). Added
+closes the last gap in the 48-hour terminology SLA). Added
 `check-dict-coverage` + `check-i18n-keys` validators.
 
 **Performance:** v3.5.32 IntersectionObserver-driven lazy translation
 (X-style read-depth-proportional savings); v3.5.32-hotfix observer
 generation closure-capture race fix.
 
-**Strategy:** POSITIONING.md rewritten 2026-05-15 — certificate-
+**Strategy:** POSITIONING.md rewritten 2026-05-15 (doc removed 2026-07-02 — strategy is owner-decided, not doc-tracked) — certificate-
 accessibility framing replaces translator framing, Korea-first
 operational definition added, telemetry promoted from Later to Now as
 marketing prerequisite, Puter.js fragility added to sunset triggers.
@@ -228,7 +225,7 @@ marketing prerequisite, Puter.js fragility added to sunset triggers.
 386 unit tests had let through three releases. Found by the first run of
 the new E2E suite.
 
-## Explicit not-doing (see POSITIONING.md for reasoning)
+## Explicit not-doing
 
 - ❌ Multi-LMS / general course-platform support
 - ❌ Premium / paid tier
@@ -262,5 +259,5 @@ the new E2E suite.
   to pass arbitrary functions through.
 - **Puter.js single point of failure** — the tutor pillar depends on a
   third party we don't control. No mitigation today (would violate the
-  "no API key" rule). Sunset trigger in POSITIONING.md covers what
+  "no API key" rule). A standing sunset trigger covers what
   happens if Puter changes terms.

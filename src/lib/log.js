@@ -4,8 +4,8 @@
 // src/content/* and src/lib/*. They make user bug reports hard to triage
 // because lines don't carry a module name and severity is mixed
 // (warn-as-log, log-as-warn). This wrapper standardizes the prefix and
-// severity routing without forcing a bulk refactor — see POSITIONING.md
-// "Things we will not do" for why there's no remote sink.
+// severity routing without forcing a bulk refactor — there's no remote
+// sink by standing decision (no server-side infrastructure).
 //
 // Prefix format is `[SkillBridge ModuleName]` to match the existing
 // hand-rolled convention in src/content/* (chat-flashcards, sidebar-chat,
