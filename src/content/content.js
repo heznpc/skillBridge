@@ -758,35 +758,13 @@
     }
   }
 
-  // Language → Google Fonts family (load only what's needed)
-  const _LANG_FONT_MAP = {
-    ko: 'Noto+Sans+KR',
-    ja: 'Noto+Sans+JP',
-    'zh-CN': 'Noto+Sans+SC',
-    'zh-TW': 'Noto+Sans+TC',
-    ar: 'Noto+Sans+Arabic',
-    hi: 'Noto+Sans+Devanagari',
-    bn: 'Noto+Sans+Bengali',
-    th: 'Noto+Sans+Thai',
-    he: 'Noto+Sans+Hebrew',
-  };
-
-  function injectGoogleFonts(lang) {
-    if (document.getElementById('sb-google-fonts')) return;
-    const family = _LANG_FONT_MAP[lang];
-    if (!family) return; // Latin-script languages use system fonts
-
-    const link = document.createElement('link');
-    link.id = 'sb-google-fonts';
-    link.rel = 'stylesheet';
-    link.href = `https://fonts.googleapis.com/css2?family=${family}:wght@400;500;700&display=swap`;
-    link.onerror = () => {
-      // Graceful fallback — system fonts will be used via CSS font-family stack
-      console.debug('[SkillBridge] Google Fonts unavailable, using system fonts');
-      link.remove();
-    };
-    document.head.appendChild(link);
-  }
+  // Non-Latin scripts render with the OS-native font stack declared in
+  // content.css (e.g. 'Apple SD Gothic Neo' / 'Malgun Gothic' for Korean,
+  // 'Hiragino Kaku Gothic Pro' / 'Yu Gothic' for Japanese, 'PingFang' /
+  // 'Microsoft YaHei' for Chinese). We deliberately do NOT fetch fonts from
+  // fonts.googleapis.com: that request would leak the user's IP and reading
+  // language to a third party not disclosed in PRIVACY_POLICY.md, contradicting
+  // the extension's "no third-party contact / no tracking" promise.
 
   function updateLangClass(lang) {
     // html lang (screen readers) + dir (RTL) are page-level semantics — set on
@@ -804,7 +782,6 @@
       for (const cls of [...el.classList].filter((c) => c.startsWith('si18n-lang-'))) el.classList.remove(cls);
       if (lang && lang !== 'en') el.classList.add(`si18n-lang-${lang}`);
     }
-    if (lang && lang !== 'en') injectGoogleFonts(lang);
   }
 
   function safeReplaceText(el, newText) {

@@ -98,8 +98,8 @@ const updateLangSrc = contentSrc.match(/function updateLangClass\(lang\) \{[\s\S
 if (!updateLangSrc) {
   throw new Error('Could not extract updateLangClass from content.js — did the source shape change?');
 }
-const updateLangFactory = new Function('sb', 'injectGoogleFonts', `${updateLangSrc[0]}\nreturn updateLangClass;`);
-const makeUpdate = (translationScope) => updateLangFactory({ translationScope }, () => {});
+const updateLangFactory = new Function('sb', `${updateLangSrc[0]}\nreturn updateLangClass;`);
+const makeUpdate = (translationScope) => updateLangFactory({ translationScope });
 
 describe('updateLangClass — lang/font class targets the scope, not the whole page', () => {
   beforeEach(() => {
