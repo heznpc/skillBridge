@@ -321,12 +321,12 @@
     // AI Tutor.
     _puterAuthCheck = () => !!puterApi.authToken;
 
-    // Force the captured instance's API origin to the official server regardless
-    // of how the SDK derived it. The page-world globals are pinned, but the SDK
-    // ALSO reads `?puter.api_origin=` when `?puter.app_instance_id=` sets env
-    // "app" — which a crafted link on the host page could supply. Every
-    // authenticated request goes through the chat bound above, so overriding the
-    // instance here closes that query-param path too.
+    // Defense in depth: re-assert the official API origin on the captured
+    // instance in case anything re-derived it at runtime. This runs
+    // POST-construction, so it does NOT by itself stop the SDK's
+    // construction-time requests — the `?puter.*` origin params that would poison
+    // the origin at construction are blocked earlier in loadPuter
+    // (_refuseIfPuterAppParams), which is what actually closes that path.
     try {
       puterApi.setAPIOrigin?.('https://api.puter.com');
     } catch (_e) {
@@ -396,6 +396,28 @@
     }
   }
 
+  // The bundled SDK derives its API origin from Puter "app" query params on the
+  // HOST page URL at construction: `?puter.app_instance_id=` flips env to "app",
+  // which unlocks `?puter.api_origin=` / `?puter.domain=` to override the origin
+  // (and fire construction-time authenticated /rao + /whoami requests carrying
+  // the user's Bearer token) BEFORE our post-load setAPIOrigin can re-pin it.
+  // These params never legitimately appear on a Skilljar/claude tutorial URL, so
+  // their presence means a crafted link — refuse to load rather than let the SDK
+  // construct against a page-supplied origin.
+  const _PUTER_APP_URL_PARAMS = ['puter.app_instance_id', 'puter.api_origin', 'puter.domain'];
+
+  function _refuseIfPuterAppParams() {
+    let params;
+    try {
+      params = new URLSearchParams(globalThis.location?.search || '');
+    } catch (_e) {
+      return;
+    }
+    for (const name of _PUTER_APP_URL_PARAMS) {
+      if (params.has(name)) throw new Error(`Refusing to load Puter — host URL carries ${name}`);
+    }
+  }
+
   function loadPuter() {
     if (puterLoadPromise) return puterLoadPromise;
     puterLoadPromise = new Promise((resolve, reject) => {
@@ -408,13 +430,16 @@
         reject(new Error('No local Puter.js URL provided'));
         return;
       }
-      // Pin the SDK's API/GUI origins to the official Puter servers BEFORE the
-      // bundle executes, so a page-world script can't redirect authenticated
-      // requests or the sign-in popup to a hostile origin.
+      // Before the bundle executes: (1) refuse if the host URL carries Puter
+      // "app" params that would poison the SDK's API origin at construction, and
+      // (2) pin the API/GUI origin globals to the official servers so a
+      // page-world script can't redirect authenticated requests or the sign-in
+      // popup to a hostile origin.
       try {
+        _refuseIfPuterAppParams();
         _pinPuterOrigins();
       } catch (e) {
-        log('Refusing to load Puter — origin pinning failed:', e?.message || e);
+        log('Refusing to load Puter:', e?.message || e);
         reject(e instanceof Error ? e : new Error(String(e)));
         return;
       }

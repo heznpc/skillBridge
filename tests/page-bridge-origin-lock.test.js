@@ -77,6 +77,7 @@ describe('page-bridge origin pin — fail closed on unsafe pre-locked global (#s
     delete globalThis.puter;
     delete globalThis.puterParent;
     delete window.__SKILLBRIDGE_BRIDGE__;
+    window.history.replaceState({}, '', '/');
   });
 
   test('refuses to load Puter when a page pre-locks PUTER_API_ORIGIN as non-configurable but writable', async () => {
@@ -100,6 +101,26 @@ describe('page-bridge origin pin — fail closed on unsafe pre-locked global (#s
     expect(chat).not.toHaveBeenCalled();
     expect(sent.find((m) => m.type === 'CHAT_RESPONSE')).toEqual(
       expect.objectContaining({ id: 'lock-chat', success: false }),
+    );
+  });
+
+  test('refuses to load Puter when the host URL carries Puter app params (?puter.app_instance_id / api_origin)', async () => {
+    const nonce = 'origin-param-nonce';
+    // A crafted link: ?puter.app_instance_id= flips the SDK env to "app", which
+    // unlocks ?puter.api_origin= to poison the origin at construction — before
+    // any post-load fix can run. loadPuter must refuse outright.
+    window.history.replaceState({}, '', '/lesson?puter.app_instance_id=x&puter.api_origin=https://evil.example');
+
+    originalAppendChild = installBridge(nonce, chat);
+    (0, eval)(src);
+
+    window.dispatchEvent(chatReq(nonce, 'param-chat'));
+    await waitFor(() => sent.some((m) => m.type === 'CHAT_RESPONSE'));
+
+    // The SDK never even loads, so no bundle construction and no chat call.
+    expect(chat).not.toHaveBeenCalled();
+    expect(sent.find((m) => m.type === 'CHAT_RESPONSE')).toEqual(
+      expect.objectContaining({ id: 'param-chat', success: false }),
     );
   });
 });

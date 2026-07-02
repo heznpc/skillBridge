@@ -134,8 +134,9 @@ describe('page-bridge Puter origin pinning (#security)', () => {
     expect(sent.find((m) => m.type === 'CHAT_RESPONSE')).toEqual(
       expect.objectContaining({ id: 'origin-pin-chat', success: true }),
     );
-    // The captured instance's API origin is also forced to the official server,
-    // closing the `?puter.api_origin=` query-param path the global pin can't reach.
+    // Defense in depth: the captured instance's API origin is re-asserted to the
+    // official server. (The construction-time `?puter.*` poisoning path is closed
+    // separately by refusing to load — see page-bridge-origin-lock.test.js.)
     expect(sdkSetAPIOrigin).toHaveBeenCalledWith('https://api.puter.com');
     expect(globalThis.puter).toBeUndefined();
   });

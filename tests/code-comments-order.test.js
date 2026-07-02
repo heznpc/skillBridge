@@ -34,6 +34,10 @@ describe('code-comments splice ordering (block comment before line comment)', ()
     'Alpha block comment': '블록',
     'Beta line comment': '라인',
     'See https://example.com docs': 'URL블록',
+    // The spurious inner line match's text. Mapping it (so it would translate)
+    // is what makes the overlap test non-vacuous: on pre-fix code BOTH match and
+    // the overlapping splices corrupt the code; the fix drops this one.
+    'example.com docs */': '내부라인',
   };
 
   beforeEach(() => {
