@@ -33,6 +33,7 @@ describe('code-comments splice ordering (block comment before line comment)', ()
   const TRANSLATIONS = {
     'Alpha block comment': '블록',
     'Beta line comment': '라인',
+    'See https://example.com docs': 'URL블록',
   };
 
   beforeEach(() => {
@@ -80,5 +81,22 @@ describe('code-comments splice ordering (block comment before line comment)', ()
     expect(html).not.toContain('Beta line comment');
     // Exact shape — the one correct result.
     expect(html).toBe('/* 블록 */\ndoStuff(); // 라인');
+  });
+
+  test('a URL (//) inside a block comment does not corrupt the code that follows', async () => {
+    // The `//` in `https://` makes the line regex spuriously match INSIDE the
+    // block comment, producing overlapping line+block matches. Splicing both
+    // (even sorted) would clobber the code; the overlap filter must drop the
+    // inner match and translate only the block, leaving `run();` intact.
+    document.querySelector('code').textContent = '/* See https://example.com docs */\nrun();';
+
+    await window._sb.translateCodeComments('ko');
+
+    const html = document.querySelector('code').innerHTML;
+    expect(html).toBe('/* URL블록 */\nrun();');
+    expect(html).toContain('run();');
+    // No stray delimiters / duplicated fragments from an overlapping splice.
+    expect(html).not.toContain('*/*/');
+    expect(html).not.toMatch(/\*\/\)/);
   });
 });

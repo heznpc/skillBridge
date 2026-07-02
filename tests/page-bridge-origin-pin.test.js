@@ -39,6 +39,7 @@ describe('page-bridge Puter origin pinning (#security)', () => {
   let sent;
   let chat;
   let sdkSawApiOrigin;
+  let sdkSetAPIOrigin;
   const nonce = 'origin-pin-nonce';
 
   beforeEach(() => {
@@ -47,6 +48,7 @@ describe('page-bridge Puter origin pinning (#security)', () => {
     delete globalThis.puterParent;
     sent = [];
     sdkSawApiOrigin = null;
+    sdkSetAPIOrigin = jest.fn();
     chat = jest.fn(async (_prompt, opts) => ({ message: { content: `model=${opts.model}` } }));
 
     const loader = document.createElement('script');
@@ -68,7 +70,7 @@ describe('page-bridge Puter origin pinning (#security)', () => {
         // time this (the script "executing") runs, the bridge has already pinned
         // it, so a faithful stub records the pinned value.
         sdkSawApiOrigin = globalThis.PUTER_API_ORIGIN;
-        globalThis.puter = { ai: { chat }, authToken: 'tok' };
+        globalThis.puter = { ai: { chat }, authToken: 'tok', setAPIOrigin: sdkSetAPIOrigin };
         globalThis.puterParent = { leaked: true };
         setTimeout(() => node.onload && node.onload(), 0);
       }
@@ -132,6 +134,9 @@ describe('page-bridge Puter origin pinning (#security)', () => {
     expect(sent.find((m) => m.type === 'CHAT_RESPONSE')).toEqual(
       expect.objectContaining({ id: 'origin-pin-chat', success: true }),
     );
+    // The captured instance's API origin is also forced to the official server,
+    // closing the `?puter.api_origin=` query-param path the global pin can't reach.
+    expect(sdkSetAPIOrigin).toHaveBeenCalledWith('https://api.puter.com');
     expect(globalThis.puter).toBeUndefined();
   });
 });

@@ -5,6 +5,7 @@ on: pull_request
 permissions:
   contents: write
   pull-requests: write
+  issues: write # `gh label create` (below) writes repo labels, an Issues-scoped resource
 
 jobs:
   auto-merge:
@@ -33,6 +34,7 @@ jobs:
         # landed in an UNSTABLE state. `gh label create --force` is create-or-update
         # and idempotent across runs.
         run: |
+          gh label create dependencies --color 0366D6 --description "Pull requests that update a dependency file" --force
           gh label create manual-review --color FBCA04 --description "Dependabot major update needs manual review" --force
           gh pr edit "$PR_URL" --add-label "dependencies,manual-review"
         env:

@@ -67,19 +67,36 @@
     let html = el.innerHTML;
     let hasTranslation = false;
 
-    // Collect all comments, translate in batch, then apply
-    const replacements = [];
+    // Collect all comment matches (line + block), then translate + splice.
+    const candidates = [];
 
     if (pattern.line) {
       for (const match of [...html.matchAll(pattern.line)]) {
         const ct = match[1]?.trim();
-        if (ct && ct.length >= 4 && sb.isLikelyEnglish(ct)) replacements.push({ match, type: 'line' });
+        if (ct && ct.length >= 4 && sb.isLikelyEnglish(ct)) candidates.push({ match, type: 'line' });
       }
     }
     if (pattern.block) {
       for (const match of [...html.matchAll(pattern.block)]) {
         const ct = match[1]?.trim();
-        if (ct && ct.length >= 4 && sb.isLikelyEnglish(ct)) replacements.push({ match, type: 'block' });
+        if (ct && ct.length >= 4 && sb.isLikelyEnglish(ct)) candidates.push({ match, type: 'block' });
+      }
+    }
+
+    // Each splice rewrites `html` in place using its match's ORIGINAL offset, so
+    // two matches whose source ranges overlap would clobber each other. The line
+    // and block regexes are independent passes, so a `//` inside a `/* ... */`
+    // block (e.g. a URL like `https://…`) yields overlapping line+block matches.
+    // Keep only a non-overlapping subset (scan by ascending start, earliest wins)
+    // — an untranslated comment is acceptable; corrupted code the learner copies
+    // is not.
+    candidates.sort((a, b) => a.match.index - b.match.index);
+    const replacements = [];
+    let lastEnd = -1;
+    for (const c of candidates) {
+      if (c.match.index >= lastEnd) {
+        replacements.push(c);
+        lastEnd = c.match.index + c.match[0].length;
       }
     }
 
@@ -92,14 +109,9 @@
       replacements.map((r) => translator.translate(r.match[1].trim(), targetLang)),
     );
 
-    // Splice from the highest source offset to the lowest so each in-place
-    // substring rewrite leaves the remaining (earlier) match indices valid.
-    // `replacements` is built line-matches-first, then block-matches — NOT in
-    // source order — so a block comment occurring before a line comment would,
-    // under plain array iteration (even reversed), be spliced first and shift
-    // every later match.index, corrupting the output. Pair each match with its
-    // translation and sort by descending match.index to make the rewrite
-    // order-independent.
+    // Apply from the highest source offset to the lowest so each in-place
+    // substring rewrite leaves the remaining (earlier, now guaranteed
+    // non-overlapping) match indices valid.
     const ordered = replacements
       .map((r, i) => ({ match: r.match, type: r.type, result: translations[i] }))
       .sort((a, b) => b.match.index - a.match.index);

@@ -321,6 +321,18 @@
     // AI Tutor.
     _puterAuthCheck = () => !!puterApi.authToken;
 
+    // Force the captured instance's API origin to the official server regardless
+    // of how the SDK derived it. The page-world globals are pinned, but the SDK
+    // ALSO reads `?puter.api_origin=` when `?puter.app_instance_id=` sets env
+    // "app" — which a crafted link on the host page could supply. Every
+    // authenticated request goes through the chat bound above, so overriding the
+    // instance here closes that query-param path too.
+    try {
+      puterApi.setAPIOrigin?.('https://api.puter.com');
+    } catch (_e) {
+      /* older SDK without setAPIOrigin — the page-global pin still applies */
+    }
+
     // SkillBridge only needs ai.chat. Leaving the full SDK (`fs`, `apps`,
     // `kv`, `workers`, auth helpers, etc.) on page-world `globalThis.puter`
     // unnecessarily expands the blast radius of any same-page script/XSS on
@@ -364,8 +376,14 @@
     for (const [name, official] of Object.entries(_PUTER_OFFICIAL_ORIGINS)) {
       const desc = Object.getOwnPropertyDescriptor(globalThis, name);
       if (desc && desc.configurable === false) {
-        if (globalThis[name] !== official) {
-          throw new Error(`Puter origin global ${name} is locked to an unexpected value`);
+        // Non-configurable means we cannot redefine it. Accept it ONLY if it is
+        // already exactly what we would pin — a non-writable DATA property equal
+        // to the official origin. A writable data property (a page could reassign
+        // it after us) or an accessor (its getter could return a hostile value on
+        // a later read) is unsafe, so fail closed instead of trusting it.
+        const alreadyPinned = 'value' in desc && desc.writable === false && desc.value === official;
+        if (!alreadyPinned) {
+          throw new Error(`Puter origin global ${name} is locked to an unsafe descriptor`);
         }
         continue;
       }
