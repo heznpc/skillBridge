@@ -92,10 +92,18 @@
       replacements.map((r) => translator.translate(r.match[1].trim(), targetLang)),
     );
 
-    // Apply in reverse order to preserve indices
-    for (let i = replacements.length - 1; i >= 0; i--) {
-      const { match, type } = replacements[i];
-      const result = translations[i];
+    // Splice from the highest source offset to the lowest so each in-place
+    // substring rewrite leaves the remaining (earlier) match indices valid.
+    // `replacements` is built line-matches-first, then block-matches — NOT in
+    // source order — so a block comment occurring before a line comment would,
+    // under plain array iteration (even reversed), be spliced first and shift
+    // every later match.index, corrupting the output. Pair each match with its
+    // translation and sort by descending match.index to make the rewrite
+    // order-independent.
+    const ordered = replacements
+      .map((r, i) => ({ match: r.match, type: r.type, result: translations[i] }))
+      .sort((a, b) => b.match.index - a.match.index);
+    for (const { match, type, result } of ordered) {
       if (result.text === match[1].trim() || result.source === 'original') continue;
       hasTranslation = true;
 

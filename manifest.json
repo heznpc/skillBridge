@@ -78,7 +78,7 @@
     },
     {
       "resources": ["src/data/*", "src/content/content.css"],
-      "matches": ["https://claude.com/*"]
+      "matches": ["https://claude.com/resources/tutorials/*"]
     }
   ]
 }

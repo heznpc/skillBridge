@@ -341,6 +341,43 @@
     return true;
   }
 
+  // Official Puter origins. The bundled SDK resolves its API/GUI base from
+  // page-world globals that are NOT env-gated:
+  //   get defaultAPIOrigin(){return globalThis.PUTER_API_ORIGIN||"https://api.puter.com"}
+  //   get defaultGUIOrigin(){return globalThis.PUTER_ORIGIN||"https://puter.com"}
+  // Because this bridge and the SDK it injects run in the UNTRUSTED host page's
+  // main world, any page-world script could pre-set those globals to redirect
+  // every authenticated Puter request (Bearer token + prompts) and the sign-in
+  // popup to a hostile origin. SkillBridge never targets a non-default Puter
+  // deployment, so pinning them removes no intended behaviour.
+  const _PUTER_OFFICIAL_ORIGINS = {
+    PUTER_API_ORIGIN: 'https://api.puter.com',
+    PUTER_ORIGIN: 'https://puter.com',
+  };
+
+  // Lock the origin globals to the official servers as non-writable /
+  // non-configurable BEFORE the SDK bundle executes, closing the poisoning
+  // vector. Runs synchronously right before script injection so no page code
+  // executes between the pin and the SDK's construction. Throws (→ Puter load is
+  // aborted) only if a page script already locked a global to a hostile value.
+  function _pinPuterOrigins() {
+    for (const [name, official] of Object.entries(_PUTER_OFFICIAL_ORIGINS)) {
+      const desc = Object.getOwnPropertyDescriptor(globalThis, name);
+      if (desc && desc.configurable === false) {
+        if (globalThis[name] !== official) {
+          throw new Error(`Puter origin global ${name} is locked to an unexpected value`);
+        }
+        continue;
+      }
+      Object.defineProperty(globalThis, name, {
+        value: official,
+        writable: false,
+        configurable: false,
+        enumerable: false,
+      });
+    }
+  }
+
   function loadPuter() {
     if (puterLoadPromise) return puterLoadPromise;
     puterLoadPromise = new Promise((resolve, reject) => {
@@ -353,9 +390,30 @@
         reject(new Error('No local Puter.js URL provided'));
         return;
       }
+      // Pin the SDK's API/GUI origins to the official Puter servers BEFORE the
+      // bundle executes, so a page-world script can't redirect authenticated
+      // requests or the sign-in popup to a hostile origin.
+      try {
+        _pinPuterOrigins();
+      } catch (e) {
+        log('Refusing to load Puter — origin pinning failed:', e?.message || e);
+        reject(e instanceof Error ? e : new Error(String(e)));
+        return;
+      }
       const script = document.createElement('script');
       script.src = _puterUrl;
       script.onload = () => {
+        // Capture + scrub synchronously if the SDK is already reachable: the
+        // bundle assigns globalThis.puter during script evaluation, which
+        // completes before onload fires. Doing it here closes the ~100ms window
+        // in which the full SDK would otherwise sit exposed on the page-world
+        // global before the first poll tick. The interval below stays as a
+        // fallback for the case where `ai.chat` is wired up asynchronously.
+        if (_captureAndHidePuter()) {
+          puterReady = true;
+          resolve();
+          return;
+        }
         let checks = 0;
         const interval = setInterval(() => {
           checks++;
