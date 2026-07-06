@@ -8,8 +8,10 @@
    Open Sans (UI) — all Latin-only fonts. CJK and other scripts need
    proper fallbacks to prevent rendering issues (tofu/boxes).
 
-   Strategy: apply local system/Noto fallback stacks through scoped
-   si18n-lang-* classes. No remote font fetches are performed.
+   Strategy: rely on locally-available Noto Sans variants and OS-native CJK
+   fonts via scoped si18n-lang-* classes. Fonts are NOT fetched from
+   fonts.googleapis.com; that remote request would leak the user's IP and
+   reading language to a third party the privacy policy does not disclose.
    ============================================================ */
 
 /* ============================================================
@@ -27,8 +29,10 @@
    looks bolder than Copernicus serif at 700).
    ============================================================ */
 
-/* NOTE: @import and runtime <link> font injection are intentionally absent.
-   Extension pages rely on the user's installed fonts and platform fallbacks. */
+/* NOTE: no remote font fetch — neither @import nor a runtime <link> to
+   fonts.googleapis.com. Rendering uses the locally-available Noto Sans /
+   OS-native font stacks declared per language below (privacy: no third-party
+   font request). */
 
 /* ---- Korean ---- */
 

@@ -758,6 +758,14 @@
     }
   }
 
+  // Non-Latin scripts render with the OS-native font stack declared in
+  // content.css (e.g. 'Apple SD Gothic Neo' / 'Malgun Gothic' for Korean,
+  // 'Hiragino Kaku Gothic Pro' / 'Yu Gothic' for Japanese, 'PingFang' /
+  // 'Microsoft YaHei' for Chinese). We deliberately do NOT fetch fonts from
+  // fonts.googleapis.com: that request would leak the user's IP and reading
+  // language to a third party not disclosed in PRIVACY_POLICY.md, contradicting
+  // the extension's "no third-party contact / no tracking" promise.
+
   function updateLangClass(lang) {
     // html lang (screen readers) + dir (RTL) are page-level semantics — set on
     // the document regardless of scope.

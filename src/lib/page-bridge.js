@@ -321,6 +321,18 @@
     // AI Tutor.
     _puterAuthCheck = () => !!puterApi.authToken;
 
+    // Defense in depth: re-assert the official API origin on the captured
+    // instance in case anything re-derived it at runtime. This runs
+    // POST-construction, so it does NOT by itself stop the SDK's
+    // construction-time requests — the `?puter.*` origin params that would poison
+    // the origin at construction are blocked earlier in loadPuter
+    // (_refuseIfPuterAppParams), which is what actually closes that path.
+    try {
+      puterApi.setAPIOrigin?.('https://api.puter.com');
+    } catch (_e) {
+      /* older SDK without setAPIOrigin — the page-global pin still applies */
+    }
+
     // SkillBridge only needs ai.chat. Leaving the full SDK (`fs`, `apps`,
     // `kv`, `workers`, auth helpers, etc.) on page-world `globalThis.puter`
     // unnecessarily expands the blast radius of any same-page script/XSS on
@@ -341,6 +353,71 @@
     return true;
   }
 
+  // Official Puter origins. The bundled SDK resolves its API/GUI base from
+  // page-world globals that are NOT env-gated:
+  //   get defaultAPIOrigin(){return globalThis.PUTER_API_ORIGIN||"https://api.puter.com"}
+  //   get defaultGUIOrigin(){return globalThis.PUTER_ORIGIN||"https://puter.com"}
+  // Because this bridge and the SDK it injects run in the UNTRUSTED host page's
+  // main world, any page-world script could pre-set those globals to redirect
+  // every authenticated Puter request (Bearer token + prompts) and the sign-in
+  // popup to a hostile origin. SkillBridge never targets a non-default Puter
+  // deployment, so pinning them removes no intended behaviour.
+  const _PUTER_OFFICIAL_ORIGINS = {
+    PUTER_API_ORIGIN: 'https://api.puter.com',
+    PUTER_ORIGIN: 'https://puter.com',
+  };
+
+  // Lock the origin globals to the official servers as non-writable /
+  // non-configurable BEFORE the SDK bundle executes, closing the poisoning
+  // vector. Runs synchronously right before script injection so no page code
+  // executes between the pin and the SDK's construction. Throws (→ Puter load is
+  // aborted) only if a page script already locked a global to a hostile value.
+  function _pinPuterOrigins() {
+    for (const [name, official] of Object.entries(_PUTER_OFFICIAL_ORIGINS)) {
+      const desc = Object.getOwnPropertyDescriptor(globalThis, name);
+      if (desc && desc.configurable === false) {
+        // Non-configurable means we cannot redefine it. Accept it ONLY if it is
+        // already exactly what we would pin — a non-writable DATA property equal
+        // to the official origin. A writable data property (a page could reassign
+        // it after us) or an accessor (its getter could return a hostile value on
+        // a later read) is unsafe, so fail closed instead of trusting it.
+        const alreadyPinned = 'value' in desc && desc.writable === false && desc.value === official;
+        if (!alreadyPinned) {
+          throw new Error(`Puter origin global ${name} is locked to an unsafe descriptor`);
+        }
+        continue;
+      }
+      Object.defineProperty(globalThis, name, {
+        value: official,
+        writable: false,
+        configurable: false,
+        enumerable: false,
+      });
+    }
+  }
+
+  // The bundled SDK derives its API origin from Puter "app" query params on the
+  // HOST page URL at construction: `?puter.app_instance_id=` flips env to "app",
+  // which unlocks `?puter.api_origin=` / `?puter.domain=` to override the origin
+  // (and fire construction-time authenticated /rao + /whoami requests carrying
+  // the user's Bearer token) BEFORE our post-load setAPIOrigin can re-pin it.
+  // These params never legitimately appear on a Skilljar/claude tutorial URL, so
+  // their presence means a crafted link — refuse to load rather than let the SDK
+  // construct against a page-supplied origin.
+  const _PUTER_APP_URL_PARAMS = ['puter.app_instance_id', 'puter.api_origin', 'puter.domain'];
+
+  function _refuseIfPuterAppParams() {
+    let params;
+    try {
+      params = new URLSearchParams(globalThis.location?.search || '');
+    } catch (_e) {
+      return;
+    }
+    for (const name of _PUTER_APP_URL_PARAMS) {
+      if (params.has(name)) throw new Error(`Refusing to load Puter — host URL carries ${name}`);
+    }
+  }
+
   function loadPuter() {
     if (puterLoadPromise) return puterLoadPromise;
     puterLoadPromise = new Promise((resolve, reject) => {
@@ -353,9 +430,33 @@
         reject(new Error('No local Puter.js URL provided'));
         return;
       }
+      // Before the bundle executes: (1) refuse if the host URL carries Puter
+      // "app" params that would poison the SDK's API origin at construction, and
+      // (2) pin the API/GUI origin globals to the official servers so a
+      // page-world script can't redirect authenticated requests or the sign-in
+      // popup to a hostile origin.
+      try {
+        _refuseIfPuterAppParams();
+        _pinPuterOrigins();
+      } catch (e) {
+        log('Refusing to load Puter:', e?.message || e);
+        reject(e instanceof Error ? e : new Error(String(e)));
+        return;
+      }
       const script = document.createElement('script');
       script.src = _puterUrl;
       script.onload = () => {
+        // Capture + scrub synchronously if the SDK is already reachable: the
+        // bundle assigns globalThis.puter during script evaluation, which
+        // completes before onload fires. Doing it here closes the ~100ms window
+        // in which the full SDK would otherwise sit exposed on the page-world
+        // global before the first poll tick. The interval below stays as a
+        // fallback for the case where `ai.chat` is wired up asynchronously.
+        if (_captureAndHidePuter()) {
+          puterReady = true;
+          resolve();
+          return;
+        }
         let checks = 0;
         const interval = setInterval(() => {
           checks++;

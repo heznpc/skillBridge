@@ -15,6 +15,7 @@ const fs = require('fs');
 const path = require('path');
 
 const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'platform.js'), 'utf8');
+const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'manifest.json'), 'utf8'));
 
 // platform.js loads as a content-script IIFE. Run it via Function with
 // our own `globalThis` so the CommonJS export branch fires. The window
@@ -59,6 +60,18 @@ describe('isPlatformSupported', () => {
     expect(isPlatformSupported(PLATFORM_IDS.ANTHROPIC_DOCS)).toBe(false);
     expect(isPlatformSupported(PLATFORM_IDS.COURSERA)).toBe(false);
     expect(isPlatformSupported(PLATFORM_IDS.UNKNOWN)).toBe(false);
+  });
+});
+
+describe('manifest host scoping', () => {
+  test('loads content scripts only on Claude tutorial pages', () => {
+    expect(manifest.content_scripts[0].matches).toContain('https://claude.com/resources/tutorials/*');
+  });
+
+  test('keeps Claude web-accessible resources on Chrome-valid origin scope', () => {
+    const claudeWar = manifest.web_accessible_resources.find((entry) => entry.matches.includes('https://claude.com/*'));
+    expect(claudeWar).toBeTruthy();
+    expect(claudeWar.matches).not.toContain('https://claude.com/resources/tutorials/*');
   });
 });
 

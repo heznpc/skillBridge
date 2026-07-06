@@ -35,6 +35,7 @@ export default [
         AbortController: 'readonly',
         CustomEvent: 'readonly',
         URL: 'readonly',
+        URLSearchParams: 'readonly',
         // Chrome extension APIs
         chrome: 'readonly',
         // Shared globals from content script load order
