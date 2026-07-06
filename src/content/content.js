@@ -758,36 +758,6 @@
     }
   }
 
-  // Language → Google Fonts family (load only what's needed)
-  const _LANG_FONT_MAP = {
-    ko: 'Noto+Sans+KR',
-    ja: 'Noto+Sans+JP',
-    'zh-CN': 'Noto+Sans+SC',
-    'zh-TW': 'Noto+Sans+TC',
-    ar: 'Noto+Sans+Arabic',
-    hi: 'Noto+Sans+Devanagari',
-    bn: 'Noto+Sans+Bengali',
-    th: 'Noto+Sans+Thai',
-    he: 'Noto+Sans+Hebrew',
-  };
-
-  function injectGoogleFonts(lang) {
-    if (document.getElementById('sb-google-fonts')) return;
-    const family = _LANG_FONT_MAP[lang];
-    if (!family) return; // Latin-script languages use system fonts
-
-    const link = document.createElement('link');
-    link.id = 'sb-google-fonts';
-    link.rel = 'stylesheet';
-    link.href = `https://fonts.googleapis.com/css2?family=${family}:wght@400;500;700&display=swap`;
-    link.onerror = () => {
-      // Graceful fallback — system fonts will be used via CSS font-family stack
-      console.debug('[SkillBridge] Google Fonts unavailable, using system fonts');
-      link.remove();
-    };
-    document.head.appendChild(link);
-  }
-
   function updateLangClass(lang) {
     // html lang (screen readers) + dir (RTL) are page-level semantics — set on
     // the document regardless of scope.
@@ -804,7 +774,6 @@
       for (const cls of [...el.classList].filter((c) => c.startsWith('si18n-lang-'))) el.classList.remove(cls);
       if (lang && lang !== 'en') el.classList.add(`si18n-lang-${lang}`);
     }
-    if (lang && lang !== 'en') injectGoogleFonts(lang);
   }
 
   function safeReplaceText(el, newText) {

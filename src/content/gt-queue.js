@@ -379,11 +379,12 @@
         if (gtGeneration !== myGeneration) return;
 
         const uncached = [];
+        const useGeminiBlocks = sb.hostCaps?.bridge !== false;
         for (let i = 0; i < batch.length; i++) {
           if (cacheResults[i]) {
             const item = batch[i];
             if (item.el && item.el.parentNode) {
-              if (item.needsGemini) {
+              if (item.needsGemini && useGeminiBlocks) {
                 uncached.push(item);
               } else {
                 const translated = window._protectedTerms.restoreProtectedTerms(cacheResults[i]);
@@ -396,8 +397,8 @@
           }
         }
 
-        const gtItems = uncached.filter((item) => !item.needsGemini);
-        const geminiItems = uncached.filter((item) => item.needsGemini);
+        const gtItems = uncached.filter((item) => !item.needsGemini || !useGeminiBlocks);
+        const geminiItems = useGeminiBlocks ? uncached.filter((item) => item.needsGemini) : [];
 
         for (const item of geminiItems) {
           if (item.el && item.el.parentNode) {

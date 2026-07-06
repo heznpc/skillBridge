@@ -185,9 +185,13 @@ describe('Protected Terms System (real production code)', () => {
       expect(terms).toContain('API');
     });
 
-    test('falls back to DEFAULT_PROTECTED_TERMS when entries are empty', () => {
+    test('keeps core protected terms when locale entries are empty', () => {
       buildProtectedTermsMap('ko', fakeTranslator({}));
-      expect(getKeepEnglishTerms()).toBe(DEFAULT_PROTECTED_TERMS);
+      const terms = getKeepEnglishTerms();
+      expect(terms).toContain('Claude');
+      expect(terms).toContain('Anthropic');
+      expect(terms).toContain('API');
+      expect(terms).toContain('SDK');
     });
   });
 });

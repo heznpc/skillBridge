@@ -312,7 +312,7 @@ See our full [Privacy Policy](PRIVACY_POLICY.md).
 | AI Tutor | Claude Sonnet 4.6 via Puter.js |
 | Curated Dictionaries | Hand-tuned JSON (1,100+ × 12 languages) |
 | Translation Cache | IndexedDB |
-| CJK Font Rendering | Google Fonts Noto Sans |
+| CJK Font Rendering | Local system/Noto fallback stacks |
 
 > **Built with [Claude Code](https://docs.anthropic.com/en/docs/claude-code).**
 > This project — from architecture design and feature implementation to debugging and the demo GIF — was developed using Claude Code as an AI pair-programming partner.

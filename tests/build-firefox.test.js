@@ -158,4 +158,9 @@ describe('Firefox build file copying', () => {
     expect(fs.existsSync(path.join(DIST_DIR, 'assets', 'icons', 'icon128.png'))).toBe(true);
     expect(fs.existsSync(path.join(DIST_DIR, 'assets', 'screenshots'))).toBe(false);
   });
+
+  test('copies license and third-party notices', () => {
+    expect(fs.existsSync(path.join(DIST_DIR, 'LICENSE'))).toBe(true);
+    expect(fs.existsSync(path.join(DIST_DIR, 'THIRD_PARTY_NOTICES.md'))).toBe(true);
+  });
 });

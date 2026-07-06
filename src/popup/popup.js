@@ -19,18 +19,31 @@ function isSkilljarHost(url) {
   }
 }
 
+function isClaudeTutorialUrl(url) {
+  try {
+    const parsed = new URL(url);
+    return parsed.hostname === 'claude.com' && parsed.pathname.startsWith('/resources/tutorials/');
+  } catch {
+    return false;
+  }
+}
+
+function isSupportedPage(url) {
+  return isSkilljarHost(url) || isClaudeTutorialUrl(url);
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const isSkilljar = isSkilljarHost(tab?.url);
+  const isSupported = isSupportedPage(tab?.url);
 
-  document.getElementById('main-content').style.display = isSkilljar ? 'block' : 'none';
-  document.getElementById('not-skilljar').style.display = isSkilljar ? 'none' : 'block';
+  document.getElementById('main-content').style.display = isSupported ? 'block' : 'none';
+  document.getElementById('not-skilljar').style.display = isSupported ? 'none' : 'block';
 
   // Footer from model constants
   document.getElementById('footer').innerHTML =
     `Google Translate + ${SKILLBRIDGE_MODEL_LABELS.GEMINI}<br>AI Tutor: ${SKILLBRIDGE_MODEL_LABELS.CLAUDE}`;
 
-  if (!isSkilljar) return;
+  if (!isSupported) return;
 
   const stored = await chrome.storage.local.get(['targetLanguage', 'autoTranslate']);
   let lang = stored.targetLanguage || 'en';

@@ -63,6 +63,8 @@ async function build() {
   copyDir(path.join(ROOT, 'assets', 'icons'), path.join(DIST, 'assets', 'icons'));
   copyDir(path.join(ROOT, '_locales'), path.join(DIST, '_locales'));
   copyDir(path.join(ROOT, 'src/data'), path.join(DIST, 'src/data'));
+  fs.copyFileSync(path.join(ROOT, 'LICENSE'), path.join(DIST, 'LICENSE'));
+  fs.copyFileSync(path.join(ROOT, 'THIRD_PARTY_NOTICES.md'), path.join(DIST, 'THIRD_PARTY_NOTICES.md'));
 
   // Copy other web-accessible resources
   fs.mkdirSync(path.join(DIST, 'src/lib'), { recursive: true });

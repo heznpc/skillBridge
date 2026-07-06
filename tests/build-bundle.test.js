@@ -32,6 +32,11 @@ describe('bundled artifact shape', () => {
     expect(fs.existsSync(path.join(DIST_DIR, 'assets', 'screenshots'))).toBe(false);
   });
 
+  test('copies license and third-party notices into the upload artifact', () => {
+    expect(fs.existsSync(path.join(DIST_DIR, 'LICENSE'))).toBe(true);
+    expect(fs.existsSync(path.join(DIST_DIR, 'THIRD_PARTY_NOTICES.md'))).toBe(true);
+  });
+
   test('does not copy repo-only development surfaces', () => {
     for (const name of ['tests', 'scripts', 'coverage', 'test-results', 'package.json', 'package-lock.json']) {
       expect(fs.existsSync(path.join(DIST_DIR, name))).toBe(false);

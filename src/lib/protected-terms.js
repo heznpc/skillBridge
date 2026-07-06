@@ -15,6 +15,13 @@
   let _protectedKeepEnglish = '';
   let _selfDupRe = null;
 
+  const CORE_PROTECTED_TERMS = Object.freeze({
+    Claude: [],
+    Anthropic: [],
+    API: [],
+    SDK: [],
+  });
+
   /**
    * Build the map of wrong->correct term replacements for the given language.
    * No-ops if the map is already built for the same language.
@@ -27,7 +34,7 @@
     _protectedTermsLang = targetLang;
 
     const map = {};
-    const protectedEntries = translator.getProtectedTerms?.() || {};
+    const protectedEntries = { ...CORE_PROTECTED_TERMS, ...(translator.getProtectedTerms?.() || {}) };
     for (const [correct, wrongForms] of Object.entries(protectedEntries)) {
       if (!Array.isArray(wrongForms)) continue;
       for (const wrong of wrongForms) {
