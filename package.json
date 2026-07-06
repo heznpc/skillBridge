@@ -63,6 +63,6 @@
     "eslint-config-prettier": "^10.1.8",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
-    "prettier": "^3.9.1"
+    "prettier": "^3.9.4"
   }
 }
