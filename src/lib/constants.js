@@ -1631,6 +1631,11 @@ const FLASHCARD_COURSE_MAP = {
   'claude-with-google-vertex': ['cloudDeployment'],
   // Claude Developer Platform
   'claude-platform-101': ['claudePlatform'],
+  // Certification / FAQ pages are public catalog entries. They do not have a
+  // dedicated terminology deck yet, so route them to the closest Claude platform
+  // deck instead of failing the live catalog drift gate.
+  'certification-faq': ['claudePlatform'],
+  'claude-certified-architect-foundations-certification': ['claudePlatform'],
   // AI Fluency courses
   'ai-fluency': ['aiFluency'],
   'ai-fluency-framework': ['aiFluency'],
