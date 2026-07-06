@@ -8,8 +8,8 @@
    Open Sans (UI) — all Latin-only fonts. CJK and other scripts need
    proper fallbacks to prevent rendering issues (tofu/boxes).
 
-   Strategy: Inject Google Fonts Noto Sans variants per language,
-   and use :lang() selectors to apply proper font stacks.
+   Strategy: apply local system/Noto fallback stacks through scoped
+   si18n-lang-* classes. No remote font fetches are performed.
    ============================================================ */
 
 /* ============================================================
@@ -27,8 +27,8 @@
    looks bolder than Copernicus serif at 700).
    ============================================================ */
 
-/* NOTE: @import removed — fonts loaded via <link> tag in content.js
-   to avoid Chrome extension CSP blocking of @import in content scripts */
+/* NOTE: @import and runtime <link> font injection are intentionally absent.
+   Extension pages rely on the user's installed fonts and platform fallbacks. */
 
 /* ---- Korean ---- */
 

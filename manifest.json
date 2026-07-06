@@ -4,7 +4,7 @@
   "description": "__MSG_extDescription__",
   "version": "3.5.41",
   "minimum_chrome_version": "124",
-  "author": "SkillBridge Contributors",
+  "author": "Heznpc",
   "homepage_url": "https://github.com/heznpc/skillbridge",
   "default_locale": "en",
   "permissions": ["storage", "alarms"],
