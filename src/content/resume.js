@@ -203,7 +203,10 @@
     }
     if (r.url === location.href) {
       window.scrollTo({ top: r.scrollY, behavior: 'smooth' });
-    } else {
+    } else if (/^https?:/i.test(r.url)) {
+      // Match the https-only gate the dashboard open handler already applies, so
+      // a dangerous-scheme URL can never reach location.href even if a future
+      // write path (import/sync) ever populates sb_recent from elsewhere.
       location.href = r.url;
     }
   }
