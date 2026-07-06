@@ -23,12 +23,18 @@ global.chrome.runtime.onInstalled = { addListener: () => {} };
 global.chrome.runtime.onMessage = { addListener: (fn) => runtimeMessageListeners.push(fn) };
 
 const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'background', 'background.js'), 'utf8');
+const originalSetTimeout = setTimeout;
+let timerDelegate = (...args) => originalSetTimeout(...args);
 
 // Extract pure functions via eval
-const fns = new Function(`
+const fns = new Function(
+  'setTimer',
+  `
+  const setTimeout = (...args) => setTimer(...args);
   ${src}
   return { gtLangCode, parseGTResponse, isYouTubeUrl, isAllowedFetchUrl, isNewerVersion, _rateLimiter, fetchWithRetry, registerAlarms, _gtFetchDedup, _inflightGT, _gtKey };
-`)();
+`,
+)((...args) => timerDelegate(...args));
 
 const {
   gtLangCode,
@@ -247,6 +253,7 @@ describe('_gtFetchDedup — in-flight dedup', () => {
 
   test('TTL forces map entry deletion if fetch never settles', async () => {
     jest.useFakeTimers();
+    timerDelegate = (...args) => setTimeout(...args);
     try {
       // fetch returns a promise that never resolves — simulates a hung
       // upstream. Without the TTL, _inflightGT.has(key) would return
@@ -261,6 +268,7 @@ describe('_gtFetchDedup — in-flight dedup', () => {
 
       expect(_inflightGT.has(_gtKey('hung-key', 'ko', 'en'))).toBe(false);
     } finally {
+      timerDelegate = (...args) => originalSetTimeout(...args);
       jest.useRealTimers();
     }
   });

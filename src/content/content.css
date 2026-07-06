@@ -9,8 +9,8 @@
    proper fallbacks to prevent rendering issues (tofu/boxes).
 
    Strategy: rely on locally-available Noto Sans variants and OS-native CJK
-   fonts via the per-language font stacks below. Fonts are NOT fetched from
-   fonts.googleapis.com — that remote request would leak the user's IP and
+   fonts via scoped si18n-lang-* classes. Fonts are NOT fetched from
+   fonts.googleapis.com; that remote request would leak the user's IP and
    reading language to a third party the privacy policy does not disclose.
    ============================================================ */
 

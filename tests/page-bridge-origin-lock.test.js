@@ -51,7 +51,15 @@ function installBridge(nonce, chat) {
 function chatReq(nonce, id) {
   return new window.MessageEvent('message', {
     source: window,
-    data: { __skillbridge__: true, __nonce__: nonce, type: 'CHAT_REQUEST', id, userMessage: 'hi', stream: false, model: 'claude-haiku-4-5' },
+    data: {
+      __skillbridge__: true,
+      __nonce__: nonce,
+      type: 'CHAT_REQUEST',
+      id,
+      userMessage: 'hi',
+      stream: false,
+      model: 'claude-haiku-4-5',
+    },
   });
 }
 

@@ -123,6 +123,11 @@ describe('updateLangClass — lang/font class targets the scope, not the whole p
     expect(document.documentElement.lang).toBe('ja');
   });
 
+  test('does not inject remote font links', () => {
+    makeUpdate(null)('ko');
+    expect(document.querySelector('link[href*="fonts.googleapis.com"]')).toBeNull();
+  });
+
   test('switching to en clears the lang class and resets lang/dir', () => {
     const update = makeUpdate(null);
     update('ar');
