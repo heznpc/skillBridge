@@ -81,10 +81,10 @@ be treated as the real public service, not just a repo-ready release candidate.
   removed before relying on the CD upload path. Before live publish, set
   `CWS_DASHBOARD_READY_VERSION` to the manifest version only after the CWS
   dashboard listing/media/privacy fields are refreshed.
-- [ ] **Migrate CWS CD off the v1.1 upload action.** The current pinned upload
-  action still uses the older Chrome Web Store upload/publish API surface. Keep
-  the new dashboard-ready and target-listing guards, but replace the action with
-  the current CWS API path before the older endpoint support window closes.
+- [x] **CWS CD upload action on the current pinned path.** The workflow uses
+  `mnao305/chrome-extension-upload` v6.0.0 with the dashboard-ready and
+  target-listing guards still in place. Re-check this only when the action or
+  Chrome Web Store API announces a new migration window.
 
 ### P2 — service quality after the store build is live
 

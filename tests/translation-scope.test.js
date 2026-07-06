@@ -98,8 +98,8 @@ const updateLangSrc = contentSrc.match(/function updateLangClass\(lang\) \{[\s\S
 if (!updateLangSrc) {
   throw new Error('Could not extract updateLangClass from content.js — did the source shape change?');
 }
-const updateLangFactory = new Function('sb', 'injectGoogleFonts', `${updateLangSrc[0]}\nreturn updateLangClass;`);
-const makeUpdate = (translationScope) => updateLangFactory({ translationScope }, () => {});
+const updateLangFactory = new Function('sb', `${updateLangSrc[0]}\nreturn updateLangClass;`);
+const makeUpdate = (translationScope) => updateLangFactory({ translationScope });
 
 describe('updateLangClass — lang/font class targets the scope, not the whole page', () => {
   beforeEach(() => {
@@ -121,6 +121,11 @@ describe('updateLangClass — lang/font class targets the scope, not the whole p
     makeUpdate(null)('ja');
     expect(document.body.classList.contains('si18n-lang-ja')).toBe(true);
     expect(document.documentElement.lang).toBe('ja');
+  });
+
+  test('does not inject remote font links', () => {
+    makeUpdate(null)('ko');
+    expect(document.querySelector('link[href*="fonts.googleapis.com"]')).toBeNull();
   });
 
   test('switching to en clears the lang class and resets lang/dir', () => {

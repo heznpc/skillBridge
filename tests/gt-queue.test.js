@@ -78,3 +78,11 @@ describe('isLikelyEnglish', () => {
     expect(isLikelyEnglish('ab가나')).toBe(false);
   });
 });
+
+describe('inline-tag fallback routing', () => {
+  test('translation-only hosts send inline-tag items through GT instead of leaving them untranslated', () => {
+    expect(src).toContain('const useGeminiBlocks = sb.hostCaps?.bridge !== false;');
+    expect(src).toContain('const gtItems = uncached.filter((item) => !item.needsGemini || !useGeminiBlocks);');
+    expect(src).toContain('const geminiItems = useGeminiBlocks ? uncached.filter((item) => item.needsGemini) : [];');
+  });
+});

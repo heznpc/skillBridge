@@ -7,14 +7,48 @@
  *   node scripts/check-dicts.js
  *
  * In CI (CI=true), writes a report to dict-check-report.txt and exits
- * non-zero if any dictionary is stale.
+ * non-zero if any review-complete dictionary is stale. Dictionaries still
+ * marked nativeReview=recruiting are explicit review debt, not a fake
+ * "reviewed" state, so they warn without blocking unrelated dependency PRs.
  */
 
 const fs = require('fs');
 const path = require('path');
 
-const DATA_DIR = path.join(__dirname, '..', 'src', 'data');
+const DATA_DIR = process.env.SB_DICT_FRESHNESS_DIR || path.join(__dirname, '..', 'src', 'data');
 const STALE_THRESHOLD_DAYS = 90;
+
+function writeCiReport(results) {
+  if (!process.env.CI) return;
+
+  const stale = results.filter((r) => r.status === 'STALE');
+  const reviewNeeded = results.filter((r) => r.status === 'REVIEW_NEEDED');
+  const report = [
+    '### Blocking stale dictionaries\n',
+    ...(stale.length
+      ? stale.map(
+          (r) =>
+            `- **${r.file}** (\`${r.lang}\`): last updated ${r.lastUpdated} (${r.daysSince} days ago), nativeReview=${r.nativeReview} — STALE`,
+        )
+      : ['- None']),
+    '',
+    '### Native review recruiting\n',
+    ...(reviewNeeded.length
+      ? reviewNeeded.map(
+          (r) =>
+            `- **${r.file}** (\`${r.lang}\`): last updated ${r.lastUpdated} (${r.daysSince} days ago), nativeReview=${r.nativeReview} — REVIEW_NEEDED`,
+        )
+      : ['- None']),
+    '',
+    '### All dictionaries\n',
+    '| File | Language | Last Updated | Days Ago | Native Review | Status |',
+    '|------|----------|-------------|----------|---------------|--------|',
+    ...results
+      .filter((r) => r.lastUpdated)
+      .map((r) => `| ${r.file} | ${r.lang} | ${r.lastUpdated} | ${r.daysSince} | ${r.nativeReview} | ${r.status} |`),
+  ].join('\n');
+  fs.writeFileSync('dict-check-report.txt', report);
+}
 
 function main() {
   console.log('Dictionary Freshness Check');
@@ -36,7 +70,7 @@ function main() {
 
   const now = new Date();
   const results = [];
-  let hasStale = false;
+  let hasBlockingStale = false;
 
   for (const file of files) {
     const filePath = path.join(DATA_DIR, file);
@@ -65,43 +99,44 @@ function main() {
 
     const daysSince = Math.floor((now - updatedDate) / (1000 * 60 * 60 * 24));
     const lang = data._meta.lang || file.replace('.json', '');
+    const nativeReview = data._meta.nativeReview || 'unknown';
+    const reviewRecruiting = nativeReview === 'recruiting';
 
     if (daysSince > STALE_THRESHOLD_DAYS) {
-      console.log(`  [STALE] ${file} (${lang}): last updated ${lastUpdated} — ${daysSince} days ago`);
-      results.push({ file, lang, status: 'STALE', lastUpdated, daysSince });
-      hasStale = true;
+      const status = reviewRecruiting ? 'REVIEW_NEEDED' : 'STALE';
+      const label = reviewRecruiting ? 'REVIEW' : 'STALE';
+      console.log(
+        `  [${label}] ${file} (${lang}): last updated ${lastUpdated} — ${daysSince} days ago; nativeReview=${nativeReview}`,
+      );
+      results.push({ file, lang, status, lastUpdated, daysSince, nativeReview });
+      if (!reviewRecruiting) hasBlockingStale = true;
     } else {
-      console.log(`  [OK]    ${file} (${lang}): last updated ${lastUpdated} — ${daysSince} days ago`);
-      results.push({ file, lang, status: 'OK', lastUpdated, daysSince });
+      console.log(
+        `  [OK]    ${file} (${lang}): last updated ${lastUpdated} — ${daysSince} days ago; nativeReview=${nativeReview}`,
+      );
+      results.push({ file, lang, status: 'OK', lastUpdated, daysSince, nativeReview });
     }
   }
 
   console.log('');
 
-  if (!hasStale) {
-    console.log('All dictionaries are fresh.');
+  const reviewNeeded = results.filter((r) => r.status === 'REVIEW_NEEDED');
+  if (reviewNeeded.length > 0) {
+    console.log(
+      `${reviewNeeded.length} dictionary/dictionaries need native review refresh but are marked nativeReview=recruiting.`,
+    );
+  }
+
+  if (!hasBlockingStale) {
+    writeCiReport(results);
+    if (reviewNeeded.length === 0) console.log('All dictionaries are fresh.');
+    else console.log('No review-complete dictionaries are stale.');
     return;
   }
 
   const stale = results.filter((r) => r.status === 'STALE');
-  console.log(`${stale.length} dictionary/dictionaries are stale (>${STALE_THRESHOLD_DAYS} days old).`);
-
-  if (process.env.CI) {
-    const report = [
-      '### Stale dictionaries\n',
-      ...stale.map(
-        (r) => `- **${r.file}** (\`${r.lang}\`): last updated ${r.lastUpdated} (${r.daysSince} days ago) — STALE`,
-      ),
-      '',
-      '### All dictionaries\n',
-      '| File | Language | Last Updated | Days Ago | Status |',
-      '|------|----------|-------------|----------|--------|',
-      ...results
-        .filter((r) => r.lastUpdated)
-        .map((r) => `| ${r.file} | ${r.lang} | ${r.lastUpdated} | ${r.daysSince} | ${r.status} |`),
-    ].join('\n');
-    fs.writeFileSync('dict-check-report.txt', report);
-  }
+  console.log(`${stale.length} review-complete dictionary/dictionaries are stale (>${STALE_THRESHOLD_DAYS} days old).`);
+  writeCiReport(results);
 
   process.exit(1);
 }

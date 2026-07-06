@@ -1,10 +1,10 @@
 # Release Checklist — v3.5.41 re-publication
 
-> Refreshed 2026-06-23 for v3.5.41. Since the last dashboard-ready checklist:
+> Refreshed 2026-07-06 for v3.5.41. Since the last dashboard-ready checklist:
 > Indonesian became a Premium language, the live Academy catalog check reports
-> 20 published courses wired into the 33-slug coverage map, and protected-term
-> restoration now also covers cached GT translations. This is the source of
-> truth for the next dashboard upload.
+> 22 published catalog slugs wired into the 35-slug coverage map, and
+> protected-term restoration now also covers cached GT translations. This is the
+> source of truth for the next dashboard upload.
 
 CWS listing status:
 - Published: **v1.0.1** (uploaded 2026-03-10)
@@ -14,7 +14,8 @@ CWS listing status:
 
 The remaining publish steps cross trust boundaries the automation can't cross
 (your hands on the dashboard, the icon design decision, the public-variable toggle).
-Everything code-side is ready; regenerate the upload artifact immediately before
+Do not treat this checklist as code-side green until `npm run release:verify`
+passes in the release checkout. Regenerate the upload artifact immediately before
 dashboard upload.
 
 ## What's already prepared (no further action needed)
@@ -35,9 +36,10 @@ dashboard upload.
   connect to the privacy policy link". `github.com` links are case-insensitive,
   so the homepage/support URLs are fine lowercase — only the `github.io` URL
   must be capital-B.
-- ✅ Latest local gate snapshot: rerun before dashboard upload with
-  `npm run validate`, `npm run check:dict-coverage`, `npm test`, and
-  `npm run test:e2e`
+- ⚠️ Latest local gate snapshot: rerun before dashboard upload with
+  `npm run release:verify`. As of 2026-07-06, dictionary freshness may report
+  recruiting-state dictionaries as review-needed warnings; that is not a native
+  review stamp.
 - ✅ AI-content gate wired into `manifest.json:content_scripts[].js` (PR #145 hotfix)
 - ✅ CWS-drift watcher will keep this from drifting 3 months again
 - ✅ Italian dictionary live (PR #140) — timed with Anthropic Milan office opening 2026-05-27
