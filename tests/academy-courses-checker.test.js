@@ -16,7 +16,7 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 
 const SCRIPT = path.join(__dirname, '..', 'scripts', 'check-academy-courses.js');
-const { parseSlugs, NON_COURSE_SLUGS } = require(SCRIPT);
+const { parseSlugs, parseStoreListingCourseCount, NON_COURSE_SLUGS } = require(SCRIPT);
 
 function run(env) {
   // spawnSync with array args avoids js/shell-command-injection-from-
@@ -119,10 +119,23 @@ describe('parseSlugs', () => {
   });
 });
 
+describe('parseStoreListingCourseCount', () => {
+  test('extracts the declared supported-course count from store copy', () => {
+    expect(parseStoreListingCourseCount('All 22 currently-published courses/catalog entries on x.')).toBe(22);
+  });
+
+  test('returns null when the store copy no longer carries the count sentence', () => {
+    expect(parseStoreListingCourseCount('SUPPORTED COURSES\nEverything is supported.')).toBeNull();
+  });
+});
+
 describe('CLI behavior (against fixtures)', () => {
   let htmlAllKnown;
   let htmlOneUnknown;
   let constantsFile;
+  let storeCountOne;
+  let storeCountTwo;
+  let storeCountStale;
 
   beforeAll(() => {
     htmlAllKnown = writeFixture('catalog-all-known.html', '<a href="https://anthropic.skilljar.com/claude-101">X</a>');
@@ -132,12 +145,22 @@ describe('CLI behavior (against fixtures)', () => {
        <a href="https://anthropic.skilljar.com/totally-new-course">Y</a>`,
     );
     constantsFile = writeFixture('fake-constants.js', "const FLASHCARD_COURSE_MAP = { 'claude-101': ['claude101'] };");
+    storeCountOne = writeFixture(
+      'store-one.md',
+      'SUPPORTED COURSES\nAll 1 currently-published courses/catalog entries.',
+    );
+    storeCountTwo = writeFixture(
+      'store-two.md',
+      'SUPPORTED COURSES\nAll 2 currently-published courses/catalog entries.',
+    );
+    storeCountStale = writeFixture('store-stale.md', 'SUPPORTED COURSES\nAll 20 currently-published courses.');
   });
 
   test('exits 0 when every live slug is known', () => {
     const res = run({
       SB_CATALOG_HTML_FIXTURE: htmlAllKnown,
       SB_CONSTANTS_FIXTURE: constantsFile,
+      SB_STORE_LISTING_FIXTURE: storeCountOne,
     });
     expect(res.code).toBe(0);
     expect(res.out).toMatch(/All live courses are wired/);
@@ -147,10 +170,22 @@ describe('CLI behavior (against fixtures)', () => {
     const res = run({
       SB_CATALOG_HTML_FIXTURE: htmlOneUnknown,
       SB_CONSTANTS_FIXTURE: constantsFile,
+      SB_STORE_LISTING_FIXTURE: storeCountTwo,
     });
     expect(res.code).toBe(1);
     expect(res.out).toMatch(/totally-new-course/);
     expect(res.out).toMatch(/\[NEW\]/);
+  });
+
+  test('exits 1 when STORE_LISTING.md declares a stale live-course count', () => {
+    const res = run({
+      SB_CATALOG_HTML_FIXTURE: htmlAllKnown,
+      SB_CONSTANTS_FIXTURE: constantsFile,
+      SB_STORE_LISTING_FIXTURE: storeCountStale,
+    });
+    expect(res.code).toBe(1);
+    expect(res.out).toMatch(/Store listing count mismatch/);
+    expect(res.out).toMatch(/declares 20/);
   });
 
   test('CI=true writes the report file with the new slug', () => {
@@ -162,6 +197,7 @@ describe('CLI behavior (against fixtures)', () => {
         CI: 'true',
         SB_CATALOG_HTML_FIXTURE: htmlOneUnknown,
         SB_CONSTANTS_FIXTURE: constantsFile,
+        SB_STORE_LISTING_FIXTURE: storeCountTwo,
       },
       cwd,
       encoding: 'utf8',
