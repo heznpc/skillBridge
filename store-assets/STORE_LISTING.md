@@ -82,8 +82,8 @@ Full dark theme for the course site. Full right-to-left layout for Arabic and He
 ━━━━━━━━━━━━━━━━━━━
 
 SUPPORTED COURSES
-All 20 currently-published courses on anthropic.skilljar.com, with terminology coverage for any new course added within 48 hours (mechanically enforced by an open-source drift watcher that auto-opens an issue when a new slug appears). Course names referenced descriptively for compatibility:
-Claude 101 · Claude Platform 101 · Claude Code 101 · Claude Code in Action · Introduction to Claude Cowork · Introduction to Agent Skills · Introduction to Subagents · Building with the Claude API · Introduction to MCP · MCP: Advanced Topics · Claude with Amazon Bedrock · Claude with Google Vertex AI · AI Fluency: Framework & Foundations · AI Fluency for Builders · AI Fluency for Students · AI Fluency for Educators · Teaching AI Fluency · AI Fluency for Nonprofits · AI Fluency for Small Businesses · AI Capabilities and Limitations
+All 22 currently-published courses/catalog entries on anthropic.skilljar.com, with terminology coverage for any new entry added within 48 hours (mechanically enforced by an open-source drift watcher that auto-opens an issue when a new slug appears). Public learning and certification-info pages are translated; proctored exam URLs remain disabled entirely as noted above. Course names referenced descriptively for compatibility:
+Claude 101 · Claude Platform 101 · Claude Code 101 · Claude Code in Action · Introduction to Claude Cowork · Introduction to Agent Skills · Introduction to Subagents · Building with the Claude API · Introduction to MCP · MCP: Advanced Topics · Claude with Amazon Bedrock · Claude with Google Vertex AI · AI Fluency: Framework & Foundations · AI Fluency for Builders · AI Fluency for Students · AI Fluency for Educators · Teaching AI Fluency · AI Fluency for Nonprofits · AI Fluency for Small Businesses · AI Capabilities and Limitations · Certification FAQ · Claude Certified Architect Foundations Certification
 
 ━━━━━━━━━━━━━━━━━━━
 
