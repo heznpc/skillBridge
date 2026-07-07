@@ -3,7 +3,8 @@ name: Academy course catalog drift watcher
 # Runs `scripts/check-academy-courses.js` against the live Anthropic
 # Academy catalog (anthropic.skilljar.com) every 12 hours and auto-
 # opens an issue when a new course slug appears that is not wired
-# into `FLASHCARD_COURSE_MAP` in `src/lib/constants.js`.
+# into `FLASHCARD_COURSE_MAP` in `src/lib/constants.js`, or when the
+# Chrome Web Store listing copy falls behind the live catalog count.
 #
 # This is the load-bearing automation behind the product's first
 # pillar — "AI terminology fidelity — new Academy course → terminology
@@ -54,7 +55,7 @@ jobs:
               report = fs.readFileSync('academy-courses-report.txt', 'utf8').slice(0, 4000);
             } catch (e) { /* file missing — script may have crashed before writing */ }
 
-            const title = '🆕 New Anthropic Academy course detected — terminology update needed';
+            const title = '🆕 Anthropic Academy catalog drift — terminology/store listing update needed';
 
             // Idempotency: skip if there's already an open drift issue.
             // Without this, a persistent gap would spawn a new issue
@@ -72,15 +73,15 @@ jobs:
 
             const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
             const body = [
-              '`scripts/check-academy-courses.js` found one or more course slugs on https://anthropic.skilljar.com/ that are not present in `FLASHCARD_COURSE_MAP` (`src/lib/constants.js`).',
+              '`scripts/check-academy-courses.js` found drift between https://anthropic.skilljar.com/, `FLASHCARD_COURSE_MAP` (`src/lib/constants.js`), and/or the Chrome Web Store listing source (`store-assets/STORE_LISTING.md`).',
               '',
-              '**Why this matters**: the product's first pillar commits to "AI terminology fidelity — new Academy course → terminology update within 48 hours." A slug that exists on the live site but not in our map ships the English fallback to non-English users for that course.',
+              '**Why this matters**: the product's first pillar commits to "AI terminology fidelity — new Academy course → terminology update within 48 hours." A slug that exists on the live site but not in our map ships the English fallback to non-English users for that course. A stale store-listing count misleads users and reviewers about current coverage.',
               '',
               '**Action**:',
-              '1. For each new slug below, add a course section to all 10 premium-language dictionaries in `src/data/` (use a sibling section like `aiFluencyEdu` as a template).',
+              '1. For each new slug below, add a course section to all 12 premium-language dictionaries in `src/data/` (use a sibling section like `aiFluencyEdu` as a template).',
               '2. Add a `\'slug\': [\'sectionName\']` row to `FLASHCARD_COURSE_MAP` in `src/lib/constants.js`.',
-              '3. Run `npm run check:dict-coverage` locally — it must pass before merge.',
-              '4. Run `npm run check:academy` locally to confirm this script now reports zero unknowns.',
+              '3. If the report names `STORE_LISTING.md`, update the supported-course count/list and regenerate store assets before release.',
+              '4. Run `npm run check:dict-coverage` and `npm run check:academy` locally — both must pass before merge.',
               '',
               '**Report**:',
               '```',
