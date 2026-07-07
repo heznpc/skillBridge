@@ -32,6 +32,8 @@ const fs = require('fs');
 const path = require('path');
 
 const CATALOG_URL = process.env.SB_CATALOG_URL || 'https://anthropic.skilljar.com/';
+const STORE_LISTING_PATH =
+  process.env.SB_STORE_LISTING_FIXTURE || path.resolve(__dirname, '..', 'store-assets', 'STORE_LISTING.md');
 
 // Paths that look like course slugs but aren't. These are first-party
 // non-course routes the catalog page also links to. Add new entries here
@@ -78,6 +80,10 @@ function loadCatalogHtml() {
   });
 }
 
+function loadStoreListingText() {
+  return fs.readFileSync(STORE_LISTING_PATH, 'utf8');
+}
+
 /**
  * Extracts course slugs from anthropic.skilljar.com catalog HTML.
  *
@@ -113,6 +119,11 @@ function parseSlugs(html) {
     slugs.add(slug);
   }
   return [...slugs].sort();
+}
+
+function parseStoreListingCourseCount(text) {
+  const match = text.match(/All\s+(\d+)\s+currently-published courses/i);
+  return match ? Number(match[1]) : null;
 }
 
 /**
@@ -153,11 +164,18 @@ async function main() {
 
   const liveSlugs = parseSlugs(html);
   const knownSlugs = loadKnownSlugs();
+  const storeListingCount = parseStoreListingCourseCount(loadStoreListingText());
 
   console.log(`\n   Live catalog slugs: ${liveSlugs.length}`);
   console.log(`   Known to FLASHCARD_COURSE_MAP: ${knownSlugs.size}\n`);
 
   const unknown = liveSlugs.filter((s) => !knownSlugs.has(s));
+  const storeListingIssue =
+    storeListingCount === null
+      ? { kind: 'missing' }
+      : storeListingCount !== liveSlugs.length
+        ? { kind: 'mismatch', declared: storeListingCount, live: liveSlugs.length }
+        : null;
   for (const slug of liveSlugs) {
     const tag = knownSlugs.has(slug) ? '[OK]      ' : '[NEW]     ';
     console.log(`  ${tag} ${slug}`);
@@ -165,18 +183,44 @@ async function main() {
 
   console.log('');
 
-  if (unknown.length === 0) {
-    console.log('All live courses are wired into FLASHCARD_COURSE_MAP.');
+  if (unknown.length === 0 && !storeListingIssue) {
+    console.log('All live courses are wired into FLASHCARD_COURSE_MAP and STORE_LISTING.md.');
     return;
   }
 
-  console.log(`${unknown.length} unknown course slug(s) on the live catalog:`);
-  for (const slug of unknown) console.log(`  - ${slug}`);
+  if (unknown.length > 0) {
+    console.log(`${unknown.length} unknown course slug(s) on the live catalog:`);
+    for (const slug of unknown) console.log(`  - ${slug}`);
+    console.log('');
+  }
+
+  if (storeListingIssue) {
+    if (storeListingIssue.kind === 'missing') {
+      console.log('STORE_LISTING.md is missing the supported-course count sentence.');
+    } else {
+      console.log(
+        `Store listing count mismatch: STORE_LISTING.md declares ${storeListingIssue.declared}, ` +
+          `live catalog has ${storeListingIssue.live}.`,
+      );
+    }
+    console.log('');
+  }
 
   if (process.env.CI) {
-    const report = [
-      '### New Academy course(s) detected on the live catalog\n',
-      ...unknown.map((s) => `- \`${s}\` → https://anthropic.skilljar.com/${s}`),
+    const report = ['### Academy catalog drift detected\n'];
+    if (unknown.length > 0) {
+      report.push(...unknown.map((s) => `- New slug: \`${s}\` → https://anthropic.skilljar.com/${s}`), '');
+    }
+    if (storeListingIssue?.kind === 'missing') {
+      report.push('- `store-assets/STORE_LISTING.md` is missing the supported-course count sentence.', '');
+    } else if (storeListingIssue?.kind === 'mismatch') {
+      report.push(
+        `- Store listing count mismatch: \`${storeListingIssue.declared}\` declared, ` +
+          `\`${storeListingIssue.live}\` live catalog slug(s).`,
+        '',
+      );
+    }
+    report.push(
       '',
       '### All live slugs\n',
       ...liveSlugs.map((s) => `- ${knownSlugs.has(s) ? '✅' : '🆕'} \`${s}\``),
@@ -184,9 +228,10 @@ async function main() {
       '### Required follow-up (48h terminology SLA)\n',
       '1. Add a section for each new course to all 12 premium-language dictionaries in `src/data/`.',
       '2. Map the slug(s) into `FLASHCARD_COURSE_MAP` in `src/lib/constants.js`.',
-      '3. `npm run check:dict-coverage` must pass before the issue closes.',
-    ].join('\n');
-    fs.writeFileSync('academy-courses-report.txt', report);
+      '3. Update `store-assets/STORE_LISTING.md` if the supported-course count or list is stale.',
+      '4. `npm run check:dict-coverage` and `npm run check:academy` must pass before the issue closes.',
+    );
+    fs.writeFileSync('academy-courses-report.txt', report.join('\n'));
   }
 
   process.exit(1);
@@ -196,4 +241,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { parseSlugs, NON_COURSE_SLUGS };
+module.exports = { parseSlugs, parseStoreListingCourseCount, NON_COURSE_SLUGS };
