@@ -1,0 +1,376 @@
+/* Chatbot widget — bottom-right popup */
+.skillbridge-sidebar {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: var(--si18n-sidebar-width);
+  height: 560px;
+  max-height: calc(100vh - 120px);
+  background: var(--si18n-bg);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  z-index: 100000;
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  color: var(--si18n-text);
+  transform: scale(0.9) translateY(20px);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.skillbridge-sidebar.open {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Header — compact chatbot style, flat layout */
+.si18n-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--si18n-border);
+  background: var(--si18n-accent);
+  color: white;
+  height: 44px;
+}
+
+.si18n-header-title {
+  flex: 1;
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 44px;
+}
+
+.si18n-close {
+  background: none;
+  border: none;
+  margin: 0;
+  padding: 0;
+  font-size: 18px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.8);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: color 0.2s;
+}
+
+.si18n-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+}
+
+/* Chat Panel — takes full sidebar height */
+.si18n-panel-chat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 14px;
+  gap: 8px;
+  overflow: hidden;
+}
+
+/* Language panel — sidebar body on translation-only hosts (claude.com tutorials) */
+.si18n-panel-lang {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 14px;
+  gap: 10px;
+}
+
+.si18n-lang-panel-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.si18n-sidebar-lang-select {
+  width: 100%;
+  padding: 9px 10px;
+  font-size: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 8px;
+  background: white;
+  color: #1a1a1a;
+  cursor: pointer;
+}
+
+.si18n-sidebar-lang-select:focus {
+  outline: none;
+  border-color: #d97757;
+  box-shadow: 0 0 0 3px rgba(217, 119, 87, 0.18);
+}
+
+html.si18n-dark .si18n-lang-panel-label {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+html.si18n-dark .si18n-sidebar-lang-select {
+  background: #2a2a2a;
+  color: #e8e8e8;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Chat */
+.si18n-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 8px;
+}
+
+.si18n-chat-msg {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.si18n-chat-user {
+  flex-direction: row-reverse;
+}
+
+.si18n-chat-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--si18n-accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.si18n-chat-user .si18n-chat-avatar {
+  background: var(--si18n-primary);
+}
+
+.si18n-chat-bubble {
+  max-width: 80%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  background: var(--si18n-surface);
+  border: 1px solid var(--si18n-border);
+}
+
+.si18n-chat-bubble p,
+.si18n-chat-bubble h3,
+.si18n-chat-bubble ul,
+.si18n-chat-bubble ol,
+.si18n-chat-bubble li,
+.si18n-chat-bubble span,
+.si18n-chat-bubble strong,
+.si18n-chat-bubble em {
+  font-family: inherit !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.si18n-chat-bubble p {
+  margin-bottom: 6px !important;
+}
+
+.si18n-chat-bubble p:last-child {
+  margin-bottom: 0 !important;
+}
+
+.si18n-chat-bubble h3 {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  margin-bottom: 4px !important;
+}
+
+.si18n-chat-bubble ul,
+.si18n-chat-bubble ol {
+  padding-left: 18px !important;
+  margin-bottom: 6px !important;
+}
+
+.si18n-chat-bubble li {
+  margin-bottom: 2px !important;
+}
+
+.si18n-chat-user .si18n-chat-bubble {
+  background: var(--si18n-accent);
+  color: white;
+  border: none;
+}
+
+.si18n-chat-bubble code {
+  background: rgba(0, 0, 0, 0.08);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 12px !important;
+}
+
+/* Tutor streaming cursor */
+.si18n-streaming-cursor::after {
+  content: '▊';
+  animation: si18n-blink 0.8s step-end infinite;
+  color: var(--si18n-primary);
+  font-weight: normal;
+}
+
+@keyframes si18n-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.si18n-thinking-dots {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.si18n-thinking-dots .si18n-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--si18n-accent);
+  animation: si18n-pulse 1.2s ease-in-out infinite;
+}
+
+.si18n-thinking-dots .si18n-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.si18n-thinking-dots .si18n-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* Chat Input */
+/* Example question chips (onboarding) */
+.si18n-example-questions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 4px 0 8px;
+  /* Align the chips with the bot bubble's left edge instead of the messages
+     gutter: the bubble sits past the 28px avatar + 8px row gap, so indent the
+     chips by the same 36px. Logical property keeps it correct under RTL. */
+  padding-inline-start: 36px;
+}
+.si18n-example-q {
+  background: var(--si18n-bg);
+  border: 1px solid var(--si18n-border);
+  border-radius: 16px;
+  padding: 5px 12px;
+  font-size: 12px;
+  color: var(--si18n-text);
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
+  line-height: 1.3;
+}
+.si18n-example-q:hover {
+  background: var(--si18n-accent-bg, #f0edeb);
+  border-color: var(--si18n-accent, #6b5b4f);
+}
+html.si18n-dark .si18n-example-q {
+  background: #1a1a1a;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #d0d0d0;
+}
+html.si18n-dark .si18n-example-q:hover {
+  background: #252525;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Retry button on error messages */
+.si18n-retry-btn {
+  background: none;
+  border: 1px solid var(--si18n-border);
+  border-radius: 4px;
+  padding: 2px 8px;
+  margin-left: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  color: var(--si18n-text);
+  transition: background 0.2s;
+}
+.si18n-retry-btn:hover {
+  background: var(--si18n-accent-bg, #f0edeb);
+}
+
+.si18n-chat-input-wrap {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  padding-top: 8px;
+  border-top: 1px solid var(--si18n-border);
+}
+
+.si18n-chat-input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--si18n-border);
+  border-radius: 20px;
+  font-size: 13px;
+  font-family: inherit;
+  resize: none;
+  background: var(--si18n-surface);
+  color: var(--si18n-text);
+  max-height: 80px;
+}
+
+.si18n-chat-input:focus {
+  outline: 2px solid var(--si18n-primary);
+  outline-offset: -2px;
+  border-color: var(--si18n-primary);
+}
+
+.si18n-chat-send-btn {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 18px;
+  background: var(--si18n-primary);
+  color: white;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+  transition:
+    background 0.2s,
+    transform 0.15s;
+}
+
+.si18n-chat-send-btn:hover {
+  background: var(--si18n-primary-hover);
+}
+
+.si18n-chat-send-btn:active {
+  transform: scale(0.95);
+}

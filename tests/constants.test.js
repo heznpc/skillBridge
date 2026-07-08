@@ -9,17 +9,18 @@ const fs = require('fs');
 const path = require('path');
 
 const selectorsSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'selectors.js'), 'utf8');
+const sharedSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'shared', 'runtime-constants.js'), 'utf8');
 const constantsSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'constants.js'), 'utf8');
 
 // Eval selectors first (constants.js references SKILLJAR_SELECTORS), then constants
-const constants = new Function(`${selectorsSrc}\n${constantsSrc}; return {
+const constants = new Function(`${sharedSrc}\n${selectorsSrc}\n${constantsSrc}; return {
   SKILLBRIDGE_MODELS, SKILLBRIDGE_THRESHOLDS, SKILLBRIDGE_DELAYS, SKILLBRIDGE_LIMITS,
   PREMIUM_LANGUAGES, AVAILABLE_LANGUAGES, AVAILABLE_LANGUAGE_CODES,
   SUPPORTED_LANGUAGE_MAP, POPUP_LABELS, DEFAULT_PROTECTED_TERMS,
   YOUTUBE_CLIENT_VERSION, SKILLBRIDGE_MODEL_LABELS,
   SHORTCUT_LABELS, SHORTCUT_DESCRIPTIONS,
   EXAM_URL_PATTERNS, EXAM_SKIP_SELECTORS, EXAM_BANNER_LABELS, TUTOR_EXAM_LABELS,
-  CERT_DISABLE_PATTERNS, FLASHCARD_COURSE_MAP,
+  CERT_DISABLE_PATTERNS, FLASHCARD_COURSE_MAP, FLASHCARD_BOX,
   SKILLJAR_SELECTORS,
 };`)();
 

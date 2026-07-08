@@ -27,12 +27,10 @@
     console.warn('[SkillBridge] resume: _sb not ready');
     return;
   }
-  if (!sb._chat || !sb._chat.state || !sb._chat.closeSubPanel) {
+  if (!sb._chat || !sb._chat.state || !sb._chat.openSubPanel) {
     console.warn('[SkillBridge] resume: _sb._chat not ready (sidebar-chat.js missing?)');
     return;
   }
-  const _state = sb._chat.state;
-
   const STORAGE_KEY = 'sb_recent';
   const RESTORE_KEY = 'sb_resume_restore';
   const MAX_RECENT = 20;
@@ -167,27 +165,33 @@
       saveTimer = setTimeout(saveRecent, 800);
     });
   }
-  window.addEventListener('scroll', onScroll, { passive: true });
-
   // Flush any pending scroll write when the user leaves / backgrounds the page.
   function flushScroll() {
     clearTimeout(saveTimer);
     saveRecent();
   }
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') flushScroll();
-  });
-  window.addEventListener('pagehide', flushScroll);
 
   // Skilljar swaps lessons client-side (pushState, no reload) and content
   // scripts may not re-run — poll the URL and record lessons reached via in-app
   // navigation. (reading-aid.js polls the same way.)
   let lastSeenUrl = location.href;
-  setInterval(() => {
-    if (location.href === lastSeenUrl) return;
-    lastSeenUrl = location.href;
-    recordVisit();
-  }, 1000);
+  let started = false;
+  function startTracking() {
+    if (started) return;
+    started = true;
+    window.addEventListener('scroll', onScroll, { passive: true });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') flushScroll();
+    });
+    window.addEventListener('pagehide', flushScroll);
+    setInterval(() => {
+      if (location.href === lastSeenUrl) return;
+      lastSeenUrl = location.href;
+      recordVisit();
+    }, 1000);
+    // Load existing recents, then record this visit (no-op off lesson pages).
+    loadRecent(recordVisit);
+  }
 
   // ============================================================
   // ACTIONS
@@ -223,28 +227,8 @@
   // ============================================================
 
   function toggleRecentPanel() {
-    const chatPanel = sb.$id('si18n-panel-chat');
-    if (!chatPanel) return;
-
-    if (_state.recentPanelOpen) {
-      sb._chat.closeSubPanel();
-      return;
-    }
-    if (
-      _state.historyPanelOpen ||
-      _state.flashcardPanelOpen ||
-      _state.bookmarksPanelOpen ||
-      _state.dashboardPanelOpen
-    ) {
-      sb._chat.closeSubPanel();
-    }
-
-    _state.recentPanelOpen = true;
-    _state.savedChatHTML = chatPanel.innerHTML;
-
-    chatPanel.replaceChildren();
-    chatPanel.insertAdjacentHTML(
-      'afterbegin',
+    const opened = sb._chat.openSubPanel(
+      'recent',
       `
       <div class="si18n-history-header">
         <button class="si18n-history-back" id="si18n-recent-back" aria-label="${sb.t(A11Y_LABELS.backToChat)}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
@@ -252,9 +236,11 @@
       </div>
       <div class="si18n-history-list" id="si18n-recent-list"></div>
     `,
+      () => {
+        sb.$id('si18n-recent-back')?.addEventListener('click', () => sb._chat.closeSubPanel());
+      },
     );
-
-    sb.$id('si18n-recent-back')?.addEventListener('click', () => sb._chat.closeSubPanel());
+    if (!opened) return;
     loadRecent(renderList);
   }
 
@@ -292,9 +278,10 @@
   // INIT + EXPORT
   // ============================================================
 
-  // Load existing recents, then record this visit (no-op off lesson pages).
-  loadRecent(recordVisit);
+  if (sb.whenActive) sb.whenActive(startTracking);
+  else startTracking();
 
   sb.toggleRecentPanel = toggleRecentPanel;
   sb._chat.toggleRecentPanel = toggleRecentPanel;
+  sb.registerModule?.('resume');
 })();

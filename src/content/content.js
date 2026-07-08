@@ -39,48 +39,54 @@
   // intentionally generous (anthropic-host fast path + 2 keyword
   // matches in any of title/h1/breadcrumb/body-head).
   //
-  // Known follow-up (separate PR): SPA route changes do not re-evaluate
-  // the gate. If the first page rejects, the extension stays paused for
-  // the tab's lifetime even after navigating into an AI lesson on the
-  // same tenant. Re-evaluation on pushState/popstate is being designed.
-  try {
-    // `??` (not `||`) so an explicit `{ isAI: false }` is honored — only
-    // an actually-missing call falls through to the gate-missing default.
-    // The default warns LOUDLY so a future content-script wiring regression
-    // (e.g. platform.js removed from manifest.content_scripts[].js) is
-    // observable in production rather than silently bypassed.
-    const verdict = window._sbPlatform?.detectAITrainingContent?.() ?? {
-      isAI: true,
-      reason: 'gate-missing',
-      hits: 0,
-    };
-    if (verdict.reason === 'gate-missing') {
-      // `console.warn` is preserved by the production minifier (see
-      // scripts/build-bundle.js PROD_PURE). `console.info` is dropped.
-      console.warn(
-        '[SkillBridge] AI-content gate is not wired (window._sbPlatform missing). ' +
-          'Check manifest.content_scripts[].js includes src/lib/platform.js. ' +
-          'Failing open: extension will activate as if no gate existed.',
-      );
+  let aiGatePaused = false;
+  let aiGateVerdict = null;
+  const activationCallbacks = [];
+
+  function evaluateAIContentGate({ logPause = false } = {}) {
+    try {
+      // `??` (not `||`) so an explicit `{ isAI: false }` is honored — only
+      // an actually-missing call falls through to the gate-missing default.
+      // The default warns LOUDLY so a future content-script wiring regression
+      // (e.g. platform.js removed from manifest.content_scripts[].js) is
+      // observable in production rather than silently bypassed.
+      aiGateVerdict = window._sbPlatform?.detectAITrainingContent?.() ?? {
+        isAI: true,
+        reason: 'gate-missing',
+        hits: 0,
+      };
+      if (aiGateVerdict.reason === 'gate-missing') {
+        // `console.warn` is preserved by the production minifier (see
+        // scripts/build-bundle.js PROD_PURE). `console.info` is dropped.
+        console.warn(
+          '[SkillBridge] AI-content gate is not wired (window._sbPlatform missing). ' +
+            'Check manifest.content_scripts[].js includes src/lib/platform.js. ' +
+            'Failing open: extension will activate as if no gate existed.',
+        );
+      }
+      // Defensive: only an explicit `false` pauses. Future signature drift
+      // (e.g. detector returning `{ isAI: undefined }` for a pending async
+      // lookup) MUST NOT silently pause the extension on real AI pages.
+      aiGatePaused = aiGateVerdict.isAI === false;
+      if (aiGatePaused && logPause) {
+        console.warn(
+          `[SkillBridge] Non-AI Skilljar tenant detected (${aiGateVerdict.reason}). ` +
+            `Extension paused on this site — gated to AI-training content per ` +
+            `the standing non-goal "Adding other Skilljar customers". ` +
+            `SPA route changes will re-check this gate automatically.`,
+        );
+      }
+    } catch (err) {
+      console.warn('[SkillBridge] AI-content gate failed open:', err?.message);
+      // Fail open — better to over-activate than to silently break the
+      // extension on a transient gate error.
+      aiGatePaused = false;
+      aiGateVerdict = { isAI: true, reason: 'gate-error', hits: 0 };
     }
-    // Defensive: only an explicit `false` pauses. Future signature drift
-    // (e.g. detector returning `{ isAI: undefined }` for a pending async
-    // lookup) MUST NOT silently pause the extension on real AI pages.
-    if (verdict.isAI === false) {
-      console.warn(
-        `[SkillBridge] Non-AI Skilljar tenant detected (${verdict.reason}). ` +
-          `Extension paused on this site — gated to AI-training content per ` +
-          `the standing non-goal "Adding other Skilljar customers". ` +
-          `Reload after navigating to an AI-keyword-rich page if you believe ` +
-          `this was a false negative (SPA route changes do not re-evaluate yet).`,
-      );
-      return;
-    }
-  } catch (err) {
-    console.warn('[SkillBridge] AI-content gate failed open:', err?.message);
-    // Fail open — better to over-activate than to silently break the
-    // extension on a transient gate error.
+    return aiGateVerdict;
   }
+
+  evaluateAIContentGate({ logPause: true });
 
   // Target ALL visible text elements — including Skilljar-specific
   // Skilljar selectors are centralized in src/lib/selectors.js
@@ -185,8 +191,8 @@
     return map[lang || currentLang] || map['en'];
   }
 
-  // escapeHtml is defined in gemini-block.js (loaded first) — reuse it
-  const escapeHtml = window._geminiBlock.escapeHtml;
+  // escapeHtml is centralized in dom-safe.js (backed by gemini-block.js).
+  const escapeHtml = window._sbDomSafe.escapeHtml;
 
   // ============================================================
   // SHARED NAMESPACE — expose state for extracted modules
@@ -204,6 +210,61 @@
     if (document.querySelector(SKILLJAR_SELECTORS.quizForm)) return true;
     if (document.querySelector(SKILLJAR_SELECTORS.answerOption)) return true;
     return false;
+  }
+
+  const moduleRegistry = new Map();
+  const REQUIRED_CONTENT_MODULES = [
+    'gt-queue',
+    'banners',
+    'code-comments',
+    'header-controls',
+    'text-selection',
+    'chat-render',
+    'shadow-css',
+    'sidebar-chat',
+    'chat-history',
+    'chat-flashcards',
+    'bookmarks',
+    'resume',
+    'dashboard',
+    'reading-aid',
+    'keyboard-shortcuts',
+  ];
+
+  function registerModule(name, details = {}) {
+    moduleRegistry.set(name, { ...details, registeredAt: Date.now() });
+  }
+
+  function assertModuleContract() {
+    const missing = REQUIRED_CONTENT_MODULES.filter((name) => !moduleRegistry.has(name));
+    if (missing.length > 0) {
+      console.warn('[SkillBridge] Content module contract incomplete. Missing:', missing.join(', '));
+    }
+    return {
+      ok: missing.length === 0,
+      missing,
+      loaded: Array.from(moduleRegistry.keys()),
+    };
+  }
+
+  function whenActive(callback) {
+    if (typeof callback !== 'function') return;
+    if (!aiGatePaused) {
+      callback();
+      return;
+    }
+    activationCallbacks.push(callback);
+  }
+
+  function runActivationCallbacks() {
+    const callbacks = activationCallbacks.splice(0);
+    for (const cb of callbacks) {
+      try {
+        cb();
+      } catch (err) {
+        console.warn('[SkillBridge] Deferred activation callback failed:', err?.message);
+      }
+    }
   }
 
   window._sb = {
@@ -258,11 +319,20 @@
     get commentTranslateEnabled() {
       return commentTranslateEnabled;
     },
+    get aiGatePaused() {
+      return aiGatePaused;
+    },
+    get aiGateVerdict() {
+      return aiGateVerdict;
+    },
     get mapSizeCap() {
       return MAP_SIZE_CAP;
     },
     t,
     escapeHtml,
+    registerModule,
+    assertModuleContract,
+    whenActive,
     // isLikelyEnglish is re-attached by gt-queue.js (declared there since
     // v3.5.15 — every call-site lived inside the GT pipeline).
     switchLanguage,
@@ -294,6 +364,7 @@
   // throw "Cannot read properties of undefined". The v3.5.16 E2E suite
   // (tests/e2e/golden-translation.spec.js) caught this on the first run.
   const sb = window._sb;
+  sb.registerModule('content');
 
   // Create the YouTube subtitle manager if this host supports it and one isn't
   // already live. Idempotent: used at init AND when re-entering a video-capable
@@ -526,7 +597,12 @@
   // INITIALIZATION
   // ============================================================
 
+  let initStarted = false;
+
   async function init() {
+    if (aiGatePaused) return;
+    if (initStarted) return;
+    initStarted = true;
     try {
       const stored = await chrome.storage.local.get([
         'targetLanguage',
@@ -567,6 +643,7 @@
       if (sb.hostCaps.fab) {
         window._sb.injectFloatingButton?.();
       }
+      runActivationCallbacks();
 
       isReady = true;
 
@@ -639,6 +716,7 @@
       if (sb.hostCaps.fab) {
         window._sb.injectFloatingButton?.();
       }
+      runActivationCallbacks();
     }
   }
 
@@ -724,6 +802,32 @@
     if (sb.hostCaps.fab) window._sb.injectFloatingButton?.();
   }
 
+  function teardownNonAIContentSurface() {
+    window._sb.cancelActiveStream?.();
+    domObserver?.disconnect();
+    subtitleManager?.destroy();
+    subtitleManager = null;
+    if (translator) restoreOriginal();
+    sidebarVisible = false;
+
+    const uiHost = document.getElementById('skillbridge-root');
+    if (uiHost) uiHost.remove();
+    sb._uiHost = null;
+    for (const sel of [
+      '#si18n-header-lang',
+      '#si18n-dark-toggle',
+      '#si18n-welcome-banner',
+      '#si18n-term-preview',
+      '#si18n-exam-banner',
+      '#si18n-reading-bar',
+      '#si18n-toc-toggle',
+      '#si18n-toc-panel',
+      '.si18n-ask-tutor-btn',
+    ]) {
+      document.querySelectorAll(sel).forEach((el) => el.remove());
+    }
+  }
+
   async function switchLanguage(newLang, opts = {}) {
     const storageData = { targetLanguage: newLang, autoTranslate: newLang !== 'en', ...opts.extraStorage };
     chrome.storage.local.set(storageData);
@@ -759,7 +863,7 @@
   }
 
   // Non-Latin scripts render with the OS-native font stack declared in
-  // content.css (e.g. 'Apple SD Gothic Neo' / 'Malgun Gothic' for Korean,
+  // content CSS (e.g. 'Apple SD Gothic Neo' / 'Malgun Gothic' for Korean,
   // 'Hiragino Kaku Gothic Pro' / 'Yu Gothic' for Japanese, 'PingFang' /
   // 'Microsoft YaHei' for Chinese). We deliberately do NOT fetch fonts from
   // fonts.googleapis.com: that request would leak the user's IP and reading
@@ -1036,18 +1140,39 @@
     if (href === _lastHref) return;
     _lastHref = href;
 
-    // Abort any in-flight tutor stream — its target lesson context is now
-    // stale, and onChunk would write into a chat bubble for a page the
-    // user has already left.
-    window._sb.cancelActiveStream?.();
-
-    // If user navigated to a Skilljar certification exam page, tear down.
-    // Skipped on hosts without Skilljar exams (claude.com tutorials).
+    // Certification pages must win over the generic AI-content gate. They are
+    // intentionally "non-AI" by content, but need the stronger cert teardown
+    // state so all SkillBridge surfaces remain disabled until the user leaves.
     if (sb.hostCaps.examDetection && CERT_DISABLE_PATTERNS.some((p) => p.test(href))) {
       teardownCertificationSurface();
       console.info('[SkillBridge] Navigated to certification page — extension disabled.');
       return;
     }
+
+    const wasPaused = aiGatePaused;
+    evaluateAIContentGate({ logPause: true });
+    if (aiGatePaused) {
+      if (!wasPaused && initStarted) teardownNonAIContentSurface();
+      return;
+    }
+    if (wasPaused && !initStarted) {
+      init();
+      return;
+    }
+    if (wasPaused && initStarted) {
+      if (sb.hostCaps.headerControls) {
+        window._sb.injectHeaderLanguageSelect?.();
+        window._sb.injectDarkModeToggle?.();
+      }
+      if (sb.hostCaps.sidebar) window._sb.injectSidebar?.();
+      if (sb.hostCaps.fab) window._sb.injectFloatingButton?.();
+      runActivationCallbacks();
+    }
+
+    // Abort any in-flight tutor stream — its target lesson context is now
+    // stale, and onChunk would write into a chat bubble for a page the
+    // user has already left.
+    window._sb.cancelActiveStream?.();
 
     reenableAfterCertificationSurface();
 
@@ -1110,4 +1235,5 @@
   } else {
     init();
   }
+  setTimeout(() => sb.assertModuleContract(), SKILLBRIDGE_DELAYS.SIDEBAR_BIND);
 })();

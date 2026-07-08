@@ -4,7 +4,7 @@
  * Extracted from sidebar-chat.js in v3.5.27. Owns:
  *   - Per-course flashcard deck building (URL slug → FLASHCARD_COURSE_MAP
  *     → static-dict section lookup → card list)
- *   - Leitner-box state (each card → box 0/1/2: new / learning / mastered)
+ *   - Leitner-box state (each card → FLASHCARD_BOX values)
  *   - Render + bind events for the flashcard sub-panel UI
  *   - Persistence: chrome.storage.local under `fc_<slug>_<lang>` keys,
  *     serialized through a single promise chain so rapid box-up/box-down
@@ -32,14 +32,14 @@
     console.warn('[SkillBridge] chat-flashcards: _sb not ready');
     return;
   }
-  if (!sb._chat || !sb._chat.state || !sb._chat.closeSubPanel) {
+  if (!sb._chat || !sb._chat.state || !sb._chat.openSubPanel || !sb._chat.closeSubPanel) {
     console.warn('[SkillBridge] chat-flashcards: _sb._chat not ready (sidebar-chat.js missing?)');
     return;
   }
   const _state = sb._chat.state;
 
   // Spaced-repetition intervals (days) indexed by Leitner box after a ✓.
-  // box 0 (new) → 1d, box 1 (learning) → 3d, box 2 (mastered) → 7d.
+  // NEW → 1d, LEARNING → 3d, MASTERED → 7d.
   const DAY_MS = 24 * 60 * 60 * 1000;
   const INTERVAL_DAYS = [1, 3, 7];
 
@@ -48,7 +48,7 @@
   let allCards = []; // full deck for the current course/lang
   let flashcardCards = []; // active list (all cards, or only due cards)
   let flashcardIndex = 0;
-  let flashcardBoxes = {}; // en → box (0/1/2)
+  let flashcardBoxes = {}; // en → FLASHCARD_BOX value
   let flashcardDues = {}; // en → due timestamp (ms); absent ⇒ due now
   let reviewMode = false; // true ⇒ flashcardCards is filtered to due cards
   let _matchedCourseSlug = null;
@@ -87,21 +87,10 @@
   // ============================================================
 
   function toggleFlashcardPanel() {
-    const chatPanel = sb.$id('si18n-panel-chat');
-    if (!chatPanel) return;
-
     if (_state.flashcardPanelOpen) {
       closeFlashcardPanel();
       return;
     }
-    // Close history if open — they share `savedChatHTML`, so closing first
-    // restores the chat panel before we save it again.
-    if (_state.historyPanelOpen || _state.bookmarksPanelOpen || _state.recentPanelOpen || _state.dashboardPanelOpen) {
-      sb._chat.closeSubPanel();
-    }
-
-    _state.flashcardPanelOpen = true;
-    _state.savedChatHTML = chatPanel.innerHTML;
 
     allCards = loadFlashcardsForCourse();
     reviewMode = false;
@@ -109,7 +98,9 @@
     flashcardIndex = 0;
     loadFlashcardProgress();
 
-    chatPanel.innerHTML = `
+    const opened = sb._chat.openSubPanel(
+      'flashcard',
+      `
       <div class="si18n-flashcard-header">
         <button class="si18n-history-back" id="si18n-fc-back" aria-label="${sb.t(A11Y_LABELS.backToChat)}">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
@@ -126,19 +117,22 @@
             : renderFlashcard()
         }
       </div>
-    `;
-
-    sb.$id('si18n-fc-back')?.addEventListener('click', closeFlashcardPanel);
-    sb.$id('si18n-fc-reset')?.addEventListener('click', () => {
-      flashcardBoxes = {};
-      flashcardDues = {};
-      reviewMode = false;
-      flashcardIndex = 0;
-      rebuildActive();
-      saveFlashcardProgress();
-      refreshFlashcard();
-    });
-    bindFlashcardEvents();
+    `,
+      () => {
+        sb.$id('si18n-fc-back')?.addEventListener('click', closeFlashcardPanel);
+        sb.$id('si18n-fc-reset')?.addEventListener('click', () => {
+          flashcardBoxes = {};
+          flashcardDues = {};
+          reviewMode = false;
+          flashcardIndex = 0;
+          rebuildActive();
+          saveFlashcardProgress();
+          refreshFlashcard();
+        });
+        bindFlashcardEvents();
+      },
+    );
+    if (!opened) return;
   }
 
   function closeFlashcardPanel() {
@@ -254,11 +248,11 @@
     }
 
     const card = flashcardCards[flashcardIndex];
-    const box = flashcardBoxes[card.en] || 0;
+    const box = flashcardBoxes[card.en] || FLASHCARD_BOX.NEW;
     const boxLabelKeys = [FLASHCARD_LABELS.boxNew, FLASHCARD_LABELS.boxLearning, FLASHCARD_LABELS.mastered];
     const boxClasses = ['si18n-fc-new', 'si18n-fc-learning', 'si18n-fc-done'];
     const countByBox = [0, 0, 0];
-    for (const c of allCards) countByBox[flashcardBoxes[c.en] || 0]++;
+    for (const c of allCards) countByBox[flashcardBoxes[c.en] || FLASHCARD_BOX.NEW]++;
     return `
       ${modeToggleRow()}
       <div class="si18n-flashcard-card" id="si18n-fc-card" role="button" tabindex="0" aria-label="${sb.t(FLASHCARD_LABELS.flip)}">
@@ -278,9 +272,9 @@
         <button class="si18n-fc-box-btn si18n-fc-done" id="si18n-fc-box-up">✓</button>
       </div>
       <div class="si18n-fc-stats">
-        <span class="si18n-fc-new">${sb.t(FLASHCARD_LABELS.boxNew)}: ${countByBox[0]}</span>
-        <span class="si18n-fc-learning">${sb.t(FLASHCARD_LABELS.boxLearning)}: ${countByBox[1]}</span>
-        <span class="si18n-fc-done">${sb.t(FLASHCARD_LABELS.mastered)}: ${countByBox[2]}</span>
+        <span class="si18n-fc-new">${sb.t(FLASHCARD_LABELS.boxNew)}: ${countByBox[FLASHCARD_BOX.NEW]}</span>
+        <span class="si18n-fc-learning">${sb.t(FLASHCARD_LABELS.boxLearning)}: ${countByBox[FLASHCARD_BOX.LEARNING]}</span>
+        <span class="si18n-fc-done">${sb.t(FLASHCARD_LABELS.mastered)}: ${countByBox[FLASHCARD_BOX.MASTERED]}</span>
       </div>
     `;
   }
@@ -300,8 +294,8 @@
   function markCurrent(correct) {
     const card = flashcardCards[flashcardIndex];
     if (!card) return;
-    const cur = flashcardBoxes[card.en] || 0;
-    const box = correct ? Math.min(cur + 1, 2) : 0;
+    const cur = flashcardBoxes[card.en] || FLASHCARD_BOX.NEW;
+    const box = correct ? Math.min(cur + 1, FLASHCARD_BOX.MASTERED) : FLASHCARD_BOX.NEW;
     flashcardBoxes[card.en] = box;
     flashcardDues[card.en] = Date.now() + INTERVAL_DAYS[box] * DAY_MS;
     saveFlashcardProgress();
@@ -402,4 +396,5 @@
   // consistency.
   sb.toggleFlashcardPanel = toggleFlashcardPanel;
   sb._chat.toggleFlashcardPanel = toggleFlashcardPanel;
+  sb.registerModule?.('chat-flashcards');
 })();

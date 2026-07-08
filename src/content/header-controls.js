@@ -196,4 +196,5 @@
   sb.injectHeaderLanguageSelect = injectHeaderLanguageSelect;
   sb.detectBrowserLanguage = detectBrowserLanguage;
   sb.showWelcomeBanner = showWelcomeBanner;
+  sb.registerModule?.('header-controls');
 })();

@@ -22,12 +22,10 @@
     console.warn('[SkillBridge] bookmarks: _sb not ready');
     return;
   }
-  if (!sb._chat || !sb._chat.state || !sb._chat.closeSubPanel) {
+  if (!sb._chat || !sb._chat.state || !sb._chat.openSubPanel) {
     console.warn('[SkillBridge] bookmarks: _sb._chat not ready (sidebar-chat.js missing?)');
     return;
   }
-  const _state = sb._chat.state;
-
   const STORAGE_KEY = 'sb_bookmarks';
   const RESTORE_KEY = 'sb_bookmark_restore';
   const MAX_BOOKMARKS = 200;
@@ -119,25 +117,8 @@
   // ============================================================
 
   function toggleBookmarksPanel() {
-    const chatPanel = sb.$id('si18n-panel-chat');
-    if (!chatPanel) return;
-
-    if (_state.bookmarksPanelOpen) {
-      sb._chat.closeSubPanel();
-      return;
-    }
-    // Another sub-panel may be open; restore the chat first so savedChatHTML
-    // captures the chat, not the other panel.
-    if (_state.historyPanelOpen || _state.flashcardPanelOpen || _state.recentPanelOpen || _state.dashboardPanelOpen) {
-      sb._chat.closeSubPanel();
-    }
-
-    _state.bookmarksPanelOpen = true;
-    _state.savedChatHTML = chatPanel.innerHTML;
-
-    chatPanel.replaceChildren();
-    chatPanel.insertAdjacentHTML(
-      'afterbegin',
+    const opened = sb._chat.openSubPanel(
+      'bookmarks',
       `
       <div class="si18n-history-header">
         <button class="si18n-history-back" id="si18n-bm-back" aria-label="${sb.t(A11Y_LABELS.backToChat)}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
@@ -146,10 +127,12 @@
       </div>
       <div class="si18n-history-list" id="si18n-bm-list"></div>
     `,
+      () => {
+        sb.$id('si18n-bm-back')?.addEventListener('click', () => sb._chat.closeSubPanel());
+        sb.$id('si18n-bm-add')?.addEventListener('click', addCurrent);
+      },
     );
-
-    sb.$id('si18n-bm-back')?.addEventListener('click', () => sb._chat.closeSubPanel());
-    sb.$id('si18n-bm-add')?.addEventListener('click', addCurrent);
+    if (!opened) return;
     loadBookmarks(renderList);
   }
 
@@ -189,4 +172,5 @@
 
   sb.toggleBookmarksPanel = toggleBookmarksPanel;
   sb._chat.toggleBookmarksPanel = toggleBookmarksPanel;
+  sb.registerModule?.('bookmarks');
 })();

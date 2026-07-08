@@ -454,7 +454,7 @@ async function evalInContentWorld(context, op, arg) {
                     svgWidth: r ? Math.round(r.width) : null,
                   };
                 },
-                // Await the transformed content.css sheet + report adoption. Proves
+                // Await the transformed content CSS sheet + report adoption. Proves
                 // the runtime fetch → transform → adoptedStyleSheets path works.
                 shadowSheetReady: async () => {
                   if (!window._sbShadowCss) return { ok: false };

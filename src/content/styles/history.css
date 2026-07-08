@@ -1,0 +1,253 @@
+/* ============================================================
+   History panel
+   ============================================================ */
+
+.si18n-history-btn {
+  background: none;
+  border: none;
+  margin: 0;
+  padding: 0;
+  width: 28px;
+  height: 28px;
+  color: white;
+  cursor: pointer;
+  opacity: 0.8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 6px;
+  transition:
+    opacity 0.15s,
+    background 0.15s;
+}
+
+.si18n-history-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.si18n-history-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--si18n-border, #e7e5e4);
+}
+
+/* Header icon buttons (back arrow + clear/reset). Both must set their own
+   `background: none` — the host page's `button, .button { background: #0164cc }`
+   rule otherwise leaks through and renders them in Skilljar's blue. */
+.si18n-history-back,
+.si18n-history-clear {
+  background: none;
+  border: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  color: var(--si18n-text-secondary, #78716c);
+  flex-shrink: 0;
+  border-radius: 6px;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.si18n-history-back svg,
+.si18n-history-clear svg {
+  display: block;
+}
+
+.si18n-history-back:hover,
+.si18n-history-clear:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--si18n-text, #1c1917);
+}
+
+.si18n-history-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--si18n-text, #1c1917);
+  line-height: 36px;
+}
+
+.si18n-history-list {
+  overflow-y: auto;
+  flex: 1;
+  padding: 4px 0;
+}
+
+.si18n-history-chapter {
+  padding: 8px 12px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--si18n-text-secondary, #78716c);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.si18n-history-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--si18n-border, #e7e5e4);
+  transition: background 0.1s;
+}
+
+.si18n-history-item:hover {
+  background: var(--si18n-bg-secondary, #f5f5f4);
+}
+
+.si18n-history-item-q {
+  font-size: 13px;
+  color: var(--si18n-text, #1c1917);
+  line-height: 1.4;
+}
+
+.si18n-history-item-time {
+  font-size: 11px;
+  color: var(--si18n-text-secondary, #78716c);
+  margin-top: 2px;
+}
+
+.si18n-history-empty,
+.si18n-history-loading {
+  padding: 24px 12px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--si18n-text-secondary, #78716c);
+}
+
+.si18n-history-detail {
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* --- Detail view overrides for better readability --- */
+.si18n-history-detail .si18n-chat-msg {
+  gap: 10px;
+}
+
+.si18n-history-detail .si18n-chat-bubble {
+  max-width: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  padding: 12px 16px;
+  border-radius: 10px;
+  word-break: break-word;
+}
+
+.si18n-history-detail .si18n-chat-bot .si18n-chat-bubble {
+  background: var(--si18n-bg-secondary, #f5f5f4);
+  border: 1px solid var(--si18n-border, #e7e5e4);
+}
+
+/* Formatted content inside AI bubble in detail view */
+.si18n-history-detail .si18n-chat-bubble p {
+  margin: 0 0 6px 0 !important;
+  padding: 0 !important;
+  font-family: inherit !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+.si18n-history-detail .si18n-chat-bubble p:last-child {
+  margin-bottom: 0 !important;
+}
+.si18n-history-detail .si18n-chat-bubble strong {
+  font-weight: 700;
+  color: inherit;
+  font-family: inherit !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+.si18n-history-detail .si18n-chat-bubble em {
+  font-style: italic;
+  opacity: 0.9;
+  font-family: inherit !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+.si18n-history-detail .si18n-chat-bubble ul,
+.si18n-history-detail .si18n-chat-bubble ol {
+  margin: 0 0 6px 0 !important;
+  padding-left: 18px !important;
+  font-family: inherit !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+.si18n-history-detail .si18n-chat-bubble li {
+  margin-bottom: 2px !important;
+  font-family: inherit !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+.si18n-history-detail .si18n-chat-bubble code {
+  background: rgba(0, 0, 0, 0.06);
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-size: 12px !important;
+  font-family: 'SF Mono', 'Menlo', monospace;
+}
+.si18n-history-detail .si18n-chat-bubble h3 {
+  font-family: inherit !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  margin: 0 0 4px 0 !important;
+}
+.si18n-history-detail .si18n-chat-bubble h3:first-child {
+  margin-top: 0 !important;
+}
+.si18n-history-detail .si18n-chat-bubble span {
+  font-family: inherit !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+
+/* Detail view: meta info (lesson title + timestamp) */
+.si18n-history-detail-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 10px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--si18n-border, #e7e5e4);
+}
+.si18n-detail-lesson {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--si18n-text, #1c1917);
+  line-height: 1.3;
+}
+.si18n-detail-time {
+  font-size: 11px;
+  color: var(--si18n-text-secondary, #78716c);
+}
+
+/* Detail view: user message label */
+.si18n-history-detail .si18n-chat-user .si18n-chat-bubble {
+  background: var(--si18n-accent, #d97757);
+  color: white;
+  border: none;
+  font-weight: 500;
+}
+.si18n-history-detail .si18n-chat-user {
+  flex-direction: row;
+}
+
+/* Detail view: message labels */
+.si18n-history-detail .si18n-chat-msg::before {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--si18n-text-secondary, #78716c);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  display: none;
+}

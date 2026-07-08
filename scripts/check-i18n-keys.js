@@ -85,6 +85,8 @@ console.log('\n--- Check 2: constants.js label dictionaries ---');
 // constants.js references selectors.js' globals at the top, so load both into
 // the same Function scope before extracting the LABEL dicts.
 const SELECTORS_FILE = path.join(ROOT, 'src', 'lib', 'selectors.js');
+const RUNTIME_CONSTANTS_FILE = path.join(ROOT, 'src', 'shared', 'runtime-constants.js');
+const runtimeConstantsSrc = fs.readFileSync(RUNTIME_CONSTANTS_FILE, 'utf8');
 const selectorsSrc = fs.readFileSync(SELECTORS_FILE, 'utf8');
 const constantsSrc = fs.readFileSync(CONSTANTS_FILE, 'utf8');
 
@@ -107,7 +109,10 @@ try {
   }
   // Both source files reference `window` at the top; provide a stub so the
   // top-level `if (typeof window !== 'undefined')` guards don't trip.
-  const runner = new Function('window', `${selectorsSrc}\n${constantsSrc}\nreturn { ${names.join(', ')} };`);
+  const runner = new Function(
+    'window',
+    `${runtimeConstantsSrc}\n${selectorsSrc}\n${constantsSrc}\nreturn { ${names.join(', ')} };`,
+  );
   dicts = runner({});
 } catch (e) {
   log.fail(`Failed to load constants.js: ${e.message}`);

@@ -19,8 +19,6 @@
     console.warn('[SkillBridge] dashboard: _sb not ready');
     return;
   }
-  const _state = sb._chat.state;
-
   function collectStats(cb) {
     chrome.storage.local.get(null, (all) => {
       all = all || {};
@@ -36,7 +34,7 @@
         if (terms.length === 0) continue;
         decks++;
         tracked += terms.length;
-        for (const t of terms) if (Number(boxes[t]) >= 3) mastered++;
+        for (const t of terms) if (Number(boxes[t]) >= FLASHCARD_BOX.MASTERED) mastered++;
       }
       cb({ recent, bookmarks, decks, tracked, mastered });
     });
@@ -83,22 +81,8 @@
   }
 
   function toggleDashboardPanel() {
-    const chatPanel = sb.$id('si18n-panel-chat');
-    if (!chatPanel) return;
-
-    if (_state.dashboardPanelOpen) {
-      sb._chat.closeSubPanel();
-      return;
-    }
-    if (_state.historyPanelOpen || _state.flashcardPanelOpen || _state.bookmarksPanelOpen || _state.recentPanelOpen) {
-      sb._chat.closeSubPanel();
-    }
-
-    _state.dashboardPanelOpen = true;
-    _state.savedChatHTML = chatPanel.innerHTML;
-    chatPanel.replaceChildren();
-    chatPanel.insertAdjacentHTML(
-      'afterbegin',
+    const opened = sb._chat.openSubPanel(
+      'dashboard',
       `
       <div class="si18n-history-header">
         <button class="si18n-history-back" id="si18n-dash-back" aria-label="${sb.t(A11Y_LABELS.backToChat)}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
@@ -106,10 +90,15 @@
       </div>
       <div class="si18n-history-list" id="si18n-dash-body"></div>
     `,
+      () => {
+        sb.$id('si18n-dash-back')?.addEventListener('click', () => sb._chat.closeSubPanel());
+      },
     );
-    sb.$id('si18n-dash-back')?.addEventListener('click', () => sb._chat.closeSubPanel());
+    if (!opened) return;
     collectStats(render);
   }
 
   sb._chat.toggleDashboardPanel = toggleDashboardPanel;
+  sb._chat.collectDashboardStats = collectStats;
+  sb.registerModule?.('dashboard');
 })();
