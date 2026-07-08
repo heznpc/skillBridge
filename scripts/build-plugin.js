@@ -30,6 +30,7 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
 const DATA_DIR = path.join(ROOT, 'src', 'data');
+const RUNTIME_CONSTANTS_PATH = path.join(ROOT, 'src', 'shared', 'runtime-constants.js');
 const CONSTANTS_PATH = path.join(ROOT, 'src', 'lib', 'constants.js');
 const OUT_DIR = path.join(ROOT, 'claude-plugin', 'skills', 'academy-terms', 'data');
 
@@ -103,12 +104,13 @@ function loadCourseMap() {
   // with it already controls the shipped content-script source, so evaluating it
   // adds no marginal risk. This mirrors the accepted pattern in
   // scripts/check-academy-courses.js (loadKnownSlugs) and check-dict-coverage.js.
+  const runtimeConstantsSrc = fs.readFileSync(RUNTIME_CONSTANTS_PATH, 'utf8');
   const src = fs.readFileSync(CONSTANTS_PATH, 'utf8');
   // constants.js only references SKILLJAR_SELECTORS at module scope; its values
   // don't affect FLASHCARD_COURSE_MAP, so a "" -> Proxy stub is sufficient.
   const stub = 'const SKILLJAR_SELECTORS = new Proxy({}, { get: () => "" });';
   const map = new Function(
-    `${stub}\n${src}\nreturn typeof FLASHCARD_COURSE_MAP !== 'undefined' ? FLASHCARD_COURSE_MAP : null;`,
+    `${runtimeConstantsSrc}\n${stub}\n${src}\nreturn typeof FLASHCARD_COURSE_MAP !== 'undefined' ? FLASHCARD_COURSE_MAP : null;`,
   )();
   if (!map || typeof map !== 'object') {
     throw new Error('FLASHCARD_COURSE_MAP not found (or not an object) in constants.js');

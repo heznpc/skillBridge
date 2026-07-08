@@ -1,0 +1,126 @@
+/* ============================================================
+   Keyboard Shortcuts Help Overlay
+   ============================================================ */
+
+#si18n-shortcuts-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 200000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+#si18n-shortcuts-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.si18n-shortcuts-panel {
+  background: var(--si18n-surface);
+  border-radius: 12px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+  width: 380px;
+  max-width: 90vw;
+  overflow: hidden;
+  transform: scale(0.95);
+  transition: transform 0.2s ease;
+}
+
+#si18n-shortcuts-overlay.visible .si18n-shortcuts-panel {
+  transform: scale(1);
+}
+
+.si18n-shortcuts-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--si18n-border);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--si18n-text);
+}
+
+.si18n-shortcuts-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--si18n-text-secondary);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.si18n-shortcuts-close:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.si18n-shortcuts-body {
+  padding: 12px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.si18n-shortcut-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+
+.si18n-shortcut-desc {
+  font-size: 13px;
+  color: var(--si18n-text);
+}
+
+.si18n-shortcut-key {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', monospace;
+  font-size: 11px;
+  padding: 3px 8px;
+  background: var(--si18n-bg);
+  border: 1px solid var(--si18n-border);
+  border-radius: 5px;
+  color: var(--si18n-text-secondary);
+  white-space: nowrap;
+  box-shadow: 0 1px 0 var(--si18n-border);
+}
+
+/* --- Shortcuts overlay in dark mode --- */
+html.si18n-dark .si18n-shortcuts-panel {
+  background: #1e1e1e;
+}
+
+html.si18n-dark .si18n-shortcuts-header {
+  border-bottom-color: #333;
+  color: #e0e0e0;
+}
+
+html.si18n-dark .si18n-shortcuts-close {
+  color: #999;
+}
+
+html.si18n-dark .si18n-shortcuts-close:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+html.si18n-dark .si18n-shortcut-desc {
+  color: #d0d0d0;
+}
+
+html.si18n-dark .si18n-shortcut-key {
+  background: #2a2a2a;
+  border-color: #444;
+  color: #aaa;
+  box-shadow: 0 1px 0 #333;
+}

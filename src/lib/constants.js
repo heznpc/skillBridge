@@ -1,6 +1,7 @@
 /**
  * SkillBridge — Shared Constants
- * Loaded first by all content scripts via manifest.json.
+ * Loaded after src/shared/runtime-constants.js by all content scripts via
+ * manifest.json.
  */
 
 /* eslint-disable no-unused-vars */
@@ -22,9 +23,13 @@ const SKILLBRIDGE_MODELS = {
 // §1). Keeping them would tell Gemini to keep ordinary words English.
 const DEFAULT_PROTECTED_TERMS = 'API, SDK, Claude, Anthropic, Claude Code, Cowork, Computer Use, SKILL.md, frontmatter';
 
-// YouTube InnerTube client version — update periodically as needed
-// Source of truth: src/shared/constants.json (keep in sync; validated by scripts/check-bg-sync.js)
-const YOUTUBE_CLIENT_VERSION = '2.20260415.01.00';
+const SB_SHARED_CONSTANTS = globalThis.SB_SHARED_CONSTANTS;
+if (!SB_SHARED_CONSTANTS) {
+  throw new Error('[SkillBridge] src/shared/runtime-constants.js must load before constants.js');
+}
+
+// YouTube InnerTube client version — generated from src/shared/constants.json.
+const YOUTUBE_CLIENT_VERSION = SB_SHARED_CONSTANTS.YOUTUBE_CLIENT_VERSION;
 
 // ==================== CERTIFICATION EXAM (full disable) ====================
 // Proctored certification exams — extension must NOT run at all.
@@ -162,6 +167,14 @@ const SKILLBRIDGE_LIMITS = {
   QUOTE_MAX: 200,
 };
 
+// ==================== FLASHCARD LEITNER BOXES ====================
+
+const FLASHCARD_BOX = Object.freeze({
+  NEW: 0,
+  LEARNING: 1,
+  MASTERED: 2,
+});
+
 // ==================== LANGUAGES ====================
 
 // Italian promoted to Premium in v3.5.34 after the 2026-05-23 CWS dashboard
@@ -220,13 +233,8 @@ const SUPPORTED_LANGUAGE_MAP = Object.fromEntries(
   AVAILABLE_LANGUAGES.filter((l) => l.code !== 'en').map((l) => [l.code, l.label]),
 );
 
-// Google Translate language code overrides
-// Source of truth: src/shared/constants.json (keep in sync; validated by scripts/check-bg-sync.js)
-const GT_LANG_MAP = {
-  'zh-CN': 'zh-CN',
-  'zh-TW': 'zh-TW',
-  'pt-BR': 'pt',
-};
+// Google Translate language code overrides — generated from src/shared/constants.json.
+const GT_LANG_MAP = SB_SHARED_CONSTANTS.GT_LANG_MAP;
 
 // YouTube subtitle language code overrides
 const YT_LANG_CODE_MAP = {

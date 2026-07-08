@@ -1,0 +1,198 @@
+/* ============================================================
+   SkillBridge - Styles
+   ============================================================ */
+
+/* ============================================================
+   Language-specific font fallbacks
+   Skilljar uses Copernicus (headings), Tiempos (body), Styrene B (links),
+   Open Sans (UI) — all Latin-only fonts. CJK and other scripts need
+   proper fallbacks to prevent rendering issues (tofu/boxes).
+
+   Strategy: rely on locally-available Noto Sans variants and OS-native CJK
+   fonts via scoped si18n-lang-* classes. Fonts are NOT fetched from
+   fonts.googleapis.com; that remote request would leak the user's IP and
+   reading language to a third party the privacy policy does not disclose.
+   ============================================================ */
+
+/* ============================================================
+   Font Strategy — match Skilljar's original visual hierarchy:
+
+   Original English weights (Copernicus serif):
+   - h1 (page titles): ~400 weight, light/elegant
+   - h2 (section titles): ~600-700 weight, medium-bold
+   - h3+ (sub-headings): ~600 weight, medium
+   - Body: ~400 weight, regular
+   - UI/Nav: ~500 weight, medium
+
+   For CJK: Noto Sans KR — DON'T over-bold. Match the original
+   visual weight, not the CSS weight (sans-serif at 700 already
+   looks bolder than Copernicus serif at 700).
+   ============================================================ */
+
+/* NOTE: no remote font fetch — neither @import nor a runtime <link> to
+   fonts.googleapis.com. Rendering uses the locally-available Noto Sans /
+   OS-native font stacks declared per language below (privacy: no third-party
+   font request). */
+
+/* ---- Korean ---- */
+
+/* Base — all text uses Noto Sans KR.
+   NOT `[lang='ko'] body` — the extension sets <html lang='ko'> itself, and on
+   scoped hosts (claude.com tutorials) that attribute selector would restyle the
+   whole page font. The lang class is applied to the translation target only
+   (document.body on Skilljar, the lesson root on scoped hosts), so key on it. */
+body.si18n-lang-ko,
+.si18n-lang-ko {
+  font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif !important;
+}
+
+/* Page titles (h1) — Copernicus is LIGHT and elegant at h1 level.
+   Use 400 (regular) to match that airy, editorial feel. */
+.si18n-lang-ko h1 {
+  font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.02em;
+}
+
+/* Section headings (h2) — Copernicus is medium-bold here. Use 700. */
+.si18n-lang-ko h2 {
+  font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em;
+}
+
+/* Sub-headings (h3–h6) — medium weight */
+.si18n-lang-ko h3,
+.si18n-lang-ko h4,
+.si18n-lang-ko h5,
+.si18n-lang-ko h6 {
+  font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.01em;
+}
+
+/* Bold text — don't over-bold, keep it natural */
+.si18n-lang-ko strong,
+.si18n-lang-ko b {
+  font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif !important;
+}
+
+/* Nav, links, buttons, UI — matches Open Sans / Styrene B feel */
+.si18n-lang-ko a,
+.si18n-lang-ko button {
+  font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif !important;
+}
+
+/* ---- Japanese ---- */
+
+.si18n-lang-ja {
+  font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic Pro', 'Yu Gothic', 'Meiryo', sans-serif !important;
+}
+.si18n-lang-ja h1 {
+  font-weight: 400 !important;
+}
+.si18n-lang-ja h2 {
+  font-weight: 700 !important;
+}
+
+/* ---- Chinese Simplified ---- */
+
+.si18n-lang-zh-CN {
+  font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif !important;
+}
+.si18n-lang-zh-CN h1 {
+  font-weight: 400 !important;
+}
+.si18n-lang-zh-CN h2 {
+  font-weight: 700 !important;
+}
+
+/* ---- Chinese Traditional ---- */
+
+.si18n-lang-zh-TW {
+  font-family: 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif !important;
+}
+.si18n-lang-zh-TW h1 {
+  font-weight: 400 !important;
+}
+.si18n-lang-zh-TW h2 {
+  font-weight: 700 !important;
+}
+
+/* ---- Arabic ---- */
+
+.si18n-lang-ar {
+  font-family: 'Noto Sans Arabic', 'Segoe UI', 'Tahoma', sans-serif !important;
+}
+.si18n-lang-ar h1 {
+  font-weight: 400 !important;
+}
+.si18n-lang-ar h2 {
+  font-weight: 700 !important;
+}
+
+/* ---- Hebrew ---- */
+
+.si18n-lang-he {
+  font-family: 'Noto Sans Hebrew', 'Segoe UI', 'Arial', sans-serif !important;
+}
+.si18n-lang-he h1 {
+  font-weight: 400 !important;
+}
+.si18n-lang-he h2 {
+  font-weight: 700 !important;
+}
+
+/* ---- Hindi/Devanagari ---- */
+
+.si18n-lang-hi {
+  font-family: 'Noto Sans Devanagari', 'Mangal', sans-serif !important;
+}
+
+/* ---- Thai ---- */
+
+.si18n-lang-th {
+  font-family: 'Noto Sans Thai', 'Tahoma', 'Leelawadee', sans-serif !important;
+}
+
+/* ---- Vietnamese — Latin extended, system fonts fine ---- */
+
+.si18n-lang-vi {
+  font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif !important;
+}
+
+:root {
+  --si18n-primary: #e07a5f;
+  --si18n-primary-hover: #c96a52;
+  --si18n-bg: #fafaf9;
+  --si18n-surface: #ffffff;
+  --si18n-text: #1c1917;
+  --si18n-text-secondary: #78716c;
+  --si18n-border: #e7e5e4;
+  --si18n-accent: #3d405b;
+  --si18n-success: #81b29a;
+  --si18n-radius: 12px;
+  --si18n-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  --si18n-sidebar-width: 380px;
+}
+
+/* Global focus styles for all SkillBridge interactive elements */
+.si18n-close:focus-visible,
+.si18n-history-btn:focus-visible,
+.si18n-history-back:focus-visible,
+.si18n-history-clear:focus-visible,
+.si18n-retry-btn:focus-visible,
+.si18n-chat-send-btn:focus-visible,
+.si18n-banner-btn:focus-visible,
+.si18n-shortcuts-close:focus-visible,
+.si18n-example-q:focus-visible,
+.si18n-ask-tutor-btn:focus-visible,
+.si18n-chat-quote-dismiss:focus-visible,
+.si18n-dark-toggle-btn:focus-visible {
+  outline: 2px solid var(--si18n-primary);
+  outline-offset: 2px;
+}
+
+/* Floating Action Button — styled by styles/fab.css. The FAB lives in the
+   #skillbridge-root shadow root and is intentionally not styled here, because
+   these shared sheets are also adopted into that same root. */

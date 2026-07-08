@@ -1,0 +1,59 @@
+/* Gemini verification in-progress indicator */
+.si18n-verifying {
+  opacity: 0.85;
+  transition: opacity 0.3s;
+}
+
+/* ============================================================
+   Gemini Verification Spinner (per-element)
+   ============================================================ */
+.si18n-verify-spinner {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.si18n-verify-spinner .si18n-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--si18n-primary, #e07a5f);
+  animation: si18n-pulse 1.2s ease-in-out infinite;
+}
+
+.si18n-verify-spinner .si18n-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.si18n-verify-spinner .si18n-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes si18n-pulse {
+  0%,
+  80%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+/* Fade when Gemini updates text */
+.si18n-text-updated {
+  animation: si18n-fade-in 0.4s ease;
+}
+
+@keyframes si18n-fade-in {
+  from {
+    opacity: 0.5;
+  }
+  to {
+    opacity: 1;
+  }
+}

@@ -162,4 +162,5 @@
 
   // Register into _sb namespace
   sb.translateCodeComments = translateCodeComments;
+  sb.registerModule?.('code-comments');
 })();

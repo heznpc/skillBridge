@@ -26,6 +26,13 @@
     dashboardPanelOpen: false,
   };
   const _state = sb._chat.state;
+  const SUB_PANEL_FLAGS = {
+    history: 'historyPanelOpen',
+    flashcard: 'flashcardPanelOpen',
+    bookmarks: 'bookmarksPanelOpen',
+    recent: 'recentPanelOpen',
+    dashboard: 'dashboardPanelOpen',
+  };
 
   let scrollRAF = null;
   let isSending = false;
@@ -62,17 +69,16 @@
   //
   // The FAB, sidebar, and TOC live here; blend-in components (header
   // controls) stay in the light DOM by design. Shadow UI is styled by the
-  // adopted, :host()-transformed content.css (see shadow-css.js) — except the
-  // FAB, whose inline critical style below is its single source of truth.
+  // adopted, :host()-transformed CSS partials (see shadow-css.js); the FAB
+  // has a separate shadow-only stylesheet in styles/fab.css.
   function getUiRoot() {
     if (sb.certDisabled) return null;
     if (sb._uiHost && sb._uiHost.isConnected) return sb._uiHost.shadowRoot;
     const host = document.createElement('div');
     host.id = 'skillbridge-root';
     host.attachShadow({ mode: 'open' });
-    // Adopt the transformed content.css so UI that moves into this root is
-    // styled from the single source. The FAB keeps a small inline <style> as
-    // immediate/critical CSS (the adopted sheet loads async via fetch).
+    // Adopt the transformed content CSS so UI that moves into this root is
+    // styled from the same manifest-declared partials as the light DOM.
     window._sbShadowCss?.ensureShadowStylesheet(host.shadowRoot);
     syncHostThemeClasses(host);
     document.body.appendChild(host);
@@ -123,34 +129,32 @@
   sb.$ = (sel) =>
     (sb._uiHost && sb._uiHost.isConnected && sb._uiHost.shadowRoot.querySelector(sel)) || document.querySelector(sel);
 
-  // The SINGLE source of truth for FAB styling (content.css carries no
-  // #skillbridge-fab rules — see the note there). Inline rather than relying
-  // on the adopted content.css sheet because adoption is async (fetch) and the
-  // FAB must never flash unstyled. Ancestor theme selectors are written in
-  // :host(...) form; the shadow host mirrors the html/body state classes.
-  const FAB_SHADOW_CSS = `
-    #skillbridge-fab { position: fixed; bottom: 24px; right: 24px; width: 48px; height: 48px; padding: 0; border-radius: 50%; background: var(--si18n-accent, #3d405b); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 16px rgba(61, 64, 91, 0.35); z-index: 99999; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s, color 0.3s; border: none; }
-    #skillbridge-fab svg { flex-shrink: 0; width: 24px; height: 24px; }
-    #skillbridge-fab:hover { transform: scale(1.08); box-shadow: 0 6px 24px rgba(61, 64, 91, 0.45); }
-    #skillbridge-fab.hidden { transform: scale(0); opacity: 0; pointer-events: none; }
-    #skillbridge-fab:focus-visible { outline: 2px solid var(--si18n-primary, #e07a5f); outline-offset: 2px; }
-    #skillbridge-fab.si18n-fab-pulse { animation: si18n-fab-pulse 2s ease-in-out 3; }
-    @keyframes si18n-fab-pulse {
-      0%, 100% { box-shadow: 0 4px 16px rgba(61, 64, 91, 0.35); }
-      50% { box-shadow: 0 4px 24px rgba(61, 64, 91, 0.55), 0 0 0 8px rgba(61, 64, 91, 0.1); }
+  let fabStylePromise = null;
+
+  function ensureFabStyle(root) {
+    if (!root) return Promise.resolve(false);
+    if (root.querySelector('style[data-sb-fab]')) return Promise.resolve(true);
+    if (!fabStylePromise) {
+      fabStylePromise = fetch(chrome.runtime.getURL('src/content/styles/fab.css'))
+        .then((r) => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          return r.text();
+        })
+        .catch((err) => {
+          fabStylePromise = null;
+          console.warn('[SkillBridge] FAB stylesheet load failed:', err && err.message);
+          return null;
+        });
     }
-    :host(.si18n-dark) #skillbridge-fab { background: #6b6f9e; border: 1px solid rgba(255, 255, 255, 0.22); color: #fff; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55); }
-    :host(.si18n-dark) #skillbridge-fab:hover { background: #7c80b3; color: #fff; }
-    :host(:is(.si18n-lang-ar, .si18n-lang-he)) #skillbridge-fab { right: auto; left: 24px; }
-    @media (prefers-reduced-motion: reduce) {
-      #skillbridge-fab { transition-duration: 0.01ms; }
-      #skillbridge-fab.si18n-fab-pulse { animation-duration: 0.01ms; animation-iteration-count: 1; }
-    }
-    @media (max-width: 600px) {
-      #skillbridge-fab { bottom: 16px; right: 16px; }
-      :host(:is(.si18n-lang-ar, .si18n-lang-he)) #skillbridge-fab { left: 16px; right: auto; }
-    }
-  `;
+    return fabStylePromise.then((css) => {
+      if (!css || root.querySelector('style[data-sb-fab]')) return Boolean(css);
+      const style = document.createElement('style');
+      style.setAttribute('data-sb-fab', '');
+      style.textContent = css;
+      root.appendChild(style);
+      return true;
+    });
+  }
 
   // ============================================================
   // FLOATING BUTTON
@@ -161,52 +165,49 @@
     const root = getUiRoot();
     if (!root) return;
     if (root.getElementById('skillbridge-fab')) return;
-    if (!root.querySelector('style[data-sb-fab]')) {
-      const style = document.createElement('style');
-      style.setAttribute('data-sb-fab', '');
-      style.textContent = FAB_SHADOW_CSS;
-      root.appendChild(style);
-    }
-    const btn = document.createElement('button');
-    btn.id = 'skillbridge-fab';
-    btn.setAttribute('role', 'button');
-    btn.setAttribute('tabindex', '0');
-    // On translation-only hosts (claude.com tutorials — no AI-tutor bridge) the
-    // FAB opens a language picker, so label + icon say "language", not "tutor".
-    const translateOnly = sb.hostCaps?.bridge === false;
-    const fabLabel = sb.t(translateOnly ? CHOOSE_LANGUAGE_LABEL : A11Y_LABELS.openTutor);
-    btn.setAttribute('aria-label', fabLabel);
-    btn.innerHTML = translateOnly
-      ? `
+    ensureFabStyle(root).then((ready) => {
+      if (!ready || !root.isConnected || root.getElementById('skillbridge-fab')) return;
+      const btn = document.createElement('button');
+      btn.id = 'skillbridge-fab';
+      btn.setAttribute('role', 'button');
+      btn.setAttribute('tabindex', '0');
+      // On translation-only hosts (claude.com tutorials — no AI-tutor bridge)
+      // the FAB opens a language picker, so label + icon say "language".
+      const translateOnly = sb.hostCaps?.bridge === false;
+      const fabLabel = sb.t(translateOnly ? CHOOSE_LANGUAGE_LABEL : A11Y_LABELS.openTutor);
+      btn.setAttribute('aria-label', fabLabel);
+      btn.innerHTML = translateOnly
+        ? `
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
       </svg>
     `
-      : `
+        : `
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
       </svg>
     `;
-    btn.title = fabLabel;
-    btn.addEventListener('click', () => {
-      btn.classList.remove('si18n-fab-pulse');
-      toggleSidebar();
-    });
-    btn.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
+      btn.title = fabLabel;
+      btn.addEventListener('click', () => {
         btn.classList.remove('si18n-fab-pulse');
         toggleSidebar();
-      }
-    });
-    root.appendChild(btn);
+      });
+      btn.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          btn.classList.remove('si18n-fab-pulse');
+          toggleSidebar();
+        }
+      });
+      root.appendChild(btn);
 
-    // Pulse animation on first visit to draw attention
-    chrome.storage.local.get(['fabSeen'], (result) => {
-      if (!result.fabSeen) {
-        btn.classList.add('si18n-fab-pulse');
-        chrome.storage.local.set({ fabSeen: true });
-      }
+      // Pulse animation on first visit to draw attention
+      chrome.storage.local.get(['fabSeen'], (result) => {
+        if (!result.fabSeen) {
+          btn.classList.add('si18n-fab-pulse');
+          chrome.storage.local.set({ fabSeen: true });
+        }
+      });
     });
   }
 
@@ -225,7 +226,7 @@
     sidebar.setAttribute('aria-label', 'SkillBridge Tutor');
     sidebar.innerHTML = getSidebarHTML();
     // Mount inside the shadow UI root so the host page's CSS can't reach the
-    // sidebar; it's styled by the adopted (transformed) content.css.
+    // sidebar; it's styled by the adopted (transformed) content CSS.
     const root = getUiRoot();
     if (!root) return;
     root.appendChild(sidebar);
@@ -621,19 +622,50 @@
   // SUB-PANEL STATE MACHINERY (shared with chat-history.js / flashcards)
   // ============================================================
 
+  function resetSubPanelFlags() {
+    for (const flag of Object.values(SUB_PANEL_FLAGS)) _state[flag] = false;
+  }
+
+  function anyOtherSubPanelOpen(name) {
+    const currentFlag = SUB_PANEL_FLAGS[name];
+    return Object.values(SUB_PANEL_FLAGS).some((flag) => flag !== currentFlag && _state[flag]);
+  }
+
+  function openSubPanel(name, html, onMount) {
+    const flag = SUB_PANEL_FLAGS[name];
+    if (!flag) {
+      console.warn('[SkillBridge] Unknown sub-panel:', name);
+      return null;
+    }
+
+    const chatPanel = sb.$id('si18n-panel-chat');
+    if (!chatPanel) return null;
+
+    if (_state[flag]) {
+      closeSubPanel();
+      return null;
+    }
+    if (anyOtherSubPanelOpen(name)) closeSubPanel();
+
+    cancelActiveStream();
+    _state.savedChatHTML = chatPanel.innerHTML;
+    resetSubPanelFlags();
+    _state[flag] = true;
+    chatPanel.replaceChildren();
+    chatPanel.insertAdjacentHTML('afterbegin', typeof html === 'function' ? html() : html);
+    onMount?.(chatPanel);
+    return chatPanel;
+  }
+
   function closeSubPanel() {
     const chatPanel = sb.$id('si18n-panel-chat');
-    if (!chatPanel || !_state.savedChatHTML) return;
+    if (!chatPanel || _state.savedChatHTML === null) return;
     // The chat bubble that was streaming is about to be replaced — abort
     // the stream so its onChunk callback doesn't write into a detached node.
     cancelActiveStream();
     chatPanel.innerHTML = _state.savedChatHTML;
     _state.savedChatHTML = null;
-    _state.historyPanelOpen = false;
-    _state.flashcardPanelOpen = false;
-    _state.bookmarksPanelOpen = false;
-    _state.recentPanelOpen = false;
-    _state.dashboardPanelOpen = false;
+    resetSubPanelFlags();
     bindChatInputEvents();
     // Example-question chips may still be in the restored chat HTML; their
     // click handlers must be re-bound too (closeSubPanel previously only
@@ -843,5 +875,7 @@
   // bindChatInputEvents + cancelActiveStream were exposed on `_chat` in
   // v3.5.13 but grep showed zero external callers — removed in v3.5.14.
   // `sb.cancelActiveStream` (above) remains the single public handle.
+  sb._chat.openSubPanel = openSubPanel;
   sb._chat.closeSubPanel = closeSubPanel;
+  sb.registerModule?.('sidebar-chat');
 })();

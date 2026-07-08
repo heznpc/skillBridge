@@ -149,4 +149,5 @@
   sb.showTranslationProgress = showTranslationProgress;
   sb.updateTranslationProgress = updateTranslationProgress;
   sb.hideTranslationProgress = hideTranslationProgress;
+  sb.registerModule?.('banners');
 })();

@@ -22,15 +22,17 @@ global.MutationObserver = class {
 global.Node = { ELEMENT_NODE: 1 };
 
 // Load constants first (youtube-subtitles.js may reference them)
+const sharedSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'shared', 'runtime-constants.js'), 'utf8');
 const selectorsSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'selectors.js'), 'utf8');
 const constantsSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'constants.js'), 'utf8');
 const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'youtube-subtitles.js'), 'utf8');
 
 let YouTubeSubtitleManager;
 try {
-  const combined = `(function() { ${selectorsSrc}; ${constantsSrc}; ${src}; return YouTubeSubtitleManager; })()`;
+  const combined = `(function() { ${sharedSrc}; ${selectorsSrc}; ${constantsSrc}; ${src}; return YouTubeSubtitleManager; })()`;
   YouTubeSubtitleManager = eval(combined);
 } catch (_e) {
+  eval(sharedSrc);
   eval(selectorsSrc);
   eval(constantsSrc);
   eval(src);

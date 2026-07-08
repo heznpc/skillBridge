@@ -20,8 +20,8 @@
     return;
   }
   // chat-render.js + sidebar-chat.js must have loaded first.
-  if (!sb._chat || !sb._chat.sanitizeHtml || !sb._chat.formatResponse) {
-    console.warn('[SkillBridge] chat-history: _sb._chat not ready (chat-render.js missing?)');
+  if (!sb._chat || !sb._chat.sanitizeHtml || !sb._chat.formatResponse || !sb._chat.openSubPanel) {
+    console.warn('[SkillBridge] chat-history: _sb._chat not ready (chat-render/sidebar-chat missing?)');
     return;
   }
 
@@ -176,22 +176,9 @@
   }
 
   function toggleHistoryPanel() {
-    const chatPanel = sb.$id('si18n-panel-chat');
-    if (!chatPanel) return;
-
-    const state = sb._chat.state;
-
-    if (state.historyPanelOpen) {
-      sb._chat.closeSubPanel();
-      return;
-    }
-    if (state.flashcardPanelOpen || state.bookmarksPanelOpen || state.recentPanelOpen || state.dashboardPanelOpen) {
-      sb._chat.closeSubPanel();
-    }
-
-    state.historyPanelOpen = true;
-    state.savedChatHTML = chatPanel.innerHTML;
-    chatPanel.innerHTML = `
+    const opened = sb._chat.openSubPanel(
+      'history',
+      `
       <div class="si18n-history-header">
         <button class="si18n-history-back" id="si18n-history-back" aria-label="${sb.t(A11Y_LABELS.backToChat)}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
         <span class="si18n-history-title">${sb.t(HISTORY_LABELS.title)}</span>
@@ -203,12 +190,15 @@
       <div class="si18n-history-list" id="si18n-history-list">
         <div class="si18n-history-loading">${sb.t(HISTORY_LABELS.loading)}</div>
       </div>
-    `;
-
-    sb.$id('si18n-history-back')?.addEventListener('click', sb._chat.closeSubPanel);
-    sb.$id('si18n-history-clear')?.addEventListener('click', () => {
-      if (confirm(sb.t(HISTORY_LABELS.clearHistory) + '?')) clearAllHistory();
-    });
+    `,
+      () => {
+        sb.$id('si18n-history-back')?.addEventListener('click', sb._chat.closeSubPanel);
+        sb.$id('si18n-history-clear')?.addEventListener('click', () => {
+          if (confirm(sb.t(HISTORY_LABELS.clearHistory) + '?')) clearAllHistory();
+        });
+      },
+    );
+    if (!opened) return;
     loadHistoryList();
   }
 
@@ -300,4 +290,5 @@
   // tests. saveConversation runs after every successful Gemini response.
   sb._chat.saveConversation = saveConversation;
   sb._chat.toggleHistoryPanel = toggleHistoryPanel;
+  sb.registerModule?.('chat-history');
 })();
