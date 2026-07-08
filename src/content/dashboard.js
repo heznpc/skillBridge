@@ -7,7 +7,7 @@
  * chrome.storage.local — nothing leaves the device, consistent with the
  * privacy policy ("local storage only").
  *
- * Loaded after sidebar-chat.js (uses sb._chat.state / closeSubPanel) and
+ * Loaded after chat-subpanels.js (uses sb._chat.state / closeSubPanel) and
  * after resume/bookmarks/chat-flashcards (whose stores it reads).
  */
 

@@ -9,7 +9,7 @@
  * Local-only: state lives in `chrome.storage.local` under `sb_bookmarks`.
  * No server, no sync (device-local by design).
  *
- * Loaded after sidebar-chat.js (provides `_sb._chat.state` + `closeSubPanel`)
+ * Loaded after chat-subpanels.js (provides `_sb._chat.state` + `closeSubPanel`)
  * and parallels chat-history.js / chat-flashcards.js. The sidebar "bookmark"
  * button (sidebar-chat.js) calls `_sb._chat.toggleBookmarksPanel`.
  */
@@ -23,7 +23,7 @@
     return;
   }
   if (!sb._chat || !sb._chat.state || !sb._chat.openSubPanel) {
-    console.warn('[SkillBridge] bookmarks: _sb._chat not ready (sidebar-chat.js missing?)');
+    console.warn('[SkillBridge] bookmarks: _sb._chat not ready (chat-subpanels.js missing?)');
     return;
   }
   const STORAGE_KEY = 'sb_bookmarks';

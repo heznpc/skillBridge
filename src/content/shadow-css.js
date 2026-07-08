@@ -3,15 +3,15 @@
  *
  * Loads the manifest-declared content CSS files, rewrites their host-page
  * (ancestor) theme selectors into :host(...) form, and adopts the result into
- * a shadow root. Standalone module loaded before sidebar-chat.js (which owns
- * the shadow UI root).
+ * a shadow root. Standalone module loaded before ui-root.js (which owns the
+ * shadow UI root).
  *
  * Why a transform: the content CSS themes via ancestor selectors
  *   html.si18n-dark X / body:is(.si18n-lang-ar,.si18n-lang-he) X /
  *   body.si18n-lang-XX X
  * Inside a shadow root those ancestors are out of reach, so they're rewritten
  * to :host(...) and the shadow host carries the mirrored state classes (see
- * sidebar-chat.js `syncHostThemeClasses`). CSS custom properties (--si18n-*)
+ * ui-root.js `syncHostThemeClasses`). CSS custom properties (--si18n-*)
  * inherit through the boundary, so var() references need no rewrite.
  *
  * Exposes: window._sbShadowCss = { transformForShadow, loadShadowSheet,

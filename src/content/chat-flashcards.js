@@ -10,10 +10,10 @@
  *     serialized through a single promise chain so rapid box-up/box-down
  *     clicks can't interleave (last-click-wins semantics)
  *
- * Loaded AFTER chat-render.js + sidebar-chat.js + chat-history.js — the
+ * Loaded AFTER chat-render.js + chat-subpanels.js + chat-history.js — the
  * sub-panel state machinery (`_sb._chat.state.{savedChatHTML,
  * flashcardPanelOpen, historyPanelOpen}` and `_sb._chat.closeSubPanel`)
- * is provided by sidebar-chat.js. Toggling the flashcard panel is
+ * is provided by chat-subpanels.js. Toggling the flashcard panel is
  * invoked from sidebar-chat.js's "fc" button click + keyboard-
  * shortcuts.js via `_sb.toggleFlashcardPanel`.
  *
@@ -33,7 +33,7 @@
     return;
   }
   if (!sb._chat || !sb._chat.state || !sb._chat.openSubPanel || !sb._chat.closeSubPanel) {
-    console.warn('[SkillBridge] chat-flashcards: _sb._chat not ready (sidebar-chat.js missing?)');
+    console.warn('[SkillBridge] chat-flashcards: _sb._chat not ready (chat-subpanels.js missing?)');
     return;
   }
   const _state = sb._chat.state;
