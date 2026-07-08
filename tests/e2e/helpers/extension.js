@@ -22,6 +22,7 @@ const fs = require('fs');
 const os = require('os');
 const { execFileSync } = require('child_process');
 const { chromium } = require('@playwright/test');
+const { PUTER_STREAM_STUB } = require('./puter-stream-stub');
 
 const ROOT = path.join(__dirname, '..', '..', '..');
 const EXTENSION_SRC = path.join(ROOT, 'dist', 'bundled');
@@ -138,64 +139,6 @@ function patchExtensionDir(extDir) {
 
   return extDir;
 }
-
-// Stream-friendly Puter SDK stub. `chat(prompt, {stream:true})` returns an
-// async iterable yielding 3 Korean chunks — page-bridge.js then forwards
-// each as a CHAT_STREAM_CHUNK message, and translator's onChunk fires for
-// each. The strings are deliberately distinctive so the tutor-chat spec
-// can assert each chunk made it end-to-end.
-const PUTER_STREAM_STUB = `
-(function () {
-  const STREAM_CHUNKS = ['안녕하세요! ', '프롬프트는 Claude에게 ', '주는 입력입니다.'];
-  // 150ms per chunk → 450ms total stream. Slow enough for the cancel
-  // spec to interrupt between chunks but still fast enough that the
-  // tutor-chat spec finishes under its 10s deadline.
-  window.__sbE2eChunkDelayMs = 150;
-  window.puter = {
-    // Models a signed-in user so the page bridge's auth gate lets the background
-    // verify/translate paths run (they skip for signed-out users to avoid Puter's
-    // sign-in prompt — see page-bridge.js _isPuterAuthed).
-    authToken: 'e2e-stub-token',
-    ai: {
-      chat: async function (prompt, opts) {
-        const failAttr = 'data-sb-e2e-fail-chat-count';
-        const failCount = Number(document.documentElement.getAttribute(failAttr) || 0);
-        if (opts && opts.stream && failCount > 0) {
-          if (failCount > 1) {
-            document.documentElement.setAttribute(failAttr, String(failCount - 1));
-          } else {
-            document.documentElement.removeAttribute(failAttr);
-          }
-          throw new Error('E2E forced chat failure');
-        }
-        const delay = Number(document.documentElement.dataset.sbE2eChunkDelayMs);
-        if (Number.isFinite(delay) && delay > 0) window.__sbE2eChunkDelayMs = delay;
-        if (opts && opts.stream) {
-          return {
-            [Symbol.asyncIterator]() {
-              let i = 0;
-              return {
-                async next() {
-                  await new Promise((r) => setTimeout(r, window.__sbE2eChunkDelayMs || 150));
-                  if (i >= STREAM_CHUNKS.length) return { done: true };
-                  return { done: false, value: { text: STREAM_CHUNKS[i++] } };
-                },
-              };
-            },
-          };
-        }
-        // Non-streaming path = Gemini verify (translator._verifySingle).
-        // Returning "OK" tells _verifySingle the GT result is good →
-        // _cacheTranslation(original, googleTranslation) — the GT
-        // translation gets cached verbatim. Without this we'd cache the
-        // chat-stream Korean greeting which is harder for tests to
-        // pre-compute. Tutor-chat uses stream=true so it's unaffected.
-        return { message: { content: 'OK' } };
-      },
-    },
-  };
-})();
-`;
 
 async function launchExtension() {
   let lastError = null;

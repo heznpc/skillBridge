@@ -523,14 +523,9 @@ class SkilljarTranslator {
     }
   }
 
-  async _verifySingle({ original, googleTranslation, targetLang, _gen }) {
-    // Re-check generation after the await fence — the user can switch
-    // language while we're inside Gemini, and writing the result then would
-    // place stale-language text into a now-current page.
-    if (_gen !== undefined && _gen !== this._langGeneration) return;
-    try {
-      const langName = this.supportedLanguages[targetLang] || targetLang;
-      const prompt = `You are a translation quality reviewer for technical education content (Anthropic AI courses).
+  _buildVerifyPrompt(original, googleTranslation, targetLang) {
+    const langName = this.supportedLanguages[targetLang] || targetLang;
+    return `You are a translation quality reviewer for technical education content (Anthropic AI courses).
 
 ORIGINAL (English):
 ${original}
@@ -545,6 +540,63 @@ RULES:
 - Ensure natural ${langName} grammar and phrasing
 - Fix any awkward literal translations
 - Preserve the original meaning precisely`;
+  }
+
+  async _keepGoogleTranslation(original, googleTranslation, targetLang) {
+    const safeGoogleTranslation = this._restoreProtectedTerms(googleTranslation);
+    await this._cacheTranslation(original, safeGoogleTranslation, targetLang);
+    this._notifyUpdate(original, safeGoogleTranslation, targetLang, false);
+  }
+
+  _isVerifyOkReply(trimResult) {
+    // The model is asked to reply EXACTLY "OK", but LLMs routinely add
+    // trailing punctuation or quotes ("OK.", "OK!", '"OK"'). Normalize
+    // surrounding quotes/whitespace + trailing .! and case before matching.
+    const okCheck = trimResult.replace(/^["'\s]+|["'\s.!]+$/g, '').toLowerCase();
+    return okCheck === 'ok';
+  }
+
+  _isUnsafeVerifyReplacement(trimResult, original) {
+    // Verify only runs on source text >= GEMINI_MIN_TEXT (80 chars), so a
+    // result that is empty or far shorter than the source is not a translation;
+    // the upper bound + prompt-echo markers catch returned explanations.
+    const tooShort = trimResult.length < Math.max(15, original.length * 0.25);
+    return (
+      !trimResult ||
+      tooShort ||
+      trimResult.length > original.length * 5 ||
+      trimResult.includes('ORIGINAL') ||
+      trimResult.includes('GOOGLE TRANSLATE')
+    );
+  }
+
+  async _applyVerifyResult(original, googleTranslation, targetLang, result) {
+    // Empty/absent result — the verify was skipped (the signed-out background
+    // path replies result:'') or the model returned nothing. Keep the Google
+    // translation and notify so the verify spinner is cleared.
+    if (!result) {
+      await this._keepGoogleTranslation(original, googleTranslation, targetLang);
+      return;
+    }
+
+    const trimResult = result.trim();
+    if (this._isVerifyOkReply(trimResult) || this._isUnsafeVerifyReplacement(trimResult, original)) {
+      await this._keepGoogleTranslation(original, googleTranslation, targetLang);
+      return;
+    }
+
+    const safeTrimResult = this._restoreProtectedTerms(trimResult);
+    await this._cacheTranslation(original, safeTrimResult, targetLang);
+    this._notifyUpdate(original, safeTrimResult, targetLang, true);
+  }
+
+  async _verifySingle({ original, googleTranslation, targetLang, _gen }) {
+    // Re-check generation after the await fence — the user can switch
+    // language while we're inside Gemini, and writing the result then would
+    // place stale-language text into a now-current page.
+    if (_gen !== undefined && _gen !== this._langGeneration) return;
+    try {
+      const prompt = this._buildVerifyPrompt(original, googleTranslation, targetLang);
 
       const result = await this._sendRequest({
         type: 'VERIFY_REQUEST',
@@ -555,68 +607,10 @@ RULES:
       // Bridge round-trip can take seconds; re-check before writing result.
       if (_gen !== undefined && _gen !== this._langGeneration) return;
 
-      // Empty/absent result — the verify was skipped (the signed-out background
-      // path replies result:'') or the model returned nothing. Fall through to
-      // the "keep the Google translation" handling: cache it and notify so the
-      // verify SPINNER is cleared. A bare `return` here left the spinner pulsing
-      // forever on every signed-out verify (and on any genuinely-empty reply).
-      if (!result) {
-        const safeGoogleTranslation = this._restoreProtectedTerms(googleTranslation);
-        await this._cacheTranslation(original, safeGoogleTranslation, targetLang);
-        this._notifyUpdate(original, safeGoogleTranslation, targetLang, false);
-        return;
-      }
-
-      const trimResult = result.trim();
-
-      // If Gemini says "OK", the Google translation is good — cache it.
-      // The model is asked to reply EXACTLY "OK", but LLMs routinely add
-      // trailing punctuation or quotes ("OK.", "OK!", '"OK"'). Normalize
-      // surrounding quotes/whitespace + trailing .!  and case before matching,
-      // so an affirmation isn't mistaken for an "improved translation" and
-      // cached/rendered verbatim — which would replace a correct translation
-      // with the literal string "OK.".
-      const okCheck = trimResult.replace(/^["'\s]+|["'\s.!]+$/g, '').toLowerCase();
-      if (okCheck === 'ok') {
-        const safeGoogleTranslation = this._restoreProtectedTerms(googleTranslation);
-        await this._cacheTranslation(original, safeGoogleTranslation, targetLang);
-        this._notifyUpdate(original, safeGoogleTranslation, targetLang, false);
-        return;
-      }
-
-      // Anything past the OK gate is supposed to be an IMPROVED translation.
-      // Verify only runs on source text >= GEMINI_MIN_TEXT (80 chars), so a
-      // result that is empty or far SHORTER than the source is not a
-      // translation — it's a stray affirmation Gemini didn't phrase as a bare
-      // "OK" ("Okay", "OK입니다", "“OK”", "OK, looks good"), an apology, or
-      // whitespace. Rendering it would replace the correct Google translation
-      // with garbage (and an empty result blanks the element). The upper bound +
-      // prompt-echo markers catch the opposite failure (a returned explanation).
-      // In all of these, keep the Google translation rather than rendering.
-      const tooShort = trimResult.length < Math.max(15, original.length * 0.25);
-      if (
-        !trimResult ||
-        tooShort ||
-        trimResult.length > original.length * 5 ||
-        trimResult.includes('ORIGINAL') ||
-        trimResult.includes('GOOGLE TRANSLATE')
-      ) {
-        const safeGoogleTranslation = this._restoreProtectedTerms(googleTranslation);
-        await this._cacheTranslation(original, safeGoogleTranslation, targetLang);
-        this._notifyUpdate(original, safeGoogleTranslation, targetLang, false);
-        return;
-      }
-
-      // Cache the improved translation
-      const safeTrimResult = this._restoreProtectedTerms(trimResult);
-      await this._cacheTranslation(original, safeTrimResult, targetLang);
-
-      this._notifyUpdate(original, safeTrimResult, targetLang, true);
+      await this._applyVerifyResult(original, googleTranslation, targetLang, result);
     } catch (err) {
       console.warn(`[SkillBridge] Gemini verify failed for "${original.substring(0, 30)}...":`, err.message);
-      const safeGoogleTranslation = this._restoreProtectedTerms(googleTranslation);
-      await this._cacheTranslation(original, safeGoogleTranslation, targetLang);
-      this._notifyUpdate(original, safeGoogleTranslation, targetLang, false);
+      await this._keepGoogleTranslation(original, googleTranslation, targetLang);
     }
   }
 
