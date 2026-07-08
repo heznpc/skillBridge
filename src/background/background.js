@@ -8,17 +8,29 @@
  * 4. Periodic maintenance via Chrome Alarms (cache cleanup, version check)
  */
 
-// Shared constants — kept in sync with src/shared/constants.json via scripts/check-bg-sync.js
-const _BG_GT_LANG_MAP = { 'zh-CN': 'zh-CN', 'zh-TW': 'zh-TW', 'pt-BR': 'pt' };
+try {
+  if (
+    !globalThis.SB_SHARED_CONSTANTS &&
+    typeof importScripts === 'function' &&
+    typeof chrome !== 'undefined' &&
+    chrome.runtime?.getURL
+  ) {
+    importScripts(chrome.runtime.getURL('src/shared/runtime-constants.js'));
+  }
+} catch (err) {
+  console.warn('[SkillBridge BG] Failed to load shared runtime constants:', err?.message);
+}
 
-// YouTube's internal client version. Bumped manually when InnerTube rejects
-// our value (observed every few weeks); kept in sync with the same constant
-// in src/lib/constants.js + src/shared/constants.json via check-bg-sync.js.
-const _BG_YT_CLIENT_VERSION = '2.20260415.01.00';
+const _BG_SHARED_CONSTANTS = globalThis.SB_SHARED_CONSTANTS || {};
+if (!_BG_SHARED_CONSTANTS.GT_LANG_MAP || !_BG_SHARED_CONSTANTS.YOUTUBE_CLIENT_VERSION) {
+  console.warn('[SkillBridge BG] Shared runtime constants missing or incomplete.');
+}
 
 function gtLangCode(lang) {
-  return _BG_GT_LANG_MAP[lang] || lang;
+  return _BG_SHARED_CONSTANTS.GT_LANG_MAP?.[lang] || lang;
 }
+
+const _BG_YT_CLIENT_VERSION = _BG_SHARED_CONSTANTS.YOUTUBE_CLIENT_VERSION;
 
 function parseGTResponse(data, fallback) {
   if (!data || !Array.isArray(data[0])) return fallback;
@@ -308,7 +320,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         headers['Origin'] = 'https://www.youtube.com';
         headers['Referer'] = 'https://www.youtube.com/';
         headers['X-Youtube-Client-Name'] = '1';
-        headers['X-Youtube-Client-Version'] = _BG_YT_CLIENT_VERSION;
+        if (_BG_YT_CLIENT_VERSION) headers['X-Youtube-Client-Version'] = _BG_YT_CLIENT_VERSION;
       }
     }
     fetchOpts.headers = headers;

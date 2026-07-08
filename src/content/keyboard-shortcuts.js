@@ -159,10 +159,14 @@
   // (sidebar / dark mode / flashcards). Skipped on claude.com tutorials, where
   // there is no such UI and the preventDefault would only swallow the host
   // page's own keyboard shortcuts.
-  if (sb.hostCaps?.keyboardShortcuts !== false) {
+  function startKeyboardShortcuts() {
+    if (sb.hostCaps?.keyboardShortcuts === false) return;
     document.addEventListener('keydown', handleKeydown);
   }
+  if (sb.whenActive) sb.whenActive(startKeyboardShortcuts);
+  else startKeyboardShortcuts();
 
   // Export
   sb.toggleShortcutsHelp = toggleHelpOverlay;
+  sb.registerModule?.('keyboard-shortcuts');
 })();

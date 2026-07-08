@@ -3,7 +3,7 @@
  *
  * Loads the real src/content/shadow-css.js IIFE (so production-code bugs can't
  * hide behind a re-implementation) and exercises transformForShadow, including
- * a completeness pass over the real content.css.
+ * a completeness pass over the real content CSS partials.
  */
 
 /* global describe, test, expect */
@@ -17,6 +17,13 @@ const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'content', 'shadow
 // referenced lazily inside loadShadowSheet (never called here).
 new Function('window', src)(fakeWindow);
 const { transformForShadow } = fakeWindow._sbShadowCss;
+
+function readManifestContentCss() {
+  const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'manifest.json'), 'utf8'));
+  return manifest.content_scripts[0].css
+    .map((file) => fs.readFileSync(path.join(__dirname, '..', file), 'utf8'))
+    .join('\n\n');
+}
 
 describe('shadow-css transformForShadow', () => {
   test('rewrites html.si18n-dark descendant selectors to :host(.si18n-dark)', () => {
@@ -56,8 +63,8 @@ describe('shadow-css transformForShadow', () => {
     expect(transformForShadow(undefined)).toBe('');
   });
 
-  test('real content.css: no ancestor theme prefix survives, and :host forms appear', () => {
-    const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'content', 'content.css'), 'utf8');
+  test('real content CSS: no ancestor theme prefix survives, and :host forms appear', () => {
+    const css = readManifestContentCss();
     const out = transformForShadow(css);
     // Every boundary-crossing selector must be rewritten — a leftover would
     // silently no-op inside the shadow root (dark/RTL theming would break).

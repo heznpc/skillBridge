@@ -15,15 +15,17 @@ global.window = { addEventListener: () => {} };
 const fs = require('fs');
 const path = require('path');
 
+const sharedSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'shared', 'runtime-constants.js'), 'utf8');
 const selectorsSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'selectors.js'), 'utf8');
 const constantsSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'constants.js'), 'utf8');
 const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'translator.js'), 'utf8');
 
 let SkilljarTranslator;
 try {
-  const combined = `(function() { ${selectorsSrc}; ${constantsSrc}; ${src}; return SkilljarTranslator; })()`;
+  const combined = `(function() { ${sharedSrc}; ${selectorsSrc}; ${constantsSrc}; ${src}; return SkilljarTranslator; })()`;
   SkilljarTranslator = eval(combined);
 } catch (_e) {
+  eval(sharedSrc);
   eval(selectorsSrc);
   eval(constantsSrc);
   eval(src);

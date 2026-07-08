@@ -115,4 +115,5 @@
 
   // Export to shared namespace
   sb.initAskTutorButton = initAskTutorButton;
+  sb.registerModule?.('text-selection');
 })();

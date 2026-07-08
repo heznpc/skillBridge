@@ -22,6 +22,7 @@ global.chrome = {
 global.chrome.runtime.onInstalled = { addListener: () => {} };
 global.chrome.runtime.onMessage = { addListener: (fn) => runtimeMessageListeners.push(fn) };
 
+const sharedSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'shared', 'runtime-constants.js'), 'utf8');
 const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'background', 'background.js'), 'utf8');
 const originalSetTimeout = setTimeout;
 let timerDelegate = (...args) => originalSetTimeout(...args);
@@ -31,7 +32,8 @@ const fns = new Function(
   'setTimer',
   `
   const setTimeout = (...args) => setTimer(...args);
-  ${src}
+	  ${sharedSrc}
+	  ${src}
   return { gtLangCode, parseGTResponse, isYouTubeUrl, isAllowedFetchUrl, isNewerVersion, _rateLimiter, fetchWithRetry, registerAlarms, _gtFetchDedup, _inflightGT, _gtKey };
 `,
 )((...args) => timerDelegate(...args));

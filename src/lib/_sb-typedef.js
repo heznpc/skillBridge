@@ -11,9 +11,8 @@
  *     accessors (currentLang, sidebarVisible, translator, etc.).
  *   - Each extracted content module attaches its own methods to `_sb`
  *     (banners.js, header-controls.js, sidebar-chat.js, ...).
- *   - All cross-module calls go through `_sb.foo?.()` so a module that
- *     hasn't loaded yet (or got intentionally dropped from the manifest)
- *     never throws.
+ *   - Module registration is checked at runtime by `assertModuleContract()`.
+ *     Feature calls that are legitimately optional still use `_sb.foo?.()`.
  *
  * @see src/content/content.js — owner of the `_sb` object
  * @see src/content/{banners,header-controls,sidebar-chat,text-selection,code-comments,keyboard-shortcuts}.js
@@ -25,17 +24,32 @@
  * @property {boolean} sidebarVisible
  * @property {SkilljarTranslator|null} translator
  * @property {boolean} isExamPage — true when `detectExamPage()` matched at init
+ * @property {boolean} certDisabled — true on certification/exam surfaces
+ * @property {boolean} hasSubtitleManager
  * @property {Map<HTMLElement, string>} originalTexts
  * @property {Map<HTMLElement, string>} translatedTexts
  * @property {Map<HTMLElement, string>} originalComments
  * @property {number} gtGeneration — bumped each switchLanguage; use to drop stale GT results
  * @property {boolean} isOffline
+ * @property {boolean} commentTranslateEnabled
+ * @property {boolean} aiGatePaused
+ * @property {Object|null} aiGateVerdict
+ * @property {number} mapSizeCap
+ * @property {Object} hostCaps
+ * @property {string|null} translationScope
  *
  * @property {(map: Record<string, string>, lang?: string) => string} t
  * @property {(text: string) => string} escapeHtml
+ * @property {(name: string, details?: Object) => void} registerModule
+ * @property {() => { ok: boolean, missing: string[], loaded: string[] }} assertModuleContract
+ * @property {(callback: () => void) => void} whenActive
  * @property {(text: string) => boolean} isLikelyEnglish
  * @property {(newLang: string, opts?: { onDone?: () => void }) => Promise<void>} switchLanguage
  * @property {() => { url: string; title: string; lang: string; lessonText?: string }} getPageContext
+ * @property {?() => void} safeReplaceText
+ * @property {?() => void} updateLangClass
+ * @property {() => boolean} detectExamPage
+ * @property {?(el: HTMLElement, text: string, lang: string) => void} showTermPreview
  *
  * --- banners.js ---
  * @property {?() => void} showOfflineBanner
@@ -65,10 +79,32 @@
  * @property {?() => void} injectSidebar
  * @property {?() => void} injectFloatingButton
  * @property {?() => void} toggleSidebar
+ * @property {?() => ShadowRoot|null} uiRoot
  * @property {?() => void} updateLocalizedLabels
  * @property {?(text: string) => string} formatResponse
  * @property {?() => void} toggleFlashcardPanel
  * @property {?() => void} cancelActiveStream
+ * @property {ChatNamespace=} _chat
+ */
+
+/**
+ * @typedef {Object} ChatNamespace
+ * @property {ChatPanelState=} state
+ * @property {?(name: string, html: string|(() => string), onMount?: (panel: HTMLElement) => void) => HTMLElement|null} openSubPanel
+ * @property {?() => void} closeSubPanel
+ * @property {?(text: string) => string} sanitizeHtml
+ * @property {?(text: string) => string} formatResponse
+ * @property {?() => { courses: number, lessons: number, flashcards: number, mastered: number, bookmarks: number, recent: number }} collectDashboardStats
+ */
+
+/**
+ * @typedef {Object} ChatPanelState
+ * @property {string|null} savedChatHTML
+ * @property {boolean} historyPanelOpen
+ * @property {boolean} flashcardPanelOpen
+ * @property {boolean} bookmarksPanelOpen
+ * @property {boolean} recentPanelOpen
+ * @property {boolean} dashboardPanelOpen
  */
 
 /**

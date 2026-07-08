@@ -36,8 +36,10 @@ export default [
         CustomEvent: 'readonly',
         URL: 'readonly',
         URLSearchParams: 'readonly',
+        globalThis: 'readonly',
         // Chrome extension APIs
         chrome: 'readonly',
+        importScripts: 'readonly',
         // Shared globals from content script load order
         SKILLBRIDGE_MODELS: 'readonly',
         SKILLBRIDGE_THRESHOLDS: 'readonly',
@@ -82,6 +84,7 @@ export default [
         SHORTCUT_LABELS: 'readonly',
         SHORTCUT_DESCRIPTIONS: 'readonly',
         FLASHCARD_LABELS: 'readonly',
+        FLASHCARD_BOX: 'readonly',
         BOOKMARK_LABELS: 'readonly',
         RESUME_LABELS: 'readonly',
         DASHBOARD_LABELS: 'readonly',
