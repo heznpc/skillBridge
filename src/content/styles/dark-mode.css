@@ -1,0 +1,917 @@
+/* ============================================================
+   Dark Mode (Claude Docs inspired)
+   Toggled via .si18n-dark on <html>
+   ============================================================ */
+
+/* --- Dark-mode toggle button (inline with lang selector) --- */
+.si18n-dark-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  margin: 0 6px 0 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #9e9e9e;
+  transition: color 0.15s;
+  border-radius: 4px;
+  vertical-align: middle;
+}
+.si18n-dark-toggle-btn:hover {
+  color: #505050;
+}
+html.si18n-dark .si18n-dark-toggle-btn {
+  color: #b0b0b0;
+}
+html.si18n-dark .si18n-dark-toggle-btn:hover {
+  color: #dedede;
+}
+.si18n-dark-toggle-btn svg {
+  width: 16px;
+  height: 16px;
+}
+/* Sun shown in light mode, moon in dark */
+.si18n-icon-sun {
+  display: block;
+}
+.si18n-icon-moon {
+  display: none;
+}
+html.si18n-dark .si18n-icon-sun {
+  display: none;
+}
+html.si18n-dark .si18n-icon-moon {
+  display: block;
+}
+
+/* --- Page-level overrides -------------------------------- */
+html.si18n-dark {
+  color-scheme: dark;
+}
+html.si18n-dark body {
+  background: #0e0e0e !important;
+  color: #b0b0b0 !important;
+}
+html.si18n-dark header,
+html.si18n-dark #header,
+html.si18n-dark #header-drop {
+  background: #0e0e0e !important;
+  border-bottom-color: rgba(255, 255, 255, 0.06) !important;
+}
+html.si18n-dark header a,
+html.si18n-dark header .header-link,
+html.si18n-dark #header a,
+html.si18n-dark #header .header-link {
+  color: #9e9e9e !important;
+  text-decoration: none !important;
+}
+html.si18n-dark header a:hover,
+html.si18n-dark header .header-link:hover,
+html.si18n-dark #header a:hover {
+  color: #dedede !important;
+}
+html.si18n-dark #si18n-header-lang-select {
+  color: #dedede !important;
+  background-color: #1a1a1a !important;
+  border-color: #333 !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%239e9e9e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") !important;
+}
+html.si18n-dark #si18n-header-lang-select:hover {
+  border-color: #555;
+}
+
+/* Main content area + Skilljar containers */
+html.si18n-dark .main-content,
+html.si18n-dark .page-content,
+html.si18n-dark .content-area,
+html.si18n-dark .catalog-container,
+html.si18n-dark .course-landing,
+html.si18n-dark .series-landing,
+html.si18n-dark .lesson-content,
+html.si18n-dark #skilljar-content,
+html.si18n-dark .clp__container,
+html.si18n-dark .clp__about,
+html.si18n-dark .clp__curriculum,
+html.si18n-dark .clp__instructors,
+html.si18n-dark .series-container,
+html.si18n-dark .profile-container,
+html.si18n-dark #header-mobile-dropdown {
+  background: #0e0e0e !important;
+}
+
+/* Skilljar section blocks (course details, about, etc.) */
+html.si18n-dark .clp__course-details,
+html.si18n-dark .clp__section-block,
+html.si18n-dark .clp__modal-footer,
+html.si18n-dark .clp__hero-details,
+html.si18n-dark .clp__meta {
+  background: #141414 !important;
+}
+
+/* Social share buttons */
+html.si18n-dark .clp__social a,
+html.si18n-dark .social-share-btn,
+html.si18n-dark [class*='share-btn'] {
+  background: #1a1a1a !important;
+  color: #9e9e9e !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Enroll button — invert to light-on-dark */
+html.si18n-dark .clp__enroll-btn,
+html.si18n-dark .clp__hero .btn {
+  background: #dedede !important;
+  color: #0e0e0e !important;
+}
+
+/* Price badge */
+html.si18n-dark .clp__price {
+  background: #1a1a1a !important;
+  color: #9e9e9e !important;
+}
+
+/* Headings */
+html.si18n-dark h1,
+html.si18n-dark h2,
+html.si18n-dark h3,
+html.si18n-dark h4 {
+  color: #dedede !important;
+}
+
+/* Paragraphs and body text */
+html.si18n-dark p,
+html.si18n-dark li,
+html.si18n-dark td,
+html.si18n-dark th,
+html.si18n-dark span,
+html.si18n-dark label {
+  color: #b0b0b0 !important;
+}
+
+/* Links — Docs style: muted, underlined, not bright blue */
+html.si18n-dark a {
+  color: #b0b0b0 !important;
+  text-decoration: underline !important;
+  text-decoration-color: rgba(255, 255, 255, 0.2) !important;
+  text-underline-offset: 2px !important;
+}
+html.si18n-dark a:hover {
+  color: #dedede !important;
+  text-decoration-color: rgba(255, 255, 255, 0.4) !important;
+}
+/* Header + nav links — no underline */
+html.si18n-dark header a,
+html.si18n-dark nav a,
+html.si18n-dark .header-link,
+html.si18n-dark .coursebox-container a {
+  text-decoration: none !important;
+}
+/* Course card title links — heading-weight, no underline */
+html.si18n-dark .coursebox-container {
+  text-decoration: none !important;
+}
+html.si18n-dark a.coursebox-container {
+  color: inherit !important;
+  text-decoration: none !important;
+}
+
+/* Cards and boxed areas — subtle elevation like Docs */
+html.si18n-dark .card,
+html.si18n-dark .course-card,
+html.si18n-dark .course-tile,
+html.si18n-dark [class*='tile'],
+html.si18n-dark .series-card,
+html.si18n-dark .coursebox-container,
+html.si18n-dark .course-listing .coursebox-container {
+  background: #161616 !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.04) !important;
+  transition:
+    background 0.15s,
+    box-shadow 0.15s !important;
+}
+html.si18n-dark .coursebox-container:hover {
+  background: #1c1c1c !important;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Coursebox inner elements */
+html.si18n-dark .coursebox-container .coursebox,
+html.si18n-dark .coursebox-container .course-details,
+html.si18n-dark .coursebox-container .course-info {
+  background: transparent !important;
+}
+html.si18n-dark .coursebox-container .sj-ribbon,
+html.si18n-dark .sj-ribbon-wrapper,
+html.si18n-dark .sj-course-ribbon-wrapper {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #9e9e9e !important;
+}
+html.si18n-dark .coursebox-container .coursebox-text,
+html.si18n-dark .coursebox-container .coursebox-text h3,
+html.si18n-dark .coursebox-container .coursebox-text h2 {
+  color: #dedede !important;
+}
+html.si18n-dark .coursebox-container .coursebox-text-description,
+html.si18n-dark .coursebox-container .storefront-price,
+html.si18n-dark .coursebox-container .course-time,
+html.si18n-dark .coursebox-container .coursebox-duration {
+  color: #9e9e9e !important;
+}
+
+/* Catalog search & filter elements */
+html.si18n-dark #catalog-content,
+html.si18n-dark .catalog-center-width,
+html.si18n-dark .top-row,
+html.si18n-dark #main-container {
+  background: transparent !important;
+}
+html.si18n-dark .catalog-sidebar,
+html.si18n-dark .catalog-filter,
+html.si18n-dark .search-wrapper {
+  background: #141414 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+html.si18n-dark .tile-counter-container {
+  background: #1a1a1a !important;
+  color: #9e9e9e !important;
+}
+
+/* Badges — "등록됨", "FREE", completion badges */
+html.si18n-dark .sj-ribbon,
+html.si18n-dark .sj-course-ribbon {
+  background: transparent !important;
+  color: #9e9e9e !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+html.si18n-dark .coursebox-container .storefront-price,
+html.si18n-dark .coursebox-callout,
+html.si18n-dark .course-status,
+html.si18n-dark .progress-label {
+  color: #888 !important;
+}
+
+/* Course images — brighten to handle transparent PNGs on dark bg */
+html.si18n-dark .coursebox-image img {
+  opacity: 1;
+  border-radius: 6px;
+  filter: brightness(1.8);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 4px;
+}
+html.si18n-dark .coursebox-image {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+}
+
+/* Skilljar logo in header */
+html.si18n-dark .header-center-img,
+html.si18n-dark #header img {
+  filter: brightness(0.85);
+}
+
+/* Sections with different bg in light mode */
+html.si18n-dark section,
+html.si18n-dark .about-course,
+html.si18n-dark .course-description,
+html.si18n-dark .curriculum-section {
+  background: #141414 !important;
+}
+
+/* Tables */
+html.si18n-dark table {
+  background: #141414 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+html.si18n-dark tr {
+  background: #141414 !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+html.si18n-dark td,
+html.si18n-dark th {
+  background: #141414 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+html.si18n-dark thead,
+html.si18n-dark thead th {
+  background: #1a1a1a !important;
+}
+
+/* Code blocks */
+html.si18n-dark code {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #fde047 !important;
+}
+html.si18n-dark pre {
+  background: #1a1a1a !important;
+}
+
+/* Buttons */
+html.si18n-dark .btn-primary,
+html.si18n-dark .enroll-button,
+html.si18n-dark [class*='enroll'] {
+  background: #dedede !important;
+  color: #0e0e0e !important;
+}
+
+/* Form inputs */
+html.si18n-dark input,
+html.si18n-dark textarea,
+html.si18n-dark select {
+  background: #1a1a1a !important;
+  color: #dedede !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Breadcrumbs */
+html.si18n-dark .breadcrumb,
+html.si18n-dark .breadcrumb a {
+  color: #999 !important;
+  text-decoration: none !important;
+}
+html.si18n-dark .breadcrumb a:hover {
+  color: #9e9e9e !important;
+}
+
+/* Footer */
+html.si18n-dark footer {
+  background: #0a0a0a !important;
+  color: #999 !important;
+}
+
+/* Skilljar-specific: course sidebar / outline */
+html.si18n-dark .sidebar-toc,
+html.si18n-dark .course-outline,
+html.si18n-dark .lesson-sidebar {
+  background: #141414 !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Misc borders and dividers */
+html.si18n-dark hr,
+html.si18n-dark .divider {
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Status badges */
+html.si18n-dark .badge,
+html.si18n-dark .tag {
+  background: #1a1a1a !important;
+  color: #9e9e9e !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Images — slightly dim to reduce glare, except logos */
+html.si18n-dark img:not(.header-center-img) {
+  opacity: 0.88;
+}
+
+/* --- Progress toast & spinner in dark mode --- */
+html.si18n-dark #si18n-progress-toast {
+  background: #1a1a1a !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #9e9e9e !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+}
+html.si18n-dark #si18n-progress-toast .si18n-progress-spinner {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  border-top-color: var(--si18n-primary) !important;
+}
+
+/* --- SkillBridge Tutor sidebar in dark mode --- */
+html.si18n-dark .skillbridge-sidebar {
+  background: #141414 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5) !important;
+  color: #9e9e9e !important;
+}
+html.si18n-dark .si18n-header {
+  background: #1a1a1a !important;
+  border-bottom-color: rgba(255, 255, 255, 0.06) !important;
+}
+/* Chat panel bg */
+html.si18n-dark .si18n-panel-chat {
+  background: #141414 !important;
+}
+/* Chat bubbles */
+html.si18n-dark .si18n-chat-bubble {
+  background: #1e1e1e !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #dedede !important;
+}
+html.si18n-dark .si18n-chat-user .si18n-chat-bubble {
+  background: #2a2a2a !important;
+  border: none !important;
+  color: #dedede !important;
+}
+html.si18n-dark .si18n-chat-bubble code {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #fde047 !important;
+}
+/* Chat messages area */
+html.si18n-dark .si18n-chat-messages {
+  background: transparent !important;
+}
+/* Chat input */
+html.si18n-dark .si18n-chat-input {
+  background: #1a1a1a !important;
+  color: #dedede !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+html.si18n-dark .si18n-chat-input:focus {
+  outline: 2px solid var(--si18n-primary) !important;
+  outline-offset: -2px;
+  border-color: var(--si18n-primary) !important;
+}
+html.si18n-dark .si18n-chat-input-wrap {
+  border-top-color: rgba(255, 255, 255, 0.06) !important;
+}
+/* Chat quote block */
+html.si18n-dark .si18n-chat-quote {
+  background: #1a1a1a !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #9e9e9e !important;
+}
+/* Send button — keep primary color but slightly muted */
+html.si18n-dark .si18n-chat-send-btn {
+  background: #d97757 !important;
+  color: #fff !important;
+}
+/* Thinking dots in dark */
+html.si18n-dark .si18n-thinking-dots .si18n-dot {
+  background: #666 !important;
+}
+/* Avatar in dark */
+html.si18n-dark .si18n-chat-avatar {
+  background: #2a2a2a !important;
+  color: #9e9e9e !important;
+}
+html.si18n-dark .si18n-chat-user .si18n-chat-avatar {
+  background: #d97757 !important;
+  color: white !important;
+}
+html.si18n-dark .si18n-history-item {
+  background: #1a1a1a !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+html.si18n-dark .si18n-history-item:hover {
+  background: #222 !important;
+}
+html.si18n-dark .si18n-history-item-q {
+  color: #dedede !important;
+}
+html.si18n-dark .si18n-history-item-time {
+  color: #999 !important;
+}
+html.si18n-dark .si18n-history-empty,
+html.si18n-dark .si18n-history-loading {
+  color: #999 !important;
+}
+html.si18n-dark .si18n-history-detail-meta {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+html.si18n-dark .si18n-detail-lesson {
+  color: #dedede !important;
+}
+html.si18n-dark .si18n-detail-time {
+  color: #999 !important;
+}
+html.si18n-dark .si18n-history-detail .si18n-chat-bot .si18n-chat-bubble {
+  background: #1a1a1a !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #dedede !important;
+}
+html.si18n-dark .si18n-history-detail .si18n-chat-bubble code {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #e0e0e0 !important;
+}
+/* (Dark-mode FAB styling lives in styles/fab.css.) */
+
+/* Course-author "course roadmap" widget — its `.crm` wrapper ships a fixed
+   cream background, so in dark mode it rendered as a bright card floating on
+   the near-black page. Re-skin the wrapper + heading; the step cards
+   (.crm-c1…c5) carry their own colours and white text, so leave those. */
+html.si18n-dark .crm {
+  background: #1a1a1a !important;
+}
+html.si18n-dark .crm-title {
+  color: #ededed !important;
+}
+
+/* --- Enrolled Course Page — curriculum, lessons, progress --- */
+
+/* Hero section (top-row) — the big cream/beige area */
+html.si18n-dark .top-row-grey,
+html.si18n-dark .top-row-white-v2,
+html.si18n-dark .top-row-grey.top-row-white-v2 {
+  background: #0e0e0e !important;
+}
+/* Course summary row inside hero */
+html.si18n-dark .cp-summary-row-v2,
+html.si18n-dark .cp-summary-wrapper,
+html.si18n-dark .sj-summary {
+  background: transparent !important;
+}
+
+/* Curriculum content area (div.content) — needs high specificity to override Skilljar */
+html.si18n-dark .curriculum-v2 div.content,
+html.si18n-dark .tabs-wrapper-v2 div.content,
+html.si18n-dark section.active div.content,
+html.si18n-dark #cp-content div.content,
+html.si18n-dark .section-container div.content {
+  background: #0e0e0e !important;
+}
+html.si18n-dark .curriculum-v2 .section-container,
+html.si18n-dark .curriculum-v2 .tabs-wrapper-v2,
+html.si18n-dark .tabs-wrapper-v2,
+html.si18n-dark .section-container.tabs,
+html.si18n-dark section.active {
+  background: #0e0e0e !important;
+}
+
+/* Main enrolled-course wrapper */
+html.si18n-dark .course-container,
+html.si18n-dark .series-outline,
+html.si18n-dark .course-left,
+html.si18n-dark .course-right {
+  background: #0e0e0e !important;
+}
+
+/* Tab nav (カリキュラム / Curriculum, About, etc.) — high specificity needed */
+html.si18n-dark p.title.focus-link-v2,
+html.si18n-dark .section-container p.title.focus-link-v2,
+html.si18n-dark .tabs-wrapper-v2 p.title.focus-link-v2 {
+  background: #0e0e0e !important;
+  color: #dedede !important;
+  border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+}
+html.si18n-dark .focus-links,
+html.si18n-dark .focus-links-v2,
+html.si18n-dark .tab-links,
+html.si18n-dark .nav-tabs {
+  background: #0e0e0e !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+html.si18n-dark .focus-link-v2,
+html.si18n-dark .focus-link-v2 a,
+html.si18n-dark .nav-tabs li a,
+html.si18n-dark .nav-tabs .nav-link {
+  color: #9e9e9e !important;
+  border-color: transparent !important;
+  text-decoration: none !important;
+  background: transparent !important;
+}
+html.si18n-dark .focus-link-v2.active,
+html.si18n-dark .focus-link-v2.active a,
+html.si18n-dark .nav-tabs li.active a,
+html.si18n-dark .nav-tabs .nav-link.active {
+  color: #dedede !important;
+  border-bottom-color: #dedede !important;
+}
+
+/* Lesson section headers (expandable sections like "Claudeと出会う") */
+html.si18n-dark .lesson-section,
+html.si18n-dark .lesson-section.expand {
+  background: transparent !important;
+  color: #dedede !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+html.si18n-dark .lesson-section .fa-caret-down,
+html.si18n-dark .lesson-section .fa-caret-right {
+  color: #999 !important;
+}
+html.si18n-dark .lesson-section .fa-check {
+  color: #81b29a !important;
+}
+
+/* Lesson rows — individual lesson links */
+html.si18n-dark .lesson-modular,
+html.si18n-dark a.lesson-modular {
+  background: transparent !important;
+  border-color: rgba(255, 255, 255, 0.04) !important;
+}
+html.si18n-dark .lesson-modular:hover,
+html.si18n-dark a.lesson-modular:hover {
+  background: #161616 !important;
+}
+html.si18n-dark .lesson-row {
+  background: transparent !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+html.si18n-dark .lesson-row:hover {
+  background: #1c1c1c !important;
+}
+html.si18n-dark .lesson-row .title,
+html.si18n-dark .outline-lesson .title,
+html.si18n-dark div.title {
+  color: #dedede !important;
+}
+html.si18n-dark .lesson-row .description,
+html.si18n-dark .lesson-row .duration,
+html.si18n-dark .sj-lesson-time,
+html.si18n-dark .sj-course-time {
+  color: #999 !important;
+}
+
+/* Lesson completion checkmarks */
+html.si18n-dark .lesson-modular .fa-check-circle,
+html.si18n-dark .lesson-complete .fa-check-circle {
+  color: #81b29a !important;
+}
+html.si18n-dark .lesson-modular .fa-circle-o,
+html.si18n-dark .lesson-modular .fa-circle {
+  color: #444 !important;
+}
+html.si18n-dark .lesson-modular .bullet {
+  color: #81b29a !important;
+}
+
+/* Type icons (video, text, quiz icons) */
+html.si18n-dark .type-icon {
+  color: #999 !important;
+}
+
+/* Section headers in curriculum */
+html.si18n-dark .section-title,
+html.si18n-dark .section-header,
+html.si18n-dark .clp__section-header {
+  background: #1a1a1a !important;
+  color: #dedede !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Progress bars — Skilljar specific classes */
+html.si18n-dark .progress-bar.button-border-color,
+html.si18n-dark .cp-summary-wrapper .progress-bar.button-border-color,
+html.si18n-dark div.progress-bar.button-border-color {
+  background: #2a2a2a !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+html.si18n-dark .progress-bar-inner.button-background,
+html.si18n-dark .progress-bar-inner {
+  background: #d97757 !important;
+}
+html.si18n-dark .progress,
+html.si18n-dark .progress-bar-container {
+  background: #1a1a1a !important;
+}
+html.si18n-dark .progress-text,
+html.si18n-dark .progress-percentage,
+html.si18n-dark .cp-lessons {
+  color: #9e9e9e !important;
+}
+
+/* Completion status icons / checkmarks */
+html.si18n-dark .lesson-status,
+html.si18n-dark .lesson-complete,
+html.si18n-dark [class*='status-icon'],
+html.si18n-dark .check-circle {
+  color: #81b29a !important;
+}
+
+/* Resume / Start button on enrolled course */
+html.si18n-dark .resume-button,
+html.si18n-dark a.resume-button,
+html.si18n-dark .resume-btn,
+html.si18n-dark .start-btn,
+html.si18n-dark [class*='continue-btn'],
+html.si18n-dark .btn-primary {
+  background: #dedede !important;
+  color: #0e0e0e !important;
+}
+/* Bookmark icon button */
+html.si18n-dark .bookmark-button,
+html.si18n-dark [class*='bookmark'] {
+  background: transparent !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: #9e9e9e !important;
+}
+
+/* Alert box (error messages etc.) */
+html.si18n-dark .alert-box {
+  background: #1a1a1a !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #9e9e9e !important;
+}
+
+/* Show all / expand link */
+html.si18n-dark .show-all,
+html.si18n-dark a.show-all {
+  color: #9e9e9e !important;
+  text-decoration: none !important;
+}
+html.si18n-dark .show-all:hover {
+  color: #dedede !important;
+}
+
+/* Course detail sidebar (right pane in course overview) */
+html.si18n-dark .course-detail-sidebar,
+html.si18n-dark .detail-sidebar,
+html.si18n-dark .details-pane {
+  background: #141414 !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+html.si18n-dark .details-pane-description {
+  color: #9e9e9e !important;
+}
+
+/* Left navigation (lesson sidebar) */
+html.si18n-dark .left-nav,
+html.si18n-dark .left-nav-container,
+html.si18n-dark .lesson-nav {
+  background: #141414 !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+html.si18n-dark .left-nav a,
+html.si18n-dark .left-nav-item,
+html.si18n-dark .left-nav-return-text {
+  color: #9e9e9e !important;
+  text-decoration: none !important;
+}
+html.si18n-dark .left-nav a:hover,
+html.si18n-dark .left-nav-item:hover {
+  color: #dedede !important;
+  background: #1c1c1c !important;
+}
+html.si18n-dark .left-nav .active,
+html.si18n-dark .left-nav-item.active {
+  background: #1e1e1e !important;
+  color: #dedede !important;
+}
+
+/* Lesson detail page — left nav, wrapper, main content */
+html.si18n-dark #lp-left-nav,
+html.si18n-dark .lp-left-nav {
+  background: #141414 !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+html.si18n-dark #lp-left-nav a,
+html.si18n-dark .lp-left-nav a {
+  color: #9e9e9e !important;
+  text-decoration: none !important;
+}
+html.si18n-dark #lp-left-nav a:hover {
+  color: #dedede !important;
+  background: #1c1c1c !important;
+}
+html.si18n-dark #lp-left-nav .section-title {
+  color: #dedede !important;
+}
+html.si18n-dark #lp-wrapper {
+  background: #0e0e0e !important;
+}
+html.si18n-dark #lesson-main {
+  background: #0e0e0e !important;
+}
+html.si18n-dark #lesson-main-inner,
+html.si18n-dark #lesson-main-content {
+  background: transparent !important;
+}
+html.si18n-dark #lp-content {
+  background: #0e0e0e !important;
+}
+html.si18n-dark #lpLeftNavBackground {
+  background: rgba(0, 0, 0, 0.6) !important;
+}
+html.si18n-dark .lesson-top,
+html.si18n-dark .lesson-wrapper,
+html.si18n-dark .lesson-body,
+html.si18n-dark #lesson-body {
+  background: #0e0e0e !important;
+}
+html.si18n-dark .lesson-top h2 {
+  color: #dedede !important;
+}
+/* Lesson content text — force light color for all inline elements */
+html.si18n-dark #lesson-main p,
+html.si18n-dark #lesson-main li,
+html.si18n-dark #lesson-main em,
+html.si18n-dark #lesson-main strong,
+html.si18n-dark #lesson-main span,
+html.si18n-dark #lesson-main h1,
+html.si18n-dark #lesson-main h2,
+html.si18n-dark #lesson-main h3,
+html.si18n-dark #lesson-main h4,
+html.si18n-dark #lesson-main td,
+html.si18n-dark #lesson-main th,
+html.si18n-dark #lesson-main blockquote {
+  color: #dedede !important;
+}
+html.si18n-dark #lesson-main a {
+  color: #d97757 !important;
+}
+/* Lesson page bottom nav (Previous / Next) */
+html.si18n-dark #lp-footer {
+  background: #0a0a0a !important;
+  border-top-color: rgba(255, 255, 255, 0.06) !important;
+}
+html.si18n-dark .next-lesson-button,
+html.si18n-dark .prev-lesson-button {
+  color: #9e9e9e !important;
+}
+html.si18n-dark .next-lesson-link,
+html.si18n-dark .prev-lesson-link {
+  background: #1a1a1a !important;
+  color: #dedede !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Footer container in course pages */
+html.si18n-dark .footer_contain,
+html.si18n-dark .u-container-full {
+  background: #0a0a0a !important;
+}
+
+/* --- Profile / Account page dark mode --- */
+html.si18n-dark .sj-grey-bg-v2,
+html.si18n-dark .row.sj-grey-bg-v2 {
+  background: #161616 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+html.si18n-dark .input-wrapper {
+  background: #1a1a1a !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+html.si18n-dark .input-wrapper input,
+html.si18n-dark .input-wrapper select {
+  background: #1a1a1a !important;
+  color: #dedede !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+html.si18n-dark .input-wrapper label,
+html.si18n-dark .sj-form label {
+  color: #9e9e9e !important;
+  background: transparent !important;
+}
+html.si18n-dark #profile-course-table,
+html.si18n-dark .sj-table-v2 {
+  background: #141414 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+html.si18n-dark .sj-table-v2 th,
+html.si18n-dark #profile-course-table th {
+  background: #1a1a1a !important;
+  color: #9e9e9e !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+html.si18n-dark .sj-table-v2 td,
+html.si18n-dark #profile-course-table td {
+  background: #141414 !important;
+  color: #9e9e9e !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+html.si18n-dark .sj-table-v2 tr,
+html.si18n-dark #profile-course-table tr {
+  background: #141414 !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+html.si18n-dark .profile-avatar,
+html.si18n-dark .avatar-wrapper {
+  background: #2a2a2a !important;
+}
+html.si18n-dark .profile-page h1,
+html.si18n-dark .profile-page h2,
+html.si18n-dark .accounts-profile h1,
+html.si18n-dark .accounts-profile h2 {
+  color: #dedede !important;
+}
+
+/* --- Generic catch-all for remaining white containers --- */
+html.si18n-dark .container,
+html.si18n-dark .wrapper,
+html.si18n-dark [class*='panel'],
+html.si18n-dark .modal-content,
+html.si18n-dark .dropdown-menu {
+  background: #141414 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #9e9e9e !important;
+}
+html.si18n-dark .modal-header,
+html.si18n-dark .modal-footer {
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Welcome banner in dark */
+html.si18n-dark #si18n-welcome-banner {
+  background: #1a1a1a !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #dedede !important;
+}
+html.si18n-dark #si18n-welcome-banner p {
+  color: #9e9e9e !important;
+}
+
+/* --- Ask Tutor floating button in dark --- */
+html.si18n-dark .si18n-ask-tutor-btn {
+  background: #d97757 !important;
+  color: #fff !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+}

@@ -615,4 +615,5 @@
   // The function was only defined inside the GT section before extraction; we
   // re-attach it here so existing call-sites don't need to know it moved.
   sb.isLikelyEnglish = isLikelyEnglish;
+  sb.registerModule?.('gt-queue');
 })();

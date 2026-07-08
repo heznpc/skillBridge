@@ -105,7 +105,7 @@ skillbridge/
 │   │   ├── header-controls.js # Header language selector, dark mode, welcome banner
 │   │   ├── sidebar-chat.js    # AI Tutor sidebar, chat, conversation history
 │   │   ├── text-selection.js  # Text selection "Ask Tutor" button
-│   │   └── content.css        # All styles (sidebar, transcript panel, fonts)
+│   │   └── styles/            # Content CSS partials (sidebar, transcript panel, fonts)
 │   ├── background/
 │   │   └── background.js      # Service worker — Google Translate proxy + URL fetcher
 │   ├── bridge/

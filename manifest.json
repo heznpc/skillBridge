@@ -30,11 +30,13 @@
         "src/lib/log.js",
         "src/lib/platform.js",
         "src/lib/selectors.js",
+        "src/shared/runtime-constants.js",
         "src/lib/constants.js",
         "src/lib/translator.js",
         "src/lib/youtube-subtitles.js",
         "src/lib/protected-terms.js",
         "src/lib/gemini-block.js",
+        "src/lib/dom-safe.js",
         "src/content/content.js",
         "src/content/gt-queue.js",
         "src/content/banners.js",
@@ -52,7 +54,20 @@
         "src/content/reading-aid.js",
         "src/content/keyboard-shortcuts.js"
       ],
-      "css": ["src/content/content.css"],
+      "css": [
+        "src/content/styles/base.css",
+        "src/content/styles/sidebar-chat.css",
+        "src/content/styles/verification.css",
+        "src/content/styles/banners-header-progress.css",
+        "src/content/styles/ask-tutor.css",
+        "src/content/styles/history.css",
+        "src/content/styles/dark-mode.css",
+        "src/content/styles/shortcuts.css",
+        "src/content/styles/exam.css",
+        "src/content/styles/tools-flashcards-reading.css",
+        "src/content/styles/rtl-responsive.css",
+        "src/content/styles/banners-term-dashboard.css"
+      ],
       "run_at": "document_idle"
     }
   ],
@@ -72,12 +87,13 @@
         "src/bridge/puter.js",
         "assets/icons/*",
         "src/shared/constants.json",
-        "src/content/content.css"
+        "src/shared/runtime-constants.js",
+        "src/content/styles/*.css"
       ],
       "matches": ["https://*.skilljar.com/*"]
     },
     {
-      "resources": ["src/data/*", "src/content/content.css"],
+      "resources": ["src/data/*", "src/shared/runtime-constants.js", "src/content/styles/*.css"],
       "matches": ["https://claude.com/*"]
     }
   ]

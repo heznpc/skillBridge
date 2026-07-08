@@ -115,74 +115,7 @@
    * @param {string} html
    * @returns {string}
    */
-  function sanitizeHtml(html) {
-    const ALLOWED_TAGS = new Set([
-      'div',
-      'span',
-      'p',
-      'h3',
-      'ul',
-      'ol',
-      'li',
-      'strong',
-      'em',
-      'code',
-      'br',
-      'button',
-      'svg',
-      'polyline',
-      'path',
-      'circle',
-    ]);
-    const ALLOWED_ATTRS = new Set([
-      'class',
-      'id',
-      'data-id',
-      'data-question',
-      'title',
-      'aria-label',
-      'role',
-      // SVG presentational attributes
-      'width',
-      'height',
-      'viewBox',
-      'fill',
-      'stroke',
-      'stroke-width',
-      'stroke-linecap',
-      'stroke-linejoin',
-      'cx',
-      'cy',
-      'r',
-      'd',
-      'points',
-    ]);
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-
-    function walk(node) {
-      const children = Array.from(node.childNodes);
-      for (const child of children) {
-        if (child.nodeType === Node.ELEMENT_NODE) {
-          const tag = child.tagName.toLowerCase();
-          if (!ALLOWED_TAGS.has(tag)) {
-            child.remove();
-            continue;
-          }
-          // Strip disallowed attributes (including event handlers)
-          for (const attr of Array.from(child.attributes)) {
-            if (!ALLOWED_ATTRS.has(attr.name) || attr.name.startsWith('on')) {
-              child.removeAttribute(attr.name);
-            }
-          }
-          walk(child);
-        }
-      }
-    }
-
-    walk(doc.body);
-    return doc.body.innerHTML;
-  }
+  const sanitizeHtml = window._sbDomSafe.sanitizeChatHtml;
 
   // Reserve the sub-namespace; sidebar-chat.js will fill in its half.
   // `applyInline` is intentionally not exposed — it's an implementation
@@ -191,4 +124,5 @@
   sb._chat = sb._chat || {};
   sb._chat.formatResponse = formatResponse;
   sb._chat.sanitizeHtml = sanitizeHtml;
+  sb.registerModule?.('chat-render');
 })();

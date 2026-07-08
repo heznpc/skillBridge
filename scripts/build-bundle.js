@@ -51,8 +51,15 @@ async function build() {
   });
 
   // Bundle CSS
+  const contentCssFiles = manifest.content_scripts[0].css || [];
+  const cssEntryPath = path.join(DIST, '_content-entry.css');
+  const cssEntry = contentCssFiles
+    .map((f) => `/* --- ${f} --- */\n` + fs.readFileSync(path.join(ROOT, f), 'utf8'))
+    .join('\n\n');
+  fs.writeFileSync(cssEntryPath, cssEntry);
+
   await esbuild.build({
-    entryPoints: [path.join(ROOT, 'src/content/content.css')],
+    entryPoints: [cssEntryPath],
     outfile: path.join(DIST, 'content.bundle.css'),
     minify: true,
   });
@@ -70,8 +77,14 @@ async function build() {
   fs.mkdirSync(path.join(DIST, 'src/lib'), { recursive: true });
   fs.mkdirSync(path.join(DIST, 'src/bridge'), { recursive: true });
   fs.mkdirSync(path.join(DIST, 'src/shared'), { recursive: true });
+  fs.mkdirSync(path.join(DIST, 'src/content/styles'), { recursive: true });
   fs.copyFileSync(path.join(ROOT, 'src/lib/page-bridge.js'), path.join(DIST, 'src/lib/page-bridge.js'));
   fs.copyFileSync(path.join(ROOT, 'src/bridge/puter.js'), path.join(DIST, 'src/bridge/puter.js'));
+  fs.copyFileSync(path.join(ROOT, 'src/content/styles/fab.css'), path.join(DIST, 'src/content/styles/fab.css'));
+  fs.copyFileSync(
+    path.join(ROOT, 'src/shared/runtime-constants.js'),
+    path.join(DIST, 'src/shared/runtime-constants.js'),
+  );
   if (fs.existsSync(path.join(ROOT, 'src/shared/constants.json'))) {
     fs.copyFileSync(path.join(ROOT, 'src/shared/constants.json'), path.join(DIST, 'src/shared/constants.json'));
   }
@@ -85,16 +98,20 @@ async function build() {
   bundledManifest.content_scripts[0].js = ['content.bundle.js'];
   bundledManifest.content_scripts[0].css = ['content.bundle.css'];
   bundledManifest.background.service_worker = 'background.bundle.js';
-  // The shadow UI fetches content.css via web_accessible_resources to adopt it
-  // into the shadow root. In the bundle that file is content.bundle.css, so
-  // remap the dev path (src/content/content.css) accordingly.
+  // The shadow UI fetches the manifest CSS via web_accessible_resources to
+  // adopt it into the shadow root. In the bundle the content CSS partials are
+  // replaced by content.bundle.css; the FAB keeps its own shadow-only CSS file.
   for (const entry of bundledManifest.web_accessible_resources || []) {
-    entry.resources = entry.resources.map((r) => (r === 'src/content/content.css' ? 'content.bundle.css' : r));
+    entry.resources = entry.resources.flatMap((r) =>
+      r === 'src/content/styles/*.css' ? ['content.bundle.css', 'src/content/styles/fab.css'] : [r],
+    );
+    entry.resources = [...new Set(entry.resources)];
   }
   fs.writeFileSync(path.join(DIST, 'manifest.json'), JSON.stringify(bundledManifest, null, 2));
 
   // Clean up temp entry
   fs.unlinkSync(contentEntryPath);
+  fs.unlinkSync(cssEntryPath);
 
   // Report sizes
   const origSize = contentScripts.reduce((sum, f) => {

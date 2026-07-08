@@ -69,7 +69,7 @@ test.describe('SkillBridge — shadow UI isolation', () => {
     expect(probe.svgWidth).toBe(24); // chat-bubble icon intact, not collapsed to 0
   });
 
-  test('content.css is fetched, transformed, and adopted into the shadow root', async () => {
+  test('content CSS is fetched, transformed, and adopted into the shadow root', async () => {
     const r = await evalInContentWorld(extCtx.context, 'shadowSheetReady');
     expect(r.ok).toBe(true);
     expect(r.sheetLoaded).toBe(true);

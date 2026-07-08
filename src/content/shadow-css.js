@@ -1,11 +1,12 @@
 /**
  * SkillBridge — Shadow stylesheet loader
  *
- * Loads content.css, rewrites its host-page (ancestor) theme selectors into
- * :host(...) form, and adopts the result into a shadow root. Standalone module
- * loaded before sidebar-chat.js (which owns the shadow UI root).
+ * Loads the manifest-declared content CSS files, rewrites their host-page
+ * (ancestor) theme selectors into :host(...) form, and adopts the result into
+ * a shadow root. Standalone module loaded before sidebar-chat.js (which owns
+ * the shadow UI root).
  *
- * Why a transform: content.css themes via ancestor selectors
+ * Why a transform: the content CSS themes via ancestor selectors
  *   html.si18n-dark X / body:is(.si18n-lang-ar,.si18n-lang-he) X /
  *   body.si18n-lang-XX X
  * Inside a shadow root those ancestors are out of reach, so they're rewritten
@@ -14,14 +15,14 @@
  * inherit through the boundary, so var() references need no rewrite.
  *
  * Exposes: window._sbShadowCss = { transformForShadow, loadShadowSheet,
- *                                  ensureShadowStylesheet }
+ *                                  ensureShadowStylesheet, getContentCssPaths }
  */
 
 (function () {
   'use strict';
 
   /**
-   * Rewrite content.css ancestor theme selectors into :host(...) form.
+   * Rewrite content CSS ancestor theme selectors into :host(...) form.
    * Pure + side-effect free so it can be unit-tested without a browser.
    * The negative lookaheads keep `html.si18n-dark` from matching inside a
    * longer token (there is none today, but it guards future class names).
@@ -39,24 +40,35 @@
 
   let _sheetPromise = null;
 
+  function getContentCssPaths() {
+    const m = chrome.runtime.getManifest();
+    const cssPaths = m.content_scripts?.[0]?.css || [];
+    return cssPaths.length ? cssPaths : ['src/content/styles/base.css'];
+  }
+
   /**
-   * Fetch + transform content.css once and return a shared CSSStyleSheet.
+   * Fetch + transform content CSS once and return a shared CSSStyleSheet.
    * Cached so every shadow root adopts the same constructed sheet.
    * @returns {Promise<CSSStyleSheet|null>}
    */
   function loadShadowSheet() {
     if (_sheetPromise) return _sheetPromise;
-    // Resolve the stylesheet path from the manifest so this works in both the
-    // unbundled dev build (src/content/content.css) and the production bundle
-    // (content.bundle.css). The file must be web-accessible (see manifest /
-    // build-bundle.js).
-    const m = chrome.runtime.getManifest();
-    const cssPath = m.content_scripts?.[0]?.css?.[0] || 'src/content/content.css';
-    _sheetPromise = fetch(chrome.runtime.getURL(cssPath))
-      .then((r) => r.text())
-      .then((css) => {
+    // Resolve stylesheet paths from the manifest so this works in both the
+    // unbundled dev build (multiple src/content/styles/*.css files) and the
+    // production bundle (content.bundle.css). The files must be web-accessible
+    // (see manifest / build-bundle.js).
+    const cssPaths = getContentCssPaths();
+    _sheetPromise = Promise.all(
+      cssPaths.map((cssPath) =>
+        fetch(chrome.runtime.getURL(cssPath)).then((r) => {
+          if (!r.ok) throw new Error(`${cssPath}: HTTP ${r.status}`);
+          return r.text();
+        }),
+      ),
+    )
+      .then((parts) => {
         const sheet = new window.CSSStyleSheet();
-        sheet.replaceSync(transformForShadow(css));
+        sheet.replaceSync(transformForShadow(parts.join('\n\n')));
         return sheet;
       })
       .catch((err) => {
@@ -84,5 +96,6 @@
     });
   }
 
-  window._sbShadowCss = { transformForShadow, loadShadowSheet, ensureShadowStylesheet };
+  window._sbShadowCss = { transformForShadow, loadShadowSheet, ensureShadowStylesheet, getContentCssPaths };
+  window._sb?.registerModule?.('shadow-css');
 })();

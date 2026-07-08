@@ -27,6 +27,7 @@
     "docs": "node scripts/generate-docs.js",
     "lint": "eslint src/ tests/ scripts/",
     "lint:fix": "eslint src/ tests/ scripts/ --fix",
+    "typecheck": "tsc --noEmit",
     "format": "prettier --write 'src/**/*.{js,css,html}' 'tests/**/*.js' 'scripts/**/*.js'",
     "format:check": "prettier --check 'src/**/*.{js,css,html}' 'tests/**/*.js' 'scripts/**/*.js'",
     "build:bundle": "node scripts/build-bundle.js",
@@ -63,6 +64,7 @@
     "eslint-config-prettier": "^10.1.8",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
-    "prettier": "^3.9.4"
+    "prettier": "^3.9.4",
+    "typescript": "^6.0.3"
   }
 }

@@ -295,7 +295,7 @@ RULES:
           // result, length/refusal guards, stale generation, or success). Several
           // bails used to `return` without this, and the signed-out auth-skip now
           // hits the empty-result bail every time — leaving the block dimmed
-          // (content.css si18n-verifying, opacity .85) permanently.
+          // (content CSS si18n-verifying, opacity .85) permanently.
           if (el?.parentNode) el.classList.remove('si18n-verifying');
         }
       })

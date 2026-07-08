@@ -1,0 +1,234 @@
+/* ============================================================
+   Language Welcome Banner (first visit)
+   ============================================================ */
+#si18n-welcome-banner {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  z-index: 99998;
+  background: var(--si18n-surface, #fff);
+  border: 1px solid var(--si18n-border, #e7e5e4);
+  border-radius: 14px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  color: var(--si18n-text, #1c1917);
+  opacity: 0;
+  transition:
+    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  max-width: 520px;
+}
+
+#si18n-welcome-banner.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+#si18n-welcome-banner .si18n-banner-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+#si18n-welcome-banner .si18n-banner-text {
+  flex: 1;
+  line-height: 1.4;
+}
+
+#si18n-welcome-banner .si18n-banner-text strong {
+  color: var(--si18n-primary, #e07a5f);
+}
+
+#si18n-welcome-banner .si18n-banner-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+#si18n-welcome-banner .si18n-banner-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s,
+    color 0.2s;
+}
+
+#si18n-welcome-banner .si18n-banner-confirm {
+  background: var(--si18n-primary, #e07a5f);
+  color: white;
+}
+
+#si18n-welcome-banner .si18n-banner-confirm:hover {
+  background: var(--si18n-primary-hover, #c96a52);
+}
+
+#si18n-welcome-banner .si18n-banner-change {
+  background: transparent;
+  color: var(--si18n-text-secondary, #78716c);
+  border: 1px solid var(--si18n-border, #e7e5e4);
+}
+
+#si18n-welcome-banner .si18n-banner-change:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+#si18n-welcome-banner select {
+  padding: 4px 8px;
+  border: 1px solid var(--si18n-border, #e7e5e4);
+  border-radius: 6px;
+  font-size: 13px;
+  background: white;
+  color: var(--si18n-text, #1c1917);
+}
+#si18n-welcome-banner select.si18n-banner-lang-inline {
+  margin-left: 8px;
+}
+
+/* ============================================================
+   Header Language Selector (Claude Docs style — minimal text)
+   ============================================================ */
+#si18n-header-lang {
+  display: table-cell;
+  vertical-align: middle;
+  padding-right: 16px;
+  white-space: nowrap;
+}
+#si18n-header-lang-select {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid #d4d4d4 !important;
+  border-radius: 8px !important;
+  background: #fff !important;
+  font-family: inherit;
+  font-size: 14px !important;
+  font-weight: 500;
+  color: #1c1917 !important;
+  cursor: pointer;
+  margin: 0 !important;
+  padding: 6px 28px 6px 12px !important;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+  width: auto !important;
+  max-width: 120px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  vertical-align: middle;
+  /* chevron ∨ matching Claude Docs */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2378716c' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 10px center !important;
+  background-size: 10px !important;
+}
+#si18n-header-lang-select:hover {
+  border-color: #a3a3a3 !important;
+}
+#si18n-header-lang-select:focus {
+  outline: 2px solid var(--si18n-primary) !important;
+  outline-offset: -2px;
+  border-color: var(--si18n-primary) !important;
+}
+
+/* ============================================================
+   Translation Progress Indicator
+   ============================================================ */
+#si18n-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  z-index: 99999;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+#si18n-progress-bar.active {
+  opacity: 1;
+}
+
+#si18n-progress-bar .si18n-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--si18n-primary, #e07a5f), #f2cc8f, var(--si18n-primary, #e07a5f));
+  background-size: 200% 100%;
+  animation: si18n-progress-sweep 1.5s ease-in-out infinite;
+  border-radius: 0 2px 2px 0;
+  transition: width 0.3s ease;
+}
+
+@keyframes si18n-progress-sweep {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+#si18n-progress-toast {
+  position: fixed;
+  top: 8px;
+  right: 16px;
+  z-index: 99999;
+  background: var(--si18n-surface, #fff);
+  border: 1px solid var(--si18n-border, #e7e5e4);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  padding: 8px 14px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 12px;
+  color: var(--si18n-text-secondary, #78716c);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+#si18n-progress-toast.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+#si18n-progress-toast .si18n-progress-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--si18n-border, #e7e5e4);
+  border-top-color: var(--si18n-primary, #e07a5f);
+  border-radius: 50%;
+  animation: si18n-spin 0.8s linear infinite;
+}
+
+@keyframes si18n-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Scrollbar */
+.si18n-chat-messages::-webkit-scrollbar,
+.si18n-panel::-webkit-scrollbar {
+  width: 5px;
+}
+
+.si18n-chat-messages::-webkit-scrollbar-thumb,
+.si18n-panel::-webkit-scrollbar-thumb {
+  background: var(--si18n-border);
+  border-radius: 3px;
+}

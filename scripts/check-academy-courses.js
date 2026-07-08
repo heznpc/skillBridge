@@ -134,6 +134,8 @@ function parseStoreListingCourseCount(text) {
  */
 function loadKnownSlugs() {
   const constantsPath = process.env.SB_CONSTANTS_FIXTURE || path.resolve(__dirname, '..', 'src', 'lib', 'constants.js');
+  const runtimeConstantsPath = path.resolve(__dirname, '..', 'src', 'shared', 'runtime-constants.js');
+  const runtimeConstantsSrc = fs.readFileSync(runtimeConstantsPath, 'utf8');
   const src = fs.readFileSync(constantsPath, 'utf8');
   // constants.js is content-script source and references SKILLJAR_SELECTORS
   // (defined in src/lib/selectors.js, loaded first by manifest.json). We
@@ -142,7 +144,7 @@ function loadKnownSlugs() {
   // FLASHCARD_COURSE_MAP, which is a literal object of string→string[] rows.
   const stub = 'const SKILLJAR_SELECTORS = new Proxy({}, { get: () => "" });';
   const map = new Function(
-    `${stub}\n${src}; return typeof FLASHCARD_COURSE_MAP !== 'undefined' ? FLASHCARD_COURSE_MAP : {};`,
+    `${runtimeConstantsSrc}\n${stub}\n${src}; return typeof FLASHCARD_COURSE_MAP !== 'undefined' ? FLASHCARD_COURSE_MAP : {};`,
   )();
   return new Set(Object.keys(map));
 }

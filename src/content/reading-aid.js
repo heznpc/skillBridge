@@ -158,16 +158,25 @@
     updateProgress();
   }
 
-  // Skilljar swaps lessons client-side, so headings change without a full
-  // reload. Poll the URL (cheap string compare) and rebuild after the new
-  // content settles.
-  let lastUrl = location.href;
-  setInterval(() => {
-    if (location.href !== lastUrl) {
-      lastUrl = location.href;
-      setTimeout(refresh, 400);
-    }
-  }, 1000);
+  let started = false;
+  function startReadingAid() {
+    if (started) return;
+    started = true;
+    // Skilljar swaps lessons client-side, so headings change without a full
+    // reload. Poll the URL (cheap string compare) and rebuild after the new
+    // content settles.
+    let lastUrl = location.href;
+    setInterval(() => {
+      if (location.href !== lastUrl) {
+        lastUrl = location.href;
+        setTimeout(refresh, 400);
+      }
+    }, 1000);
 
-  refresh();
+    refresh();
+  }
+
+  if (window._sb?.whenActive) window._sb.whenActive(startReadingAid);
+  else startReadingAid();
+  window._sb?.registerModule?.('reading-aid');
 })();

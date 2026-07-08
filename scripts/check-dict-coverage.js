@@ -66,6 +66,7 @@ const ROOT = path.resolve(__dirname, '..');
 // (CI, local) leave it unset and use src/data/.
 const DATA_DIR = process.env.SB_DICT_DIR_OVERRIDE || path.join(ROOT, 'src', 'data');
 const SELECTORS_PATH = path.join(ROOT, 'src', 'lib', 'selectors.js');
+const RUNTIME_CONSTANTS_PATH = path.join(ROOT, 'src', 'shared', 'runtime-constants.js');
 const CONSTANTS_PATH = path.join(ROOT, 'src', 'lib', 'constants.js');
 const MANIFEST_PATH = path.join(ROOT, 'manifest.json');
 
@@ -117,13 +118,17 @@ const languages = Object.keys(dicts).sort();
 console.log(`Loaded ${languages.length} dictionaries: ${languages.join(', ')}`);
 
 // Load FLASHCARD_COURSE_MAP from constants.js. The file references
-// SKILLJAR_SELECTORS from selectors.js at the top, so both have to be in
-// scope for the eval.
+// SB_SHARED_CONSTANTS and SKILLJAR_SELECTORS at the top, so runtime constants
+// and selectors have to be in scope for the eval.
+const runtimeConstantsSrc = fs.readFileSync(RUNTIME_CONSTANTS_PATH, 'utf8');
 const selectorsSrc = fs.readFileSync(SELECTORS_PATH, 'utf8');
 const constantsSrc = fs.readFileSync(CONSTANTS_PATH, 'utf8');
 let FLASHCARD_COURSE_MAP;
 try {
-  const runner = new Function('window', `${selectorsSrc}\n${constantsSrc}\nreturn FLASHCARD_COURSE_MAP;`);
+  const runner = new Function(
+    'window',
+    `${runtimeConstantsSrc}\n${selectorsSrc}\n${constantsSrc}\nreturn FLASHCARD_COURSE_MAP;`,
+  );
   FLASHCARD_COURSE_MAP = runner({});
 } catch (e) {
   console.error('Failed to load FLASHCARD_COURSE_MAP from constants.js:', e.message);

@@ -11,9 +11,11 @@ const fs = require('fs');
 const path = require('path');
 
 // Load real constants for the URL pattern tests.
+const sharedSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'shared', 'runtime-constants.js'), 'utf8');
 const selectorsSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'selectors.js'), 'utf8');
 const constantsSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'constants.js'), 'utf8');
 const sourceConstants = new Function(`
+  ${sharedSrc}
   ${selectorsSrc}
   ${constantsSrc}
   return { CERT_DISABLE_PATTERNS, EXAM_URL_PATTERNS };
