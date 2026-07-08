@@ -21,72 +21,16 @@
     return;
   }
 
-  // ── AI-content gate (v3.5.34, 2026-05-26) ──────────────────
-  // Manifest host_permission is `*.skilljar.com` (broader than just
-  // anthropic.skilljar.com so the same code can serve other Skilljar-
-  // hosted AI courses if any emerge). On a non-anthropic tenant we run
-  // the AI-content detector and short-circuit on non-AI pages
-  // (Calendly Academy etc. — Skilljar's general B2B LMS customers
-  // that fell into our host pattern but aren't our audience).
-  //
-  // Anthropic Academy users see no change: the detector's fast path
-  // unconditionally activates for `anthropic.skilljar.com`.
-  //
-  // Sync-only on purpose. An async storage-backed override (for the
-  // rare case the heuristic mis-rejects an AI page) would require
-  // wrapping the entire IIFE body in an async callback; that
-  // refactor is deliberately deferred. For now the heuristic is
-  // intentionally generous (anthropic-host fast path + 2 keyword
-  // matches in any of title/h1/breadcrumb/body-head).
-  //
-  let aiGatePaused = false;
-  let aiGateVerdict = null;
-  const activationCallbacks = [];
+  // Keep the broad Skilljar host permission safe: non-AI Skilljar tenants pause
+  // here, while Anthropic Academy and detector failures fail open.
+  const aiGate = window._sbContentLifecycle.createAIGateController({
+    detectAITrainingContent: () => window._sbPlatform?.detectAITrainingContent?.(),
+  });
+  const activationQueue = window._sbContentLifecycle.createActivationQueue({
+    isActive: () => !aiGate.paused,
+  });
 
-  function evaluateAIContentGate({ logPause = false } = {}) {
-    try {
-      // `??` (not `||`) so an explicit `{ isAI: false }` is honored — only
-      // an actually-missing call falls through to the gate-missing default.
-      // The default warns LOUDLY so a future content-script wiring regression
-      // (e.g. platform.js removed from manifest.content_scripts[].js) is
-      // observable in production rather than silently bypassed.
-      aiGateVerdict = window._sbPlatform?.detectAITrainingContent?.() ?? {
-        isAI: true,
-        reason: 'gate-missing',
-        hits: 0,
-      };
-      if (aiGateVerdict.reason === 'gate-missing') {
-        // `console.warn` is preserved by the production minifier (see
-        // scripts/build-bundle.js PROD_PURE). `console.info` is dropped.
-        console.warn(
-          '[SkillBridge] AI-content gate is not wired (window._sbPlatform missing). ' +
-            'Check manifest.content_scripts[].js includes src/lib/platform.js. ' +
-            'Failing open: extension will activate as if no gate existed.',
-        );
-      }
-      // Defensive: only an explicit `false` pauses. Future signature drift
-      // (e.g. detector returning `{ isAI: undefined }` for a pending async
-      // lookup) MUST NOT silently pause the extension on real AI pages.
-      aiGatePaused = aiGateVerdict.isAI === false;
-      if (aiGatePaused && logPause) {
-        console.warn(
-          `[SkillBridge] Non-AI Skilljar tenant detected (${aiGateVerdict.reason}). ` +
-            `Extension paused on this site — gated to AI-training content per ` +
-            `the standing non-goal "Adding other Skilljar customers". ` +
-            `SPA route changes will re-check this gate automatically.`,
-        );
-      }
-    } catch (err) {
-      console.warn('[SkillBridge] AI-content gate failed open:', err?.message);
-      // Fail open — better to over-activate than to silently break the
-      // extension on a transient gate error.
-      aiGatePaused = false;
-      aiGateVerdict = { isAI: true, reason: 'gate-error', hits: 0 };
-    }
-    return aiGateVerdict;
-  }
-
-  evaluateAIContentGate({ logPause: true });
+  aiGate.evaluate({ logPause: true });
 
   // Target ALL visible text elements — including Skilljar-specific
   // Skilljar selectors are centralized in src/lib/selectors.js
@@ -160,16 +104,13 @@
   const originalTexts = new Map();
   const translatedTexts = new Map();
   const MAP_SIZE_CAP = 5000;
-  let pendingActions = [];
   // gtTranslateQueue / gtProcessing / gtGeneration / _offlinePendingItems
   // moved to gt-queue.js in v3.5.15. Read via sb._gt.gtGeneration; mutate
   // via sb._gt.reset() / bumpGeneration() / flushOfflinePending().
-  let domObserver = null;
   let commentTranslateEnabled = false;
   const originalComments = new Map(); // el → original innerHTML for code elements
   let isOffline = !navigator.onLine;
   let isCertDisabled = false;
-  let _termPreviewShown = false;
 
   window.addEventListener('online', () => {
     isOffline = false;
@@ -248,23 +189,11 @@
   }
 
   function whenActive(callback) {
-    if (typeof callback !== 'function') return;
-    if (!aiGatePaused) {
-      callback();
-      return;
-    }
-    activationCallbacks.push(callback);
+    activationQueue.whenActive(callback);
   }
 
   function runActivationCallbacks() {
-    const callbacks = activationCallbacks.splice(0);
-    for (const cb of callbacks) {
-      try {
-        cb();
-      } catch (err) {
-        console.warn('[SkillBridge] Deferred activation callback failed:', err?.message);
-      }
-    }
+    activationQueue.run();
   }
 
   window._sb = {
@@ -320,10 +249,10 @@
       return commentTranslateEnabled;
     },
     get aiGatePaused() {
-      return aiGatePaused;
+      return aiGate.paused;
     },
     get aiGateVerdict() {
-      return aiGateVerdict;
+      return aiGate.verdict;
     },
     get mapSizeCap() {
       return MAP_SIZE_CAP;
@@ -380,218 +309,80 @@
     });
   }
 
-  // ============================================================
-  // PER-LESSON TERM PREVIEW
-  // ============================================================
-
-  function showTermPreview() {
-    if (_termPreviewShown) return;
-    if (currentLang === 'en' || isExamPage) return;
-    if (!translator?.staticDict || Object.keys(translator.staticDict).length === 0) return;
-    if (document.getElementById('si18n-term-preview')) return;
-
-    // Match current URL to a course
-    const url = location.pathname.toLowerCase();
-    let matchedSlug = null;
-    let sections = null;
-    for (const [slug, sects] of FLASHCARD_COURSE_SLUGS_SORTED) {
-      if (url.includes(slug)) {
-        matchedSlug = slug;
-        sections = sects;
-        break;
-      }
-    }
-    if (!matchedSlug) return;
-    _termPreviewShown = true;
-
-    const dismissKey = `termPreview_${matchedSlug}`;
-    chrome.storage.local.get([dismissKey], (result) => {
-      if (result[dismissKey]) return;
-
-      // Gather terms from matched sections
-      let terms = [];
-      const lang = currentLang;
-      if (sections && translator.premiumLanguages.includes(lang)) {
-        try {
-          const jsonUrl = chrome.runtime.getURL(`src/data/${lang}.json`);
-          fetch(jsonUrl)
-            .then((r) => r.json())
-            .then((data) => {
-              for (const sect of sections) {
-                if (data[sect] && typeof data[sect] === 'object') {
-                  for (const [en, tr] of Object.entries(data[sect])) {
-                    if (en !== tr && en.length >= 3 && en.length <= 40 && tr.length >= 1) {
-                      terms.push({ en, tr });
-                    }
-                  }
-                }
-              }
-              if (terms.length > 0) _renderTermPreview(terms.slice(0, 6), matchedSlug, dismissKey);
-            })
-            .catch(() => {});
-        } catch (_ignored) {
-          /* non-fatal */
-        }
-      } else {
-        // Fallback: pick short terms from staticDict
-        terms = Object.entries(translator.staticDict)
-          .filter(([k, v]) => k !== v && k.length >= 3 && k.length <= 40)
-          .map(([en, tr]) => ({ en, tr }))
-          .slice(0, 6);
-        if (terms.length > 0) _renderTermPreview(terms, matchedSlug, dismissKey);
-      }
-    });
-  }
-
-  function _renderTermPreview(terms, slug, dismissKey) {
-    _termPreviewShown = true;
-    const card = document.createElement('div');
-    card.id = 'si18n-term-preview';
-    card.setAttribute('role', 'status');
-    card.setAttribute('aria-live', 'polite');
-
-    const courseName = slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-
-    card.innerHTML = `
-      <div class="si18n-tp-header">
-        <span class="si18n-tp-title">${escapeHtml(t(TERM_PREVIEW_LABELS.title))} · ${escapeHtml(courseName)}</span>
-        <button class="si18n-tp-close" aria-label="Close">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-      <div class="si18n-tp-terms">
-        ${terms.map((term) => `<div class="si18n-tp-chip"><span class="si18n-tp-en">${escapeHtml(term.en)}</span><span class="si18n-tp-tr">${escapeHtml(term.tr)}</span></div>`).join('')}
-      </div>
-      <button class="si18n-tp-viewall">${escapeHtml(t(TERM_PREVIEW_LABELS.viewAll))} →</button>
-    `;
-    document.body.appendChild(card);
-
-    requestAnimationFrame(() => card.classList.add('visible'));
-
-    const dismiss = () => {
-      card.classList.remove('visible');
-      chrome.storage.local.set({ [dismissKey]: true });
-      setTimeout(() => card.remove(), 400);
-    };
-
-    card.querySelector('.si18n-tp-close').addEventListener('click', dismiss);
-    card.querySelector('.si18n-tp-viewall').addEventListener('click', () => {
-      dismiss();
+  const termPreview = window._sbContentTermPreview.createTermPreview({
+    getCurrentLang: () => currentLang,
+    getIsExamPage: () => isExamPage,
+    getTranslator: () => translator,
+    courseSlugs: FLASHCARD_COURSE_SLUGS_SORTED,
+    labels: TERM_PREVIEW_LABELS,
+    translateLabel: (labelMap) => t(labelMap),
+    escapeHtml,
+    storage: chrome.storage.local,
+    getDataUrl: (lang) => chrome.runtime.getURL(`src/data/${lang}.json`),
+    openFlashcards: () => {
       window._sb.toggleSidebar?.();
       setTimeout(() => window._sb.toggleFlashcardPanel?.(), 400);
-    });
+    },
+  });
 
-    // Auto-dismiss after 15 seconds
-    setTimeout(() => {
-      if (document.getElementById('si18n-term-preview')) dismiss();
-    }, 15000);
+  function showTermPreview() {
+    termPreview.show();
   }
 
-  // ============================================================
-  // REGISTER MESSAGE LISTENER IMMEDIATELY (before async init)
-  // ============================================================
-
-  chrome.runtime.onMessage.addListener(handleMessage);
-
-  function handleMessage(request, sender, sendResponse) {
-    // Catch the inverse of background.js' guard: if a `type`-shaped message
-    // (intended for the bg worker) somehow reached the content script, we
-    // would otherwise silently fall through to "Unknown action" and the
-    // sender just sees a generic failure. Warn loudly in dev so the
-    // misroute is obvious.
-    if (request && typeof request === 'object' && 'type' in request && !('action' in request)) {
-      console.warn(
-        '[SkillBridge] Content received `type`-shaped message — should this go to background?',
-        request.type,
-      );
-    }
-
-    if (isCertDisabled && !['ping', 'restoreOriginal', 'cacheCleanup'].includes(request?.action)) {
-      sendResponse({ success: false, error: 'SkillBridge disabled on certification pages' });
-      return false;
-    }
-
-    if (!isReady && request.action === 'translatePage') {
-      pendingActions.push({ request, sendResponse });
-      sendResponse({ success: true, queued: true });
-      return false;
-    }
-
-    switch (request.action) {
-      case 'translatePage':
-        translatePage(request.language)
-          .then(() => {
-            sendResponse({ success: true });
-          })
-          .catch((err) => {
-            console.error('[SkillBridge] translatePage error:', err);
-            sendResponse({ success: false, error: err.message });
-          });
-        return true;
-
-      case 'restoreOriginal':
-        restoreOriginal();
-        sendResponse({ success: true });
-        return false;
-
-      case 'toggleSidebar':
-        window._sb.toggleSidebar?.();
-        sendResponse({ success: true });
-        return false;
-
-      case 'getPageContext':
-        sendResponse({ context: getPageContext() });
-        return false;
-
-      case 'setLanguage': {
-        const newLang = request.language;
-        if (newLang !== 'en' && !SUPPORTED_LANGUAGE_MAP[newLang]) {
-          sendResponse({ success: false, error: 'Unsupported language' });
-          return false;
-        }
-        switchLanguage(newLang, {
-          onDone: () => sendResponse({ success: true }),
-        }).catch((err) => {
-          console.error('[SkillBridge] setLanguage error:', err);
-          sendResponse({ success: false, error: err.message });
+  // Register message listener immediately (before async init).
+  const messageRouter = window._sbContentMessages.createContentMessageRouter({
+    isCertificationDisabled: () => isCertDisabled,
+    isReady: () => isReady,
+    translatePage,
+    restoreOriginal,
+    toggleSidebar: () => window._sb.toggleSidebar?.(),
+    getPageContext,
+    isSupportedLanguage: (lang) => lang === 'en' || !!SUPPORTED_LANGUAGE_MAP[lang],
+    switchLanguage,
+    cleanupCache: () => {
+      // Triggered by the 24h alarm in background.js. Page-load fallback also
+      // runs this on translator init, so the alarm path is for long-pinned tabs.
+      translator
+        ?._cleanupExpiredCache()
+        .then(() => translator?._checkStorageQuota())
+        .catch((err) => console.warn('[SkillBridge] alarm cleanup error:', err.message));
+    },
+    setCommentTranslation: (enabled) => {
+      commentTranslateEnabled = enabled;
+      chrome.storage.local.set({ commentTranslate: enabled });
+      if (enabled && currentLang !== 'en') {
+        window._sb.translateCodeComments?.(currentLang);
+      } else {
+        originalComments.forEach((html, el) => {
+          if (el && el.parentNode) el.innerHTML = html;
         });
-        return true;
+        originalComments.clear();
       }
+    },
+  });
+  chrome.runtime.onMessage.addListener(messageRouter.handleMessage);
 
-      case 'ping':
-        sendResponse({ ready: isReady });
-        return false;
-
-      case 'cacheCleanup':
-        // Triggered by the 24h alarm in background.js. Page-load fallback
-        // also runs this on translator init, so the alarm path is for
-        // long-pinned tabs that never get a fresh load.
-        translator
-          ?._cleanupExpiredCache()
-          .then(() => translator?._checkStorageQuota())
-          .catch((err) => console.warn('[SkillBridge] alarm cleanup error:', err.message));
-        sendResponse({ success: true });
-        return false;
-
-      case 'toggleCommentTranslation':
-        commentTranslateEnabled = request.enabled;
-        chrome.storage.local.set({ commentTranslate: request.enabled });
-        if (request.enabled && currentLang !== 'en') {
-          window._sb.translateCodeComments?.(currentLang);
-        } else {
-          originalComments.forEach((html, el) => {
-            if (el && el.parentNode) el.innerHTML = html;
-          });
-          originalComments.clear();
-        }
-        sendResponse({ success: true });
-        return false;
-
-      default:
-        sendResponse({ success: false, error: 'Unknown action' });
-        return false;
-    }
-  }
+  const domTranslationObserver = window._sbContentDomObserver.createContentDomObserver({
+    getCurrentLang: () => currentLang,
+    getTranslator: () => translator,
+    getIsReady: () => isReady,
+    getOriginalTextCount: () => originalTexts.size,
+    getTranslatedTextCount: () => translatedTexts.size,
+    pruneDetachedEntries: () => sb._gt.pruneDetachedEntries(),
+    getTranslatableSelector: () => TRANSLATABLE_SELECTOR,
+    getExcludeSelector: () => EXCLUDE_SELECTOR,
+    getTranslationScope: () => sb.translationScope,
+    getHostCaps: () => sb.hostCaps,
+    getIsExamPage: () => sb.isExamPage,
+    setIsExamPage: (value) => {
+      sb.isExamPage = value;
+    },
+    detectExamPage: () => sb.detectExamPage(),
+    processOneElement: (el, lang) => sb._gt.processOneElement(el, lang),
+    queueForGoogleTranslate: (elements, lang) => sb._gt.queueForGoogleTranslate(elements, lang),
+    delays: SKILLBRIDGE_DELAYS,
+    thresholds: SKILLBRIDGE_THRESHOLDS,
+  });
 
   // ============================================================
   // INITIALIZATION
@@ -600,7 +391,7 @@
   let initStarted = false;
 
   async function init() {
-    if (aiGatePaused) return;
+    if (aiGate.paused) return;
     if (initStarted) return;
     initStarted = true;
     try {
@@ -647,7 +438,7 @@
 
       isReady = true;
 
-      for (const { request } of pendingActions) {
+      for (const request of messageRouter.drainPendingTranslateRequests()) {
         if (request.action === 'translatePage') {
           currentLang = request.language;
           if (Object.keys(translator.staticDict).length === 0) {
@@ -656,9 +447,8 @@
           sb._gt.applyStaticTranslations(request.language);
         }
       }
-      pendingActions = [];
 
-      observeDOM();
+      domTranslationObserver.observe();
 
       if (stored.autoTranslate && currentLang !== 'en') {
         setTimeout(() => sb._gt.applyStaticTranslations(currentLang), SKILLBRIDGE_DELAYS.LATE_CONTENT);
@@ -752,8 +542,7 @@
     // _offlinePendingItems since v3.5.15 — reset() clears all four and bumps
     // gtGeneration so any in-flight Promise.all bails before writing.
     sb._gt?.reset?.();
-    clearTimeout(translateTimeout);
-    pendingNodes = [];
+    domTranslationObserver.resetPending();
     currentLang = 'en';
     window._protectedTerms.resetProtectedTerms();
     updateLangClass('en');
@@ -767,7 +556,7 @@
   function teardownCertificationSurface() {
     isCertDisabled = true;
     window._sb.cancelActiveStream?.();
-    domObserver?.disconnect();
+    domTranslationObserver.disconnect();
     subtitleManager?.destroy();
     subtitleManager = null;
     restoreOriginal();
@@ -804,7 +593,7 @@
 
   function teardownNonAIContentSurface() {
     window._sb.cancelActiveStream?.();
-    domObserver?.disconnect();
+    domTranslationObserver.disconnect();
     subtitleManager?.destroy();
     subtitleManager = null;
     if (translator) restoreOriginal();
@@ -1034,132 +823,16 @@
   };
   sb.translationScope = sb.hostCaps.contentScope;
 
-  // ============================================================
-  // DOM OBSERVER (with cleanup)
-  // ============================================================
-
-  let _pruneScheduled = false;
-  function schedulePrune() {
-    if (_pruneScheduled) return;
-    _pruneScheduled = true;
-    requestAnimationFrame(() => {
-      _pruneScheduled = false;
-      sb._gt.pruneDetachedEntries();
-    });
-  }
-
-  function observeDOM() {
-    domObserver = new MutationObserver((mutations) => {
-      let hasRemovals = false;
-      for (const mutation of mutations) {
-        if (mutation.removedNodes.length > 0) hasRemovals = true;
-
-        if (currentLang === 'en' || !translator || !isReady) continue;
-        for (const node of mutation.addedNodes) {
-          if (
-            node.nodeType === Node.ELEMENT_NODE &&
-            !node.closest('.skillbridge-sidebar') &&
-            !node.closest('#skillbridge-bridge')
-          ) {
-            debounceTranslateNew(node);
-          }
-        }
-      }
-      if (hasRemovals && (originalTexts.size > 0 || translatedTexts.size > 0)) {
-        schedulePrune();
-      }
-    });
-
-    domObserver.observe(document.body, { childList: true, subtree: true });
-  }
-
-  // Cleanup on page hide (pagehide is preferred over unload — doesn't block bfcache)
-  window.addEventListener('pagehide', () => {
-    domObserver?.disconnect();
-    clearTimeout(translateTimeout);
-    pendingNodes = [];
-    // Restore original history methods to prevent wrapper stacking on bfcache restore
-    if (_origPushState) history.pushState = _origPushState;
-    if (_origReplaceState) history.replaceState = _origReplaceState;
-  });
-
-  let translateTimeout;
-  let pendingNodes = [];
-  function debounceTranslateNew(node) {
-    if (pendingNodes.length >= SKILLBRIDGE_THRESHOLDS.PENDING_NODES_MAX) return;
-    pendingNodes.push(node);
-    clearTimeout(translateTimeout);
-    translateTimeout = setTimeout(() => {
-      const nodes = pendingNodes.splice(0);
-      if (currentLang !== 'en' && translator) {
-        const elements = [];
-        for (const n of nodes) {
-          if (n.matches?.(TRANSLATABLE_SELECTOR)) {
-            elements.push(n);
-          } else {
-            elements.push(...Array.from(n.querySelectorAll?.(TRANSLATABLE_SELECTOR) || []));
-          }
-        }
-
-        // Honour the per-host content scope: on claude.com tutorials only
-        // translate freshly-inserted nodes that live inside the lesson root,
-        // never the surrounding marketing shell. null scope = no restriction.
-        const scope = sb.translationScope;
-        const scoped = scope ? elements.filter((el) => el.closest(scope)) : elements;
-
-        // The freshly-inserted nodes may BE a late-rendered quiz (SPA/AJAX) on a
-        // page whose URL never matched an exam pattern, so detectExamPage() was
-        // false at init. Re-detect here (it checks the quiz DOM shape, which now
-        // exists) so processOneElement's answer-skip chokepoint actually fires —
-        // otherwise late answer choices get translated, cached, and Gemini-verified.
-        if (sb.hostCaps?.examDetection !== false && !sb.isExamPage) sb.isExamPage = sb.detectExamPage();
-
-        const gtCandidates = [];
-
-        for (const el of scoped) {
-          if (el.closest(EXCLUDE_SELECTOR)) continue;
-          const result = sb._gt.processOneElement(el, currentLang);
-          if (result === 'gt') gtCandidates.push(el);
-        }
-
-        if (gtCandidates.length > 0) {
-          sb._gt.queueForGoogleTranslate(gtCandidates, currentLang);
-        }
-      }
-    }, SKILLBRIDGE_DELAYS.DOM_DEBOUNCE);
-  }
-
-  // ============================================================
-  // SPA NAVIGATION — re-evaluate on route change
-  // ============================================================
-
-  let _lastHref = location.href;
-
-  function onRouteChange() {
-    const href = location.href;
-    if (href === _lastHref) return;
-    _lastHref = href;
-
-    // Certification pages must win over the generic AI-content gate. They are
-    // intentionally "non-AI" by content, but need the stronger cert teardown
-    // state so all SkillBridge surfaces remain disabled until the user leaves.
-    if (sb.hostCaps.examDetection && CERT_DISABLE_PATTERNS.some((p) => p.test(href))) {
-      teardownCertificationSurface();
-      console.info('[SkillBridge] Navigated to certification page — extension disabled.');
-      return;
-    }
-
-    const wasPaused = aiGatePaused;
-    evaluateAIContentGate({ logPause: true });
-    if (aiGatePaused) {
-      if (!wasPaused && initStarted) teardownNonAIContentSurface();
-      return;
-    }
-    if (wasPaused && !initStarted) {
-      init();
-      return;
-    }
-    if (wasPaused && initStarted) {
+  const routeController = window._sbContentLifecycle.createRouteController({
+    getHref: () => location.href,
+    isCertificationHref: (href) => sb.hostCaps.examDetection && CERT_DISABLE_PATTERNS.some((p) => p.test(href)),
+    teardownCertificationSurface,
+    evaluateGate: (opts) => aiGate.evaluate(opts),
+    isGatePaused: () => aiGate.paused,
+    isInitStarted: () => initStarted,
+    init,
+    teardownNonAIContentSurface,
+    rehydrateAfterGateResume: () => {
       if (sb.hostCaps.headerControls) {
         window._sb.injectHeaderLanguageSelect?.();
         window._sb.injectDarkModeToggle?.();
@@ -1167,68 +840,30 @@
       if (sb.hostCaps.sidebar) window._sb.injectSidebar?.();
       if (sb.hostCaps.fab) window._sb.injectFloatingButton?.();
       runActivationCallbacks();
-    }
-
-    // Abort any in-flight tutor stream — its target lesson context is now
-    // stale, and onChunk would write into a chat bubble for a page the
-    // user has already left.
-    window._sb.cancelActiveStream?.();
-
-    reenableAfterCertificationSurface();
-
-    // Re-enable observer if it was disconnected (e.g., after visiting a cert page)
-    if (!domObserver || !document.body) {
-      observeDOM();
-    } else {
-      try {
-        domObserver.observe(document.body, { childList: true, subtree: true });
-      } catch (_ignored) {
-        /* observer already active */
+    },
+    cancelActiveStream: () => window._sb.cancelActiveStream?.(),
+    reenableAfterCertificationSurface,
+    ensureObserver: () => domTranslationObserver.observe(),
+    ensureSubtitleManager,
+    redetectExamPage: () => {
+      isExamPage = sb.hostCaps.examDetection ? detectExamPage() : false;
+    },
+    reapplyTranslations: () => {
+      if (currentLang !== 'en' && translator && isReady) {
+        setTimeout(() => sb._gt.applyStaticTranslations(currentLang), SKILLBRIDGE_DELAYS.LATE_CONTENT);
       }
-    }
-
-    // Rebuild the subtitle manager if a prior cert-page visit tore it down — a
-    // normal lesson can embed videos again. No-op when one is already live or
-    // the host doesn't support YouTube subtitles.
-    ensureSubtitleManager();
-
-    // Re-detect exam mode for the new page (Skilljar hosts only — claude.com
-    // tutorials have no Skilljar exams, so honour examDetection here too).
-    isExamPage = sb.hostCaps.examDetection ? detectExamPage() : false;
-
-    // Re-apply translations for new content
-    if (currentLang !== 'en' && translator && isReady) {
-      setTimeout(() => sb._gt.applyStaticTranslations(currentLang), SKILLBRIDGE_DELAYS.LATE_CONTENT);
-    }
-  }
-
-  window.addEventListener('popstate', onRouteChange);
-  window.addEventListener('hashchange', onRouteChange);
-
-  // Catch pushState/replaceState (Skilljar SPA uses these).
-  // Guard against double-wrapping: extension reloads/updates re-run this
-  // module; without the marker we'd capture the previous wrapper as the
-  // "original" and stack handlers, doubling onRouteChange per nav.
-  let _origPushState = null;
-  let _origReplaceState = null;
-  if (!history.pushState.__sb_wrapped__) {
-    _origPushState = history.pushState;
-    _origReplaceState = history.replaceState;
-    history.pushState = function (...args) {
-      _origPushState.apply(this, args);
-      onRouteChange();
-    };
-    history.replaceState = function (...args) {
-      _origReplaceState.apply(this, args);
-      onRouteChange();
-    };
-    history.pushState.__sb_wrapped__ = true;
-    history.replaceState.__sb_wrapped__ = true;
-  }
+    },
+    onPageHide: () => {
+      domTranslationObserver.disconnect();
+      domTranslationObserver.resetPending();
+    },
+  });
 
   // ============================================================
   // BOOT
   // ============================================================
+
+  routeController.start();
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);

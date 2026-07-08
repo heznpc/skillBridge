@@ -71,15 +71,25 @@ test.describe('SkillBridge — tutor stream cancel flow', () => {
   test('cancelActiveStream mid-stream cleans up cursor + leaves partial text + allows next send', async () => {
     // Pace this test slower than the happy-path tutor spec so the cancel
     // window is deterministic under both headed and headless Chromium.
-    await evalInContentWorld(extCtx.context, 'setPuterChunkDelay', 400);
+    await evalInContentWorld(extCtx.context, 'setPuterChunkDelay', 1000);
 
-    // Stream is paced at 400ms/chunk × 3 chunks = ~1200ms total.
+    // Stream is paced at 1000ms/chunk x 3 chunks. Wait for the first chunk
+    // to actually land instead of sleeping a fixed interval; on a busy local
+    // browser a fixed 500ms wait can accidentally cancel after natural end.
     const send = await evalInContentWorld(extCtx.context, 'sendChat', 'Cancel-me prompt');
     expect(send?.ok).toBe(true);
 
-    // Wait long enough for chunk 1 to land but NOT chunk 3.
-    // Chunk 1 should arrive around 400ms; chunk 2 around 800ms.
-    await page.waitForTimeout(500);
+    const firstChunkDeadline = Date.now() + 5_000;
+    let preCancelLog = null;
+    while (Date.now() < firstChunkDeadline) {
+      preCancelLog = await evalInContentWorld(extCtx.context, 'readChatLog');
+      const lastBot = (preCancelLog || []).filter((m) => m.role === 'bot').slice(-1)[0];
+      if (lastBot?.text?.includes('안녕하세요') && !lastBot.text.includes('주는 입력입니다')) break;
+      await page.waitForTimeout(50);
+    }
+    const preCancelBot = (preCancelLog || []).filter((m) => m.role === 'bot').slice(-1)[0];
+    expect(preCancelBot?.text || '').toContain('안녕하세요');
+    expect(preCancelBot?.text || '').not.toContain('주는 입력입니다');
 
     const cancel = await evalInContentWorld(extCtx.context, 'cancelStream');
     expect(cancel?.ok).toBe(true);
