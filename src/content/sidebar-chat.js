@@ -12,27 +12,7 @@
     return;
   }
 
-  // Sub-panel state shared with chat-history.js (and, eventually,
-  // chat-flashcards.js when that gets extracted). Kept on `sb._chat.state`
-  // so any module loaded after content.js can read/mutate the same object
-  // without us re-introducing a tangle of ad-hoc globals.
   sb._chat = sb._chat || {};
-  sb._chat.state = sb._chat.state || {
-    savedChatHTML: null,
-    historyPanelOpen: false,
-    flashcardPanelOpen: false,
-    bookmarksPanelOpen: false,
-    recentPanelOpen: false,
-    dashboardPanelOpen: false,
-  };
-  const _state = sb._chat.state;
-  const SUB_PANEL_FLAGS = {
-    history: 'historyPanelOpen',
-    flashcard: 'flashcardPanelOpen',
-    bookmarks: 'bookmarksPanelOpen',
-    recent: 'recentPanelOpen',
-    dashboard: 'dashboardPanelOpen',
-  };
 
   let scrollRAF = null;
   let isSending = false;
@@ -51,121 +31,15 @@
   }
 
   // ============================================================
-  // SHADOW UI ROOT — style isolation from the host page
-  // ============================================================
-  // Skilljar styles bare element selectors (button {}, svg {}, input {}, …)
-  // that leak into our injected controls whenever they don't set those
-  // properties themselves — the FAB icon collapsed (#182) and the reset button
-  // turned host-blue (#185) exactly this way. Instead of chasing each leak, we
-  // host our injected UI inside an OPEN shadow root: the page stylesheet cannot
-  // reach in (shadow encapsulation), so that leak class becomes impossible.
-  //
-  // Two boundary facts shape the design:
-  //   - Ancestor state selectors (html.si18n-dark, body.si18n-lang-*) do NOT
-  //     cross into the shadow, so we mirror those classes onto the shadow HOST
-  //     and the shadow CSS targets them via :host(...).
-  //   - CSS custom properties (--si18n-*) DO inherit through the boundary, so
-  //     var() references keep resolving from :root.
-  //
-  // The FAB, sidebar, and TOC live here; blend-in components (header
-  // controls) stay in the light DOM by design. Shadow UI is styled by the
-  // adopted, :host()-transformed CSS partials (see shadow-css.js); the FAB
-  // has a separate shadow-only stylesheet in styles/fab.css.
-  function getUiRoot() {
-    if (sb.certDisabled) return null;
-    if (sb._uiHost && sb._uiHost.isConnected) return sb._uiHost.shadowRoot;
-    const host = document.createElement('div');
-    host.id = 'skillbridge-root';
-    host.attachShadow({ mode: 'open' });
-    // Adopt the transformed content CSS so UI that moves into this root is
-    // styled from the same manifest-declared partials as the light DOM.
-    window._sbShadowCss?.ensureShadowStylesheet(host.shadowRoot);
-    syncHostThemeClasses(host);
-    document.body.appendChild(host);
-    sb._uiHost = host;
-    return host.shadowRoot;
-  }
-
-  // Mirror host-page theme/locale state onto the shadow host so shadow CSS can
-  // react via :host(.si18n-dark) / :host(.si18n-lang-xx). Kept in sync because
-  // the dark toggle and language switch flip these classes after first paint.
-  function syncHostThemeClasses(host) {
-    const apply = () => {
-      host.classList.toggle('si18n-dark', document.documentElement.classList.contains('si18n-dark'));
-      for (const c of [...host.classList]) {
-        if (c.startsWith('si18n-lang-') || c === 'si18n-rtl') host.classList.remove(c);
-      }
-      for (const c of document.body.classList) {
-        if (c.startsWith('si18n-lang-') || c === 'si18n-rtl') host.classList.add(c);
-      }
-    };
-    apply();
-    // Self-disconnect when the host leaves the DOM (host-page swap): a fresh
-    // host from getUiRoot() brings its own observer, so the old one must not
-    // linger and keep mutating a detached node.
-    const obs = new MutationObserver(() => {
-      if (!host.isConnected) {
-        obs.disconnect();
-        return;
-      }
-      apply();
-    });
-    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    obs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
-  }
-
-  // Shadow-aware element lookups. Query the shadow UI root first (the sidebar
-  // and FAB live there), then fall back to the light DOM for host-page UI and
-  // for components not yet migrated into the shadow root. Every module calls
-  // sb.$id / sb.$ instead of document.getElementById / querySelector so a
-  // single call resolves correctly regardless of which side an element is on
-  // during the staged migration.
-  // isConnected guard: if the host was ever detached (host-page DOM swap), a
-  // lookup must not return elements from the dead root — fall through to the
-  // light DOM (null there reads as "not present", which handlers treat as a
-  // no-op) until getUiRoot() builds a fresh host.
-  sb.$id = (id) =>
-    (sb._uiHost && sb._uiHost.isConnected && sb._uiHost.shadowRoot.getElementById(id)) || document.getElementById(id);
-  sb.$ = (sel) =>
-    (sb._uiHost && sb._uiHost.isConnected && sb._uiHost.shadowRoot.querySelector(sel)) || document.querySelector(sel);
-
-  let fabStylePromise = null;
-
-  function ensureFabStyle(root) {
-    if (!root) return Promise.resolve(false);
-    if (root.querySelector('style[data-sb-fab]')) return Promise.resolve(true);
-    if (!fabStylePromise) {
-      fabStylePromise = fetch(chrome.runtime.getURL('src/content/styles/fab.css'))
-        .then((r) => {
-          if (!r.ok) throw new Error(`HTTP ${r.status}`);
-          return r.text();
-        })
-        .catch((err) => {
-          fabStylePromise = null;
-          console.warn('[SkillBridge] FAB stylesheet load failed:', err && err.message);
-          return null;
-        });
-    }
-    return fabStylePromise.then((css) => {
-      if (!css || root.querySelector('style[data-sb-fab]')) return Boolean(css);
-      const style = document.createElement('style');
-      style.setAttribute('data-sb-fab', '');
-      style.textContent = css;
-      root.appendChild(style);
-      return true;
-    });
-  }
-
-  // ============================================================
   // FLOATING BUTTON
   // ============================================================
 
   function injectFloatingButton() {
     if (sb.certDisabled) return;
-    const root = getUiRoot();
+    const root = sb.uiRoot?.();
     if (!root) return;
     if (root.getElementById('skillbridge-fab')) return;
-    ensureFabStyle(root).then((ready) => {
+    (sb._uiRoot?.ensureFabStyle?.(root) || Promise.resolve(false)).then((ready) => {
       if (!ready || !root.isConnected || root.getElementById('skillbridge-fab')) return;
       const btn = document.createElement('button');
       btn.id = 'skillbridge-fab';
@@ -227,7 +101,7 @@
     sidebar.innerHTML = getSidebarHTML();
     // Mount inside the shadow UI root so the host page's CSS can't reach the
     // sidebar; it's styled by the adopted (transformed) content CSS.
-    const root = getUiRoot();
+    const root = sb.uiRoot?.();
     if (!root) return;
     root.appendChild(sidebar);
     setTimeout(bindSidebarEvents, SKILLBRIDGE_DELAYS.SIDEBAR_BIND);
@@ -347,7 +221,7 @@
     });
     sb.$id('si18n-history-btn')?.addEventListener('click', () => sb._chat.toggleHistoryPanel?.());
     sb.$id('si18n-fc-btn')?.addEventListener('click', () => sb._chat.toggleFlashcardPanel?.());
-    sb.$id('si18n-pdf-btn')?.addEventListener('click', exportLessonPDF);
+    sb.$id('si18n-pdf-btn')?.addEventListener('click', () => sb.exportLessonPDF?.());
     sb.$id('si18n-bm-btn')?.addEventListener('click', () => sb._chat.toggleBookmarksPanel?.());
     sb.$id('si18n-recent-btn')?.addEventListener('click', () => sb._chat.toggleRecentPanel?.());
     sb.$id('si18n-dash-btn')?.addEventListener('click', () => sb._chat.toggleDashboardPanel?.());
@@ -397,6 +271,11 @@
         sendChatMessage();
       }
     });
+  }
+
+  function restoreChatPanelEvents() {
+    bindChatInputEvents();
+    bindExampleQuestions();
   }
 
   function updateLocalizedLabels() {
@@ -619,61 +498,6 @@
   // to chat-history.js. Both attach their public surface onto `sb._chat`.
 
   // ============================================================
-  // SUB-PANEL STATE MACHINERY (shared with chat-history.js / flashcards)
-  // ============================================================
-
-  function resetSubPanelFlags() {
-    for (const flag of Object.values(SUB_PANEL_FLAGS)) _state[flag] = false;
-  }
-
-  function anyOtherSubPanelOpen(name) {
-    const currentFlag = SUB_PANEL_FLAGS[name];
-    return Object.values(SUB_PANEL_FLAGS).some((flag) => flag !== currentFlag && _state[flag]);
-  }
-
-  function openSubPanel(name, html, onMount) {
-    const flag = SUB_PANEL_FLAGS[name];
-    if (!flag) {
-      console.warn('[SkillBridge] Unknown sub-panel:', name);
-      return null;
-    }
-
-    const chatPanel = sb.$id('si18n-panel-chat');
-    if (!chatPanel) return null;
-
-    if (_state[flag]) {
-      closeSubPanel();
-      return null;
-    }
-    if (anyOtherSubPanelOpen(name)) closeSubPanel();
-
-    cancelActiveStream();
-    _state.savedChatHTML = chatPanel.innerHTML;
-    resetSubPanelFlags();
-    _state[flag] = true;
-    chatPanel.replaceChildren();
-    chatPanel.insertAdjacentHTML('afterbegin', typeof html === 'function' ? html() : html);
-    onMount?.(chatPanel);
-    return chatPanel;
-  }
-
-  function closeSubPanel() {
-    const chatPanel = sb.$id('si18n-panel-chat');
-    if (!chatPanel || _state.savedChatHTML === null) return;
-    // The chat bubble that was streaming is about to be replaced — abort
-    // the stream so its onChunk callback doesn't write into a detached node.
-    cancelActiveStream();
-    chatPanel.innerHTML = _state.savedChatHTML;
-    _state.savedChatHTML = null;
-    resetSubPanelFlags();
-    bindChatInputEvents();
-    // Example-question chips may still be in the restored chat HTML; their
-    // click handlers must be re-bound too (closeSubPanel previously only
-    // re-bound the input).
-    bindExampleQuestions();
-  }
-
-  // ============================================================
   // SIDEBAR TOGGLE
   // ============================================================
 
@@ -756,126 +580,16 @@
     }
   }
 
-  // ============================================================
-  // PDF EXPORT
-  // ============================================================
-
-  function exportLessonPDF() {
-    const lessonContent = sb.$(SKILLJAR_SELECTORS.lessonContent) || sb.$('main');
-    if (!lessonContent) return;
-
-    const title = sb.$('h1')?.textContent?.trim() || 'SkillBridge Lesson';
-    const langName = sb.translator?.supportedLanguages?.[sb.currentLang] || sb.currentLang;
-
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      // Popup blocker rejected the open. Without a signal the user thinks
-      // the button did nothing. alert() is intentionally used over a
-      // banner here — the failure is rare and the recovery (allow popups)
-      // requires user attention, not a passive notification.
-      alert(sb.t(PDF_EXPORT_LABELS.blocked));
-      return;
-    }
-
-    // Sanitize the lesson body BEFORE injecting it into the new window.
-    // The previous version wrote `lessonContent.innerHTML` directly, then
-    // tried to remove `<script>`/`<iframe>` after `document.close()` — by
-    // which point inline scripts had already executed. Sanitize the
-    // cloned DOM tree first; serialize the cleaned tree into the new doc.
-    const lessonClone = lessonContent.cloneNode(true);
-    const DANGEROUS_TAGS = 'script, iframe, object, embed, link[rel="import"], style, base, meta';
-    lessonClone.querySelectorAll(DANGEROUS_TAGS).forEach((el) => el.remove());
-    // Strip the extension's own UI elements that may be inside the lesson.
-    lessonClone
-      .querySelectorAll('[class*="si18n"], [id*="si18n"], [class*="skillbridge"]')
-      .forEach((el) => el.remove());
-    // Strip inline event handlers + dangerous URL schemes from every attribute
-    // (cloneNode preserves both). The scheme check normalizes the value first:
-    // browsers ignore ASCII whitespace + C0 control chars INSIDE a URL scheme, so
-    // "java&#x09;script:" — which the DOM parser has already decoded to a real tab —
-    // resolves to "javascript:" and would slip through a naive /^javascript:/ test.
-    // data: is blocked on NAVIGABLE attributes (href/xlink:href/formaction/action/
-    // ping) but allowed on `src` so legitimate inline data:image content survives.
-    const NAV_URL_ATTRS = new Set(['href', 'xlink:href', 'formaction', 'action', 'ping']);
-    const dangerousScheme = (value, blockData) => {
-      const v = String(value)
-        // Strip the full C0-control + space range: browsers ignore these inside a
-        // URL scheme, so a tab-obfuscated "java\tscript:" collapses to "javascript:"
-        // before the scheme test. Stripping control chars is the point of this rule.
-        // eslint-disable-next-line no-control-regex
-        .replace(/[\u0000-\u0020]+/g, '')
-        .toLowerCase();
-      return /^(?:javascript|vbscript):/.test(v) || (blockData && v.startsWith('data:'));
-    };
-    lessonClone.querySelectorAll('*').forEach((el) => {
-      for (const attr of [...el.attributes]) {
-        const name = attr.name.toLowerCase();
-        if (name.startsWith('on')) {
-          el.removeAttribute(attr.name);
-        } else if (
-          NAV_URL_ATTRS.has(name)
-            ? dangerousScheme(attr.value, true)
-            : name === 'src' && dangerousScheme(attr.value, false)
-        ) {
-          el.removeAttribute(attr.name);
-        }
-      }
-    });
-
-    printWindow.document.write(`<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>${sb.escapeHtml(title)}</title>
-<style>
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 24px; color: #1c1917; line-height: 1.7; font-size: 14px; }
-  h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
-  h2 { font-size: 18px; margin-top: 28px; }
-  h3 { font-size: 16px; margin-top: 20px; }
-  p { margin: 10px 0; }
-  code { background: #f5f5f4; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
-  pre { background: #f5f5f4; padding: 14px; border-radius: 8px; overflow-x: auto; font-size: 13px; }
-  img { max-width: 100%; height: auto; }
-  .si18n-pdf-meta { color: #78716c; font-size: 12px; margin-bottom: 24px; border-bottom: 1px solid #e7e5e4; padding-bottom: 12px; }
-  @media print { body { margin: 20px; } }
-</style>
-</head>
-<body>
-  <h1>${sb.escapeHtml(title)}</h1>
-  <div class="si18n-pdf-meta">SkillBridge · ${sb.escapeHtml(langName)} · ${new Date().toLocaleDateString()}</div>
-  ${lessonClone.innerHTML}
-</body>
-</html>`);
-    printWindow.document.close();
-
-    setTimeout(() => {
-      // The user may have closed the popup before the timer fires.
-      try {
-        if (!printWindow.closed) printWindow.print();
-      } catch (_e) {
-        /* window already closed — nothing to do */
-      }
-    }, 500);
-  }
-
   // Export to shared namespace.
   // `formatResponse` is now provided by chat-render.js (loaded earlier in
   // the manifest order); we deliberately do NOT re-assign it here.
   sb.injectSidebar = injectSidebar;
   sb.injectFloatingButton = injectFloatingButton;
   sb.toggleSidebar = toggleSidebar;
-  // Shared shadow UI root accessor — later migration stages move more
-  // body-injected UI into this same root and query it via sb.uiRoot().
-  sb.uiRoot = getUiRoot;
   sb.updateLocalizedLabels = updateLocalizedLabels;
   // `sb.toggleFlashcardPanel` is set by chat-flashcards.js since v3.5.27;
   // keyboard-shortcuts.js's call-site reads through that namespace handle.
   sb.cancelActiveStream = cancelActiveStream;
-  // Surface for chat-history.js / chat-flashcards.js / SPA route handlers.
-  // bindChatInputEvents + cancelActiveStream were exposed on `_chat` in
-  // v3.5.13 but grep showed zero external callers — removed in v3.5.14.
-  // `sb.cancelActiveStream` (above) remains the single public handle.
-  sb._chat.openSubPanel = openSubPanel;
-  sb._chat.closeSubPanel = closeSubPanel;
+  sb._chat.restoreChatPanelEvents = restoreChatPanelEvents;
   sb.registerModule?.('sidebar-chat');
 })();
