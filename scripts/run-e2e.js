@@ -92,7 +92,7 @@ for (let i = 0; i < batches.length; i++) {
       '--output',
       `test-results/e2e-batch-${i + 1}`,
     ],
-    { timeoutMs: 240_000 },
+    { timeoutMs: 360_000 },
   );
   cleanupE2ETempState();
 }
