@@ -97,7 +97,7 @@ test.describe('SkillBridge — golden translation flow', () => {
     for (const [name, type] of Object.entries(snap.methods.gt)) {
       expect.soft(type, `_gt.${name}`).toBe('function');
     }
-    // chat-render.js + sidebar-chat.js + chat-history.js all attached.
+    // chat-render.js + chat-subpanels.js + chat-history.js all attached.
     for (const [name, type] of Object.entries(snap.methods.chat)) {
       if (name === 'state') continue;
       expect.soft(type, `_chat.${name}`).toBe('function');

@@ -2,12 +2,11 @@
  * SkillBridge — Tutor Conversation History (IndexedDB + panel UI)
  *
  * Owns the `chat-history` IDB store, the history sub-panel, and the detail
- * view. Talks back into sidebar-chat.js through `_sb._chat` for sub-panel
- * state machinery (savedChatHTML, closeSubPanel, bindChatInputEvents) and
- * to chat-render.js for sanitizeHtml / formatResponse.
+ * view. Talks back into chat-subpanels.js through `_sb._chat` for sub-panel
+ * state machinery and to chat-render.js for sanitizeHtml / formatResponse.
  *
- * Loaded after content.js + chat-render.js + sidebar-chat.js (which sets up
- * `_sb._chat`). Toggling the panel is invoked from sidebar-chat.js's
+ * Loaded after content.js + chat-render.js + chat-subpanels.js (which sets
+ * up `_sb._chat`). Toggling the panel is invoked from sidebar-chat.js's
  * "history" button click handler via `_sb._chat.toggleHistoryPanel`.
  */
 
@@ -19,9 +18,9 @@
     console.warn('[SkillBridge] chat-history: _sb not ready');
     return;
   }
-  // chat-render.js + sidebar-chat.js must have loaded first.
+  // chat-render.js + chat-subpanels.js must have loaded first.
   if (!sb._chat || !sb._chat.sanitizeHtml || !sb._chat.formatResponse || !sb._chat.openSubPanel) {
-    console.warn('[SkillBridge] chat-history: _sb._chat not ready (chat-render/sidebar-chat missing?)');
+    console.warn('[SkillBridge] chat-history: _sb._chat not ready (chat-render/chat-subpanels missing?)');
     return;
   }
 

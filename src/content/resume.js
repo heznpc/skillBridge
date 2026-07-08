@@ -9,7 +9,7 @@
  * Local-only: `chrome.storage.local` under `sb_recent`; scroll restore via
  * sessionStorage (`sb_resume_restore`) across the navigation. No server/sync.
  *
- * Loaded after sidebar-chat.js (provides `_sb._chat.state` + `closeSubPanel`),
+ * Loaded after chat-subpanels.js (provides `_sb._chat.state` + `closeSubPanel`),
  * parallels chat-history / chat-flashcards / bookmarks. The sidebar "recent"
  * button calls `_sb._chat.toggleRecentPanel`.
  */
@@ -28,7 +28,7 @@
     return;
   }
   if (!sb._chat || !sb._chat.state || !sb._chat.openSubPanel) {
-    console.warn('[SkillBridge] resume: _sb._chat not ready (sidebar-chat.js missing?)');
+    console.warn('[SkillBridge] resume: _sb._chat not ready (chat-subpanels.js missing?)');
     return;
   }
   const STORAGE_KEY = 'sb_recent';

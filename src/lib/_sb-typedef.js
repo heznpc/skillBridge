@@ -15,7 +15,7 @@
  *     Feature calls that are legitimately optional still use `_sb.foo?.()`.
  *
  * @see src/content/content.js — owner of the `_sb` object
- * @see src/content/{banners,header-controls,sidebar-chat,text-selection,code-comments,keyboard-shortcuts}.js
+ * @see src/content/{banners,header-controls,ui-root,sidebar-chat,text-selection,code-comments,keyboard-shortcuts}.js
  */
 
 /**
@@ -80,7 +80,9 @@
  * @property {?() => void} injectFloatingButton
  * @property {?() => void} toggleSidebar
  * @property {?() => ShadowRoot|null} uiRoot
+ * @property {{ ensureFabStyle?: (root: ShadowRoot) => Promise<boolean> }=} _uiRoot
  * @property {?() => void} updateLocalizedLabels
+ * @property {?() => void} exportLessonPDF
  * @property {?(text: string) => string} formatResponse
  * @property {?() => void} toggleFlashcardPanel
  * @property {?() => void} cancelActiveStream
@@ -92,6 +94,7 @@
  * @property {ChatPanelState=} state
  * @property {?(name: string, html: string|(() => string), onMount?: (panel: HTMLElement) => void) => HTMLElement|null} openSubPanel
  * @property {?() => void} closeSubPanel
+ * @property {?() => void} restoreChatPanelEvents
  * @property {?(text: string) => string} sanitizeHtml
  * @property {?(text: string) => string} formatResponse
  * @property {?() => { courses: number, lessons: number, flashcards: number, mastered: number, bookmarks: number, recent: number }} collectDashboardStats
