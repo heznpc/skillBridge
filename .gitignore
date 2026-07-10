@@ -38,6 +38,7 @@ playwright/.cache/
 store-assets/description.md
 store-assets/captions.json
 store-assets/shotkit-manifest.json
+store-assets/shotkit-approval.json
 store-assets/storyboard.json
 store-assets/schemas/
 store-assets/*-thumbnail.png
