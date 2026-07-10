@@ -29,6 +29,7 @@ const path = require('path');
 
 const { evalInContentWorld, makePatchedExtension } = require('./tests/e2e/helpers/extension');
 const { registerStubs, GT_KO, buildGTResponse } = require('./tests/e2e/helpers/network-stubs');
+const { createShortsDemo } = require('./scripts/store-assets/shorts-demo');
 
 const FIXTURES = path.join(__dirname, 'store-assets', 'fixtures');
 const TEMPLATES = path.join(__dirname, 'store-assets', 'templates');
@@ -82,6 +83,10 @@ module.exports = {
   outDir: 'store-assets',
   disclaimer: DISCLAIMER,
   description: { from: 'store-assets/STORE_LISTING.md' },
+  calibration: {
+    from: 'shotkit.calibration.json',
+    layouts: ['focus-column', 'compact-column'],
+  },
 
   // dist/bundled (copied + manifest widened to localhost + streaming Puter stub).
   prepareExtension: () => makePatchedExtension(),
@@ -263,4 +268,6 @@ module.exports = {
       await page.waitForTimeout(1800);
     },
   },
+
+  demos: [createShortsDemo({ evalInContentWorld, lessonUrl: LESSON_URL })],
 };

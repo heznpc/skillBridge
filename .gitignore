@@ -36,6 +36,11 @@ playwright/.cache/
 
 # Generated store-listing copy (source of truth: store-assets/STORE_LISTING.md)
 store-assets/description.md
+store-assets/captions.json
+store-assets/shotkit-manifest.json
+store-assets/storyboard.json
+store-assets/schemas/
+store-assets/*-thumbnail.png
 
 # Stray files in root
 /content.css

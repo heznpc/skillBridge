@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "profiles": {
+    "demo-skillbridge": {
+      "youtube-shorts": {
+        "layoutPreset": "focus-column",
+        "framing": {
+          "scale": 1,
+          "focusX": 0.5,
+          "focusY": 0.5
+        },
+        "captionOptions": {
+          "position": "bottom-left",
+          "appearance": "outline",
+          "bottomOffset": 425
+        },
+        "protectedRegions": [
+          {
+            "id": "lesson-result",
+            "label": "Lesson result",
+            "x": 36,
+            "y": 110,
+            "width": 648,
+            "height": 610
+          },
+          {
+            "id": "language-control",
+            "label": "Language control",
+            "x": 400,
+            "y": 28,
+            "width": 220,
+            "height": 82
+          }
+        ],
+        "verification": {
+          "profileHash": "c59ceba30749fd64fa29bdd701cf4dd42e8f60ba7bcaa2c3a8b6cd8680d7f8da",
+          "status": "publish-ready",
+          "verifiedAt": "2026-07-10T13:42:16.971Z"
+        }
+      }
+    }
+  }
+}
