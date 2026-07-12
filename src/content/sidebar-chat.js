@@ -375,6 +375,7 @@
     if (isSending) return;
     const input = sb.$id('si18n-chat-input');
     const messages = sb.$id('si18n-chat-messages');
+    const chatDom = sb._chat.dom;
     const text = input.value.trim();
     if (!text) return;
 
@@ -382,16 +383,7 @@
 
     // Offline guard — show localized message instead of hitting the network
     if (sb.isOffline) {
-      const messages = sb.$id('si18n-chat-messages');
-      messages.insertAdjacentHTML(
-        'beforeend',
-        `
-        <div class="si18n-chat-msg si18n-chat-bot">
-          <div class="si18n-chat-avatar">AI</div>
-          <div class="si18n-chat-bubble" role="alert">${sb.escapeHtml(sb.t(TUTOR_OFFLINE_LABELS))}</div>
-        </div>
-      `,
-      );
+      chatDom.appendOfflineMessage(messages);
       scrollToBottom(messages);
       isSending = false;
       return;
@@ -401,38 +393,12 @@
     const quotedText = quoteEl?.textContent?.replace('\u00d7', '').trim() || '';
     if (quoteEl) quoteEl.remove();
 
-    const displayHtml = quotedText
-      ? `<div class="si18n-chat-quote" style="margin-bottom:4px">${sb.escapeHtml(quotedText)}</div>${sb.escapeHtml(text)}`
-      : sb.escapeHtml(text);
-
-    messages.insertAdjacentHTML(
-      'beforeend',
-      `
-      <div class="si18n-chat-msg si18n-chat-user">
-        <div class="si18n-chat-bubble">${displayHtml}</div>
-        <div class="si18n-chat-avatar">You</div>
-      </div>
-    `,
-    );
+    chatDom.appendUserMessage(messages, text, quotedText);
     input.value = '';
     input.placeholder = sb.t(CHAT_PLACEHOLDERS);
 
     const loadingId = 'loading-' + Date.now();
-    messages.insertAdjacentHTML(
-      'beforeend',
-      `
-      <div class="si18n-chat-msg si18n-chat-bot" id="${loadingId}">
-        <div class="si18n-chat-avatar">AI</div>
-        <div class="si18n-chat-bubble">
-          <span class="si18n-thinking-dots" role="status" aria-label="${sb.t(A11Y_LABELS.loading)}">
-            <span class="si18n-dot"></span>
-            <span class="si18n-dot"></span>
-            <span class="si18n-dot"></span>
-          </span>
-        </div>
-      </div>
-    `,
-    );
+    chatDom.appendLoadingMessage(messages, loadingId);
     scrollToBottom(messages);
 
     const fullQuestion = quotedText ? `[Regarding this text: "${quotedText}"]\n\n${text}` : text;
@@ -459,13 +425,10 @@
           lastStreamedText = fullText;
           if (!started) {
             started = true;
-            if (bubble) {
-              bubble.innerHTML = '';
-              bubble.classList.add('si18n-streaming-cursor');
-            }
+            chatDom.startStreamingBubble(bubble);
           }
           if (bubble) {
-            bubble.innerHTML = sb._chat.formatResponse(fullText);
+            chatDom.renderStreamingText(bubble, fullText);
             scrollToBottom(messages);
           }
         },
@@ -473,7 +436,7 @@
       );
 
       if (bubble && !signal.aborted) {
-        bubble.classList.remove('si18n-streaming-cursor');
+        chatDom.finishStreamingBubble(bubble);
         const answerText = lastStreamedText?.trim() || bubble.textContent?.trim() || '';
         if (answerText) sb._chat.saveConversation?.(text, answerText, sb.currentLang);
       }
@@ -481,30 +444,20 @@
       // AbortError is expected when the user navigates away mid-stream.
       // Don't render an error bubble or leave the spinner on.
       if (err?.name === 'AbortError') {
-        if (bubble) bubble.classList.remove('si18n-streaming-cursor');
+        chatDom.finishStreamingBubble(bubble);
         return;
       }
-      if (bubble) {
-        bubble.classList.remove('si18n-streaming-cursor');
-        bubble.setAttribute('role', 'alert');
-        bubble.textContent = sb.t(CHAT_ERROR_LABELS) + ' ';
-        const retryBtn = document.createElement('button');
-        retryBtn.className = 'si18n-retry-btn';
-        retryBtn.textContent = '\u21bb';
-        retryBtn.title = sb.t(A11Y_LABELS.retry);
-        retryBtn.addEventListener('click', () => {
-          const failedBotMsg = bubble.closest('.si18n-chat-msg');
-          const failedUserMsg = failedBotMsg?.previousElementSibling;
-          if (failedUserMsg?.classList.contains('si18n-chat-user')) failedUserMsg.remove();
-          failedBotMsg?.remove();
-          const inp = sb.$id('si18n-chat-input');
-          if (inp) {
-            inp.value = text;
-            sendChatMessage();
-          }
-        });
-        bubble.appendChild(retryBtn);
-      }
+      chatDom.renderRetryableError(bubble, sb.t(A11Y_LABELS.retry), () => {
+        const failedBotMsg = bubble.closest('.si18n-chat-msg');
+        const failedUserMsg = failedBotMsg?.previousElementSibling;
+        if (failedUserMsg?.classList.contains('si18n-chat-user')) failedUserMsg.remove();
+        failedBotMsg?.remove();
+        const inp = sb.$id('si18n-chat-input');
+        if (inp) {
+          inp.value = text;
+          sendChatMessage();
+        }
+      });
     } finally {
       isSending = false;
       if (sendBtn) sendBtn.disabled = false;
@@ -537,15 +490,7 @@
       if (sb.isExamPage) {
         const messages = sb.$id('si18n-chat-messages');
         if (messages && !messages.querySelector('.si18n-exam-warning')) {
-          messages.insertAdjacentHTML(
-            'beforeend',
-            `
-            <div class="si18n-chat-msg si18n-chat-bot">
-              <div class="si18n-chat-avatar">AI</div>
-              <div class="si18n-chat-bubble si18n-exam-warning">${sb.escapeHtml(sb.t(TUTOR_EXAM_LABELS))}</div>
-            </div>
-          `,
-          );
+          sb._chat.dom.appendExamWarning(messages);
         }
       }
 

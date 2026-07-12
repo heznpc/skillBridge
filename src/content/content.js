@@ -164,6 +164,7 @@
     'shadow-css',
     'ui-root',
     'pdf-export',
+    'chat-message-dom',
     'sidebar-chat',
     'chat-subpanels',
     'chat-history',
@@ -557,6 +558,15 @@
     originalComments.clear();
   }
 
+  function injectHostSurfaces() {
+    if (sb.hostCaps.headerControls) {
+      window._sb.injectHeaderLanguageSelect?.();
+      window._sb.injectDarkModeToggle?.();
+    }
+    if (sb.hostCaps.sidebar) window._sb.injectSidebar?.();
+    if (sb.hostCaps.fab) window._sb.injectFloatingButton?.();
+  }
+
   function teardownCertificationSurface() {
     isCertDisabled = true;
     window._sb.cancelActiveStream?.();
@@ -568,31 +578,17 @@
 
     // Remove every UI surface that could translate, open the tutor, or trigger
     // page actions while the SPA tab is sitting on a proctored cert page.
-    const uiHost = document.getElementById('skillbridge-root');
-    if (uiHost) uiHost.remove();
-    sb._uiHost = null;
-    for (const sel of [
-      '#si18n-header-lang',
-      '#si18n-dark-toggle',
-      '#si18n-welcome-banner',
-      '#si18n-term-preview',
-      '#si18n-exam-banner',
-      '#si18n-reading-bar',
-      '.si18n-ask-tutor-btn',
-    ]) {
-      document.querySelectorAll(sel).forEach((el) => el.remove());
-    }
+    window._sbContentSurface.removeContentSurfaces(
+      document,
+      sb,
+      window._sbContentSurface.CERTIFICATION_SURFACE_SELECTORS,
+    );
   }
 
   function reenableAfterCertificationSurface() {
     if (!isCertDisabled) return;
     isCertDisabled = false;
-    if (sb.hostCaps.headerControls) {
-      window._sb.injectHeaderLanguageSelect?.();
-      window._sb.injectDarkModeToggle?.();
-    }
-    if (sb.hostCaps.sidebar) window._sb.injectSidebar?.();
-    if (sb.hostCaps.fab) window._sb.injectFloatingButton?.();
+    injectHostSurfaces();
   }
 
   function teardownNonAIContentSurface() {
@@ -603,22 +599,11 @@
     if (translator) restoreOriginal();
     sidebarVisible = false;
 
-    const uiHost = document.getElementById('skillbridge-root');
-    if (uiHost) uiHost.remove();
-    sb._uiHost = null;
-    for (const sel of [
-      '#si18n-header-lang',
-      '#si18n-dark-toggle',
-      '#si18n-welcome-banner',
-      '#si18n-term-preview',
-      '#si18n-exam-banner',
-      '#si18n-reading-bar',
-      '#si18n-toc-toggle',
-      '#si18n-toc-panel',
-      '.si18n-ask-tutor-btn',
-    ]) {
-      document.querySelectorAll(sel).forEach((el) => el.remove());
-    }
+    window._sbContentSurface.removeContentSurfaces(
+      document,
+      sb,
+      window._sbContentSurface.NON_AI_CONTENT_SURFACE_SELECTORS,
+    );
   }
 
   async function switchLanguage(newLang, opts = {}) {
@@ -837,12 +822,7 @@
     init,
     teardownNonAIContentSurface,
     rehydrateAfterGateResume: () => {
-      if (sb.hostCaps.headerControls) {
-        window._sb.injectHeaderLanguageSelect?.();
-        window._sb.injectDarkModeToggle?.();
-      }
-      if (sb.hostCaps.sidebar) window._sb.injectSidebar?.();
-      if (sb.hostCaps.fab) window._sb.injectFloatingButton?.();
+      injectHostSurfaces();
       runActivationCallbacks();
     },
     cancelActiveStream: () => window._sb.cancelActiveStream?.(),
