@@ -1,33 +1,42 @@
-# Release Checklist — v3.5.41 re-publication
+# Release Checklist — next CWS release (version pending)
 
-> Refreshed 2026-07-06 for v3.5.41. Since the last dashboard-ready checklist:
-> Indonesian became a Premium language, the live Academy catalog check reports
-> 22 published catalog slugs wired into the 35-slug coverage map, and
-> protected-term restoration now also covers cached GT translations. This is the
-> source of truth for the next dashboard upload.
+> Refreshed 2026-07-11 for the privacy-focused CWS build. The upload artifact
+> keeps translation and local learning tools. Its runtime disables the AI
+> gateway and makes no AI requests; Puter SDK and page-bridge files are omitted.
+> Dormant shared-source AI strings may remain. This is the source of truth for the next
+> dashboard upload.
 
 CWS listing status:
 - Published: **v1.0.1** (uploaded 2026-03-10)
 - Local: **v3.5.41**
+- Release identity: **not assigned** — the existing `v3.5.41` tag is immutable
+  and cannot identify this no-AI CWS change set
 - Many PRs have landed since the published version — none have reached users yet
 - `npm run check:cws-drift` intentionally fails until the dashboard is updated
 
-The remaining publish steps cross trust boundaries the automation can't cross
-(your hands on the dashboard, the icon design decision, the public-variable toggle).
+The remaining publish steps cross trust boundaries the automation cannot cross
+(dashboard fields, external permission confirmation, and the publication toggle).
 Do not treat this checklist as code-side green until `npm run release:verify`
 passes in the release checkout. Regenerate the upload artifact immediately before
 dashboard upload.
 
-## What's already prepared (no further action needed)
+## Code-side state
 
-- ✅ `manifest.json` v3.5.41 + `package.json` + 12 `src/data/*.json` `_meta.version` all bumped
-- ✅ `CHANGELOG.md` sections through v3.5.41 written
-- ✅ `store-assets/skillbridge-bundled.zip` (minified, rebuilt via `npm run build:bundle:zip`) — **this is the CWS upload artifact**
-- ⚠️ `store-assets/skillbridge.zip` (raw source) — fallback only if the bundled
-  build is rejected in review. **Run `npm run build:zip` immediately before
-  uploading it** — this artifact is gitignored and is not rebuilt by
-  `build:bundle:zip`, so it can lag behind `manifest.json`.
-- ✅ All 12 Premium `_locales/*/messages.json` have `extDescription` nominative form
+- ⛔ Do not build the final ZIP as `3.5.41`. After the approved feature scope is
+  fixed, assign a new version consistently in `manifest.json`, `package.json`,
+  and versioned dictionary metadata; then move the pending notes out of
+  `CHANGELOG.md`'s Unreleased section.
+- ✅ Historical `CHANGELOG.md` sections through v3.5.41 remain immutable
+- ⏳ Run `npm run build:bundle:zip` to regenerate
+  `store-assets/skillbridge-bundled.zip` only after every release gate passes.
+  This bundled no-AI ZIP is the **only** CWS upload artifact; the compatibility
+  alias `npm run build:zip` resolves to this same safe command.
+- ⛔ Never upload `store-assets/skillbridge-developer.zip` (generated only by the
+  explicit `npm run build:developer:zip` command), the repository root, or the
+  Firefox build to CWS. Raw/developer source retains the optional Puter-based AI
+  path and does not represent the CWS product or its privacy disclosures.
+- ✅ All 33 `_locales/*/messages.json` descriptions cover translation and local
+  learning tools; `npm run check:i18n` enforces the 132-character limit.
 - ✅ Nominative-use sweep clean (`SkillBridge — AI Course Translator`, no Anthropic-as-product-modifier)
 - ✅ Privacy URL is `https://heznpc.github.io/skillBridge/privacy` — **capital "B"**.
   GitHub Pages repo-path segments are case-sensitive: the lowercase
@@ -36,6 +45,10 @@ dashboard upload.
   connect to the privacy policy link". `github.com` links are case-insensitive,
   so the homepage/support URLs are fine lowercase — only the `github.io` URL
   must be capital-B.
+- ⏳ While publication is paused, that privacy page must retain separate
+  disclosures for live legacy v1.0.1 and the unpublished candidate. Remove or
+  archive the legacy section only after the replacement version is confirmed
+  live in the CWS dashboard and update the listing/privacy answers together.
 - ⚠️ Latest local gate snapshot: rerun before dashboard upload with
   `npm run release:verify`. As of 2026-07-06, dictionary freshness may report
   recruiting-state dictionaries as review-needed warnings; that is not a native
@@ -55,6 +68,10 @@ against the file before fixing — the 2026-06-10 audit caught `Slack → "Lento
 dictionary's `_meta.lastAudited` and run `npm run docs` so the README QA table
 reflects it. Three-layer QA model: `docs/TRANSLATION_QA.md`.
 
+After the external permission scope is confirmed, the release order is: new
+version bump → finalize the Unreleased changelog → rerun all gates → generate
+the bundled ZIP. Never reuse the existing `v3.5.41` release identity.
+
 ### 1. Icon — resolved
 
 Status: **resolved**. The non-infringing icon shipped in v3.5.35 (a rising
@@ -70,8 +87,8 @@ Playwright and regenerates the full CWS set into `store-assets/` — or run it
 with **zero local setup**: Actions → "Capture store assets" → Run workflow →
 download the `store-assets` artifact:
 
-- `01-translate.png` … `05-exam-safe.png` (1280×800) — translate before/after,
-  language picker, in-page AI tutor, flashcards, exam-safe answers
+- `01-translate.png` … `05-exam-safe.png` (1280×800) — translated lesson,
+  language picker, local progress dashboard, flashcards, exam-safe answers
 - `promo-tile-440x280.png` — small promo tile
 - `demo.webm` — demo screencast (CWS takes a YouTube link, not a file — upload it and paste the URL)
 - `description.md` — copy/paste Title / Summary / Description / What's new
@@ -79,8 +96,9 @@ download the `store-assets` artifact:
 Edit which states are captured in `store.config.js`, and the listing copy in
 `store-assets/STORE_LISTING.md`. The run doubles as a real-bundle smoke test (a
 screenshot only appears if that feature rendered). Captures are login-free and
-deterministic — a frozen Korean translation map, neutral "Academy" fixtures (no
-Anthropic logo), and a composited "unofficial / not affiliated" disclaimer band
+deterministic — a frozen Korean translation map, no Puter/AI readiness step,
+neutral "Academy" fixtures (no Anthropic logo), and a composited
+"unofficial / not affiliated" disclaimer band
 on every shot. (`assets/screenshots/*` README/marketing images are separate and
 still hand-made.)
 
@@ -91,7 +109,7 @@ Open the [Chrome Web Store developer console](https://chrome.google.com/webstore
 | Field | Value |
 |---|---|
 | Package upload | `store-assets/skillbridge-bundled.zip` ← drag this in |
-| Listing title | `SkillBridge — AI Course Translator with in-page AI tutor` |
+| Listing title | `SkillBridge — AI Course Translator` |
 | Summary | paste from `store-assets/STORE_LISTING.md` "Summary" section |
 | Description | paste from `store-assets/STORE_LISTING.md` "Description" section |
 | Privacy policy URL | `https://heznpc.github.io/skillBridge/privacy` |
@@ -102,53 +120,47 @@ Open the [Chrome Web Store developer console](https://chrome.google.com/webstore
 ### 3b. Privacy tab (this is what blocked the last submit)
 
 Open the "개인정보 보호 / Privacy practices" tab. The published v1.0.1 answers are
-stale against v3.5.41 — fix these:
+stale against the next CWS candidate — fix these:
 
 - **Privacy policy URL** — must be the **capital-B** `github.io` URL (see the
   Privacy-URL note above). The lowercase form 404s and the dashboard refuses to
   submit ("개인정보처리방침 링크에 연결할 수 없습니다").
-- **"Are you using remote code?" → NO.** v1.0.1 loaded Puter.js from
-  `https://js.puter.com/v2/` (remote code → MV3 detailed review / delay).
-  v3.5.39+ bundles it as `src/bridge/puter.js` and loads it via
-  `chrome.runtime.getURL` (`translator.js` sets `script.dataset.puterUrl =
-  chrome.runtime.getURL('src/bridge/puter.js')`); there is no remote fallback
-  (`page-bridge.js`: `if (!_puterUrl) reject`). So no remote code is loaded.
-  **Only flip this to NO after the v3.5.41 package is uploaded** — answering NO
-  while the published build still loads remote Puter would be a false statement.
-  (Puter's runtime calls to `api.puter.com` are data transfer, not remote code —
-  disclosed under data usage below.)
+- **"Are you using remote code?" → NO for the bundled CWS ZIP.** The CWS builder
+  pins the AI gateway off, omits `src/bridge/puter.js` and
+  `src/lib/page-bridge.js`, and runs `check:rhc` against the final artifact.
+  Inspect the uploaded ZIP itself before answering. The public repository still
+  contains the optional Puter-based developer path, so the raw source ZIP must
+  never be substituted for the bundled CWS artifact.
 - **Data usage → check "Website content".** Page text is sent to Google
-  Translate and lesson context (≤2,000 chars) is sent via Puter to Gemini/Claude.
-  Leaving it unchecked while the description says page text is sent off-device is
-  an inconsistency reviewers reject. Local-only data (bookmarks, resume,
-  flashcards, settings — `chrome.storage.local`, never leaves the device) is
-  NOT "collected", so location / browsing history / user activity stay unchecked.
+  Translate when translation is requested. No lesson context, tutor message, or
+  learning-tool state is sent to Puter, Gemini, or Claude by the CWS build.
+  Leaving Website content unchecked while the description says page text is
+  sent off-device is an inconsistency reviewers reject. Local-only data
+  (bookmarks, resume, flashcards, progress, settings) is not collected, so
+  location, browsing history, and user activity stay unchecked.
   Keep the three confirmations checked (transfer to a service provider to perform
   the requested feature is an approved use case, not a sale).
-- **Permission justifications** — paste from `STORE_LISTING.md` "Permission
-  Justifications". v3.5.41 declares `storage` + `alarms` + four hosts
-  (`*.skilljar.com`, `*.youtube.com`, `translate.googleapis.com`,
-  `api.github.com`). The old `activeTab` / `tabs` justification fields disappear
+- **Permission and site-access justifications** — paste from `STORE_LISTING.md`
+  "Permission Justifications". The next candidate declares `storage` + `alarms` + three
+  explicit `host_permissions` (`*.skilljar.com`, `translate.googleapis.com`,
+  `api.github.com`) plus the scoped
+  `https://claude.com/resources/tutorials/*` content-script match. The old
+  `activeTab` / `tabs` justification fields disappear
   after upload (those permissions are no longer in the manifest); `alarms` and
-  `api.github.com` are new and need a line each.
+  `api.github.com` and the Claude tutorial match each need an accurate line.
 
-### 4. Flip CWS_PUBLICATION_PAUSED off (only if currently set)
+### 4. Keep publication paused
 
-```
-gh variable set CWS_DASHBOARD_READY_VERSION --body 3.5.41
-gh variable list | grep CWS_PUBLICATION_PAUSED && gh variable delete CWS_PUBLICATION_PAUSED
-```
+Do **not** delete `CWS_PUBLICATION_PAUSED` during code cleanup or dashboard
+draft preparation. Set `CWS_DASHBOARD_READY_VERSION` and remove the pause only
+after the requested external permission scope is confirmed in writing, the
+final no-AI ZIP passes `npm run release:verify`, and steps 3 and 3b are complete.
+Listing copy, icon, screenshots, promo tile, privacy URL, privacy-practices
+answers, and permission justifications must all match this checklist.
 
-Set `CWS_DASHBOARD_READY_VERSION` only after steps 3 and 3b are complete:
-listing copy, icon, screenshots, promo tile, privacy URL, privacy-practices
-answers, and permission justifications should all match this checklist. The CD
-workflow refuses a live publish unless that variable equals `manifest.json`
-version, so the package cannot race ahead of stale dashboard-visible fields.
-
-The pause flag was added in PR #133 to prevent the CD workflow from publishing
-while the trademark complaint was unresolved. If it's still set, CD will skip
-the upload step; deleting it re-enables CD's CWS upload path on the next push.
-The workflow builds and uploads the same bundled artifact named in step 3:
+While the pause remains set, CD skips the live upload step. Removing it later
+re-enables the CWS upload path on the next eligible push. The workflow builds
+and uploads the same bundled artifact named in step 3:
 `store-assets/skillbridge-bundled.zip`.
 
 Safety rails in the CD workflow:
@@ -159,7 +171,8 @@ Safety rails in the CD workflow:
 - Manual `publish=false` runs are draft-only and do not create the live
   `cws-v*` deployed tag; only a successful live publish does.
 
-If the variable is already absent, skip.
+If the pause variable is unexpectedly absent, restore the publication lock
+before continuing release work.
 
 ### 5. CWS review wait
 
@@ -178,7 +191,7 @@ the `cws-drift.yml` workflow via `workflow_dispatch` — it should report `OK`
 
 ## If trademark complaint comes back
 
-If Tracer / Anthropic IP enforcement files another complaint against v3.5.41:
+If a new complaint is filed against the next CWS release:
 1. Check whether it cites the icon (then return to step 1 option B/C) or the
    listing copy (then re-sweep `store-assets/STORE_LISTING*.md` for any
    residual brand-as-product-modifier phrasing).
@@ -189,5 +202,5 @@ If Tracer / Anthropic IP enforcement files another complaint against v3.5.41:
 ## SNS launch (separate session, after listing is live)
 
 SNS launch drafts are kept outside this repo (internal). Do not post until the
-CWS listing reflects v3.5.41 — posting before would point users at a listing
+CWS listing reflects the newly assigned release version — posting before would point users at a listing
 missing all the work the post talks about.

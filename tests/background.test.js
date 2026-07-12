@@ -1,7 +1,7 @@
 /**
  * Unit tests for background.js pure functions.
  *
- * Tests: gtLangCode, parseGTResponse, isYouTubeUrl, isAllowedFetchUrl, isNewerVersion
+ * Tests: gtLangCode, parseGTResponse, isNewerVersion
  */
 
 /* global describe, test, expect, beforeEach, afterEach, jest */
@@ -34,15 +34,13 @@ const fns = new Function(
   const setTimeout = (...args) => setTimer(...args);
 	  ${sharedSrc}
 	  ${src}
-  return { gtLangCode, parseGTResponse, isYouTubeUrl, isAllowedFetchUrl, isNewerVersion, _rateLimiter, fetchWithRetry, registerAlarms, _gtFetchDedup, _inflightGT, _gtKey };
+  return { gtLangCode, parseGTResponse, isNewerVersion, _rateLimiter, fetchWithRetry, registerAlarms, _gtFetchDedup, _inflightGT, _gtKey };
 `,
 )((...args) => timerDelegate(...args));
 
 const {
   gtLangCode,
   parseGTResponse,
-  isYouTubeUrl,
-  isAllowedFetchUrl,
   isNewerVersion,
   _rateLimiter,
   fetchWithRetry,
@@ -273,54 +271,6 @@ describe('_gtFetchDedup — in-flight dedup', () => {
       timerDelegate = (...args) => originalSetTimeout(...args);
       jest.useRealTimers();
     }
-  });
-});
-
-describe('isYouTubeUrl', () => {
-  test('accepts www.youtube.com', () => {
-    expect(isYouTubeUrl('https://www.youtube.com/watch?v=abc')).toBe(true);
-  });
-
-  test('accepts subdomains of youtube.com', () => {
-    expect(isYouTubeUrl('https://m.youtube.com/watch?v=abc')).toBe(true);
-  });
-
-  test('rejects non-YouTube URLs', () => {
-    expect(isYouTubeUrl('https://www.google.com')).toBe(false);
-  });
-
-  test('rejects invalid URLs', () => {
-    expect(isYouTubeUrl('not-a-url')).toBe(false);
-  });
-
-  test('rejects spoofed hostnames', () => {
-    expect(isYouTubeUrl('https://fake-youtube.com/embed')).toBe(false);
-  });
-});
-
-describe('isAllowedFetchUrl', () => {
-  test('allows www.youtube.com', () => {
-    expect(isAllowedFetchUrl('https://www.youtube.com/watch?v=test')).toBe(true);
-  });
-
-  test('allows translate.googleapis.com', () => {
-    expect(isAllowedFetchUrl('https://translate.googleapis.com/translate?q=test')).toBe(true);
-  });
-
-  test('allows m.youtube.com', () => {
-    expect(isAllowedFetchUrl('https://m.youtube.com/embed/abc')).toBe(true);
-  });
-
-  test('rejects arbitrary domains', () => {
-    expect(isAllowedFetchUrl('https://evil.com')).toBe(false);
-  });
-
-  test('rejects invalid URLs', () => {
-    expect(isAllowedFetchUrl('not-a-url')).toBe(false);
-  });
-
-  test('rejects spoofed subdomains', () => {
-    expect(isAllowedFetchUrl('https://fake-youtube.com/embed')).toBe(false);
   });
 });
 

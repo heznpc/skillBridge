@@ -1,6 +1,7 @@
 const esbuild = require('esbuild');
 const fs = require('fs');
 const path = require('path');
+const { assertNoRemoteHostedCode } = require('./check-rhc');
 
 const ROOT = path.resolve(__dirname, '..');
 const DIST = path.join(ROOT, 'dist', 'bundled');
@@ -16,9 +17,12 @@ async function build() {
   // Bundle content scripts into a single file
   const contentScripts = manifest.content_scripts[0].js;
   // Create a combined entry that loads all content scripts in order
-  const contentEntry = contentScripts
-    .map((f) => `// --- ${f} ---\n` + fs.readFileSync(path.join(ROOT, f), 'utf8'))
-    .join('\n\n');
+  const cwsBuildGate =
+    "Object.defineProperty(globalThis,'__SKILLBRIDGE_AI_GATEWAY_ENABLED__',{value:false,writable:false,configurable:false});";
+  const contentEntry = [
+    cwsBuildGate,
+    ...contentScripts.map((f) => `// --- ${f} ---\n` + fs.readFileSync(path.join(ROOT, f), 'utf8')),
+  ].join('\n\n');
 
   const contentEntryPath = path.join(DIST, '_content-entry.js');
   fs.writeFileSync(contentEntryPath, contentEntry);
@@ -71,15 +75,11 @@ async function build() {
   copyDir(path.join(ROOT, '_locales'), path.join(DIST, '_locales'));
   copyDir(path.join(ROOT, 'src/data'), path.join(DIST, 'src/data'));
   fs.copyFileSync(path.join(ROOT, 'LICENSE'), path.join(DIST, 'LICENSE'));
-  fs.copyFileSync(path.join(ROOT, 'THIRD_PARTY_NOTICES.md'), path.join(DIST, 'THIRD_PARTY_NOTICES.md'));
 
   // Copy other web-accessible resources
   fs.mkdirSync(path.join(DIST, 'src/lib'), { recursive: true });
-  fs.mkdirSync(path.join(DIST, 'src/bridge'), { recursive: true });
   fs.mkdirSync(path.join(DIST, 'src/shared'), { recursive: true });
   fs.mkdirSync(path.join(DIST, 'src/content/styles'), { recursive: true });
-  fs.copyFileSync(path.join(ROOT, 'src/lib/page-bridge.js'), path.join(DIST, 'src/lib/page-bridge.js'));
-  fs.copyFileSync(path.join(ROOT, 'src/bridge/puter.js'), path.join(DIST, 'src/bridge/puter.js'));
   fs.copyFileSync(path.join(ROOT, 'src/content/styles/fab.css'), path.join(DIST, 'src/content/styles/fab.css'));
   fs.copyFileSync(
     path.join(ROOT, 'src/shared/runtime-constants.js'),
@@ -88,10 +88,11 @@ async function build() {
   if (fs.existsSync(path.join(ROOT, 'src/shared/constants.json'))) {
     fs.copyFileSync(path.join(ROOT, 'src/shared/constants.json'), path.join(DIST, 'src/shared/constants.json'));
   }
-  // Copy popup
-  fs.mkdirSync(path.join(DIST, 'src/popup'), { recursive: true });
-  fs.copyFileSync(path.join(ROOT, 'src/popup/popup.html'), path.join(DIST, 'src/popup/popup.html'));
-  fs.copyFileSync(path.join(ROOT, 'src/popup/popup.js'), path.join(DIST, 'src/popup/popup.js'));
+  // Copy the popup and every local asset it references. Keeping this driven by
+  // action.default_popup prevents a new classic-script dependency from being
+  // added to the HTML without also landing in the CWS artifact.
+  copyHtmlEntrypoint(manifest.action?.default_popup);
+  fs.writeFileSync(path.join(DIST, 'src', 'shared', 'build-config.js'), `${cwsBuildGate}\n`);
 
   // Create bundled manifest
   const bundledManifest = JSON.parse(JSON.stringify(manifest));
@@ -105,6 +106,7 @@ async function build() {
     entry.resources = entry.resources.flatMap((r) =>
       r === 'src/content/styles/*.css' ? ['content.bundle.css', 'src/content/styles/fab.css'] : [r],
     );
+    entry.resources = entry.resources.filter((r) => r !== 'src/lib/page-bridge.js' && r !== 'src/bridge/puter.js');
     entry.resources = [...new Set(entry.resources)];
   }
   fs.writeFileSync(path.join(DIST, 'manifest.json'), JSON.stringify(bundledManifest, null, 2));
@@ -112,6 +114,8 @@ async function build() {
   // Clean up temp entry
   fs.unlinkSync(contentEntryPath);
   fs.unlinkSync(cssEntryPath);
+
+  assertNoRemoteHostedCode(DIST);
 
   // Report sizes
   const origSize = contentScripts.reduce((sum, f) => {
@@ -143,6 +147,42 @@ function copyDir(src, dest) {
     } else {
       fs.copyFileSync(srcPath, destPath);
     }
+  }
+}
+
+function copyRelativeFile(relativePath) {
+  const src = path.resolve(ROOT, relativePath);
+  const dest = path.resolve(DIST, relativePath);
+  const rootPrefix = `${ROOT}${path.sep}`;
+  const distPrefix = `${DIST}${path.sep}`;
+  if (!src.startsWith(rootPrefix) || !dest.startsWith(distPrefix)) {
+    throw new Error(`Refusing to copy path outside extension roots: ${relativePath}`);
+  }
+  if (!fs.existsSync(src) || !fs.statSync(src).isFile()) {
+    throw new Error(`Missing extension runtime asset: ${relativePath}`);
+  }
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  fs.copyFileSync(src, dest);
+}
+
+function localHtmlReferences(html) {
+  const refs = [];
+  const tagPattern = /<(?:script|link|img)\b[^>]*?\b(?:src|href)=["']([^"']+)["'][^>]*>/gi;
+  for (const match of html.matchAll(tagPattern)) {
+    const ref = match[1].split(/[?#]/, 1)[0];
+    if (!ref || /^(?:[a-z]+:|\/\/|#)/i.test(ref)) continue;
+    refs.push(ref);
+  }
+  return refs;
+}
+
+function copyHtmlEntrypoint(relativeHtmlPath) {
+  if (!relativeHtmlPath) throw new Error('manifest.action.default_popup is required');
+  copyRelativeFile(relativeHtmlPath);
+  const html = fs.readFileSync(path.join(ROOT, relativeHtmlPath), 'utf8');
+  const htmlDir = path.posix.dirname(relativeHtmlPath.replaceAll(path.sep, '/'));
+  for (const ref of localHtmlReferences(html)) {
+    copyRelativeFile(path.posix.normalize(path.posix.join(htmlDir, ref)));
   }
 }
 

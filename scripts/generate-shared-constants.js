@@ -24,7 +24,6 @@ const out = `/**
 
   const constants = Object.freeze({
     GT_LANG_MAP: Object.freeze(${JSON.stringify(json.GT_LANG_MAP)}),
-    YOUTUBE_CLIENT_VERSION: ${JSON.stringify(json.YOUTUBE_CLIENT_VERSION)},
   });
 
   root.SB_SHARED_CONSTANTS = constants;

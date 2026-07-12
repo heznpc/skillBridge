@@ -1,6 +1,9 @@
 /**
  * Page Bridge - Injected into the HOST PAGE's main world (not extension context)
- * Loads bundled Puter.js from extension resources (no remote code — MV3 compliant).
+ * Raw-developer bridge: loads the packaged Puter SDK entry file from extension
+ * resources. That SDK contains lazy remote JS/WASM paths, so this bridge and
+ * the SDK are omitted from the CWS bundle; packaging the entry file locally
+ * does not by itself establish MV3 remote-code compliance.
  * Communicates with the content script via window.postMessage.
  */
 

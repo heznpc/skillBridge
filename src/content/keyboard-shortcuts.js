@@ -22,7 +22,7 @@
     { key: 'l', ctrl: true, shift: true, label: SHORTCUT_DESCRIPTIONS.toggleDarkMode },
     { key: '/', ctrl: true, shift: true, label: SHORTCUT_DESCRIPTIONS.showHelp },
     { key: 'Escape', label: SHORTCUT_DESCRIPTIONS.close },
-    { key: '/', label: SHORTCUT_DESCRIPTIONS.focusChat },
+    ...(sb.hostCaps?.bridge === false ? [] : [{ key: '/', label: SHORTCUT_DESCRIPTIONS.focusChat }]),
   ];
 
   // ============================================================
@@ -76,11 +76,13 @@
       return;
     }
 
-    // / → Focus chat input (only when sidebar open, not in input)
+    // / → Focus chat input (AI-enabled sidebar only). Do not consume the key
+    // when the CWS language panel is open and there is no chat field.
     if (e.key === '/' && !isInput && !ctrl && !e.metaKey && !e.shiftKey && !e.altKey) {
-      if (sb.sidebarVisible) {
+      const chatInput = sb.sidebarVisible ? sb.$id('si18n-chat-input') : null;
+      if (chatInput) {
         e.preventDefault();
-        sb.$id('si18n-chat-input')?.focus();
+        chatInput.focus();
       }
     }
   }

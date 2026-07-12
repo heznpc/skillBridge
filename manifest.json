@@ -10,7 +10,6 @@
   "permissions": ["storage", "alarms"],
   "host_permissions": [
     "https://*.skilljar.com/*",
-    "https://*.youtube.com/*",
     "https://translate.googleapis.com/*",
     "https://api.github.com/*"
   ],

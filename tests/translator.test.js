@@ -65,6 +65,27 @@ describe('SkilljarTranslator', () => {
     test('supportedLanguages includes 30+ languages', () => {
       expect(Object.keys(translator.supportedLanguages).length).toBeGreaterThanOrEqual(30);
     });
+
+    test('accepts an AI-disabled CWS configuration', () => {
+      expect(new SkilljarTranslator({ aiEnabled: false }).aiEnabled).toBe(false);
+      expect(new SkilljarTranslator().aiEnabled).toBe(true);
+    });
+  });
+
+  describe('initialize', () => {
+    test('opens the local cache but skips bridge setup when AI is disabled', async () => {
+      const localOnly = new SkilljarTranslator({ aiEnabled: false });
+      localOnly._openDB = jest.fn().mockResolvedValue(undefined);
+      localOnly._cleanupExpiredCache = jest.fn().mockResolvedValue(undefined);
+      localOnly._checkStorageQuota = jest.fn().mockResolvedValue(undefined);
+      localOnly._setupMessageListener = jest.fn();
+      localOnly._injectPageBridgeWithRetry = jest.fn();
+
+      await expect(localOnly.initialize()).resolves.toBe(true);
+      expect(localOnly._openDB).toHaveBeenCalledTimes(1);
+      expect(localOnly._setupMessageListener).not.toHaveBeenCalled();
+      expect(localOnly._injectPageBridgeWithRetry).not.toHaveBeenCalled();
+    });
   });
 
   describe('_normalizeTypography', () => {

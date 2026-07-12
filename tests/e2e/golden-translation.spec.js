@@ -14,19 +14,18 @@
  * blocks while keeping reporter output sane.
  *
  *   Step A — `_sb` namespace assembly:
- *     content.js owns `_sb`; gt-queue.js mounts `_sb._gt`; chat-render.js
- *     + sidebar-chat.js + chat-history.js cooperatively mount `_sb._chat`.
- *     A missing surface here means a manifest load order broke.
+ *     content.js owns `_sb`; gt-queue.js mounts `_sb._gt`; the sidebar and
+ *     local-tool modules retain their shared state under the legacy `_sb._chat`
+ *     namespace. A missing surface here means a manifest load order broke.
  *
  *   Step B — `switchLanguage('ko')`:
  *     Exercises the GT queue end-to-end (with stubbed translate API),
  *     bumps `_gt.gtGeneration`, applies static + GT translations to the
  *     fixture. Asserts page text changed AND generation moved.
  *
- *   Step C — Sidebar panel state machinery:
- *     Opens the sidebar, toggles the history sub-panel, closes it. The
- *     `_sb._chat.state.savedChatHTML` / `historyPanelOpen` flags have
- *     never been exercised outside unit tests until now.
+ *   Step C — Local sidebar panel state machinery:
+ *     Opens the sidebar, toggles the progress dashboard, then restores the
+ *     language panel through the shared `_sb._chat` state machine.
  *
  *   Step D — `switchLanguage('en')`:
  *     Restore path. Calls `restoreOriginal` internally; that function
@@ -37,9 +36,7 @@
  * can't see it. We bridge via `evalInContentWorld(context, opName, arg)`,
  * which uses `chrome.scripting.executeScript` from the SW to run one of
  * a hard-coded menu of diagnostic operations inside the isolated world.
- * See helpers/extension.js for the menu (`snapshot`, `switchLanguage`,
- * `injectSidebar`, `toggleSidebar`, `toggleHistoryPanel`, `closeSubPanel`,
- * `pageText`).
+ * See helpers/extension.js for the diagnostic operation menu.
  */
 
 const { test, expect } = require('@playwright/test');
@@ -97,11 +94,10 @@ test.describe('SkillBridge — golden translation flow', () => {
     for (const [name, type] of Object.entries(snap.methods.gt)) {
       expect.soft(type, `_gt.${name}`).toBe('function');
     }
-    // chat-render.js + chat-subpanels.js + chat-history.js all attached.
-    for (const [name, type] of Object.entries(snap.methods.chat)) {
-      if (name === 'state') continue;
-      expect.soft(type, `_chat.${name}`).toBe('function');
-    }
+    // CWS local-tool state machine is attached without requiring chat/history.
+    expect(snap.methods.chat.closeSubPanel).toBe('function');
+    expect(snap.methods.chat.toggleDashboardPanel).toBe('function');
+    expect(snap.methods.chat.toggleFlashcardPanel).toBe('function');
     // content.js own surface (including the v3.5.15-added safeReplaceText).
     for (const [name, type] of Object.entries(snap.methods.sb)) {
       expect.soft(type, `sb.${name}`).toBe('function');
@@ -109,7 +105,7 @@ test.describe('SkillBridge — golden translation flow', () => {
 
     // Sub-panel state starts cleared.
     expect(snap.methods.chat.state.savedChatHTML).toBeNull();
-    expect(snap.methods.chat.state.historyPanelOpen).toBe(false);
+    expect(snap.methods.chat.state.dashboardPanelOpen).toBe(false);
     expect(snap.methods.chat.state.flashcardPanelOpen).toBe(false);
   });
 
@@ -141,27 +137,26 @@ test.describe('SkillBridge — golden translation flow', () => {
     expect(after.p1).toContain('프롬프트 엔지니어링'); // proves GT batch + DOM write worked
   });
 
-  test('step C: sidebar + history sub-panel state machinery', async () => {
+  test('step C: sidebar + local dashboard state machinery', async () => {
     await evalInContentWorld(extCtx.context, 'injectSidebar');
     await evalInContentWorld(extCtx.context, 'toggleSidebar');
 
     let snap = await evalInContentWorld(extCtx.context, 'snapshot');
     expect(snap.sidebarVisible).toBe(true);
-    expect(snap.methods.chat.state.historyPanelOpen).toBe(false);
+    expect(snap.methods.chat.state.dashboardPanelOpen).toBe(false);
     expect(snap.methods.chat.state.savedChatHTML).toBeNull();
 
-    // Open the history sub-panel — the v3.5.13 split refactored this path
-    // so it goes through `sb._chat.state` rather than module-local flags.
-    await evalInContentWorld(extCtx.context, 'toggleHistoryPanel');
+    await evalInContentWorld(extCtx.context, 'toggleDashboardPanel');
     snap = await evalInContentWorld(extCtx.context, 'snapshot');
-    expect(snap.methods.chat.state.historyPanelOpen).toBe(true);
+    expect(snap.methods.chat.state.dashboardPanelOpen).toBe(true);
     expect(typeof snap.methods.chat.state.savedChatHTML).toBe('string');
     expect(snap.methods.chat.state.savedChatHTML.length).toBeGreaterThan(0);
+    expect((await evalInContentWorld(extCtx.context, 'readDashboard')).stats).toBe(4);
 
     // Close it via the shared helper sidebar-chat.js exposes.
     await evalInContentWorld(extCtx.context, 'closeSubPanel');
     snap = await evalInContentWorld(extCtx.context, 'snapshot');
-    expect(snap.methods.chat.state.historyPanelOpen).toBe(false);
+    expect(snap.methods.chat.state.dashboardPanelOpen).toBe(false);
     expect(snap.methods.chat.state.flashcardPanelOpen).toBe(false);
     expect(snap.methods.chat.state.savedChatHTML).toBeNull();
   });

@@ -2,7 +2,8 @@
  * SkillBridge - Shared chat sub-panel state machine.
  *
  * Owns the panel switcher used by history, flashcards, bookmarks, recent
- * lessons, and dashboard modules.
+ * lessons, and dashboard modules. The base surface is the chat panel in
+ * AI-enabled builds and the language panel in the CWS no-AI build.
  */
 
 (function () {
@@ -41,6 +42,10 @@
     return Object.values(SUB_PANEL_FLAGS).some((flag) => flag !== currentFlag && _state[flag]);
   }
 
+  function getBasePanel() {
+    return sb.$('.si18n-panel-chat, .si18n-panel-lang');
+  }
+
   function openSubPanel(name, html, onMount) {
     const flag = SUB_PANEL_FLAGS[name];
     if (!flag) {
@@ -48,8 +53,8 @@
       return null;
     }
 
-    const chatPanel = sb.$id('si18n-panel-chat');
-    if (!chatPanel) return null;
+    const basePanel = getBasePanel();
+    if (!basePanel) return null;
 
     if (_state[flag]) {
       closeSubPanel();
@@ -58,23 +63,24 @@
     if (anyOtherSubPanelOpen(name)) closeSubPanel();
 
     sb.cancelActiveStream?.();
-    _state.savedChatHTML = chatPanel.innerHTML;
+    _state.savedChatHTML = basePanel.innerHTML;
     resetSubPanelFlags();
     _state[flag] = true;
-    chatPanel.replaceChildren();
-    chatPanel.insertAdjacentHTML('afterbegin', typeof html === 'function' ? html() : html);
-    onMount?.(chatPanel);
-    return chatPanel;
+    basePanel.replaceChildren();
+    basePanel.insertAdjacentHTML('afterbegin', typeof html === 'function' ? html() : html);
+    onMount?.(basePanel);
+    return basePanel;
   }
 
   function closeSubPanel() {
-    const chatPanel = sb.$id('si18n-panel-chat');
-    if (!chatPanel || _state.savedChatHTML === null) return;
+    const basePanel = getBasePanel();
+    if (!basePanel || _state.savedChatHTML === null) return;
     sb.cancelActiveStream?.();
-    chatPanel.innerHTML = _state.savedChatHTML;
+    basePanel.innerHTML = _state.savedChatHTML;
     _state.savedChatHTML = null;
     resetSubPanelFlags();
     sb._chat.restoreChatPanelEvents?.();
+    sb.updateLocalizedLabels?.();
   }
 
   sb._chat.openSubPanel = openSubPanel;

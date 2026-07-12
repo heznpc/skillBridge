@@ -3,9 +3,8 @@
  *
  * Handles:
  * 1. Google Translate API proxy (fast initial translation)
- * 2. General CORS proxy for YouTube
- * 3. Badge management
- * 4. Periodic maintenance via Chrome Alarms (cache cleanup, version check)
+ * 2. Badge management
+ * 3. Periodic maintenance via Chrome Alarms (cache cleanup, version check)
  */
 
 try {
@@ -22,15 +21,13 @@ try {
 }
 
 const _BG_SHARED_CONSTANTS = globalThis.SB_SHARED_CONSTANTS || {};
-if (!_BG_SHARED_CONSTANTS.GT_LANG_MAP || !_BG_SHARED_CONSTANTS.YOUTUBE_CLIENT_VERSION) {
+if (!_BG_SHARED_CONSTANTS.GT_LANG_MAP) {
   console.warn('[SkillBridge BG] Shared runtime constants missing or incomplete.');
 }
 
 function gtLangCode(lang) {
   return _BG_SHARED_CONSTANTS.GT_LANG_MAP?.[lang] || lang;
 }
-
-const _BG_YT_CLIENT_VERSION = _BG_SHARED_CONSTANTS.YOUTUBE_CLIENT_VERSION;
 
 function parseGTResponse(data, fallback) {
   if (!data || !Array.isArray(data[0])) return fallback;
@@ -45,27 +42,6 @@ function parseGTResponse(data, fallback) {
     }
   }
   return translated || fallback;
-}
-
-function isYouTubeUrl(url) {
-  try {
-    const u = new URL(url);
-    return u.hostname === 'www.youtube.com' || u.hostname.endsWith('.youtube.com');
-  } catch {
-    return false;
-  }
-}
-
-// URL allowlist for FETCH_URL — only permit known trusted domains
-const _ALLOWED_FETCH_DOMAINS = ['www.youtube.com', 'youtube.com', 'm.youtube.com', 'translate.googleapis.com'];
-
-function isAllowedFetchUrl(url) {
-  try {
-    const u = new URL(url);
-    return _ALLOWED_FETCH_DOMAINS.some((d) => u.hostname === d || u.hostname.endsWith('.' + d));
-  } catch {
-    return false;
-  }
 }
 
 // ==================== RATE LIMITER ====================
@@ -279,7 +255,7 @@ chrome.runtime.onInstalled.addListener((details) => {
 // All cross-context messages use ONE of two discriminator fields:
 //
 //   { type: 'SCREAMING_SNAKE' }   — addressed to the background worker
-//                                   (FETCH_URL, GOOGLE_TRANSLATE, ...)
+//                                   (GOOGLE_TRANSLATE, ...)
 //   { action: 'camelCase' }       — addressed to a content script
 //                                   (cacheCleanup, setLanguage, toggleSidebar, ...)
 //
@@ -302,39 +278,6 @@ function _logMisroutedMessage(msg) {
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   // Verify sender is this extension
   if (sender.id !== chrome.runtime.id) return;
-
-  if (msg.type === 'FETCH_URL') {
-    if (!isAllowedFetchUrl(msg.url)) {
-      sendResponse({ ok: false, error: 'URL not in allowlist' });
-      return true;
-    }
-    const fetchOpts = {};
-    const headers = {};
-    // Support POST requests (used for InnerTube API)
-    if (msg.method === 'POST' && msg.body) {
-      fetchOpts.method = 'POST';
-      fetchOpts.body = msg.body;
-      headers['Content-Type'] = 'application/json';
-      // InnerTube API needs origin + client headers
-      if (isYouTubeUrl(msg.url) && msg.url.includes('/youtubei/')) {
-        headers['Origin'] = 'https://www.youtube.com';
-        headers['Referer'] = 'https://www.youtube.com/';
-        headers['X-Youtube-Client-Name'] = '1';
-        if (_BG_YT_CLIENT_VERSION) headers['X-Youtube-Client-Version'] = _BG_YT_CLIENT_VERSION;
-      }
-    }
-    fetchOpts.headers = headers;
-    // Route through fetchWithRetry so 5xx/429s back off, 4xx fails fast,
-    // and the abuse-pattern contract is consistent with the GT path.
-    fetchWithRetry(msg.url, fetchOpts)
-      .then((resp) => resp.text())
-      .then((text) => sendResponse({ ok: true, data: text }))
-      .catch((err) => {
-        console.error(`[SkillBridge BG] FETCH_URL error: ${err.message}`);
-        sendResponse({ ok: false, error: err.message });
-      });
-    return true;
-  }
 
   // Google Translate: single text (with rate limiting + exponential backoff)
   if (msg.type === 'GOOGLE_TRANSLATE') {

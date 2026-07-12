@@ -1,6 +1,6 @@
 # Testing & Debugging Guide
 
-This guide covers how to run tests, debug the extension, and troubleshoot common issues.
+This guide covers how to run tests, debug the extension, and troubleshoot common issues. Unless a section says "raw developer build," browser tests target `dist/bundled`, the no-AI Chrome Web Store package.
 
 ---
 
@@ -74,22 +74,23 @@ tests/protected-terms.test.js → re-implements logic (legacy pattern)
 
 A Playwright E2E suite loads the built extension into headed Chromium (xvfb in
 CI — see the `e2e` job in `.github/workflows/ci.yml`) and exercises the
-integrated flows: page load → translate → restore, SPA navigation, lazy
-translation, IndexedDB cache, protected-term restoration, tutor streaming +
-cancel, exam-mode safety, code-comment translation, and PDF-export
-sanitization. Specs live in `tests/e2e/` (`npm run test:e2e`).
+integrated CWS flows: page load → translate → restore, popup startup, SPA
+navigation, lazy translation, IndexedDB cache, protected-term restoration,
+local learning tools, exam-mode safety, code-comment translation, PDF-export
+sanitization, and the no-RHC/no-AI package boundary. Specs live in
+`tests/e2e/` (`npm run test:e2e`).
 
 ### Thin coverage / known gaps
 
 - Unit-level coverage of `content.js` DOM helpers and `background.js` internals
   beyond what the E2E suite exercises
 - Real YouTube iframe caption activation (E2E can't drive the embedded player)
-- **Real Puter tutor auth UX** — the signed-out tutor opens a `puter.com` window
-  gated by a Cloudflare "verify you're human" (Turnstile) check, so the real
-  auth flow **cannot be completed by automated E2E**. The suite stubs
-  `src/bridge/puter.js`, so it verifies the bridge contract (message shapes,
-  model allowlist, auth-gate skip) but NOT the live Puter sign-in. An opt-in
-  manual smoke can only observe the prompt, not pass the Turnstile.
+- **Archived AI regression references** — `tutor-chat`, `tutor-offline`,
+  `chat-history`, and `stream-cancel` remain in `tests/e2e/` as historical
+  regression references, but `run-e2e` no longer executes them and the current
+  helper loads only `dist/bundled`. They are not a runnable developer suite.
+  Reactivating them requires a separate remote-free developer harness; until
+  then, they provide no release evidence for either the CWS or raw AI path.
 - Visual / dark-mode QA, mobile layout, long-session memory — manual only
 
 ---
@@ -98,10 +99,20 @@ sanitization. Specs live in `tests/e2e/` (`npm run test:e2e`).
 
 ### Loading for development
 
+To test the CWS-equivalent package:
+
+```bash
+npm run build:bundle
+```
+
 1. Open `chrome://extensions`
 2. Enable **Developer Mode** (top-right toggle)
-3. Click **Load unpacked** → select the project root folder
+3. Click **Load unpacked** → select `dist/bundled`
 4. After code changes: click the **reload button** (circular arrow) on the extension card, then refresh the Skilljar page
+
+Loading the repository root instead uses the raw developer configuration. That
+configuration retains the optional Puter-based AI gateway and must not be used
+to validate CWS privacy, permissions, remote-code status, or screenshots.
 
 ### Content Script debugging
 
@@ -115,7 +126,7 @@ Content scripts run in the context of `anthropic.skilljar.com` pages.
 
 Key console prefixes:
 - `[SkillBridge]` — main content script
-- `[SkillBridge PageBridge]` — Puter.js bridge (main world)
+- `[SkillBridge PageBridge]` — raw developer build only; absent from CWS
 
 ### Service Worker debugging
 
@@ -131,15 +142,21 @@ The background service worker has a **separate** DevTools console.
 1. DevTools → **Network tab**
 2. Useful filters:
    - `translate.googleapis.com` — Google Translate API calls
-   - `puter` — Puter.js AI requests (Gemini/Claude)
-   - `youtube.com/youtubei` — YouTube InnerTube API calls
+   - `api.github.com` — background public release check
+   - `puter` — raw developer build only; any Puter request in the CWS bundle is a release blocker
+
+Embedded YouTube players make their own page/frame requests. SkillBridge no
+longer fetches InnerTube or captions and requests no YouTube host permission.
 
 ### IndexedDB inspection
 
 1. DevTools → **Application tab** → **IndexedDB**
-2. Two databases:
+2. CWS data:
    - `skillbridge-cache` → `translations` store — cached translations (30-day TTL)
-   - `skillbridge-tutor` → `conversations` store — chat history
+   - local learning-tool state is stored through `chrome.storage.local`
+
+The raw developer AI path may also create `skillbridge-tutor`; that database is
+not part of the CWS feature set.
 
 To clear the cache:
 - Right-click the database → **Delete database**
@@ -171,27 +188,12 @@ Stored keys: `targetLanguage`, `autoTranslate`, `darkMode`, `welcomeShown`, `fab
 
 **Fix:** Make sure you're on `anthropic.skilljar.com`, not `anthropic.com/learn` (which redirects).
 
-### "Bridge not ready" errors
+### Raw developer AI gateway issues
 
-**Cause:** Puter.js failed to load within the 20-second timeout.
-
-**Fix:**
-- Check if `puter.com` is accessible from your network
-- Check console for `[SkillBridge PageBridge]` errors
-- Try refreshing the page — the bridge auto-retries on load
-
-### AI Tutor not responding
-
-**Cause:** Puter.js free tier may be rate-limited or temporarily unavailable.
-
-**Fix:**
-- Check the Network tab for failed Puter.js requests
-- Wait a minute and retry
-- When signed out, the tutor opens a `puter.com` "verify you're human"
-  (Cloudflare Turnstile) window under Puter's free "user-pays" tier — no email
-  or password is entered at that step; complete the human-check to continue.
-  Translation never reaches this path (its background verify is auth-gated to
-  stay silent when signed out)
+`Bridge not ready`, Puter authentication, and AI Tutor troubleshooting apply
+only when the repository root is loaded as an unpacked developer build. The CWS
+bundle must not initialize the page bridge or make Puter requests. If it does,
+stop release testing and treat that as a package-boundary defect.
 
 ### Google Translate rate limiting
 
@@ -229,26 +231,26 @@ User visits anthropic.skilljar.com
   │
   ├── content.js initializes
   │     ├── Injects header controls (language selector, dark mode toggle)
-  │     ├── Injects sidebar (AI tutor chat)
+  │     ├── Injects local tools / language sidebar
   │     ├── Injects floating action button
   │     └── Starts MutationObserver for dynamic content
   │
   ├── Translation pipeline (translator.js)
   │     ├── 1. Static dictionary lookup (src/data/*.json) → instant, local
   │     ├── 2. IndexedDB cache check → instant, local
-  │     ├── 3. Google Translate API (via background.js) → ~200ms, external
+  │     ├── 3. Google Translate API (via background.js) → external
   │     ├── 4. Protected terms auto-fix → instant, local
-  │     └── 5. Gemini verification queue (via page-bridge.js → Puter.js) → background, external
+  │     └── 5. IndexedDB result cache → local, 30-day TTL
   │
-  ├── AI Tutor (sidebar-chat.js)
-  │     ├── User sends message
-  │     ├── Page context appended (title + headings + 2000 chars)
-  │     └── Claude Sonnet 4.6 streaming response (via page-bridge.js → Puter.js) → external
+  ├── Local learning tools
+  │     ├── Flashcards, bookmarks, recent lessons, progress dashboard
+  │     ├── Outline, reading progress, and PDF export
+  │     └── State stored in the browser
   │
   └── YouTube subtitles (youtube-subtitles.js)
         ├── Detects YouTube embed iframes
         ├── Enables captions via postMessage API
-        └── Sets target language subtitle track
+        └── Sets target language without a YouTube host permission
 ```
 
 ### Module communication
@@ -256,13 +258,14 @@ User visits anthropic.skilljar.com
 ```
 content.js ←──window._sb──→ header-controls.js
      │                            sidebar-chat.js
-     │                            text-selection.js
+     │                            local learning-tool modules
      │
      ├── chrome.runtime.sendMessage ──→ background.js (Google Translate proxy)
-     │
-     └── window.postMessage ──→ page-bridge.js (main world)
-                                    └── puter.ai.chat() → Puter servers → Gemini/Claude
+     └── chrome.storage / IndexedDB ─→ local preferences, cache, and study state
 ```
+
+The raw developer build adds a separate page-bridge → Puter → Gemini/Claude
+path. It is intentionally absent from the CWS data-flow diagram and artifact.
 
 ### IndexedDB schema
 
@@ -275,7 +278,7 @@ content.js ←──window._sb──→ header-controls.js
 }
 ```
 
-**`skillbridge-tutor`** (conversations):
+**Raw developer build only — `skillbridge-tutor`** (conversations):
 ```
 {
   id: auto-increment,               // primary key
@@ -316,16 +319,16 @@ Use this checklist before releases or when reviewing PRs that touch core functio
 - [ ] Navigate to a different lesson → auto-translate triggers if enabled
 - [ ] Refresh page → cached translations load instantly (check Network tab — no GT calls for cached text)
 
-### AI Tutor
+### Local Learning Tools
 
-- [ ] Click floating button → sidebar opens
-- [ ] Type a question → streaming response appears
-- [ ] Response renders markdown (bold, lists, code blocks) correctly
-- [ ] Select text on page → "Ask Tutor" button appears → clicking sends quoted text to chat
-- [ ] Chat history: click clock icon → history panel shows past conversations
-- [ ] Close and reopen sidebar → chat state preserved
-- [ ] Error during response → retry button (↻) appears → clicking retries the message
-- [ ] Clear history → confirmation dialog appears before deletion
+- [ ] Click the floating language/tools button → sidebar opens with no chat input
+- [ ] Open flashcards → course glossary deck appears and review state persists
+- [ ] Add a bookmark → exact lesson position appears in Bookmarks
+- [ ] Open Continue/Recent → visited lesson and scroll position appear
+- [ ] Open dashboard → local course and progress summaries render
+- [ ] Open outline → heading links navigate within the lesson
+- [ ] Export PDF → translated lesson renders without extension controls
+- [ ] Network tab shows no Puter, Gemini, Claude, or page-bridge request
 
 ### Keyboard Shortcuts
 
@@ -333,7 +336,6 @@ Use this checklist before releases or when reviewing PRs that touch core functio
 - [ ] `Ctrl+Shift+L` → toggles dark mode
 - [ ] `Ctrl+Shift+/` → shows shortcut help overlay
 - [ ] `Escape` → closes help overlay or sidebar
-- [ ] `/` (with sidebar open, not in input field) → focuses chat input
 - [ ] Shortcuts do NOT fire when typing in textarea/input fields
 
 ### Exam Mode (Course Quizzes)
@@ -341,8 +343,7 @@ Use this checklist before releases or when reviewing PRs that touch core functio
 - [ ] Navigate to a quiz/assessment page → exam banner appears at top
 - [ ] Answer choices (radio/checkbox labels) are NOT translated
 - [ ] Question text and page headings ARE translated
-- [ ] AI Tutor shows integrity warning immediately when sidebar opens on exam page
-- [ ] AI Tutor refuses to provide direct exam answers
+- [ ] Local tools do not expose or translate quiz answer choices
 
 ### Certification Exam Kill-Switch
 
@@ -358,8 +359,7 @@ Use this checklist before releases or when reviewing PRs that touch core functio
 - [ ] **Non-English browser**: banner shows translate prompt in detected language
 - [ ] Click "Got it" / dismiss → banner doesn't reappear on refresh
 - [ ] FAB button pulses on first visit (3 cycles), stops on click
-- [ ] Sidebar first open → example question chips appear below greeting
-- [ ] Click an example question → question is sent, chips disappear
+- [ ] Sidebar first open → language and local tools are available without an AI chat surface
 
 ### SPA Navigation
 
@@ -388,7 +388,8 @@ Use this checklist before releases or when reviewing PRs that touch core functio
 ### Security Spot-Check
 
 - [ ] Open DevTools Console → no errors containing `[SkillBridge]`
-- [ ] Network tab → no requests to unexpected domains (only `translate.googleapis.com`, `youtube.com`, `puter.com`)
+- [ ] Extension-origin network requests are limited to `translate.googleapis.com` and the periodic `api.github.com` release check
+- [ ] No CWS runtime request reaches Puter, Gemini, Claude models, `page-bridge.js`, or `src/bridge/puter.js`; the packaged files and manifest omit the bridge/SDK even though dormant shared-source strings may remain in `content.bundle.js`
 - [ ] Application tab → IndexedDB → `skillbridge-cache` entries have timestamps (TTL working)
 
 ---
@@ -416,7 +417,7 @@ npm run build:firefox          # generates dist/firefox/
 | Feature | Expected | Known Issues |
 |---------|----------|-------------|
 | Page translation | Works (GT + static dict) | None known |
-| AI Tutor | Should work (Puter.js) | Untested |
+| Optional raw-source AI gateway | Developer build only; not CWS | Untested |
 | Dark mode | Should work (CSS-only) | Untested |
 | Keyboard shortcuts | Should work | Untested |
 | YouTube subtitles | May not work | iframe postMessage differences |

@@ -1,18 +1,18 @@
 /**
  * SkillBridge — AI Course Translator - Translation Engine v3.0
  *
- * Translation priority (3-tier with background verification):
+ * Translation priority:
  * 1. Static JSON dictionary (instant, no network)
- * 2. IndexedDB cache of Gemini-verified translations (instant)
+ * 2. IndexedDB translation cache (instant)
  * 3. Google Translate via background proxy (fast, ~200ms)
- *    → Then Gemini 2.0 Flash verifies in background
- *    → If improved, updates DOM + caches result
+ *    → CWS: cache the result directly
+ *    → Developer build: optionally verify complex sentences in the background
  *
  * Copyright respecting: translates on-the-fly only
  */
 
 class SkilljarTranslator {
-  constructor() {
+  constructor({ aiEnabled = true } = {}) {
     /** @type {Record<string, string>} Merged flat dictionary from JSON */
     this.staticDict = {};
     /** @type {Record<string, string>} Lowercase lookup mirror of staticDict */
@@ -38,6 +38,8 @@ class SkilljarTranslator {
     /** Bumped on every active-language switch; verify items stamped with the
      *  generation at queue time get filtered if it changes mid-flight. */
     this._langGeneration = 0;
+    /** CWS builds disable the Puter/Gemini bridge but retain GT + IDB. */
+    this.aiEnabled = aiEnabled;
   }
 
   /**
@@ -55,8 +57,10 @@ class SkilljarTranslator {
       await this._openDB();
       await this._cleanupExpiredCache();
       await this._checkStorageQuota();
-      this._setupMessageListener();
-      await this._injectPageBridgeWithRetry();
+      if (this.aiEnabled) {
+        this._setupMessageListener();
+        await this._injectPageBridgeWithRetry();
+      }
       return true;
     } catch (err) {
       console.error('[SkillBridge] Init failed:', err);
@@ -446,6 +450,14 @@ class SkilljarTranslator {
     if (!originalText || !googleTranslation) return false;
     const text = originalText.trim();
 
+    // The CWS edition has no executable AI gateway. Persist the GT result
+    // directly so the 30-day cache still works, without creating a verify
+    // queue or UI spinner that can never complete.
+    if (!this.aiEnabled) {
+      void this._cacheTranslation(text, googleTranslation, targetLang);
+      return false;
+    }
+
     // Skip if too short — Google Translate handles these fine
     if (text.length < SKILLBRIDGE_THRESHOLDS.GEMINI_MIN_TEXT) return false;
 
@@ -636,7 +648,8 @@ RULES:
   // ==================== MAIN TRANSLATE API ====================
 
   /**
-   * Translate text. Priority: static dict -> cache -> Google Translate + Gemini verify.
+   * Translate text. Priority: static dict -> cache -> Google Translate, with
+   * optional developer-build verification when the AI gateway is enabled.
    * @param {string} text — English source text
    * @param {string} targetLang — ISO 639-1
    * @returns {Promise<{text: string, source: 'static'|'cache'|'google'|'original'}>}
@@ -649,7 +662,7 @@ RULES:
     const staticResult = this.staticLookup(text);
     if (staticResult) return { text: this._restoreProtectedTerms(staticResult), source: 'static' };
 
-    // 2. IndexedDB cache of Gemini-verified translations (instant)
+    // 2. IndexedDB translation cache (instant)
     const cached = await this.cachedLookup(text, targetLang);
     if (cached) return { text: cached, source: 'cache' };
 
@@ -657,7 +670,7 @@ RULES:
     const gtResult = await this.googleTranslate(text, targetLang);
     if (gtResult) {
       const safeGtResult = this._restoreProtectedTerms(gtResult);
-      // Queue background Gemini verification
+      // CWS caches the GT result directly; developer builds may verify it.
       this.queueGeminiVerify(text, safeGtResult, targetLang);
       return { text: safeGtResult, source: 'google' };
     }

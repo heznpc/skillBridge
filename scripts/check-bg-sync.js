@@ -29,13 +29,9 @@ function fail(msg) {
 
 const json = JSON.parse(fs.readFileSync(JSON_PATH, 'utf8'));
 const jsonMap = json.GT_LANG_MAP;
-const jsonVersion = json.YOUTUBE_CLIENT_VERSION;
 
 if (!jsonMap || typeof jsonMap !== 'object') {
   fail('constants.json is missing GT_LANG_MAP');
-}
-if (!jsonVersion || typeof jsonVersion !== 'string') {
-  fail('constants.json is missing YOUTUBE_CLIENT_VERSION');
 }
 
 // --------------- 2. Evaluate generated runtime constants ---------------
@@ -53,11 +49,6 @@ if (!runtime || typeof runtime !== 'object') {
       `runtime GT_LANG_MAP differs from constants.json\n  runtime:        ${JSON.stringify(runtime.GT_LANG_MAP)}\n  constants.json: ${JSON.stringify(jsonMap)}`,
     );
   }
-  if (runtime.YOUTUBE_CLIENT_VERSION !== jsonVersion) {
-    fail(
-      `runtime YOUTUBE_CLIENT_VERSION differs from constants.json\n  runtime:        ${runtime.YOUTUBE_CLIENT_VERSION}\n  constants.json: ${jsonVersion}`,
-    );
-  }
 }
 
 // --------------- 3. Verify consumers read the generated runtime ---------------
@@ -65,9 +56,6 @@ if (!runtime || typeof runtime !== 'object') {
 const constSrc = fs.readFileSync(CONST_PATH, 'utf8');
 if (!constSrc.includes('const SB_SHARED_CONSTANTS = globalThis.SB_SHARED_CONSTANTS')) {
   fail('constants.js does not read globalThis.SB_SHARED_CONSTANTS');
-}
-if (!constSrc.includes('const YOUTUBE_CLIENT_VERSION = SB_SHARED_CONSTANTS.YOUTUBE_CLIENT_VERSION')) {
-  fail('constants.js does not bind YOUTUBE_CLIENT_VERSION from SB_SHARED_CONSTANTS');
 }
 if (!constSrc.includes('const GT_LANG_MAP = SB_SHARED_CONSTANTS.GT_LANG_MAP')) {
   fail('constants.js does not bind GT_LANG_MAP from SB_SHARED_CONSTANTS');

@@ -410,7 +410,10 @@
       currentLang = stored.targetLanguage || 'en';
       isExamPage = sb.hostCaps.examDetection ? detectExamPage() : false;
 
-      translator = new SkilljarTranslator();
+      translator = new SkilljarTranslator({ aiEnabled: sb.hostCaps.bridge !== false });
+      if (!translator.aiEnabled) {
+        await translator.initialize();
+      }
 
       if (currentLang !== 'en') {
         await translator.loadStaticTranslations(currentLang);
@@ -426,11 +429,9 @@
         window._sb.injectHeaderLanguageSelect?.();
         window._sb.injectDarkModeToggle?.();
       }
-      // The AI-tutor sidebar / FAB / Puter bridge run only on trusted hosts
-      // (anthropic.skilljar.com + the localhost E2E fixture). Other Skilljar
-      // tenants get dictionary + Google Translate but not the bridge (its
-      // postMessage nonce is readable by any page-world script); claude.com
-      // tutorials are translation-only. See getHostCapabilities (platform.js).
+      // Sidebar/FAB availability is host-scoped. Its body is either the AI
+      // tutor (developer build on a trusted host) or the bridge-free language
+      // and local-tools surface (CWS build / translation-only host).
       if (sb.hostCaps.sidebar) {
         window._sb.injectSidebar?.();
       }
@@ -480,7 +481,7 @@
         }
       });
 
-      if (sb.hostCaps.bridge) {
+      if (translator.aiEnabled) {
         translator.initialize().catch((err) => {
           console.warn('[SkillBridge] Bridge init failed (AI features unavailable):', err);
         });
@@ -817,7 +818,7 @@
     contentScope: null,
     sidebar: true,
     fab: true,
-    bridge: true,
+    bridge: globalThis.__SKILLBRIDGE_AI_GATEWAY_ENABLED__ !== false,
     headerControls: true,
     keyboardShortcuts: true,
     readingAid: true,

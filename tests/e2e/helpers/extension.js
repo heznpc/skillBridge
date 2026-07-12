@@ -346,6 +346,22 @@ async function evalInContentWorld(context, op, arg) {
                     sidebarVisible: sb.sidebarVisible,
                     gtGeneration: sb._gt && sb._gt.gtGeneration,
                     isOffline: sb.isOffline,
+                    hostCaps: sb.hostCaps
+                      ? {
+                          platform: sb.hostCaps.platform,
+                          trusted: sb.hostCaps.trusted,
+                          sidebar: sb.hostCaps.sidebar,
+                          fab: sb.hostCaps.fab,
+                          bridge: sb.hostCaps.bridge,
+                        }
+                      : null,
+                    translator: sb.translator
+                      ? {
+                          aiEnabled: sb.translator.aiEnabled !== false,
+                          cacheReady: !!sb.translator._db,
+                          bridgeReady: !!sb.translator.isReady,
+                        }
+                      : null,
                     methods: {
                       gt: sb._gt && {
                         applyStaticTranslations: typeof sb._gt.applyStaticTranslations,
@@ -361,10 +377,13 @@ async function evalInContentWorld(context, op, arg) {
                         sanitizeHtml: typeof sb._chat.sanitizeHtml,
                         closeSubPanel: typeof sb._chat.closeSubPanel,
                         toggleHistoryPanel: typeof sb._chat.toggleHistoryPanel,
+                        toggleDashboardPanel: typeof sb._chat.toggleDashboardPanel,
+                        toggleFlashcardPanel: typeof sb._chat.toggleFlashcardPanel,
                         saveConversation: typeof sb._chat.saveConversation,
                         state: sb._chat.state && {
                           savedChatHTML: sb._chat.state.savedChatHTML,
                           historyPanelOpen: sb._chat.state.historyPanelOpen,
+                          dashboardPanelOpen: sb._chat.state.dashboardPanelOpen,
                           flashcardPanelOpen: sb._chat.state.flashcardPanelOpen,
                         },
                       },

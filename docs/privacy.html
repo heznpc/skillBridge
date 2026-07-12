@@ -10,17 +10,18 @@
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: #FAFAF9; color: #1C1917; line-height: 1.7;
-      max-width: 720px; margin: 0 auto; padding: 40px 24px 80px;
+      max-width: 760px; margin: 0 auto; padding: 40px 24px 80px;
     }
     h1 { font-size: 28px; margin-bottom: 8px; color: #3D405B; }
     h2 { font-size: 20px; margin: 32px 0 12px; color: #3D405B; }
+    h3 { font-size: 17px; margin: 24px 0 10px; color: #3D405B; }
     p, li { font-size: 15px; margin-bottom: 12px; color: #44403C; }
     ul { padding-left: 24px; }
     strong { color: #1C1917; }
     a { color: #E07A5F; text-decoration: none; }
     a:hover { text-decoration: underline; }
     table { width: 100%; border-collapse: collapse; margin: 12px 0; }
-    th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #E7E5E4; font-size: 14px; }
+    th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #E7E5E4; font-size: 14px; vertical-align: top; }
     th { background: #F5F5F4; font-weight: 600; }
     code { background: #F5F5F4; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
     .updated { font-size: 14px; color: #78716C; margin-bottom: 32px; }
@@ -29,86 +30,144 @@
 </head>
 <body>
   <h1>Privacy Policy</h1>
-  <p class="updated"><strong>Last updated:</strong> June 18, 2026</p>
+  <p class="updated"><strong>Last updated:</strong> July 11, 2026</p>
 
-  <h2>Overview</h2>
-  <p>SkillBridge is a browser extension that translates the free AI course pages on Skilljar (<a href="https://anthropic.skilljar.com/">anthropic.skilljar.com</a> and other detected Skilljar AI-course tenants) and Claude tutorial pages at <code>claude.com/resources/tutorials</code> into 32 languages, and provides an in-page AI learning assistant on the trusted primary course host. It is designed with privacy in mind — SkillBridge does not operate any servers, requires no account, email, or password to translate (the optional in-page AI tutor uses Puter.js, which may open a Puter window to verify you're human the first time you use it), and does not use analytics or tracking.</p>
+  <h2>Version Status — Read This First</h2>
+  <p>As of July 11, 2026, the Chrome Web Store still publishes <strong>SkillBridge v1.0.1</strong>. That legacy version includes a bundled Puter client used for Gemini translation review and the Claude-powered AI Tutor, and it declares YouTube host access.</p>
+  <p>A privacy-focused CWS candidate is being prepared, but <strong>publication is paused and that candidate is not yet available from the Chrome Web Store</strong>. The candidate disables the AI gateway, removes the Tutor from the CWS surface, omits the Puter SDK and page bridge, and removes YouTube host access.</p>
+  <p>Use the section below that matches the version you installed. SkillBridge does not operate a backend server and does not use analytics, telemetry, advertising, or tracking in either version. Third-party services can still process the content described below when their features are used.</p>
 
-  <h2>Data Stored Locally (Never Leaves Your Device)</h2>
-  <ul>
-    <li><strong>User preferences</strong> — Selected language, dark mode, auto-translate settings are saved in <code>chrome.storage.local</code>.</li>
-    <li><strong>Translation cache</strong> — Previously translated text is cached in your browser's IndexedDB (<code>skillbridge-cache</code>) for up to 30 days to improve performance. This data never leaves your device.</li>
-    <li><strong>Conversation history</strong> — AI Tutor chat history is stored in IndexedDB (<code>skillbridge-tutor</code>) on your device. This data never leaves your device.</li>
-    <li><strong>Curated dictionaries</strong> — 1,100+ hand-curated translation entries per premium language are bundled within the extension package itself.</li>
-  </ul>
-
-  <h2>Data Sent to Third-Party Services</h2>
-  <p>To provide translation and AI features, SkillBridge sends data to the following third-party services. <strong>SkillBridge does not operate or control any of these services.</strong></p>
+  <h2>Currently Published Chrome Web Store Version: v1.0.1 (Legacy)</h2>
+  <h3>Data Sent to Third-Party Services</h3>
   <table>
-    <tr><th>Service</th><th>What is sent</th><th>Purpose</th><th>Privacy Policy</th></tr>
+    <tr><th>Service</th><th>What v1.0.1 sends</th><th>Purpose</th><th>Privacy policy</th></tr>
     <tr>
       <td>Google Translate API</td>
-      <td>Page text to be translated</td>
-      <td>Primary translation for plain text</td>
+      <td>Visible course-page text selected for translation and the requested language</td>
+      <td>Produce the initial translation</td>
       <td><a href="https://policies.google.com/privacy">Google Privacy Policy</a></td>
     </tr>
     <tr>
-      <td>Gemini 2.0 Flash<br><small>(via Puter.js)</small></td>
-      <td>Text with inline HTML tags; original + translated text pairs for quality verification</td>
-      <td>Tag-preserving translation of complex HTML; background quality checks on translations</td>
-      <td><a href="https://puter.com/privacy">Puter.js Privacy Policy</a></td>
+      <td>Puter-backed Gemini</td>
+      <td>Visible course text, the requested language, and, for quality review, the initial Google translation</td>
+      <td>Review or improve complex translations</td>
+      <td><a href="https://puter.com/privacy">Puter Privacy Policy</a></td>
     </tr>
     <tr>
-      <td>Claude Sonnet 4.6<br><small>(via Puter.js)</small></td>
-      <td>User's chat message + lesson context (page title, headings, and up to 2,000 characters of lesson body)</td>
-      <td>AI Tutor sidebar chatbot</td>
-      <td><a href="https://puter.com/privacy">Puter.js Privacy Policy</a></td>
+      <td>Puter-backed Claude</td>
+      <td>The user's Tutor question, any text explicitly quoted into it, the requested response language, the course title, and up to five page headings</td>
+      <td>Generate an AI Tutor response</td>
+      <td><a href="https://puter.com/privacy">Puter Privacy Policy</a></td>
     </tr>
   </table>
-  <p>All requests to Gemini and Claude are routed through <a href="https://docs.puter.com/">Puter.js</a>, a third-party client-side AI gateway. Puter.js handles authentication and API routing. Please review Puter's privacy policy for details on how they process data.</p>
+  <p>The main Puter SDK file in v1.0.1 is bundled inside the extension package, but that SDK also contains lazy remote JavaScript and WebAssembly import paths, including an unpkg-hosted polyfill and remote <code>rustls.js</code>/<code>rustls.wasm</code> assets. v1.0.1 therefore must not be described as a fully self-contained or no-remote-code package. When an AI feature is used, the client also connects to Puter services, which route the request to the selected AI model. The unpublished replacement candidate omits the Puter SDK and page bridge entirely.</p>
 
-  <h2>Data NOT Collected</h2>
+  <h3>YouTube Access in v1.0.1</h3>
+  <p>v1.0.1 declares <code>https://*.youtube.com/*</code> host access. Its subtitle feature controls an existing embedded player with iframe <code>postMessage</code> commands. The package also contains an unused <code>FETCH_URL</code> background proxy; the v1.0.1 subtitle module does not call that proxy, but, if invoked internally for a YouTube URL, it can make a YouTube request and attach one fixed <code>Cookie</code> header containing technical <code>CONSENT</code> and <code>SOCS</code> values. The unpublished candidate removes both the host permission and that handler.</p>
+
+  <h3>Data Stored Locally by v1.0.1</h3>
   <ul>
-    <li>No personal information (name, email, etc.)</li>
-    <li>No browsing history outside the pages the extension runs on (Skilljar AI-course pages and <code>claude.com/resources/tutorials</code>)</li>
-    <li>No analytics, telemetry, or tracking of any kind</li>
-    <li>No advertising or marketing data</li>
+    <li><strong>Preferences</strong> — selected language, auto-translate, dark mode, and onboarding state are stored in <code>chrome.storage.local</code>.</li>
+    <li><strong>Translation cache</strong> — original and translated course text is cached in IndexedDB (<code>skillbridge-cache</code>).</li>
+    <li><strong>Tutor history</strong> — Tutor questions, AI answers, language, course heading, page URL, and timestamp are stored in IndexedDB (<code>skillbridge-tutor</code>) so the user can reopen recent conversations.</li>
+    <li><strong>Curated dictionaries</strong> — packaged with the extension.</li>
+  </ul>
+  <p>The local cache and Tutor history are not sent to the SkillBridge operator. A new Tutor request sends the current question and the limited page context described above, not the saved conversation database.</p>
+
+  <h3>v1.0.1 Retention</h3>
+  <ul>
+    <li><strong>Preferences:</strong> retained until the user clears extension data or removes the extension.</li>
+    <li><strong>Translation cache:</strong> entries older than 30 days are no longer used, but v1.0.1 does not delete the stale IndexedDB record during lookup; it may remain until the user clears the relevant browser/site data.</li>
+    <li><strong>Tutor history:</strong> no automatic expiry; retained locally until the user clears the relevant browser/site data.</li>
+    <li><strong>Third-party processing:</strong> Google, Puter, and the selected AI provider control their own service logs and retention under their respective policies.</li>
   </ul>
 
-  <h2>Permissions</h2>
+  <h3>Permissions Declared by v1.0.1</h3>
   <table>
-    <tr><th>Permission</th><th>Purpose</th></tr>
-    <tr><td><code>storage</code></td><td>Save user preferences (selected language, dark mode, auto-translate) and cached translations</td></tr>
-    <tr><td><code>alarms</code></td><td>Run periodic maintenance (cache cleanup, update check) without waking the user</td></tr>
-    <tr><td><code>*.skilljar.com</code></td><td>Translate AI-course pages on Skilljar (anthropic.skilljar.com and other detected Skilljar AI tenants)</td></tr>
-    <tr><td><code>claude.com/resources/tutorials</code> (content-script match)</td><td>Translate Claude tutorial pages</td></tr>
-    <tr><td><code>*.youtube.com</code></td><td>Auto-activate translated subtitles on course videos</td></tr>
-    <tr><td><code>translate.googleapis.com</code></td><td>Send text to Google Translate API</td></tr>
-    <tr><td><code>api.github.com</code></td><td>Check the GitHub Releases API for new-version notifications (no user data sent)</td></tr>
+    <tr><th>Permission or site access</th><th>v1.0.1 scope</th></tr>
+    <tr><td><code>storage</code></td><td>Save extension preferences</td></tr>
+    <tr><td><code>activeTab</code></td><td>Legacy access to the active course tab</td></tr>
+    <tr><td><code>tabs</code></td><td>Legacy tab/navigation access</td></tr>
+    <tr><td><code>*.skilljar.com</code></td><td>Run on and translate supported Skilljar course pages</td></tr>
+    <tr><td><code>*.youtube.com</code></td><td>Legacy YouTube access described above</td></tr>
+    <tr><td><code>translate.googleapis.com</code></td><td>Send requested course text to Google Translate</td></tr>
   </table>
 
-  <h2>Data Retention</h2>
+  <h2>Next Chrome Web Store Candidate (Unpublished)</h2>
+  <h3>CWS Package Boundary</h3>
+  <p>The candidate runtime disables the AI gateway, does not expose the AI Tutor, and makes no Gemini, Claude-model, or Puter request. The Puter SDK and page bridge are omitted from the candidate package. Dormant AI-related helpers or labels from shared source may remain as non-executing strings in the compiled content bundle; an immutable build flag prevents that path from initializing.</p>
+
+  <h3>Data Stored Locally by the Candidate</h3>
   <ul>
-    <li><strong>Translation cache:</strong> Stored locally for 30 days, then automatically expired. Can be cleared anytime via browser settings.</li>
-    <li><strong>Conversation history:</strong> Stored locally with no automatic expiration. Can be cleared via browser settings (clear site data for <code>*.skilljar.com</code>).</li>
-    <li><strong>Third-party services:</strong> SkillBridge does not control data retention by Google, Puter.js, or their upstream AI providers. Please review their respective privacy policies.</li>
+    <li><strong>Preferences and interface state (<code>chrome.storage.local</code>)</strong> — selected language, dark mode, auto-translate, onboarding state, and related display settings.</li>
+    <li><strong>Learning-tool state (<code>chrome.storage.local</code>)</strong> — flashcard review state, bookmarks, recent lessons, and scroll positions.</li>
+    <li><strong>Translation cache (IndexedDB)</strong> — original text, translated text, target language, and a timestamp are cached in <code>skillbridge-cache</code> for up to 30 days. This does not depend on the <code>storage</code> extension permission.</li>
+    <li><strong>Progress summaries</strong> — calculated locally from stored course state; they are not separately persisted or transmitted.</li>
+    <li><strong>Curated dictionaries</strong> — packaged with the extension.</li>
+  </ul>
+  <p>SkillBridge does not send this locally stored state to its operator or to a third-party analytics service. It can be removed through the browser's extension or site-data controls.</p>
+
+  <h3>Data Sent to Third-Party Services by the Candidate</h3>
+  <table>
+    <tr><th>Service</th><th>What is sent</th><th>Purpose</th><th>Privacy policy</th></tr>
+    <tr>
+      <td>Google Translate API</td>
+      <td>Visible course-page text selected for translation and the requested language</td>
+      <td>Translate text not already covered by the packaged dictionary or local cache</td>
+      <td><a href="https://policies.google.com/privacy">Google Privacy Policy</a></td>
+    </tr>
+    <tr>
+      <td>GitHub Releases API</td>
+      <td>A periodic request for the latest public SkillBridge release; no course text or learning-tool state</td>
+      <td>Display an update badge when a newer release exists</td>
+      <td><a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub Privacy Statement</a></td>
+    </tr>
+  </table>
+  <p>The candidate does not transmit course text to YouTube. Auto-subtitles configure an existing embedded player and send it player-control messages; the extension requests no YouTube host permission.</p>
+
+  <h3>Data Not Collected by the Candidate</h3>
+  <ul>
+    <li>No name, email address, account credential, or payment information</li>
+    <li>No browsing history outside the pages where the extension is configured to run</li>
+    <li>No analytics, telemetry, advertising identifier, or marketing profile</li>
+    <li>No AI Tutor messages or AI conversation history</li>
   </ul>
 
-  <h2>GDPR and International Users</h2>
-  <p>SkillBridge does not operate servers or maintain user databases. All user-generated data (cache, chat history, preferences) is stored exclusively on your local device and can be deleted at any time through your browser settings.</p>
-  <p>However, by using SkillBridge's translation and AI features, page text and chat messages are transmitted to third-party services (Google, Puter.js) as described above. These services may process data in jurisdictions outside your country. Please review their privacy policies for GDPR-specific information.</p>
+  <h3>Candidate Permissions</h3>
+  <table>
+    <tr><th>Permission or site access</th><th>Purpose</th></tr>
+    <tr><td><code>storage</code></td><td>Save preferences, flashcard review state, bookmarks, recent lessons, and scroll positions in <code>chrome.storage.local</code></td></tr>
+    <tr><td><code>alarms</code></td><td>Run periodic cache cleanup and public release checks</td></tr>
+    <tr><td><code>*.skilljar.com</code></td><td>Translate supported AI-course pages hosted on Skilljar</td></tr>
+    <tr><td><code>claude.com/resources/tutorials</code> (content-script match)</td><td>Translate Claude tutorial pages</td></tr>
+    <tr><td><code>translate.googleapis.com</code></td><td>Send page text to Google Translate when translation is requested</td></tr>
+    <tr><td><code>api.github.com</code></td><td>Check the public Releases API for newer versions; no user or lesson content is sent</td></tr>
+  </table>
 
-  <h2>Children's Privacy</h2>
-  <p>SkillBridge does not knowingly collect any information from children under 13.</p>
+  <h3>Candidate Retention</h3>
+  <ul>
+    <li><strong>Translation cache:</strong> up to 30 days, unless the user clears it sooner.</li>
+    <li><strong>Preferences and learning-tool state:</strong> retained locally until the user clears extension or site data.</li>
+    <li><strong>Third-party processing:</strong> Google and GitHub control their own service logs and retention under their respective policies.</li>
+  </ul>
 
-  <h2>Changes to This Policy</h2>
-  <p>Any changes to this privacy policy will be posted on this page and reflected in the extension update.</p>
+  <h2>Raw Source and Developer Builds</h2>
+  <p>The public repository retains an optional Puter-based AI gateway for unpacked development and research. The raw source configuration enables that developer path, which can send translation text or user-requested Tutor context to Puter-backed Gemini or Claude services when those functions are used.</p>
+  <p>Loading the repository root as an unpacked extension is therefore <strong>not equivalent to the unpublished no-AI CWS candidate</strong>. Developers should review the source and <a href="https://puter.com/privacy">Puter's privacy policy</a> before using its optional AI functions.</p>
 
-  <h2>Contact</h2>
-  <p>For questions about this privacy policy, please open an issue on <a href="https://github.com/heznpc/skillbridge/issues">GitHub</a>.</p>
+  <h2>International Users and Children's Privacy</h2>
+  <p>SkillBridge does not operate a user database. Google and, in v1.0.1 or raw developer builds, Puter and the selected AI provider may process transmitted text in jurisdictions outside the user's country. Users should review the applicable third-party policies for rights and controls.</p>
+  <p>SkillBridge does not knowingly collect personal information from children under 13.</p>
+
+  <h2>Release-Maintenance Note</h2>
+  <p><strong>TODO:</strong> Keep the v1.0.1 legacy disclosure on this page while publication is paused. Remove or archive it only after the replacement version is confirmed live in the Chrome Web Store, then update this policy and the store listing together.</p>
+
+  <h2>Changes</h2>
+  <p>Material changes to this policy will be posted here and reflected in the published extension information.</p>
 
   <footer>
-    <p>SkillBridge is an unofficial, independent community project. Not affiliated with, endorsed by, or sponsored by Anthropic or Skilljar. References to "Anthropic", "Claude", "Skilljar", and the URL anthropic.skilljar.com are nominative — they describe the third-party platform and content this extension translates.</p>
+    SkillBridge is an open-source project. For privacy questions, open an issue on
+    <a href="https://github.com/heznpc/skillbridge/issues">GitHub</a>.
   </footer>
 </body>
 </html>

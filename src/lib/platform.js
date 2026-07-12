@@ -77,7 +77,8 @@ function isPlatformSupported(id) {
 // threaded through as `window._sb.hostCaps`:
 //   - contentScope        — CSS root(s) to confine translation + reading aid
 //                           to (null = whole document, the Skilljar default)
-//   - sidebar / fab / bridge        — the AI-tutor surface (trusted hosts only)
+//   - sidebar / fab                — local learning surface
+//   - bridge                       — optional AI surface (trusted host + enabled build)
 //   - headerControls / keyboardShortcuts / readingAid / examDetection /
 //     youtubeSubtitles            — per-host feature toggles
 //
@@ -104,14 +105,16 @@ const _CAPS_NONE = Object.freeze({
   examDetection: false,
   youtubeSubtitles: false,
 });
-// anthropic.skilljar.com + the localhost/127.0.0.1 E2E fixture: full feature set.
+// anthropic.skilljar.com + the localhost/127.0.0.1 E2E fixture: full local
+// feature set. The build flag independently decides whether the AI bridge is
+// present (false in the Chrome Web Store artifact).
 const _CAPS_FULL = Object.freeze({
   platform: PLATFORM_IDS.SKILLJAR,
   trusted: true,
   contentScope: null,
   sidebar: true,
   fab: true,
-  bridge: true,
+  bridge: globalThis.__SKILLBRIDGE_AI_GATEWAY_ENABLED__ !== false,
   headerControls: true,
   keyboardShortcuts: true,
   readingAid: true,

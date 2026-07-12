@@ -1,154 +1,132 @@
-# Chrome Web Store — Store Listing (v3.5.41)
+# Chrome Web Store — Store Listing (next version pending)
 
-This is the single Chrome Web Store listing (English / default locale — shown to
-every user regardless of browser language). The store copy is intentionally
-English-only to avoid listing drift; the extension UI itself is localized in 12
-premium languages.
+This copy describes only the bundled Chrome Web Store package. It must stay in
+sync with the uploaded ZIP, the CWS Privacy tab, and `PRIVACY_POLICY.md`.
 
-## What's New (v3.5.41) — paste into the CWS "What's new" field
+## What's New — paste into the CWS "What's new" field after version assignment
 
-- 🌏 Indonesian is now a Premium language with the curated dictionary.
-- 🛡️ Protected terms are restored on cached translations too, so brand and technical terms stay correct on repeat visits.
-- 🃏 Spaced-repetition flashcards — a new "Review due" mode shows only the cards due now (cards come back at the right time).
-- 🔖 Bookmarks — save a lesson at your exact scroll position and jump back anytime.
-- ⏩ Continue / Recent — resume across courses right where you left off.
-- 📑 In-lesson outline + reading-progress bar for long lessons.
-- 🧰 Tidier tutor — history, flashcards, bookmarks, Continue, and PDF export are grouped in one "Tools" menu.
-- 🛠️ Polish — the AI-tutor button icon renders on every page, suggestion chips line up with the chat, and brand terms no longer show up doubled like "Claude(Claude)".
-- 🧱 Sturdier UI — SkillBridge's panels are now isolated from the host site's styles, so Academy site updates can't visually break them.
-- 🎨 New extension icon.
+- 🔒 Privacy-focused CWS runtime: AI gateway disabled, no AI-service requests, and Puter/page bridge omitted.
+- 🌐 Translation continues through packaged dictionaries, local cache, and Google Translate.
+- 🃏 Local learning tools include spaced-repetition flashcards, bookmarks, Continue/Recent, progress dashboard, outline, and PDF export.
+- 🎬 Auto-subtitles remain available without requesting YouTube host access.
+- 🧹 Removed an unused YouTube network proxy and its host permission.
+- 🪟 Repaired the extension popup and added final-bundle browser coverage.
+- 🎨 Updated extension icon and isolated panels from host-page styles.
 
 ## Title (max 75 chars)
 
-SkillBridge — AI Course Translator with in-page AI tutor
+SkillBridge — AI Course Translator
 
 ## Summary (max 132 chars)
 
-Take Anthropic's free AI courses in 32 languages — accurate AI terminology, an in-page AI tutor, exam-safe. Free, no API key.
+Translate AI courses into 32 languages with curated terminology, local flashcards, bookmarks, reading tools, and exam safeguards.
 
 ## Description (for Store listing)
 
-Anthropic's free AI courses at anthropic.skilljar.com — prompt engineering, AI safety, the Claude API, MCP, and more — are world-class, but English-only. SkillBridge translates them into 32 languages, right inside the page, so you can actually follow along and finish.
+SkillBridge translates supported AI-course pages into 32 languages directly inside the page. It combines packaged terminology dictionaries, a 30-day local cache, and Google Translate so learners can follow lessons without copying text between tabs.
 
-This is not generic page-translate. SkillBridge ships hand-curated AI terminology dictionaries so the words that matter stay correct — "Prompt" stays a prompt, not the literal mistranslation machine translators produce in most languages — then verifies tricky sentences with an LLM in the background. On top sits an in-page AI tutor that knows the exact lesson you're on: get stuck, ask in your own language, and the answer fits the slide in front of you.
+🌐 COURSE-PAGE TRANSLATION
+Translate headings, paragraphs, lists, navigation, course cards, progress labels, and supported code comments while keeping course controls usable. Translation follows single-page navigation as you move between lessons.
 
-🎓 FINISH IN YOUR LANGUAGE
-Every text element on the page is translated — headings, paragraphs, lists, navigation, course cards, progress labels, video subtitles, and code comments. Interactive elements stay intact so progress tracking and quiz submission keep working. (Blocks that mix inline formatting — bold, links, code — are AI-translated and fill in after the optional tutor's Puter human-check; plain text needs no account.)
+✨ CURATED AI TERMINOLOGY
+Premium languages include 1,100+ packaged entries for technical terms and product names. Protected-term restoration corrects known machine-translation errors after translation and when cached results are reused.
 
-🤖 IN-PAGE AI TUTOR (powered by Claude Sonnet 4.6 via Puter.js)
-A sidebar chatbot that knows which course and lesson you're on. Ask questions in your language; get streaming answers grounded in the current lesson. Powered by Puter.js's free tier — no API key; the first time you open the tutor, Puter may show a quick "verify you're human" window.
+🧰 LOCAL LEARNING TOOLS
+Use spaced-repetition flashcards, bookmarks, Continue/Recent links, a progress dashboard, an in-lesson outline, reading progress, and PDF export. Preferences and learning-tool state stay in the browser.
 
-🃏 SPACED-REPETITION FLASHCARDS
-Vocabulary decks generated from the curated dictionary for the course you're viewing. Spaced-repetition scheduling means a card you mark comes back at the right time (1 / 3 / 7 days), and a "Review due" mode shows only the cards due now. Saved locally.
-
-📝 SELECT-AND-ASK
-Select any text in the lesson and click "Ask Tutor" for an explanation in your language. The tutor sees the full lesson context.
-
-💬 CONVERSATION HISTORY
-Chat history is saved locally (IndexedDB), grouped by chapter. Review past Q&A across sessions without losing context.
-
-🔖 BOOKMARKS & CONTINUE
-Bookmark any lesson at the exact spot you stopped, and pick up across courses with "Continue" — SkillBridge remembers the lessons you've visited and your scroll position, so you jump straight back. All local.
-
-📑 IN-LESSON OUTLINE & READING PROGRESS
-A table of contents built from the lesson's headings (jump to any section) plus a reading-progress bar, so you always know how far you've read — handy on long lessons.
-
-🎓 EXAM MODE & CERTIFICATION SAFETY (the rule that makes this safe to use)
-Course quizzes: answer choices are NEVER translated, so your selection matches the canonical English answer. The AI Tutor switches to exam-safe mode.
-
-Proctored certification exams (e.g., Claude Certified Architect): the extension disables itself entirely — no translation, no UI, no AI tutor — so it cannot be mistaken for a cheating tool.
-
-✨ PROTECTED TERMS
-1,100+ curated entries per premium language. Brand names (Anthropic, Claude, Cowork, Dispatch, Computer Use, Subagent) and technical AI terms stay correct — these are descriptive references to third-party brands, not our claim of association. Auto-corrects known mistranslations per language. New courses on the platform get terminology coverage within 48 hours, mechanically enforced by our open-source drift watcher.
-
-💻 CODE COMMENT TRANSLATION
-Comments inside code blocks get translated; the code itself stays intact. Supports Python, JavaScript, HTML, Bash, and more.
+🎓 EXAM AND CERTIFICATION SAFETY
+Course-quiz answer choices are never translated, so they remain aligned with the canonical English answers. On recognized proctored certification routes, SkillBridge disables translation and injected UI entirely.
 
 🎬 AUTO-SUBTITLES
-Course videos automatically activate translated subtitles when you play them. No manual toggle needed.
+For supported embedded course videos, SkillBridge asks the existing player to enable translated subtitles. It does not fetch captions and does not request YouTube host permission.
 
-🔍 SMART DETECTION
-Detects your browser language on first visit and offers to translate — including an onboarding guide for English-speaking users. Handles SPA navigation: when you move between lessons, the new page translates automatically without a reload.
+📡 CACHE AND OFFLINE FALLBACK
+Previously translated text is cached locally for up to 30 days. If the network drops, cached translations remain available and the extension shows an offline status instead of silently failing.
 
-📡 OFFLINE SUPPORT
-When you lose internet, SkillBridge switches to cached translations and shows an offline banner. The AI Tutor displays a friendly offline notice instead of failing silently.
-
-⌨️ KEYBOARD SHORTCUTS
-Ctrl+Shift+S (toggle tutor), Ctrl+Shift+F (flashcards), Ctrl+Shift+L (dark mode), Ctrl+Shift+/ (help), Escape (close), / (focus chat).
-
-🌙 DARK MODE · 🔄 RTL SUPPORT · 📱 MOBILE FRIENDLY
-Full dark theme for the course site. Full right-to-left layout for Arabic and Hebrew. Sidebar adapts to mobile.
+🌙 ACCESSIBLE STUDY SURFACE
+Dark mode, right-to-left layout, keyboard shortcuts, responsive panels, language onboarding, and protected course controls are included.
 
 ━━━━━━━━━━━━━━━━━━━
 
 SUPPORTED COURSES
-All 22 currently-published courses/catalog entries on anthropic.skilljar.com, with terminology coverage for any new entry added within 48 hours (mechanically enforced by an open-source drift watcher that auto-opens an issue when a new slug appears). Public learning and certification-info pages are translated; proctored exam URLs remain disabled entirely as noted above. Course names referenced descriptively for compatibility:
-Claude 101 · Claude Platform 101 · Claude Code 101 · Claude Code in Action · Introduction to Claude Cowork · Introduction to Agent Skills · Introduction to Subagents · Building with the Claude API · Introduction to MCP · MCP: Advanced Topics · Claude with Amazon Bedrock · Claude with Google Vertex AI · AI Fluency: Framework & Foundations · AI Fluency for Builders · AI Fluency for Students · AI Fluency for Educators · Teaching AI Fluency · AI Fluency for Nonprofits · AI Fluency for Small Businesses · AI Capabilities and Limitations · Certification FAQ · Claude Certified Architect Foundations Certification
+
+All 22 currently-published courses/catalog entries on anthropic.skilljar.com are covered by the current compatibility map. Public learning and certification-information pages can translate; recognized proctored exam routes remain disabled.
 
 ━━━━━━━━━━━━━━━━━━━
 
-PREMIUM LANGUAGES (Curated Dictionary + Google Translate + AI Verification):
-🇰🇷 한국어 · 🇯🇵 日本語 · 🇨🇳 中文简体 · 🇹🇼 中文繁體 · 🇪🇸 Español · 🇫🇷 Français · 🇮🇹 Italiano · 🇩🇪 Deutsch · 🇧🇷 Português (BR) · 🇷🇺 Русский · 🇻🇳 Tiếng Việt · 🇮🇩 Bahasa Indonesia
+LANGUAGES
 
-STANDARD LANGUAGES (Google Translate + AI Verification):
+PREMIUM LANGUAGES — Packaged curated dictionary + Google Translate:
+한국어 · 日本語 · 中文简体 · 中文繁體 · Español · Français · Italiano · Deutsch · Português (BR) · Русский · Tiếng Việt · Bahasa Indonesia
+
+STANDARD LANGUAGES — Google Translate:
 Português (PT) · Nederlands · Polski · Українська · Čeština · Svenska · Dansk · Suomi · Norsk · Türkçe · العربية · हिन्दी · ภาษาไทย · Bahasa Melayu · Filipino · বাংলা · עברית · Română · Magyar · Ελληνικά
 
 ━━━━━━━━━━━━━━━━━━━
 
-HOW IT WORKS
-1. Curated dictionary lookup (1,100+ entries) → instant, fully local
-2. Local cache (IndexedDB) → instant, stays on your device
-3. Inline HTML tags → Gemini 2.0 Flash translates with tag preservation (via Puter.js — needs a one-time Puter human-check)
-4. Plain text → Google Translate API (~200ms)
-5. AI quality check → Gemini 2.0 Flash verifies complex sentences when Puter auth is available; otherwise the Google Translate result stays in place
-6. Protected Terms auto-fix → restores brand and technical terms
+HOW TRANSLATION WORKS
 
-No data is stored on SkillBridge servers. Translation uses Google Translate and Puter.js — see Privacy Policy below for details.
+1. Packaged curated-dictionary lookup — local
+2. IndexedDB cache lookup — local
+3. Google Translate for remaining visible text — external service
+4. Protected-term restoration — local
+5. Result cache — local, up to 30 days
+
+SkillBridge does not operate a translation server. Page text that is not already covered locally is sent to Google Translate when translation is requested.
 
 ━━━━━━━━━━━━━━━━━━━
 
-🔒 PRIVACY & DATA
-No API keys needed. No account, email, or password to translate (the optional AI tutor may open a Puter human-check window). No analytics or tracking by default.
+🔒 CWS PRIVACY AND PACKAGE BOUNDARY
 
-SkillBridge does NOT operate any servers. To provide translation and AI features, data is sent to third parties:
+The Chrome Web Store runtime disables the AI gateway, exposes no AI Tutor, and makes no Gemini, Claude-model, or Puter request. The Puter SDK and page bridge are omitted. Dormant AI-related helpers or labels from shared source may remain as non-executing strings in the compiled content bundle. The extension does not request YouTube host access and uses no analytics, tracking, advertising, account, email, password, or user API key.
 
-• Google Translate — Page text is sent to Google's translation endpoint. Google's privacy policy applies.
-• Puter.js → Gemini 2.0 Flash — Signed-in or human-checked sessions may send translation text via Puter.js for quality verification of complex sentences. Puter's privacy policy applies.
-• Puter.js → Claude Sonnet 4.6 — Chat messages and lesson context (up to 2,000 characters) are sent via Puter.js for AI tutoring. Puter's privacy policy applies.
+Third-party requests made by the CWS edition:
 
-All settings, translation cache, and conversation history are stored locally in your browser (chrome.storage and IndexedDB). This data never leaves your device.
+• Google Translate — visible page text selected for translation and the requested language.
+• GitHub Releases API — a periodic public update check; no course text or learning-tool data.
+
+Settings, bookmarks, flashcard review state, recent lessons, and scroll positions are stored in `chrome.storage.local`. Original and translated text is cached separately in IndexedDB. Progress summaries are calculated locally from that state rather than separately stored or transmitted.
+
+The public repository also retains an optional Puter-based AI gateway for unpacked developer builds. In the CWS build that gateway cannot initialize, and its Puter SDK and page-bridge files are omitted; it is not a feature advertised by this listing.
 
 Full privacy policy: https://heznpc.github.io/skillBridge/privacy
 
 📖 OPEN SOURCE
 https://github.com/heznpc/skillbridge
-MIT License — contributions welcome. The "things we will not do" list is public in the repo's TODO.md.
 
 ⚠️ DISCLAIMER
-SkillBridge is an unofficial, independent community project. It is not affiliated with, endorsed by, or sponsored by Anthropic or Skilljar. References to "Anthropic", "Claude", "Skilljar", and the URL anthropic.skilljar.com are nominative — they describe the third-party platform and content this extension translates. All trademarks remain the property of their respective owners.
+SkillBridge is an unofficial, independent community project. It is not affiliated with, endorsed by, or sponsored by Anthropic or Skilljar. Third-party names and URLs are used descriptively to explain compatibility. All trademarks remain the property of their respective owners.
 
 ## Category
+
 Education
 
 ## Language
+
 All languages
 
 ## Permission Justifications
 
 ### storage
-Saves user preferences such as selected language, dark mode, and auto-translate settings locally in the browser.
+
+Stores the selected language, display preferences, flashcard review state, bookmarks, recent lessons, and scroll positions in `chrome.storage.local`. The IndexedDB translation cache does not depend on this permission, and progress summaries are calculated rather than separately stored.
 
 ### alarms
-Schedules background maintenance tasks (cache trim, YouTube client version refresh) without keeping the service worker alive unnecessarily.
+
+Schedules periodic cache cleanup and public release checks without keeping the service worker alive.
 
 ### Host permission: *.skilljar.com
-Required to inject content scripts that translate the course pages at anthropic.skilljar.com and other detected Skilljar-hosted AI-course tenants (translation only outside the trusted primary host).
 
-### Host permission: *.youtube.com
-Required to auto-activate translated subtitles on course videos embedded from YouTube.
+Allows SkillBridge to run on supported AI-course pages hosted on Skilljar and translate the visible course content requested by the user.
+
+### Content-script match: claude.com/resources/tutorials
+
+Allows translation to run only on Claude tutorial paths, rather than across all of `claude.com`.
 
 ### Host permission: translate.googleapis.com
-Required to send page text to Google Translate API for translation.
+
+Allows page text selected for translation to be sent to Google Translate. No account credential or learning-tool state is included.
 
 ### Host permission: api.github.com
-Used only by the in-extension update notifier to check for newer published versions of SkillBridge. Read-only, no auth.
+
+Used only for a read-only request to the public Releases API so the extension can display an update badge. No user, lesson, or learning-tool content is sent.

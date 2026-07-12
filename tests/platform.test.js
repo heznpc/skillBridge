@@ -311,6 +311,23 @@ describe('getHostCapabilities', () => {
     expect(getHostCapabilities('localhost').contentScope).toBeNull();
   });
 
+  test('CWS build gate disables only the full-profile AI bridge', () => {
+    const gatedGlobal = {
+      module: { exports: {} },
+      __SKILLBRIDGE_AI_GATEWAY_ENABLED__: false,
+    };
+    new Function('globalThis', src)(gatedGlobal);
+    const gatedCaps = gatedGlobal.module.exports.getHostCapabilities('anthropic.skilljar.com');
+    expect(gatedCaps).toMatchObject({
+      trusted: true,
+      bridge: false,
+      sidebar: true,
+      fab: true,
+      readingAid: true,
+      youtubeSubtitles: true,
+    });
+  });
+
   test('claude.com: scoped translation + reading aid + sidebar/FAB for the language picker, but NO bridge/header/keyboard/exam', () => {
     const c = getHostCapabilities('claude.com');
     expect(c.platform).toBe(PLATFORM_IDS.CLAUDE_TUTORIALS);

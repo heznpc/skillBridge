@@ -6,10 +6,9 @@
 // Hostname-exact / suffix match against `skilljar.com`. The previous
 // substring check matched `evil.skilljar.com.attacker.example/` and
 // `prefix-skilljar.com/`, both of which CodeQL flagged
-// (`js/incomplete-url-substring-sanitization`, HIGH). The popup runs in
-// extension context and sees any active-tab URL, so this matters even
-// though the rest of the extension is host-gated by manifest
-// `host_permissions`.
+// (`js/incomplete-url-substring-sanitization`, HIGH). URL checks still need
+// exact host parsing whenever Chrome exposes tab.url; scoped content-script
+// matches such as Claude tutorials use the extension-owned ping fallback below.
 function isSkilljarHost(url) {
   try {
     const host = new URL(url).hostname;
@@ -32,16 +31,45 @@ function isSupportedPage(url) {
   return isSkilljarHost(url) || isClaudeTutorialUrl(url);
 }
 
+function pingContentScript(tabId) {
+  return new Promise((resolve) => {
+    if (!Number.isInteger(tabId)) return resolve(false);
+    try {
+      chrome.tabs.sendMessage(tabId, { action: 'ping' }, (response) => {
+        const failed = chrome.runtime.lastError;
+        resolve(!failed && !!response && typeof response.ready === 'boolean');
+      });
+    } catch (_err) {
+      resolve(false);
+    }
+  });
+}
+
+async function hasSkillBridgeContentScript(tabId) {
+  // claude.com is intentionally scoped through content_scripts.matches rather
+  // than a broad host permission. Chrome may therefore omit tab.url from the
+  // popup's query result. Probe our own content script instead, with a short
+  // document_idle retry window for a just-opened tutorial.
+  for (let attempt = 0; attempt < 6; attempt++) {
+    if (await pingContentScript(tabId)) return true;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  return false;
+}
+
+const _POPUP_AI_GATEWAY_ENABLED = globalThis.__SKILLBRIDGE_AI_GATEWAY_ENABLED__ !== false;
+
 document.addEventListener('DOMContentLoaded', async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const isSupported = isSupportedPage(tab?.url);
+  const isSupported = isSupportedPage(tab?.url) || (await hasSkillBridgeContentScript(tab?.id));
 
   document.getElementById('main-content').style.display = isSupported ? 'block' : 'none';
   document.getElementById('not-skilljar').style.display = isSupported ? 'none' : 'block';
 
   // Footer from model constants
-  document.getElementById('footer').innerHTML =
-    `Google Translate + ${SKILLBRIDGE_MODEL_LABELS.GEMINI}<br>AI Tutor: ${SKILLBRIDGE_MODEL_LABELS.CLAUDE}`;
+  document.getElementById('footer').innerHTML = _POPUP_AI_GATEWAY_ENABLED
+    ? `Google Translate + ${SKILLBRIDGE_MODEL_LABELS.GEMINI}<br>AI Tutor: ${SKILLBRIDGE_MODEL_LABELS.CLAUDE}`
+    : 'Google Translate<br>Local learning tools';
 
   if (!isSupported) return;
 
@@ -66,7 +94,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     buildLanguageOptions(langSelect, t);
     langSelect.value = selectedLang;
     document.getElementById('lang-label').textContent = t(POPUP_LABELS.targetLang);
-    sidebarBtn.textContent = t(POPUP_LABELS.openSidebar);
+    sidebarBtn.textContent = _POPUP_AI_GATEWAY_ENABLED ? t(POPUP_LABELS.openSidebar) : t(MENU_LABELS.tools);
     document.getElementById('auto-translate-label').textContent = t(POPUP_LABELS.autoTranslate);
     if (commentLabel) commentLabel.textContent = t(COMMENT_TRANSLATE_LABELS);
   }

@@ -2,7 +2,11 @@
 
 <img src="assets/icons/icon128.png" alt="SkillBridge" width="90" />
 
-# SkillBridge — AI Course Translator <!-- VERSION_START -->v3.5.41<!-- VERSION_END -->
+# SkillBridge — AI Course Translator
+
+> **Source manifest:** <!-- VERSION_START -->v3.5.41<!-- VERSION_END --> —
+> unreleased; the next CWS release identity is pending. The existing matching
+> `v3.5.41` tag predates the current change set and will not be reused.
 
 > Available in multiple languages at the [project landing page](https://heznpc.github.io/skillBridge/).
 
@@ -17,7 +21,13 @@
 
 **Translate the free AI courses at [anthropic.skilljar.com](https://anthropic.skilljar.com/) into your language — instantly.**
 
-Break the language barrier on these free AI courses. <!-- LANG_COUNT_START -->32 languages<!-- LANG_COUNT_END --> supported. The extension auto-activates on `anthropic.skilljar.com`, on any other Skilljar-hosted AI course it detects, and on Claude tutorial pages at `claude.com/resources/tutorials` (translation only on those — the AI Tutor runs on `anthropic.skilljar.com` exclusively); non-AI Skilljar tenants are paused automatically.
+Break the language barrier on these free AI courses. <!-- LANG_COUNT_START -->32 languages<!-- LANG_COUNT_END --> supported. The CWS edition combines course-page translation with local flashcards, bookmarks, progress, reading, and export tools. It runs on `anthropic.skilljar.com`, detected Skilljar-hosted AI courses, and Claude tutorial pages at `claude.com/resources/tutorials`; non-AI Skilljar tenants are paused automatically.
+
+> **Version boundary:** the Chrome Web Store still serves legacy v1.0.1, which
+> includes the Puter-backed Gemini/Claude path and YouTube host permission.
+> Unless explicitly labeled legacy, references below to the “CWS edition” mean
+> the next privacy-focused candidate. Publication of that candidate is paused;
+> see the [version-split Privacy Policy](PRIVACY_POLICY.md).
 
 [Install](#installation) · [Features](#features) · [Report Bug](https://github.com/heznpc/skillbridge/issues) · [Request Feature](https://github.com/heznpc/skillbridge/issues) · [Contributing](CONTRIBUTING.md)
 
@@ -59,8 +69,8 @@ Generic translators make it worse, not better:
 | | Google Translate (page) | SkillBridge |
 |---|---|---|
 | AI terminology | ❌ "Prompt" → "신속한" (wrong) | ✅ "Prompt" → "프롬프트" (correct) |
-| Technical accuracy | ❌ Generic machine translation | ✅ 1,100+ curated terms + AI verification |
-| Context-aware help | ❌ None | ✅ AI tutor answers questions about the lesson |
+| Technical accuracy | ❌ Generic machine translation | ✅ 1,100+ curated terms per Premium language |
+| Learning tools | ❌ None | ✅ Local flashcards, bookmarks, progress, outline, PDF |
 | Video subtitles | ❌ Separate manual toggle | ✅ Auto-translated subtitles |
 | UI preservation | ❌ Breaks checkboxes, progress bars | ✅ All interactive elements preserved |
 | Cost | Free | Free — no API keys needed |
@@ -81,7 +91,7 @@ That's it.
 
 ### 🌐 Full Page Translation
 
-Every text element on the page is translated, with AI-specific terms handled correctly via curated dictionaries. Progress checkboxes, icons, navigation, and CJK fonts all stay intact. (Blocks that mix inline formatting — bold, links, inline code — are AI-translated, so they fill in after the optional tutor's Puter human-check; plain text, headings, and lists translate with no account.)
+Course headings, paragraphs, lists, navigation, cards, and supported code comments are translated, with AI-specific terms handled through curated dictionaries and protected-term restoration. Course controls and CJK font rendering remain intact. Text not already covered by the packaged dictionary or local cache is translated through Google Translate.
 
 <div align="center">
 <img src="assets/screenshots/01-lesson-translated.png" alt="Lesson page with curriculum fully translated" width="720" />
@@ -89,9 +99,11 @@ Every text element on the page is translated, with AI-specific terms handled cor
 <em>Course lesson with full curriculum translated — UI elements preserved.</em>
 </div>
 
-### 🤖 AI Tutor
+### 🧰 Local Learning Tools
 
-A sidebar chatbot powered by **Claude Sonnet 4.6** via [Puter.js](https://docs.puter.com/). It knows which course and lesson you're on. Ask questions in your language, get streaming answers. The tutor and the Puter page bridge it relies on run **only on `anthropic.skilljar.com`** — on other detected Skilljar AI tenants the extension still translates (curated dictionary + Google Translate), but the AI Tutor stays off (its bridge nonce is readable by page-world scripts, so we never expose it on tenants we don't control).
+The CWS edition includes spaced-repetition flashcards, bookmarks, Continue/Recent links, a local progress dashboard, an in-lesson outline, reading progress, and PDF export. Learning-tool state stays in the browser.
+
+> **Developer-source boundary:** the repository retains an optional Puter-based AI gateway for unpacked development and research. It is enabled in the raw source configuration. The CWS runtime pins that gateway off, exposes no AI Tutor, makes no AI-service requests, and omits the Puter SDK and page bridge. Dormant shared-source AI helpers or labels may remain as non-executing bundle strings.
 
 ### 🎬 Auto-Subtitles
 
@@ -99,17 +111,17 @@ Course videos automatically activate translated subtitles when you play them —
 
 ### 🌙 Dark Mode
 
-A full dark theme for the entire Academy site — header, sidebar, lesson content, and tutor. Toggle with one click.
+A full dark theme for the course header, lesson content, and SkillBridge panels. Toggle with one click.
 
 ### 🎓 Exam Mode & Certification Safety
 
-**Course quizzes** (e.g., Claude 101 completion quiz) — answer choices are protected from translation to preserve accuracy; the AI Tutor switches to exam-safe mode.
+**Course quizzes** (e.g., Claude 101 completion quiz) — answer choices are protected from translation to preserve accuracy.
 
 **Proctored certification exams** (e.g., Claude Certified Architect) — the extension **disables itself entirely** so it cannot be mistaken for a cheating tool. No translation, no UI injection, nothing.
 
 ### ⌨️ Keyboard Shortcuts
 
-`Ctrl+Shift+S` toggle sidebar, `Ctrl+Shift+F` flashcards, `Ctrl+Shift+L` dark mode, `Ctrl+Shift+/` help overlay, `Escape` close, `/` focus chat.
+`Ctrl+Shift+S` toggle the sidebar, `Ctrl+Shift+F` open flashcards, `Ctrl+Shift+L` toggle dark mode, `Ctrl+Shift+/` open help, and `Escape` close.
 
 ### 📖 Per-Lesson Term Preview
 
@@ -145,27 +157,38 @@ Generic translation tools often **mistranslate brand names and technical terms**
 
 ## Installation
 
-> **Status: live as v1.0.1; re-publication of the current v3.5.41 pending.**
+> **Status: live as v1.0.1; the next CWS release version is pending.**
 > The Chrome Web Store listing is available in all locales **except the United
 > States**, where it was removed on 2026-05-12 over a trademark issue with the
 > old icon (since redesigned on `main`). The published store build is v1.0.1;
-> `main` is the up-to-date release (v3.5.41). For the latest version — and for
-> US users until re-listing — install via the manual / developer-mode path below.
+> The existing `v3.5.41` tag predates the current CWS changes and will not be
+> reused. `main` contains unreleased development code. Publication of the rebuilt CWS
+> edition remains paused while its package and external permission scope are
+> verified.
 
 ### Chrome / Edge / Chromium browsers
 
-**Manual install** (developer mode):
+**CWS-equivalent local bundle** (developer mode):
 
 ```bash
 git clone https://github.com/heznpc/skillbridge.git
+cd skillbridge
+npm ci
+npm run build:bundle
 ```
 
 1. Open `chrome://extensions/` (Chrome) or `edge://extensions/` (Edge)
 2. Enable **Developer mode** (top-right toggle)
-3. Click **Load unpacked** → select the cloned folder
+3. Click **Load unpacked** → select `dist/bundled`
 4. Visit [anthropic.skilljar.com](https://anthropic.skilljar.com/) and start learning!
 
 Also works in Brave, Arc, Opera, Vivaldi, and other Chromium-based browsers.
+
+> Loading the repository root instead selects the raw developer configuration.
+> That source tree retains an optional Puter-based AI gateway that is not active
+> in the candidate CWS runtime. Its packaged Puter SDK contains lazy remote
+> JavaScript/WebAssembly paths. Review the source and privacy implications before
+> using that developer-only path; never treat it as the CWS artifact.
 
 ### Firefox (Beta)
 
@@ -184,33 +207,29 @@ npm run build:firefox
 
 ## How It Works
 
-SkillBridge uses a **multi-stage translation engine** that prioritizes speed and accuracy:
+The CWS edition uses a staged translation engine that prioritizes local results:
 
 ```
 Page text
   │
   ├─ 1,100+ curated term dictionary ──→ Instant (AI terms translated correctly)
   │
-  ├─ Local cache (IndexedDB) ───────→ Instant (previously verified)
+  ├─ Local cache (IndexedDB) ───────→ Instant (previous result)
   │
-  ├─ Has inline HTML tags? (<strong>, <a>, <code>...)
-  │     └─ Yes → Gemini 2.0 Flash translates with tag preservation (needs a one-time Puter human-check via the tutor)
-  │
-  └─ Plain text → Google Translate ─→ ~200ms
+  └─ Remaining visible text → Google Translate
        │
        ├─ Protected Terms auto-fix ─→ Restores brand/tech terms GT mistranslates
-       │
-       └─ Complex sentence? → Gemini 2.0 Flash verifies when Puter auth is available → otherwise GT text stays in place
+       └─ Cache result locally for up to 30 days
 ```
 
-Translation requests are sent to Google Translate and Gemini/Claude APIs via [Puter.js](https://docs.puter.com/). SkillBridge does not operate any servers — but text is transmitted to these third-party services for translation and AI features. No account, email, or password is required to translate; the optional AI tutor may open a Puter window to verify you're human. See our [Privacy Policy](PRIVACY_POLICY.md) for full details.
+Text not covered by the packaged dictionary or local cache is sent to Google Translate when translation is requested. The CWS runtime exposes no AI Tutor and makes no Puter, Gemini, or Claude-model request; its Puter SDK and page bridge are omitted. See the [Privacy Policy](PRIVACY_POLICY.md) for the CWS data flow and the separate raw-source developer boundary.
 
 ## Architecture & engineering decisions
 
 The interesting part of SkillBridge is the constraints, not the feature count. A few decisions worth calling out:
 
 **Why a multi-stage pipeline, not "just call an LLM."**
-Translating a whole course page on every navigation has to be fast *and* correct, so each stage above earns its place: the curated dictionary fixes the terms generic MT gets wrong ("Prompt" → "프롬프트", never "신속한") at zero latency; the IndexedDB cache makes re-visits instant; Google Translate covers the long tail at ~200ms; and the LLM verification pass runs **in the background** on complex sentences only — so AI cost and latency never sit on the critical path. Cheapest correct stage first, most expensive last.
+Translating a course page on every navigation has to be fast and predictable. The curated dictionary fixes terms generic MT gets wrong ("Prompt" → "프롬프트", never "신속한") at zero latency, the IndexedDB cache makes revisits instant, Google Translate covers the remaining visible text, and protected-term restoration runs after machine translation. Local results come first; the network is used only for text that still needs translation.
 
 **Reliability & safety are designed in, not bolted on.**
 - **Exam-safe by default** — on proctored certification exams the extension *disables itself entirely*, and on quizzes answer choices are never translated. A learning aid must not be mistakable for a cheating tool.
@@ -219,7 +238,7 @@ Translating a whole course page on every navigation has to be fast *and* correct
 - **Defensive content scripts** — idempotent injection guards and URL polling, because the host app navigates via SPA (content scripts can fire more than once — or not at all — per navigation).
 
 **What I deliberately did *not* build (and why).**
-- **No servers / no backend** — everything runs client-side; translation and AI go straight to third parties via Puter.js. This is what keeps it free forever and privacy-preserving, at the deliberate cost of cross-device sync.
+- **No SkillBridge servers / no backend** — the CWS edition stores its learning state locally and sends translation text directly to Google Translate, at the deliberate cost of cross-device sync.
 - **No telemetry or analytics** — nothing is collected, not even opt-in error reports; marketing convenience never outweighs the privacy promise.
 - **No A/B framework, no paid tier** — both imply infrastructure (traffic, segmentation, billing) that a free, server-less project shouldn't fake.
 
@@ -227,7 +246,7 @@ The full "things we will not do" list is kept public on purpose in [TODO.md](TOD
 
 ## Supported Languages
 
-### Premium — Curated Dictionary + Google Translate + AI Verification
+### Premium — Curated Dictionary + Google Translate
 
 | Language | Code | Dictionary |
 |----------|------|------------|
@@ -244,7 +263,7 @@ The full "things we will not do" list is kept public on purpose in [TODO.md](TOD
 | 🇻🇳 Tiếng Việt (Vietnamese) | `vi` | 1,100+ entries |
 | 🇮🇩 Bahasa Indonesia | `id` | 1,100+ entries |
 
-### Standard — Google Translate + AI Verification
+### Standard — Google Translate
 
 🇵🇹 Português (PT) · 🇳🇱 Nederlands · 🇵🇱 Polski · 🇺🇦 Українська · 🇨🇿 Čeština · 🇸🇪 Svenska · 🇩🇰 Dansk · 🇫🇮 Suomi · 🇳🇴 Norsk · 🇹🇷 Türkçe · 🇸🇦 العربية · 🇮🇳 हिन्दी · 🇹🇭 ภาษาไทย · 🇲🇾 Bahasa Melayu · 🇵🇭 Filipino · 🇧🇩 বাংলা · 🇮🇱 עברית · 🇷🇴 Română · 🇭🇺 Magyar · 🇬🇷 Ελληνικά
 
@@ -289,14 +308,18 @@ review is the final layer:
 ~1–2 hours, needs no coding, and gets you credited here. See
 [#202](https://github.com/heznpc/skillBridge/issues/202).
 
-## Privacy & Security
+## Privacy & Security — Next CWS Candidate
 
-SkillBridge is designed with privacy first:
+These claims describe the unpublished candidate, not live legacy v1.0.1:
 
-- **No data collection** — zero analytics, zero tracking, zero telemetry
-- **No SkillBridge servers** — we do not operate any servers. Translation and AI requests are sent to third-party services (Google Translate, Puter.js → Gemini/Claude)
-- **No account required to translate** — works immediately after install; the optional AI tutor may open a one-time Puter "verify you're human" window
-- **Local storage only** — translation cache (30-day TTL) and chat history are stored in your browser's IndexedDB. This data never leaves your device
+- **No operator analytics** — zero analytics, tracking, or telemetry; requested
+  page text is still processed by Google Translate as disclosed
+- **No SkillBridge servers** — we do not operate any servers; uncached page text is sent directly to Google Translate when translation is requested
+- **No account required** — the CWS edition needs no account, email, password, user API key, or human-check
+- **Local learning state** — original/translated text is cached in IndexedDB;
+  preferences, flashcard review state, bookmarks, recent lessons, and scroll
+  positions use `chrome.storage.local`; progress summaries are calculated locally
+- **No active CWS AI gateway** — the CWS runtime exposes no AI Tutor or AI-service request and omits the Puter SDK and page bridge; dormant shared-source helpers may remain in the bundle
 - **Open source** — every line of code is auditable right here
 
 See our full [Privacy Policy](PRIVACY_POLICY.md).
@@ -306,12 +329,11 @@ See our full [Privacy Policy](PRIVACY_POLICY.md).
 | Component | Technology |
 |-----------|-----------|
 | Page Translation | Google Translate API |
-| Inline Tag Translation | Gemini 2.0 Flash (preserves `<strong>`, `<a>`, `<code>`) |
-| Quality Verification | Gemini 2.0 Flash via [Puter.js](https://docs.puter.com/) when Puter auth is available |
 | Protected Terms | Auto-correction of GT brand/product term errors per language (Claude, Cowork, Computer Use, Agent Skills, etc.) |
-| AI Tutor | Claude Sonnet 4.6 via Puter.js |
 | Curated Dictionaries | Hand-tuned JSON (1,100+ × 12 languages) |
 | Translation Cache | IndexedDB |
+| Local Learning Tools | `chrome.storage.local` + IndexedDB |
+| CWS Package Gate | AI gateway disabled; Puter/page bridge omitted; RHC scan required |
 | CJK Font Rendering | Local system/Noto fallback stacks |
 
 > **Built with [Claude Code](https://docs.anthropic.com/en/docs/claude-code).**
@@ -336,13 +358,13 @@ Yes! SkillBridge supports **Chrome**, **Firefox**, and **Edge** (plus Brave, Arc
 <details>
 <summary><strong>Do I need an API key or account?</strong></summary>
 
-Not for translation — it works out of the box via Google Translate with no account, email, API key, or password, and the background Gemini quality check stays silent when you're signed out (it never prompts you). The optional **AI Tutor** uses [Puter.js](https://puter.com/) (free, no API key); the first time you open it, Puter may show a window to verify you're human (its free "user-pays" tier). So: read and translate with zero setup; the tutor is the one feature that may open a brief Puter human-check.
+No. The unpublished CWS candidate translates through packaged dictionaries, local cache, and Google Translate without an account, email, password, user API key, or human-check. The repository's optional Puter-based developer path is not included in that package. See the version notice above for the currently published legacy v1.0.1 boundary.
 </details>
 
 <details>
 <summary><strong>Why does my language show as "Standard" instead of "Premium"?</strong></summary>
 
-Premium languages have a hand-curated dictionary (1,100+ entries) that catches AI/ML term mistranslations. Standard languages rely on Google Translate + Gemini verification, which is still quite good. Want to promote your language? Contribute a dictionary — see <a href="CONTRIBUTING.md">CONTRIBUTING.md</a>.
+Premium languages have a hand-curated dictionary (1,100+ entries) that catches AI/ML term mistranslations. Standard languages use Google Translate plus local protected-term restoration. Want to promote your language? Contribute a dictionary — see <a href="CONTRIBUTING.md">CONTRIBUTING.md</a>.
 </details>
 
 <details>

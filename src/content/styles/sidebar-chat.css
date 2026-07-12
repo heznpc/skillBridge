@@ -84,7 +84,7 @@
   overflow: hidden;
 }
 
-/* Language panel — sidebar body on translation-only hosts (claude.com tutorials) */
+/* Language panel — sidebar body in AI-disabled builds/hosts */
 .si18n-panel-lang {
   flex: 1;
   display: flex;

@@ -53,7 +53,6 @@ export default [
         CHOOSE_LANGUAGE_LABEL: 'readonly',
         SKILLJAR_SELECTORS: 'readonly',
         DEFAULT_PROTECTED_TERMS: 'readonly',
-        YOUTUBE_CLIENT_VERSION: 'readonly',
         GT_LANG_MAP: 'readonly',
         YT_LANG_CODE_MAP: 'readonly',
         YT_LANG_NAME_MAP: 'readonly',

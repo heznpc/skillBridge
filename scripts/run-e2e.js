@@ -19,20 +19,20 @@ const npxCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 const workers = process.env.E2E_WORKERS || '1';
 const tempPrefix = 'skillbridge-e2e-';
 const tempExtPrefix = 'skillbridge-e2e-ext-';
+// This runner validates the CWS artifact. Tutor/chat-history/stream specs stay
+// in the repository for the non-published developer edition, but cannot be
+// part of a release gate whose bundle deliberately excludes the AI bridge.
 const batches = [
   [
     'tests/e2e/a11y.spec.js',
     'tests/e2e/first-user-flow.spec.js',
+    'tests/e2e/cws-no-rhc.spec.js',
+    'tests/e2e/popup.spec.js',
     'tests/e2e/keyboard-shortcuts.spec.js',
     'tests/e2e/viewport-polish.spec.js',
     'tests/e2e/shadow-isolation.spec.js',
   ],
-  [
-    'tests/e2e/chat-history.spec.js',
-    'tests/e2e/code-comments.spec.js',
-    'tests/e2e/dashboard.spec.js',
-    'tests/e2e/exam-mode.spec.js',
-  ],
+  ['tests/e2e/code-comments.spec.js', 'tests/e2e/dashboard.spec.js', 'tests/e2e/exam-mode.spec.js'],
   [
     'tests/e2e/golden-translation.spec.js',
     'tests/e2e/idb-cache.spec.js',
@@ -42,8 +42,8 @@ const batches = [
     'tests/e2e/pdf-export.spec.js',
     'tests/e2e/protected-terms.spec.js',
   ],
-  ['tests/e2e/rapid-switch.spec.js', 'tests/e2e/spa-navigation.spec.js', 'tests/e2e/stream-cancel.spec.js'],
-  ['tests/e2e/tutor-chat.spec.js', 'tests/e2e/tutor-offline.spec.js', 'tests/e2e/youtube-lifecycle.spec.js'],
+  ['tests/e2e/rapid-switch.spec.js', 'tests/e2e/spa-navigation.spec.js'],
+  ['tests/e2e/youtube-lifecycle.spec.js'],
 ];
 
 function run(cmd, args, options = {}) {

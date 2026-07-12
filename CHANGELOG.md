@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Security
+- The Chrome Web Store builder now pins the optional AI gateway off, omits the Puter SDK and page-world bridge from the artifact and web-accessible resources, and fails the build on detected remote or indirect executable-code sinks. The generic `build:zip` command now resolves to this CWS-safe bundle; raw source packaging is explicitly named `build:developer:zip`.
+- Removed the unused YouTube host permission and the dead background `FETCH_URL`/InnerTube proxy path. Embedded subtitle control continues through the existing iframe player API without direct YouTube fetch access.
+
+### Fixed
+- The packaged action popup now copies every local HTML dependency, loads selectors before constants, and runs in a real Chromium extension context during release smoke tests.
+- The no-AI CWS sidebar now keeps dashboard, flashcards, bookmarks, recent lessons, PDF export, focus handling, language state, and localized labels working across local sub-panel open/close cycles.
+- CWS translation cache initialization is independent of the AI bridge; Google Translate results are cached directly without creating a verification queue or permanent spinner.
+
+### Changed
+- CWS-facing locale, store, privacy, permission, and test descriptions now distinguish the unpublished no-AI candidate from the currently published legacy build. AI-only browser specs remain archived references outside the CWS release runner.
+
 ## [3.5.41] - 2026-06-23
 
 ### Fixed

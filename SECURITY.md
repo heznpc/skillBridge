@@ -16,11 +16,12 @@ an alternate intake channel within 72 hours.
 
 ## What's in scope
 
-- **Translation pipeline** — anything that could leak user lesson
-  content, exam answers, or chat history outside the user's browser
-  beyond the documented `Google Translate / Puter.js` endpoints
+- **CWS translation pipeline** — anything that could leak lesson content or
+  exam answers outside the browser beyond the documented Google Translate path
   ([README — Privacy & Security](README.md#privacy--security),
   [PRIVACY_POLICY.md](PRIVACY_POLICY.md)).
+- **CWS package boundary** — any path that enables the optional AI gateway or
+  packages `src/bridge/puter.js` / `src/lib/page-bridge.js` into the CWS ZIP.
 - **Content-script injection** — XSS, CSP bypass, prototype pollution,
   or any path through translator output that lets remote content reach
   `innerHTML` without escaping (`src/lib/gemini-block.js` `escapeHtml`
@@ -28,8 +29,8 @@ an alternate intake channel within 72 hours.
 - **Exam-mode safety bypass** — anything that lets the extension
   translate proctored exam content or quiz answer choices in
   violation of the standing "things we will not do" list (see TODO.md).
-- **Supply-chain compromise** — tampering with `src/bridge/puter.js`
-  (hash-checked by `.github/workflows/maintenance.yml`), an npm
+- **Developer-source supply chain** — tampering with the optional raw-source
+  `src/bridge/puter.js` (hash-checked by `.github/workflows/maintenance.yml`), an npm
   devDependency, or a GitHub Action used in this repo.
 - **Secret exposure** — any path where `CWS_*` / `AMO_*` credentials
   could leak from workflow logs or artifacts.
@@ -37,12 +38,10 @@ an alternate intake channel within 72 hours.
 ## What's out of scope
 
 - Bugs in Anthropic Academy itself (report to Anthropic).
-- Bugs in third-party services SkillBridge calls (Google Translate,
-  Puter.js — report to those vendors).
-- Reports that depend on the user manually pasting malicious content
-  into the AI Tutor chat — that input is treated as untrusted by
-  design and rendered through `escapeHtml`; an LLM hallucinating in
-  response is a UX issue, not a vulnerability.
+- Bugs in Google Translate itself, or in Puter.js when testing the optional raw
+  developer build — report those service bugs to the relevant vendor.
+- Reports that concern only model output from the optional raw developer build,
+  without an extension security-boundary failure.
 - Theoretical browser-engine bugs in Chrome / Firefox / Edge — report
   to the browser vendor.
 
@@ -73,7 +72,9 @@ GHSA), listed publicly only with the researcher's explicit consent.
   for each CWS upload (`actions/attest-build-provenance` step in
   `cd.yml`). Verify via
   [`gh attestation verify`](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations/using-artifact-attestations-to-establish-provenance-for-builds).
-- Bundled Puter.js (`src/bridge/puter.js`): SHA-256 hash recorded in
-  `THIRD_PARTY_NOTICES.md`; verified weekly by
-  `maintenance.yml` `dependency-audit` job, which opens an issue on
-  mismatch.
+- Chrome Web Store ZIP: the build must pin the AI gateway off, omit
+  `src/bridge/puter.js` and `src/lib/page-bridge.js`, and pass the automated RHC
+  scan before upload.
+- Raw developer source: the optional `src/bridge/puter.js` hash is recorded in
+  `THIRD_PARTY_NOTICES.md` and checked by the maintenance workflow. This file is
+  not part of the CWS artifact.

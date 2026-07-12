@@ -50,6 +50,17 @@ describe('queueGeminiVerify', () => {
     expect(translator.queueGeminiVerify('text', null, 'ko')).toBe(false);
   });
 
+  test('AI-disabled mode caches GT directly without a verify queue', () => {
+    const localOnly = new SkilljarTranslator({ aiEnabled: false });
+    localOnly._cacheTranslation = jest.fn().mockResolvedValue(undefined);
+    const original =
+      'This is a comprehensive guide to understanding how large language models work, with enough detail to verify.';
+
+    expect(localOnly.queueGeminiVerify(original, 'Google 번역 결과', 'ko')).toBe(false);
+    expect(localOnly._verifyQueue).toEqual([]);
+    expect(localOnly._cacheTranslation).toHaveBeenCalledWith(original, 'Google 번역 결과', 'ko');
+  });
+
   test('rejects text shorter than GEMINI_MIN_TEXT (80 chars)', () => {
     const short = 'This is a short text.';
     expect(translator.queueGeminiVerify(short, '짧은 텍스트입니다.', 'ko')).toBe(false);

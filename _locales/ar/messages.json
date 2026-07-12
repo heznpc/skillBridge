@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "مساعد تعليمي متعدد اللغات لدورات على Skilljar. ترجم الدورات وتعلّم مع مدرّس ذكاء اصطناعي — لا حاجة لمفتاح API.",
+    "message": "ترجم دورات الذكاء الاصطناعي إلى 32 لغة بمصطلحات منسقة وبطاقات تعليمية وإشارات مرجعية وأدوات دراسة محلية.",
     "description": "Extension description"
   }
 }
