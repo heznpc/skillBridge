@@ -125,6 +125,99 @@ describe('page-bridge runtime hardening', () => {
     expect(globalThis.puterParent).toBeUndefined();
   });
 
+  test('TRANSLATE_REQUEST returns a fixed response envelope on success', async () => {
+    window.dispatchEvent(
+      new window.MessageEvent('message', {
+        source: window,
+        data: {
+          __skillbridge__: true,
+          __nonce__: nonce,
+          type: 'TRANSLATE_REQUEST',
+          id: 'translate-success',
+          text: 'Hello',
+          systemPrompt: 'Translate Hello',
+          model: 'claude-sonnet-4-6',
+        },
+      }),
+    );
+
+    await waitFor(() => sent.some((message) => message.type === 'TRANSLATE_RESPONSE'));
+
+    expect(chat).toHaveBeenCalledWith(
+      'Translate Hello',
+      expect.objectContaining({ model: 'gemini-2.0-flash', stream: false }),
+    );
+    expect(sent.find((message) => message.type === 'TRANSLATE_RESPONSE')).toEqual({
+      __skillbridge__: true,
+      __nonce__: nonce,
+      type: 'TRANSLATE_RESPONSE',
+      id: 'translate-success',
+      success: true,
+      result: 'model=gemini-2.0-flash;auth=test-token',
+    });
+  });
+
+  test('TRANSLATE_REQUEST failure preserves the original text in the error response', async () => {
+    chat.mockRejectedValueOnce(new Error('forced translate failure'));
+
+    window.dispatchEvent(
+      new window.MessageEvent('message', {
+        source: window,
+        data: {
+          __skillbridge__: true,
+          __nonce__: nonce,
+          type: 'TRANSLATE_REQUEST',
+          id: 'translate-failure',
+          text: 'Keep this text',
+          systemPrompt: 'Translate this',
+          model: 'gemini-2.0-flash',
+        },
+      }),
+    );
+
+    await waitFor(() => sent.some((message) => message.type === 'TRANSLATE_RESPONSE'));
+
+    expect(sent.find((message) => message.type === 'TRANSLATE_RESPONSE')).toEqual({
+      __skillbridge__: true,
+      __nonce__: nonce,
+      type: 'TRANSLATE_RESPONSE',
+      id: 'translate-failure',
+      success: false,
+      error: 'forced translate failure',
+      result: 'Keep this text',
+    });
+  });
+
+  test('VERIFY_REQUEST failure returns an empty result in the fixed error envelope', async () => {
+    chat.mockRejectedValueOnce(new Error('forced verify failure'));
+
+    window.dispatchEvent(
+      new window.MessageEvent('message', {
+        source: window,
+        data: {
+          __skillbridge__: true,
+          __nonce__: nonce,
+          type: 'VERIFY_REQUEST',
+          id: 'verify-failure',
+          systemPrompt: 'Verify this',
+          model: 'gemini-2.0-flash',
+        },
+      }),
+    );
+
+    await waitFor(() => sent.some((message) => message.type === 'VERIFY_RESPONSE'));
+
+    expect(sent.find((message) => message.type === 'VERIFY_RESPONSE')).toEqual({
+      __skillbridge__: true,
+      __nonce__: nonce,
+      type: 'VERIFY_RESPONSE',
+      id: 'verify-failure',
+      success: false,
+      error: 'forced verify failure',
+      result: '',
+    });
+  });
+
   test('non-streaming CHAT_REQUEST rejects page-supplied Gemini model and uses Claude fallback', async () => {
     window.dispatchEvent(
       new window.MessageEvent('message', {

@@ -111,6 +111,29 @@
     );
   }
 
+  function _postBridgeMessage(type, id, payload = {}) {
+    window.postMessage(
+      {
+        ...payload,
+        __skillbridge__: true,
+        __nonce__: _bridgeNonce,
+        type,
+        id,
+      },
+      window.location.origin,
+    );
+  }
+
+  function _postBridgeError(type, id, err, result) {
+    const errMsg = err?.error || err?.message || String(err);
+    _postBridgeMessage(type, id, {
+      success: false,
+      error: errMsg,
+      result,
+    });
+    return errMsg;
+  }
+
   // Map of in-flight streaming-CHAT request id → { cancelled: boolean }.
   // The translator's AbortController previously stopped the UI from
   // *displaying* further chunks but did NOT stop Puter.js from generating
@@ -502,6 +525,59 @@
     return response?.text || '';
   }
 
+  async function _handleTranslateRequest(data) {
+    if (_payloadTooLarge(data)) {
+      _replyTooLarge('TRANSLATE_RESPONSE', data.id, data.text);
+      return;
+    }
+    try {
+      if (!puterReady) await loadPuter();
+      // Never trigger the SDK sign-in prompt from this background path —
+      // keep the caller's Google-Translate text instead (see _replyUnauthedSkip).
+      if (!_isPuterAuthed()) {
+        _replyUnauthedSkip('TRANSLATE_RESPONSE', data.id, data.text || '');
+        return;
+      }
+      // systemPrompt already contains the full prompt including the text
+      const prompt = data.systemPrompt || 'Translate to target language:\n' + data.text;
+      const result = await callAI(prompt, data.model, 'TRANSLATE_REQUEST');
+
+      _postBridgeMessage('TRANSLATE_RESPONSE', data.id, {
+        success: true,
+        result: result || data.text,
+      });
+    } catch (err) {
+      const errMsg = _postBridgeError('TRANSLATE_RESPONSE', data.id, err, data.text);
+      log('Translate error:', errMsg);
+    }
+  }
+
+  async function _handleVerifyRequest(data) {
+    if (_payloadTooLarge(data)) {
+      _replyTooLarge('VERIFY_RESPONSE', data.id, '');
+      return;
+    }
+    try {
+      if (!puterReady) await loadPuter();
+      // Background quality check — must stay silent for signed-out users so it
+      // never opens Puter's sign-in prompt. The caller keeps its GT result.
+      if (!_isPuterAuthed()) {
+        _replyUnauthedSkip('VERIFY_RESPONSE', data.id, '');
+        return;
+      }
+      const prompt = data.systemPrompt;
+      const result = await callAI(prompt, data.model, 'VERIFY_REQUEST');
+
+      _postBridgeMessage('VERIFY_RESPONSE', data.id, {
+        success: true,
+        result: result || '',
+      });
+    } catch (err) {
+      const errMsg = _postBridgeError('VERIFY_RESPONSE', data.id, err, '');
+      log('Verify error:', errMsg);
+    }
+  }
+
   window.addEventListener('message', async (event) => {
     if (event.source !== window) return;
     const data = event.data;
@@ -522,95 +598,14 @@
 
     // === TRANSLATE ===
     if (data.type === 'TRANSLATE_REQUEST') {
-      if (_payloadTooLarge(data)) {
-        _replyTooLarge('TRANSLATE_RESPONSE', data.id, data.text);
-        return;
-      }
-      try {
-        if (!puterReady) await loadPuter();
-        // Never trigger the SDK sign-in prompt from this background path —
-        // keep the caller's Google-Translate text instead (see _replyUnauthedSkip).
-        if (!_isPuterAuthed()) {
-          _replyUnauthedSkip('TRANSLATE_RESPONSE', data.id, data.text || '');
-          return;
-        }
-        // systemPrompt already contains the full prompt including the text
-        const prompt = data.systemPrompt || 'Translate to target language:\n' + data.text;
-        const result = await callAI(prompt, data.model, 'TRANSLATE_REQUEST');
-
-        window.postMessage(
-          {
-            __skillbridge__: true,
-            __nonce__: _bridgeNonce,
-            type: 'TRANSLATE_RESPONSE',
-            id: data.id,
-            success: true,
-            result: result || data.text,
-          },
-          window.location.origin,
-        );
-      } catch (err) {
-        const errMsg = err?.error || err?.message || String(err);
-        log('Translate error:', errMsg);
-        window.postMessage(
-          {
-            __skillbridge__: true,
-            __nonce__: _bridgeNonce,
-            type: 'TRANSLATE_RESPONSE',
-            id: data.id,
-            success: false,
-            error: errMsg,
-            result: data.text,
-          },
-          window.location.origin,
-        );
-      }
+      await _handleTranslateRequest(data);
+      return;
     }
 
     // === GEMINI VERIFY (background quality check) ===
     if (data.type === 'VERIFY_REQUEST') {
-      if (_payloadTooLarge(data)) {
-        _replyTooLarge('VERIFY_RESPONSE', data.id, '');
-        return;
-      }
-      try {
-        if (!puterReady) await loadPuter();
-        // Background quality check — must stay silent for signed-out users so it
-        // never opens Puter's sign-in prompt. The caller keeps its GT result.
-        if (!_isPuterAuthed()) {
-          _replyUnauthedSkip('VERIFY_RESPONSE', data.id, '');
-          return;
-        }
-        const prompt = data.systemPrompt;
-        const result = await callAI(prompt, data.model, 'VERIFY_REQUEST');
-
-        window.postMessage(
-          {
-            __skillbridge__: true,
-            __nonce__: _bridgeNonce,
-            type: 'VERIFY_RESPONSE',
-            id: data.id,
-            success: true,
-            result: result || '',
-          },
-          window.location.origin,
-        );
-      } catch (err) {
-        const errMsg = err?.error || err?.message || String(err);
-        log('Verify error:', errMsg);
-        window.postMessage(
-          {
-            __skillbridge__: true,
-            __nonce__: _bridgeNonce,
-            type: 'VERIFY_RESPONSE',
-            id: data.id,
-            success: false,
-            error: errMsg,
-            result: '',
-          },
-          window.location.origin,
-        );
-      }
+      await _handleVerifyRequest(data);
+      return;
     }
 
     // === CHAT (streaming) ===
