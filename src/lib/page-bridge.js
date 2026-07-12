@@ -134,7 +134,7 @@
     return errMsg;
   }
 
-  // Map of in-flight streaming-CHAT request id → { cancelled: boolean }.
+  // Map of in-flight streaming-CHAT request id → StreamSession.
   // The translator's AbortController previously stopped the UI from
   // *displaying* further chunks but did NOT stop Puter.js from generating
   // them — so a user clicking "send" 3x in a row left two zombie streams
@@ -143,15 +143,67 @@
   // the async iterator's `return()` close the underlying connection.
   const _activeStreams = new Map();
 
-  function _handleAbort(id) {
-    const entry = _activeStreams.get(id);
-    if (entry) {
-      entry.cancelled = true;
-      entry.closeStream?.();
-      entry.releasePuterGlobals?.();
-      entry.clearWatchdog?.();
-      _activeStreams.delete(id);
+  class StreamSession {
+    constructor(id) {
+      this.id = id;
+      this.cancelled = false;
+      this.response = null;
+      this.releasePuterGlobals = null;
+      this.watchdog = null;
     }
+
+    setReleasePuterGlobals(releaseGlobals) {
+      this.releasePuterGlobals = releaseGlobals;
+    }
+
+    setResponse(response) {
+      this.response = response;
+    }
+
+    async closeUpstream() {
+      try {
+        const closed = this.response?.return?.();
+        if (closed && typeof closed.then === 'function') await closed;
+      } catch (_) {
+        // Best-effort upstream cancellation only.
+      }
+    }
+
+    clearWatchdog() {
+      if (!this.watchdog) return;
+      clearTimeout(this.watchdog);
+      this.watchdog = null;
+    }
+
+    armWatchdog() {
+      this.clearWatchdog();
+      this.watchdog = setTimeout(() => {
+        this.cancelled = true;
+        // The for-await may still be waiting on next() forever. Release the
+        // SDK globals and remove the session even if upstream never settles.
+        void this.closeUpstream();
+        this.releasePuterGlobals?.();
+        _activeStreams.delete(this.id);
+        this.watchdog = null;
+      }, _CHAT_STREAM_BRIDGE_TIMEOUT_MS);
+    }
+
+    cancel() {
+      this.cancelled = true;
+      void this.closeUpstream();
+      this.releasePuterGlobals?.();
+      this.clearWatchdog();
+      _activeStreams.delete(this.id);
+    }
+
+    finish() {
+      this.clearWatchdog();
+      _activeStreams.delete(this.id);
+    }
+  }
+
+  function _handleAbort(id) {
+    _activeStreams.get(id)?.cancel();
   }
 
   // Fallback chain — used when a primary model is rejected by Puter
@@ -578,6 +630,86 @@
     }
   }
 
+  async function _handleStreamingChat(data, prompt, streamEntry) {
+    streamEntry.armWatchdog();
+    const response = await _puterChat(
+      prompt,
+      {
+        // SkillBridge is Claude-focused; default to Haiku as a cheap,
+        // fast Claude fallback if content.js forgets to pass `model`.
+        model: _selectModel('CHAT_REQUEST', data.model, 'claude-haiku-4-5'),
+        stream: true,
+      },
+      (releaseGlobals) => streamEntry.setReleasePuterGlobals(releaseGlobals),
+      () => streamEntry.cancelled,
+    );
+    streamEntry.setResponse(response);
+
+    if (streamEntry.cancelled) {
+      // Abort may land while `_puterChat` is waiting on Puter's first
+      // response. Do not enter the iterator after cancellation.
+      await streamEntry.closeUpstream();
+      return;
+    }
+
+    for await (const chunk of response) {
+      // Breaking out of for-await calls the iterator's `return()` and asks
+      // Puter to stop generating further tokens.
+      if (streamEntry.cancelled) break;
+      streamEntry.armWatchdog();
+      const text = chunk?.text || chunk?.message?.content || '';
+      if (text) _postBridgeMessage('CHAT_STREAM_CHUNK', data.id, { text });
+    }
+
+    // A cancelled stream already rejected on the content side. Emitting END
+    // here would race that AbortError and resolve the orphan as "No response".
+    if (!streamEntry.cancelled) {
+      _postBridgeMessage('CHAT_STREAM_END', data.id, { success: true });
+    }
+  }
+
+  async function _handleChatRequest(data) {
+    if (_payloadTooLarge(data)) {
+      _replyTooLarge('CHAT_RESPONSE', data.id, '');
+      return;
+    }
+
+    // Register before awaiting Puter so CHAT_ABORT can cancel a cold-start.
+    const streamEntry = data.stream ? new StreamSession(data.id) : null;
+    if (streamEntry) _activeStreams.set(data.id, streamEntry);
+
+    try {
+      if (!puterReady) await loadPuter();
+
+      // Abort may arrive during the SDK cold-start. Do not pay for a request
+      // after the content side has already cancelled it.
+      if (streamEntry?.cancelled) return;
+
+      const prompt = data.systemPrompt || data.userMessage;
+      if (data.stream) {
+        await _handleStreamingChat(data, prompt, streamEntry);
+        return;
+      }
+
+      const result = await callAI(prompt, data.model, 'CHAT_REQUEST', 'claude-haiku-4-5');
+      _postBridgeMessage('CHAT_RESPONSE', data.id, {
+        success: true,
+        result: result || 'No response',
+      });
+    } catch (err) {
+      if (streamEntry?.cancelled) return;
+      const errMsg = err?.error || err?.message || String(err);
+      log('Chat error:', errMsg);
+      _postBridgeMessage('CHAT_RESPONSE', data.id, {
+        success: false,
+        error: errMsg,
+        result: 'Error: ' + errMsg,
+      });
+    } finally {
+      streamEntry?.finish();
+    }
+  }
+
   window.addEventListener('message', async (event) => {
     if (event.source !== window) return;
     const data = event.data;
@@ -610,173 +742,8 @@
 
     // === CHAT (streaming) ===
     if (data.type === 'CHAT_REQUEST') {
-      if (_payloadTooLarge(data)) {
-        _replyTooLarge('CHAT_RESPONSE', data.id, '');
-        return;
-      }
-      // Register the stream entry BEFORE awaiting Puter — a CHAT_ABORT
-      // can arrive while we're still inside `_puterChat` (e.g. Puter is
-      // slow to first-byte) and must take effect when the stream starts.
-      const streamEntry = data.stream ? { cancelled: false } : null;
-      if (streamEntry) _activeStreams.set(data.id, streamEntry);
-
-      // Bridge-side watchdog (audit V3). The for-await loop only checks
-      // `cancelled` BETWEEN chunks; if Puter.js stalls (no first chunk,
-      // or chunk gap > 60s), the loop sits inside `await response.next()`,
-      // the cancelled flag is never observed, the finally never runs,
-      // and the Map entry leaks. We arm a setTimeout that flips the
-      // flag and lets the iterator's next() resolve (Puter may still
-      // hang — but the cleanup path executes regardless because we
-      // also clear from the timeout itself).
-      let watchdog = null;
-      const _clearWatchdog = () => {
-        if (watchdog) {
-          clearTimeout(watchdog);
-          watchdog = null;
-        }
-      };
-      const _armWatchdog = () => {
-        _clearWatchdog();
-        watchdog = setTimeout(() => {
-          if (streamEntry) {
-            streamEntry.cancelled = true;
-            // The for-await may still be waiting on next() forever —
-            // explicitly release Puter globals and delete here so a
-            // stalled stream doesn't expose the SDK or accumulate Map
-            // entries indefinitely.
-            streamEntry.closeStream?.();
-            streamEntry.releasePuterGlobals?.();
-            _activeStreams.delete(data.id);
-          }
-          watchdog = null;
-        }, _CHAT_STREAM_BRIDGE_TIMEOUT_MS);
-      };
-      if (streamEntry) streamEntry.clearWatchdog = _clearWatchdog;
-
-      try {
-        if (!puterReady) await loadPuter();
-
-        // Audit V15: an abort during loadPuter (Puter cold-start can
-        // take seconds) used to still fire one outbound _puterChat
-        // call. Check here before paying for the request.
-        if (streamEntry?.cancelled) {
-          return;
-        }
-
-        const prompt = data.systemPrompt || data.userMessage;
-
-        if (data.stream) {
-          _armWatchdog();
-          // Streaming mode — send chunks via postMessage
-          const response = await _puterChat(
-            prompt,
-            {
-              // SkillBridge is Claude-focused; default to Haiku as a cheap,
-              // fast Claude fallback if content.js forgets to pass `model`.
-              model: _selectModel('CHAT_REQUEST', data.model, 'claude-haiku-4-5'),
-              stream: true,
-            },
-            (releaseGlobals) => {
-              streamEntry.releasePuterGlobals = releaseGlobals;
-            },
-            () => streamEntry.cancelled,
-          );
-          streamEntry.closeStream = () => {
-            try {
-              const closed = response?.return?.();
-              if (closed && typeof closed.catch === 'function') return closed.catch(() => undefined);
-              return closed;
-            } catch (_) {
-              return undefined;
-            }
-          };
-          if (streamEntry.cancelled) {
-            // Abort may land while `_puterChat` is waiting on Puter's first
-            // response. Do not enter the iterator after cancellation; close it
-            // immediately when the SDK exposes a return hook.
-            try {
-              await streamEntry.closeStream?.();
-            } catch (_) {
-              // best-effort upstream cancellation only
-            }
-            return;
-          }
-
-          for await (const chunk of response) {
-            // Bail on cancellation — breaking out of for-await calls the
-            // iterator's `return()` which signals Puter.js to close the
-            // upstream stream and stops billing for further tokens.
-            if (streamEntry.cancelled) break;
-            // Reset the watchdog on each live chunk so an actively-
-            // streaming response doesn't get killed mid-flight.
-            _armWatchdog();
-            const text = chunk?.text || chunk?.message?.content || '';
-            if (text) {
-              window.postMessage(
-                {
-                  __skillbridge__: true,
-                  __nonce__: _bridgeNonce,
-                  type: 'CHAT_STREAM_CHUNK',
-                  id: data.id,
-                  text,
-                },
-                window.location.origin,
-              );
-            }
-          }
-          // Only emit END for natural completion — a cancelled stream
-          // means the translator already rejected with AbortError; an
-          // END here would race with that and resolve the orphan
-          // promise to "No response".
-          if (!streamEntry.cancelled) {
-            window.postMessage(
-              {
-                __skillbridge__: true,
-                __nonce__: _bridgeNonce,
-                type: 'CHAT_STREAM_END',
-                id: data.id,
-                success: true,
-              },
-              window.location.origin,
-            );
-          }
-        } else {
-          // Non-streaming fallback
-          const result = await callAI(prompt, data.model, 'CHAT_REQUEST', 'claude-haiku-4-5');
-          window.postMessage(
-            {
-              __skillbridge__: true,
-              __nonce__: _bridgeNonce,
-              type: 'CHAT_RESPONSE',
-              id: data.id,
-              success: true,
-              result: result || 'No response',
-            },
-            window.location.origin,
-          );
-        }
-      } catch (err) {
-        if (streamEntry?.cancelled) {
-          return;
-        }
-        const errMsg = err?.error || err?.message || String(err);
-        log('Chat error:', errMsg);
-        window.postMessage(
-          {
-            __skillbridge__: true,
-            __nonce__: _bridgeNonce,
-            type: 'CHAT_RESPONSE',
-            id: data.id,
-            success: false,
-            error: errMsg,
-            result: 'Error: ' + errMsg,
-          },
-          window.location.origin,
-        );
-      } finally {
-        _clearWatchdog();
-        if (streamEntry) _activeStreams.delete(data.id);
-      }
+      await _handleChatRequest(data);
+      return;
     }
   });
 

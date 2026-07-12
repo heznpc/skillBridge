@@ -242,74 +242,65 @@ describe('_payloadTooLarge', () => {
 // contains the wiring. If a future commit removes any piece, the wiring
 // is broken end-to-end and this test fails fast.
 describe('CHAT_ABORT wiring (M-1 regression guard)', () => {
-  test('declares the _activeStreams Map', () => {
+  test('tracks active StreamSession instances by request id', () => {
     expect(src).toMatch(/const\s+_activeStreams\s*=\s*new\s+Map\(\s*\)/);
+    expect(src).toMatch(/class\s+StreamSession\s*\{/);
+    expect(src).toMatch(/_activeStreams\.set\s*\(\s*data\.id\s*,\s*streamEntry\s*\)/);
   });
 
-  test('defines _handleAbort that flips a `cancelled` flag', () => {
+  test('routes CHAT_ABORT through StreamSession.cancel()', () => {
     expect(src).toMatch(/function\s+_handleAbort\s*\(\s*id\s*\)/);
-    expect(src).toMatch(/entry\.cancelled\s*=\s*true/);
-  });
-
-  test('routes CHAT_ABORT messages to _handleAbort', () => {
+    expect(src).toMatch(/_activeStreams\.get\(id\)\?\.cancel\(\)/);
     expect(src).toMatch(/data\.type\s*===\s*['"]CHAT_ABORT['"]/);
     expect(src).toMatch(/_handleAbort\s*\(\s*data\.id\s*\)/);
   });
 
-  test('registers the streamEntry object specifically (not null/undefined)', () => {
-    // Tightened per audit sweep #4 — previously matched any second arg
-    // including `null`/`undefined`. Pin that we register the real
-    // entry object that carries the `cancelled` flag.
-    expect(src).toMatch(/_activeStreams\.set\s*\(\s*data\.id\s*,\s*streamEntry\s*\)/);
+  test('StreamSession cancellation closes upstream, releases globals, and removes the map entry', () => {
+    expect(src).toMatch(
+      /cancel\(\)\s*\{[\s\S]*?this\.cancelled\s*=\s*true[\s\S]*?this\.closeUpstream\(\)[\s\S]*?this\.releasePuterGlobals\?\.\(\)[\s\S]*?this\.clearWatchdog\(\)[\s\S]*?_activeStreams\.delete\(this\.id\)/,
+    );
   });
 
-  test('breaks the for-await loop on cancellation', () => {
+  test('breaks streaming and suppresses CHAT_STREAM_END after cancellation', () => {
     expect(src).toMatch(/if\s*\(\s*streamEntry\.cancelled\s*\)\s*break/);
-  });
-
-  test('suppresses CHAT_STREAM_END when cancelled (no orphan-resolve race)', () => {
     expect(src).toMatch(/if\s*\(\s*!streamEntry\.cancelled\s*\)/);
   });
 
-  test('deletes the stream entry in finally (no zombie growth)', () => {
-    expect(src).toMatch(/_activeStreams\.delete\s*\(\s*data\.id\s*\)/);
+  test('finalizes the session in the chat handler finally block', () => {
+    expect(src).toMatch(/finally\s*\{\s*streamEntry\?\.finish\(\);\s*\}/);
+    expect(src).toMatch(/finish\(\)\s*\{[\s\S]*?this\.clearWatchdog\(\)[\s\S]*?_activeStreams\.delete\(this\.id\)/);
   });
 
-  // ── Audit V3: bridge-side watchdog on hung Puter.js streams ──
-  test('arms a watchdog timeout that flips cancelled on stall', () => {
-    expect(src).toMatch(/setTimeout\s*\([\s\S]+?streamEntry\.cancelled\s*=\s*true/);
+  test('watchdog cancels, closes, releases, and removes a stalled session', () => {
+    expect(src).toMatch(
+      /armWatchdog\(\)\s*\{[\s\S]*?setTimeout\([\s\S]*?this\.cancelled\s*=\s*true[\s\S]*?this\.closeUpstream\(\)[\s\S]*?this\.releasePuterGlobals\?\.\(\)[\s\S]*?_activeStreams\.delete\(this\.id\)/,
+    );
     expect(src).toMatch(/_CHAT_STREAM_BRIDGE_TIMEOUT_MS/);
   });
 
-  test('clears the watchdog in finally (no timer leak)', () => {
-    expect(src).toMatch(/const\s+_clearWatchdog\s*=\s*\(\)\s*=>\s*\{/);
-    expect(src).toMatch(/clearTimeout\s*\(\s*watchdog\s*\)/);
-    expect(src).toMatch(/finally\s*\{[\s\S]*?_clearWatchdog\s*\(\s*\)/);
-  });
-
-  test('releases Puter globals from abort and watchdog even if the stream is hung', () => {
-    expect(src).toMatch(/entry\.closeStream\?\.\(\s*\)/);
-    expect(src).toMatch(/entry\.releasePuterGlobals\?\.\(\s*\)/);
-    expect(src).toMatch(/streamEntry\.closeStream\?\.\(\s*\)/);
-    expect(src).toMatch(/streamEntry\.releasePuterGlobals\?\.\(\s*\)/);
-    expect(src).toMatch(/onReleaseReady/);
+  test('clearWatchdog owns timer cleanup', () => {
+    expect(src).toMatch(
+      /clearWatchdog\(\)\s*\{[\s\S]*?clearTimeout\(this\.watchdog\)[\s\S]*?this\.watchdog\s*=\s*null/,
+    );
   });
 
   test('skips fallback retry and error responses after a stream is cancelled', () => {
     expect(src).toMatch(/shouldCancel\s*\)/);
     expect(src).toMatch(/streamEntry\?\.cancelled[\s\S]*?return;/);
+    expect(src).toMatch(/\(\)\s*=>\s*streamEntry\.cancelled/);
   });
 
-  // ── Audit V15: cancelled check between loadPuter and _puterChat ──
-  test('checks streamEntry?.cancelled after loadPuter() before _puterChat', () => {
-    // Find the streaming branch; the early-return must sit between
-    // `await loadPuter()` and the first _puterChat call.
-    const loadIdx = src.indexOf('await loadPuter()');
-    const cancelCheckIdx = src.indexOf('streamEntry?.cancelled', loadIdx);
-    const puterChatIdx = src.indexOf('_puterChat(', cancelCheckIdx);
+  test('checks cancellation after loadPuter before starting the streaming handler', () => {
+    const handlerStart = src.indexOf('async function _handleChatRequest');
+    const handlerEnd = src.indexOf("window.addEventListener('message'", handlerStart);
+    const handler = src.slice(handlerStart, handlerEnd);
+    const loadIdx = handler.indexOf('await loadPuter()');
+    const cancelCheckIdx = handler.indexOf('streamEntry?.cancelled', loadIdx);
+    const streamCallIdx = handler.indexOf('_handleStreamingChat(', cancelCheckIdx);
+    expect(handlerStart).toBeGreaterThan(0);
     expect(loadIdx).toBeGreaterThan(0);
     expect(cancelCheckIdx).toBeGreaterThan(loadIdx);
-    expect(puterChatIdx).toBeGreaterThan(cancelCheckIdx);
+    expect(streamCallIdx).toBeGreaterThan(cancelCheckIdx);
   });
 });
 
