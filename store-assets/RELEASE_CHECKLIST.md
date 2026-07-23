@@ -1,6 +1,6 @@
-# Release Checklist — next CWS release (version pending)
+# Release Checklist — CWS v3.5.42
 
-> Refreshed 2026-07-11 for the privacy-focused CWS build. The upload artifact
+> Refreshed 2026-07-24 for the privacy-focused CWS build. The upload artifact
 > keeps translation and local learning tools. Its runtime disables the AI
 > gateway and makes no AI requests; Puter SDK and page-bridge files are omitted.
 > Dormant shared-source AI strings may remain. This is the source of truth for the next
@@ -8,9 +8,9 @@
 
 CWS listing status:
 - Published: **v1.0.1** (uploaded 2026-03-10)
-- Local: **v3.5.41**
-- Release identity: **not assigned** — the existing `v3.5.41` tag is immutable
-  and cannot identify this no-AI CWS change set
+- Local candidate: **v3.5.42**
+- Release identity: **assigned** — the existing `v3.5.41` tag remains immutable
+  and is not reused for this no-AI CWS change set
 - Many PRs have landed since the published version — none have reached users yet
 - `npm run check:cws-drift` intentionally fails until the dashboard is updated
 
@@ -22,13 +22,13 @@ dashboard upload.
 
 ## Code-side state
 
-- ⛔ Do not build the final ZIP as `3.5.41`. After the approved feature scope is
-  fixed, assign a new version consistently in `manifest.json`, `package.json`,
-  and versioned dictionary metadata; then move the pending notes out of
-  `CHANGELOG.md`'s Unreleased section.
+- ✅ Final ZIP release identity is `3.5.42` across `manifest.json`,
+  `package.json`, versioned dictionary metadata, and `CHANGELOG.md`.
 - ✅ Historical `CHANGELOG.md` sections through v3.5.41 remain immutable
-- ⏳ Run `npm run build:bundle:zip` to regenerate
-  `store-assets/skillbridge-bundled.zip` only after every release gate passes.
+- ✅ `npm run release:verify` passed on 2026-07-24 and regenerated
+  `store-assets/skillbridge-bundled.zip` after every release gate passed.
+  The inspected 63-file ZIP has SHA-256
+  `c81fdbe5fac854974f5dc673358918f1e8098368edac375d440750217df600f6`.
   This bundled no-AI ZIP is the **only** CWS upload artifact; the compatibility
   alias `npm run build:zip` resolves to this same safe command.
 - ⛔ Never upload `store-assets/skillbridge-developer.zip` (generated only by the
@@ -49,10 +49,12 @@ dashboard upload.
   disclosures for live legacy v1.0.1 and the unpublished candidate. Remove or
   archive the legacy section only after the replacement version is confirmed
   live in the CWS dashboard and update the listing/privacy answers together.
-- ⚠️ Latest local gate snapshot: rerun before dashboard upload with
-  `npm run release:verify`. As of 2026-07-06, dictionary freshness may report
-  recruiting-state dictionaries as review-needed warnings; that is not a native
-  review stamp.
+- ✅ Latest local gate snapshot: `npm run release:verify` passed on 2026-07-24,
+  including 646 unit tests, the full five-batch Chromium E2E suite, live
+  selector/course-map checks, store capture, and ZIP integrity. Dictionary
+  freshness reported recruiting-state dictionaries as review-needed warnings;
+  that is not a native review stamp. Rerun immediately before dashboard upload
+  if this artifact changes.
 - ✅ AI-content gate wired into `manifest.json:content_scripts[].js` (PR #145 hotfix)
 - ✅ CWS-drift watcher will keep this from drifting 3 months again
 - ✅ Italian dictionary live (PR #140) — timed with Anthropic Milan office opening 2026-05-27
@@ -68,9 +70,9 @@ against the file before fixing — the 2026-06-10 audit caught `Slack → "Lento
 dictionary's `_meta.lastAudited` and run `npm run docs` so the README QA table
 reflects it. Three-layer QA model: `docs/TRANSLATION_QA.md`.
 
-After the external permission scope is confirmed, the release order is: new
-version bump → finalize the Unreleased changelog → rerun all gates → generate
-the bundled ZIP. Never reuse the existing `v3.5.41` release identity.
+The release identity and changelog are now fixed at v3.5.42. After the external
+permission scope is confirmed, rerun all gates and generate the bundled ZIP.
+Never reuse the existing `v3.5.41` release identity.
 
 ### 1. Icon — resolved
 

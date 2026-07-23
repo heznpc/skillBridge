@@ -4,9 +4,9 @@
 
 # SkillBridge — AI Course Translator
 
-> **Source manifest:** <!-- VERSION_START -->v3.5.41<!-- VERSION_END --> —
-> unreleased; the next CWS release identity is pending. The existing matching
-> `v3.5.41` tag predates the current change set and will not be reused.
+> **Source manifest:** <!-- VERSION_START -->v3.5.42<!-- VERSION_END --> —
+> unreleased CWS candidate. The existing `v3.5.41` tag predates this change
+> set and is not reused.
 
 > Available in multiple languages at the [project landing page](https://heznpc.github.io/skillBridge/).
 
@@ -157,12 +157,12 @@ Generic translation tools often **mistranslate brand names and technical terms**
 
 ## Installation
 
-> **Status: live as v1.0.1; the next CWS release version is pending.**
+> **Status: live as v1.0.1; v3.5.42 is the next CWS release candidate.**
 > The Chrome Web Store listing is available in all locales **except the United
 > States**, where it was removed on 2026-05-12 over a trademark issue with the
 > old icon (since redesigned on `main`). The published store build is v1.0.1;
-> The existing `v3.5.41` tag predates the current CWS changes and will not be
-> reused. `main` contains unreleased development code. Publication of the rebuilt CWS
+> The existing `v3.5.41` tag predates the current CWS changes and is not reused.
+> `v3.5.42` contains the unreleased candidate. Publication of the rebuilt CWS
 > edition remains paused while its package and external permission scope are
 > verified.
 

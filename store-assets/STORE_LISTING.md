@@ -1,4 +1,4 @@
-# Chrome Web Store — Store Listing (next version pending)
+# Chrome Web Store — Store Listing (v3.5.42 candidate)
 
 This copy describes only the bundled Chrome Web Store package. It must stay in
 sync with the uploaded ZIP, the CWS Privacy tab, and `PRIVACY_POLICY.md`.

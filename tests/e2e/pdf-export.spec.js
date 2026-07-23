@@ -43,17 +43,25 @@ test.describe('SkillBridge — PDF export sanitization', () => {
 
     await page.goto(`${fixture.baseUrl}/lesson`);
 
-    const deadline = Date.now() + 15_000;
-    while (Date.now() < deadline) {
-      const snap = await evalInContentWorld(extCtx.context, 'snapshot');
-      if (snap?.init && snap?.sb && snap?.methods?.chat) break;
-      await page.waitForTimeout(200);
-    }
+    await expect
+      .poll(
+        async () => {
+          const snap = await evalInContentWorld(extCtx.context, 'snapshot');
+          return !!(snap?.init && snap?.sb && snap?.methods?.chat);
+        },
+        { timeout: 15_000 },
+      )
+      .toBe(true);
 
     // Open sidebar so #si18n-pdf-btn exists in the DOM and its click
     // handler (bound by sidebar-chat.bindSidebarEvents) is live.
     await evalInContentWorld(extCtx.context, 'injectSidebar');
     await evalInContentWorld(extCtx.context, 'toggleSidebar');
+    await expect(page.locator('#skillbridge-sidebar')).toHaveClass(/\bopen\b/, { timeout: 15_000 });
+    // injectSidebar schedules event binding, and toggleSidebar schedules the
+    // initial focus at the same delay after it. Waiting for that focus proves
+    // the earlier binding callback has run before this spec starts clicking.
+    await expect(page.locator('#si18n-sidebar-lang-select')).toBeFocused({ timeout: 15_000 });
   });
 
   test.afterAll(async () => {
@@ -71,13 +79,16 @@ test.describe('SkillBridge — PDF export sanitization', () => {
     // Promise.all + waitForEvent('popup') captures it without racing.
     // PDF export now lives in the consolidated "Tools" menu, so open it first
     // (the button is hidden until the menu is expanded).
-    await page.click('#si18n-tools-btn');
+    const toolsButton = page.locator('#si18n-tools-btn');
+    const pdfButton = page.locator('#si18n-pdf-btn');
+    await toolsButton.click();
+    await expect(toolsButton).toHaveAttribute('aria-expanded', 'true', { timeout: 15_000 });
     // Wait for the PDF button to actually be visible before racing the popup —
     // the Tools menu expands via a transition, and clicking before it settles
     // can no-op (no window.open → popup never fires). The 5s popup timeout was
     // also too tight under headless CI load; 15s matches the suite's other waits.
-    await page.waitForSelector('#si18n-pdf-btn', { state: 'visible', timeout: 5_000 });
-    const [popup] = await Promise.all([page.waitForEvent('popup', { timeout: 15_000 }), page.click('#si18n-pdf-btn')]);
+    await expect(pdfButton).toBeVisible({ timeout: 15_000 });
+    const [popup] = await Promise.all([page.waitForEvent('popup', { timeout: 15_000 }), pdfButton.click()]);
     expect(popup, 'window.open must spawn a popup').toBeTruthy();
     // Give document.write a beat to land.
     await popup.waitForLoadState('domcontentloaded').catch(() => {});

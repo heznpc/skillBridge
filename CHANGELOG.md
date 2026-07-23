@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [3.5.42] - 2026-07-24
+
 ### Security
 - The Chrome Web Store builder now pins the optional AI gateway off, omits the Puter SDK and page-world bridge from the artifact and web-accessible resources, and fails the build on detected remote or indirect executable-code sinks. The generic `build:zip` command now resolves to this CWS-safe bundle; raw source packaging is explicitly named `build:developer:zip`.
 - Removed the unused YouTube host permission and the dead background `FETCH_URL`/InnerTube proxy path. Embedded subtitle control continues through the existing iframe player API without direct YouTube fetch access.

@@ -1,6 +1,6 @@
 # SkillBridge TODO
 
-> Last refreshed: 2026-07-11 (next CWS release, version pending)
+> Last refreshed: 2026-07-24 (next CWS release: v3.5.42)
 
 Items below are concrete engineering / ops work. Anything strategic — what
 markets we enter, what we charge, what features we accept — is an owner
@@ -10,7 +10,7 @@ The top board tracks the remaining work before a newly versioned CWS candidate
 can replace the live legacy v1.0.1. The existing `v3.5.41` tag predates the
 current privacy/package changes and must not be reused for the upload.
 
-## Service completion board (next CWS version pending)
+## Service completion board (next CWS version: v3.5.42)
 
 ### P0 — must close before public release
 
@@ -49,17 +49,19 @@ current privacy/package changes and must not be reused for the upload.
   - Verify: `npm run glossary`, `npm run validate`,
     `npm run check:dict-coverage`, `npm run check:locales`, `npm run docs`.
 
-- [ ] **Build, smoke, and freeze the upload artifact.** Regenerate the bundled
-  extension immediately before upload, then run the real-bundle release smoke.
+- [x] **Build, smoke, and freeze the upload artifact.** The bundled extension
+  was regenerated immediately before the real-bundle release smoke.
+  Completed 2026-07-24: full release verification passed and the inspected
+  63-file ZIP was frozen at SHA-256
+  `c81fdbe5fac854974f5dc673358918f1e8098368edac375d440750217df600f6`.
   - DoD: `dist/bundled` is fresh, first-user smoke passes, bundled zip is
     rebuilt, and generated store assets match the current icon/listing state.
   - Verify: `npm run release:smoke`, then `npm run release:verify` before the
     final upload window.
 
-- [ ] **Assign a new version, upload the bundled CWS candidate, and fix the
-  privacy tab.** The public listing is still legacy `v1.0.1`; `v3.5.41` cannot
-  identify the current change set. After external scope approval, bump to a new
-  version, run `npm run release:verify`, generate only
+- [ ] **Upload the v3.5.42 bundled CWS candidate and fix the privacy tab.** The
+  public listing is still legacy `v1.0.1`; `v3.5.41` does not identify the
+  current change set. After external scope approval, run `npm run release:verify`, generate only
   `store-assets/skillbridge-bundled.zip`, refresh listing copy/media, set the
   capital-B privacy URL, answer remote code = NO only after inspecting that exact
   uploaded package, check Website content, and paste current permission
@@ -70,9 +72,11 @@ current privacy/package changes and must not be reused for the upload.
 
 ### P1 — quality gates before/around submission
 
-- [ ] **Regenerate and inspect store assets.** Run `npm run capture:store` or
+- [x] **Regenerate and inspect store assets.** Run `npm run capture:store` or
   the "Capture store assets" workflow, inspect screenshots/promo tile/listing
-  description, then upload the media to the store listing.
+  description, then upload the media to the store listing. Regenerated and
+  visually inspected the five screenshots and promo tile on 2026-07-24; upload
+  remains part of the dashboard step.
 - [ ] **Manual real-tab bundled-extension smoke.** Load `dist/bundled` in
   Chrome and check popup startup, translation, language switch, flashcards,
   bookmarks/recent/dashboard, exam-safe disable, dark mode, the known manual
