@@ -29,14 +29,17 @@ jobs:
 
       - name: Label major updates for manual review
         if: steps.meta.outputs.update-type == 'version-update:semver-major'
-        # Ensure the label exists first — `gh pr edit --add-label` fails the whole
-        # job (exit 1) when a label is missing, which is why every major bump
-        # landed in an UNSTABLE state. `gh label create --force` is create-or-update
-        # and idempotent across runs.
+        # This job runs without actions/checkout, so `gh` cannot infer the repo
+        # from a local git remote. Without GH_REPO the first `gh label create`
+        # aborts with "fatal: not a git repository" (exit 1 under `bash -e`),
+        # which is why every major bump landed in an UNSTABLE state — the label
+        # commands never ran. GH_REPO lets gh resolve owner/repo directly;
+        # `gh label create --force` is create-or-update and idempotent.
         run: |
           gh label create dependencies --color 0366D6 --description "Pull requests that update a dependency file" --force
           gh label create manual-review --color FBCA04 --description "Dependabot major update needs manual review" --force
           gh pr edit "$PR_URL" --add-label "dependencies,manual-review"
         env:
+          GH_REPO: ${{ github.repository }}
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
