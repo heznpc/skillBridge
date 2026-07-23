@@ -353,6 +353,107 @@
     processGTQueue();
   }
 
+  function partitionAfterCacheLookup(batch, cacheResults, geminiQueue, originalTexts) {
+    const uncached = [];
+    const useGeminiBlocks = sb.hostCaps?.bridge !== false;
+
+    for (let i = 0; i < batch.length; i++) {
+      const item = batch[i];
+      const cached = cacheResults[i];
+      if (cached) {
+        if (!item.el?.parentNode) continue;
+        if (item.needsGemini && useGeminiBlocks) {
+          uncached.push(item);
+          continue;
+        }
+        const translated = window._protectedTerms.restoreProtectedTerms(cached);
+        sb.safeReplaceText(item.el, translated);
+        trackTranslatedElement(item.text, item.el);
+        continue;
+      }
+      uncached.push(item);
+    }
+
+    const gtItems = uncached.filter((item) => !item.needsGemini || !useGeminiBlocks);
+    const geminiItems = useGeminiBlocks ? uncached.filter((item) => item.needsGemini) : [];
+    queueGeminiBlockCandidates(geminiItems, geminiQueue, originalTexts);
+    return gtItems;
+  }
+
+  function queueGeminiBlockCandidates(geminiItems, geminiQueue, originalTexts) {
+    for (const item of geminiItems) {
+      if (item.el && item.el.parentNode) {
+        if (!originalTexts.has(item.el)) originalTexts.set(item.el, item.el.innerHTML);
+        geminiQueue.push({ el: item.el, targetLang: item.targetLang });
+      }
+    }
+  }
+
+  function queueOfflineItems(gtItems) {
+    const remaining = SKILLBRIDGE_THRESHOLDS.GT_QUEUE_MAX - _offlinePendingItems.length;
+    if (remaining > 0) _offlinePendingItems.push(...gtItems.slice(0, remaining));
+  }
+
+  function groupItemsByText(items) {
+    const textToItems = new Map();
+    for (const item of items) {
+      if (!textToItems.has(item.text)) textToItems.set(item.text, []);
+      textToItems.get(item.text).push(item);
+    }
+    return textToItems;
+  }
+
+  function applyGoogleTranslations(uniqueTexts, translations, textToItems, translator, targetLang) {
+    for (let i = 0; i < uniqueTexts.length; i++) {
+      let translated = translations[i];
+      if (!translated || translated === uniqueTexts[i]) continue;
+      translated = window._protectedTerms.restoreProtectedTerms(translated);
+      const items = textToItems.get(uniqueTexts[i]);
+      let verifyQueued = false;
+      for (const item of items) {
+        if (!item.el?.parentNode) continue;
+        sb.safeReplaceText(item.el, translated);
+        trackTranslatedElement(item.text, item.el);
+        if (!verifyQueued) {
+          verifyQueued = !!translator.queueGeminiVerify(item.text, translated, targetLang);
+        }
+        if (verifyQueued) addVerifySpinner(item.el);
+      }
+    }
+  }
+
+  async function translateGoogleItems(gtItems, targetLang, translator, myGeneration) {
+    if (gtItems.length === 0) return true;
+    if (sb.isOffline) {
+      queueOfflineItems(gtItems);
+      return true;
+    }
+
+    const textToItems = groupItemsByText(gtItems);
+    const uniqueTexts = [...textToItems.keys()];
+    const translations = await translator.googleTranslateBatch(uniqueTexts, targetLang);
+
+    if (gtGeneration !== myGeneration) return false;
+
+    applyGoogleTranslations(uniqueTexts, translations, textToItems, translator, targetLang);
+    return true;
+  }
+
+  function flushGeminiBlockQueue(geminiQueue, translator, originalTexts, myGeneration) {
+    for (const { el, targetLang } of geminiQueue) {
+      if (el && el.parentNode) {
+        window._geminiBlock.queueGeminiBlockTranslation(el, targetLang, {
+          translator,
+          originalTexts,
+          isLikelyEnglish,
+          generation: myGeneration,
+          getGeneration: () => gtGeneration,
+          getCurrentLang: () => sb.currentLang,
+        });
+      }
+    }
+  }
+
   async function processGTQueue() {
     if (gtProcessing || gtTranslateQueue.length === 0) return;
     gtProcessing = true;
@@ -378,69 +479,9 @@
 
         if (gtGeneration !== myGeneration) return;
 
-        const uncached = [];
-        const useGeminiBlocks = sb.hostCaps?.bridge !== false;
-        for (let i = 0; i < batch.length; i++) {
-          if (cacheResults[i]) {
-            const item = batch[i];
-            if (item.el && item.el.parentNode) {
-              if (item.needsGemini && useGeminiBlocks) {
-                uncached.push(item);
-              } else {
-                const translated = window._protectedTerms.restoreProtectedTerms(cacheResults[i]);
-                sb.safeReplaceText(item.el, translated);
-                trackTranslatedElement(item.text, item.el);
-              }
-            }
-          } else {
-            uncached.push(batch[i]);
-          }
-        }
-
-        const gtItems = uncached.filter((item) => !item.needsGemini || !useGeminiBlocks);
-        const geminiItems = useGeminiBlocks ? uncached.filter((item) => item.needsGemini) : [];
-
-        for (const item of geminiItems) {
-          if (item.el && item.el.parentNode) {
-            if (!originalTexts.has(item.el)) originalTexts.set(item.el, item.el.innerHTML);
-            geminiQueue.push({ el: item.el, targetLang: item.targetLang });
-          }
-        }
-
-        if (gtItems.length > 0) {
-          if (sb.isOffline) {
-            const remaining = SKILLBRIDGE_THRESHOLDS.GT_QUEUE_MAX - _offlinePendingItems.length;
-            if (remaining > 0) _offlinePendingItems.push(...gtItems.slice(0, remaining));
-          } else {
-            // Deduplicate texts — group elements by text to avoid redundant API calls.
-            const textToItems = new Map();
-            for (const item of gtItems) {
-              if (!textToItems.has(item.text)) textToItems.set(item.text, []);
-              textToItems.get(item.text).push(item);
-            }
-            const uniqueTexts = [...textToItems.keys()];
-            const translations = await translator.googleTranslateBatch(uniqueTexts, targetLang);
-
-            if (gtGeneration !== myGeneration) return;
-
-            for (let i = 0; i < uniqueTexts.length; i++) {
-              let translated = translations[i];
-              if (!translated || translated === uniqueTexts[i]) continue;
-              translated = window._protectedTerms.restoreProtectedTerms(translated);
-              const items = textToItems.get(uniqueTexts[i]);
-              let verifyQueued = false;
-              for (const item of items) {
-                if (!item.el?.parentNode) continue;
-                sb.safeReplaceText(item.el, translated);
-                trackTranslatedElement(item.text, item.el);
-                if (!verifyQueued) {
-                  verifyQueued = !!translator.queueGeminiVerify(item.text, translated, targetLang);
-                }
-                if (verifyQueued) addVerifySpinner(item.el);
-              }
-            }
-          }
-        }
+        const gtItems = partitionAfterCacheLookup(batch, cacheResults, geminiQueue, originalTexts);
+        const gtStillFresh = await translateGoogleItems(gtItems, targetLang, translator, myGeneration);
+        if (!gtStillFresh) return;
 
         processedItems += batch.length;
         sb.updateTranslationProgress?.(80 + Math.round((processedItems / totalItems) * 15));
@@ -464,18 +505,7 @@
       // Stale generations are discarded here and re-checked by the consumer
       // before it writes async Gemini output into the DOM.
       if (gtGeneration === myGeneration) {
-        for (const { el, targetLang } of geminiQueue) {
-          if (el && el.parentNode) {
-            window._geminiBlock.queueGeminiBlockTranslation(el, targetLang, {
-              translator,
-              originalTexts,
-              isLikelyEnglish,
-              generation: myGeneration,
-              getGeneration: () => gtGeneration,
-              getCurrentLang: () => sb.currentLang,
-            });
-          }
-        }
+        flushGeminiBlockQueue(geminiQueue, translator, originalTexts, myGeneration);
       }
     }
   }
