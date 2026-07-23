@@ -709,7 +709,6 @@
       streamEntry?.finish();
     }
   }
-
   window.addEventListener('message', async (event) => {
     if (event.source !== window) return;
     const data = event.data;

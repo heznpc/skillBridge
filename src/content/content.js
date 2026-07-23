@@ -575,7 +575,6 @@
     subtitleManager = null;
     restoreOriginal();
     sidebarVisible = false;
-
     // Remove every UI surface that could translate, open the tutor, or trigger
     // page actions while the SPA tab is sitting on a proctored cert page.
     window._sbContentSurface.removeContentSurfaces(
@@ -598,7 +597,6 @@
     subtitleManager = null;
     if (translator) restoreOriginal();
     sidebarVisible = false;
-
     window._sbContentSurface.removeContentSurfaces(
       document,
       sb,

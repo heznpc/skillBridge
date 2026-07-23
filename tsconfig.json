@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "ES2022",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "lib": ["ES2022", "DOM", "DOM.Iterable", "WebWorker"],
     "allowJs": true,
     "checkJs": false,
@@ -10,8 +10,6 @@
     "strict": false,
     "noImplicitAny": false,
     "strictNullChecks": false,
-    "alwaysStrict": false,
-    "ignoreDeprecations": "6.0",
     "noImplicitThis": false,
     "skipLibCheck": true,
     "resolveJsonModule": true,

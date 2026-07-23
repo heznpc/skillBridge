@@ -29,7 +29,7 @@
   }
 
   function appendOfflineMessage(messages) {
-    appendBotMessage(messages, sb.escapeHtml(sb.t(TUTOR_OFFLINE_LABELS)));
+    appendBotMessage(messages, sb.escapeHtml(sb.t(TUTOR_OFFLINE_LABELS)), ' role="presentation"');
     messages.lastElementChild?.querySelector('.si18n-chat-bubble')?.setAttribute('role', 'alert');
   }
 
