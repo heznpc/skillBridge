@@ -19,33 +19,34 @@
     the few extras live in store-assets/fixtures/gt-frozen.ko.json.
   -->
   <style>
-    :root { --ink:#1c1917; --muted:#6b6560; --accent:#e07a5f; --navy:#3d405b; --line:#e7e5e4; --bg:#fafaf9; }
+    :root { --ink:#1f1e1b; --muted:#69655f; --accent:#d96f52; --line:#dedad3; --bg:#f8f7f3; --rail:#efede7; }
     * { box-sizing: border-box; }
     html, body { margin: 0; }
-    body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:var(--ink); background:var(--bg); }
+    body { font-family:Arial,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; color:var(--ink); background:var(--bg); }
 
-    /* Skilljar-shaped header so the extension injects its lang select + dark toggle */
-    .site-header { background:var(--navy); color:#fff; display:flex; align-items:center; padding:0 28px; height:58px; }
-    .site-header .logo { display:flex; align-items:center; gap:10px; font-weight:700; font-size:16px; }
-    .site-header .logo .dot { width:22px; height:22px; border-radius:6px; background:linear-gradient(135deg,#e07a5f,#f2cc8f); }
+    /*
+      Neutral test host: this only exposes the Skilljar-shaped anchors required by
+      the extension. It intentionally does not imitate or brand the live site.
+    */
+    .site-header { background:var(--bg); color:var(--ink); display:flex; align-items:center; justify-content:flex-end; padding:0 30px; height:64px; border-bottom:1px solid var(--line); }
     #header-right { margin-left:auto; display:flex; align-items:center; gap:18px; }
-    .header-links-container { display:flex; gap:18px; }
-    .header-links-container a { color:#e9e9f0; text-decoration:none; font-size:14px; }
+    .header-links-container { display:flex; gap:30px; }
+    .header-links-container a { color:var(--ink); text-decoration:none; font-size:15px; }
     /* The extension's injected #si18n-header-lang sits left of the links */
-    #si18n-header-lang select { padding:6px 10px; border-radius:7px; border:1px solid #5a5d77; background:#2e3047; color:#fff; font-size:13px; }
+    #si18n-header-lang select { padding:8px 12px; border-radius:7px; border:1px solid var(--line); background:#fff; color:var(--ink); font-size:13px; }
 
-    .layout { display:grid; grid-template-columns:260px 1fr; max-width:1180px; margin:0 auto; }
-    aside { border-right:1px solid var(--line); padding:26px 20px; background:#fff; min-height:742px; }
-    aside .course { font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); font-weight:700; }
-    aside ol { margin:14px 0 0; padding-left:18px; color:var(--muted); font-size:14px; line-height:2; }
+    .layout { display:grid; grid-template-columns:286px minmax(0,1fr); min-height:728px; }
+    aside { border-right:1px solid var(--line); padding:38px 28px; background:var(--rail); }
+    aside .course { font-family:Georgia,'Times New Roman',serif; font-size:18px; line-height:1.25; color:var(--ink); font-weight:600; }
+    aside ol { margin:24px 0 0; padding-left:18px; color:var(--muted); font-size:14px; line-height:2.25; }
     aside ol li.active { color:var(--accent); font-weight:600; }
-    main { padding:34px 44px; }
-    .eyebrow { color:var(--accent); font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:.08em; }
-    h1 { font-size:32px; margin:6px 0 14px; line-height:1.2; }
+    main { padding:52px 60px; max-width:940px; }
+    .eyebrow { color:var(--muted); font-weight:600; font-size:13px; letter-spacing:.02em; }
+    h1 { font-family:Georgia,'Times New Roman',serif; font-size:44px; font-weight:400; margin:12px 0 30px; line-height:1.08; letter-spacing:-.025em; }
     h2 { font-size:21px; margin:28px 0 8px; }
     p { line-height:1.65; margin:0 0 14px; max-width:62ch; }
     ul { line-height:1.9; max-width:62ch; }
-    pre { background:#1c1917; color:#e9e7e3; padding:16px 18px; border-radius:10px; overflow:auto; font-size:13px; max-width:62ch; }
+    pre { background:#24231f; color:#f2f0e9; padding:16px 18px; border-radius:3px; overflow:auto; font-size:13px; max-width:62ch; }
     pre .cmt { color:#9fb89f; }
     .progress { height:4px; background:var(--line); border-radius:4px; margin-top:24px; max-width:62ch; }
     .progress > span { display:block; height:100%; width:28%; background:var(--accent); border-radius:4px; }
@@ -53,11 +54,10 @@
 </head>
 <body>
   <header class="site-header">
-    <span class="logo"><span class="dot"></span>Academy</span>
     <div id="header-right">
       <div class="header-links-container">
-        <a href="#">Catalog</a>
-        <a href="#">My Courses</a>
+        <a href="#">Academy</a>
+        <a href="#">Courses</a>
       </div>
     </div>
   </header>
@@ -75,7 +75,7 @@
     </aside>
 
     <main id="lesson-main">
-      <div class="eyebrow">Lesson 2</div>
+      <div class="eyebrow">Building with the Claude API / Lesson 2</div>
       <h1>Introduction to Claude</h1>
       <h2>Course overview</h2>
       <p id="p-1">This lesson covers prompt engineering fundamentals and how Claude processes user requests.</p>

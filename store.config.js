@@ -160,7 +160,7 @@ module.exports = {
     },
     {
       name: '02-language-select',
-      caption: 'Pick from 32 languages — onboarding offers one for you',
+      caption: 'Choose from 32 languages on first run',
       async run({ page, context, baseUrl }) {
         await page.goto(`${baseUrl}${LESSON_URL}`, { waitUntil: 'networkidle' });
         await evalInContentWorld(context, 'showWelcomeBanner', KO);
@@ -232,6 +232,25 @@ module.exports = {
         DISCLAIMER: 'Unofficial · not affiliated with or endorsed by Anthropic',
       },
     },
+    ...[
+      ['promo-social-landscape-1200x675', 1200, 675],
+      ['promo-social-square-1080x1080', 1080, 1080],
+      ['promo-social-portrait-1080x1350', 1080, 1350],
+      ['promo-video-thumbnail-1280x720', 1280, 720],
+      ['promo-short-thumbnail-1080x1920', 1080, 1920],
+    ].map(([name, width, height]) => ({
+      name,
+      template: path.join(TEMPLATES, 'promo-social.html'),
+      width,
+      height,
+      replacements: {
+        EYEBROW: 'v3.5.42 · RELEASE CANDIDATE',
+        HEADLINE: 'Learn in your language.\nKeep technical terms intact.',
+        BODY: '32 languages · local study tools · exam-safe translation',
+        CTA: 'Built for supported AI courses',
+        DISCLAIMER: 'Unofficial · independent · not affiliated with or endorsed by Anthropic',
+      },
+    })),
   ],
 
   demo: {

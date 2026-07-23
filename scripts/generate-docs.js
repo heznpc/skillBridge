@@ -175,6 +175,15 @@ function replaceBetweenMarkers(content, tag, replacement) {
   return content.replace(inlineRe, `$1${replacement}$2`);
 }
 
+function replaceGeneratedTitle(content, replacement) {
+  return content.replace(/(<title data-generated="seo-title">)[\s\S]*?(<\/title>)/, `$1${replacement}$2`);
+}
+
+function replaceGeneratedMeta(content, key, replacement) {
+  const metaRe = new RegExp(`(<meta data-generated="${key}"[^>]*content=")[^"]*(")`);
+  return content.replace(metaRe, `$1${replacement}$2`);
+}
+
 // --- docs/index.html ---
 const indexPath = path.join(ROOT, 'docs/index.html');
 let indexHtml = fs.readFileSync(indexPath, 'utf8');
@@ -182,6 +191,17 @@ let indexHtml = fs.readFileSync(indexPath, 'utf8');
 indexHtml = replaceBetweenMarkers(indexHtml, 'VERSION', `v${version}`);
 indexHtml = replaceBetweenMarkers(indexHtml, 'LANG_COUNT', langCountShort);
 indexHtml = replaceBetweenMarkers(indexHtml, 'PREMIUM_LANGS', '\n' + buildLangTagsHtml(premiumLangs) + '\n      ');
+indexHtml = replaceGeneratedTitle(indexHtml, `SkillBridge — AI Course Translator for ${langCountShort} Languages`);
+indexHtml = replaceGeneratedMeta(
+  indexHtml,
+  'seo-description',
+  `Translate supported AI courses into ${langCountShort} languages with curated terminology, local study tools, and exam safeguards.`,
+);
+indexHtml = replaceGeneratedMeta(
+  indexHtml,
+  'og-description',
+  `SkillBridge source manifest v${version}; unreleased CWS candidate with translation, local study tools, and exam safeguards.`,
+);
 
 fs.writeFileSync(indexPath, indexHtml, 'utf8');
 

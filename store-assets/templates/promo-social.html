@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    :root {
+      --navy: #25283f;
+      --navy-deep: #17192a;
+      --cream: #fff9ef;
+      --coral: #ef8068;
+      --gold: #f2cc8f;
+      --sage: #9ec7a5;
+    }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+    body {
+      color: var(--cream);
+      background: var(--navy-deep);
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .stage {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 86% 12%, rgba(242, 204, 143, .22), transparent 31%),
+        radial-gradient(circle at 8% 92%, rgba(239, 128, 104, .18), transparent 35%),
+        linear-gradient(145deg, #414563 0%, var(--navy) 54%, var(--navy-deep) 100%);
+    }
+    .grid {
+      position: absolute;
+      inset: 0;
+      opacity: .12;
+      background-image:
+        linear-gradient(rgba(255,255,255,.18) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.18) 1px, transparent 1px);
+      background-size: 72px 72px;
+      mask-image: linear-gradient(130deg, #000, transparent 72%);
+    }
+    .content {
+      position: relative;
+      z-index: 2;
+      height: 100%;
+      padding: clamp(52px, 7vw, 104px);
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(300px, .7fr);
+      gap: clamp(36px, 6vw, 96px);
+      align-items: center;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: clamp(34px, 4vw, 62px);
+    }
+    .brand img {
+      width: clamp(58px, 7vw, 88px);
+      height: clamp(58px, 7vw, 88px);
+      padding: 8px;
+      border-radius: 22%;
+      background: rgba(255,255,255,.1);
+      box-shadow: 0 16px 40px rgba(0,0,0,.22);
+    }
+    .brand-name { font-size: clamp(34px, 4.2vw, 58px); font-weight: 850; letter-spacing: -.03em; }
+    .brand-name span { color: var(--gold); }
+    .eyebrow {
+      display: inline-flex;
+      padding: 10px 16px;
+      margin-bottom: 24px;
+      border: 1px solid rgba(255,255,255,.22);
+      border-radius: 999px;
+      background: rgba(23,25,42,.42);
+      color: var(--gold);
+      font-size: clamp(14px, 1.45vw, 21px);
+      font-weight: 760;
+      letter-spacing: .12em;
+    }
+    h1 {
+      max-width: 820px;
+      margin: 0;
+      font-size: clamp(50px, 6.6vw, 96px);
+      line-height: .98;
+      letter-spacing: -.055em;
+      white-space: pre-line;
+      text-wrap: balance;
+    }
+    .body {
+      max-width: 760px;
+      margin-top: 30px;
+      color: #e8e6ef;
+      font-size: clamp(22px, 2.25vw, 34px);
+      line-height: 1.42;
+      text-wrap: balance;
+    }
+    .proof-card {
+      position: relative;
+      padding: clamp(30px, 4vw, 54px);
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 30px;
+      background: rgba(255,255,255,.09);
+      box-shadow: 0 28px 80px rgba(0,0,0,.28);
+      backdrop-filter: blur(16px);
+    }
+    .proof-label {
+      margin-bottom: 22px;
+      color: rgba(255,255,255,.62);
+      font-size: clamp(14px, 1.5vw, 20px);
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .proof-item {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 17px 0;
+      border-top: 1px solid rgba(255,255,255,.13);
+      font-size: clamp(19px, 2vw, 27px);
+      font-weight: 680;
+    }
+    .proof-item::before {
+      content: "";
+      width: 13px;
+      height: 13px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      background: var(--sage);
+      box-shadow: 0 0 0 7px rgba(158,199,165,.13);
+    }
+    .cta {
+      margin-top: 26px;
+      color: var(--gold);
+      font-size: clamp(17px, 1.7vw, 23px);
+      font-weight: 720;
+    }
+    .disclaimer {
+      position: absolute;
+      z-index: 3;
+      left: clamp(52px, 7vw, 104px);
+      right: clamp(52px, 7vw, 104px);
+      bottom: clamp(28px, 3.4vw, 48px);
+      color: rgba(255,255,255,.55);
+      font-size: clamp(12px, 1.15vw, 17px);
+      letter-spacing: .015em;
+    }
+    @media (min-aspect-ratio: 5/4) {
+      .brand { margin-bottom: 24px; }
+      .eyebrow { margin-bottom: 18px; }
+      h1 { font-size: clamp(50px, 5vw, 72px); }
+      .body { margin-top: 18px; font-size: clamp(19px, 1.85vw, 28px); }
+      .disclaimer { bottom: 20px; }
+    }
+    @media (max-aspect-ratio: 4/5) {
+      .content {
+        padding: clamp(64px, 9vw, 104px);
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto;
+        align-content: center;
+        gap: clamp(48px, 7vh, 100px);
+      }
+      .brand { margin-bottom: clamp(48px, 6vh, 86px); }
+      h1 { font-size: clamp(66px, 10.2vw, 112px); line-height: 1.02; }
+      .body { font-size: clamp(27px, 4vw, 43px); }
+      .proof-card { padding: clamp(40px, 7vw, 70px); }
+      .proof-item { font-size: clamp(24px, 3.4vw, 38px); padding: 22px 0; }
+      .disclaimer { left: clamp(64px, 9vw, 104px); bottom: clamp(34px, 5vw, 72px); }
+    }
+    @media (min-aspect-ratio: 4/5) and (max-aspect-ratio: 5/4) {
+      .content { grid-template-columns: 1fr; align-content: center; }
+      .proof-card { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+      .proof-label, .cta { grid-column: 1 / -1; }
+      .proof-item { border-top: 1px solid rgba(255,255,255,.13); }
+      h1 { font-size: clamp(64px, 8vw, 88px); }
+    }
+  </style>
+</head>
+<body>
+  <main class="stage">
+    <div class="grid"></div>
+    <div class="content">
+      <section>
+        <div class="brand">
+          <img src="../../assets/icons/icon128.png" alt="" />
+          <div class="brand-name">Skill<span>Bridge</span></div>
+        </div>
+        <div class="eyebrow">{{EYEBROW}}</div>
+        <h1>{{HEADLINE}}</h1>
+        <div class="body">{{BODY}}</div>
+      </section>
+      <aside class="proof-card">
+        <div class="proof-label">What the CWS build does</div>
+        <div class="proof-item">Translate lessons</div>
+        <div class="proof-item">Study locally</div>
+        <div class="proof-item">Protect quiz answers</div>
+        <div class="cta">{{CTA}}</div>
+      </aside>
+    </div>
+    <div class="disclaimer">{{DISCLAIMER}}</div>
+  </main>
+</body>
+</html>

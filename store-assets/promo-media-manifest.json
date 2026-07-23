@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "product": "SkillBridge",
+  "version": "3.5.42",
+  "status": "release-candidate",
+  "publicIdentity": "Heznpc",
+  "source": {
+    "path": "store-assets/demo.webm",
+    "sha256": "d596af539039cb2b6baf66179179b3343ebb8d26664a3c3e67685e32a8106272",
+    "runtime": "dist/bundled",
+    "captureEnvironment": "neutral deterministic fixture; not the live Skilljar UI"
+  },
+  "claimGuard": "Do not claim the release is live until the CWS listing shows v3.5.42.",
+  "supportedClaims": [
+    "Translates supported AI-course lessons into 32 interface languages.",
+    "Provides local learning tools including progress and flashcards.",
+    "Leaves quiz answer choices untranslated in exam mode.",
+    "The CWS bundle omits the AI Tutor, Puter SDK, and page bridge."
+  ],
+  "assets": [
+    {
+      "path": "store-assets/skillbridge-v3.5.42-demo-landscape.mp4",
+      "sha256": "2e2fb6c9ca10fd811126cf77586f96530f56cc668628fb80e56a3b6008c837bd",
+      "codec": "h264",
+      "width": 1280,
+      "height": 720,
+      "fps": "25/1",
+      "durationSeconds": 11.44,
+      "bytes": 529920
+    },
+    {
+      "path": "store-assets/skillbridge-v3.5.42-demo-short.mp4",
+      "sha256": "32da5ba26d4ad19ceb3549131b7cf03bc0c96720f650b699ff8cf4806fbb92a0",
+      "codec": "h264",
+      "width": 1080,
+      "height": 1920,
+      "fps": "25/1",
+      "durationSeconds": 11.44,
+      "bytes": 559874
+    }
+  ]
+}

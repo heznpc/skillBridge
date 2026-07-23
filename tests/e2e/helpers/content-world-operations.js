@@ -298,6 +298,8 @@ async function evalInContentWorld(context, op, arg) {
                 // term-preview popover and any in-flight GT verify spinners ("•••").
                 cleanForCapture: () => {
                   document.getElementById('si18n-term-preview')?.remove();
+                  document.getElementById('si18n-progress-bar')?.remove();
+                  document.getElementById('si18n-progress-toast')?.remove();
                   document.querySelectorAll('.si18n-verify-spinner').forEach((el) => el.remove());
                   return true;
                 },
