@@ -1,6 +1,6 @@
 {
   "name": "skillbridge-academy-terms",
-  "description": "Anthropic Academy terminology and study companion. Translates and explains Anthropic Academy / Claude course terms (Claude Code, MCP, agent skills, subagents, the Claude API, AI Fluency) correctly across 11 languages using SkillBridge's curated dictionary, and can quiz or flashcard the learner in their own language.",
+  "description": "Anthropic Academy terminology and study companion. Translates and explains Anthropic Academy / Claude course terms (Claude Code, MCP, agent skills, subagents, the Claude API, AI Fluency) correctly across 12 languages using SkillBridge's curated dictionary, and can quiz or flashcard the learner in their own language.",
   "version": "1.0.0",
   "author": {
     "name": "heznpc"

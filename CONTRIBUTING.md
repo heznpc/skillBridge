@@ -130,7 +130,7 @@ skillbridge/
 │   │   ├── youtube-subtitles.js  # YouTube auto-subtitle enabler
 │   │   └── page-bridge.js     # Developer-only Puter main-world bridge; omitted from CWS
 │   └── data/                  # Static JSON translation dictionaries
-│       ├── ko.json            # English → Korean (570+ entries)
+│       ├── ko.json            # English → Korean (1,100+ entries)
 │       ├── ja.json            # English → Japanese
 │       ├── zh-CN.json         # English → Chinese Simplified
 │       ├── es.json            # English → Spanish
@@ -430,7 +430,7 @@ bundle, so it is not part of the CWS translation flow above.
 ### Key Design Decisions
 
 - **Why Google Translate in CWS?** It provides the requested translation fallback without shipping the Puter SDK or activating an AI gateway. Curated dictionaries and protected-term restoration handle domain-specific terminology locally.
-- **Why static dictionaries?** For the 570+ most critical AI/ML terms, human-curated translations are simply better than any MT engine. These are the terms that matter most for comprehension.
+- **Why static dictionaries?** For the 1,100+ most critical AI/ML terms, human-curated translations are simply better than any MT engine. These are the terms that matter most for comprehension.
 - **Why retain Puter source at all?** It is an optional developer/research path. It is not a feature of the next CWS candidate and must remain outside the bundled upload artifact.
 - **Why separate build outputs?** `npm run build:bundle:zip` produces the only CWS-safe ZIP. `npm run build:developer:zip` is an explicit raw-source artifact and must never be uploaded to CWS; `npm run build:zip` aliases the safe bundled command.
 
