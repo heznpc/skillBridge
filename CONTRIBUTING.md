@@ -119,7 +119,7 @@ skillbridge/
 │   ├── background/
 │   │   └── background.js      # Service worker — Google Translate, update checks, cache cleanup
 │   ├── bridge/
-│   │   └── puter.js           # Developer-only Puter SDK; omitted from CWS (contains lazy RHC paths)
+│   │   └── puter.js           # Vendored Puter SDK (AI tutor) — ships in the CWS bundle
 │   ├── popup/
 │   │   ├── popup.html         # Extension popup UI
 │   │   └── popup.js           # Popup logic
@@ -129,7 +129,7 @@ skillbridge/
 │   │   ├── selectors.js       # Centralized Skilljar DOM selectors (quiz, content, catalog)
 │   │   ├── translator.js      # CWS: Static → Cache → GT; raw developer path may add Gemini
 │   │   ├── youtube-subtitles.js  # YouTube auto-subtitle enabler
-│   │   └── page-bridge.js     # Developer-only Puter main-world bridge; omitted from CWS
+│   │   └── page-bridge.js     # Puter main-world bridge (AI tutor) — ships in the CWS bundle
 │   └── data/                  # Static JSON translation dictionaries
 │       ├── ko.json            # English → Korean (1,100+ entries)
 │       ├── ja.json            # English → Japanese
