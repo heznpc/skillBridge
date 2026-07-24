@@ -115,9 +115,9 @@ A full dark theme for the course header, lesson content, and SkillBridge panels.
 
 ### 🎓 Exam Mode & Certification Safety
 
-**Course quizzes** (e.g., Claude 101 completion quiz) — answer choices are protected from translation to preserve accuracy.
+**Course quizzes** (e.g., Claude 101 completion quiz) — answer choices on recognized quiz pages are skipped by translation to preserve accuracy (detection is URL- and page-selector-based).
 
-**Proctored certification exams** (e.g., Claude Certified Architect) — the extension **disables itself entirely** so it cannot be mistaken for a cheating tool. No translation, no UI injection, nothing.
+**Proctored certification exams** (e.g., Claude Certified Architect) — on recognized certification routes the extension **disables itself**: no translation, no UI injection. Recognition is URL-pattern based, so treat it as a safeguard, not a guarantee — if Skilljar ships an exam under a URL the patterns don't cover yet, the extension won't know it's an exam. For any proctored exam, turn the extension off yourself.
 
 ### ⌨️ Keyboard Shortcuts
 
@@ -232,7 +232,7 @@ The interesting part of SkillBridge is the constraints, not the feature count. A
 Translating a course page on every navigation has to be fast and predictable. The curated dictionary fixes terms generic MT gets wrong ("Prompt" → "프롬프트", never "신속한") at zero latency, the IndexedDB cache makes revisits instant, Google Translate covers the remaining visible text, and protected-term restoration runs after machine translation. Local results come first; the network is used only for text that still needs translation.
 
 **Reliability & safety are designed in, not bolted on.**
-- **Exam-safe by default** — on proctored certification exams the extension *disables itself entirely*, and on quizzes answer choices are never translated. A learning aid must not be mistakable for a cheating tool.
+- **Exam-safe by default** — on recognized proctored certification routes the extension *disables itself*, and on recognized quiz pages answer choices are skipped by translation. Detection is pattern-based (URLs + page selectors), so it is a safeguard rather than a guarantee: sitting a proctored exam, turn the extension off. A learning aid must not be mistakable for a cheating tool.
 - **Invariants over hope** — brand/product terms ("Claude", "Cowork", "Agent Skills") are protected by a dictionary and restored *after* machine translation, rather than trusting the translator to leave them alone. (Generic concept words like "subagent" are translated natively per locale — see [docs/TRANSLATION_RULES.md](docs/TRANSLATION_RULES.md).)
 - **Guarding against external drift** — the target site is a third party we don't control, so CI watchers detect when the platform adds a course or changes its DOM selectors and open an issue automatically, instead of letting users hit silent breakage.
 - **Defensive content scripts** — idempotent injection guards and URL polling, because the host app navigates via SPA (content scripts can fire more than once — or not at all — per navigation).
