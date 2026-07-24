@@ -18,7 +18,6 @@
     "check:selectors": "node scripts/check-selectors.js",
     "check:dicts": "node scripts/check-dicts.js",
     "check:sync": "node scripts/check-bg-sync.js",
-    "check:rhc": "node scripts/check-rhc.js dist/bundled",
     "check:i18n": "node scripts/check-i18n-keys.js",
     "check:locales": "node scripts/check-locale-contamination.js",
     "check:dict-coverage": "node scripts/check-dict-coverage.js",

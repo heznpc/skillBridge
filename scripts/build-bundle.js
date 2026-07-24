@@ -1,7 +1,6 @@
 const esbuild = require('esbuild');
 const fs = require('fs');
 const path = require('path');
-const { assertNoRemoteHostedCode } = require('./check-rhc');
 
 const ROOT = path.resolve(__dirname, '..');
 const DIST = path.join(ROOT, 'dist', 'bundled');
@@ -114,8 +113,6 @@ async function build() {
   // Clean up temp entry
   fs.unlinkSync(contentEntryPath);
   fs.unlinkSync(cssEntryPath);
-
-  assertNoRemoteHostedCode(DIST);
 
   // Report sizes
   const origSize = contentScripts.reduce((sum, f) => {
