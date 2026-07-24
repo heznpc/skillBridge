@@ -667,7 +667,7 @@
   function safeReplaceText(el, newText) {
     if (el.children.length === 0) {
       el.textContent = newText;
-      return;
+      return true;
     }
 
     // `newText` is the translation of the element's ENTIRE visible text,
@@ -684,13 +684,13 @@
     //
     // Writing the whole translation into the FIRST meaningful descendant text
     // node and clearing every other one removes the duplication while keeping
-    // the inline elements in place (links stay clickable, the wrapping
-    // <strong> survives). Code/pre/script/style text is preserved untouched,
-    // so inline <code> fragments are never overwritten.
+    // formatting elements (<strong>, <em>) in place. Code/pre/script/style
+    // text is preserved untouched, so inline <code> fragments are never
+    // overwritten.
     const meaningful = getTextNodes(el);
     if (meaningful.length === 0) {
       el.textContent = newText;
-      return;
+      return true;
     }
     const target = meaningful[0];
 
@@ -706,8 +706,23 @@
       if (node.parentElement?.closest('code, pre, script, style')) continue;
       toBlank.push(node);
     }
+
+    // INVARIANT — never destroy an interactive element's visible label.
+    // Collapsing a mixed block into a single text node would either blank a
+    // link/button's text (leaving a clickable dead spot) or, when the first
+    // meaningful node sits inside the control, swallow the whole sentence
+    // into its label. Both are worse than showing the original English, so
+    // refuse the replacement and leave the DOM untouched. Routing in
+    // gt-queue keeps such blocks on the structure-preserving AI path; this
+    // guard is the last line of defense if one slips through (cache replay,
+    // future routing regressions).
+    const INTERACTIVE = 'a, button, summary, [role="button"], [role="link"]';
+    if (toBlank.some((node) => node.parentElement?.closest(INTERACTIVE))) return false;
+    if (toBlank.length > 0 && target.parentElement?.closest(INTERACTIVE)) return false;
+
     target.textContent = newText;
     for (const node of toBlank) node.textContent = '';
+    return true;
   }
 
   // Local copy — gt-queue.js has its own (private to the GT pipeline).

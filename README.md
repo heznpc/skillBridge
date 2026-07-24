@@ -91,7 +91,7 @@ That's it.
 
 ### 🌐 Full Page Translation
 
-Course headings, paragraphs, lists, navigation, cards, and supported code comments are translated, with AI-specific terms handled through curated dictionaries and protected-term restoration. Course controls and CJK font rendering remain intact. Text not already covered by the packaged dictionary or local cache is translated through Google Translate.
+Course headings, paragraphs, lists, navigation, cards, and supported code comments are translated, with AI-specific terms handled through curated dictionaries and protected-term restoration. Course controls and CJK font rendering remain intact. Text not already covered by the packaged dictionary or local cache is translated through Google Translate. Paragraphs that mix prose with links or buttons are only translated through the structure-preserving AI path — where that path isn't available they keep their original text, so link and button labels are never lost.
 
 <div align="center">
 <img src="assets/screenshots/01-lesson-translated.png" alt="Lesson page with curriculum fully translated" width="720" />

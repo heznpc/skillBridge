@@ -79,10 +79,23 @@ describe('isLikelyEnglish', () => {
   });
 });
 
-describe('inline-tag fallback routing', () => {
-  test('translation-only hosts send inline-tag items through GT instead of leaving them untranslated', () => {
+describe('inline routing invariants', () => {
+  test('interactive-bearing blocks never take the flattening GT path', () => {
+    // Interactive labels must never be blanked by safeReplaceText: with the
+    // bridge they ride the structure-preserving Gemini path, without it they
+    // stay untranslated. Formatting-only inline blocks remain GT-eligible.
     expect(src).toContain('const useGeminiBlocks = sb.hostCaps?.bridge !== false;');
-    expect(src).toContain('const gtItems = uncached.filter((item) => !item.needsGemini || !useGeminiBlocks);');
-    expect(src).toContain('const geminiItems = useGeminiBlocks ? uncached.filter((item) => item.needsGemini) : [];');
+    expect(src).toContain(
+      'const gtItems = uncached.filter((item) => (!item.needsGemini || !useGeminiBlocks) && !item.hasInteractive);',
+    );
+    expect(src).toContain('? uncached.filter((item) => item.needsGemini || item.hasInteractive)');
+  });
+
+  test('interactive detection is a deep query, not a direct-children check', () => {
+    // hasInlineTags only inspects direct children, so wrapper shapes like
+    // <p><span>text <a>link</a></span></p> slip past it. The routing guard
+    // must therefore use a descendant query.
+    expect(src).toContain("el.querySelector('a, button, summary, [role=\"button\"], [role=\"link\"]')");
+    expect(src).toContain('hasInteractive: _hasInteractiveEls(el)');
   });
 });

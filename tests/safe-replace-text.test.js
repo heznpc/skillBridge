@@ -57,13 +57,37 @@ describe('safeReplaceText', () => {
     expect(el.querySelector('strong')).not.toBeNull();
   });
 
-  test('inline link is preserved and not duplicated', () => {
+  // INVARIANT: an interactive element's visible label is never blanked or
+  // swallowed. A previous version of these tests asserted the flattening
+  // behavior (link kept, label emptied) as correct — codifying the exact
+  // breakage they should have caught.
+  test('mixed block with an inline link is refused — label is never blanked', () => {
     const el = makeEl('<p>See <a href="https://x.test">the docs</a> now</p>');
-    safeReplaceText(el, '지금 문서를 보세요');
-    expect(el.textContent.replace(/\s+/g, ' ').trim()).toBe('지금 문서를 보세요');
-    const link = el.querySelector('a');
-    expect(link).not.toBeNull();
-    expect(link.getAttribute('href')).toBe('https://x.test');
+    const applied = safeReplaceText(el, '지금 문서를 보세요');
+    expect(applied).toBe(false);
+    // Original stays fully intact: no empty anchor, no half-translated mix.
+    expect(el.querySelector('a').textContent).toBe('the docs');
+    expect(el.querySelector('a').getAttribute('href')).toBe('https://x.test');
+    expect(el.textContent).not.toContain('지금 문서를 보세요');
+  });
+
+  test('leading link block is refused — label must not swallow the sentence', () => {
+    const el = makeEl('<p><a href="/x">Read this</a> for background</p>');
+    expect(safeReplaceText(el, '배경 설명은 이것을 읽으세요')).toBe(false);
+    expect(el.querySelector('a').textContent).toBe('Read this');
+  });
+
+  test('link-only block still gets its label replaced', () => {
+    const el = makeEl('<p><a href="/x">Read more</a></p>');
+    expect(safeReplaceText(el, '더 읽기')).toBe(true);
+    expect(el.querySelector('a').textContent).toBe('더 읽기');
+    expect(el.querySelector('a').getAttribute('href')).toBe('/x');
+  });
+
+  test('button label is protected like a link', () => {
+    const el = makeEl('<div>Press <button>Submit</button> to finish</div>');
+    expect(safeReplaceText(el, '완료하려면 제출을 누르세요')).toBe(false);
+    expect(el.querySelector('button').textContent).toBe('Submit');
   });
 
   test('multiple inline children collapse to a single translation', () => {

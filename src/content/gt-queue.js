@@ -173,8 +173,10 @@
     const translator = sb.translator;
     const elementMatch = translator.staticLookup(fullText);
     if (elementMatch) {
-      sb.safeReplaceText(el, elementMatch);
-      return 'static';
+      if (sb.safeReplaceText(el, elementMatch) !== false) return 'static';
+      // Guard refused the collapse (block carries link/button labels) — fall
+      // through to the per-node static pass below, which replaces text node
+      // by node and never flattens inline structure.
     }
 
     let allNodesMatched = true;
@@ -325,6 +327,14 @@
    * @param {string} targetLang
    * @param {boolean} [alreadyVisible] — if true, skip viewport re-check (caller already classified)
    */
+  // Deep check, unlike hasInlineTags (which only looks at DIRECT children and
+  // so misses wrapper shapes like <p><span>text <a>link</a></span></p>). Any
+  // block carrying a link/button label must never take the flattening
+  // safeReplaceText path — see partitionAfterCacheLookup.
+  function _hasInteractiveEls(el) {
+    return !!el.querySelector('a, button, summary, [role="button"], [role="link"]');
+  }
+
   function queueForGoogleTranslate(elements, targetLang, alreadyVisible) {
     const _hasInlineTags = window._geminiBlock.hasInlineTags;
     if (alreadyVisible) {
@@ -332,7 +342,13 @@
         if (gtTranslateQueue.length >= SKILLBRIDGE_THRESHOLDS.GT_QUEUE_MAX) break;
         const text = el.textContent.trim();
         if (!text || text.length < 4) continue;
-        gtTranslateQueue.push({ el, text, targetLang, needsGemini: _hasInlineTags(el) });
+        gtTranslateQueue.push({
+          el,
+          text,
+          targetLang,
+          needsGemini: _hasInlineTags(el),
+          hasInteractive: _hasInteractiveEls(el),
+        });
       }
     } else {
       const visibleItems = [];
@@ -345,7 +361,13 @@
           break;
         const text = el.textContent.trim();
         if (!text || text.length < 4) continue;
-        const item = { el, text, targetLang, needsGemini: _hasInlineTags(el) };
+        const item = {
+          el,
+          text,
+          targetLang,
+          needsGemini: _hasInlineTags(el),
+          hasInteractive: _hasInteractiveEls(el),
+        };
         (isInViewport(el) ? visibleItems : offscreenItems).push(item);
       }
       gtTranslateQueue.push(...visibleItems, ...offscreenItems);
@@ -362,20 +384,29 @@
       const cached = cacheResults[i];
       if (cached) {
         if (!item.el?.parentNode) continue;
-        if (item.needsGemini && useGeminiBlocks) {
+        if ((item.needsGemini || item.hasInteractive) && useGeminiBlocks) {
           uncached.push(item);
           continue;
         }
+        // Bridge-less host: a cached flat translation must never blank a
+        // link/button label. Keep the original text instead.
+        if (item.hasInteractive) continue;
         const translated = window._protectedTerms.restoreProtectedTerms(cached);
-        sb.safeReplaceText(item.el, translated);
+        if (sb.safeReplaceText(item.el, translated) === false) continue;
         trackTranslatedElement(item.text, item.el);
         continue;
       }
       uncached.push(item);
     }
 
-    const gtItems = uncached.filter((item) => !item.needsGemini || !useGeminiBlocks);
-    const geminiItems = useGeminiBlocks ? uncached.filter((item) => item.needsGemini) : [];
+    // Interactive-bearing blocks only ever render through the
+    // structure-preserving Gemini path; on hosts without the bridge they stay
+    // untranslated rather than losing their link/button labels. Formatting-only
+    // inline blocks (<strong>, <em>, …) remain GT-eligible everywhere.
+    const gtItems = uncached.filter((item) => (!item.needsGemini || !useGeminiBlocks) && !item.hasInteractive);
+    const geminiItems = useGeminiBlocks
+      ? uncached.filter((item) => item.needsGemini || item.hasInteractive)
+      : [];
     queueGeminiBlockCandidates(geminiItems, geminiQueue, originalTexts);
     return gtItems;
   }
@@ -412,7 +443,7 @@
       let verifyQueued = false;
       for (const item of items) {
         if (!item.el?.parentNode) continue;
-        sb.safeReplaceText(item.el, translated);
+        if (sb.safeReplaceText(item.el, translated) === false) continue;
         trackTranslatedElement(item.text, item.el);
         if (!verifyQueued) {
           verifyQueued = !!translator.queueGeminiVerify(item.text, translated, targetLang);
