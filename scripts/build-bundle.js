@@ -16,8 +16,11 @@ async function build() {
   // Bundle content scripts into a single file
   const contentScripts = manifest.content_scripts[0].js;
   // Create a combined entry that loads all content scripts in order
+  // v4: the AI tutor (bundled Puter bridge) ships in the CWS build. The gate
+  // stays as the single chokepoint but is flipped ON; per-host `bridge`
+  // capability + host_permissions still scope where the bridge actually runs.
   const cwsBuildGate =
-    "Object.defineProperty(globalThis,'__SKILLBRIDGE_AI_GATEWAY_ENABLED__',{value:false,writable:false,configurable:false});";
+    "Object.defineProperty(globalThis,'__SKILLBRIDGE_AI_GATEWAY_ENABLED__',{value:true,writable:false,configurable:false});";
   const contentEntry = [
     cwsBuildGate,
     ...contentScripts.map((f) => `// --- ${f} ---\n` + fs.readFileSync(path.join(ROOT, f), 'utf8')),
@@ -78,8 +81,13 @@ async function build() {
   // Copy other web-accessible resources
   fs.mkdirSync(path.join(DIST, 'src/lib'), { recursive: true });
   fs.mkdirSync(path.join(DIST, 'src/shared'), { recursive: true });
+  fs.mkdirSync(path.join(DIST, 'src/bridge'), { recursive: true });
   fs.mkdirSync(path.join(DIST, 'src/content/styles'), { recursive: true });
   fs.copyFileSync(path.join(ROOT, 'src/content/styles/fab.css'), path.join(DIST, 'src/content/styles/fab.css'));
+  // AI tutor bridge (v4): the page-world loader + vendored Puter SDK ship as
+  // web-accessible resources so the tutor works in the CWS build.
+  fs.copyFileSync(path.join(ROOT, 'src/lib/page-bridge.js'), path.join(DIST, 'src/lib/page-bridge.js'));
+  fs.copyFileSync(path.join(ROOT, 'src/bridge/puter.js'), path.join(DIST, 'src/bridge/puter.js'));
   fs.copyFileSync(
     path.join(ROOT, 'src/shared/runtime-constants.js'),
     path.join(DIST, 'src/shared/runtime-constants.js'),
@@ -105,7 +113,6 @@ async function build() {
     entry.resources = entry.resources.flatMap((r) =>
       r === 'src/content/styles/*.css' ? ['content.bundle.css', 'src/content/styles/fab.css'] : [r],
     );
-    entry.resources = entry.resources.filter((r) => r !== 'src/lib/page-bridge.js' && r !== 'src/bridge/puter.js');
     entry.resources = [...new Set(entry.resources)];
   }
   fs.writeFileSync(path.join(DIST, 'manifest.json'), JSON.stringify(bundledManifest, null, 2));

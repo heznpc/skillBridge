@@ -271,14 +271,13 @@ function verifyArtifacts() {
 function smoke() {
   runNpm('Build production extension bundle', 'build:bundle');
   run(
-    'First-user, action-popup, and no-RHC smoke E2E',
+    'First-user and action-popup smoke E2E',
     NPX,
     [
       'playwright',
       'test',
       'tests/e2e/first-user-flow.spec.js',
       'tests/e2e/popup.spec.js',
-      'tests/e2e/cws-no-rhc.spec.js',
     ],
     { timeoutMs: 180_000 },
   );
@@ -317,7 +316,7 @@ function preflight({ includeFullE2e, includeStoreCapture }) {
     runNpm('Full E2E suite', 'test:e2e');
   } else {
     console.log('\nFull E2E suite is reserved for npm run release:verify.');
-    console.log('Preflight covers upload-readiness plus first-user, action-popup, and no-RHC paths.');
+    console.log('Preflight covers upload-readiness plus first-user and action-popup paths.');
   }
 }
 

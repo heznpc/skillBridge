@@ -89,17 +89,17 @@ describe('bundled artifact shape', () => {
     expect(fs.existsSync(path.join(DIST_DIR, 'THIRD_PARTY_NOTICES.md'))).toBe(false);
   });
 
-  test('excludes the Puter bridge and pins the CWS AI gateway off', () => {
+  test('ships the Puter bridge and pins the AI gateway on (v4 tutor)', () => {
     const manifest = JSON.parse(fs.readFileSync(path.join(DIST_DIR, 'manifest.json'), 'utf8'));
     const resources = manifest.web_accessible_resources.flatMap((entry) => entry.resources);
-    expect(resources).not.toContain('src/lib/page-bridge.js');
-    expect(resources).not.toContain('src/bridge/puter.js');
-    expect(fs.existsSync(path.join(DIST_DIR, 'src', 'lib', 'page-bridge.js'))).toBe(false);
-    expect(fs.existsSync(path.join(DIST_DIR, 'src', 'bridge', 'puter.js'))).toBe(false);
+    expect(resources).toContain('src/lib/page-bridge.js');
+    expect(resources).toContain('src/bridge/puter.js');
+    expect(fs.existsSync(path.join(DIST_DIR, 'src', 'lib', 'page-bridge.js'))).toBe(true);
+    expect(fs.existsSync(path.join(DIST_DIR, 'src', 'bridge', 'puter.js'))).toBe(true);
     expect(fs.readFileSync(path.join(DIST_DIR, 'content.bundle.js'), 'utf8')).toContain(
       '__SKILLBRIDGE_AI_GATEWAY_ENABLED__',
     );
-    expect(fs.readFileSync(path.join(DIST_DIR, 'src', 'shared', 'build-config.js'), 'utf8')).toContain('value:false');
+    expect(fs.readFileSync(path.join(DIST_DIR, 'src', 'shared', 'build-config.js'), 'utf8')).toContain('value:true');
   });
 
   test('does not copy repo-only development surfaces', () => {

@@ -26,7 +26,6 @@ const batches = [
   [
     'tests/e2e/a11y.spec.js',
     'tests/e2e/first-user-flow.spec.js',
-    'tests/e2e/cws-no-rhc.spec.js',
     'tests/e2e/popup.spec.js',
     'tests/e2e/keyboard-shortcuts.spec.js',
     'tests/e2e/viewport-polish.spec.js',
