@@ -17,6 +17,7 @@ const constants = new Function(`${sharedSrc}\n${selectorsSrc}\n${constantsSrc}; 
   SKILLBRIDGE_MODELS, SKILLBRIDGE_THRESHOLDS, SKILLBRIDGE_DELAYS, SKILLBRIDGE_LIMITS,
   PREMIUM_LANGUAGES, AVAILABLE_LANGUAGES, AVAILABLE_LANGUAGE_CODES,
   SUPPORTED_LANGUAGE_MAP, POPUP_LABELS, DEFAULT_PROTECTED_TERMS,
+  ENGINE_LABELS,
   SKILLBRIDGE_MODEL_LABELS,
   SHORTCUT_LABELS, SHORTCUT_DESCRIPTIONS,
   EXAM_URL_PATTERNS, EXAM_SKIP_SELECTORS, EXAM_BANNER_LABELS, TUTOR_EXAM_LABELS,
@@ -31,6 +32,7 @@ const {
   PREMIUM_LANGUAGES,
   AVAILABLE_LANGUAGES,
   POPUP_LABELS,
+  ENGINE_LABELS,
   DEFAULT_PROTECTED_TERMS,
   SHORTCUT_LABELS,
   SHORTCUT_DESCRIPTIONS,
@@ -132,6 +134,34 @@ describe('UI Labels (i18n)', () => {
     for (const [_key, map] of Object.entries(POPUP_LABELS)) {
       for (const code of coreI18nCodes) {
         expect(map[code]).toBeDefined();
+      }
+    }
+  });
+});
+
+describe('ENGINE_LABELS (v4 tutor engine selector)', () => {
+  const EXPECTED_KEYS = [
+    'engineLabel',
+    'cloudOption',
+    'localOption',
+    'offOption',
+    'localBaseUrl',
+    'localModel',
+    'onDeviceHint',
+  ];
+
+  test('defines every engine-selector string', () => {
+    for (const key of EXPECTED_KEYS) {
+      expect(ENGINE_LABELS[key]).toBeDefined();
+    }
+  });
+
+  test('every entry covers the full i18n locale set', () => {
+    const codes = ['en', 'ko', 'id', 'it', 'ja', 'zh-CN', 'zh-TW', 'es', 'fr', 'de', 'pt-BR', 'ru', 'vi'];
+    for (const [_key, map] of Object.entries(ENGINE_LABELS)) {
+      for (const code of codes) {
+        expect(typeof map[code]).toBe('string');
+        expect(map[code].length).toBeGreaterThan(0);
       }
     }
   });

@@ -66,6 +66,24 @@ test.describe('SkillBridge — bundled action popup', () => {
     await expect(popup.locator('#lang-select optgroup').nth(0)).toHaveAttribute('label', '★ Curated terminology');
     await expect(popup.locator('#lang-select optgroup').nth(1)).toHaveAttribute('label', 'Google Translate');
 
+    // v4 A5/A4: the tutor engine selector ships (cloud/local/off). Choosing
+    // "local" reveals the on-device config and persists the pref.
+    await expect(popup.locator('#engine-field')).toBeVisible();
+    await expect(popup.locator('#engine-select option')).toHaveCount(3);
+    await expect(popup.locator('#local-config')).toBeHidden();
+    await popup.locator('#engine-select').selectOption('local');
+    await expect(popup.locator('#local-config')).toBeVisible();
+    await expect(popup.locator('#local-base-input')).toHaveAttribute('placeholder', 'http://localhost:11434/v1');
+    await expect
+      .poll(async () =>
+        extCtx.context
+          .serviceWorkers()[0]
+          .evaluate(async () => (await chrome.storage.local.get('sb_ai_engine')).sb_ai_engine),
+      )
+      .toBe('local');
+    await popup.locator('#engine-select').selectOption('cloud');
+    await expect(popup.locator('#local-config')).toBeHidden();
+
     await popup.locator('#lang-select').selectOption('ko');
     await expect
       .poll(async () =>

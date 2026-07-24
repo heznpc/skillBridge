@@ -97,6 +97,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     sidebarBtn.textContent = _POPUP_AI_GATEWAY_ENABLED ? t(POPUP_LABELS.openSidebar) : t(MENU_LABELS.tools);
     document.getElementById('auto-translate-label').textContent = t(POPUP_LABELS.autoTranslate);
     if (commentLabel) commentLabel.textContent = t(COMMENT_TRANSLATE_LABELS);
+    if (_POPUP_AI_GATEWAY_ENABLED) renderEngineLabels();
   }
 
   renderPopupLabels();
@@ -151,6 +152,50 @@ document.addEventListener('DOMContentLoaded', async () => {
     chrome.storage.local.set({ commentTranslate: commentTranslate.checked });
     safeSendMessage(tab.id, { action: 'toggleCommentTranslation', enabled: commentTranslate.checked });
   });
+
+  // AI tutor engine selector (cloud / local / off) — only when the AI gateway
+  // is bundled. `local` reveals the on-device (Ollama / OpenAI-compatible) config.
+  const engineField = document.getElementById('engine-field');
+  const engineSelect = document.getElementById('engine-select');
+  const localConfig = document.getElementById('local-config');
+  const localBaseInput = document.getElementById('local-base-input');
+  const localModelInput = document.getElementById('local-model-input');
+
+  function renderEngineLabels() {
+    document.getElementById('engine-label').textContent = t(ENGINE_LABELS.engineLabel);
+    document.getElementById('engine-opt-cloud').textContent = t(ENGINE_LABELS.cloudOption);
+    document.getElementById('engine-opt-local').textContent = t(ENGINE_LABELS.localOption);
+    document.getElementById('engine-opt-off').textContent = t(ENGINE_LABELS.offOption);
+    document.getElementById('local-base-label').textContent = t(ENGINE_LABELS.localBaseUrl);
+    document.getElementById('local-model-label').textContent = t(ENGINE_LABELS.localModel);
+    document.getElementById('on-device-hint').textContent = t(ENGINE_LABELS.onDeviceHint);
+  }
+
+  function syncLocalConfigVisibility() {
+    localConfig.style.display = engineSelect.value === 'local' ? 'block' : 'none';
+  }
+
+  if (_POPUP_AI_GATEWAY_ENABLED) {
+    engineField.style.display = 'block';
+    renderEngineLabels();
+    const eng = await chrome.storage.local.get(['sb_ai_engine', 'sb_local_base', 'sb_local_model']);
+    engineSelect.value = eng.sb_ai_engine || 'cloud';
+    localBaseInput.value = eng.sb_local_base || '';
+    localModelInput.value = eng.sb_local_model || '';
+    syncLocalConfigVisibility();
+
+    engineSelect.addEventListener('change', () => {
+      chrome.storage.local.set({ sb_ai_engine: engineSelect.value });
+      syncLocalConfigVisibility();
+    });
+    // Persist trimmed values; empty falls back to the SW defaults.
+    localBaseInput.addEventListener('change', () => {
+      chrome.storage.local.set({ sb_local_base: localBaseInput.value.trim() });
+    });
+    localModelInput.addEventListener('change', () => {
+      chrome.storage.local.set({ sb_local_model: localModelInput.value.trim() });
+    });
+  }
 
   function showStatus(text, type) {
     status.textContent = text;

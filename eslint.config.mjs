@@ -81,6 +81,7 @@ export default [
         HISTORY_DB_NAME: 'readonly',
         HISTORY_STORE: 'readonly',
         POPUP_LABELS: 'readonly',
+        ENGINE_LABELS: 'readonly',
         SKILLBRIDGE_MODEL_LABELS: 'readonly',
         SHORTCUT_LABELS: 'readonly',
         SHORTCUT_DESCRIPTIONS: 'readonly',
