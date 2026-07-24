@@ -45,9 +45,10 @@ npm run build:bundle
 
 > **Note:** The extension activates on `anthropic.skilljar.com` (Anthropic Academy's learning platform powered by Skilljar).
 
-`dist/bundled` is the CWS-equivalent, no-AI build. Loading the repository root
-instead selects the raw developer configuration, which retains the optional
-Puter AI path and is not valid evidence for CWS privacy, permissions, or RHC.
+`dist/bundled` is the CWS-equivalent build (minified, same AI tutor as the raw
+source — the bundled Puter bridge ships and the AI gateway flag is on). Loading
+the repository root instead runs the raw, un-minified developer configuration;
+both include the opt-in Puter AI path.
 
 ---
 
@@ -112,8 +113,8 @@ skillbridge/
 │   ├── content/
 │   │   ├── content.js         # Main content script — DOM translation, init, GT queue
 │   │   ├── header-controls.js # Header language selector, dark mode, welcome banner
-│   │   ├── sidebar-chat.js    # Sidebar shell; CWS exposes local learning tools
-│   │   ├── text-selection.js  # Shared-source selection helper; AI path is developer-only
+│   │   ├── sidebar-chat.js    # Sidebar shell — AI tutor chat + local learning tools
+│   │   ├── text-selection.js  # Selection helper — "Ask tutor" on selected text
 │   │   └── styles/            # Content CSS partials (sidebar, transcript panel, fonts)
 │   ├── background/
 │   │   └── background.js      # Service worker — Google Translate, update checks, cache cleanup

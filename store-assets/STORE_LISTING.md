@@ -5,7 +5,7 @@ sync with the uploaded ZIP, the CWS Privacy tab, and `PRIVACY_POLICY.md`.
 
 ## What's New — paste into the CWS "What's new" field after version assignment
 
-- 🔒 Privacy-focused CWS runtime: AI gateway disabled, no AI-service requests, and Puter/page bridge omitted.
+- 🔒 No SkillBridge account: translation and learning tools need no sign-in; the optional AI Tutor uses a free Puter sign-in (no API key).
 - 🌐 Translation continues through packaged dictionaries, local cache, and Google Translate.
 - 🃏 Local learning tools include spaced-repetition flashcards, bookmarks, Continue/Recent, progress dashboard, outline, and PDF export.
 - 🎬 Auto-subtitles remain available without requesting YouTube host access.
@@ -78,7 +78,7 @@ SkillBridge does not operate a translation server. Page text that is not already
 
 🔒 CWS PRIVACY AND PACKAGE BOUNDARY
 
-The Chrome Web Store runtime disables the AI gateway, exposes no AI Tutor, and makes no Gemini, Claude-model, or Puter request. The Puter SDK and page bridge are omitted. Dormant AI-related helpers or labels from shared source may remain as non-executing strings in the compiled content bundle. The extension does not request YouTube host access and uses no analytics, tracking, advertising, account, email, password, or user API key.
+Page translation (Google Translate + curated dictionaries) and the local learning tools work with no account. The optional AI Tutor (Claude Sonnet 4.6) and the background translation-quality check reach Claude/Gemini through the bundled Puter bridge, and run only after you sign in to Puter — a free account, no API key, nothing shared with SkillBridge. The extension does not request YouTube host access and uses no analytics, tracking, advertising, SkillBridge account, email, password, or user API key.
 
 Third-party requests made by the CWS edition:
 
@@ -87,7 +87,7 @@ Third-party requests made by the CWS edition:
 
 Settings, bookmarks, flashcard review state, recent lessons, and scroll positions are stored in `chrome.storage.local`. Original and translated text is cached separately in IndexedDB. Progress summaries are calculated locally from that state rather than separately stored or transmitted.
 
-The public repository also retains an optional Puter-based AI gateway for unpacked developer builds. In the CWS build that gateway cannot initialize, and its Puter SDK and page-bridge files are omitted; it is not a feature advertised by this listing.
+The AI Tutor and translation-quality check use Puter's free AI gateway (Claude/Gemini). Sending a tutor message or, while signed in, translating a page routes that text through Puter; see Puter's privacy policy. If you never sign in to Puter, no AI request is made and the extension stays translation + local-tools only.
 
 Full privacy policy: https://heznpc.github.io/skillBridge/privacy
 

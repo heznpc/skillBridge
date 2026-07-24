@@ -103,7 +103,7 @@ Course headings, paragraphs, lists, navigation, cards, and supported code commen
 
 The CWS edition includes spaced-repetition flashcards, bookmarks, Continue/Recent links, a local progress dashboard, an in-lesson outline, reading progress, and PDF export. Learning-tool state stays in the browser.
 
-> **Developer-source boundary:** the repository retains an optional Puter-based AI gateway for unpacked development and research. It is enabled in the raw source configuration. The CWS runtime pins that gateway off, exposes no AI Tutor, makes no AI-service requests, and omits the Puter SDK and page bridge. Dormant shared-source AI helpers or labels may remain as non-executing bundle strings.
+> **AI Tutor & accounts:** the published build includes the AI Tutor (Claude Sonnet 4.6) via the bundled Puter bridge. The tutor uses a **free Puter sign-in** — no API key and no SkillBridge account. Page translation and the local learning tools need no account at all; only the optional tutor prompts for sign-in.
 
 ### 🎬 Auto-Subtitles
 
@@ -222,7 +222,7 @@ Page text
        └─ Cache result locally for up to 30 days
 ```
 
-Text not covered by the packaged dictionary or local cache is sent to Google Translate when translation is requested. The CWS runtime exposes no AI Tutor and makes no Puter, Gemini, or Claude-model request; its Puter SDK and page bridge are omitted. See the [Privacy Policy](PRIVACY_POLICY.md) for the CWS data flow and the separate raw-source developer boundary.
+Text not covered by the packaged dictionary or local cache is sent to Google Translate when translation is requested. Paragraphs that mix prose with links/buttons are translated structure-preserving through Google Translate's HTML mode (no AI required). The AI Tutor and the background translation-quality check use Claude/Gemini through the bundled Puter bridge, which runs only when you sign in to Puter (free, no API key). See the [Privacy Policy](PRIVACY_POLICY.md) for the full data flow.
 
 ## Architecture & engineering decisions
 
@@ -315,11 +315,11 @@ These claims describe the unpublished candidate, not live legacy v1.0.1:
 - **No operator analytics** — zero analytics, tracking, or telemetry; requested
   page text is still processed by Google Translate as disclosed
 - **No SkillBridge servers** — we do not operate any servers; uncached page text is sent directly to Google Translate when translation is requested
-- **No account required** — the CWS edition needs no account, email, password, user API key, or human-check
+- **No SkillBridge account, ever** — translation and the local learning tools need no account, email, password, or API key. The optional AI Tutor uses a **free Puter sign-in** (its own account, no API key); nothing is shared with SkillBridge
 - **Local learning state** — original/translated text is cached in IndexedDB;
   preferences, flashcard review state, bookmarks, recent lessons, and scroll
   positions use `chrome.storage.local`; progress summaries are calculated locally
-- **No active CWS AI gateway** — the CWS runtime exposes no AI Tutor or AI-service request and omits the Puter SDK and page bridge; dormant shared-source helpers may remain in the bundle
+- **AI is opt-in** — the AI Tutor and background translation-quality check reach Claude/Gemini through the bundled Puter bridge, and run only after you sign in to Puter; no AI request is made otherwise
 - **Open source** — every line of code is auditable right here
 
 See our full [Privacy Policy](PRIVACY_POLICY.md).
@@ -333,7 +333,7 @@ See our full [Privacy Policy](PRIVACY_POLICY.md).
 | Curated Dictionaries | Hand-tuned JSON (1,100+ × 12 languages) |
 | Translation Cache | IndexedDB |
 | Local Learning Tools | `chrome.storage.local` + IndexedDB |
-| CWS Package Gate | AI gateway disabled; Puter/page bridge omitted; RHC scan required |
+| AI Tutor | Claude Sonnet 4.6 via bundled Puter bridge (free Puter sign-in) |
 | CJK Font Rendering | Local system/Noto fallback stacks |
 
 > **Built with [Claude Code](https://docs.anthropic.com/en/docs/claude-code).**

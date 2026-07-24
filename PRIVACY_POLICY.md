@@ -57,7 +57,7 @@ The local cache and Tutor history are not sent to the SkillBridge operator. A ne
 
 ### CWS Package Boundary
 
-The candidate runtime disables the AI gateway, does not expose the AI Tutor, and makes no Gemini, Claude-model, or Puter request. The Puter SDK and page bridge are omitted from the candidate package. Dormant AI-related helpers or labels from shared source may remain as non-executing strings in the compiled content bundle; an immutable build flag prevents that path from initializing.
+The candidate includes the AI Tutor (Claude Sonnet 4.6) and a background translation-quality check, both reaching Claude/Gemini through the bundled Puter bridge. These run **only after you sign in to Puter** (a free account, no API key, no SkillBridge account). Until you sign in, no AI request is made: page translation uses Google Translate and curated dictionaries, and the learning tools run locally. When signed in, tutor prompts — and page text sent for the quality check — are transmitted to Puter's AI services; see Puter's privacy policy.
 
 ### Data Stored Locally by the Candidate
 
@@ -83,7 +83,7 @@ The candidate does not transmit course text to YouTube. Auto-subtitles configure
 - No name, email address, account credential, or payment information
 - No browsing history outside the pages where the extension is configured to run
 - No analytics, telemetry, advertising identifier, or marketing profile
-- No AI Tutor messages or AI conversation history
+- No AI Tutor messages or conversation history are stored or collected by SkillBridge (tutor prompts are sent to Puter only while you are signed in, and are not retained by SkillBridge)
 
 ### Candidate Permissions
 
@@ -104,9 +104,7 @@ The candidate does not transmit course text to YouTube. Auto-subtitles configure
 
 ## Raw Source and Developer Builds
 
-The public repository retains an optional Puter-based AI gateway for unpacked development and research. The raw source configuration enables that developer path, which can send translation text or user-requested Tutor context to Puter-backed Gemini or Claude services when those functions are used.
-
-Loading the repository root as an unpacked extension is therefore **not equivalent to the unpublished no-AI CWS candidate**. Developers should review the source and [Puter's privacy policy](https://puter.com/privacy) before using its optional AI functions.
+Unpacked developer builds behave the same way as the published build with respect to AI: the Puter-based AI gateway is present, and using the Tutor or the signed-in translation-quality check sends that text to Puter-backed Gemini or Claude services. Developers should review the source and [Puter's privacy policy](https://puter.com/privacy) before signing in to those optional AI functions.
 
 ## International Users and Children's Privacy
 
