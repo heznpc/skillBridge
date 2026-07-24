@@ -244,7 +244,7 @@ module.exports = {
       width,
       height,
       replacements: {
-        EYEBROW: 'v3.5.42 · RELEASE CANDIDATE',
+        EYEBROW: 'v4.0.0 · RELEASE CANDIDATE',
         HEADLINE: 'Learn in your language.\nKeep technical terms intact.',
         BODY: '32 languages · local study tools · exam-safe translation',
         CTA: 'Built for supported AI courses',

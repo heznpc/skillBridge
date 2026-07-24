@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [4.0.0] - 2026-07-24
+
+### Added
+- The AI tutor is bundled again in the Chrome Web Store build (Claude Sonnet via a free Puter sign-in). It answers questions about the current lesson; no SkillBridge account is required. Reverses the no-AI boundary of the 3.5.x candidates.
+- Local (on-device) AI tutor engine. A new popup selector chooses the tutor engine — Cloud (Claude, no setup), Local (Ollama / any OpenAI-compatible server), or Off (translation only). Local mode adds server-URL + model configuration, an optional `http://localhost/*` host permission requested only when Local is selected, a reachability probe that classifies connected / CORS-blocked / not-found, and CORS onboarding (OLLAMA_ORIGINS) guidance. In Local mode nothing leaves the device — the service worker proxies the streaming chat to localhost.
+
+### Changed
+- Inline-mixed blocks (links, inline code, emphasis) are translated as HTML through Google Translate's document endpoint, preserving tags and hrefs and reconciling the result back into the original DOM nodes without `innerHTML` assignment. A tag/href integrity gate falls back to the original block on any mismatch, replacing the previous flat-text + placeholder path.
+- Store, README, privacy, permission, and contributor copy corrected to v4 reality: the AI tutor ships and uses a free Puter sign-in, while translation and local study tools need no account.
+- The CWS build no longer pins the AI gateway off; the Puter SDK and page-world bridge ship in the artifact and web-accessible resources.
+
+### Removed
+- `scripts/check-rhc.js` and its build/test wiring — the self-imposed remote-hosted-code scanner added after the last Puter-bundled release. The bundled tutor is a first-party integration, not remote-hosted code.
+
 ## [3.5.42] - 2026-07-24
 
 ### Security

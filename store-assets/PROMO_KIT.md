@@ -1,14 +1,14 @@
-# SkillBridge v3.5.42 Promotion Kit
+# SkillBridge v4.0.0 Promotion Kit
 
 Status: **release candidate — not yet live in the Chrome Web Store**
 
 This kit is derived from the same no-AI `dist/bundled` artifact used for the
-CWS candidate. Until the public listing itself shows v3.5.42, do not use
+CWS candidate. Until the public listing itself shows v4.0.0, do not use
 “available now”, “released”, or equivalent launch-complete wording.
 
 ## Runtime and capture boundary
 
-The unpacked v3.5.42 bundle was also exercised on the signed-in live Skilljar
+The unpacked v4.0.0 bundle was also exercised on the signed-in live Skilljar
 site on 2026-07-24. Lesson translation, language switching, the tools menu, and
 the learning dashboard worked while the host header remained unchanged.
 
@@ -45,7 +45,7 @@ technical terminology intact.
 
 ### Korean
 
-SkillBridge v3.5.42 Chrome Web Store 후보를 준비했습니다.
+SkillBridge v4.0.0 Chrome Web Store 후보를 준비했습니다.
 
 지원되는 AI 강의를 32개 언어로 읽고, 기술 용어는 보호하며, 학습 현황과
 플래시카드는 기기 안에서 관리합니다. 시험 모드에서는 질문만 번역하고 답안
@@ -56,7 +56,7 @@ SkillBridge v3.5.42 Chrome Web Store 후보를 준비했습니다.
 
 ### English
 
-SkillBridge v3.5.42 is ready as a Chrome Web Store release candidate.
+SkillBridge v4.0.0 is ready as a Chrome Web Store release candidate.
 
 Translate supported AI courses across 32 languages, keep technical terms
 intact, use local progress and flashcards, and leave quiz answers untranslated
@@ -66,9 +66,9 @@ Final listing review is still pending.
 
 ## Launch-line lock
 
-Use this sentence only after the CWS listing visibly reports v3.5.42:
+Use this sentence only after the CWS listing visibly reports v4.0.0:
 
-> SkillBridge v3.5.42 is now available on the Chrome Web Store.
+> SkillBridge v4.0.0 is now available on the Chrome Web Store.
 
 Before that proof exists, retain the release-candidate wording above.
 
@@ -87,8 +87,8 @@ Before that proof exists, retain the release-candidate wording above.
 - `promo-social-portrait-1080x1350.png` — portrait feed card.
 - `promo-video-thumbnail-1280x720.png` — landscape video thumbnail/title card.
 - `promo-short-thumbnail-1080x1920.png` — Shorts/Reels thumbnail/title card.
-- `skillbridge-v3.5.42-demo-landscape.mp4` — landscape demo.
-- `skillbridge-v3.5.42-demo-short.mp4` — vertical short.
+- `skillbridge-v4.0.0-demo-landscape.mp4` — landscape demo.
+- `skillbridge-v4.0.0-demo-short.mp4` — vertical short.
 - `promo-media-manifest.json` — source hash, output hashes, dimensions, durations,
   and allowed claims.
 

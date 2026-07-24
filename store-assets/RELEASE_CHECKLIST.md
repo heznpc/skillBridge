@@ -1,4 +1,4 @@
-# Release Checklist — CWS v3.5.42
+# Release Checklist — CWS v4.0.0
 
 > Refreshed 2026-07-24 for the privacy-focused CWS build. The upload artifact
 > keeps translation and local learning tools. Its runtime disables the AI
@@ -8,7 +8,7 @@
 
 CWS listing status:
 - Published: **v1.0.1** (uploaded 2026-03-10)
-- Local candidate: **v3.5.42**
+- Local candidate: **v4.0.0**
 - Release identity: **assigned** — the existing `v3.5.41` tag remains immutable
   and is not reused for this no-AI CWS change set
 - Many PRs have landed since the published version — none have reached users yet
@@ -22,7 +22,7 @@ dashboard upload.
 
 ## Code-side state
 
-- ✅ Final ZIP release identity is `3.5.42` across `manifest.json`,
+- ✅ Final ZIP release identity is `4.0.0` across `manifest.json`,
   `package.json`, versioned dictionary metadata, and `CHANGELOG.md`.
 - ✅ Historical `CHANGELOG.md` sections through v3.5.41 remain immutable
 - ✅ `npm run release:verify` passed on 2026-07-24 and regenerated
@@ -70,7 +70,7 @@ against the file before fixing — the 2026-06-10 audit caught `Slack → "Lento
 dictionary's `_meta.lastAudited` and run `npm run docs` so the README QA table
 reflects it. Three-layer QA model: `docs/TRANSLATION_QA.md`.
 
-The release identity and changelog are now fixed at v3.5.42. After the external
+The release identity and changelog are now fixed at v4.0.0. After the external
 permission scope is confirmed, rerun all gates and generate the bundled ZIP.
 Never reuse the existing `v3.5.41` release identity.
 

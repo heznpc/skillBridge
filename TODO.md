@@ -1,6 +1,6 @@
 # SkillBridge TODO
 
-> Last refreshed: 2026-07-24 (next CWS release: v3.5.42)
+> Last refreshed: 2026-07-24 (next CWS release: v4.0.0)
 
 Items below are concrete engineering / ops work. Anything strategic — what
 markets we enter, what we charge, what features we accept — is an owner
@@ -10,7 +10,7 @@ The top board tracks the remaining work before a newly versioned CWS candidate
 can replace the live legacy v1.0.1. The existing `v3.5.41` tag predates the
 current privacy/package changes and must not be reused for the upload.
 
-## Service completion board (next CWS version: v3.5.42)
+## Service completion board (next CWS version: v4.0.0)
 
 ### P0 — must close before public release
 
@@ -59,7 +59,7 @@ current privacy/package changes and must not be reused for the upload.
   - Verify: `npm run release:smoke`, then `npm run release:verify` before the
     final upload window.
 
-- [ ] **Upload the v3.5.42 bundled CWS candidate and fix the privacy tab.** The
+- [ ] **Upload the v4.0.0 bundled CWS candidate and fix the privacy tab.** The
   public listing is still legacy `v1.0.1`; `v3.5.41` does not identify the
   current change set. After external scope approval, run `npm run release:verify`, generate only
   `store-assets/skillbridge-bundled.zip`, refresh listing copy/media, set the

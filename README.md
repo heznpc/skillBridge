@@ -4,7 +4,7 @@
 
 # SkillBridge — AI Course Translator
 
-> **Source manifest:** <!-- VERSION_START -->v3.5.42<!-- VERSION_END --> —
+> **Source manifest:** <!-- VERSION_START -->v4.0.0<!-- VERSION_END --> —
 > unreleased CWS candidate. The existing `v3.5.41` tag predates this change
 > set and is not reused.
 
@@ -157,14 +157,15 @@ Generic translation tools often **mistranslate brand names and technical terms**
 
 ## Installation
 
-> **Status: live as v1.0.1; v3.5.42 is the next CWS release candidate.**
+> **Status: live as v1.0.1; v4.0.0 is the next CWS release candidate.**
 > The Chrome Web Store listing is available in all locales **except the United
 > States**, where it was removed on 2026-05-12 over a trademark issue with the
 > old icon (since redesigned on `main`). The published store build is v1.0.1;
-> The existing `v3.5.41` tag predates the current CWS changes and is not reused.
-> `v3.5.42` contains the unreleased candidate. Publication of the rebuilt CWS
-> edition remains paused while its package and external permission scope are
-> verified.
+> the earlier `v3.5.x` candidates predate the current CWS changes and are not reused.
+> `v4.0.0` contains the unreleased candidate: it restores the bundled AI tutor,
+> adds a local on-device tutor engine, and translates inline-mixed blocks as HTML.
+> Publication of the rebuilt CWS edition remains paused while its package and
+> external permission scope are verified.
 
 ### Chrome / Edge / Chromium browsers
 
