@@ -9,6 +9,7 @@
   "default_locale": "en",
   "permissions": ["storage", "alarms"],
   "host_permissions": ["https://*.skilljar.com/*", "https://translate.googleapis.com/*", "https://api.github.com/*"],
+  "optional_host_permissions": ["http://localhost/*", "http://127.0.0.1/*"],
   "action": {
     "default_popup": "src/popup/popup.html",
     "default_icon": {

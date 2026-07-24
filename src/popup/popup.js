@@ -171,8 +171,50 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('on-device-hint').textContent = t(ENGINE_LABELS.onDeviceHint);
   }
 
+  const localStatus = document.getElementById('local-status');
+  const LOCALHOST_ORIGINS = ['http://localhost/*', 'http://127.0.0.1/*'];
+
   function syncLocalConfigVisibility() {
     localConfig.style.display = engineSelect.value === 'local' ? 'block' : 'none';
+  }
+
+  function setLocalStatus(map) {
+    localStatus.textContent = map ? t(map) : '';
+  }
+
+  // The SW is the only context that can fetch localhost cross-origin, so it
+  // classifies reachability: ok / cors / unreachable. Requires the optional
+  // localhost host permission first (granted from the select's user gesture).
+  async function probeLocalEngine() {
+    const baseUrl = localBaseInput.value.trim() || undefined;
+    setLocalStatus(ENGINE_LABELS.statusChecking);
+    let result;
+    try {
+      result = await chrome.runtime.sendMessage({ type: 'CHECK_LOCAL_ENGINE', baseUrl });
+    } catch {
+      result = { status: 'unreachable' };
+    }
+    if (!result || result.status === 'unreachable' || result.status === 'error') {
+      setLocalStatus(ENGINE_LABELS.statusUnreachable);
+    } else if (result.status === 'cors') {
+      setLocalStatus(ENGINE_LABELS.statusCors);
+    } else if (result.status === 'ok') {
+      setLocalStatus(ENGINE_LABELS.statusOk);
+    }
+  }
+
+  async function ensureLocalPermissionAndProbe() {
+    let granted;
+    try {
+      granted = await chrome.permissions.request({ origins: LOCALHOST_ORIGINS });
+    } catch {
+      granted = false;
+    }
+    if (!granted) {
+      setLocalStatus(ENGINE_LABELS.permDenied);
+      return;
+    }
+    await probeLocalEngine();
   }
 
   if (_POPUP_AI_GATEWAY_ENABLED) {
@@ -187,10 +229,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     engineSelect.addEventListener('change', () => {
       chrome.storage.local.set({ sb_ai_engine: engineSelect.value });
       syncLocalConfigVisibility();
+      setLocalStatus(null);
+      if (engineSelect.value === 'local') ensureLocalPermissionAndProbe();
     });
-    // Persist trimmed values; empty falls back to the SW defaults.
+    // Persist trimmed values; empty falls back to the SW defaults. A changed
+    // base URL re-probes (permission already held once local was selected).
     localBaseInput.addEventListener('change', () => {
       chrome.storage.local.set({ sb_local_base: localBaseInput.value.trim() });
+      if (engineSelect.value === 'local') probeLocalEngine();
     });
     localModelInput.addEventListener('change', () => {
       chrome.storage.local.set({ sb_local_model: localModelInput.value.trim() });

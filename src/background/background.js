@@ -279,6 +279,17 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   // Verify sender is this extension
   if (sender.id !== chrome.runtime.id) return;
 
+  // Local AI engine reachability probe (v4 A5.3). Content/popup can't fetch
+  // localhost cross-origin, so the SW does it and classifies the result:
+  // ok / cors (403 → OLLAMA_ORIGINS) / unreachable (server down or no
+  // host permission). GET /models is cheap and needs no model loaded.
+  if (msg.type === 'CHECK_LOCAL_ENGINE') {
+    _checkLocalEngine(msg.baseUrl)
+      .then((result) => sendResponse(result))
+      .catch((err) => sendResponse({ ok: false, status: 'unreachable', error: err.message }));
+    return true;
+  }
+
   // Google Translate: single text (with rate limiting + exponential backoff)
   if (msg.type === 'GOOGLE_TRANSLATE') {
     const { text, targetLang, sourceLang } = msg;
@@ -372,6 +383,27 @@ function _parseSseDelta(line) {
     return delta ? { delta } : null;
   } catch {
     return null; // keep-alive / partial frame
+  }
+}
+
+async function _checkLocalEngine(baseUrl) {
+  const base = String(baseUrl || 'http://localhost:11434/v1').replace(/\/+$/, '');
+  try {
+    const resp = await fetch(`${base}/models`, { method: 'GET' });
+    if (resp.ok) {
+      let models = [];
+      try {
+        const data = await resp.json();
+        models = Array.isArray(data?.data) ? data.data.map((m) => m.id).filter(Boolean) : [];
+      } catch {
+        /* non-JSON body is fine — reachability is what matters */
+      }
+      return { ok: true, status: 'ok', models };
+    }
+    if (resp.status === 403) return { ok: false, status: 'cors', httpStatus: 403 };
+    return { ok: false, status: 'error', httpStatus: resp.status };
+  } catch (err) {
+    return { ok: false, status: 'unreachable', error: err.message };
   }
 }
 

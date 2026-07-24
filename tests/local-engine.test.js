@@ -17,6 +17,12 @@ const parserMatch = bgSrc.match(/function _parseSseDelta\(line\)\s*\{[\s\S]*?\n\
 if (!parserMatch) throw new Error('Could not extract _parseSseDelta from background.js');
 const _parseSseDelta = new Function(`${parserMatch[0]}\nreturn _parseSseDelta;`)();
 
+const checkMatch = bgSrc.match(/async function _checkLocalEngine\(baseUrl\)\s*\{[\s\S]*?\n\}/);
+if (!checkMatch) throw new Error('Could not extract _checkLocalEngine from background.js');
+// fetch is injected so the reachability probe can be exercised against fakes.
+const makeCheck = (fakeFetch) =>
+  new Function('fetch', `${checkMatch[0]}\nreturn _checkLocalEngine;`)(fakeFetch);
+
 describe('_parseSseDelta (local OpenAI-compatible SSE)', () => {
   test('token delta line → { delta }', () => {
     expect(_parseSseDelta('data: {"choices":[{"delta":{"content":"안녕"}}]}')).toEqual({ delta: '안녕' });
@@ -62,5 +68,55 @@ describe('tutor engine routing', () => {
     expect(bgSrc).toContain('/chat/completions');
     expect(bgSrc).toContain("stream: true,");
     expect(bgSrc).toContain('OLLAMA_ORIGINS');
+  });
+});
+
+describe('_checkLocalEngine (local reachability probe)', () => {
+  const OK_MODELS = { data: [{ id: 'gemma3:4b' }, { id: 'llama3' }] };
+
+  test('200 with model list → { ok, status: ok, models }', async () => {
+    const check = makeCheck(async () => ({ ok: true, status: 200, json: async () => OK_MODELS }));
+    expect(await check('http://localhost:11434/v1')).toEqual({ ok: true, status: 'ok', models: ['gemma3:4b', 'llama3'] });
+  });
+
+  test('trailing slashes in the base URL are normalized', async () => {
+    let requested = '';
+    const check = makeCheck(async (url) => {
+      requested = url;
+      return { ok: true, status: 200, json: async () => OK_MODELS };
+    });
+    await check('http://localhost:11434/v1///');
+    expect(requested).toBe('http://localhost:11434/v1/models');
+  });
+
+  test('403 → { status: cors } (blocked origin — OLLAMA_ORIGINS)', async () => {
+    const check = makeCheck(async () => ({ ok: false, status: 403 }));
+    expect(await check()).toEqual({ ok: false, status: 'cors', httpStatus: 403 });
+  });
+
+  test('network failure → { status: unreachable }', async () => {
+    const check = makeCheck(async () => {
+      throw new Error('Failed to fetch');
+    });
+    const r = await check('http://localhost:9/v1');
+    expect(r.ok).toBe(false);
+    expect(r.status).toBe('unreachable');
+  });
+
+  test('SW registers the CHECK_LOCAL_ENGINE handler', () => {
+    expect(bgSrc).toContain("msg.type === 'CHECK_LOCAL_ENGINE'");
+  });
+});
+
+describe('local engine host permission', () => {
+  test('manifest declares optional localhost host permission', () => {
+    const manifest = require('../manifest.json');
+    expect(manifest.optional_host_permissions).toContain('http://localhost/*');
+  });
+
+  test('popup requests the optional permission before probing', () => {
+    const popupSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'popup', 'popup.js'), 'utf8');
+    expect(popupSrc).toContain('chrome.permissions.request({ origins: LOCALHOST_ORIGINS })');
+    expect(popupSrc).toContain("type: 'CHECK_LOCAL_ENGINE'");
   });
 });
