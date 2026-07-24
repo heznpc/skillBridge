@@ -354,6 +354,82 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   _logMisroutedMessage(msg);
 });
 
+// ==================== LOCAL AI ENGINE (OpenAI-compatible: Ollama, LM Studio, …) ====================
+// Content scripts cannot reach http://localhost cross-origin, so the service
+// worker proxies the streaming chat over a Port. Needs the optional host
+// permission for http://localhost/* (requested when the user enables the
+// local engine). Any OpenAI-compatible `/v1/chat/completions` server works.
+
+// Pure: turn one SSE line into a token delta, the DONE sentinel, or null.
+// Exported for unit tests via the standard src-extraction pattern.
+function _parseSseDelta(line) {
+  const s = String(line || '').trim();
+  if (!s.startsWith('data:')) return null;
+  const payload = s.slice(5).trim();
+  if (payload === '[DONE]') return { done: true };
+  try {
+    const delta = JSON.parse(payload)?.choices?.[0]?.delta?.content;
+    return delta ? { delta } : null;
+  } catch {
+    return null; // keep-alive / partial frame
+  }
+}
+
+async function _streamLocalChat(port, req) {
+  const base = String(req.baseUrl || 'http://localhost:11434/v1').replace(/\/+$/, '');
+  let aborted = false;
+  port.onDisconnect.addListener(() => {
+    aborted = true;
+  });
+  try {
+    const resp = await fetch(`${base}/chat/completions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: req.model || 'gemma3:4b',
+        stream: true,
+        messages: Array.isArray(req.messages) ? req.messages : [{ role: 'user', content: String(req.prompt || '') }],
+      }),
+    });
+    if (!resp.ok) {
+      const hint = resp.status === 403 ? ' — set OLLAMA_ORIGINS to allow the extension origin' : '';
+      port.postMessage({ type: 'error', error: `Local AI server returned HTTP ${resp.status}${hint}` });
+      return;
+    }
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    while (!aborted) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop() || '';
+      for (const line of lines) {
+        const parsed = _parseSseDelta(line);
+        if (!parsed) continue;
+        if (parsed.done) {
+          port.postMessage({ type: 'done' });
+          return;
+        }
+        port.postMessage({ type: 'chunk', delta: parsed.delta });
+      }
+    }
+    if (!aborted) port.postMessage({ type: 'done' });
+  } catch (err) {
+    port.postMessage({ type: 'error', error: `Cannot reach local AI server: ${err.message}` });
+  }
+}
+
+if (typeof chrome !== 'undefined' && chrome.runtime?.onConnect) {
+  chrome.runtime.onConnect.addListener((port) => {
+    if (port.name !== 'sb-local-chat') return;
+    port.onMessage.addListener((req) => {
+      if (req && req.type === 'start') _streamLocalChat(port, req);
+    });
+  });
+}
+
 // Badge to show active language
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'local' && changes.targetLanguage) {

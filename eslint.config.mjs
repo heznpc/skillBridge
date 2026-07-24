@@ -36,6 +36,8 @@ export default [
         CustomEvent: 'readonly',
         URL: 'readonly',
         URLSearchParams: 'readonly',
+        TextDecoder: 'readonly',
+        TextEncoder: 'readonly',
         globalThis: 'readonly',
         // Chrome extension APIs
         chrome: 'readonly',

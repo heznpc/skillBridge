@@ -683,6 +683,69 @@ RULES:
    * @param {{isExamPage?: boolean}} [opts={}]
    * @returns {Promise<string>} complete response text
    */
+  // Selected tutor engine: 'cloud' (default) | 'local' | 'off'.
+  async _getAiEngine() {
+    try {
+      const { sb_ai_engine } = await chrome.storage.local.get('sb_ai_engine');
+      return sb_ai_engine || 'cloud';
+    } catch {
+      return 'cloud';
+    }
+  }
+
+  // Stream a tutor reply from a local OpenAI-compatible server (Ollama, …).
+  // The service worker does the localhost fetch and relays tokens over a Port;
+  // this mirrors the cloud chatStream contract: onChunk(delta, fullText),
+  // resolves with the full text, honors opts.signal.
+  async _localChatStream(prompt, onChunk, opts = {}) {
+    const { sb_local_base, sb_local_model } = await chrome.storage.local.get(['sb_local_base', 'sb_local_model']);
+    return new Promise((resolve, reject) => {
+      let port;
+      try {
+        port = chrome.runtime.connect({ name: 'sb-local-chat' });
+      } catch (err) {
+        reject(new Error(`Local AI engine unavailable: ${err.message}`));
+        return;
+      }
+      let fullText = '';
+      let settled = false;
+      const finish = (fn, arg) => {
+        if (settled) return;
+        settled = true;
+        opts.signal?.removeEventListener('abort', onAbort);
+        try {
+          port.disconnect();
+        } catch {
+          /* already gone */
+        }
+        fn(arg);
+      };
+      const onAbort = () => finish(reject, new DOMException('Aborted', 'AbortError'));
+      port.onMessage.addListener((msg) => {
+        if (settled || !msg) return;
+        if (msg.type === 'chunk') {
+          fullText += msg.delta;
+          onChunk?.(msg.delta, fullText);
+        } else if (msg.type === 'done') {
+          finish(resolve, fullText || 'No response');
+        } else if (msg.type === 'error') {
+          finish(reject, new Error(msg.error || 'Local AI error'));
+        }
+      });
+      port.onDisconnect.addListener(() => finish(reject, new Error('Local AI connection closed')));
+      if (opts.signal) {
+        if (opts.signal.aborted) return onAbort();
+        opts.signal.addEventListener('abort', onAbort, { once: true });
+      }
+      port.postMessage({
+        type: 'start',
+        messages: [{ role: 'user', content: prompt }],
+        baseUrl: sb_local_base || 'http://localhost:11434/v1',
+        model: sb_local_model || 'gemma3:4b',
+      });
+    });
+  }
+
   async chatStream(userMessage, targetLang, courseContext = '', onChunk, opts = {}) {
     try {
       const langName = this.supportedLanguages[targetLang] || 'English';
@@ -704,6 +767,14 @@ Guidelines:
 ${courseContext ? `Current course context: ${courseContext}` : ''}
 
 User: ${userMessage}`;
+
+      // Route to the selected AI engine (settings, chrome.storage.local):
+      // 'cloud' (default) = Claude via the Puter bridge; 'local' = an
+      // OpenAI-compatible server (Ollama) proxied by the service worker;
+      // 'off' = no tutor.
+      const engine = await this._getAiEngine();
+      if (engine === 'off') throw new Error('AI tutor is turned off in settings.');
+      if (engine === 'local') return this._localChatStream(prompt, onChunk, opts);
 
       if (!this.isReady) {
         throw new Error('Bridge not ready');
