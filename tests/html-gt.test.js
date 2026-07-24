@@ -7,7 +7,7 @@
  * mangle/reorder behavior the pipeline must survive, not hand-invented strings.
  */
 
-/* global describe, test, expect, beforeEach, window, document */
+/* global describe, test, expect, window, document */
 
 require('../src/content/html-gt.js');
 const { checkTagIntegrity, reconcileHtml } = window._sbHtmlGt;

@@ -80,15 +80,25 @@ describe('isLikelyEnglish', () => {
 });
 
 describe('inline routing invariants', () => {
-  test('interactive-bearing blocks never take the flattening GT path', () => {
-    // Interactive labels must never be blanked by safeReplaceText: with the
-    // bridge they ride the structure-preserving Gemini path, without it they
-    // stay untranslated. Formatting-only inline blocks remain GT-eligible.
+  test('structured blocks never take the flattening flat-GT path', () => {
+    // Structured blocks (inline tags or interactive labels) must never be
+    // flattened by safeReplaceText. With the bridge they ride the Gemini XML
+    // path; without it they ride the structure-preserving HTML-GT path. Only
+    // plain-text blocks reach the flat GT path.
     expect(src).toContain('const useGeminiBlocks = sb.hostCaps?.bridge !== false;');
-    expect(src).toContain(
-      'const gtItems = uncached.filter((item) => (!item.needsGemini || !useGeminiBlocks) && !item.hasInteractive);',
-    );
-    expect(src).toContain('? uncached.filter((item) => item.needsGemini || item.hasInteractive)');
+    expect(src).toContain('const isStructured = (item) => item.needsGemini || item.hasInteractive;');
+    // flat GT path gets plain-text blocks only
+    expect(src).toContain('return uncached.filter((item) => !isStructured(item));');
+    // bridge-less structured blocks are routed to the HTML-GT queue, not flattened
+    expect(src).toContain('for (const item of structured) if (item.el?.parentNode) htmlQueue.push(item);');
+  });
+
+  test('HTML-GT path applies through the integrity gate + reconciliation', () => {
+    // The structure-preserving path never assigns el.innerHTML; it gates on
+    // tag/href integrity and reconciles original nodes back in.
+    expect(src).toContain('if (!htmlGt.checkTagIntegrity(el, root)) return false;');
+    expect(src).toContain('if (!htmlGt.reconcileHtml(el, root)) return false;');
+    expect(src).toContain('_restoreProtectedInTextNodes(el)');
   });
 
   test('interactive detection is a deep query, not a direct-children check', () => {

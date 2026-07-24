@@ -375,22 +375,27 @@
     processGTQueue();
   }
 
-  function partitionAfterCacheLookup(batch, cacheResults, geminiQueue, originalTexts) {
+  function partitionAfterCacheLookup(batch, cacheResults, geminiQueue, originalTexts, htmlQueue) {
     const uncached = [];
     const useGeminiBlocks = sb.hostCaps?.bridge !== false;
+    // Blocks with inline tags or interactive labels are "structured": they must
+    // keep their markup. On bridge hosts they take the Gemini XML path; on
+    // bridge-less hosts they take the HTML-GT path (structure-preserving, no
+    // AI). Plain-text blocks always take the fast flat GT path.
+    const isStructured = (item) => item.needsGemini || item.hasInteractive;
 
     for (let i = 0; i < batch.length; i++) {
       const item = batch[i];
       const cached = cacheResults[i];
       if (cached) {
         if (!item.el?.parentNode) continue;
-        if ((item.needsGemini || item.hasInteractive) && useGeminiBlocks) {
+        // The flat cache is keyed by textContent and cannot safely fill a
+        // structured block (it would blank link/button labels) — re-translate
+        // it through the structure-preserving path instead of applying flat.
+        if (isStructured(item)) {
           uncached.push(item);
           continue;
         }
-        // Bridge-less host: a cached flat translation must never blank a
-        // link/button label. Keep the original text instead.
-        if (item.hasInteractive) continue;
         const translated = window._protectedTerms.restoreProtectedTerms(cached);
         if (sb.safeReplaceText(item.el, translated) === false) continue;
         trackTranslatedElement(item.text, item.el);
@@ -399,16 +404,13 @@
       uncached.push(item);
     }
 
-    // Interactive-bearing blocks only ever render through the
-    // structure-preserving Gemini path; on hosts without the bridge they stay
-    // untranslated rather than losing their link/button labels. Formatting-only
-    // inline blocks (<strong>, <em>, …) remain GT-eligible everywhere.
-    const gtItems = uncached.filter((item) => (!item.needsGemini || !useGeminiBlocks) && !item.hasInteractive);
-    const geminiItems = useGeminiBlocks
-      ? uncached.filter((item) => item.needsGemini || item.hasInteractive)
-      : [];
-    queueGeminiBlockCandidates(geminiItems, geminiQueue, originalTexts);
-    return gtItems;
+    const structured = uncached.filter(isStructured);
+    if (useGeminiBlocks) {
+      queueGeminiBlockCandidates(structured, geminiQueue, originalTexts);
+    } else if (htmlQueue) {
+      for (const item of structured) if (item.el?.parentNode) htmlQueue.push(item);
+    }
+    return uncached.filter((item) => !isStructured(item));
   }
 
   function queueGeminiBlockCandidates(geminiItems, geminiQueue, originalTexts) {
@@ -470,6 +472,73 @@
     return true;
   }
 
+  // ==================== HTML-GT (structure-preserving, no AI) ====================
+
+  // Restore protected/brand terms in the visible text of a reconciled block,
+  // reusing the single protected-terms chokepoint. GT (HTML mode) translates
+  // all inner text including brand terms, so this corrects them deterministically.
+  function _restoreProtectedInTextNodes(el) {
+    const restore = window._protectedTerms?.restoreProtectedTerms;
+    if (!restore) return;
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    for (const node of nodes) {
+      if (node.parentElement?.closest('code, pre, script, style')) continue;
+      node.textContent = restore(node.textContent);
+    }
+  }
+
+  // Fold GT's translated HTML back into the original element via the integrity
+  // gate + node-reconciliation module. Returns false (keep original) on any
+  // gate failure — never renders a blanked/corrupted structure.
+  function _applyHtmlTranslation(el, translatedHtml) {
+    const domSafe = window._sbDomSafe;
+    const htmlGt = window._sbHtmlGt;
+    if (!domSafe || !htmlGt) return false;
+    const clean = domSafe.sanitizeInlineHtml(translatedHtml);
+    const container = document.createElement(el.tagName);
+    container.innerHTML = clean;
+    let root = container;
+    if (container.children.length === 1 && container.firstElementChild.tagName === el.tagName) {
+      root = container.firstElementChild;
+    }
+    if (!htmlGt.checkTagIntegrity(el, root)) return false;
+    if (!htmlGt.reconcileHtml(el, root)) return false;
+    _restoreProtectedInTextNodes(el);
+    return true;
+  }
+
+  async function translateHtmlItems(htmlItems, targetLang, translator, myGeneration) {
+    if (!htmlItems || htmlItems.length === 0) return true;
+    if (sb.isOffline) return true; // structured blocks keep original text offline
+    // Dedup identical source blocks so repeated markup costs one GT call.
+    const bySource = new Map();
+    for (const item of htmlItems) {
+      if (!item.el?.parentNode) continue;
+      const src = item.el.outerHTML;
+      if (!bySource.has(src)) bySource.set(src, []);
+      bySource.get(src).push(item);
+    }
+    const sources = [...bySource.keys()];
+    if (sources.length === 0) return true;
+
+    const translations = await translator.googleTranslateBatch(sources, targetLang);
+    if (gtGeneration !== myGeneration) return false;
+
+    for (let i = 0; i < sources.length; i++) {
+      const translatedHtml = translations[i];
+      if (!translatedHtml || translatedHtml === sources[i]) continue;
+      for (const item of bySource.get(sources[i])) {
+        if (!item.el?.parentNode) continue;
+        if (_applyHtmlTranslation(item.el, translatedHtml)) {
+          trackTranslatedElement(item.text, item.el);
+        }
+      }
+    }
+    return true;
+  }
+
   function flushGeminiBlockQueue(geminiQueue, translator, originalTexts, myGeneration) {
     for (const { el, targetLang } of geminiQueue) {
       if (el && el.parentNode) {
@@ -510,9 +579,12 @@
 
         if (gtGeneration !== myGeneration) return;
 
-        const gtItems = partitionAfterCacheLookup(batch, cacheResults, geminiQueue, originalTexts);
+        const htmlItems = [];
+        const gtItems = partitionAfterCacheLookup(batch, cacheResults, geminiQueue, originalTexts, htmlItems);
         const gtStillFresh = await translateGoogleItems(gtItems, targetLang, translator, myGeneration);
         if (!gtStillFresh) return;
+        const htmlStillFresh = await translateHtmlItems(htmlItems, targetLang, translator, myGeneration);
+        if (!htmlStillFresh) return;
 
         processedItems += batch.length;
         sb.updateTranslationProgress?.(80 + Math.round((processedItems / totalItems) * 15));
