@@ -57,9 +57,11 @@ test.describe('SkillBridge — bundled action popup', () => {
     await expect(popup.locator('#main-content')).toBeVisible();
     await expect(popup.locator('#not-skilljar')).toBeHidden();
     await expect(popup.locator('#footer')).toContainText('Google Translate');
-    await expect(popup.locator('#footer')).toContainText('Local learning tools');
-    await expect(popup.locator('#footer')).not.toContainText(/Gemini|Tutor|Claude/i);
-    await expect(popup.locator('#sidebar-btn')).not.toContainText(/Tutor/i);
+    // v4: the AI tutor ships in the CWS build, so the popup advertises the AI
+    // stack (Gemini verify + Claude tutor) and the sidebar button names it.
+    await expect(popup.locator('#footer')).toContainText('AI Tutor');
+    await expect(popup.locator('#footer')).toContainText(/Gemini|Claude/i);
+    await expect(popup.locator('#sidebar-btn')).toContainText(/Tutor/i);
     await expect(popup.locator('#lang-select option')).toHaveCount(33);
     await expect(popup.locator('#lang-select optgroup').nth(0)).toHaveAttribute('label', '★ Curated terminology');
     await expect(popup.locator('#lang-select optgroup').nth(1)).toHaveAttribute('label', 'Google Translate');
@@ -117,7 +119,8 @@ test.describe('SkillBridge — bundled action popup', () => {
     });
     await expect(popup.locator('#main-content')).toBeVisible();
     await expect(popup.locator('#not-skilljar')).toBeHidden();
-    await expect(popup.locator('#sidebar-btn')).not.toContainText(/Tutor/i);
+    // Korean-context popup: the button reads "AI 튜터 사이드바 열기".
+    await expect(popup.locator('#sidebar-btn')).toContainText(/Tutor|튜터/i);
 
     expect(pageErrors).toEqual([]);
     expect(consoleErrors).toEqual([]);

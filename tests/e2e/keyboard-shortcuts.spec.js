@@ -10,7 +10,7 @@
  *   - Mod+Shift+F  → open the sidebar and toggle the flashcards panel
  *   - Mod+Shift+/  → toggle the shortcuts help overlay
  *   - Escape       → close the overlay when it's open
- *   - /            → no-op in CWS, where the sidebar has no chat input
+ *   - /            → focus the tutor chat input (AI-enabled sidebar)
  *   - Mod+Shift+L  → toggle dark mode (si18n-dark class on <html>)
  *
  * a11y.spec.js covers the overlay's ARIA shape; this spec covers that the key
@@ -84,7 +84,9 @@ test.describe('SkillBridge — keyboard shortcuts', () => {
     await expect.poll(overlayPresent, { timeout: 3_000 }).toBe(true);
     const descriptions = await page.locator('.si18n-shortcut-desc').allTextContents();
     expect(descriptions).toContain('Toggle learning sidebar');
-    expect(descriptions.join(' ')).not.toMatch(/AI Tutor|Focus chat input/i);
+    // v4: the AI tutor ships, so the sidebar has a chat input and the overlay
+    // lists the "Focus chat input" (/) shortcut.
+    expect(descriptions.join(' ')).toMatch(/Focus chat input/i);
 
     await page.keyboard.press('Escape');
     // hideHelpOverlay removes after an OVERLAY_REMOVE transition delay, so poll.
@@ -117,7 +119,7 @@ test.describe('SkillBridge — keyboard shortcuts', () => {
     await expect.poll(sidebarVisible, { timeout: 3_000 }).toBe(false);
   });
 
-  test('Mod+Shift+F opens flashcards and / leaves the CWS language panel intact', async () => {
+  test('Mod+Shift+F opens flashcards and / focuses the tutor chat input', async () => {
     if (await sidebarVisible()) {
       await page.keyboard.press('Escape');
       await expect.poll(sidebarVisible, { timeout: 3_000 }).toBe(false);
@@ -130,16 +132,21 @@ test.describe('SkillBridge — keyboard shortcuts', () => {
     await page.keyboard.press(`${MOD}+Shift+KeyF`);
     await expect.poll(flashcardsVisible, { timeout: 3_000 }).toBe(false);
 
+    // v4 (AI tutor build): the sidebar carries a chat input, so pressing / (not
+    // in a field) focuses it and consumes the key.
+    if (!(await sidebarVisible())) {
+      await page.keyboard.press(`${MOD}+Shift+KeyS`);
+      await expect.poll(sidebarVisible, { timeout: 3_000 }).toBe(true);
+    }
     const beforeSlash = await sidebarInputState();
-    expect(beforeSlash).toMatchObject({ languageSelect: true, chatInput: false });
-    const notConsumed = await page.evaluate(() =>
-      document.body.dispatchEvent(
+    expect(beforeSlash.chatInput, 'AI sidebar exposes a chat input').toBe(true);
+    const consumed = await page.evaluate(() =>
+      !document.body.dispatchEvent(
         new window.KeyboardEvent('keydown', { key: '/', code: 'Slash', bubbles: true, cancelable: true }),
       ),
     );
-    expect(notConsumed, 'CWS should not prevent the / key when no chat field exists').toBe(true);
+    expect(consumed, '/ should focus the tutor chat input and consume the key').toBe(true);
     const afterSlash = await sidebarInputState();
-    expect(afterSlash).toMatchObject({ languageSelect: true, chatInput: false });
-    expect(afterSlash.activeId).not.toBe('si18n-chat-input');
+    expect(afterSlash.activeId).toBe('si18n-chat-input');
   });
 });

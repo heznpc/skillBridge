@@ -57,8 +57,10 @@ test.describe('SkillBridge — CWS direct-GT IDB cache', () => {
     if (!snap?.translator?.cacheReady) {
       throw new Error(`CWS translator cache did not initialize: ${JSON.stringify(snap)}`);
     }
-    expect(snap.hostCaps?.bridge).toBe(false);
-    expect(snap.translator).toMatchObject({ aiEnabled: false, cacheReady: true, bridgeReady: false });
+    // v4: the AI tutor ships, so the full-cap host has the bridge enabled.
+    // The GT→IDB cache lifecycle below is independent of the AI layer.
+    expect(snap.hostCaps?.bridge).toBe(true);
+    expect(snap.translator).toMatchObject({ aiEnabled: true, cacheReady: true });
   });
 
   test.afterAll(async () => {

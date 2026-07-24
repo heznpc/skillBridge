@@ -61,7 +61,9 @@ test.describe('SkillBridge — PDF export sanitization', () => {
     // injectSidebar schedules event binding, and toggleSidebar schedules the
     // initial focus at the same delay after it. Waiting for that focus proves
     // the earlier binding callback has run before this spec starts clicking.
-    await expect(page.locator('#si18n-sidebar-lang-select')).toBeFocused({ timeout: 15_000 });
+    // v4 (AI tutor build) focuses the chat input first; the language selector
+    // is the initial control only on bridge-free surfaces.
+    await expect(page.locator('#si18n-chat-input')).toBeFocused({ timeout: 15_000 });
   });
 
   test.afterAll(async () => {
