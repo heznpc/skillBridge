@@ -1,0 +1,102 @@
+/**
+ * @jest-environment jsdom
+ *
+ * Unit tests for html-gt.js (v4 B6) — structure-preserving HTML-mode GT
+ * reconciliation. Fixtures are REAL gtx endpoint outputs captured 2026-07-24
+ * (translate_a/single?client=gtx&dt=t), so the tests exercise the actual
+ * mangle/reorder behavior the pipeline must survive, not hand-invented strings.
+ */
+
+/* global describe, test, expect, beforeEach, window, document */
+
+require('../src/content/html-gt.js');
+const { checkTagIntegrity, reconcileHtml } = window._sbHtmlGt;
+
+function el(html) {
+  const wrap = document.createElement('div');
+  wrap.innerHTML = html;
+  return wrap.firstElementChild;
+}
+// translated block → its root element (mirrors: parse GT output, take the block)
+const root = (html) => el(html);
+
+describe('checkTagIntegrity', () => {
+  test('link preserved (en→ko, real gtx) → passes', () => {
+    const orig = el('<p>See <a href="/x">the docs</a> now</p>');
+    const tr = root('<p>지금 <a href="/x">문서</a> 보기</p>');
+    expect(checkTagIntegrity(orig, tr)).toBe(true);
+  });
+
+  test('nested strong>a preserved (real gtx) → passes', () => {
+    const orig = el('<p>Read <strong>the <a href="/d">full docs</a></strong> before you start</p>');
+    const tr = root('<p>시작하기 전에 <strong><a href="/d">전체 문서</a></strong>를 읽어보세요</p>');
+    expect(checkTagIntegrity(orig, tr)).toBe(true);
+  });
+
+  test('two links preserved (real gtx) → passes', () => {
+    const orig = el('<li>See <a href="/a">setup</a> and <a href="/b">config</a> pages</li>');
+    const tr = root('<li><a href="/a">설정</a> 및 <a href="/b">구성</a> 페이지 보기</li>');
+    expect(checkTagIntegrity(orig, tr)).toBe(true);
+  });
+
+  test('a dropped link → fails (gate)', () => {
+    const orig = el('<p>See <a href="/x">the docs</a> now</p>');
+    const tr = root('<p>지금 문서 보기</p>'); // link gone
+    expect(checkTagIntegrity(orig, tr)).toBe(false);
+  });
+
+  test('a changed href → fails (gate)', () => {
+    const orig = el('<p>See <a href="/x">the docs</a> now</p>');
+    const tr = root('<p>지금 <a href="/EVIL">문서</a> 보기</p>');
+    expect(checkTagIntegrity(orig, tr)).toBe(false);
+  });
+});
+
+describe('reconcileHtml', () => {
+  test('folds translation in, preserving original link node identity', () => {
+    const orig = el('<p>See <a href="/x">the docs</a> now</p>');
+    const origLink = orig.querySelector('a');
+    origLink.__sbIdentity = 'ORIGINAL'; // survives only if the node is moved, not recreated
+
+    const tr = root('<p>지금 <a href="/x">문서</a> 보기</p>');
+    expect(reconcileHtml(orig, tr)).toBe(true);
+
+    const link = orig.querySelector('a');
+    expect(link.__sbIdentity).toBe('ORIGINAL'); // same node — identity/listeners kept
+    expect(link.getAttribute('href')).toBe('/x'); // href intact
+    expect(link.textContent).toBe('문서'); // inner text translated (not blanked!)
+    expect(orig.textContent.replace(/\s+/g, ' ').trim()).toBe('지금 문서 보기');
+  });
+
+  test('nested strong>a: both original nodes kept, text translated', () => {
+    const orig = el('<p>Read <strong>the <a href="/d">full docs</a></strong> before you start</p>');
+    orig.querySelector('strong').__sbId = 'S';
+    orig.querySelector('a').__sbId = 'A';
+    const tr = root('<p>시작하기 전에 <strong><a href="/d">전체 문서</a></strong>를 읽어보세요</p>');
+    expect(reconcileHtml(orig, tr)).toBe(true);
+    expect(orig.querySelector('strong').__sbId).toBe('S');
+    expect(orig.querySelector('a').__sbId).toBe('A');
+    expect(orig.querySelector('a').textContent).toBe('전체 문서');
+    expect(orig.textContent.replace(/\s+/g, ' ').trim()).toBe('시작하기 전에 전체 문서를 읽어보세요');
+  });
+
+  test('two links: both originals kept in translated order', () => {
+    const orig = el('<li>See <a href="/a">setup</a> and <a href="/b">config</a> pages</li>');
+    orig.querySelectorAll('a')[0].__n = 'A';
+    orig.querySelectorAll('a')[1].__n = 'B';
+    const tr = root('<li><a href="/a">설정</a> 및 <a href="/b">구성</a> 페이지 보기</li>');
+    expect(reconcileHtml(orig, tr)).toBe(true);
+    const links = orig.querySelectorAll('a');
+    expect(links[0].__n).toBe('A'); // href /a original
+    expect(links[0].textContent).toBe('설정');
+    expect(links[1].__n).toBe('B'); // href /b original
+    expect(links[1].textContent).toBe('구성');
+  });
+
+  test('no interactive/link blanked — visible label always non-empty', () => {
+    const orig = el('<p>Click <a href="/x">here</a> to continue</p>');
+    const tr = root('<p>계속하려면 <a href="/x">여기</a>를 클릭하세요</p>');
+    reconcileHtml(orig, tr);
+    expect(orig.querySelector('a').textContent.trim().length).toBeGreaterThan(0);
+  });
+});
