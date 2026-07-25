@@ -157,7 +157,8 @@ const manifest = {
     'Translates supported AI-course lessons into 32 interface languages.',
     'Provides local learning tools including progress and flashcards.',
     'Leaves quiz answer choices untranslated in exam mode.',
-    'The CWS bundle omits the AI Tutor, Puter SDK, and page bridge.',
+    'The CWS bundle ships the AI Tutor (Claude via the bundled Puter client, free Puter sign-in).',
+    'The AI Tutor can instead run on-device against a user-run OpenAI-compatible server, or be turned off.',
   ],
   assets,
 };

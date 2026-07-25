@@ -1,16 +1,18 @@
 # Release Checklist — CWS v4.0.0
 
-> Refreshed 2026-07-24 for the privacy-focused CWS build. The upload artifact
-> keeps translation and local learning tools. Its runtime disables the AI
-> gateway and makes no AI requests; Puter SDK and page-bridge files are omitted.
-> Dormant shared-source AI strings may remain. This is the source of truth for the next
-> dashboard upload.
+> Refreshed 2026-07-25 for the v4.0.0 CWS build. The upload artifact keeps
+> translation and local learning tools AND ships the AI Tutor: the AI gateway is
+> pinned ON and `src/bridge/puter.js` + `src/lib/page-bridge.js` are included by
+> design. Tutor requests happen only after the user signs in to Puter (free). An
+> optional on-device engine (a user-run OpenAI-compatible server on localhost)
+> is selectable in the popup. This is the source of truth for the next dashboard
+> upload.
 
 CWS listing status:
 - Published: **v1.0.1** (uploaded 2026-03-10)
 - Local candidate: **v4.0.0**
 - Release identity: **assigned** — the existing `v3.5.41` tag remains immutable
-  and is not reused for this no-AI CWS change set
+  and is not reused for this v4.0.0 CWS change set
 - Many PRs have landed since the published version — none have reached users yet
 - `npm run check:cws-drift` intentionally fails until the dashboard is updated
 
@@ -25,12 +27,14 @@ dashboard upload.
 - ✅ Final ZIP release identity is `4.0.0` across `manifest.json`,
   `package.json`, versioned dictionary metadata, and `CHANGELOG.md`.
 - ✅ Historical `CHANGELOG.md` sections through v3.5.41 remain immutable
-- ✅ `npm run release:verify` passed on 2026-07-24 and regenerated
-  `store-assets/skillbridge-bundled.zip` after every release gate passed.
-  The inspected 63-file ZIP has SHA-256
-  `c81fdbe5fac854974f5dc673358918f1e8098368edac375d440750217df600f6`.
-  This bundled no-AI ZIP is the **only** CWS upload artifact; the compatibility
-  alias `npm run build:zip` resolves to this same safe command.
+- ⏳ **The recorded artifact is stale.** The 63-file ZIP with SHA-256
+  `c81fdbe5fac854974f5dc673358918f1e8098368edac375d440750217df600f6` was the
+  superseded 3.5.42 (no-AI) build. v4.0.0 ships additional files
+  (`src/bridge/puter.js`, `src/lib/page-bridge.js`, `src/content/html-gt.js`),
+  so both the file count and the hash change: rerun `npm run release:verify`
+  and record the new values here before upload. This bundled ZIP is the
+  **only** CWS upload artifact; the compatibility alias `npm run build:zip`
+  resolves to this same safe command.
 - ⛔ Never upload `store-assets/skillbridge-developer.zip` (generated only by the
   explicit `npm run build:developer:zip` command), the repository root, or the
   Firefox build to CWS. Raw/developer source retains the optional Puter-based AI
@@ -49,8 +53,12 @@ dashboard upload.
   disclosures for live legacy v1.0.1 and the unpublished candidate. Remove or
   archive the legacy section only after the replacement version is confirmed
   live in the CWS dashboard and update the listing/privacy answers together.
-- ✅ Latest local gate snapshot: `npm run release:verify` passed on 2026-07-24,
-  including 646 unit tests, the full five-batch Chromium E2E suite, live
+- ⏳ Latest recorded gate snapshot predates v4.0.0 (`release:verify` on
+  2026-07-24, 646 unit tests, against the no-AI candidate). The v4.0.0 code-side
+  gates pass locally — 684 unit tests, lint, typecheck, `build:bundle`, and the
+  full Chromium E2E suite (42 tests) — but `release:verify` itself must be rerun
+  in the release checkout and its snapshot recorded here. The 2026-07-24 run
+  covered the full five-batch Chromium E2E suite, live
   selector/course-map checks, store capture, and ZIP integrity. Dictionary
   freshness reported recruiting-state dictionaries as review-needed warnings;
   that is not a native review stamp. Rerun immediately before dashboard upload
@@ -127,15 +135,24 @@ stale against the next CWS candidate — fix these:
 - **Privacy policy URL** — must be the **capital-B** `github.io` URL (see the
   Privacy-URL note above). The lowercase form 404s and the dashboard refuses to
   submit ("개인정보처리방침 링크에 연결할 수 없습니다").
-- **"Are you using remote code?" → NO for the bundled CWS ZIP.** The CWS builder
-  pins the AI gateway off, omits `src/bridge/puter.js` and
-  `src/lib/page-bridge.js`, and runs `check:rhc` against the final artifact.
-  Inspect the uploaded ZIP itself before answering. The public repository still
-  contains the optional Puter-based developer path, so the raw source ZIP must
-  never be substituted for the bundled CWS artifact.
+- **"Are you using remote code?" — answer from the artifact, not from memory.**
+  v4.0.0 ships the Puter SDK **inside** the package (no remote `<script>` tag is
+  added), so nothing is fetched to bootstrap the extension. But the bundled
+  Puter SDK itself contains lazy remote JavaScript/WebAssembly import paths (an
+  unpkg-hosted polyfill and remote `rustls.js`/`rustls.wasm`) — which is exactly
+  why PRIVACY_POLICY.md refuses to call the package "no remote code". Inspect
+  the uploaded ZIP and answer consistently with that disclosure. Do **not**
+  reuse the 3.5.x rationale, which described a build that omitted these files,
+  and note that `scripts/check-rhc.js` was removed in v4.0.0 — there is no such
+  gate to run. The raw source ZIP must still never be substituted for the
+  bundled CWS artifact.
 - **Data usage → check "Website content".** Page text is sent to Google
-  Translate when translation is requested. No lesson context, tutor message, or
-  learning-tool state is sent to Puter, Gemini, or Claude by the CWS build.
+  Translate when translation is requested. In v4.0.0 a signed-in AI Tutor also
+  sends the tutor message plus lesson context (course title, up to five
+  headings) to Claude via Puter, and the translation-quality check can send page
+  text to Gemini via Puter — both only after a Puter sign-in. With the local
+  engine selected, tutor text goes only to the user's own localhost server.
+  Learning-tool state is never transmitted.
   Leaving Website content unchecked while the description says page text is
   sent off-device is an inconsistency reviewers reject. Local-only data
   (bookmarks, resume, flashcards, progress, settings) is not collected, so
@@ -156,7 +173,7 @@ stale against the next CWS candidate — fix these:
 Do **not** delete `CWS_PUBLICATION_PAUSED` during code cleanup or dashboard
 draft preparation. Set `CWS_DASHBOARD_READY_VERSION` and remove the pause only
 after the requested external permission scope is confirmed in writing, the
-final no-AI ZIP passes `npm run release:verify`, and steps 3 and 3b are complete.
+final ZIP passes `npm run release:verify`, and steps 3 and 3b are complete.
 Listing copy, icon, screenshots, promo tile, privacy URL, privacy-practices
 answers, and permission justifications must all match this checklist.
 

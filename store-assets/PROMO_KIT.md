@@ -2,8 +2,8 @@
 
 Status: **release candidate — not yet live in the Chrome Web Store**
 
-This kit is derived from the same no-AI `dist/bundled` artifact used for the
-CWS candidate. Until the public listing itself shows v4.0.0, do not use
+This kit is derived from the same `dist/bundled` artifact used for the CWS
+candidate — the v4.0.0 build, which ships the AI Tutor. Until the public listing itself shows v4.0.0, do not use
 “available now”, “released”, or equivalent launch-complete wording.
 
 ## Runtime and capture boundary
@@ -29,7 +29,11 @@ technical terminology intact.
 - Curated dictionaries for premium languages and protected-term restoration.
 - Local progress, bookmarks, recent lessons, and spaced-repetition flashcards.
 - Exam mode translates the question but leaves answer choices unchanged.
-- The CWS bundle exposes no AI Tutor and omits the Puter SDK and page bridge.
+- The AI Tutor ships in the CWS bundle: Claude via the bundled Puter client
+  (free Puter sign-in, no API key, no SkillBridge account).
+- Optional on-device tutor engine: point it at your own OpenAI-compatible
+  server (e.g. Ollama) and tutor text never leaves your machine. Or turn the
+  tutor off and use translation only.
 
 ## Claim evidence
 
@@ -39,7 +43,8 @@ technical terminology intact.
 | Lesson translation | `manifest.json`, `src/content/` | `01-translate.png` |
 | Local learning tools | `src/content/dashboard.js`, `src/content/chat-flashcards.js` | `03-learning-dashboard.png`, `04-flashcards.png` |
 | Exam-safe answers | `src/content/content.js`, `tests/e2e/exam-mode.spec.js` | `05-exam-safe.png` |
-| No AI runtime in CWS | `src/shared/build-config.js`, `scripts/check-rhc.js` | `promo-media-manifest.json` source record |
+| AI Tutor ships in CWS | `src/shared/build-config.js` (gateway pinned on), `src/bridge/puter.js`, `tests/build-bundle.test.js` | `promo-media-manifest.json` source record |
+| Optional on-device engine | `src/background/background.js` (`sb-local-chat` port), `src/popup/popup.js` engine selector, `tests/local-engine.test.js` | popup engine selector |
 
 ## Pre-launch copy
 
@@ -49,8 +54,9 @@ SkillBridge v4.0.0 Chrome Web Store 후보를 준비했습니다.
 
 지원되는 AI 강의를 32개 언어로 읽고, 기술 용어는 보호하며, 학습 현황과
 플래시카드는 기기 안에서 관리합니다. 시험 모드에서는 질문만 번역하고 답안
-선택지는 원문으로 유지합니다. 이번 CWS 번들은 AI Tutor와 Puter/page bridge를
-포함하지 않습니다.
+선택지는 원문으로 유지합니다. AI 튜터는 이번 CWS 번들에 포함되며(무료 Puter
+로그인 사용), 원한다면 Ollama 같은 내 컴퓨터의 서버로 돌리거나 완전히 끌 수
+있습니다.
 
 현재 최종 등록 전 검증 단계입니다.
 
@@ -60,7 +66,8 @@ SkillBridge v4.0.0 is ready as a Chrome Web Store release candidate.
 
 Translate supported AI courses across 32 languages, keep technical terms
 intact, use local progress and flashcards, and leave quiz answers untranslated
-in exam mode. The CWS bundle contains no AI Tutor, Puter SDK, or page bridge.
+in exam mode. The AI Tutor ships in this bundle (free Puter sign-in) and can
+instead run fully on-device against your own local server, or be turned off.
 
 Final listing review is still pending.
 
@@ -87,8 +94,10 @@ Before that proof exists, retain the release-candidate wording above.
 - `promo-social-portrait-1080x1350.png` — portrait feed card.
 - `promo-video-thumbnail-1280x720.png` — landscape video thumbnail/title card.
 - `promo-short-thumbnail-1080x1920.png` — Shorts/Reels thumbnail/title card.
-- `skillbridge-v4.0.0-demo-landscape.mp4` — landscape demo.
-- `skillbridge-v4.0.0-demo-short.mp4` — vertical short.
+- `skillbridge-v3.5.42-demo-landscape.mp4` — landscape demo.
+- `skillbridge-v3.5.42-demo-short.mp4` — vertical short.
+  ⏳ Both videos are the 3.5.42 capture; regenerate with `npm run promo:build`
+  (needs ffmpeg + shotkit) before the v4.0.0 upload.
 - `promo-media-manifest.json` — source hash, output hashes, dimensions, durations,
   and allowed claims.
 

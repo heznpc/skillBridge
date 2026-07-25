@@ -5,7 +5,10 @@ sync with the uploaded ZIP, the CWS Privacy tab, and `PRIVACY_POLICY.md`.
 
 ## What's New — paste into the CWS "What's new" field after version assignment
 
-- 🔒 No SkillBridge account: translation and learning tools need no sign-in; the optional AI Tutor uses a free Puter sign-in (no API key).
+- 🤖 AI Tutor: ask about the lesson you are reading. Uses a free Puter sign-in — no API key, no SkillBridge account.
+- 💻 New on-device option: run the tutor against your own local AI server (Ollama or any OpenAI-compatible server) so tutor text never leaves your machine — or turn the tutor off and use translation only.
+- 🔗 Better translation of mixed content: paragraphs containing links, inline code, and emphasis keep their structure and destinations intact instead of being flattened.
+- 🔒 No SkillBridge account: translation and learning tools need no sign-in at all.
 - 🌐 Translation continues through packaged dictionaries, local cache, and Google Translate.
 - 🃏 Local learning tools include spaced-repetition flashcards, bookmarks, Continue/Recent, progress dashboard, outline, and PDF export.
 - 🎬 Auto-subtitles remain available without requesting YouTube host access.
@@ -130,3 +133,7 @@ Allows page text selected for translation to be sent to Google Translate. No acc
 ### Host permission: api.github.com
 
 Used only for a read-only request to the public Releases API so the extension can display an update badge. No user, lesson, or learning-tool content is sent.
+
+### Optional host permission: http://localhost/*, http://127.0.0.1/*
+
+Not requested at install time. It is requested only if the user selects the optional on-device AI Tutor engine, so the extension can reach an OpenAI-compatible AI server the user runs on their own machine (for example Ollama). In that mode the tutor question and its lesson context go only to that local address, never to a remote AI service. Declining the prompt leaves the tutor on its previous engine.

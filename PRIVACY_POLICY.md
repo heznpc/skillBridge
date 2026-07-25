@@ -1,12 +1,16 @@
 # Privacy Policy — SkillBridge
 
-**Last updated:** July 11, 2026
+**Last updated:** July 25, 2026
 
 ## Version Status — Read This First
 
-As of July 11, 2026, the Chrome Web Store still publishes **SkillBridge v1.0.1**. That legacy version includes a bundled Puter client used for Gemini translation review and the Claude-powered AI Tutor, and it declares YouTube host access.
+As of July 25, 2026, the Chrome Web Store still publishes **SkillBridge v1.0.1**. That legacy version includes a bundled Puter client used for Gemini translation review and the Claude-powered AI Tutor, and it declares YouTube host access.
 
-A privacy-focused CWS candidate is being prepared, but **publication is paused and that candidate is not yet available from the Chrome Web Store**. The candidate disables the AI gateway, removes the Tutor from the CWS surface, omits the Puter SDK and page bridge, and removes YouTube host access.
+A replacement candidate (**v4.0.0**) is being prepared, but **publication is paused and that candidate is not yet available from the Chrome Web Store**. The candidate keeps the AI Tutor and its bundled Puter bridge, removes YouTube host access, and adds an on-device tutor option:
+
+- **AI Tutor (cloud, default):** ships in the candidate. Tutor questions go through the bundled Puter client to Claude, and the user signs in to Puter (free) when they first use it. Translation and the local study tools need no account.
+- **AI Tutor (local/on-device, optional):** the user can instead point the Tutor at a local OpenAI-compatible server they run themselves (for example Ollama). In that mode Tutor text goes only to that local server — see "Local AI Engine" below.
+- **AI Tutor (off):** the user can disable the Tutor entirely and use translation only.
 
 Use the section below that matches the version you installed. SkillBridge does not operate a backend server and does not use analytics, telemetry, advertising, or tracking in either version. Third-party services can still process the content described below when their features are used.
 
@@ -20,7 +24,7 @@ Use the section below that matches the version you installed. SkillBridge does n
 | Puter-backed Gemini | Visible course text, the requested language, and, for quality review, the initial Google translation | Review or improve complex translations | [Puter Privacy Policy](https://puter.com/privacy) |
 | Puter-backed Claude | The user's Tutor question, any text the user explicitly quotes into that question, the requested response language, the course title, and up to five page headings | Generate an AI Tutor response | [Puter Privacy Policy](https://puter.com/privacy) |
 
-The main Puter SDK file in v1.0.1 is bundled inside the extension package, but that SDK also contains lazy remote JavaScript and WebAssembly import paths, including an unpkg-hosted polyfill and remote `rustls.js`/`rustls.wasm` assets. v1.0.1 therefore must not be described as a fully self-contained or no-remote-code package. When an AI feature is used, the client also connects to Puter services, which route the request to the selected AI model. The unpublished replacement candidate omits the Puter SDK and page bridge entirely.
+The main Puter SDK file in v1.0.1 is bundled inside the extension package, but that SDK also contains lazy remote JavaScript and WebAssembly import paths, including an unpkg-hosted polyfill and remote `rustls.js`/`rustls.wasm` assets. v1.0.1 therefore must not be described as a fully self-contained or no-remote-code package. When an AI feature is used, the client also connects to Puter services, which route the request to the selected AI model. The v4.0.0 candidate bundles the same Puter SDK and page bridge, so that description applies to it as well.
 
 ### YouTube Access in v1.0.1
 
@@ -74,6 +78,9 @@ SkillBridge does not send this locally stored state to its operator or to a thir
 | Service | What is sent | Purpose | Privacy policy |
 |---|---|---|---|
 | Google Translate API | Visible course-page text selected for translation and the requested language | Translate text not already covered by the packaged dictionary or local cache | [Google Privacy Policy](https://policies.google.com/privacy) |
+| Puter-backed Claude | The user's Tutor question, any text the user explicitly quotes into it, the requested response language, the course title, and up to five page headings | Generate an AI Tutor response (cloud engine only; not used when the Tutor is set to local or off) | [Puter Privacy Policy](https://puter.com/privacy) |
+| Puter-backed Gemini | Visible course text, the requested language, and the initial Google translation | Review or improve complex translations (only while signed in to Puter) | [Puter Privacy Policy](https://puter.com/privacy) |
+| A local server the user runs (**optional**) | Same Tutor content as the Claude row, sent only to the user's configured address | Generate an AI Tutor response on-device; see "Local AI Engine" below | Controlled by the user |
 | GitHub Releases API | A periodic request for the latest public SkillBridge release; no course text or learning-tool state | Display an update badge when a newer release exists | [GitHub Privacy Statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement) |
 
 The candidate does not transmit course text to YouTube. Auto-subtitles configure an existing embedded player and send it player-control messages; the extension requests no YouTube host permission.
@@ -95,6 +102,16 @@ The candidate does not transmit course text to YouTube. Auto-subtitles configure
 | `claude.com/resources/tutorials` (content-script match) | Translate Claude tutorial pages |
 | `translate.googleapis.com` | Send page text to Google Translate when translation is requested |
 | `api.github.com` | Check the public Releases API for newer versions; no user or lesson content is sent |
+| `http://localhost/*`, `http://127.0.0.1/*` (**optional**) | Requested only if the user selects the local (on-device) AI Tutor engine, so the extension can reach an OpenAI-compatible server the user runs on their own machine. Not granted at install time; declining leaves the Tutor on its previous engine. |
+
+### Local AI Engine (Optional, On-Device)
+
+The candidate lets the user run the AI Tutor against a local OpenAI-compatible server (for example Ollama) instead of the cloud. When that engine is selected:
+
+- The Tutor question, the requested response language, and the same lesson context described above are sent **only to the address the user configures** (default `http://localhost:11434/v1`). Nothing is sent to Puter, Claude, or any other remote service for tutor chat.
+- The request is made by the extension's service worker because a page context cannot reach `localhost` directly. It carries no credentials and no cookies.
+- SkillBridge does not operate, bundle, or control that local server. Whatever the user's own server logs or retains is under the user's control.
+- The address and model name are stored locally in `chrome.storage.local` alongside the other preferences.
 
 ### Candidate Retention
 

@@ -67,9 +67,11 @@ Chrome / Edge:
 3. Run `npm run build:bundle`, then click **Load unpacked** and select `dist/bundled`
 4. The SkillBridge icon should appear in your toolbar
 
-Loading the project root is a separate developer-only mode. Its Puter SDK and
-page bridge are omitted from `dist/bundled` and must never be included in the
-CWS ZIP.
+Loading the project root is a separate developer-only mode: it runs the raw
+source instead of the built bundle. Both surfaces ship the Puter SDK and page
+bridge — since v4.0.0 the AI Tutor is part of the CWS package, so
+`dist/bundled` intentionally contains `src/bridge/puter.js` and
+`src/lib/page-bridge.js`.
 
 Firefox:
 1. Run `npm run build:firefox` to generate the Firefox-compatible build
@@ -424,15 +426,17 @@ translator.js receives Google translation
 Result cached in IndexedDB for future visits
 ```
 
-The raw developer configuration can add a separate Puter-backed Gemini review
-step. That path is disabled and its SDK/bridge files are omitted from the CWS
-bundle, so it is not part of the CWS translation flow above.
+A Puter-backed Gemini review step can refine complex translations. Since
+v4.0.0 it ships in the CWS bundle along with the AI Tutor, but it runs only
+after the user signs in to Puter — until then the translation flow above is
+exactly what executes.
 
 ### Key Design Decisions
 
-- **Why Google Translate in CWS?** It provides the requested translation fallback without shipping the Puter SDK or activating an AI gateway. Curated dictionaries and protected-term restoration handle domain-specific terminology locally.
+- **Why Google Translate in CWS?** It translates every page without requiring any account, so translation works before (or entirely without) a Puter sign-in. Curated dictionaries and protected-term restoration handle domain-specific terminology locally.
 - **Why static dictionaries?** For the 1,100+ most critical AI/ML terms, human-curated translations are simply better than any MT engine. These are the terms that matter most for comprehension.
-- **Why retain Puter source at all?** It is an optional developer/research path. It is not a feature of the next CWS candidate and must remain outside the bundled upload artifact.
+- **Why bundle the Puter SDK?** It is how the AI Tutor reaches Claude without SkillBridge running a backend or asking for an API key — the user signs in to Puter (free) and their own quota is used. It ships inside the package; no remote script tag is added.
+- **Why a local engine option?** Some users would rather not send tutor questions to any cloud. Pointing the Tutor at an OpenAI-compatible server they run themselves (e.g. Ollama) keeps that text on their machine; the service worker proxies it because a page context cannot reach `localhost`.
 - **Why separate build outputs?** `npm run build:bundle:zip` produces the only CWS-safe ZIP. `npm run build:developer:zip` is an explicit raw-source artifact and must never be uploaded to CWS; `npm run build:zip` aliases the safe bundled command.
 
 ---

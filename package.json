@@ -7,7 +7,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:e2e": "node scripts/run-e2e.js",
-    "test:e2e:first-user": "npm run build:bundle && playwright test tests/e2e/first-user-flow.spec.js tests/e2e/cws-no-rhc.spec.js tests/e2e/popup.spec.js",
+    "test:e2e:first-user": "npm run build:bundle && playwright test tests/e2e/first-user-flow.spec.js tests/e2e/popup.spec.js",
     "e2e:install": "playwright install chromium",
     "glossary": "node scripts/check-glossary.js",
     "validate": "node scripts/validate-translations.js",

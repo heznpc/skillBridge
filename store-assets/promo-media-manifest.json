@@ -15,11 +15,12 @@
     "Translates supported AI-course lessons into 32 interface languages.",
     "Provides local learning tools including progress and flashcards.",
     "Leaves quiz answer choices untranslated in exam mode.",
-    "The CWS bundle omits the AI Tutor, Puter SDK, and page bridge."
+    "The CWS bundle ships the AI Tutor (Claude via the bundled Puter client, free Puter sign-in).",
+    "The AI Tutor can instead run on-device against a user-run OpenAI-compatible server, or be turned off."
   ],
   "assets": [
     {
-      "path": "store-assets/skillbridge-v4.0.0-demo-landscape.mp4",
+      "path": "store-assets/skillbridge-v3.5.42-demo-landscape.mp4",
       "sha256": "2e2fb6c9ca10fd811126cf77586f96530f56cc668628fb80e56a3b6008c837bd",
       "codec": "h264",
       "width": 1280,
@@ -29,7 +30,7 @@
       "bytes": 529920
     },
     {
-      "path": "store-assets/skillbridge-v4.0.0-demo-short.mp4",
+      "path": "store-assets/skillbridge-v3.5.42-demo-short.mp4",
       "sha256": "32da5ba26d4ad19ceb3549131b7cf03bc0c96720f650b699ff8cf4806fbb92a0",
       "codec": "h264",
       "width": 1080,
@@ -38,5 +39,6 @@
       "durationSeconds": 11.44,
       "bytes": 559874
     }
-  ]
+  ],
+  "mediaStatus": "STALE: the recorded videos are the 3.5.42 capture. Regenerate with `npm run promo:build` (needs ffmpeg + shotkit) before the v4.0.0 upload; paths, hashes, and durations all change."
 }

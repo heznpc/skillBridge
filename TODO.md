@@ -26,7 +26,7 @@ current privacy/package changes and must not be reused for the upload.
   ever rejected. Fixed by pointing the fallback at the live same-generation
   `gemini-2.0-flash-lite`; primary stays `gemini-2.0-flash`. This is historical
   evidence for the optional raw developer path, not CWS release evidence: the
-  next CWS package disables the AI gateway and omits Puter.
+  v4.0.0 CWS package ships the AI Tutor and the bundled Puter client.
 
 - [ ] **Optional raw-developer Puter smoke (not a CWS release gate).** The CWS
   E2E suite loads only `dist/bundled`, where AI is disabled and Puter/page bridge
