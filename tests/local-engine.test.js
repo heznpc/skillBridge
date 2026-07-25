@@ -108,6 +108,68 @@ describe('_checkLocalEngine (local reachability probe)', () => {
   });
 });
 
+// Review findings: the SW proxy never cancelled the upstream request on port
+// disconnect (Ollama kept generating server-side) and a postMessage on the
+// dead port threw inside the catch → unhandled rejection in the worker.
+describe('local stream cancellation + dead-port safety (source contract)', () => {
+  test('the fetch is abortable and the disconnect aborts it', () => {
+    expect(bgSrc).toContain('const controller = new AbortController();');
+    expect(bgSrc).toContain('signal: controller.signal,');
+    // onDisconnect must abort, not just flip a flag.
+    const disconnectBlock = bgSrc.slice(bgSrc.indexOf('port.onDisconnect.addListener'));
+    expect(disconnectBlock.slice(0, 260)).toContain('controller.abort()');
+  });
+
+  test('the reader/body is cancelled so the local server stops generating', () => {
+    expect(bgSrc).toContain('await reader.cancel()');
+    expect(bgSrc).toContain('await resp.body?.cancel()');
+  });
+
+  test('every reply goes through a guarded send (never a raw postMessage in the relay)', () => {
+    const fn = bgSrc.slice(bgSrc.indexOf('async function _streamLocalChat'), bgSrc.indexOf('chrome.runtime.onConnect'));
+    expect(fn).toContain('const send = (msg) =>');
+    // Exactly one port.postMessage in the whole function: the one inside the
+    // guarded `send` helper. Any other is an unguarded call that would throw
+    // on a disconnected port.
+    expect(fn.match(/\bport\.postMessage\(/g)).toHaveLength(1);
+    const sendHelper = fn.slice(fn.indexOf('const send = (msg) =>'), fn.indexOf('port.onDisconnect'));
+    expect(sendHelper).toContain('port.postMessage(msg);');
+    expect(sendHelper).toContain('if (aborted) return;');
+  });
+
+  test('an abort is not reported as a server failure', () => {
+    expect(bgSrc).toContain("if (aborted || err?.name === 'AbortError') return;");
+  });
+
+  test('the port handler guards against a second start and handles rejections', () => {
+    expect(bgSrc).toContain('void _streamLocalChat(port, req).catch(');
+    expect(bgSrc).toMatch(/if \(!req \|\| req\.type !== 'start' \|\| started\) return;/);
+  });
+});
+
+// Review finding: the local path had no timeout at all, so a stalled local
+// server left the sidebar spinner running forever with send disabled.
+describe('local stream watchdog', () => {
+  test('a generous first-token window covers a cold model load', () => {
+    const constantsSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'constants.js'), 'utf8');
+    const m = constantsSrc.match(/LOCAL_FIRST_TOKEN_TIMEOUT:\s*(\d+)/);
+    expect(m).toBeTruthy();
+    // Must exceed the measured gemma3:4b cold load (10.7s) by a wide margin.
+    expect(Number(m[1])).toBeGreaterThanOrEqual(60000);
+  });
+
+  test('the watchdog is armed before the request and re-armed on every chunk', () => {
+    expect(trSrc).toContain('armWatchdog(SKILLBRIDGE_THRESHOLDS.LOCAL_FIRST_TOKEN_TIMEOUT);');
+    expect(trSrc).toContain('armWatchdog(SKILLBRIDGE_THRESHOLDS.CHAT_STREAM_TIMEOUT);');
+    expect(trSrc).toContain("finish(reject, new Error('Local AI stream timed out'))");
+  });
+
+  test('settling clears the watchdog', () => {
+    const fn = trSrc.slice(trSrc.indexOf('async _localChatStream'), trSrc.indexOf('async chatStream'));
+    expect(fn).toContain('if (watchdog) clearTimeout(watchdog);');
+  });
+});
+
 describe('local engine host permission', () => {
   test('manifest declares optional localhost host permission', () => {
     const manifest = require('../manifest.json');
@@ -118,5 +180,34 @@ describe('local engine host permission', () => {
     const popupSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'popup', 'popup.js'), 'utf8');
     expect(popupSrc).toContain('chrome.permissions.request({ origins: LOCALHOST_ORIGINS })');
     expect(popupSrc).toContain("type: 'CHECK_LOCAL_ENGINE'");
+  });
+
+  // Review finding: denying the Chrome prompt still persisted
+  // sb_ai_engine='local', so every later tutor message routed to a fetch that
+  // could never succeed, with no hint in the reopened popup.
+  test('denying the permission reverts the stored engine and explains why', () => {
+    const popupSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'popup', 'popup.js'), 'utf8');
+    const fn = popupSrc.slice(
+      popupSrc.indexOf('async function ensureLocalPermissionAndProbe'),
+      popupSrc.indexOf('engineField.style.display'),
+    );
+    expect(fn).toContain('engineSelect.value = revertTo;');
+    expect(fn).toContain('await chrome.storage.local.set({ sb_ai_engine: revertTo });');
+    // The local block (and its status line) is hidden by the revert, so the
+    // message must go to the always-visible status row.
+    expect(fn).toContain('showStatus(t(ENGINE_LABELS.permDenied)');
+    expect(popupSrc).toContain('ensureLocalPermissionAndProbe(previousEngine)');
+  });
+
+  // Review finding: the status line was the one string in the engine block
+  // that a popup language change did not re-render.
+  test('the local status line re-renders on a language change', () => {
+    const popupSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'popup', 'popup.js'), 'utf8');
+    expect(popupSrc).toContain('localStatusMap = map || null;');
+    const fn = popupSrc.slice(popupSrc.indexOf('function renderEngineLabels'), popupSrc.indexOf('const localStatus'));
+    expect(fn).toContain('if (localStatusMap && statusEl) statusEl.textContent = t(localStatusMap);');
+    // Declared before renderPopupLabels' first call — otherwise the popup
+    // boots into a TDZ ReferenceError.
+    expect(popupSrc.indexOf('let localStatusMap')).toBeLessThan(popupSrc.indexOf('renderPopupLabels();'));
   });
 });

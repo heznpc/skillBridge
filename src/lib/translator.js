@@ -709,9 +709,20 @@ RULES:
       }
       let fullText = '';
       let settled = false;
+      // Without a watchdog a local server that accepts the connection but
+      // never answers (cold-load stall, OOM) left the sidebar spinner running
+      // forever with the send button disabled. Two windows: a generous one
+      // for the first token (cold model load) and the shared cloud idle
+      // timeout between tokens once generation is flowing.
+      let watchdog = null;
+      const armWatchdog = (ms) => {
+        if (watchdog) clearTimeout(watchdog);
+        watchdog = setTimeout(() => finish(reject, new Error('Local AI stream timed out')), ms);
+      };
       const finish = (fn, arg) => {
         if (settled) return;
         settled = true;
+        if (watchdog) clearTimeout(watchdog);
         opts.signal?.removeEventListener('abort', onAbort);
         try {
           port.disconnect();
@@ -724,6 +735,7 @@ RULES:
       port.onMessage.addListener((msg) => {
         if (settled || !msg) return;
         if (msg.type === 'chunk') {
+          armWatchdog(SKILLBRIDGE_THRESHOLDS.CHAT_STREAM_TIMEOUT);
           fullText += msg.delta;
           onChunk?.(msg.delta, fullText);
         } else if (msg.type === 'done') {
@@ -737,6 +749,7 @@ RULES:
         if (opts.signal.aborted) return onAbort();
         opts.signal.addEventListener('abort', onAbort, { once: true });
       }
+      armWatchdog(SKILLBRIDGE_THRESHOLDS.LOCAL_FIRST_TOKEN_TIMEOUT);
       port.postMessage({
         type: 'start',
         messages: [{ role: 'user', content: prompt }],

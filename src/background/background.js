@@ -410,25 +410,58 @@ async function _checkLocalEngine(baseUrl) {
 async function _streamLocalChat(port, req) {
   const base = String(req.baseUrl || 'http://localhost:11434/v1').replace(/\/+$/, '');
   let aborted = false;
+  // A disconnect must actually CANCEL the upstream request. Ollama stops
+  // generating only when the connection closes, so without this a cancelled
+  // chat (sidebar closed, user sent again) left the server generating the
+  // whole completion — burning GPU and contending with the next request.
+  const controller = new AbortController();
+  // Once the port is gone every postMessage throws ("disconnected port
+  // object"); a throw inside the catch below would surface as an unhandled
+  // rejection in the service worker. Route every reply through this guard.
+  const send = (msg) => {
+    if (aborted) return;
+    try {
+      port.postMessage(msg);
+    } catch (_e) {
+      aborted = true;
+    }
+  };
   port.onDisconnect.addListener(() => {
     aborted = true;
+    try {
+      controller.abort();
+    } catch (_e) {
+      /* already aborted */
+    }
   });
+  let reader = null;
   try {
     const resp = await fetch(`${base}/chat/completions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
       body: JSON.stringify({
         model: req.model || 'gemma3:4b',
         stream: true,
         messages: Array.isArray(req.messages) ? req.messages : [{ role: 'user', content: String(req.prompt || '') }],
       }),
     });
-    if (!resp.ok) {
-      const hint = resp.status === 403 ? ' — set OLLAMA_ORIGINS to allow the extension origin' : '';
-      port.postMessage({ type: 'error', error: `Local AI server returned HTTP ${resp.status}${hint}` });
+    if (aborted) {
+      // Disconnected while the request was in flight — drop the body so the
+      // server stops generating instead of streaming into a closed port.
+      try {
+        await resp.body?.cancel();
+      } catch (_e) {
+        /* best-effort */
+      }
       return;
     }
-    const reader = resp.body.getReader();
+    if (!resp.ok) {
+      const hint = resp.status === 403 ? ' — set OLLAMA_ORIGINS to allow the extension origin' : '';
+      send({ type: 'error', error: `Local AI server returned HTTP ${resp.status}${hint}` });
+      return;
+    }
+    reader = resp.body.getReader();
     const decoder = new TextDecoder();
     let buf = '';
     while (!aborted) {
@@ -438,26 +471,45 @@ async function _streamLocalChat(port, req) {
       const lines = buf.split('\n');
       buf = lines.pop() || '';
       for (const line of lines) {
+        if (aborted) break;
         const parsed = _parseSseDelta(line);
         if (!parsed) continue;
         if (parsed.done) {
-          port.postMessage({ type: 'done' });
+          send({ type: 'done' });
           return;
         }
-        port.postMessage({ type: 'chunk', delta: parsed.delta });
+        send({ type: 'chunk', delta: parsed.delta });
       }
     }
-    if (!aborted) port.postMessage({ type: 'done' });
+    if (!aborted) send({ type: 'done' });
   } catch (err) {
-    port.postMessage({ type: 'error', error: `Cannot reach local AI server: ${err.message}` });
+    // An abort is our own cancellation, not a server failure.
+    if (aborted || err?.name === 'AbortError') return;
+    send({ type: 'error', error: `Cannot reach local AI server: ${err.message}` });
+  } finally {
+    if (aborted && reader) {
+      try {
+        await reader.cancel();
+      } catch (_e) {
+        /* best-effort upstream cancellation */
+      }
+    }
   }
 }
 
 if (typeof chrome !== 'undefined' && chrome.runtime?.onConnect) {
   chrome.runtime.onConnect.addListener((port) => {
     if (port.name !== 'sb-local-chat') return;
+    let started = false;
     port.onMessage.addListener((req) => {
-      if (req && req.type === 'start') _streamLocalChat(port, req);
+      // One stream per port; a second 'start' would race two readers onto it.
+      if (!req || req.type !== 'start' || started) return;
+      started = true;
+      // Defense in depth: nothing above should reject, but an unhandled
+      // rejection here would be an opaque service-worker error.
+      void _streamLocalChat(port, req).catch((err) => {
+        console.warn('[SkillBridge] Local chat stream failed:', err?.message || err);
+      });
     });
   });
 }

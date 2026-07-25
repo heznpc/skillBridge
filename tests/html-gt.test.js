@@ -100,3 +100,52 @@ describe('reconcileHtml', () => {
     expect(orig.querySelector('a').textContent.trim().length).toBeGreaterThan(0);
   });
 });
+
+// Review finding: <img> used to be UNtracked, so a dropped inline image passed
+// the gate and reconciliation silently lost it. GT does preserve inline
+// <img src> (verified live 2026-07-25 en→ko), so the tracked case must still
+// pass — and the drop must now fail the gate.
+describe('inline <img> integrity', () => {
+  test('preserved image (real gtx shape) → gate passes and the ORIGINAL node is kept', () => {
+    const orig = el('<p>Use the <img src="/icons/gear.png" alt="gear"> settings button to continue.</p>');
+    orig.querySelector('img').__sbId = 'IMG';
+    const tr = root('<p>계속하려면 <img src="/icons/gear.png" alt="gear"> 설정 버튼을 사용하세요.</p>');
+    expect(checkTagIntegrity(orig, tr)).toBe(true);
+    expect(reconcileHtml(orig, tr)).toBe(true);
+    expect(orig.querySelector('img').__sbId).toBe('IMG');
+  });
+
+  test('dropped image → gate fails (caller keeps the original block)', () => {
+    const orig = el('<p>Use the <img src="/icons/gear.png" alt="gear"> settings button.</p>');
+    const tr = root('<p>설정 버튼을 사용하세요.</p>');
+    expect(checkTagIntegrity(orig, tr)).toBe(false);
+  });
+
+  test('rewritten image src → gate fails', () => {
+    const orig = el('<p>Use the <img src="/icons/gear.png"> button.</p>');
+    const tr = root('<p><img src="https://evil.example/x.png"> 버튼을 사용하세요.</p>');
+    expect(checkTagIntegrity(orig, tr)).toBe(false);
+  });
+});
+
+// Review finding: elementKey is only tag|href, so same-key originals were
+// consumed FIFO — a GT reorder could land one element's attributes on
+// another's text. Reconciliation now prefers an attribute-exact candidate.
+describe('same-key disambiguation', () => {
+  test('reordered same-key spans keep their own class/id with their own content', () => {
+    const orig = el(
+      '<p><span class="notranslate" id="term-a">Claude</span> and <span class="hl" id="mark-b">emphasis</span> here</p>',
+    );
+    orig.querySelector('#term-a').__sbId = 'A';
+    orig.querySelector('#mark-b').__sbId = 'B';
+    // GT reorders the two spans (same elementKey "SPAN|").
+    const tr = root('<p>여기 <span class="hl" id="mark-b">강조</span> 및 <span class="notranslate" id="term-a">Claude</span></p>');
+    expect(checkTagIntegrity(orig, tr)).toBe(true);
+    expect(reconcileHtml(orig, tr)).toBe(true);
+    // Attributes must still travel with their own element, not swap.
+    expect(orig.querySelector('#term-a').__sbId).toBe('A');
+    expect(orig.querySelector('#term-a').className).toBe('notranslate');
+    expect(orig.querySelector('#mark-b').__sbId).toBe('B');
+    expect(orig.querySelector('#mark-b').className).toBe('hl');
+  });
+});

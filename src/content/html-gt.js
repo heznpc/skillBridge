@@ -22,12 +22,38 @@
   // Tags whose presence/identity we protect. Interactive ones are load-bearing
   // (a blanked/duplicated <a> is the killer this whole path exists to prevent);
   // formatting ones are matched too so reconciliation stays deterministic.
-  const TRACKED_TAGS = new Set(['A', 'BUTTON', 'STRONG', 'B', 'EM', 'I', 'CODE', 'U', 'SPAN', 'SUP', 'SUB', 'MARK']);
+  // IMG is tracked (not just formatting): GT does preserve inline <img src>
+  // (verified 2026-07-25 en→ko), but an UNtracked element is invisible to the
+  // integrity gate, so a drop would pass the gate and reconciliation would
+  // silently lose the image. Tracking it makes a dropped/rewritten image fail
+  // the gate → caller keeps the original block, and preserves the original
+  // node instead of a shallow clone.
+  const TRACKED_TAGS = new Set([
+    'A',
+    'BUTTON',
+    'IMG',
+    'STRONG',
+    'B',
+    'EM',
+    'I',
+    'CODE',
+    'U',
+    'SPAN',
+    'SUP',
+    'SUB',
+    'MARK',
+  ]);
   const INTERACTIVE_TAGS = new Set(['A', 'BUTTON']);
 
   // A stable key for matching a translated element back to its original.
-  // GT preserves tagName + href/src, so those identify the element; an ordinal
-  // disambiguates repeats (e.g. two <a href="/x">).
+  // GT preserves tagName + href/src, so those identify the element. Repeats
+  // that share a key (e.g. two <a href="/x">, or every plain <strong>) are NOT
+  // disambiguated by the key itself — buildOriginalPool consumes same-key
+  // originals FIFO in document order, so a GT reorder can pair original #1
+  // with translated position #2. That is harmless for same-key elements with
+  // identical attributes (the visible text comes from the translation either
+  // way); it only matters when same-key elements carry distinct attributes,
+  // which is why the pool prefers an attribute-exact candidate below.
   function elementKey(el) {
     const tag = el.tagName;
     const href = el.getAttribute && (el.getAttribute('href') || el.getAttribute('src') || '');
@@ -117,6 +143,24 @@
    * @param {Element} translatedRoot parsed container of translated children
    * @returns {boolean} true on success
    */
+  // Signature of the attributes GT carries through, used to disambiguate
+  // same-key originals (elementKey is only tag|href/src).
+  function attrSignature(el) {
+    if (!el.getAttribute) return '';
+    return ['class', 'id', 'title', 'alt'].map((a) => el.getAttribute(a) || '').join('|');
+  }
+
+  // Take the original that best corresponds to `srcNode` from a same-key
+  // bucket: prefer an attribute-exact match (so a GT reorder cannot land the
+  // attributes of one element on another's text), else fall back to FIFO
+  // document order.
+  function takeBestMatch(bucket, srcNode) {
+    if (!bucket.length) return null;
+    const wanted = attrSignature(srcNode);
+    const exact = bucket.findIndex((el) => attrSignature(el) === wanted);
+    return bucket.splice(exact >= 0 ? exact : 0, 1)[0];
+  }
+
   function reconcileHtml(originalEl, translatedRoot) {
     const pool = buildOriginalPool(originalEl);
     const doc = originalEl.ownerDocument || document;
@@ -130,7 +174,7 @@
           if (TRACKED_TAGS.has(tag)) {
             const k = elementKey(srcNode);
             const bucket = pool.get(k);
-            const origEl = bucket && bucket.shift();
+            const origEl = bucket && takeBestMatch(bucket, srcNode);
             if (!origEl) return false; // integrity said this can't happen; bail safe
             // Move original node here, clear its children, refill from translation.
             while (origEl.firstChild) origEl.removeChild(origEl.firstChild);

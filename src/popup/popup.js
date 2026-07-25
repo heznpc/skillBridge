@@ -88,6 +88,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   const commentTranslate = document.getElementById('comment-translate');
   const commentLabel = document.getElementById('comment-translate-label');
 
+  // Which ENGINE_LABELS map the local-engine status line is currently showing,
+  // so a language change re-renders it too. Declared up here because
+  // renderPopupLabels() runs before the engine block below is initialized.
+  let localStatusMap = null;
+
   function renderPopupLabels() {
     const selectedLang = langSelect.value || lang;
     langSelect.textContent = '';
@@ -169,6 +174,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('local-base-label').textContent = t(ENGINE_LABELS.localBaseUrl);
     document.getElementById('local-model-label').textContent = t(ENGINE_LABELS.localModel);
     document.getElementById('on-device-hint').textContent = t(ENGINE_LABELS.onDeviceHint);
+    // Re-render the live status line in the new language too. Looked up by id
+    // (not the const below) so this is safe on the pre-engine-block call.
+    const statusEl = document.getElementById('local-status');
+    if (localStatusMap && statusEl) statusEl.textContent = t(localStatusMap);
   }
 
   const localStatus = document.getElementById('local-status');
@@ -179,7 +188,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function setLocalStatus(map) {
-    localStatus.textContent = map ? t(map) : '';
+    localStatusMap = map || null;
+    localStatus.textContent = localStatusMap ? t(localStatusMap) : '';
   }
 
   // The SW is the only context that can fetch localhost cross-origin, so it
@@ -203,7 +213,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  async function ensureLocalPermissionAndProbe() {
+  // `previousEngine` is what we fall back to when the user declines the
+  // localhost prompt: persisting 'local' without the permission would route
+  // every later tutor message into a fetch that can never succeed, and the
+  // reopened popup would show Local selected with no explanation.
+  async function ensureLocalPermissionAndProbe(previousEngine) {
     let granted;
     try {
       granted = await chrome.permissions.request({ origins: LOCALHOST_ORIGINS });
@@ -211,7 +225,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       granted = false;
     }
     if (!granted) {
-      setLocalStatus(ENGINE_LABELS.permDenied);
+      const revertTo = previousEngine && previousEngine !== 'local' ? previousEngine : 'cloud';
+      engineSelect.value = revertTo;
+      await chrome.storage.local.set({ sb_ai_engine: revertTo });
+      setLocalStatus(null);
+      syncLocalConfigVisibility();
+      // The local config (and its status line) is hidden again by the revert,
+      // so the explanation goes to the always-visible status row.
+      showStatus(t(ENGINE_LABELS.permDenied), 'error');
       return;
     }
     await probeLocalEngine();
@@ -226,11 +247,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     localModelInput.value = eng.sb_local_model || '';
     syncLocalConfigVisibility();
 
+    let currentEngine = engineSelect.value;
     engineSelect.addEventListener('change', () => {
+      const previousEngine = currentEngine;
+      currentEngine = engineSelect.value;
       chrome.storage.local.set({ sb_ai_engine: engineSelect.value });
       syncLocalConfigVisibility();
       setLocalStatus(null);
-      if (engineSelect.value === 'local') ensureLocalPermissionAndProbe();
+      if (engineSelect.value === 'local') {
+        ensureLocalPermissionAndProbe(previousEngine).then(() => {
+          currentEngine = engineSelect.value;
+        });
+      }
     });
     // Persist trimmed values; empty falls back to the SW defaults. A changed
     // base URL re-probes (permission already held once local was selected).

@@ -123,6 +123,13 @@ const SKILLBRIDGE_THRESHOLDS = {
   VIEWPORT_CHUNK_SIZE: 50, // Elements per idle-callback chunk
   CACHE_TTL_MS: 30 * 24 * 60 * 60 * 1000, // 30 days
   CHAT_STREAM_TIMEOUT: 60000, // 60s timeout for AI tutor streaming
+  // Local (on-device) engine: a cold model load happens BEFORE the first
+  // token, so the first-token window must be far more generous than the
+  // cloud's. Measured on an M4/16GB: gemma3:4b cold ≈ 10.7s, gemma4:12b
+  // cold ≈ 196s. 240s covers a large cold load; after the first token the
+  // shared CHAT_STREAM_TIMEOUT applies as an inter-token idle watchdog, so
+  // a server that stalls mid-generation still fails fast.
+  LOCAL_FIRST_TOKEN_TIMEOUT: 240000,
   GT_MAX_RETRIES: 3, // Max retries for Google Translate requests
   GT_BASE_DELAY: 500, // Base delay (ms) for exponential backoff
   GT_RATE_LIMIT_PER_MIN: 120, // Max Google Translate requests per minute
@@ -1161,18 +1168,18 @@ const ENGINE_LABELS = {
     vi: 'Đã kết nối tới máy chủ cục bộ',
   },
   statusCors: {
-    en: 'Server reachable but blocked it. Start Ollama with OLLAMA_ORIGINS="chrome-extension://*" (or set it in your OpenAI-compatible server).',
-    ko: '서버에 접근했지만 차단되었습니다. Ollama를 OLLAMA_ORIGINS="chrome-extension://*" 로 실행하세요(또는 OpenAI 호환 서버에 설정).',
-    id: 'Server dapat dijangkau tetapi memblokir. Jalankan Ollama dengan OLLAMA_ORIGINS="chrome-extension://*" (atau atur di server yang kompatibel dengan OpenAI).',
-    it: 'Server raggiungibile ma ha bloccato. Avvia Ollama con OLLAMA_ORIGINS="chrome-extension://*" (o impostalo nel tuo server compatibile con OpenAI).',
+    en: 'Server reachable, but it blocked the request. Start Ollama with OLLAMA_ORIGINS="chrome-extension://*" (or set it in your OpenAI-compatible server).',
+    ko: '서버에 접근했지만 요청이 차단되었습니다. Ollama를 OLLAMA_ORIGINS="chrome-extension://*" 로 실행하세요(또는 OpenAI 호환 서버에 설정).',
+    id: 'Server dapat dijangkau, tetapi permintaan diblokir. Jalankan Ollama dengan OLLAMA_ORIGINS="chrome-extension://*" (atau atur di server yang kompatibel dengan OpenAI).',
+    it: 'Server raggiungibile, ma la richiesta è stata bloccata. Avvia Ollama con OLLAMA_ORIGINS="chrome-extension://*" (o impostalo nel tuo server compatibile con OpenAI).',
     ja: 'サーバーには到達しましたがブロックされました。OLLAMA_ORIGINS="chrome-extension://*" を設定して Ollama を起動してください（OpenAI 互換サーバーの場合は同等の設定を）。',
     'zh-CN': '可访问服务器但被拦截。请使用 OLLAMA_ORIGINS="chrome-extension://*" 启动 Ollama（或在兼容 OpenAI 的服务器中设置）。',
     'zh-TW': '可存取伺服器但被攔截。請使用 OLLAMA_ORIGINS="chrome-extension://*" 啟動 Ollama（或在相容 OpenAI 的伺服器中設定）。',
-    es: 'Servidor accesible pero bloqueó. Inicia Ollama con OLLAMA_ORIGINS="chrome-extension://*" (o configúralo en tu servidor compatible con OpenAI).',
-    fr: 'Serveur accessible mais bloqué. Lancez Ollama avec OLLAMA_ORIGINS="chrome-extension://*" (ou configurez-le sur votre serveur compatible OpenAI).',
-    de: 'Server erreichbar, aber blockiert. Starten Sie Ollama mit OLLAMA_ORIGINS="chrome-extension://*" (oder legen Sie es in Ihrem OpenAI-kompatiblen Server fest).',
-    'pt-BR': 'Servidor acessível, mas bloqueou. Inicie o Ollama com OLLAMA_ORIGINS="chrome-extension://*" (ou defina no seu servidor compatível com OpenAI).',
-    ru: 'Сервер доступен, но заблокировал. Запустите Ollama с OLLAMA_ORIGINS="chrome-extension://*" (или задайте это в вашем OpenAI-совместимом сервере).',
+    es: 'Servidor accesible, pero bloqueó la solicitud. Inicia Ollama con OLLAMA_ORIGINS="chrome-extension://*" (o configúralo en tu servidor compatible con OpenAI).',
+    fr: 'Serveur accessible, mais il a bloqué la requête. Lancez Ollama avec OLLAMA_ORIGINS="chrome-extension://*" (ou configurez-le sur votre serveur compatible OpenAI).',
+    de: 'Server erreichbar, aber die Anfrage wurde blockiert. Starten Sie Ollama mit OLLAMA_ORIGINS="chrome-extension://*" (oder legen Sie es in Ihrem OpenAI-kompatiblen Server fest).',
+    'pt-BR': 'Servidor acessível, mas a solicitação foi bloqueada. Inicie o Ollama com OLLAMA_ORIGINS="chrome-extension://*" (ou defina no seu servidor compatível com OpenAI).',
+    ru: 'Сервер доступен, но запрос заблокирован. Запустите Ollama с OLLAMA_ORIGINS="chrome-extension://*" (или задайте это в вашем OpenAI-совместимом сервере).',
     vi: 'Máy chủ tiếp cận được nhưng đã chặn. Khởi động Ollama với OLLAMA_ORIGINS="chrome-extension://*" (hoặc đặt trong máy chủ tương thích OpenAI của bạn).',
   },
   statusUnreachable: {
