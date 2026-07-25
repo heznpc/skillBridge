@@ -42,11 +42,16 @@ describe('page-bridge runtime hardening', () => {
   // Per-test Puter auth state. Default 'signed in' so the model-routing tests
   // exercise the real chat path; the unauthenticated-skip tests set it null.
   let puterAuthToken;
+  // Handle to the fake SDK instance (created lazily at script-append time) so
+  // reauth-recovery tests can assert resetAuthToken calls / auth-state flips.
+  let fakePuter;
 
   beforeEach(() => {
     delete window.__SKILLBRIDGE_BRIDGE__;
     delete globalThis.puter;
     delete globalThis.puterParent;
+    window.localStorage.clear();
+    fakePuter = null;
     sent = [];
     nonce = `runtime-nonce-${++nonceSeq}`;
     puterAuthToken = 'test-token';
@@ -79,7 +84,16 @@ describe('page-bridge runtime hardening', () => {
     document.head.appendChild = (node) => {
       const appended = originalAppendChild(node);
       if (node.tagName === 'SCRIPT') {
-        globalThis.puter = { ai: { chat }, authToken: puterAuthToken };
+        fakePuter = {
+          ai: { chat },
+          authToken: puterAuthToken,
+          // Mirrors the real SDK's instance method (clears the in-memory
+          // token; the real one also drops the localStorage copy).
+          resetAuthToken: jest.fn(function () {
+            this.authToken = null;
+          }),
+        };
+        globalThis.puter = fakePuter;
         globalThis.puterParent = { leaked: true };
         setTimeout(() => node.onload && node.onload(), 0);
       }
@@ -602,5 +616,230 @@ describe('page-bridge runtime hardening', () => {
 
     // CHAT is NOT gated — an explicit user action is allowed to authenticate.
     expect(chat).toHaveBeenCalled();
+  });
+
+  // === v4 reauth recovery (Puter revoked v1 tokens → 401 reauth_required) ===
+  //
+  // Observed live 2026-07-25: a chat under a revoked token makes the SDK's
+  // internal re-auth flow die against the scrubbed global, so chat RESOLVES
+  // with a non-stream value instead of prompting, and the old code crashed
+  // with a bare "response is not async iterable" TypeError.
+
+  test('streaming CHAT with a revoked session resets the dead token and retries into a working stream', async () => {
+    window.localStorage.setItem('puter.auth.token', 'stale-v1-token');
+    // Most hostile shape the SDK produced live: a resolution that is not a
+    // stream at all. The retry (token cleared → signed-out path) streams.
+    chat.mockResolvedValueOnce(undefined);
+
+    window.dispatchEvent(
+      new window.MessageEvent('message', {
+        source: window,
+        data: {
+          __skillbridge__: true,
+          __nonce__: nonce,
+          type: 'CHAT_REQUEST',
+          id: 'chat-reauth-recover',
+          userMessage: 'hi',
+          stream: true,
+          model: 'claude-sonnet-4-6',
+        },
+      }),
+    );
+
+    await waitFor(() => sent.some((m) => m.type === 'CHAT_STREAM_END'));
+
+    expect(chat).toHaveBeenCalledTimes(2);
+    expect(fakePuter.resetAuthToken).toHaveBeenCalledTimes(1);
+    // The bridge also drops the localStorage copy of the dead token.
+    expect(window.localStorage.getItem('puter.auth.token')).toBeNull();
+    expect(sent.filter((m) => m.type === 'CHAT_STREAM_CHUNK').length).toBeGreaterThan(0);
+    expect(sent.find((m) => m.type === 'CHAT_STREAM_END')).toEqual(
+      expect.objectContaining({ id: 'chat-reauth-recover', success: true }),
+    );
+    // Call window closed after the stream: globals scrubbed again.
+    expect(globalThis.puter).toBeUndefined();
+  });
+
+  test('streaming CHAT surfaces a clean error (no bare TypeError) when the recovery retry also fails', async () => {
+    chat
+      .mockResolvedValueOnce({ error: { code: 'reauth_required', message: 'Re-authentication required' } })
+      .mockResolvedValueOnce({ error: { code: 'auth_canceled', message: 'Authentication canceled' } });
+
+    window.dispatchEvent(
+      new window.MessageEvent('message', {
+        source: window,
+        data: {
+          __skillbridge__: true,
+          __nonce__: nonce,
+          type: 'CHAT_REQUEST',
+          id: 'chat-reauth-cancel',
+          userMessage: 'hi',
+          stream: true,
+          model: 'claude-sonnet-4-6',
+        },
+      }),
+    );
+
+    await waitFor(() => sent.some((m) => m.type === 'CHAT_RESPONSE'));
+
+    expect(chat).toHaveBeenCalledTimes(2);
+    const resp = sent.find((m) => m.type === 'CHAT_RESPONSE');
+    expect(resp).toEqual(expect.objectContaining({ id: 'chat-reauth-cancel', success: false }));
+    // The SDK's actual reason survives — not "response is not async iterable".
+    expect(resp.error).toMatch(/Authentication canceled/);
+    expect(resp.error).not.toMatch(/async iterable/);
+  });
+
+  test('signed-out streaming CHAT that cannot stream fails cleanly without touching auth state', async () => {
+    puterAuthToken = null;
+    // Signed out, the SDK prompts inside chat() itself; a non-stream
+    // resolution here means the user closed the prompt. No reset, no retry.
+    chat.mockResolvedValueOnce({ error: { code: 'auth_canceled', message: 'Authentication canceled' } });
+
+    window.dispatchEvent(
+      new window.MessageEvent('message', {
+        source: window,
+        data: {
+          __skillbridge__: true,
+          __nonce__: nonce,
+          type: 'CHAT_REQUEST',
+          id: 'chat-anon-cancel',
+          userMessage: 'hi',
+          stream: true,
+          model: 'claude-sonnet-4-6',
+        },
+      }),
+    );
+
+    await waitFor(() => sent.some((m) => m.type === 'CHAT_RESPONSE'));
+
+    expect(chat).toHaveBeenCalledTimes(1);
+    expect(fakePuter.resetAuthToken).not.toHaveBeenCalled();
+    expect(sent.find((m) => m.type === 'CHAT_RESPONSE')).toEqual(
+      expect.objectContaining({ id: 'chat-anon-cancel', success: false }),
+    );
+  });
+
+  // Regression guard for the review finding: the recovery used to fire on ANY
+  // non-iterable resolution while signed in, so a quota/permission/5xx
+  // envelope destroyed a WORKING token, popped a sign-in prompt that could not
+  // fix the real problem, and silently disabled the background verify path
+  // (which skips while unauthenticated) for the rest of the session.
+  test.each([
+    ['insufficient_funds', { error: { code: 'insufficient_funds', message: 'Insufficient funds' } }],
+    ['usage_limited', { error: { code: 'usage_limited', message: 'Usage limit reached' } }],
+    ['permission_denied', { error: { code: 'permission_denied', message: 'Permission denied' } }],
+    ['server error', { error: { code: 'internal_error', message: 'Internal Server Error' } }],
+  ])('non-auth failure (%s) surfaces cleanly and KEEPS the session', async (_label, envelope) => {
+    window.localStorage.setItem('puter.auth.token', 'valid-token');
+    chat.mockResolvedValueOnce(envelope);
+
+    window.dispatchEvent(
+      new window.MessageEvent('message', {
+        source: window,
+        data: {
+          __skillbridge__: true,
+          __nonce__: nonce,
+          type: 'CHAT_REQUEST',
+          id: 'chat-nonauth',
+          userMessage: 'hi',
+          stream: true,
+          model: 'claude-sonnet-4-6',
+        },
+      }),
+    );
+
+    await waitFor(() => sent.some((m) => m.type === 'CHAT_RESPONSE'));
+
+    // No reset, no retry — one call only.
+    expect(chat).toHaveBeenCalledTimes(1);
+    expect(fakePuter.resetAuthToken).not.toHaveBeenCalled();
+    expect(window.localStorage.getItem('puter.auth.token')).toBe('valid-token');
+    const resp = sent.find((m) => m.type === 'CHAT_RESPONSE');
+    expect(resp).toEqual(expect.objectContaining({ id: 'chat-nonauth', success: false }));
+    expect(resp.error).toMatch(new RegExp(envelope.error.message));
+    expect(resp.error).not.toMatch(/async iterable/);
+  });
+
+  test('an SDK 401 resolution IS treated as a revoked session and recovers', async () => {
+    window.localStorage.setItem('puter.auth.token', 'stale-token');
+    // The bundled SDK's own 401 branch resolves this shape.
+    chat.mockResolvedValueOnce({ status: 401, message: 'Unauthorized' });
+
+    window.dispatchEvent(
+      new window.MessageEvent('message', {
+        source: window,
+        data: {
+          __skillbridge__: true,
+          __nonce__: nonce,
+          type: 'CHAT_REQUEST',
+          id: 'chat-401',
+          userMessage: 'hi',
+          stream: true,
+          model: 'claude-sonnet-4-6',
+        },
+      }),
+    );
+
+    await waitFor(() => sent.some((m) => m.type === 'CHAT_STREAM_END'));
+
+    expect(chat).toHaveBeenCalledTimes(2);
+    expect(fakePuter.resetAuthToken).toHaveBeenCalledTimes(1);
+    expect(window.localStorage.getItem('puter.auth.token')).toBeNull();
+  });
+
+  test('an anomalous plain-string resolution never costs the user their token', async () => {
+    window.localStorage.setItem('puter.auth.token', 'valid-token');
+    chat.mockResolvedValueOnce('not a stream');
+
+    window.dispatchEvent(
+      new window.MessageEvent('message', {
+        source: window,
+        data: {
+          __skillbridge__: true,
+          __nonce__: nonce,
+          type: 'CHAT_REQUEST',
+          id: 'chat-string',
+          userMessage: 'hi',
+          stream: true,
+          model: 'claude-sonnet-4-6',
+        },
+      }),
+    );
+
+    await waitFor(() => sent.some((m) => m.type === 'CHAT_RESPONSE'));
+
+    expect(chat).toHaveBeenCalledTimes(1);
+    expect(fakePuter.resetAuthToken).not.toHaveBeenCalled();
+    expect(window.localStorage.getItem('puter.auth.token')).toBe('valid-token');
+  });
+
+  test('non-streaming CHAT error envelope is surfaced as a failure, not fake-success "No response"', async () => {
+    chat.mockResolvedValueOnce({ error: { code: 'reauth_required', message: 'Re-authentication required' } });
+
+    window.dispatchEvent(
+      new window.MessageEvent('message', {
+        source: window,
+        data: {
+          __skillbridge__: true,
+          __nonce__: nonce,
+          type: 'CHAT_REQUEST',
+          id: 'chat-nonstream-reauth',
+          userMessage: 'hi',
+          stream: false,
+          model: 'claude-haiku-4-5',
+        },
+      }),
+    );
+
+    await waitFor(() => sent.some((m) => m.type === 'CHAT_RESPONSE'));
+
+    expect(sent.find((m) => m.type === 'CHAT_RESPONSE')).toEqual(
+      expect.objectContaining({
+        id: 'chat-nonstream-reauth',
+        success: false,
+        error: 'Re-authentication required',
+      }),
+    );
   });
 });

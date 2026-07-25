@@ -254,6 +254,67 @@
     return /\b(model|invalid|deprecated|unsupported|not[ _-]?found|404)\b/.test(msg);
   }
 
+  function _isAsyncIterable(value) {
+    return !!value && typeof value[Symbol.asyncIterator] === 'function';
+  }
+
+  // Human-readable reason from a Puter chat "resolution" that is not a
+  // stream/string. The SDK resolves `{error:{code,message}}` envelopes instead
+  // of rejecting for several failures (e.g. `auth_canceled` after its internal
+  // re-auth flow dies under a revoked token).
+  function _puterErrorText(response) {
+    const err = response?.error;
+    if (!err) return '';
+    if (typeof err === 'string') return err;
+    return err.message || err.code || '';
+  }
+
+  // Auth-shaped failure codes: only these justify discarding the user's
+  // session. The SDK resolves plenty of NON-auth envelopes the same way
+  // (insufficient_funds / usage_limited / permission_denied / 5xx), and
+  // resetting on those would destroy a WORKING token, pop a sign-in prompt
+  // that cannot fix the actual problem (quota), and silently disable the
+  // background verify path (which skips while unauthenticated) for the rest
+  // of the session. `auth_canceled` is deliberately excluded — that is the
+  // user closing the prompt, not a revoked token.
+  const _REVOKED_TOKEN_CODES = new Set([
+    'reauth_required',
+    'token_auth_failed',
+    'token_expired',
+    'invalid_token',
+    'unauthorized',
+  ]);
+
+  // True only when the resolution says "your token is no longer valid".
+  // Puter's live shape for this (verified 2026-07-25): HTTP 401 with
+  // {"code":"reauth_required","reason":"token_v1"}; the SDK's own 401 branch
+  // resolves {status:401,message:"Unauthorized"}.
+  function _isRevokedTokenResolution(response) {
+    if (!response || typeof response !== 'object') return false;
+    if (response.status === 401) return true;
+    const err = response.error;
+    const code = (typeof err === 'object' && (err?.code || err?.reason)) || '';
+    if (_REVOKED_TOKEN_CODES.has(String(code).toLowerCase())) return true;
+    return (typeof err === 'object' && err?.status === 401) || false;
+  }
+
+  // The other observed revoked-token shape: an INFORMATION-FREE resolution.
+  // Live 2026-07-25 a chat under a revoked v1 token resolved a value carrying
+  // no error envelope at all (the SDK's internal re-auth flow died against the
+  // scrubbed page-world global). Failures that are NOT auth — quota,
+  // permission, 5xx — resolve a real `{error:{code,message}}` envelope, so
+  // "no diagnostic information" specifically identifies the dead-session path.
+  // A plain string is excluded: that is an anomalous success shape, not a
+  // session problem, and must never cost the user their token.
+  function _isOpaqueChatResolution(response) {
+    if (typeof response === 'string') return false;
+    return !_puterErrorText(response);
+  }
+
+  function _shouldResetPuterSession(response) {
+    return _isRevokedTokenResolution(response) || _isOpaqueChatResolution(response);
+  }
+
   function _restoreGlobal(name, hadValue, previousValue) {
     try {
       if (hadValue) {
@@ -296,6 +357,33 @@
       _puterPreviousHadGlobal = false;
       _puterPreviousHadParentGlobal = false;
     };
+  }
+
+  // Drop a stale Puter session. Observed live 2026-07-25: Puter revoked its
+  // v1 tokens (API answers 401 `reauth_required`), and a chat call under a
+  // revoked token makes the SDK attempt its INTERNAL re-auth flow — which
+  // dereferences the scrubbed page-world `puter` global and dies
+  // (ReferenceError → chat resolves an `{error}` envelope instead of a
+  // stream, and its dying socket callbacks crash in the console). Clearing
+  // the dead token lets the next user-invoked chat run signed-out, where the
+  // SDK's own sign-in prompt flow works (verified live). resetAuthToken may
+  // touch SDK internals that read the global, so hold the call-window
+  // globals while it runs. CHAT-only: background paths (translate/verify)
+  // must never mutate auth state.
+  function _resetStalePuterSession() {
+    const releaseGlobals = _enterPuterCallGlobals();
+    try {
+      _puterApi?.resetAuthToken?.();
+    } catch (_e) {
+      /* best-effort — fall through to the storage clear */
+    } finally {
+      releaseGlobals();
+    }
+    try {
+      globalThis.localStorage?.removeItem('puter.auth.token');
+    } catch (_e) {
+      /* storage unavailable — the in-memory reset above still applies */
+    }
   }
 
   function _wrapPuterStream(stream, releaseGlobals) {
@@ -564,6 +652,14 @@
     });
     if (typeof response === 'string') return response;
 
+    // The SDK resolves error envelopes (`{error:{code,message}}`) instead of
+    // rejecting — e.g. `reauth_required` under a revoked token, or
+    // `auth_canceled` when the user closes the sign-in prompt. Surface them
+    // as failures instead of flattening to ''/fake-success 'No response'.
+    if (response?.error) {
+      throw new Error(_puterErrorText(response) || 'Puter chat failed');
+    }
+
     // Handle different model response formats
     const content = response?.message?.content;
     if (typeof content === 'string') return content;
@@ -632,17 +728,39 @@
 
   async function _handleStreamingChat(data, prompt, streamEntry) {
     streamEntry.armWatchdog();
-    const response = await _puterChat(
-      prompt,
-      {
-        // SkillBridge is Claude-focused; default to Haiku as a cheap,
-        // fast Claude fallback if content.js forgets to pass `model`.
-        model: _selectModel('CHAT_REQUEST', data.model, 'claude-haiku-4-5'),
-        stream: true,
-      },
-      (releaseGlobals) => streamEntry.setReleasePuterGlobals(releaseGlobals),
-      () => streamEntry.cancelled,
-    );
+    const chatOpts = {
+      // SkillBridge is Claude-focused; default to Haiku as a cheap,
+      // fast Claude fallback if content.js forgets to pass `model`.
+      model: _selectModel('CHAT_REQUEST', data.model, 'claude-haiku-4-5'),
+      stream: true,
+    };
+    const callChat = () =>
+      _puterChat(
+        prompt,
+        chatOpts,
+        (releaseGlobals) => streamEntry.setReleasePuterGlobals(releaseGlobals),
+        () => streamEntry.cancelled,
+      );
+    let response = await callChat();
+
+    // A signed-in session whose stream request comes back as an auth-revoked
+    // resolution (401 / reauth_required — see _resetStalePuterSession) cannot
+    // recover on its own: the SDK resolves an error envelope instead of
+    // prompting. Recover once on this user-invoked path: drop the dead token
+    // and retry — the retry runs signed-out, which makes the SDK open its own
+    // sign-in prompt exactly like a fresh install. Non-auth failures
+    // (quota/permission/5xx) must NOT reset the session; they fall through to
+    // the clean error surfacing below with the token intact.
+    if (
+      !streamEntry.cancelled &&
+      !_isAsyncIterable(response) &&
+      _isPuterAuthed() &&
+      _shouldResetPuterSession(response)
+    ) {
+      log('Stale Puter session detected (signed in but no stream) — resetting token and retrying');
+      _resetStalePuterSession();
+      response = await callChat();
+    }
     streamEntry.setResponse(response);
 
     if (streamEntry.cancelled) {
@@ -650,6 +768,18 @@
       // response. Do not enter the iterator after cancellation.
       await streamEntry.closeUpstream();
       return;
+    }
+
+    // Entering for-await on a non-iterable would crash with a bare
+    // TypeError ("response is not async iterable") — surface the SDK's
+    // actual reason (or a sign-in hint) instead.
+    if (!_isAsyncIterable(response)) {
+      const reason = _puterErrorText(response);
+      throw new Error(
+        reason
+          ? `Puter chat unavailable: ${reason}`
+          : 'Puter sign-in required — the AI tutor needs a (free) Puter session.',
+      );
     }
 
     for await (const chunk of response) {
