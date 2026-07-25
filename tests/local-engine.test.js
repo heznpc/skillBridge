@@ -211,3 +211,81 @@ describe('local engine host permission', () => {
     expect(popupSrc.indexOf('let localStatusMap')).toBeLessThan(popupSrc.indexOf('renderPopupLabels();'));
   });
 });
+
+// Review finding (v4): a deliberately-off tutor rendered the generic
+// "an error occurred" bubble WITH a retry button, so it looked transient and
+// retrying re-sent the same doomed request in a loop. Deterministic engine
+// states must explain themselves instead.
+describe('tutor error surfacing for deterministic engine states', () => {
+  const sidebarSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'content', 'sidebar-chat.js'), 'utf8');
+  const domSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'content', 'chat-message-dom.js'), 'utf8');
+
+  test('a non-retryable renderer exists and is exported', () => {
+    expect(domSrc).toContain('function renderFinalError(bubble, message)');
+    expect(domSrc).toMatch(/dom = \{[\s\S]*renderFinalError,/);
+    // It must NOT attach a retry control.
+    const fn = domSrc.slice(domSrc.indexOf('function renderFinalError'), domSrc.indexOf('function renderRetryableError'));
+    expect(fn).not.toContain('si18n-retry-btn');
+  });
+
+  test('the sidebar routes off / sign-in / local-unreachable to the final renderer', () => {
+    expect(sidebarSrc).toContain('const finalMessage = _finalErrorMessage(err);');
+    expect(sidebarSrc).toContain('chatDom.renderFinalError(bubble, finalMessage);');
+    const mapper = sidebarSrc.slice(
+      sidebarSrc.indexOf('function _finalErrorMessage'),
+      sidebarSrc.indexOf('async function sendChatMessage'),
+    );
+    expect(mapper).toContain('ENGINE_LABELS.tutorOff');
+    expect(mapper).toContain('ENGINE_LABELS.tutorSignInRequired');
+    expect(mapper).toContain('ENGINE_LABELS.tutorLocalUnreachable');
+    // Transient failures keep the retry affordance.
+    expect(mapper).toContain('return null;');
+  });
+
+  // Behavioral: run the REAL mapper against the REAL error strings the three
+  // engines throw, with the label maps stubbed to their own names.
+  const makeMapper = () => {
+    const m = sidebarSrc.match(/function _finalErrorMessage\(err\)\s*\{[\s\S]*?\n {2}\}/);
+    if (!m) throw new Error('Could not extract _finalErrorMessage from sidebar-chat.js');
+    const label = (name) => ({ __name: name });
+    return new Function(
+      'sb',
+      'ENGINE_LABELS',
+      `${m[0]}\nreturn _finalErrorMessage;`,
+    )(
+      { t: (map) => map.__name },
+      {
+        tutorOff: label('tutorOff'),
+        tutorSignInRequired: label('tutorSignInRequired'),
+        tutorLocalUnreachable: label('tutorLocalUnreachable'),
+      },
+    );
+  };
+
+  test.each([
+    ['AI tutor is turned off in settings.', 'tutorOff'],
+    ['Puter sign-in required — the AI tutor needs a (free) Puter session.', 'tutorSignInRequired'],
+    ['Cannot reach local AI server: Failed to fetch', 'tutorLocalUnreachable'],
+    ['Local AI engine unavailable: Receiving end does not exist', 'tutorLocalUnreachable'],
+    ['Local AI connection closed', 'tutorLocalUnreachable'],
+  ])('maps %j to the %s explanation', (message, expected) => {
+    expect(makeMapper()(new Error(message))).toBe(expected);
+  });
+
+  test.each([
+    ['Stream timed out'],
+    ['Local AI stream timed out'],
+    ['Local AI server returned HTTP 500'],
+    ['Puter chat unavailable: Internal Server Error'],
+  ])('keeps the retry affordance for the transient failure %j', (message) => {
+    expect(makeMapper()(new Error(message))).toBeNull();
+  });
+
+  test('the thrown strings the mapper keys on still exist in the sources', () => {
+    expect(trSrc).toContain("throw new Error('AI tutor is turned off in settings.')");
+    const bridgeSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'page-bridge.js'), 'utf8');
+    expect(bridgeSrc).toContain('Puter sign-in required');
+    expect(bgSrc).toContain('Cannot reach local AI server');
+    expect(trSrc).toContain('Local AI engine unavailable');
+  });
+});

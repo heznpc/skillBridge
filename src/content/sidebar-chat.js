@@ -370,6 +370,19 @@
     });
   }
 
+  // Map a chat failure to a localized explanation when a retry cannot help.
+  // Returns null for genuinely transient failures (network blip, upstream
+  // hiccup), which keep the retry affordance.
+  function _finalErrorMessage(err) {
+    const msg = String(err?.message || '');
+    if (/turned off in settings/i.test(msg)) return sb.t(ENGINE_LABELS.tutorOff);
+    if (/sign-in required/i.test(msg)) return sb.t(ENGINE_LABELS.tutorSignInRequired);
+    if (/Cannot reach local AI server|Local AI engine unavailable|Local AI connection closed/i.test(msg)) {
+      return sb.t(ENGINE_LABELS.tutorLocalUnreachable);
+    }
+    return null;
+  }
+
   async function sendChatMessage() {
     if (sb.certDisabled) return;
     if (isSending) return;
@@ -445,6 +458,13 @@
       // Don't render an error bubble or leave the spinner on.
       if (err?.name === 'AbortError') {
         chatDom.finishStreamingBubble(bubble);
+        return;
+      }
+      // Deterministic engine states: retrying re-runs the same failure, so
+      // explain the cause instead of offering a retry button.
+      const finalMessage = _finalErrorMessage(err);
+      if (finalMessage) {
+        chatDom.renderFinalError(bubble, finalMessage);
         return;
       }
       chatDom.renderRetryableError(bubble, sb.t(A11Y_LABELS.retry), () => {

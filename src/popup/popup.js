@@ -174,6 +174,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('local-base-label').textContent = t(ENGINE_LABELS.localBaseUrl);
     document.getElementById('local-model-label').textContent = t(ENGINE_LABELS.localModel);
     document.getElementById('on-device-hint').textContent = t(ENGINE_LABELS.onDeviceHint);
+    document.getElementById('hardware-hint').textContent = t(ENGINE_LABELS.hardwareHint);
     // Re-render the live status line in the new language too. Looked up by id
     // (not the const below) so this is safe on the pre-engine-block call.
     const statusEl = document.getElementById('local-status');

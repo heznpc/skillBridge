@@ -148,6 +148,18 @@ describe('ENGINE_LABELS (v4 tutor engine selector)', () => {
     'localBaseUrl',
     'localModel',
     'onDeviceHint',
+    // Hardware guidance from the measured benchmark + the Chrome-built-in-AI
+    // note (v4 A4), and the tutor-side messages for engine states a retry
+    // cannot fix.
+    'hardwareHint',
+    'tutorOff',
+    'tutorSignInRequired',
+    'tutorLocalUnreachable',
+    'statusChecking',
+    'statusOk',
+    'statusCors',
+    'statusUnreachable',
+    'permDenied',
   ];
 
   test('defines every engine-selector string', () => {
