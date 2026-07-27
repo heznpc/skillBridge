@@ -459,29 +459,6 @@
         setTimeout(() => sb._gt.applyStaticTranslations(currentLang), SKILLBRIDGE_DELAYS.LATE_CONTENT);
       }
 
-      translator.onTranslationUpdate((originalText, finalTranslation, targetLang, wasImproved) => {
-        if (targetLang !== currentLang) return;
-        const entries = translatedTexts.get(originalText);
-        if (!entries) return;
-
-        // Prune detached elements to prevent memory leak
-        const live = entries.filter((e) => e.el?.parentNode);
-        if (live.length === 0) {
-          translatedTexts.delete(originalText);
-          return;
-        }
-        if (live.length < entries.length) translatedTexts.set(originalText, live);
-
-        for (const entry of live) {
-          sb._gt.removeVerifySpinner(entry.el);
-          if (wasImproved) {
-            safeReplaceText(entry.el, window._protectedTerms.restoreProtectedTerms(finalTranslation));
-            entry.el.classList.add('si18n-text-updated');
-            setTimeout(() => entry.el.classList.remove('si18n-text-updated'), SKILLBRIDGE_DELAYS.TEXT_UPDATE_FADE);
-          }
-        }
-      });
-
       if (translator.aiEnabled) {
         translator.initialize().catch((err) => {
           console.warn('[SkillBridge] Bridge init failed (AI features unavailable):', err);
@@ -610,10 +587,6 @@
 
     if (!opts.skipRestore) restoreOriginal();
     currentLang = newLang;
-    // Invalidate any in-flight verify-queue work targeting the previous lang
-    // so its callbacks don't write stale translations into the now-current
-    // page. Mirrors content.js's gtGeneration counter for the GT pipeline.
-    translator?.bumpLangGeneration?.();
 
     try {
       if (newLang === 'en') {
@@ -627,8 +600,8 @@
       // (disk/cache timing resolves loads out of order). currentLang is set
       // synchronously to the latest request, so if it no longer equals this
       // call's target the call is stale — bail rather than paint a now-wrong
-      // language over the page. bumpLangGeneration() above guards the verify
-      // queue; this guards the static-apply path it doesn't cover.
+      // language over the page. The generation check in the GT queue handles
+      // network results; this guards the static-apply path as well.
       if (currentLang !== newLang) return;
       sb._gt.applyStaticTranslations(newLang);
       window._sb.updateLocalizedLabels?.();

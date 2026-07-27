@@ -286,7 +286,7 @@
   }
 
   // Expose for sidebar-chat.js (history button binding) and chat-render.js
-  // tests. saveConversation runs after every successful Gemini response.
+  // tests. saveConversation runs after every successful Tutor response.
   sb._chat.saveConversation = saveConversation;
   sb._chat.toggleHistoryPanel = toggleHistoryPanel;
   sb.registerModule?.('chat-history');

@@ -118,12 +118,6 @@
  * @property {() => string} getKeepEnglishTerms
  */
 
-/**
- * @typedef {Object} GeminiBlockApi
- * @property {(text: string) => string} escapeHtml
- * @property {(text: string) => string} sanitizeFromGemini
- */
-
 // This file is JSDoc-only — no runtime code. The empty `void 0` keeps it a
 // valid module body for IDEs that need an expression.
 void 0;

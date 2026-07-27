@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Footer from model constants
   document.getElementById('footer').innerHTML = _POPUP_AI_GATEWAY_ENABLED
-    ? `Google Translate + ${SKILLBRIDGE_MODEL_LABELS.GEMINI}<br>AI Tutor: ${SKILLBRIDGE_MODEL_LABELS.CLAUDE}`
+    ? `Google Translate + curated terminology<br>AI Tutor: ${SKILLBRIDGE_MODEL_LABELS.CLAUDE}`
     : 'Google Translate<br>Local learning tools';
 
   if (!isSupported) return;

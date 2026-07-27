@@ -20,8 +20,7 @@ const _parseSseDelta = new Function(`${parserMatch[0]}\nreturn _parseSseDelta;`)
 const checkMatch = bgSrc.match(/async function _checkLocalEngine\(baseUrl\)\s*\{[\s\S]*?\n\}/);
 if (!checkMatch) throw new Error('Could not extract _checkLocalEngine from background.js');
 // fetch is injected so the reachability probe can be exercised against fakes.
-const makeCheck = (fakeFetch) =>
-  new Function('fetch', `${checkMatch[0]}\nreturn _checkLocalEngine;`)(fakeFetch);
+const makeCheck = (fakeFetch) => new Function('fetch', `${checkMatch[0]}\nreturn _checkLocalEngine;`)(fakeFetch);
 
 describe('_parseSseDelta (local OpenAI-compatible SSE)', () => {
   test('token delta line → { delta }', () => {
@@ -66,7 +65,7 @@ describe('tutor engine routing', () => {
 
   test('SW proxy posts an OpenAI-shaped body and handles 403 (Ollama origins)', () => {
     expect(bgSrc).toContain('/chat/completions');
-    expect(bgSrc).toContain("stream: true,");
+    expect(bgSrc).toContain('stream: true,');
     expect(bgSrc).toContain('OLLAMA_ORIGINS');
   });
 });
@@ -76,7 +75,11 @@ describe('_checkLocalEngine (local reachability probe)', () => {
 
   test('200 with model list → { ok, status: ok, models }', async () => {
     const check = makeCheck(async () => ({ ok: true, status: 200, json: async () => OK_MODELS }));
-    expect(await check('http://localhost:11434/v1')).toEqual({ ok: true, status: 'ok', models: ['gemma3:4b', 'llama3'] });
+    expect(await check('http://localhost:11434/v1')).toEqual({
+      ok: true,
+      status: 'ok',
+      models: ['gemma3:4b', 'llama3'],
+    });
   });
 
   test('trailing slashes in the base URL are normalized', async () => {
@@ -224,7 +227,10 @@ describe('tutor error surfacing for deterministic engine states', () => {
     expect(domSrc).toContain('function renderFinalError(bubble, message)');
     expect(domSrc).toMatch(/dom = \{[\s\S]*renderFinalError,/);
     // It must NOT attach a retry control.
-    const fn = domSrc.slice(domSrc.indexOf('function renderFinalError'), domSrc.indexOf('function renderRetryableError'));
+    const fn = domSrc.slice(
+      domSrc.indexOf('function renderFinalError'),
+      domSrc.indexOf('function renderRetryableError'),
+    );
     expect(fn).not.toContain('si18n-retry-btn');
   });
 
@@ -248,11 +254,7 @@ describe('tutor error surfacing for deterministic engine states', () => {
     const m = sidebarSrc.match(/function _finalErrorMessage\(err\)\s*\{[\s\S]*?\n {2}\}/);
     if (!m) throw new Error('Could not extract _finalErrorMessage from sidebar-chat.js');
     const label = (name) => ({ __name: name });
-    return new Function(
-      'sb',
-      'ENGINE_LABELS',
-      `${m[0]}\nreturn _finalErrorMessage;`,
-    )(
+    return new Function('sb', 'ENGINE_LABELS', `${m[0]}\nreturn _finalErrorMessage;`)(
       { t: (map) => map.__name },
       {
         tutorOff: label('tutorOff'),

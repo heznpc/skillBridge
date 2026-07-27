@@ -139,7 +139,9 @@ describe('same-key disambiguation', () => {
     orig.querySelector('#term-a').__sbId = 'A';
     orig.querySelector('#mark-b').__sbId = 'B';
     // GT reorders the two spans (same elementKey "SPAN|").
-    const tr = root('<p>여기 <span class="hl" id="mark-b">강조</span> 및 <span class="notranslate" id="term-a">Claude</span></p>');
+    const tr = root(
+      '<p>여기 <span class="hl" id="mark-b">강조</span> 및 <span class="notranslate" id="term-a">Claude</span></p>',
+    );
     expect(checkTagIntegrity(orig, tr)).toBe(true);
     expect(reconcileHtml(orig, tr)).toBe(true);
     // Attributes must still travel with their own element, not swap.

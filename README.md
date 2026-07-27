@@ -223,7 +223,7 @@ Page text
        └─ Cache result locally for up to 30 days
 ```
 
-Text not covered by the packaged dictionary or local cache is sent to Google Translate when translation is requested. Paragraphs that mix prose with links/buttons are translated structure-preserving through Google Translate's HTML mode (no AI required). The AI Tutor and the background translation-quality check use Claude/Gemini through the bundled Puter bridge, which runs only when you sign in to Puter (free, no API key). See the [Privacy Policy](PRIVACY_POLICY.md) for the full data flow.
+Text not covered by the packaged dictionary or local cache is sent to Google Translate when translation is requested. Paragraphs that mix prose with links/buttons are translated structure-preserving through Google Translate's HTML mode. Page translation never invokes an AI model. The optional cloud Tutor uses Claude through the bundled Puter bridge only when you send a Tutor message; local and off Tutor modes are also available. See the [Privacy Policy](PRIVACY_POLICY.md) for the full data flow.
 
 ## Architecture & engineering decisions
 
@@ -320,7 +320,7 @@ These claims describe the unpublished candidate, not live legacy v1.0.1:
 - **Local learning state** — original/translated text is cached in IndexedDB;
   preferences, flashcard review state, bookmarks, recent lessons, and scroll
   positions use `chrome.storage.local`; progress summaries are calculated locally
-- **AI is opt-in** — the AI Tutor and background translation-quality check reach Claude/Gemini through the bundled Puter bridge, and run only after you sign in to Puter; no AI request is made otherwise
+- **AI is user-invoked** — page translation never calls an AI model; only a cloud Tutor message reaches Claude through Puter, while local and off Tutor modes remain available
 - **Open source** — every line of code is auditable right here
 
 See our full [Privacy Policy](PRIVACY_POLICY.md).

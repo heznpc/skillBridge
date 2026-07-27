@@ -30,10 +30,10 @@
 </head>
 <body>
   <h1>Privacy Policy</h1>
-  <p class="updated"><strong>Last updated:</strong> July 25, 2026</p>
+  <p class="updated"><strong>Last updated:</strong> July 27, 2026</p>
 
   <h2>Version Status — Read This First</h2>
-  <p>As of July 11, 2026, the Chrome Web Store still publishes <strong>SkillBridge v1.0.1</strong>. That legacy version includes a bundled Puter client used for Gemini translation review and the Claude-powered AI Tutor, and it declares YouTube host access.</p>
+  <p>As of July 27, 2026, the Chrome Web Store still publishes <strong>SkillBridge v1.0.1</strong>. That legacy version includes a bundled Puter client used for Gemini translation review and the Claude-powered AI Tutor, and it declares YouTube host access.</p>
   <p>A replacement candidate (<strong>v4.0.0</strong>) is being prepared, but <strong>publication is paused and that candidate is not yet available from the Chrome Web Store</strong>. The candidate keeps the AI Tutor and its bundled Puter bridge, removes YouTube host access, and adds an on-device tutor option:</p>
   <ul>
     <li><strong>AI Tutor (cloud, default)</strong> — tutor questions go through the bundled Puter client to Claude; the user signs in to Puter (free) when they first use it. Translation and the local study tools need no account.</li>
@@ -65,7 +65,7 @@
       <td><a href="https://puter.com/privacy">Puter Privacy Policy</a></td>
     </tr>
   </table>
-  <p>The main Puter SDK file in v1.0.1 is bundled inside the extension package, but that SDK also contains lazy remote JavaScript and WebAssembly import paths, including an unpkg-hosted polyfill and remote <code>rustls.js</code>/<code>rustls.wasm</code> assets. v1.0.1 therefore must not be described as a fully self-contained or no-remote-code package. When an AI feature is used, the client also connects to Puter services, which route the request to the selected AI model. The v4.0.0 candidate bundles the same Puter SDK and page bridge, so that description applies to it as well.</p>
+  <p>The main Puter SDK file in v1.0.1 is bundled inside the extension package, but that SDK also contains lazy remote JavaScript and WebAssembly import paths, including an unpkg-hosted polyfill and remote <code>rustls.js</code>/<code>rustls.wasm</code> assets. v1.0.1 therefore must not be described as a fully self-contained or no-remote-code package. When an AI feature is used, the client also connects to Puter services, which route the request to the selected AI model. The v4.0.0 build removes those unused TLS-socket imports from the packaged SDK and fails the build if executable remote-code patterns remain in the upload artifact.</p>
 
   <h3>YouTube Access in v1.0.1</h3>
   <p>v1.0.1 declares <code>https://*.youtube.com/*</code> host access. Its subtitle feature controls an existing embedded player with iframe <code>postMessage</code> commands. The package also contains an unused <code>FETCH_URL</code> background proxy; the v1.0.1 subtitle module does not call that proxy, but, if invoked internally for a YouTube URL, it can make a YouTube request and attach one fixed <code>Cookie</code> header containing technical <code>CONSENT</code> and <code>SOCS</code> values. The unpublished candidate removes both the host permission and that handler.</p>
@@ -100,13 +100,14 @@
 
   <h2>Next Chrome Web Store Candidate (Unpublished)</h2>
   <h3>CWS Package Boundary</h3>
-  <p>The candidate includes the AI Tutor (Claude Sonnet 4.6) and a background translation-quality check, both reaching Claude/Gemini through the bundled Puter bridge. These run <strong>only after you sign in to Puter</strong> (a free account, no API key, no SkillBridge account). Until you sign in, no AI request is made: page translation uses Google Translate and curated dictionaries, and the learning tools run locally. When signed in, tutor prompts — and page text sent for the quality check — are transmitted to Puter's AI services; see Puter's privacy policy. If the on-device engine is selected instead, tutor text goes only to the local server the user runs.</p>
+  <p>The candidate includes an AI Tutor using Claude Sonnet 4.6 through the bundled Puter bridge. It runs only when the user sends a Tutor message; the first cloud Tutor use opens a free Puter sign-in. Page translation never invokes Puter or an AI model: it uses curated dictionaries, the local cache, Google Translate, deterministic protected-term restoration, and structure-preserving HTML reconciliation. Selecting the local or off Tutor engine prevents Tutor messages from going to Puter.</p>
 
   <h3>Data Stored Locally by the Candidate</h3>
   <ul>
     <li><strong>Preferences and interface state (<code>chrome.storage.local</code>)</strong> — selected language, dark mode, auto-translate, onboarding state, and related display settings.</li>
     <li><strong>Learning-tool state (<code>chrome.storage.local</code>)</strong> — flashcard review state, bookmarks, recent lessons, and scroll positions.</li>
     <li><strong>Translation cache (IndexedDB)</strong> — original text, translated text, target language, and a timestamp are cached in <code>skillbridge-cache</code> for up to 30 days. This does not depend on the <code>storage</code> extension permission.</li>
+    <li><strong>AI Tutor chat history (IndexedDB)</strong> — your question, the tutor's answer, the language, the lesson heading, a timestamp, and the lesson URL are stored on your device so the sidebar can show past conversations. This never leaves your device except as the tutor request itself (to Puter, or to your own local server when the on-device engine is selected).</li>
     <li><strong>Progress summaries</strong> — calculated locally from stored course state; they are not separately persisted or transmitted.</li>
     <li><strong>Curated dictionaries</strong> — packaged with the extension.</li>
   </ul>
@@ -117,7 +118,7 @@
     <tr><th>Service</th><th>What is sent</th><th>Purpose</th><th>Privacy policy</th></tr>
     <tr>
       <td>Google Translate API</td>
-      <td>Visible course-page text selected for translation and the requested language</td>
+      <td>Course-page text selected for translation and the requested language. For paragraphs that mix text with links, inline code, or emphasis, the block's <strong>markup</strong> is sent so the structure survives translation — that markup includes the link targets (<code>href</code>) and image addresses (<code>src</code>) inside the block</td>
       <td>Translate text not already covered by the packaged dictionary or local cache</td>
       <td><a href="https://policies.google.com/privacy">Google Privacy Policy</a></td>
     </tr>
@@ -125,12 +126,6 @@
       <td>Puter-backed Claude</td>
       <td>The user's Tutor question, any text the user explicitly quotes into it, the requested response language, the course title, and up to five page headings</td>
       <td>Generate an AI Tutor response (cloud engine only; not used when the Tutor is set to local or off)</td>
-      <td><a href="https://puter.com/privacy">Puter Privacy Policy</a></td>
-    </tr>
-    <tr>
-      <td>Puter-backed Gemini</td>
-      <td>Visible course text, the requested language, and the initial Google translation</td>
-      <td>Review or improve complex translations (only while signed in to Puter)</td>
       <td><a href="https://puter.com/privacy">Puter Privacy Policy</a></td>
     </tr>
     <tr>
@@ -153,7 +148,7 @@
     <li>No name, email address, account credential, or payment information</li>
     <li>No browsing history outside the pages where the extension is configured to run</li>
     <li>No analytics, telemetry, advertising identifier, or marketing profile</li>
-    <li>No AI Tutor messages or conversation history are stored or collected by SkillBridge (tutor prompts are sent to Puter only while you are signed in, or to your own local server, and are not retained by SkillBridge)</li>
+    <li>No AI Tutor conversation is collected by SkillBridge or sent to its operator. Tutor chats are kept <strong>on your device</strong> (see “Data Stored Locally”) and are deleted when you clear extension or site data.</li>
   </ul>
 
   <h3>Candidate Permissions</h3>
@@ -181,15 +176,16 @@
   <ul>
     <li><strong>Translation cache:</strong> up to 30 days, unless the user clears it sooner.</li>
     <li><strong>Preferences and learning-tool state:</strong> retained locally until the user clears extension or site data.</li>
-    <li><strong>Third-party processing:</strong> Google and GitHub control their own service logs and retention under their respective policies.</li>
+    <li><strong>Tutor history:</strong> retained locally until the user clears extension or site data; older entries can be pruned if browser storage is exhausted.</li>
+    <li><strong>Third-party processing:</strong> Google, Puter, GitHub, and any local server selected by the user control their own logs and retention under their respective policies or configuration.</li>
   </ul>
 
   <h2>Raw Source and Developer Builds</h2>
-  <p>The public repository retains an optional Puter-based AI gateway for unpacked development and research. The raw source configuration enables that developer path, which can send translation text or user-requested Tutor context to Puter-backed Gemini or Claude services when those functions are used.</p>
-  <p>Loading the repository root as an unpacked extension is therefore <strong>not equivalent to the unpublished no-AI CWS candidate</strong>. Developers should review the source and <a href="https://puter.com/privacy">Puter's privacy policy</a> before using its optional AI functions.</p>
+  <p>Unpacked developer builds contain the same user-invoked Tutor gateway. Sending a cloud Tutor message transmits that request to Claude through Puter; page translation does not invoke Puter or an AI model.</p>
+  <p>The raw vendored Puter source still contains SDK features that the CWS build removes during packaging, so the repository root or developer ZIP must not be substituted for the scanned CWS artifact.</p>
 
   <h2>International Users and Children's Privacy</h2>
-  <p>SkillBridge does not operate a user database. Google and, in v1.0.1 or raw developer builds, Puter and the selected AI provider may process transmitted text in jurisdictions outside the user's country. Users should review the applicable third-party policies for rights and controls.</p>
+  <p>SkillBridge does not operate a user database. Google and, when the cloud Tutor is used, Puter and the selected AI provider may process transmitted text in jurisdictions outside the user's country. Users should review the applicable third-party policies for rights and controls.</p>
   <p>SkillBridge does not knowingly collect personal information from children under 13.</p>
 
   <h2>Release-Maintenance Note</h2>

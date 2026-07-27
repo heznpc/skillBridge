@@ -213,35 +213,12 @@ function verifyArtifacts() {
   console.log('\n==> Verify generated release artifacts');
   verifyStoreDescriptionSync();
 
-  const retiredTutorScreenshot = path.join(ROOT, 'store-assets', '03-sidebar-tutor.png');
-  if (fs.existsSync(retiredTutorScreenshot)) {
-    throw new Error(
-      'Retired AI-Tutor screenshot is still present: store-assets/03-sidebar-tutor.png. ' +
-        'Run npm run capture:store before preparing the CWS upload.',
-    );
-  }
-  for (const generatedTextAsset of [
-    'store-assets/captions.json',
-    'store-assets/storyboard.json',
-    'store-assets/shotkit-manifest.json',
-  ]) {
-    const absolute = path.join(ROOT, generatedTextAsset);
-    if (!fs.existsSync(absolute)) continue;
-    const source = fs.readFileSync(absolute, 'utf8');
-    if (/AI tutor|Puter|Gemini|Claude-powered/i.test(source)) {
-      throw new Error(
-        `Retired AI feature copy remains in generated store media metadata: ${generatedTextAsset}. ` +
-          'Run npm run capture:store before preparing the CWS upload.',
-      );
-    }
-  }
-
   for (const file of [
     'store-assets/description.md',
     'store-assets/promo-tile-440x280.png',
     'store-assets/01-translate.png',
     'store-assets/02-language-select.png',
-    'store-assets/03-learning-dashboard.png',
+    'store-assets/03-sidebar-tutor.png',
     'store-assets/04-flashcards.png',
     'store-assets/05-exam-safe.png',
     'store-assets/skillbridge-bundled.zip',
@@ -273,12 +250,7 @@ function smoke() {
   run(
     'First-user and action-popup smoke E2E',
     NPX,
-    [
-      'playwright',
-      'test',
-      'tests/e2e/first-user-flow.spec.js',
-      'tests/e2e/popup.spec.js',
-    ],
+    ['playwright', 'test', 'tests/e2e/first-user-flow.spec.js', 'tests/e2e/popup.spec.js'],
     { timeoutMs: 180_000 },
   );
 }

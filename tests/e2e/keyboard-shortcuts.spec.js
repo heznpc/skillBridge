@@ -140,10 +140,11 @@ test.describe('SkillBridge — keyboard shortcuts', () => {
     }
     const beforeSlash = await sidebarInputState();
     expect(beforeSlash.chatInput, 'AI sidebar exposes a chat input').toBe(true);
-    const consumed = await page.evaluate(() =>
-      !document.body.dispatchEvent(
-        new window.KeyboardEvent('keydown', { key: '/', code: 'Slash', bubbles: true, cancelable: true }),
-      ),
+    const consumed = await page.evaluate(
+      () =>
+        !document.body.dispatchEvent(
+          new window.KeyboardEvent('keydown', { key: '/', code: 'Slash', bubbles: true, cancelable: true }),
+        ),
     );
     expect(consumed, '/ should focus the tutor chat input and consume the key').toBe(true);
     const afterSlash = await sidebarInputState();

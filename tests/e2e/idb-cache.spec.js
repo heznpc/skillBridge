@@ -11,7 +11,7 @@
  *   CWS translator.translate(text, lang)
  *     → cachedLookup miss
  *     → googleTranslate fires (source: 'google')
- *     → no-AI fallback writes the GT result directly to IDB
+ *     → writes the GT result directly to IDB
  *
  *   later — same (text, lang):
  *     → cachedLookup HIT
@@ -69,19 +69,16 @@ test.describe('SkillBridge — CWS direct-GT IDB cache', () => {
   });
 
   test('first translate hits GT; second hits cache; different lang misses cache', async () => {
-    // Keep the established fixture string so the GT stub returns a stable
-    // translation. Unlike the old Puter path, CWS caches the GT result without
-    // waiting for a Gemini verification queue.
-    const TEXT = 'Cache me through the IDB layer; this sentence is long enough to clear the GEMINI_MIN_TEXT threshold.';
-    const KO = 'IDB 레이어를 통해 캐시하세요; 이 문장은 GEMINI_MIN_TEXT 임계값을 통과할 만큼 깁니다.';
+    const TEXT = 'Cache this course sentence through the IndexedDB translation layer.';
+    const KO = 'IndexedDB 번역 레이어를 통해 이 강의 문장을 캐시하세요.';
 
     // === Cycle 1: cold miss → GT ===
     const cold = await evalInContentWorld(extCtx.context, 'translateOnce', { text: TEXT, lang: 'ko' });
     expect(cold.text).toBe(KO);
     expect(cold.source).toBe('google');
 
-    // The no-AI fallback starts the IDB write asynchronously. Poll the next
-    // translate() until that transaction commits and the cache is observed.
+    // Poll translate() until the IndexedDB transaction commits and the cache
+    // is observed.
     const deadline = Date.now() + 6_000;
     let warm = cold;
     while (Date.now() < deadline) {

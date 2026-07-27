@@ -1,17 +1,18 @@
 /**
- * SkillBridge — Gemini Block Translation
- * Handles elements with mixed inline tags (<strong>, <a>, <code>, etc.)
- * by converting to XML placeholders, sending to Gemini for translation,
- * then restoring the HTML structure with sanitization.
+ * SkillBridge — Inline HTML helpers
+ * Detects mixed inline content and exposes the canonical HTML escaping helper
+ * used by the content UI.
+ *
+ * The legacy filename and global name are retained to avoid a migration-only
+ * manifest change. No AI request or model-specific translation runs here.
  *
  * Standalone module — loaded BEFORE content.js.
- * Exposes: window._geminiBlock = { hasInlineTags, queueGeminiBlockTranslation, ... }
+ * Exposes: window._geminiBlock = { hasInlineTags, escapeHtml }
  */
 
 (function () {
   'use strict';
 
-  // Inline tags that indicate mixed content needing Gemini block translation
   const INLINE_TAGS = new Set([
     'STRONG',
     'B',
@@ -28,31 +29,9 @@
     'U',
     'S',
   ]);
-  const NO_TRANSLATE_TAGS = new Set(['CODE', 'PRE', 'KBD', 'SAMP', 'VAR']);
-
-  // Tags allowed in Gemini block translation output — derived from existing sets + <br>
-  const SAFE_TAGS = new Set([...INLINE_TAGS, ...NO_TRANSLATE_TAGS, 'BR'].map((tag) => tag.toLowerCase()));
-
-  // Per-tag attribute allowlist for the sanitizer. Hoisted to module scope
-  // so we don't rebuild 9 Sets every xmlToHtml call. WHY allowlist instead
-  // of the older blocklist: open-by-default left target="_blank" (reverse
-  // tabnabbing), formaction, srcset, srcdoc, is="x-element" through.
-  const TAG_ATTR_ALLOWLIST = {
-    a: new Set(['href', 'title', 'lang', 'target']),
-    abbr: new Set(['title', 'lang']),
-    time: new Set(['datetime', 'lang']),
-    code: new Set(['class', 'lang']),
-    pre: new Set(['class', 'lang']),
-    samp: new Set(['lang']),
-    kbd: new Set(['lang']),
-    var: new Set(['lang']),
-    mark: new Set(['lang']),
-    span: new Set(['class', 'lang', 'title']),
-  };
-  const DEFAULT_ALLOWED_ATTRS = new Set(['lang', 'title']);
 
   /**
-   * Check whether an element contains a mix of text nodes and inline element children.
+   * Check whether an element contains a mix of text nodes and inline children.
    * @param {Element} el
    * @returns {boolean}
    */
@@ -68,58 +47,11 @@
   }
 
   /**
-   * Convert an element's children to XML with placeholder tags for Gemini.
-   * @param {Element} el
-   * @returns {{ xml: string, tagInfo: object }}
-   */
-  function buildXmlForGemini(el) {
-    const tagInfo = {};
-    let xCounter = 0;
-    let cCounter = 0;
-    let xml = '';
-
-    for (const node of el.childNodes) {
-      if (node.nodeType === Node.TEXT_NODE) {
-        xml += node.textContent;
-      } else if (node.nodeType === Node.ELEMENT_NODE && INLINE_TAGS.has(node.tagName)) {
-        if (NO_TRANSLATE_TAGS.has(node.tagName)) {
-          const id = `c${++cCounter}`;
-          tagInfo[id] = { tag: node.tagName.toLowerCase(), original: node.outerHTML };
-          xml += `<${id}/>`;
-        } else {
-          const id = `x${++xCounter}`;
-          tagInfo[id] = { tag: node.tagName.toLowerCase(), attrs: getAttrsString(node) };
-          xml += `<${id}>${node.textContent}</${id}>`;
-        }
-      } else if (node.nodeType === Node.ELEMENT_NODE) {
-        xml += node.outerHTML;
-      }
-    }
-    return { xml: xml.trim(), tagInfo };
-  }
-
-  /**
-   * Serialize an element's attributes to a string for later restoration.
-   * @param {Element} el
-   * @returns {string}
-   */
-  function getAttrsString(el) {
-    const attrs = [];
-    for (const attr of el.attributes) {
-      attrs.push(`${attr.name}="${escapeHtml(attr.value)}"`);
-    }
-    return attrs.length ? ' ' + attrs.join(' ') : '';
-  }
-
-  /**
    * Escape HTML special characters.
    * @param {string} text
    * @returns {string}
    */
   function escapeHtml(text) {
-    // Coerce non-strings (null/undefined/numbers from out-of-tree callers
-    // like flashcard / chapter title fields). The previous version threw
-    // TypeError on `null.replace`.
     return String(text ?? '')
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
@@ -128,194 +60,5 @@
       .replace(/'/g, '&#39;');
   }
 
-  /**
-   * Convert Gemini's translated XML back to safe HTML.
-   * @param {string} translatedXml
-   * @param {object} tagInfo — from buildXmlForGemini
-   * @returns {string}
-   */
-  function xmlToHtml(translatedXml, tagInfo) {
-    // Step 1: Restore placeholder tags to real HTML using tagInfo
-    let rawHtml = translatedXml;
-    for (const [id, info] of Object.entries(tagInfo)) {
-      if (id.startsWith('c')) {
-        rawHtml = rawHtml.replace(new RegExp(`<${id}\\s*/>`, 'g'), info.original);
-      } else {
-        rawHtml = rawHtml.replace(new RegExp(`<${id}>([\\s\\S]*?)</${id}>`, 'g'), (_, content) => {
-          return `<${info.tag}${info.attrs}>${content}</${info.tag}>`;
-        });
-      }
-    }
-    // Clean up unmatched placeholder tags
-    rawHtml = rawHtml.replace(/<[xc]\d+\s*\/?>/g, '');
-    rawHtml = rawHtml.replace(/<\/[xc]\d+>/g, '');
-
-    // Step 2: DOM-based sanitization — parse and walk the tree,
-    // keeping only SAFE_TAGS and stripping dangerous attributes
-    const doc = new DOMParser().parseFromString(rawHtml, 'text/html');
-
-    function sanitizeNode(node) {
-      const fragment = document.createDocumentFragment();
-      for (const child of Array.from(node.childNodes)) {
-        if (child.nodeType === Node.TEXT_NODE) {
-          fragment.appendChild(document.createTextNode(child.textContent));
-        } else if (child.nodeType === Node.ELEMENT_NODE) {
-          if (SAFE_TAGS.has(child.tagName.toLowerCase())) {
-            const tagName = child.tagName.toLowerCase();
-            const clean = document.createElement(tagName);
-            const allowed = TAG_ATTR_ALLOWLIST[tagName] || DEFAULT_ALLOWED_ATTRS;
-            for (const attr of Array.from(child.attributes)) {
-              const name = attr.name.toLowerCase();
-              if (!allowed.has(name)) continue;
-              if (name === 'href') {
-                // Parse against the document base so we can judge the resolved
-                // protocol. Pure-fragment hrefs ("#section") stay as-is.
-                const raw = attr.value.trim().replace(/[\x00-\x1f]/g, '');
-                if (raw.startsWith('#')) {
-                  clean.setAttribute('href', raw);
-                  continue;
-                }
-                let parsed;
-                try {
-                  parsed = new URL(raw, document.baseURI);
-                } catch {
-                  continue;
-                }
-                if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') continue;
-                clean.setAttribute('href', parsed.href);
-                continue;
-              }
-              clean.setAttribute(attr.name, attr.value);
-            }
-            // Force noopener/noreferrer on `target="_blank"` to prevent
-            // reverse tabnabbing if Gemini ever injects an external link.
-            if (tagName === 'a' && clean.getAttribute('target') === '_blank') {
-              clean.setAttribute('rel', 'noopener noreferrer');
-            }
-            clean.appendChild(sanitizeNode(child));
-            fragment.appendChild(clean);
-          } else {
-            // Unsafe tag — keep its text children but drop the element
-            fragment.appendChild(sanitizeNode(child));
-          }
-        }
-      }
-      return fragment;
-    }
-
-    const sanitized = sanitizeNode(doc.body);
-    const wrapper = document.createElement('div');
-    wrapper.appendChild(sanitized);
-    return wrapper.innerHTML;
-  }
-
-  /**
-   * Queue a Gemini block translation for an element with mixed inline tags.
-   * Builds XML placeholders, sends to Gemini, then restores safe HTML.
-   * @param {Element} el — DOM element containing mixed text + inline children
-   * @param {string} targetLang — ISO 639-1
-   * @param {{translator: SkilljarTranslator, originalTexts: Map<Element, string>, isLikelyEnglish: (text: string) => boolean}} deps
-   * @returns {void}
-   */
-  function queueGeminiBlockTranslation(el, targetLang, deps) {
-    // Dedup: in-flight elements would otherwise race two innerHTML writes
-    // with mismatched tagInfo on rapid SPA-nav re-fires.
-    if (el.classList.contains('si18n-verifying')) return;
-
-    const { translator, originalTexts, isLikelyEnglish, generation, getGeneration, getCurrentLang } = deps;
-    const { xml, tagInfo } = buildXmlForGemini(el);
-    const pureText = el.textContent.trim();
-
-    if (!pureText || pureText.length < 10) return;
-    if (!isLikelyEnglish(pureText)) return;
-
-    if (!originalTexts.has(el)) originalTexts.set(el, el.innerHTML);
-
-    const langName = translator.supportedLanguages[targetLang] || targetLang;
-    const keepEnglish = window._protectedTerms.getKeepEnglishTerms();
-
-    const prompt = `You are translating technical education content (Anthropic AI courses) to ${langName}.
-
-SOURCE (XML-tagged English):
-${xml}
-
-RULES:
-- Translate to natural, fluent ${langName}
-- PRESERVE all XML tags exactly: <x1>...</x1>, <x2>...</x2>, <c1/>, <c2/> etc.
-- You may REORDER tags to match ${langName} grammar (e.g., SOV word order for Korean/Japanese)
-- Translate the TEXT INSIDE <xN>...</xN> tags
-- NEVER modify <cN/> tags (they are code identifiers — keep exactly as-is)
-- Keep these terms in English (DO NOT translate): ${keepEnglish}
-- Output ONLY the translated text with tags. No explanations.`;
-
-    translator
-      ._sendRequest({
-        type: 'VERIFY_REQUEST',
-        systemPrompt: prompt,
-        model: SKILLBRIDGE_MODELS.GEMINI,
-      })
-      .then((result) => {
-        try {
-          // Empty/absent result — model returned nothing, OR (since the
-          // background AI auth gate) the signed-out skip replies result:''. Bail
-          // and leave the block in its source form; the finally clears the dim.
-          if (!result) return;
-          const trimmed = result.trim();
-          // Run the sanity/refusal guards on the RAW model output. Protected-term
-          // restoration (below) can GROW the text (a CJK transliteration → English,
-          // e.g. "클로드" → "Claude"), so restoring before this length guard could
-          // wrongly discard a valid reply.
-          if (trimmed.length > xml.length * 3) return;
-          if (trimmed.includes('SOURCE') || trimmed.includes('RULES:')) return;
-          // Refusal guard: if the source had placeholders, the reply must too —
-          // catches "I cannot translate this" responses that the substring
-          // checks above miss.
-          const hadTags = Object.keys(tagInfo).length > 0;
-          if (hadTags && !/<[xc]\d/.test(trimmed)) return;
-          // Bail if the element was detached while we awaited the model — otherwise
-          // we'd cache el.textContent (the untranslated original) as the translation.
-          if (!el?.parentNode) return;
-          const staleGeneration = generation !== undefined && getGeneration?.() !== generation;
-          const staleLanguage = typeof getCurrentLang === 'function' && getCurrentLang() !== targetLang;
-          if (staleGeneration || staleLanguage) return;
-
-          // Restore protected brand/API terms only after the guards pass, then write.
-          const restored = window._protectedTerms.restoreProtectedTerms(trimmed);
-          try {
-            el.innerHTML = xmlToHtml(restored, tagInfo);
-          } catch (sanitizeErr) {
-            console.warn('[SkillBridge] Gemini block sanitization failed:', sanitizeErr.message);
-            // Restore original HTML on failure
-            const orig = originalTexts.get(el);
-            if (orig) el.innerHTML = orig;
-          }
-          translator._cacheTranslation(pureText, el.textContent.trim(), targetLang);
-        } finally {
-          // ALWAYS clear the in-progress dim, whichever guard bailed (empty/skipped
-          // result, length/refusal guards, stale generation, or success). Several
-          // bails used to `return` without this, and the signed-out auth-skip now
-          // hits the empty-result bail every time — leaving the block dimmed
-          // (content CSS si18n-verifying, opacity .85) permanently.
-          if (el?.parentNode) el.classList.remove('si18n-verifying');
-        }
-      })
-      .catch((err) => {
-        console.warn('[SkillBridge] Gemini block translation failed:', err.message);
-        if (el?.parentNode) el.classList.remove('si18n-verifying');
-      });
-
-    el.classList.add('si18n-verifying');
-  }
-
-  // Expose as standalone global (loaded before content.js).
-  // `_xmlToHtml` is a test-only handle so the sanitizer (the security-
-  // critical piece — strips on* handlers, javascript:/data: URLs, enforces
-  // per-tag attribute allowlist, forces rel=noopener on target=_blank) can
-  // be unit-tested without spinning up the full Gemini request pipeline.
-  window._geminiBlock = {
-    hasInlineTags,
-    queueGeminiBlockTranslation,
-    escapeHtml,
-    _xmlToHtml: xmlToHtml,
-  };
+  window._geminiBlock = { hasInlineTags, escapeHtml };
 })();

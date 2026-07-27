@@ -100,7 +100,6 @@ async function evalInContentWorld(context, op, arg) {
                         queueForGoogleTranslate: typeof sb._gt.queueForGoogleTranslate,
                         reset: typeof sb._gt.reset,
                         pruneDetachedEntries: typeof sb._gt.pruneDetachedEntries,
-                        removeVerifySpinner: typeof sb._gt.removeVerifySpinner,
                         processOneElement: typeof sb._gt.processOneElement,
                         flushOfflinePending: typeof sb._gt.flushOfflinePending,
                       },
@@ -294,13 +293,11 @@ async function evalInContentWorld(context, op, arg) {
                   }
                   return true;
                 },
-                // Remove transient clutter right before a screenshot: the per-lesson
-                // term-preview popover and any in-flight GT verify spinners ("•••").
+                // Remove transient clutter right before a screenshot.
                 cleanForCapture: () => {
                   document.getElementById('si18n-term-preview')?.remove();
                   document.getElementById('si18n-progress-bar')?.remove();
                   document.getElementById('si18n-progress-toast')?.remove();
-                  document.querySelectorAll('.si18n-verify-spinner').forEach((el) => el.remove());
                   return true;
                 },
                 toggleDashboardPanel: () => {
@@ -419,16 +416,13 @@ async function evalInContentWorld(context, op, arg) {
                   };
                 },
                 // Diagnostic: probe translator IDB cache state directly.
-                // Returns the count of entries + the verifyQueue length +
-                // whether _db is open. Used by idb-cache.spec.js to verify
-                // the cache write path is actually running, not just trust
-                // the translator.translate() return value.
+                // Returns the entry count and whether _db is open. Used by
+                // idb-cache.spec.js to verify the cache write path directly.
                 cacheState: async () => {
                   const t = window._sb?.translator;
                   if (!t) return { error: 'translator missing' };
                   const dbOpen = !!t._db;
-                  const verifyLen = (t._verifyQueue && t._verifyQueue.length) || 0;
-                  if (!dbOpen) return { dbOpen, verifyLen, count: null };
+                  if (!dbOpen) return { dbOpen, count: null };
                   const count = await new Promise((resolve) => {
                     try {
                       const tx = t._db.transaction('translations', 'readonly');
@@ -439,7 +433,7 @@ async function evalInContentWorld(context, op, arg) {
                       resolve(-2);
                     }
                   });
-                  return { dbOpen, verifyLen, count, isReady: t.isReady, gen: t._langGeneration };
+                  return { dbOpen, count, isReady: t.isReady };
                 },
                 // Seed a deliberately un-restored protected-term translation into
                 // the translator cache. Used by protected-terms.spec.js to prove a

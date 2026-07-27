@@ -1,9 +1,9 @@
 /**
  * SkillBridge runtime build configuration.
  *
- * Source/raw builds keep the optional AI gateway. The CWS builder replaces
- * this file in dist and also pins the same flag at the start of content.bundle
- * so the upload artifact cannot load the Puter/page-world bridge.
+ * Source/raw builds and the CWS bundle keep the user-invoked AI Tutor gateway.
+ * The CWS builder replaces this file in dist and pins the same non-writable
+ * value at the start of content.bundle so runtime code cannot override it.
  */
 (function (root) {
   'use strict';

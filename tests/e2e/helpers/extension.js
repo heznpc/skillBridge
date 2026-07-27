@@ -127,10 +127,9 @@ function patchExtensionDir(extDir) {
   }
   fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
 
-  // Raw/developer artifacts can contain `src/bridge/puter.js`, which must be
-  // patched in-place because page-bridge loads it from a chrome-extension URL.
-  // The CWS bundle intentionally omits the file, so this branch is a no-op for
-  // the current default E2E artifact.
+  // Replace the bundled Puter client with a deterministic local stub. The
+  // production-shaped page bridge still loads this exact extension URL, so the
+  // Tutor message/streaming path remains end-to-end without a real sign-in.
   const puterStubPath = path.join(extDir, 'src', 'bridge', 'puter.js');
   if (fs.existsSync(puterStubPath)) {
     fs.writeFileSync(puterStubPath, PUTER_STREAM_STUB);

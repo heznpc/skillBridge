@@ -3,7 +3,7 @@
  *
  * Pure (DOM-free for the markdown half) functions used by the sidebar chat,
  * conversation-history detail view, and any other surface that needs to
- * convert Gemini's markdown into safe HTML.
+ * convert Tutor markdown into safe HTML.
  *
  * Loaded after content.js (which constructs `_sb`) and before
  * sidebar-chat.js / chat-history.js — both consume these via `sb._chat`.
@@ -24,7 +24,7 @@
   }
 
   /**
-   * Convert Gemini-style markdown into HTML.
+   * Convert Tutor markdown into HTML.
    * Input is fully HTML-escaped first so any markdown captured groups can
    * be inserted without re-escaping (see {@link applyInline}).
    * @param {string} text

@@ -19,9 +19,8 @@ const npxCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 const workers = process.env.E2E_WORKERS || '1';
 const tempPrefix = 'skillbridge-e2e-';
 const tempExtPrefix = 'skillbridge-e2e-ext-';
-// This runner validates the CWS artifact. Tutor/chat-history/stream specs stay
-// in the repository for the non-published developer edition, but cannot be
-// part of a release gate whose bundle deliberately excludes the AI bridge.
+// This runner validates every CWS runtime surface, including the bundled Tutor,
+// local-engine permission flow, streaming cancellation, and chat history.
 const batches = [
   [
     'tests/e2e/a11y.spec.js',
@@ -42,6 +41,13 @@ const batches = [
     'tests/e2e/protected-terms.spec.js',
   ],
   ['tests/e2e/rapid-switch.spec.js', 'tests/e2e/spa-navigation.spec.js'],
+  [
+    'tests/e2e/chat-history.spec.js',
+    'tests/e2e/stream-cancel.spec.js',
+    'tests/e2e/tutor-chat.spec.js',
+    'tests/e2e/tutor-offline.spec.js',
+  ],
+  ['tests/e2e/local-engine-live.spec.js'],
   ['tests/e2e/youtube-lifecycle.spec.js'],
 ];
 

@@ -108,12 +108,9 @@ const GT_KO = {
   'This is a Claude prompt example': '클로드 프롬프트 예시',
   // Cache E2E (tests/e2e/idb-cache.spec.js). The string is deliberately
   // NOT in any static dictionary so the first lookup misses → GT call;
-  // the second lookup must hit the IDB cache the verify queue wrote.
-  // Length ≥ 80 chars + at least one period/comma/colon is required —
-  // queueGeminiVerify skips shorter / simpler text (GEMINI_MIN_TEXT=80,
-  // MIN_COMPLEX_TEXT=120). The verify queue is what writes the cache.
-  'Cache me through the IDB layer; this sentence is long enough to clear the GEMINI_MIN_TEXT threshold.':
-    'IDB 레이어를 통해 캐시하세요; 이 문장은 GEMINI_MIN_TEXT 임계값을 통과할 만큼 깁니다.',
+  // the second lookup must hit the IDB cache written directly by translate().
+  'Cache this course sentence through the IndexedDB translation layer.':
+    'IndexedDB 번역 레이어를 통해 이 강의 문장을 캐시하세요.',
   // Lazy translation E2E (tests/e2e/lazy-translate.spec.js). Distinctive
   // strings so we can detect by Hangul presence whether the lazy path
   // queued this paragraph or not.
@@ -198,9 +195,7 @@ async function registerStubs(context) {
     (function () {
       const STREAM_CHUNKS = ['안녕하세요! ', '프롬프트는 Claude에게 ', '주는 입력입니다.'];
       window.puter = {
-        // The page bridge gates background verify/translate on auth state to avoid
-        // tripping Puter's sign-in prompt for signed-out users; the e2e suite models
-        // a signed-in user so those paths run and stay under test.
+        // Model a signed-in Tutor session without a real Puter account.
         authToken: 'e2e-stub-token',
         ai: {
           chat: async function (prompt, opts) {

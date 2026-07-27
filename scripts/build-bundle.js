@@ -1,6 +1,7 @@
 const esbuild = require('esbuild');
 const fs = require('fs');
 const path = require('path');
+const { assertNoRemoteHostedCode } = require('./check-rhc');
 
 const ROOT = path.resolve(__dirname, '..');
 const DIST = path.join(ROOT, 'dist', 'bundled');
@@ -87,7 +88,7 @@ async function build() {
   // AI tutor bridge (v4): the page-world loader + vendored Puter SDK ship as
   // web-accessible resources so the tutor works in the CWS build.
   fs.copyFileSync(path.join(ROOT, 'src/lib/page-bridge.js'), path.join(DIST, 'src/lib/page-bridge.js'));
-  fs.copyFileSync(path.join(ROOT, 'src/bridge/puter.js'), path.join(DIST, 'src/bridge/puter.js'));
+  writeCwsSafePuter(path.join(ROOT, 'src/bridge/puter.js'), path.join(DIST, 'src/bridge/puter.js'));
   fs.copyFileSync(
     path.join(ROOT, 'src/shared/runtime-constants.js'),
     path.join(DIST, 'src/shared/runtime-constants.js'),
@@ -138,7 +139,57 @@ async function build() {
   const bgBundleSize = fs.statSync(path.join(DIST, 'background.bundle.js')).size;
   console.log(`Background: ${(bgOrigSize / 1024).toFixed(1)} KB → ${(bgBundleSize / 1024).toFixed(1)} KB`);
 
+  // Last gate before the artifact is considered ready.
+  assertNoRemoteHostedCode(DIST);
+  console.log('Remote-hosted-code check: clean');
+
   console.log(`\nBundled extension ready at: ${DIST}`);
+}
+
+// The bundled Puter SDK reaches for THREE remotely-hosted modules — an
+// unpkg-hosted web-streams polyfill, and `rustls.js` + `rustls.wasm` from
+// puter-net.b-cdn.net — inside one place: the TLS-socket class's "open"
+// handler (`puter.net` sockets). SkillBridge only ever calls `puter.ai.chat`,
+// so that class is dead code here, but shipping the URLs makes the CWS
+// artifact contain remotely-hosted code, which Chrome's MV3 policy forbids
+// regardless of whether the path executes.
+//
+// Neutralize it in the shipped artifact: the dynamic imports become a throw,
+// so no remote fetch is reachable and no CDN URL survives in the package. If
+// a future SDK build changes this expression the pattern stops matching and
+// the build FAILS rather than silently shipping remote-code URLs again.
+const PUTER_REMOTE_IMPORT_EXPR =
+  'en||(globalThis.ReadableByteStreamController||await import("https://unpkg.com/web-streams-polyfill@3.0.2/dist/polyfill.js"),' +
+  'en=await import("https://puter-net.b-cdn.net/rustls.js"),' +
+  'await en.default("https://puter-net.b-cdn.net/rustls.wasm"))';
+const PUTER_REMOTE_IMPORT_REPLACEMENT =
+  'en||(()=>{throw new Error("SkillBridge: Puter TLS sockets are not bundled")})()';
+const PUTER_GLOBAL_FUNCTION_FALLBACK =
+  'const ve="undefined"!=typeof self?self:"undefined"!=typeof window?window:Function("return this")();';
+const PUTER_GLOBAL_FUNCTION_REPLACEMENT =
+  'const ve="undefined"!=typeof self?self:"undefined"!=typeof window?window:globalThis;';
+
+function writeCwsSafePuter(srcPath, destPath) {
+  const src = fs.readFileSync(srcPath, 'utf8');
+  if (!src.includes(PUTER_REMOTE_IMPORT_EXPR)) {
+    throw new Error(
+      'Puter SDK remote-import pattern not found — the vendored SDK changed. ' +
+        'Re-derive PUTER_REMOTE_IMPORT_EXPR in scripts/build-bundle.js before shipping, ' +
+        'or the artifact may ship remotely-hosted code.',
+    );
+  }
+  if (!src.includes(PUTER_GLOBAL_FUNCTION_FALLBACK)) {
+    throw new Error(
+      'Puter SDK Function-constructor fallback not found — the vendored SDK changed. ' +
+        'Re-audit its global-scope fallback before shipping.',
+    );
+  }
+  const sanitized = src
+    .split(PUTER_REMOTE_IMPORT_EXPR)
+    .join(PUTER_REMOTE_IMPORT_REPLACEMENT)
+    .split(PUTER_GLOBAL_FUNCTION_FALLBACK)
+    .join(PUTER_GLOBAL_FUNCTION_REPLACEMENT);
+  fs.writeFileSync(destPath, sanitized);
 }
 
 function copyDir(src, dest) {

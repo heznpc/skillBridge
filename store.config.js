@@ -6,7 +6,8 @@
  * video → description. This file owns the SkillBridge-specific parts:
  *
  *   - prepareExtension: reuse the E2E helper's makePatchedExtension(), which
- *     copies the no-AI dist/bundled artifact and widens its manifest to localhost.
+ *     copies the CWS-shaped dist/bundled artifact, widens its manifest to
+ *     localhost, and replaces Puter with a deterministic streaming stub.
  *   - setup(): reuse the E2E network stubs, serve the styled
  *     store fixtures, and translate via a FROZEN offline map so captures are
  *     reproducible. --live-gt hits real Google Translate; --freeze re-records
@@ -47,6 +48,28 @@ const QUIZ_URL = '/quiz';
 const DISCLAIMER = 'Unofficial · independent project · not affiliated with or endorsed by Anthropic';
 const KO = 'ko';
 
+/** Poll until the bundled Tutor bridge is ready for the deterministic stub. */
+async function waitBridge(context, page) {
+  const deadline = Date.now() + 10_000;
+  while (Date.now() < deadline) {
+    const bridge = await evalInContentWorld(context, 'bridgeReady');
+    if (bridge?.isReady) return;
+    await page.waitForTimeout(250);
+  }
+  throw new Error('Tutor bridge did not become ready for store capture');
+}
+
+/** Wait until all deterministic Tutor response chunks have rendered. */
+async function waitTutorReply(context, page) {
+  const deadline = Date.now() + 10_000;
+  while (Date.now() < deadline) {
+    const messages = await evalInContentWorld(context, 'readChatLog');
+    if (messages?.some((message) => message.role === 'bot' && message.text?.includes('입력입니다'))) return;
+    await page.waitForTimeout(150);
+  }
+  throw new Error('Tutor reply did not finish rendering for store capture');
+}
+
 /** Poll until the content script has fully initialized (exam detection, translator). */
 async function waitInit(context, page) {
   const deadline = Date.now() + 15_000;
@@ -77,12 +100,7 @@ module.exports = {
   prepareExtension: () => makePatchedExtension(),
 
   async setup({ context, flags }) {
-    // Remove the retired AI-Tutor scene only when an explicit capture run is
-    // regenerating store assets. Keeping it beside the new dashboard image is
-    // an easy way to upload a screenshot for a feature the CWS build omits.
-    fs.rmSync(path.join(__dirname, 'store-assets', '03-sidebar-tutor.png'), { force: true });
-
-    // Shared E2E network stubs; this CWS bundle has no executable Puter path.
+    // Shared E2E network stubs; makePatchedExtension supplies the Tutor SDK stub.
     await registerStubs(context);
 
     // Google Translate: deterministic frozen map by default.
@@ -169,15 +187,16 @@ module.exports = {
       },
     },
     {
-      name: '03-learning-dashboard',
-      caption: 'Track course progress with local learning tools',
+      name: '03-sidebar-tutor',
+      caption: 'Ask about the lesson without leaving the page',
       async run({ page, context, baseUrl }) {
         await openTranslatedLesson(page, context, baseUrl);
         await evalInContentWorld(context, 'injectSidebar');
         await evalInContentWorld(context, 'toggleSidebar');
-        await evalInContentWorld(context, 'toggleDashboardPanel');
-        await page.waitForSelector('.si18n-dash-stat', { timeout: 8_000 });
-        await page.waitForTimeout(700);
+        await waitBridge(context, page);
+        await evalInContentWorld(context, 'sendChat', '프롬프트가 무엇인가요?');
+        await waitTutorReply(context, page);
+        await page.waitForTimeout(300);
         await evalInContentWorld(context, 'cleanForCapture');
         await page.waitForTimeout(150);
       },
@@ -268,10 +287,10 @@ module.exports = {
       await page.waitForTimeout(1400);
       await evalInContentWorld(context, 'injectSidebar');
       await evalInContentWorld(context, 'toggleSidebar');
-      await evalInContentWorld(context, 'toggleDashboardPanel');
-      await page.waitForSelector('.si18n-dash-stat', { timeout: 8_000 }).catch(() => {});
+      await waitBridge(context, page);
+      await evalInContentWorld(context, 'sendChat', '프롬프트가 무엇인가요?');
+      await waitTutorReply(context, page);
       await page.waitForTimeout(1400);
-      await evalInContentWorld(context, 'closeSubPanel');
       await evalInContentWorld(context, 'toggleFlashcardPanel');
       await page.waitForTimeout(1800);
     },

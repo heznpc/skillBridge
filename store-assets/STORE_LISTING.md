@@ -81,7 +81,7 @@ SkillBridge does not operate a translation server. Page text that is not already
 
 🔒 CWS PRIVACY AND PACKAGE BOUNDARY
 
-Page translation (Google Translate + curated dictionaries) and the local learning tools work with no account. The optional AI Tutor (Claude Sonnet 4.6) and the background translation-quality check reach Claude/Gemini through the bundled Puter bridge, and run only after you sign in to Puter — a free account, no API key, nothing shared with SkillBridge. The extension does not request YouTube host access and uses no analytics, tracking, advertising, SkillBridge account, email, password, or user API key.
+Page translation (Google Translate + curated dictionaries) and the local learning tools work with no account. Translation never calls an AI model. The optional cloud AI Tutor reaches Claude through the bundled Puter bridge only when you send a Tutor message; its first use opens a free Puter sign-in. A user-run local engine and an off mode are also available. The extension does not request YouTube host access and uses no analytics, tracking, advertising, SkillBridge account, email, password, or user API key.
 
 Third-party requests made by the CWS edition:
 
@@ -90,7 +90,7 @@ Third-party requests made by the CWS edition:
 
 Settings, bookmarks, flashcard review state, recent lessons, and scroll positions are stored in `chrome.storage.local`. Original and translated text is cached separately in IndexedDB. Progress summaries are calculated locally from that state rather than separately stored or transmitted.
 
-The AI Tutor and translation-quality check use Puter's free AI gateway (Claude/Gemini). Sending a tutor message or, while signed in, translating a page routes that text through Puter; see Puter's privacy policy. If you never sign in to Puter, no AI request is made and the extension stays translation + local-tools only.
+Sending a cloud Tutor message routes that message and limited lesson context through Puter's free AI gateway to Claude; see Puter's privacy policy. Translating a page never sends text to Puter. With the local engine selected, Tutor text goes only to the user's configured local server; with Tutor off, no Tutor request is made.
 
 Full privacy policy: https://heznpc.github.io/skillBridge/privacy
 

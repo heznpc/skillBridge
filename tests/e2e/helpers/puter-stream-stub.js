@@ -1,9 +1,9 @@
 /**
  * Stream-friendly Puter SDK stub used by the extension-bundle E2E patch.
  *
- * The raw/developer manifest passes chrome.runtime.getURL('src/bridge/puter.js')
- * to page-bridge.js. CWS bundles omit that file, so patching is intentionally
- * a no-op there; developer-artifact tests can still replace it without a route.
+ * page-bridge.js loads the bundled SDK from
+ * chrome.runtime.getURL('src/bridge/puter.js'). The E2E helper replaces that
+ * file in a temporary bundle so no account or external AI request is needed.
  */
 
 const PUTER_STREAM_STUB = `
@@ -14,9 +14,7 @@ const PUTER_STREAM_STUB = `
   // tutor-chat spec finishes under its 10s deadline.
   window.__sbE2eChunkDelayMs = 150;
   window.puter = {
-    // Models a signed-in user so the page bridge's auth gate lets the background
-    // verify/translate paths run (they skip for signed-out users to avoid Puter's
-    // sign-in prompt — see page-bridge.js _isPuterAuthed).
+    // Models a signed-in user so the Tutor can run without a sign-in prompt.
     authToken: 'e2e-stub-token',
     ai: {
       chat: async function (prompt, opts) {
@@ -46,11 +44,8 @@ const PUTER_STREAM_STUB = `
             },
           };
         }
-        // Non-streaming path = Gemini verify (translator._verifySingle).
-        // Returning "OK" tells _verifySingle the GT result is good →
-        // _cacheTranslation(original, googleTranslation) — the GT
-        // translation gets cached verbatim. Tutor-chat uses stream=true
-        // so it's unaffected.
+        // The Tutor uses stream=true; retain a harmless non-streaming response
+        // for SDK compatibility.
         return { message: { content: 'OK' } };
       },
     },

@@ -2,8 +2,8 @@
  * SkillBridge - Shared chat sub-panel state machine.
  *
  * Owns the panel switcher used by history, flashcards, bookmarks, recent
- * lessons, and dashboard modules. The base surface is the chat panel in
- * AI-enabled builds and the language panel in the CWS no-AI build.
+ * lessons, and dashboard modules. The base surface is either the Tutor chat
+ * or the translation-only language panel, depending on host capabilities.
  */
 
 (function () {

@@ -41,9 +41,9 @@ technical terminology intact.
 |---|---|---|
 | 32 languages | `_locales/`, `README.md` generated language count | `02-language-select.png` |
 | Lesson translation | `manifest.json`, `src/content/` | `01-translate.png` |
-| Local learning tools | `src/content/dashboard.js`, `src/content/chat-flashcards.js` | `03-learning-dashboard.png`, `04-flashcards.png` |
+| Local learning tools | `src/content/dashboard.js`, `src/content/chat-flashcards.js` | `04-flashcards.png` |
 | Exam-safe answers | `src/content/content.js`, `tests/e2e/exam-mode.spec.js` | `05-exam-safe.png` |
-| AI Tutor ships in CWS | `src/shared/build-config.js` (gateway pinned on), `src/bridge/puter.js`, `tests/build-bundle.test.js` | `promo-media-manifest.json` source record |
+| AI Tutor ships in CWS | `src/shared/build-config.js` (gateway pinned on), `src/bridge/puter.js`, `tests/build-bundle.test.js` | `03-sidebar-tutor.png`, `promo-media-manifest.json` source record |
 | Optional on-device engine | `src/background/background.js` (`sb-local-chat` port), `src/popup/popup.js` engine selector, `tests/local-engine.test.js` | popup engine selector |
 
 ## Pre-launch copy
@@ -94,10 +94,8 @@ Before that proof exists, retain the release-candidate wording above.
 - `promo-social-portrait-1080x1350.png` — portrait feed card.
 - `promo-video-thumbnail-1280x720.png` — landscape video thumbnail/title card.
 - `promo-short-thumbnail-1080x1920.png` — Shorts/Reels thumbnail/title card.
-- `skillbridge-v3.5.42-demo-landscape.mp4` — landscape demo.
-- `skillbridge-v3.5.42-demo-short.mp4` — vertical short.
-  ⏳ Both videos are the 3.5.42 capture; regenerate with `npm run promo:build`
-  (needs ffmpeg + shotkit) before the v4.0.0 upload.
+- `skillbridge-v4.0.0-demo-landscape.mp4` — landscape demo.
+- `skillbridge-v4.0.0-demo-short.mp4` — vertical short.
 - `promo-media-manifest.json` — source hash, output hashes, dimensions, durations,
   and allowed claims.
 
@@ -109,7 +107,7 @@ hashes are committed in the media manifest.
 
 1. Release-candidate title card.
 2. The actual bundled extension running against a neutral deterministic fixture:
-   translate a lesson, open local progress, then show flashcards.
+   translate a lesson, ask the in-page Tutor, then show flashcards.
 3. Return to the title card. No mocked extension UI or AI Tutor footage.
 
 The videos are silent by design; the visual captions and title cards carry the

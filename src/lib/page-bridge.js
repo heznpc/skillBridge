@@ -1,9 +1,8 @@
 /**
  * Page Bridge - Injected into the HOST PAGE's main world (not extension context)
- * Raw-developer bridge: loads the packaged Puter SDK entry file from extension
- * resources. That SDK contains lazy remote JS/WASM paths, so this bridge and
- * the SDK are omitted from the CWS bundle; packaging the entry file locally
- * does not by itself establish MV3 remote-code compliance.
+ * Loads the packaged Puter SDK entry file from extension resources for the
+ * user-invoked AI Tutor. The CWS build removes unused remote TLS-socket imports
+ * from that vendored SDK and scans the complete artifact before packaging.
  * Communicates with the content script via window.postMessage.
  */
 
@@ -32,20 +31,15 @@
   let _puterPreviousHadGlobal = false;
   let _puterPreviousHadParentGlobal = false;
   // Live read of the bundled Puter SDK's auth state, captured before the SDK
-  // global is scrubbed. Background AI paths (verify / block-translate) gate on
-  // this so a signed-out user never trips Puter's sign-in prompt (see
-  // _isPuterAuthed). null until the SDK is captured.
+  // global is scrubbed. Used to recover a revoked tutor session once without
+  // discarding a valid anonymous first-use flow.
   let _puterAuthCheck = null;
 
   function log(...args) {
     console.warn('[SkillBridge PageBridge]', ...args);
   }
 
-  // Whether the bundled Puter SDK currently holds an auth token. Calling
-  // puter.ai.chat() while signed out (env "web") makes the SDK open its own
-  // sign-in prompt — which would contradict SkillBridge's "no account required"
-  // promise if it fired from a BACKGROUND path the user never invoked. Returns
-  // false (→ skip) whenever auth state is unknown, so we never prompt by surprise.
+  // Whether the bundled Puter SDK currently holds an auth token.
   function _isPuterAuthed() {
     try {
       return _puterAuthCheck ? _puterAuthCheck() : false;
@@ -54,20 +48,9 @@
     }
   }
 
-  // Reply that a background AI request was skipped because the user is signed
-  // out. success:true with a benign result keeps the caller's existing
-  // Google-Translate output (verify/block-translate both no-op on empty/echo),
-  // and crucially the SDK's auth prompt was never reached.
-  function _replyUnauthedSkip(type, id, result) {
-    window.postMessage(
-      { __skillbridge__: true, __nonce__: _bridgeNonce, type, id, success: true, result, skipped: 'unauthenticated' },
-      window.location.origin,
-    );
-  }
-
   // Hard upper bound on request payload sizes. Real translations top out
   // at a few kB; chat prompts in the 10-20 kB range. 200 kB sits well
-  // above legitimate usage and well below any reasonable Claude / Gemini
+  // above legitimate usage and well below any reasonable Claude
   // context limit. Without this guard a buggy caller — or a page-world
   // script that managed to read the loader nonce — could burn the
   // shared Puter.js quota by submitting megabyte-sized prompts.
@@ -222,17 +205,9 @@
     'claude-opus-4-8': 'claude-opus-4-7',
     'claude-opus-4-7': 'claude-opus-4-6',
     'claude-opus-4-6': 'claude-opus-4-5',
-    // 2026-06-24: gemini-1.5-flash was shut down (the whole Gemini 1.5/1.0 line
-    // 404s now), so the old fallback gave zero resilience — if gemini-2.0-flash
-    // were ever rejected, the retry would 404 too. Fall back to the live
-    // same-generation lighter sibling gemini-2.0-flash-lite (verified available
-    // on Puter). gemini-2.0-flash itself is still active and stays the primary.
-    'gemini-2.0-flash': 'gemini-2.0-flash-lite',
   };
 
   const _REQUEST_MODEL_ALLOWLIST = {
-    TRANSLATE_REQUEST: new Set(['gemini-2.0-flash', 'gemini-2.0-flash-lite']),
-    VERIFY_REQUEST: new Set(['gemini-2.0-flash', 'gemini-2.0-flash-lite']),
     CHAT_REQUEST: new Set([
       'claude-sonnet-4-6',
       'claude-sonnet-4-5',
@@ -273,9 +248,8 @@
   // session. The SDK resolves plenty of NON-auth envelopes the same way
   // (insufficient_funds / usage_limited / permission_denied / 5xx), and
   // resetting on those would destroy a WORKING token, pop a sign-in prompt
-  // that cannot fix the actual problem (quota), and silently disable the
-  // background verify path (which skips while unauthenticated) for the rest
-  // of the session. `auth_canceled` is deliberately excluded — that is the
+  // that cannot fix the actual problem (quota), and disable the Tutor for the
+  // rest of the session. `auth_canceled` is deliberately excluded — that is the
   // user closing the prompt, not a revoked token.
   const _REVOKED_TOKEN_CODES = new Set([
     'reauth_required',
@@ -645,7 +619,7 @@
   /**
    * Single-prompt call to puter.ai.chat (confirmed working format)
    */
-  async function callAI(prompt, model, requestType = 'VERIFY_REQUEST', fallbackModel = 'gemini-2.0-flash') {
+  async function callAI(prompt, model, requestType = 'CHAT_REQUEST', fallbackModel = 'claude-haiku-4-5') {
     const response = await _puterChat(prompt, {
       model: _selectModel(requestType, model, fallbackModel),
       stream: false,
@@ -671,59 +645,6 @@
         .join('\n');
     }
     return response?.text || '';
-  }
-
-  async function _handleTranslateRequest(data) {
-    if (_payloadTooLarge(data)) {
-      _replyTooLarge('TRANSLATE_RESPONSE', data.id, data.text);
-      return;
-    }
-    try {
-      if (!puterReady) await loadPuter();
-      // Never trigger the SDK sign-in prompt from this background path —
-      // keep the caller's Google-Translate text instead (see _replyUnauthedSkip).
-      if (!_isPuterAuthed()) {
-        _replyUnauthedSkip('TRANSLATE_RESPONSE', data.id, data.text || '');
-        return;
-      }
-      // systemPrompt already contains the full prompt including the text
-      const prompt = data.systemPrompt || 'Translate to target language:\n' + data.text;
-      const result = await callAI(prompt, data.model, 'TRANSLATE_REQUEST');
-
-      _postBridgeMessage('TRANSLATE_RESPONSE', data.id, {
-        success: true,
-        result: result || data.text,
-      });
-    } catch (err) {
-      const errMsg = _postBridgeError('TRANSLATE_RESPONSE', data.id, err, data.text);
-      log('Translate error:', errMsg);
-    }
-  }
-
-  async function _handleVerifyRequest(data) {
-    if (_payloadTooLarge(data)) {
-      _replyTooLarge('VERIFY_RESPONSE', data.id, '');
-      return;
-    }
-    try {
-      if (!puterReady) await loadPuter();
-      // Background quality check — must stay silent for signed-out users so it
-      // never opens Puter's sign-in prompt. The caller keeps its GT result.
-      if (!_isPuterAuthed()) {
-        _replyUnauthedSkip('VERIFY_RESPONSE', data.id, '');
-        return;
-      }
-      const prompt = data.systemPrompt;
-      const result = await callAI(prompt, data.model, 'VERIFY_REQUEST');
-
-      _postBridgeMessage('VERIFY_RESPONSE', data.id, {
-        success: true,
-        result: result || '',
-      });
-    } catch (err) {
-      const errMsg = _postBridgeError('VERIFY_RESPONSE', data.id, err, '');
-      log('Verify error:', errMsg);
-    }
   }
 
   async function _handleStreamingChat(data, prompt, streamEntry) {
@@ -854,18 +775,6 @@
     // === CHAT_ABORT === (fire-and-forget; no response expected)
     if (data.type === 'CHAT_ABORT') {
       _handleAbort(data.id);
-      return;
-    }
-
-    // === TRANSLATE ===
-    if (data.type === 'TRANSLATE_REQUEST') {
-      await _handleTranslateRequest(data);
-      return;
-    }
-
-    // === GEMINI VERIFY (background quality check) ===
-    if (data.type === 'VERIFY_REQUEST') {
-      await _handleVerifyRequest(data);
       return;
     }
 

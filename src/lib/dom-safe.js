@@ -2,8 +2,8 @@
  * SkillBridge — DOM-safe rendering helpers.
  *
  * Central allowlisted HTML sanitizers and escape helpers shared by chat,
- * history, and panel rendering code. Loaded after gemini-block.js so the
- * canonical escapeHtml implementation stays the single escaping primitive.
+ * history, and panel rendering code. Loaded after the legacy-named
+ * gemini-block.js helper so escapeHtml stays a single escaping primitive.
  */
 (function () {
   'use strict';

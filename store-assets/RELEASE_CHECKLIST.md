@@ -1,6 +1,6 @@
 # Release Checklist — CWS v4.0.0
 
-> Refreshed 2026-07-25 for the v4.0.0 CWS build. The upload artifact keeps
+> Refreshed 2026-07-27 for the v4.0.0 CWS build. The upload artifact keeps
 > translation and local learning tools AND ships the AI Tutor: the AI gateway is
 > pinned ON and `src/bridge/puter.js` + `src/lib/page-bridge.js` are included by
 > design. Tutor requests happen only after the user signs in to Puter (free). An
@@ -27,18 +27,16 @@ dashboard upload.
 - ✅ Final ZIP release identity is `4.0.0` across `manifest.json`,
   `package.json`, versioned dictionary metadata, and `CHANGELOG.md`.
 - ✅ Historical `CHANGELOG.md` sections through v3.5.41 remain immutable
-- ⏳ **The recorded artifact is stale.** The 63-file ZIP with SHA-256
-  `c81fdbe5fac854974f5dc673358918f1e8098368edac375d440750217df600f6` was the
-  superseded 3.5.42 (no-AI) build. v4.0.0 ships additional files
-  (`src/bridge/puter.js`, `src/lib/page-bridge.js`, `src/content/html-gt.js`),
-  so both the file count and the hash change: rerun `npm run release:verify`
-  and record the new values here before upload. This bundled ZIP is the
+- ✅ The verified v4.0.0 upload artifact contains 65 files and has SHA-256
+  `274249d04ddd052d6a9c36e30112a5345d353d217ef311285b401723574ff78b`
+  (709,429 bytes). It includes `src/bridge/puter.js`,
+  `src/lib/page-bridge.js`, and the bundled HTML-GT path. This bundled ZIP is the
   **only** CWS upload artifact; the compatibility alias `npm run build:zip`
   resolves to this same safe command.
 - ⛔ Never upload `store-assets/skillbridge-developer.zip` (generated only by the
   explicit `npm run build:developer:zip` command), the repository root, or the
-  Firefox build to CWS. Raw/developer source retains the optional Puter-based AI
-  path and does not represent the CWS product or its privacy disclosures.
+  Firefox build to CWS. Raw/developer source retains Puter SDK features that the
+  CWS build removes and does not represent the scanned upload artifact.
 - ✅ All 33 `_locales/*/messages.json` descriptions cover translation and local
   learning tools; `npm run check:i18n` enforces the 132-character limit.
 - ✅ Nominative-use sweep clean (`SkillBridge — AI Course Translator`, no Anthropic-as-product-modifier)
@@ -53,16 +51,14 @@ dashboard upload.
   disclosures for live legacy v1.0.1 and the unpublished candidate. Remove or
   archive the legacy section only after the replacement version is confirmed
   live in the CWS dashboard and update the listing/privacy answers together.
-- ⏳ Latest recorded gate snapshot predates v4.0.0 (`release:verify` on
-  2026-07-24, 646 unit tests, against the no-AI candidate). The v4.0.0 code-side
-  gates pass locally — 684 unit tests, lint, typecheck, `build:bundle`, and the
-  full Chromium E2E suite (42 tests) — but `release:verify` itself must be rerun
-  in the release checkout and its snapshot recorded here. The 2026-07-24 run
-  covered the full five-batch Chromium E2E suite, live
-  selector/course-map checks, store capture, and ZIP integrity. Dictionary
-  freshness reported recruiting-state dictionaries as review-needed warnings;
-  that is not a native review stamp. Rerun immediately before dashboard upload
-  if this artifact changes.
+- ✅ `npm run release:verify` passed on 2026-07-27: lint, format, 651 unit
+  tests, translation/glossary/i18n checks, live selector and 22-course map
+  checks, first-user/popup smoke, Firefox build, store capture, 65-file ZIP
+  integrity, and all 42 Chromium E2E tests across seven resource-bounded
+  batches. The live CWS check still reports v1.0.1, updated 2026-03-10.
+  Dictionary freshness reports 10 recruiting-state dictionaries as
+  review-needed; that is not a native review stamp. Rerun the gate immediately
+  before dashboard upload if the artifact changes.
 - ✅ AI-content gate wired into `manifest.json:content_scripts[].js` (PR #145 hotfix)
 - ✅ CWS-drift watcher will keep this from drifting 3 months again
 - ✅ Italian dictionary live (PR #140) — timed with Anthropic Milan office opening 2026-05-27
@@ -98,7 +94,7 @@ with **zero local setup**: Actions → "Capture store assets" → Run workflow �
 download the `store-assets` artifact:
 
 - `01-translate.png` … `05-exam-safe.png` (1280×800) — translated lesson,
-  language picker, local progress dashboard, flashcards, exam-safe answers
+  language picker, in-page Tutor, flashcards, exam-safe answers
 - `promo-tile-440x280.png` — small promo tile
 - `demo.webm` — demo screencast (CWS takes a YouTube link, not a file — upload it and paste the URL)
 - `description.md` — copy/paste Title / Summary / Description / What's new
@@ -136,22 +132,18 @@ stale against the next CWS candidate — fix these:
   Privacy-URL note above). The lowercase form 404s and the dashboard refuses to
   submit ("개인정보처리방침 링크에 연결할 수 없습니다").
 - **"Are you using remote code?" — answer from the artifact, not from memory.**
-  v4.0.0 ships the Puter SDK **inside** the package (no remote `<script>` tag is
-  added), so nothing is fetched to bootstrap the extension. But the bundled
-  Puter SDK itself contains lazy remote JavaScript/WebAssembly import paths (an
-  unpkg-hosted polyfill and remote `rustls.js`/`rustls.wasm`) — which is exactly
-  why PRIVACY_POLICY.md refuses to call the package "no remote code". Inspect
-  the uploaded ZIP and answer consistently with that disclosure. Do **not**
-  reuse the 3.5.x rationale, which described a build that omitted these files,
-  and note that `scripts/check-rhc.js` was removed in v4.0.0 — there is no such
-  gate to run. The raw source ZIP must still never be substituted for the
-  bundled CWS artifact.
+  v4.0.0 ships the Puter SDK **inside** the package. The build removes its unused
+  remote TLS-socket imports and `Function` fallback, then `scripts/check-rhc.js`
+  scans the entire artifact for remote imports, scripts, workers, worklets,
+  executable fetches/WebAssembly, eval, and Function constructors. The final ZIP
+  must pass that gate with zero findings. Answer **No** for remote code only for
+  this scanned bundled artifact; never substitute the raw source/developer ZIP.
 - **Data usage → check "Website content".** Page text is sent to Google
   Translate when translation is requested. In v4.0.0 a signed-in AI Tutor also
   sends the tutor message plus lesson context (course title, up to five
-  headings) to Claude via Puter, and the translation-quality check can send page
-  text to Gemini via Puter — both only after a Puter sign-in. With the local
-  engine selected, tutor text goes only to the user's own localhost server.
+  headings) to Claude via Puter, but only after the user sends a Tutor message.
+  Page translation never invokes Puter or an AI model. With the local engine
+  selected, Tutor text goes only to the user's own localhost server.
   Learning-tool state is never transmitted.
   Leaving Website content unchecked while the description says page text is
   sent off-device is an inconsistency reviewers reject. Local-only data

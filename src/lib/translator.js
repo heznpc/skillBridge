@@ -4,9 +4,7 @@
  * Translation priority:
  * 1. Static JSON dictionary (instant, no network)
  * 2. IndexedDB translation cache (instant)
- * 3. Google Translate via background proxy (fast, ~200ms)
- *    → CWS: cache the result directly
- *    → Developer build: optionally verify complex sentences in the background
+ * 3. Google Translate via background proxy (fast, ~200ms), then cache locally
  *
  * Copyright respecting: translates on-the-fly only
  */
@@ -19,36 +17,16 @@ class SkilljarTranslator {
     this._lowerDict = {};
     /** @type {Record<string, string[]>} Protected terms loaded from JSON */
     this._protectedTerms = {};
-    /** @type {boolean} True once the page bridge is ready (Gemini + AI Tutor) */
+    /** @type {boolean} True once the optional AI Tutor bridge is ready */
     this.isReady = false;
-    /** @type {Map<string, function>} Pending request callbacks keyed by ID */
-    this.pendingCallbacks = new Map();
-    /** @type {IDBDatabase|null} IndexedDB handle for verified translation cache */
+    /** @type {IDBDatabase|null} IndexedDB handle for the translation cache */
     this._db = null;
-    /** @type {Array<{original: string, googleTranslation: string, targetLang: string}>} */
-    this._verifyQueue = [];
-    /** @type {Promise|null} Lock for verify queue processing */
-    this._verifyLock = null;
-    /** @type {Array<function>} Callbacks when Gemini improves a translation */
-    this._onUpdateCallbacks = [];
     /** @type {string[]} ISO codes with static dictionaries */
     this.premiumLanguages = PREMIUM_LANGUAGE_CODES;
     /** @type {Record<string, string>} ISO code to language name */
     this.supportedLanguages = SUPPORTED_LANGUAGE_MAP;
-    /** Bumped on every active-language switch; verify items stamped with the
-     *  generation at queue time get filtered if it changes mid-flight. */
-    this._langGeneration = 0;
-    /** CWS builds disable the Puter/Gemini bridge but retain GT + IDB. */
+    /** Whether the user-invoked AI Tutor bridge is available on this host. */
     this.aiEnabled = aiEnabled;
-  }
-
-  /**
-   * Called by content.js when the user switches language. Invalidates any
-   * verify-queue work targeting the old language so we don't write stale
-   * translations into the now-current page.
-   */
-  bumpLangGeneration() {
-    this._langGeneration++;
   }
 
   /** @returns {Promise<boolean>} true if initialization succeeded */
@@ -138,14 +116,6 @@ class SkilljarTranslator {
     } catch (err) {
       console.warn('[SkillBridge] Cache eviction failed:', err);
     }
-  }
-
-  /**
-   * Register a callback for when Gemini finishes verifying a translation.
-   * @param {(originalText: string, finalTranslation: string, targetLang: string, wasImproved: boolean) => void} callback
-   */
-  onTranslationUpdate(callback) {
-    this._onUpdateCallbacks.push(callback);
   }
 
   // ==================== STATIC DICTIONARY ====================
@@ -278,7 +248,7 @@ class SkilljarTranslator {
   }
 
   /**
-   * Look up a cached Gemini-verified translation.
+   * Look up a cached translation.
    * @param {string} text — original English text
    * @param {string} targetLang — ISO 639-1
    * @returns {Promise<string|null>}
@@ -364,7 +334,7 @@ class SkilljarTranslator {
 
   /**
    * Reject obvious garbage before persisting it for 30 days. Covers the
-   * cases we've observed: GT/Gemini returning a partial HTML error page,
+   * cases we've observed: translation services returning a partial HTML error page,
    * untranslated ASCII when a non-Latin target was requested, or a wildly
    * inflated string that's likely the model echoing the prompt.
    */
@@ -373,7 +343,7 @@ class SkilljarTranslator {
     if (translation.length > original.length * 10) return false;
     // HTML tag at start = error page, not a translation
     if (/<\s*[a-z!][^>]*>/i.test(translation)) return false;
-    // For non-Latin targets, mostly-ASCII output usually means the model
+    // For non-Latin targets, mostly-ASCII output usually means the service
     // refused or returned an error string in English.
     const NON_LATIN = new Set(['ko', 'ja', 'zh-CN', 'zh-TW', 'ru', 'ar', 'hi', 'th', 'he', 'el', 'uk', 'bn']);
     if (NON_LATIN.has(targetLang) && translation.length > 20) {
@@ -436,214 +406,10 @@ class SkilljarTranslator {
     }
   }
 
-  // ==================== GEMINI VERIFICATION ====================
-
-  /**
-   * Queue a text for background Gemini verification.
-   * Skips short/simple strings where Google Translate is sufficient.
-   * @param {string} originalText — English source
-   * @param {string} googleTranslation — Google Translate output
-   * @param {string} targetLang — ISO 639-1
-   * @returns {boolean} true if queued, false if filtered out
-   */
-  queueGeminiVerify(originalText, googleTranslation, targetLang) {
-    if (!originalText || !googleTranslation) return false;
-    const text = originalText.trim();
-
-    // The CWS edition has no executable AI gateway. Persist the GT result
-    // directly so the 30-day cache still works, without creating a verify
-    // queue or UI spinner that can never complete.
-    if (!this.aiEnabled) {
-      void this._cacheTranslation(text, googleTranslation, targetLang);
-      return false;
-    }
-
-    // Skip if too short — Google Translate handles these fine
-    if (text.length < SKILLBRIDGE_THRESHOLDS.GEMINI_MIN_TEXT) return false;
-
-    // Skip if mostly numbers/symbols (e.g. "6 minutes", "10-15 min")
-    const alphaRatio = text.replace(/[^a-zA-Z]/g, '').length / text.length;
-    if (alphaRatio < SKILLBRIDGE_THRESHOLDS.GEMINI_ALPHA_RATIO) return false;
-
-    // Skip simple patterns: time, dates, labels
-    if (/^\d+[\s-]+\w+$/.test(text)) return false; // "6 minutes"
-    if (/^(estimated|about|approx)/i.test(text) && text.length < 60) return false;
-    if (/^(module|lesson|chapter|section|part)\s+\d/i.test(text)) return false;
-
-    // Only verify sentences with real prose (has periods, commas, or is long)
-    const hasComplexity =
-      text.includes('.') ||
-      text.includes(',') ||
-      text.includes(':') ||
-      text.length > SKILLBRIDGE_THRESHOLDS.MIN_COMPLEX_TEXT;
-    if (!hasComplexity) return false;
-
-    // Cap queue size to prevent memory growth on large pages
-    if (this._verifyQueue.length >= SKILLBRIDGE_THRESHOLDS.VERIFY_QUEUE_MAX) {
-      const dropped = this._verifyQueue.shift();
-      // Cache the Google Translate result as-is so it's at least persisted
-      this._cacheTranslation(dropped.original, dropped.googleTranslation, dropped.targetLang);
-    }
-    this._verifyQueue.push({
-      original: text,
-      googleTranslation,
-      targetLang,
-      _gen: this._langGeneration,
-    });
-
-    this._kickVerifyQueue();
-    return true;
-  }
-
-  /**
-   * Schedule the verify-queue runner. Re-kicks itself if items arrive during
-   * the brief window between the while loop draining and the lock clearing
-   * (previously these tail items sat un-verified until the next manual
-   * trigger, which on a quiet page is "never").
-   */
-  _kickVerifyQueue() {
-    if (this._verifyLock) return;
-    this._verifyLock = new Promise((resolve) => {
-      setTimeout(() => {
-        this._runVerifyQueue().finally(() => {
-          this._verifyLock = null;
-          resolve();
-          if (this._verifyQueue.length > 0 && this.isReady) {
-            this._kickVerifyQueue();
-          }
-        });
-      }, SKILLBRIDGE_DELAYS.VERIFY_QUEUE);
-    });
-  }
-
-  async _runVerifyQueue() {
-    if (!this.isReady) {
-      await new Promise((r) => setTimeout(r, SKILLBRIDGE_DELAYS.VERIFY_QUEUE_RETRY));
-      if (!this.isReady) return;
-    }
-
-    while (this._verifyQueue.length > 0) {
-      const batch = this._verifyQueue.splice(0, SKILLBRIDGE_THRESHOLDS.GEMINI_BATCH_SIZE);
-      // Filter stale items (user switched language while we were waiting).
-      const fresh = batch.filter((item) => item._gen === this._langGeneration);
-      if (fresh.length > 0) {
-        await Promise.all(fresh.map((item) => this._verifySingle(item)));
-      }
-      if (this._verifyQueue.length > 0) {
-        await new Promise((r) => setTimeout(r, SKILLBRIDGE_DELAYS.GEMINI_BATCH));
-      }
-    }
-  }
-
-  _buildVerifyPrompt(original, googleTranslation, targetLang) {
-    const langName = this.supportedLanguages[targetLang] || targetLang;
-    return `You are a translation quality reviewer for technical education content (Anthropic AI courses).
-
-ORIGINAL (English):
-${original}
-
-GOOGLE TRANSLATE (${langName}):
-${googleTranslation}
-
-TASK: Review the Google Translate output. If it is accurate and natural-sounding, reply with EXACTLY "OK". If it needs improvement, provide ONLY the corrected translation (no explanations, no "OK", just the improved text).
-
-RULES:
-- Keep technical terms (API, SDK, Claude, Anthropic, AI Fluency, 4Ds) in English
-- Ensure natural ${langName} grammar and phrasing
-- Fix any awkward literal translations
-- Preserve the original meaning precisely`;
-  }
-
-  async _keepGoogleTranslation(original, googleTranslation, targetLang) {
-    const safeGoogleTranslation = this._restoreProtectedTerms(googleTranslation);
-    await this._cacheTranslation(original, safeGoogleTranslation, targetLang);
-    this._notifyUpdate(original, safeGoogleTranslation, targetLang, false);
-  }
-
-  _isVerifyOkReply(trimResult) {
-    // The model is asked to reply EXACTLY "OK", but LLMs routinely add
-    // trailing punctuation or quotes ("OK.", "OK!", '"OK"'). Normalize
-    // surrounding quotes/whitespace + trailing .! and case before matching.
-    const okCheck = trimResult.replace(/^["'\s]+|["'\s.!]+$/g, '').toLowerCase();
-    return okCheck === 'ok';
-  }
-
-  _isUnsafeVerifyReplacement(trimResult, original) {
-    // Verify only runs on source text >= GEMINI_MIN_TEXT (80 chars), so a
-    // result that is empty or far shorter than the source is not a translation;
-    // the upper bound + prompt-echo markers catch returned explanations.
-    const tooShort = trimResult.length < Math.max(15, original.length * 0.25);
-    return (
-      !trimResult ||
-      tooShort ||
-      trimResult.length > original.length * 5 ||
-      trimResult.includes('ORIGINAL') ||
-      trimResult.includes('GOOGLE TRANSLATE')
-    );
-  }
-
-  async _applyVerifyResult(original, googleTranslation, targetLang, result) {
-    // Empty/absent result — the verify was skipped (the signed-out background
-    // path replies result:'') or the model returned nothing. Keep the Google
-    // translation and notify so the verify spinner is cleared.
-    if (!result) {
-      await this._keepGoogleTranslation(original, googleTranslation, targetLang);
-      return;
-    }
-
-    const trimResult = result.trim();
-    if (this._isVerifyOkReply(trimResult) || this._isUnsafeVerifyReplacement(trimResult, original)) {
-      await this._keepGoogleTranslation(original, googleTranslation, targetLang);
-      return;
-    }
-
-    const safeTrimResult = this._restoreProtectedTerms(trimResult);
-    await this._cacheTranslation(original, safeTrimResult, targetLang);
-    this._notifyUpdate(original, safeTrimResult, targetLang, true);
-  }
-
-  async _verifySingle({ original, googleTranslation, targetLang, _gen }) {
-    // Re-check generation after the await fence — the user can switch
-    // language while we're inside Gemini, and writing the result then would
-    // place stale-language text into a now-current page.
-    if (_gen !== undefined && _gen !== this._langGeneration) return;
-    try {
-      const prompt = this._buildVerifyPrompt(original, googleTranslation, targetLang);
-
-      const result = await this._sendRequest({
-        type: 'VERIFY_REQUEST',
-        systemPrompt: prompt,
-        model: SKILLBRIDGE_MODELS.GEMINI,
-      });
-
-      // Bridge round-trip can take seconds; re-check before writing result.
-      if (_gen !== undefined && _gen !== this._langGeneration) return;
-
-      await this._applyVerifyResult(original, googleTranslation, targetLang, result);
-    } catch (err) {
-      console.warn(`[SkillBridge] Gemini verify failed for "${original.substring(0, 30)}...":`, err.message);
-      await this._keepGoogleTranslation(original, googleTranslation, targetLang);
-    }
-  }
-
-  /**
-   * Notify all registered update callbacks.
-   */
-  _notifyUpdate(original, translation, targetLang, wasImproved) {
-    for (const cb of this._onUpdateCallbacks) {
-      try {
-        cb(original, translation, targetLang, wasImproved);
-      } catch (e) {
-        console.warn('[SkillBridge] Update callback error:', e);
-      }
-    }
-  }
-
   // ==================== MAIN TRANSLATE API ====================
 
   /**
-   * Translate text. Priority: static dict -> cache -> Google Translate, with
-   * optional developer-build verification when the AI gateway is enabled.
+   * Translate text. Priority: static dict -> cache -> Google Translate.
    * @param {string} text — English source text
    * @param {string} targetLang — ISO 639-1
    * @returns {Promise<{text: string, source: 'static'|'cache'|'google'|'original'}>}
@@ -664,8 +430,7 @@ RULES:
     const gtResult = await this.googleTranslate(text, targetLang);
     if (gtResult) {
       const safeGtResult = this._restoreProtectedTerms(gtResult);
-      // CWS caches the GT result directly; developer builds may verify it.
-      this.queueGeminiVerify(text, safeGtResult, targetLang);
+      await this._cacheTranslation(text, safeGtResult, targetLang);
       return { text: safeGtResult, source: 'google' };
     }
 
@@ -905,29 +670,17 @@ User: ${userMessage}`;
 
       if (data.type === 'BRIDGE_READY') {
         this.isReady = true;
-        // Process any pending verify queue now that bridge is ready
-        if (this._verifyQueue.length > 0) {
-          this._kickVerifyQueue();
-        }
       }
 
       if (data.type === 'BRIDGE_ERROR') {
         console.error('[SkillBridge] Bridge error:', data.error);
       }
-
-      if (data.type === 'TRANSLATE_RESPONSE' || data.type === 'CHAT_RESPONSE' || data.type === 'VERIFY_RESPONSE') {
-        const cb = this.pendingCallbacks.get(data.id);
-        if (cb) {
-          this.pendingCallbacks.delete(data.id);
-          cb(data);
-        }
-      }
     });
   }
 
   /**
-   * Inject the page bridge, retrying on transient failure (CDN hiccup,
-   * one-shot CSP transient, network drop). Final timeout/error after the
+   * Inject the packaged page bridge, retrying on a transient script-load or
+   * one-shot CSP failure. Final timeout/error after the
    * retry budget is exhausted dispatches `skillbridge:bridgeunavailable`
    * so the banner UI shows the user what happened.
    */
@@ -990,53 +743,6 @@ User: ${userMessage}`;
         reject(new Error('Failed to inject page-bridge.js'));
       };
       (document.head || document.documentElement).appendChild(script);
-    });
-  }
-
-  _sendRequest(message) {
-    return new Promise((resolve, reject) => {
-      if (!this.isReady) {
-        reject(new Error('Bridge not ready'));
-        return;
-      }
-
-      const id = crypto.randomUUID();
-      message.id = id;
-      message.__skillbridge__ = true;
-      message.__nonce__ = this._bridgeNonce;
-
-      // Evict stale callbacks before adding new one
-      if (this.pendingCallbacks.size >= SKILLBRIDGE_THRESHOLDS.PENDING_CALLBACKS_MAX) {
-        const now = Date.now();
-        for (const [cbId, cb] of this.pendingCallbacks) {
-          if (cb._ts && now - cb._ts > SKILLBRIDGE_THRESHOLDS.CALLBACK_STALE_MS) {
-            this.pendingCallbacks.delete(cbId);
-          }
-        }
-        // Hard cap: drop oldest if still over limit
-        if (this.pendingCallbacks.size >= SKILLBRIDGE_THRESHOLDS.PENDING_CALLBACKS_MAX) {
-          const oldest = this.pendingCallbacks.keys().next().value;
-          this.pendingCallbacks.delete(oldest);
-        }
-      }
-
-      const timeout = setTimeout(() => {
-        this.pendingCallbacks.delete(id);
-        reject(new Error('Request timed out'));
-      }, SKILLBRIDGE_THRESHOLDS.REQUEST_TIMEOUT);
-
-      const handler = (response) => {
-        clearTimeout(timeout);
-        if (response.success === false && response.error) {
-          reject(new Error(response.error));
-        } else {
-          resolve(response.result);
-        }
-      };
-      handler._ts = Date.now();
-      this.pendingCallbacks.set(id, handler);
-
-      window.postMessage(message, window.location.origin);
     });
   }
 }

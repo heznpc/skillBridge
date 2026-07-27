@@ -157,7 +157,7 @@ test.describe('SkillBridge — exam-mode flow', () => {
     // exam mode, but only at switch time — by then this page has no quiz DOM, so it
     // stays false. The mutation path (debounceTranslateNew) is the ONLY thing that can
     // re-detect for answers inserted later; without that re-detect the chokepoint never
-    // fires and the answer leaks (translated, cached, Gemini-verified). This locks it.
+    // fires and the answer leaks through the translation/cache path. This locks it.
     await gotoAndWait('/lesson');
     // Precondition: a plain /lesson URL is NOT exam-detected at init. This is exactly
     // what makes the mutation-path re-detect load-bearing — there is no URL signal.

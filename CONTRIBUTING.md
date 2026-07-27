@@ -283,17 +283,18 @@ Key constants in `constants.js` (v2.1.0+):
 - **`DEFAULT_PROTECTED_TERMS`** — Fallback list of terms to keep in English (Cowork, Dispatch, Computer Use, Subagent, etc.).
 
 Areas that need work:
-- **Developer-only Gemini heuristics** — `queueGeminiVerify()` is dormant when the CWS AI gate is off. Changes to it require a separate raw-developer test boundary and must not weaken the CWS package gate.
 - **Batch processing** — the Google Translate queue processes in batches of `GT_BATCH_SIZE`. Performance tuning is welcome
 - **Cache eviction strategy** — IndexedDB cache entries expire after 30 days; smarter invalidation (e.g., per-dictionary-version) could improve freshness
 
-#### Optional Raw-Developer AI Tutor
+#### AI Tutor and CWS Package Boundary
 
-Shared source retains Tutor/chat modules and `src/lib/page-bridge.js` for an
-optional raw developer path. The CWS builder disables that gateway, exposes no
-Tutor, and omits the page bridge and Puter SDK. The SDK contains lazy remote
-JavaScript/WebAssembly paths, so neither the repository root nor
-`store-assets/skillbridge-developer.zip` is a CWS upload artifact.
+The CWS candidate includes the Tutor/chat modules, `src/lib/page-bridge.js`,
+and a packaged Puter client. The Tutor contacts Claude only after the user sends
+a message; page translation never calls Puter or an AI model. The CWS builder
+removes unused remote TLS-socket imports and dynamic-code fallback from the
+vendored SDK, then fails if `scripts/check-rhc.js` finds executable remote-code
+patterns in `dist/bundled`. The raw repository and developer ZIP are not the
+scanned CWS upload artifact.
 
 #### YouTube Features
 

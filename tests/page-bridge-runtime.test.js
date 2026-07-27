@@ -111,125 +111,27 @@ describe('page-bridge runtime hardening', () => {
     delete window.__SKILLBRIDGE_BRIDGE__;
   });
 
-  test('VERIFY_REQUEST rejects page-supplied Claude model and uses Gemini fallback', async () => {
-    window.dispatchEvent(
-      new window.MessageEvent('message', {
-        source: window,
-        data: {
-          __skillbridge__: true,
-          __nonce__: nonce,
-          type: 'VERIFY_REQUEST',
-          id: 'verify-1',
-          systemPrompt: 'verify this',
-          model: 'claude-sonnet-4-6',
-        },
-      }),
-    );
+  test('ignores background translation and verification requests', async () => {
+    for (const type of ['TRANSLATE_REQUEST', 'VERIFY_REQUEST']) {
+      window.dispatchEvent(
+        new window.MessageEvent('message', {
+          source: window,
+          data: {
+            __skillbridge__: true,
+            __nonce__: nonce,
+            type,
+            id: `ignored-${type}`,
+            text: 'course text',
+            systemPrompt: 'background AI request',
+            model: 'gemini-2.0-flash',
+          },
+        }),
+      );
+    }
 
-    await waitFor(() => sent.some((m) => m.type === 'VERIFY_RESPONSE'));
-
-    expect(chat).toHaveBeenCalledWith(
-      'verify this',
-      expect.objectContaining({ model: 'gemini-2.0-flash', stream: false }),
-    );
-    expect(sent.find((m) => m.type === 'VERIFY_RESPONSE')).toEqual(
-      expect.objectContaining({ id: 'verify-1', success: true, result: 'model=gemini-2.0-flash;auth=test-token' }),
-    );
-    expect(globalThis.puter).toBeUndefined();
-    expect(globalThis.puterParent).toBeUndefined();
-  });
-
-  test('TRANSLATE_REQUEST returns a fixed response envelope on success', async () => {
-    window.dispatchEvent(
-      new window.MessageEvent('message', {
-        source: window,
-        data: {
-          __skillbridge__: true,
-          __nonce__: nonce,
-          type: 'TRANSLATE_REQUEST',
-          id: 'translate-success',
-          text: 'Hello',
-          systemPrompt: 'Translate Hello',
-          model: 'claude-sonnet-4-6',
-        },
-      }),
-    );
-
-    await waitFor(() => sent.some((message) => message.type === 'TRANSLATE_RESPONSE'));
-
-    expect(chat).toHaveBeenCalledWith(
-      'Translate Hello',
-      expect.objectContaining({ model: 'gemini-2.0-flash', stream: false }),
-    );
-    expect(sent.find((message) => message.type === 'TRANSLATE_RESPONSE')).toEqual({
-      __skillbridge__: true,
-      __nonce__: nonce,
-      type: 'TRANSLATE_RESPONSE',
-      id: 'translate-success',
-      success: true,
-      result: 'model=gemini-2.0-flash;auth=test-token',
-    });
-  });
-
-  test('TRANSLATE_REQUEST failure preserves the original text in the error response', async () => {
-    chat.mockRejectedValueOnce(new Error('forced translate failure'));
-
-    window.dispatchEvent(
-      new window.MessageEvent('message', {
-        source: window,
-        data: {
-          __skillbridge__: true,
-          __nonce__: nonce,
-          type: 'TRANSLATE_REQUEST',
-          id: 'translate-failure',
-          text: 'Keep this text',
-          systemPrompt: 'Translate this',
-          model: 'gemini-2.0-flash',
-        },
-      }),
-    );
-
-    await waitFor(() => sent.some((message) => message.type === 'TRANSLATE_RESPONSE'));
-
-    expect(sent.find((message) => message.type === 'TRANSLATE_RESPONSE')).toEqual({
-      __skillbridge__: true,
-      __nonce__: nonce,
-      type: 'TRANSLATE_RESPONSE',
-      id: 'translate-failure',
-      success: false,
-      error: 'forced translate failure',
-      result: 'Keep this text',
-    });
-  });
-
-  test('VERIFY_REQUEST failure returns an empty result in the fixed error envelope', async () => {
-    chat.mockRejectedValueOnce(new Error('forced verify failure'));
-
-    window.dispatchEvent(
-      new window.MessageEvent('message', {
-        source: window,
-        data: {
-          __skillbridge__: true,
-          __nonce__: nonce,
-          type: 'VERIFY_REQUEST',
-          id: 'verify-failure',
-          systemPrompt: 'Verify this',
-          model: 'gemini-2.0-flash',
-        },
-      }),
-    );
-
-    await waitFor(() => sent.some((message) => message.type === 'VERIFY_RESPONSE'));
-
-    expect(sent.find((message) => message.type === 'VERIFY_RESPONSE')).toEqual({
-      __skillbridge__: true,
-      __nonce__: nonce,
-      type: 'VERIFY_RESPONSE',
-      id: 'verify-failure',
-      success: false,
-      error: 'forced verify failure',
-      result: '',
-    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(chat).not.toHaveBeenCalled();
+    expect(sent.some((message) => /^(TRANSLATE|VERIFY)_RESPONSE$/.test(message.type))).toBe(false);
   });
 
   test('non-streaming CHAT_REQUEST rejects page-supplied Gemini model and uses Claude fallback', async () => {
@@ -533,68 +435,6 @@ describe('page-bridge runtime hardening', () => {
     expect(sent.some((m) => m.type === 'CHAT_STREAM_END')).toBe(false);
   });
 
-  // ── "No account required" guard ────────────────────────────────
-  // The bundled Puter SDK opens its own sign-in prompt when ai.chat() is called
-  // while signed out (env "web"). Background paths (verify / block-translate) run
-  // automatically during translation, so they MUST NOT reach ai.chat() for a
-  // signed-out user — otherwise the public "no account required" claim breaks.
-  // These exercise the REAL auth gate (not the e2e Puter stub, which is ungated).
-
-  test('VERIFY_REQUEST is skipped (no chat call, no auth prompt) when signed out', async () => {
-    puterAuthToken = null;
-    window.dispatchEvent(
-      new window.MessageEvent('message', {
-        source: window,
-        data: {
-          __skillbridge__: true,
-          __nonce__: nonce,
-          type: 'VERIFY_REQUEST',
-          id: 'verify-anon',
-          systemPrompt: 'verify this',
-          model: 'gemini-2.0-flash',
-        },
-      }),
-    );
-
-    await waitFor(() => sent.some((m) => m.type === 'VERIFY_RESPONSE'));
-
-    // ai.chat — the call that would trip Puter's sign-in prompt — never ran.
-    expect(chat).not.toHaveBeenCalled();
-    expect(sent.find((m) => m.type === 'VERIFY_RESPONSE')).toEqual(
-      expect.objectContaining({ id: 'verify-anon', success: true, result: '', skipped: 'unauthenticated' }),
-    );
-  });
-
-  test('TRANSLATE_REQUEST is skipped (keeps the GT text) when signed out', async () => {
-    puterAuthToken = null;
-    window.dispatchEvent(
-      new window.MessageEvent('message', {
-        source: window,
-        data: {
-          __skillbridge__: true,
-          __nonce__: nonce,
-          type: 'TRANSLATE_REQUEST',
-          id: 'tr-anon',
-          systemPrompt: 'translate this',
-          text: 'google-translate output',
-          model: 'gemini-2.0-flash',
-        },
-      }),
-    );
-
-    await waitFor(() => sent.some((m) => m.type === 'TRANSLATE_RESPONSE'));
-
-    expect(chat).not.toHaveBeenCalled();
-    expect(sent.find((m) => m.type === 'TRANSLATE_RESPONSE')).toEqual(
-      expect.objectContaining({
-        id: 'tr-anon',
-        success: true,
-        result: 'google-translate output',
-        skipped: 'unauthenticated',
-      }),
-    );
-  });
-
   test('CHAT_REQUEST still runs when signed out — the tutor is a deliberate user action', async () => {
     puterAuthToken = null;
     window.dispatchEvent(
@@ -723,8 +563,7 @@ describe('page-bridge runtime hardening', () => {
   // Regression guard for the review finding: the recovery used to fire on ANY
   // non-iterable resolution while signed in, so a quota/permission/5xx
   // envelope destroyed a WORKING token, popped a sign-in prompt that could not
-  // fix the real problem, and silently disabled the background verify path
-  // (which skips while unauthenticated) for the rest of the session.
+  // fix the real problem, and disabled the Tutor for the rest of the session.
   test.each([
     ['insufficient_funds', { error: { code: 'insufficient_funds', message: 'Insufficient funds' } }],
     ['usage_limited', { error: { code: 'usage_limited', message: 'Usage limit reached' } }],

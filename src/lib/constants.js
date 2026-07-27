@@ -9,18 +9,17 @@
 // ==================== AI MODELS ====================
 
 const SKILLBRIDGE_MODELS = {
-  GEMINI: 'gemini-2.0-flash',
   CLAUDE: 'claude-sonnet-4-6',
 };
 
 // ==================== DEFAULTS ====================
 
-// Gemini "keep-English" fallback, used by getKeepEnglishTerms() only when a locale
+// Protected-term fallback, used by getKeepEnglishTerms() only when a locale
 // has no _protected keys. Brand/product/file-format proper nouns ONLY — generic
 // concept words (skill, Subagent, Enterprise, Personal, Plugin, Dispatch) were
 // dropped here to match PR #218, which removed them from the per-locale _protected
 // blocks because they are translated natively per locale (see docs/TRANSLATION_RULES.md
-// §1). Keeping them would tell Gemini to keep ordinary words English.
+// §1). Keeping them would leave ordinary words untranslated.
 const DEFAULT_PROTECTED_TERMS = 'API, SDK, Claude, Anthropic, Claude Code, Cowork, Computer Use, SKILL.md, frontmatter';
 
 const SB_SHARED_CONSTANTS = globalThis.SB_SHARED_CONSTANTS;
@@ -113,12 +112,7 @@ const TUTOR_EXAM_LABELS = {
 // ==================== THRESHOLDS ====================
 
 const SKILLBRIDGE_THRESHOLDS = {
-  GEMINI_MIN_TEXT: 80,
-  GEMINI_ALPHA_RATIO: 0.5,
-  MIN_COMPLEX_TEXT: 120,
   GT_BATCH_SIZE: 10,
-  GEMINI_BATCH_SIZE: 3,
-  VERIFY_QUEUE_MAX: 500,
   PENDING_NODES_MAX: 500,
   VIEWPORT_CHUNK_SIZE: 50, // Elements per idle-callback chunk
   CACHE_TTL_MS: 30 * 24 * 60 * 60 * 1000, // 30 days
@@ -135,9 +129,6 @@ const SKILLBRIDGE_THRESHOLDS = {
   GT_RATE_LIMIT_PER_MIN: 120, // Max Google Translate requests per minute
   GT_QUEUE_MAX: 200, // Max items in the Google Translate queue
   BRIDGE_READY_TIMEOUT: 20000, // 20s timeout waiting for Puter.js bridge
-  REQUEST_TIMEOUT: 30000, // 30s timeout for individual AI requests
-  PENDING_CALLBACKS_MAX: 100, // Max concurrent pending bridge callbacks
-  CALLBACK_STALE_MS: 120000, // Auto-cleanup callbacks older than 2 min
   STORAGE_QUOTA_WARN: 0.9, // Warn when storage usage exceeds 90%
   STORAGE_EVICT_TARGET: 0.7, // Evict old entries until usage drops below 70%
 };
@@ -146,11 +137,7 @@ const SKILLBRIDGE_THRESHOLDS = {
 
 const SKILLBRIDGE_DELAYS = {
   GT_BATCH: 100,
-  GEMINI_BATCH: 300,
   DOM_DEBOUNCE: 300,
-  VERIFY_QUEUE: 1000,
-  VERIFY_QUEUE_RETRY: 2000,
-  BRIDGE_READY_VERIFY: 500,
   LATE_CONTENT: 1500,
   SIDEBAR_BIND: 100,
   TEXT_SELECTION: 10,
@@ -158,7 +145,6 @@ const SKILLBRIDGE_DELAYS = {
   PROGRESS_HIDE: 300,
   PROGRESS_REMOVE: 400,
   WELCOME_BANNER: 1500,
-  TEXT_UPDATE_FADE: 500,
   IDLE_TIMEOUT: 1000, // requestIdleCallback timeout (ms) for offscreen work
   OVERLAY_REMOVE: 200, // delay before removing overlay element after fade-out
 };
@@ -1128,12 +1114,15 @@ const ENGINE_LABELS = {
     id: 'Berjalan di komputer Anda via Ollama atau server yang kompatibel dengan OpenAI. Tidak ada data yang dikirim ke cloud. Perlu server lokal yang berjalan.',
     it: 'Funziona sul tuo computer tramite Ollama o un server compatibile con OpenAI. Nulla viene inviato al cloud. Richiede un server locale attivo.',
     ja: 'Ollama など OpenAI 互換サーバーで自分の PC 上で動作します。クラウドには何も送信されません。ローカルサーバーの起動が必要です。',
-    'zh-CN': '通过 Ollama 或任何兼容 OpenAI 的服务器在你自己的电脑上运行。不会向云端发送任何数据。需要本地服务器处于运行状态。',
-    'zh-TW': '透過 Ollama 或任何相容 OpenAI 的伺服器在你自己的電腦上執行。不會向雲端傳送任何資料。需要本地伺服器處於執行狀態。',
+    'zh-CN':
+      '通过 Ollama 或任何兼容 OpenAI 的服务器在你自己的电脑上运行。不会向云端发送任何数据。需要本地服务器处于运行状态。',
+    'zh-TW':
+      '透過 Ollama 或任何相容 OpenAI 的伺服器在你自己的電腦上執行。不會向雲端傳送任何資料。需要本地伺服器處於執行狀態。',
     es: 'Se ejecuta en tu propio equipo mediante Ollama o cualquier servidor compatible con OpenAI. No se envía nada a la nube. Requiere un servidor local en ejecución.',
     fr: 'Fonctionne sur votre machine via Ollama ou tout serveur compatible OpenAI. Rien n’est envoyé vers le cloud. Nécessite un serveur local en cours d’exécution.',
     de: 'Läuft auf Ihrem eigenen Rechner über Ollama oder einen OpenAI-kompatiblen Server. Nichts wird in die Cloud gesendet. Erfordert einen laufenden lokalen Server.',
-    'pt-BR': 'Executa na sua própria máquina via Ollama ou qualquer servidor compatível com OpenAI. Nada é enviado para a nuvem. Requer um servidor local em execução.',
+    'pt-BR':
+      'Executa na sua própria máquina via Ollama ou qualquer servidor compatível com OpenAI. Nada é enviado para a nuvem. Requer um servidor local em execução.',
     ru: 'Работает на вашем компьютере через Ollama или любой OpenAI-совместимый сервер. Ничего не отправляется в облако. Требуется запущенный локальный сервер.',
     vi: 'Chạy trên máy của bạn qua Ollama hoặc bất kỳ máy chủ tương thích OpenAI nào. Không có dữ liệu nào được gửi lên đám mây. Cần một máy chủ cục bộ đang chạy.',
   },
@@ -1149,12 +1138,15 @@ const ENGINE_LABELS = {
     id: 'Model ~4B (misalnya gemma3:4b) adalah pilihan praktis pada RAM 16 GB; 12B atau lebih besar memerlukan ~24 GB atau lebih. Jawaban pertama lebih lambat karena model dimuat. AI bawaan Chrome tidak digunakan — jalankan server lokal.',
     it: 'Un modello ~4B (es. gemma3:4b) è la scelta pratica con 16 GB di RAM; da 12B in su servono ~24 GB o più. La prima risposta è più lenta perché il modello viene caricato. L’IA integrata di Chrome non viene usata: usa un server locale.',
     ja: 'メモリ 16GB では 4B 級モデル（例: gemma3:4b）が実用的です。12B 以上は 24GB 以上を推奨します。初回の応答はモデル読み込みのため遅くなります。Chrome 内蔵 AI は使用せず、ローカルサーバーを実行します。',
-    'zh-CN': '在 16 GB 内存下，约 4B 的模型（如 gemma3:4b）较为实用；12B 及更大的模型建议 24 GB 以上。首次回答会因加载模型而较慢。不使用 Chrome 内置 AI，请运行本地服务器。',
-    'zh-TW': '在 16 GB 記憶體下，約 4B 的模型（如 gemma3:4b）較為實用；12B 及更大的模型建議 24 GB 以上。首次回答會因載入模型而較慢。不使用 Chrome 內建 AI，請執行本地伺服器。',
+    'zh-CN':
+      '在 16 GB 内存下，约 4B 的模型（如 gemma3:4b）较为实用；12B 及更大的模型建议 24 GB 以上。首次回答会因加载模型而较慢。不使用 Chrome 内置 AI，请运行本地服务器。',
+    'zh-TW':
+      '在 16 GB 記憶體下，約 4B 的模型（如 gemma3:4b）較為實用；12B 及更大的模型建議 24 GB 以上。首次回答會因載入模型而較慢。不使用 Chrome 內建 AI，請執行本地伺服器。',
     es: 'Un modelo de ~4B (p. ej. gemma3:4b) es la opción práctica con 16 GB de RAM; de 12B en adelante conviene tener ~24 GB o más. La primera respuesta es más lenta porque se carga el modelo. No se usa la IA integrada de Chrome: ejecuta un servidor local.',
     fr: 'Un modèle ~4B (par ex. gemma3:4b) est le choix pratique avec 16 Go de RAM ; à partir de 12B, prévoyez ~24 Go ou plus. La première réponse est plus lente car le modèle se charge. L’IA intégrée de Chrome n’est pas utilisée : lancez un serveur local.',
     de: 'Ein ~4B-Modell (z. B. gemma3:4b) ist bei 16 GB RAM die praktische Wahl; ab 12B sind ~24 GB oder mehr sinnvoll. Die erste Antwort ist langsamer, weil das Modell geladen wird. Chromes eigene integrierte KI wird nicht genutzt — betreiben Sie stattdessen einen lokalen Server.',
-    'pt-BR': 'Um modelo de ~4B (ex.: gemma3:4b) é a escolha prática com 16 GB de RAM; de 12B em diante, ~24 GB ou mais. A primeira resposta é mais lenta porque o modelo é carregado. A IA integrada do Chrome não é usada — execute um servidor local.',
+    'pt-BR':
+      'Um modelo de ~4B (ex.: gemma3:4b) é a escolha prática com 16 GB de RAM; de 12B em diante, ~24 GB ou mais. A primeira resposta é mais lenta porque o modelo é carregado. A IA integrada do Chrome não é usada — execute um servidor local.',
     ru: 'При 16 ГБ ОЗУ практичный выбор — модель ~4B (например, gemma3:4b); для 12B и больше нужно ~24 ГБ и более. Первый ответ медленнее из-за загрузки модели. Встроенный ИИ Chrome не используется — запустите локальный сервер.',
     vi: 'Với 16 GB RAM, mô hình ~4B (ví dụ gemma3:4b) là lựa chọn thực tế; từ 12B trở lên nên có ~24 GB hoặc hơn. Câu trả lời đầu tiên chậm hơn vì phải tải mô hình. AI tích hợp của Chrome không được dùng — hãy chạy một máy chủ cục bộ.',
   },
@@ -1194,12 +1186,15 @@ const ENGINE_LABELS = {
     id: 'Server dapat dijangkau, tetapi permintaan diblokir. Jalankan Ollama dengan OLLAMA_ORIGINS="chrome-extension://*" (atau atur di server yang kompatibel dengan OpenAI).',
     it: 'Server raggiungibile, ma la richiesta è stata bloccata. Avvia Ollama con OLLAMA_ORIGINS="chrome-extension://*" (o impostalo nel tuo server compatibile con OpenAI).',
     ja: 'サーバーには到達しましたがブロックされました。OLLAMA_ORIGINS="chrome-extension://*" を設定して Ollama を起動してください（OpenAI 互換サーバーの場合は同等の設定を）。',
-    'zh-CN': '可访问服务器但被拦截。请使用 OLLAMA_ORIGINS="chrome-extension://*" 启动 Ollama（或在兼容 OpenAI 的服务器中设置）。',
-    'zh-TW': '可存取伺服器但被攔截。請使用 OLLAMA_ORIGINS="chrome-extension://*" 啟動 Ollama（或在相容 OpenAI 的伺服器中設定）。',
+    'zh-CN':
+      '可访问服务器但被拦截。请使用 OLLAMA_ORIGINS="chrome-extension://*" 启动 Ollama（或在兼容 OpenAI 的服务器中设置）。',
+    'zh-TW':
+      '可存取伺服器但被攔截。請使用 OLLAMA_ORIGINS="chrome-extension://*" 啟動 Ollama（或在相容 OpenAI 的伺服器中設定）。',
     es: 'Servidor accesible, pero bloqueó la solicitud. Inicia Ollama con OLLAMA_ORIGINS="chrome-extension://*" (o configúralo en tu servidor compatible con OpenAI).',
     fr: 'Serveur accessible, mais il a bloqué la requête. Lancez Ollama avec OLLAMA_ORIGINS="chrome-extension://*" (ou configurez-le sur votre serveur compatible OpenAI).',
     de: 'Server erreichbar, aber die Anfrage wurde blockiert. Starten Sie Ollama mit OLLAMA_ORIGINS="chrome-extension://*" (oder legen Sie es in Ihrem OpenAI-kompatiblen Server fest).',
-    'pt-BR': 'Servidor acessível, mas a solicitação foi bloqueada. Inicie o Ollama com OLLAMA_ORIGINS="chrome-extension://*" (ou defina no seu servidor compatível com OpenAI).',
+    'pt-BR':
+      'Servidor acessível, mas a solicitação foi bloqueada. Inicie o Ollama com OLLAMA_ORIGINS="chrome-extension://*" (ou defina no seu servidor compatível com OpenAI).',
     ru: 'Сервер доступен, но запрос заблокирован. Запустите Ollama с OLLAMA_ORIGINS="chrome-extension://*" (или задайте это в вашем OpenAI-совместимом сервере).',
     vi: 'Máy chủ tiếp cận được nhưng đã chặn. Khởi động Ollama với OLLAMA_ORIGINS="chrome-extension://*" (hoặc đặt trong máy chủ tương thích OpenAI của bạn).',
   },
@@ -1233,7 +1228,8 @@ const ENGINE_LABELS = {
     es: 'El tutor de IA está desactivado. Vuelve a activarlo en la ventana de SkillBridge (Motor del tutor IA) para preguntar.',
     fr: 'Le tuteur IA est désactivé. Réactivez-le dans la fenêtre SkillBridge (Moteur du tuteur IA) pour poser des questions.',
     de: 'Der KI-Tutor ist ausgeschaltet. Schalten Sie ihn im SkillBridge-Popup (KI-Tutor-Engine) wieder ein, um Fragen zu stellen.',
-    'pt-BR': 'O tutor de IA está desligado. Ligue-o novamente no popup do SkillBridge (Motor do tutor IA) para fazer perguntas.',
+    'pt-BR':
+      'O tutor de IA está desligado. Ligue-o novamente no popup do SkillBridge (Motor do tutor IA) para fazer perguntas.',
     ru: 'ИИ-репетитор отключён. Включите его снова во всплывающем окне SkillBridge («Движок ИИ-репетитора»), чтобы задавать вопросы.',
     vi: 'Gia sư AI đang tắt. Hãy bật lại trong cửa sổ SkillBridge (Bộ máy gia sư AI) để đặt câu hỏi.',
   },
@@ -1248,7 +1244,8 @@ const ENGINE_LABELS = {
     es: 'El tutor de IA necesita un inicio de sesión (gratuito) en Puter. Envía la pregunta de nuevo y completa la ventana de inicio de sesión.',
     fr: 'Le tuteur IA nécessite une connexion Puter (gratuite). Renvoyez votre question et terminez la fenêtre de connexion qui s’ouvre.',
     de: 'Der KI-Tutor benötigt eine (kostenlose) Puter-Anmeldung. Senden Sie die Frage erneut und schließen Sie das Anmeldefenster ab.',
-    'pt-BR': 'O tutor de IA precisa de um login (gratuito) no Puter. Envie a pergunta novamente e conclua a janela de login.',
+    'pt-BR':
+      'O tutor de IA precisa de um login (gratuito) no Puter. Envie a pergunta novamente e conclua a janela de login.',
     ru: 'ИИ-репетитору нужен (бесплатный) вход в Puter. Отправьте вопрос снова и завершите вход в открывшемся окне.',
     vi: 'Gia sư AI cần đăng nhập Puter (miễn phí). Hãy gửi lại câu hỏi và hoàn tất cửa sổ đăng nhập mở ra.',
   },
@@ -1263,7 +1260,8 @@ const ENGINE_LABELS = {
     es: 'No se pudo conectar con tu servidor de IA local. Comprueba que esté en ejecución y que la dirección en la ventana de SkillBridge sea correcta.',
     fr: 'Impossible de joindre votre serveur IA local. Vérifiez qu’il est lancé et que l’adresse dans la fenêtre SkillBridge est correcte.',
     de: 'Ihr lokaler KI-Server war nicht erreichbar. Prüfen Sie, ob er läuft und ob die Adresse im SkillBridge-Popup korrekt ist.',
-    'pt-BR': 'Não foi possível acessar seu servidor de IA local. Verifique se ele está em execução e se o endereço no popup do SkillBridge está correto.',
+    'pt-BR':
+      'Não foi possível acessar seu servidor de IA local. Verifique se ele está em execução e se o endereço no popup do SkillBridge está correto.',
     ru: 'Не удалось подключиться к вашему локальному ИИ-серверу. Убедитесь, что он запущен, и проверьте адрес во всплывающем окне SkillBridge.',
     vi: 'Không thể kết nối tới máy chủ AI cục bộ của bạn. Hãy kiểm tra máy chủ đang chạy và địa chỉ trong cửa sổ SkillBridge là đúng.',
   },
@@ -1285,7 +1283,6 @@ const ENGINE_LABELS = {
 };
 
 const SKILLBRIDGE_MODEL_LABELS = {
-  GEMINI: 'Gemini 2.0 Flash',
   CLAUDE: 'Claude Sonnet 4.6',
 };
 

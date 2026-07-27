@@ -57,10 +57,9 @@ test.describe('SkillBridge — bundled action popup', () => {
     await expect(popup.locator('#main-content')).toBeVisible();
     await expect(popup.locator('#not-skilljar')).toBeHidden();
     await expect(popup.locator('#footer')).toContainText('Google Translate');
-    // v4: the AI tutor ships in the CWS build, so the popup advertises the AI
-    // stack (Gemini verify + Claude tutor) and the sidebar button names it.
+    // v4: page translation stays deterministic while the optional Tutor ships.
     await expect(popup.locator('#footer')).toContainText('AI Tutor');
-    await expect(popup.locator('#footer')).toContainText(/Gemini|Claude/i);
+    await expect(popup.locator('#footer')).toContainText(/Claude/i);
     await expect(popup.locator('#sidebar-btn')).toContainText(/Tutor/i);
     await expect(popup.locator('#lang-select option')).toHaveCount(33);
     await expect(popup.locator('#lang-select optgroup').nth(0)).toHaveAttribute('label', '★ Curated terminology');

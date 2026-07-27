@@ -271,23 +271,24 @@ describe('SkilljarTranslator', () => {
       expect(result).toEqual({ text: 'Claude 프롬프트 예시', source: 'static' });
     });
 
-    test('restores protected terms on immediate Google results before verify queueing', async () => {
+    test('restores protected terms and caches immediate Google results without an AI review request', async () => {
       translator.cachedLookup = jest.fn(async () => null);
       translator.googleTranslate = jest.fn(async () => '클로드 프롬프트 예시');
-      translator.queueGeminiVerify = jest.fn();
+      translator._cacheTranslation = jest.fn(async () => undefined);
 
       const result = await translator.translate('This is a Claude prompt example', 'ko');
 
       expect(result).toEqual({ text: 'Claude 프롬프트 예시', source: 'google' });
-      expect(translator.queueGeminiVerify).toHaveBeenCalledWith(
+      expect(translator._cacheTranslation).toHaveBeenCalledWith(
         'This is a Claude prompt example',
         'Claude 프롬프트 예시',
         'ko',
       );
+      expect(translator.queueGeminiVerify).toBeUndefined();
     });
   });
 
-  describe('queueGeminiVerify heuristics', () => {
+  describe('premium language configuration', () => {
     test('isPremium returns true for premium languages (Italian promoted v3.5.34)', () => {
       expect(translator.premiumLanguages.includes('ko')).toBe(true);
       expect(translator.premiumLanguages.includes('pt-BR')).toBe(true);
@@ -422,93 +423,5 @@ describe('chatStream — bridge-not-ready propagates as a rejection', () => {
     // this resolves to a string instead, the "thinking…" spinner is stranded
     // forever with no error and no retry.
     await expect(t.chatStream('hello', 'ko', '', () => {}, {})).rejects.toThrow('Bridge not ready');
-  });
-});
-
-describe('_verifySingle — a non-translation Gemini reply never replaces the GT result', () => {
-  // Verify only runs on source text >= GEMINI_MIN_TEXT (80 chars), so the tests
-  // use a realistic long source — that's the regime the length guard targets and
-  // the regime production actually hits. (The earlier version of this block used
-  // a 5-char 'Hello' source, which is unreachable in production and let short
-  // affirmations look fine.)
-  const ORIGINAL = 'Anthropic released the Claude model family to help developers build safe and reliable AI agents.';
-  const GT =
-    '앤트로픽은 개발자가 안전하고 신뢰할 수 있는 AI 에이전트를 구축하도록 돕기 위해 Claude 모델 제품군을 출시했습니다.';
-
-  function harness(geminiReply) {
-    const t = new SkilljarTranslator();
-    const cached = [];
-    const notified = [];
-    t._sendRequest = async () => geminiReply;
-    t._cacheTranslation = async (original, translation, lang) => {
-      cached.push({ original, translation, lang });
-    };
-    t._notifyUpdate = (original, translation, lang, wasImproved) => {
-      notified.push({ original, translation, lang, wasImproved });
-    };
-    return { t, cached, notified };
-  }
-
-  // Replies that mean "the Google translation is good" (bare OK + variants) AND
-  // replies that are stray affirmations / junk Gemini emits instead of a clean
-  // OK or a real translation. NONE of these may be cached or rendered as the
-  // translation — the user must keep the correct Google output. The second group
-  // is exactly what shipped broken before the length guard.
-  const keepGtReplies = [
-    'OK',
-    'ok.',
-    '"OK"', // clean OK forms (handled by the OK normalizer)
-    'OK?',
-    'OK,',
-    'Okay',
-    'OK입니다',
-    '“OK”', // curly-quoted
-    '- OK',
-    'OK, looks good',
-    '   ', // whitespace-only must NOT blank the element
-  ];
-  for (const reply of keepGtReplies) {
-    test(`reply ${JSON.stringify(reply)} keeps the Google translation (not cached/rendered as the reply)`, async () => {
-      const { t, cached, notified } = harness(reply);
-      await t._verifySingle({ original: ORIGINAL, googleTranslation: GT, targetLang: 'ko' });
-      // The GT result is what gets cached...
-      expect(cached).toHaveLength(1);
-      expect(cached[0].translation).toBe(GT);
-      // ...and the render notification is wasImproved=false (so content.js does
-      // NOT call safeReplaceText — the reply string never reaches the DOM).
-      expect(notified).toHaveLength(1);
-      expect(notified[0].translation).toBe(GT);
-      expect(notified[0].wasImproved).toBe(false);
-    });
-  }
-
-  test('a genuine, full-length improved translation IS cached and rendered as the improvement', async () => {
-    const improved =
-      '앤트로픽은 개발자들이 안전하고 신뢰할 수 있는 AI 에이전트를 만들 수 있도록 돕고자 Claude 모델 제품군을 공개했습니다.';
-    const { t, cached, notified } = harness(improved);
-    await t._verifySingle({ original: ORIGINAL, googleTranslation: GT, targetLang: 'ko' });
-    expect(cached[0].translation).toBe(improved);
-    expect(notified[0].wasImproved).toBe(true);
-  });
-
-  test('restores protected terms before caching or notifying an OK Google result', async () => {
-    global.window._protectedTerms = {
-      restoreProtectedTerms: (text) => text.replaceAll('앤스로픽', 'Anthropic').replaceAll('클로드', 'Claude'),
-    };
-
-    try {
-      const { t, cached, notified } = harness('OK');
-      const badGt = '앤스로픽은 클로드를 프런티어 모델로 출시했습니다.';
-
-      await t._verifySingle({ original: ORIGINAL, googleTranslation: badGt, targetLang: 'ko' });
-
-      expect(cached).toHaveLength(1);
-      expect(cached[0].translation).toBe('Anthropic은 Claude를 프런티어 모델로 출시했습니다.');
-      expect(notified[0].translation).toBe('Anthropic은 Claude를 프런티어 모델로 출시했습니다.');
-      expect(notified[0].translation).not.toContain('앤스로픽');
-      expect(notified[0].translation).not.toContain('클로드');
-    } finally {
-      delete global.window._protectedTerms;
-    }
   });
 });

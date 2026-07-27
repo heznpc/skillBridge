@@ -63,7 +63,6 @@
       "css": [
         "src/content/styles/base.css",
         "src/content/styles/sidebar-chat.css",
-        "src/content/styles/verification.css",
         "src/content/styles/banners-header-progress.css",
         "src/content/styles/ask-tutor.css",
         "src/content/styles/history.css",
