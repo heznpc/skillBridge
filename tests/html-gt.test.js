@@ -10,6 +10,9 @@
 /* global describe, test, expect, window, document */
 
 require('../src/content/html-gt.js');
+// dom-safe provides the inline sanitizer that runs on GT output before the
+// integrity gate — the two must agree on which tags survive.
+require('../src/lib/dom-safe.js');
 const { checkTagIntegrity, reconcileHtml } = window._sbHtmlGt;
 
 function el(html) {
@@ -149,5 +152,68 @@ describe('same-key disambiguation', () => {
     expect(orig.querySelector('#term-a').className).toBe('notranslate');
     expect(orig.querySelector('#mark-b').__sbId).toBe('B');
     expect(orig.querySelector('#mark-b').className).toBe('hl');
+  });
+});
+
+// Review finding: the inline sanitizer that runs on GT output stripped
+// <img> and <button>. Because the integrity gate tracks both, every block
+// containing one failed the gate and stayed untranslated (and before <img>
+// was tracked, the image vanished silently). The sanitized tree is only a
+// MATCHING TEMPLATE — reconcileHtml swaps in the original nodes — so allowing
+// them cannot inject a translated src/href into the page.
+describe('sanitizer keeps the tags the integrity gate tracks', () => {
+  const { sanitizeInlineHtml } = window._sbDomSafe || {};
+
+  test('_sbDomSafe is loaded for this check', () => {
+    expect(typeof sanitizeInlineHtml).toBe('function');
+  });
+
+  test('img and button survive sanitization with the attributes the gate matches on', () => {
+    const out = sanitizeInlineHtml(
+      '<p>Use <img src="/i/gear.png" alt="gear" class="ic"> and <button id="go" class="cta">Start</button> now</p>',
+    );
+    expect(out).toMatch(/<img[^>]*src="\/i\/gear\.png"/);
+    expect(out).toMatch(/alt="gear"/);
+    expect(out).toMatch(/<button[^>]*id="go"/);
+    expect(out).toMatch(/class="cta"/);
+  });
+
+  // Mirrors _applyHtmlTranslation: sanitize, then re-wrap in a container of
+  // the original tag (the inline sanitizer strips the block wrapper itself).
+  function applyLikePipeline(originalEl, translatedHtml) {
+    const container = document.createElement(originalEl.tagName);
+    container.innerHTML = sanitizeInlineHtml(translatedHtml);
+    let root = container;
+    if (container.children.length === 1 && container.firstElementChild.tagName === originalEl.tagName) {
+      root = container.firstElementChild;
+    }
+    return root;
+  }
+
+  test('a sanitized block still passes the integrity gate end to end', () => {
+    const orig = el('<p>Use the <img src="/i/gear.png" alt="gear"> settings <button id="go">button</button>.</p>');
+    const translated = '<p><img src="/i/gear.png" alt="gear"> 설정 <button id="go">버튼</button>을 사용하세요.</p>';
+    const rootEl = applyLikePipeline(orig, translated);
+    expect(checkTagIntegrity(orig, rootEl)).toBe(true);
+    expect(reconcileHtml(orig, rootEl)).toBe(true);
+    expect(orig.querySelector('img')).toBeTruthy();
+    expect(orig.querySelector('button').textContent).toBe('버튼');
+  });
+
+  test('regression: before the fix the sanitizer dropped these and the gate failed', () => {
+    // Guards the exact defect: if img/button ever leave the allowlist again,
+    // the sanitized tree loses them and the gate refuses the whole block.
+    const orig = el('<p>Use the <img src="/i/gear.png"> settings <button>button</button>.</p>');
+    const strippedByOldSanitizer = document.createElement('p');
+    strippedByOldSanitizer.innerHTML = ' 설정 버튼을 사용하세요.';
+    expect(checkTagIntegrity(orig, strippedByOldSanitizer)).toBe(false);
+  });
+
+  test('unsafe src/href and event handlers are still stripped', () => {
+    const out = sanitizeInlineHtml(
+      '<p><img src="javascript:alert(1)" onerror="alert(1)"><a href="javascript:alert(1)">x</a></p>',
+    );
+    expect(out).not.toMatch(/javascript:/i);
+    expect(out).not.toMatch(/onerror/i);
   });
 });

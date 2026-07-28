@@ -445,7 +445,21 @@
     }
   }
 
+  // True once WE injected the SDK script, so a `puter` global that appears
+  // afterwards is ours. Before that, any `puter` on the page world belongs to
+  // the (untrusted) host page.
+  let _puterScriptInjected = false;
+
   function _captureAndHidePuter() {
+    // A page-world script that defines `window.puter.ai.chat` BEFORE our SDK
+    // loads would otherwise be adopted as the chat implementation — handing it
+    // every tutor question plus its lesson context and letting it forge the
+    // answers rendered in the sidebar. This bridge already treats the host
+    // page as untrusted (see the origin pinning below); fail closed here too.
+    if (!_puterScriptInjected && typeof globalThis.puter !== 'undefined') {
+      log('Refusing to adopt a pre-existing page-world `puter` global');
+      return false;
+    }
     const puterApi = globalThis.puter;
     const puterParentApi = globalThis.puterParent;
     const puterParentCaptured = Object.prototype.hasOwnProperty.call(globalThis, 'puterParent');
@@ -611,6 +625,8 @@
         }, 100);
       };
       script.onerror = () => reject(new Error('Failed to load Puter.js'));
+      // From here on, a `puter` global is the one our own script created.
+      _puterScriptInjected = true;
       document.head.appendChild(script);
     });
     return puterLoadPromise;

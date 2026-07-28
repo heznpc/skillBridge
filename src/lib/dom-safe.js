@@ -71,6 +71,11 @@
     'abbr',
     'b',
     'br',
+    // `button` and `img` are structural for HTML-GT: the integrity gate tracks
+    // them, so stripping them here made every block containing one fail the
+    // gate and stay untranslated (img additionally used to vanish silently).
+    'button',
+    'img',
     'code',
     'em',
     'i',
@@ -88,13 +93,15 @@
   ]);
 
   const INLINE_ATTR_ALLOWLIST = {
-    a: new Set(['href', 'title', 'lang', 'target']),
+    a: new Set(['href', 'title', 'lang', 'target', 'class', 'id']),
+    button: new Set(['type', 'title', 'lang', 'class', 'id', 'disabled']),
+    img: new Set(['src', 'alt', 'title', 'lang', 'class', 'id', 'width', 'height']),
     abbr: new Set(['title', 'lang']),
     code: new Set(['class', 'lang']),
     kbd: new Set(['lang']),
     mark: new Set(['lang']),
     samp: new Set(['lang']),
-    span: new Set(['class', 'lang', 'title']),
+    span: new Set(['class', 'lang', 'title', 'id']),
     var: new Set(['lang']),
   };
   const DEFAULT_INLINE_ATTRS = new Set(['lang', 'title']);
@@ -160,7 +167,7 @@
         for (const attr of Array.from(child.attributes)) {
           const name = attr.name.toLowerCase();
           if (name.startsWith('on') || !allowed.has(name)) continue;
-          if (name === 'href' && !isSafeHttpHref(attr.value)) continue;
+          if ((name === 'href' || name === 'src') && !isSafeHttpHref(attr.value)) continue;
           clean.setAttribute(attr.name, attr.value);
         }
         if (tag === 'a' && clean.getAttribute('target') === '_blank') {

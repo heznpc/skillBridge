@@ -291,3 +291,35 @@ describe('tutor error surfacing for deterministic engine states', () => {
     expect(trSrc).toContain('Local AI engine unavailable');
   });
 });
+
+// Review findings: the offline guard blocked the LOCAL engine (which talks to
+// this machine and needs no internet), and structured HTML blocks were dropped
+// offline instead of being deferred like plain text.
+describe('offline behavior', () => {
+  const sidebarSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'content', 'sidebar-chat.js'), 'utf8');
+  const queueSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'content', 'gt-queue.js'), 'utf8');
+
+  test('the chat offline guard exempts the local engine', () => {
+    expect(sidebarSrc).toContain("const offlineBlocks = sb.isOffline && (await _currentEngine()) !== 'local';");
+    expect(sidebarSrc).toContain('if (offlineBlocks) {');
+    expect(sidebarSrc).toContain('async function _currentEngine()');
+    expect(sidebarSrc).toContain("return sb_ai_engine || 'cloud';");
+  });
+
+  test('structured HTML blocks are deferred offline, not dropped', () => {
+    const fn = queueSrc.slice(
+      queueSrc.indexOf('async function translateHtmlItems'),
+      queueSrc.indexOf('async function processGTQueue'),
+    );
+    expect(fn).toContain('queueOfflineItems(htmlItems);');
+    // The old early-return that silently abandoned them must be gone.
+    expect(fn).not.toContain('if (sb.isOffline) return true;');
+  });
+
+  test('the offline flush re-queues by element, so deferred blocks get re-classified', () => {
+    expect(queueSrc).toContain('function flushOfflinePending(');
+    const fn = queueSrc.slice(queueSrc.indexOf('function flushOfflinePending('), queueSrc.indexOf('sb._gt = {'));
+    expect(fn).toContain('queueForGoogleTranslate(');
+    expect(fn).toContain('pending.map((item) => item.el)');
+  });
+});

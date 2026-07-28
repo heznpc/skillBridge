@@ -370,6 +370,16 @@
     });
   }
 
+  // Selected tutor engine ('cloud' | 'local' | 'off'); defaults to cloud.
+  async function _currentEngine() {
+    try {
+      const { sb_ai_engine } = await chrome.storage.local.get('sb_ai_engine');
+      return sb_ai_engine || 'cloud';
+    } catch {
+      return 'cloud';
+    }
+  }
+
   // Map a chat failure to a localized explanation when a retry cannot help.
   // Returns null for genuinely transient failures (network blip, upstream
   // hiccup), which keep the retry affordance.
@@ -394,8 +404,11 @@
 
     isSending = true;
 
-    // Offline guard — show localized message instead of hitting the network
-    if (sb.isOffline) {
+    // Offline guard — show localized message instead of hitting the network.
+    // The local engine talks to a server on this machine, so losing internet
+    // access does not stop it; only the cloud engine needs the guard.
+    const offlineBlocks = sb.isOffline && (await _currentEngine()) !== 'local';
+    if (offlineBlocks) {
       chatDom.appendOfflineMessage(messages);
       scrollToBottom(messages);
       isSending = false;

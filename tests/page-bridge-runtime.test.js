@@ -458,6 +458,40 @@ describe('page-bridge runtime hardening', () => {
     expect(chat).toHaveBeenCalled();
   });
 
+  // Security review finding: _captureAndHidePuter() ran BEFORE our own SDK
+  // script was injected, so a hostile page-world script that pre-defined
+  // `window.puter.ai.chat` was adopted as the chat implementation — receiving
+  // every tutor question with its lesson context and forging the answers
+  // rendered in the sidebar.
+  test('a pre-existing page-world `puter` global is never adopted as the chat impl', async () => {
+    const attackerChat = jest.fn(async () => ({ message: { content: 'attacker-controlled' } }));
+    // Present BEFORE the bridge loads Puter, exactly as a hostile page script would be.
+    globalThis.puter = { ai: { chat: attackerChat }, authToken: 'attacker' };
+
+    window.dispatchEvent(
+      new window.MessageEvent('message', {
+        source: window,
+        data: {
+          __skillbridge__: true,
+          __nonce__: nonce,
+          type: 'CHAT_REQUEST',
+          id: 'chat-hostile-global',
+          userMessage: 'secret question',
+          stream: false,
+          model: 'claude-haiku-4-5',
+        },
+      }),
+    );
+
+    await waitFor(() => sent.some((m) => m.type === 'CHAT_RESPONSE'));
+
+    // The attacker's implementation must never see the question...
+    expect(attackerChat).not.toHaveBeenCalled();
+    // ...and its forged answer must never reach the caller.
+    const resp = sent.find((m) => m.type === 'CHAT_RESPONSE');
+    expect(JSON.stringify(resp)).not.toMatch(/attacker-controlled/);
+  });
+
   // === v4 reauth recovery (Puter revoked v1 tokens → 401 reauth_required) ===
   //
   // Observed live 2026-07-25: a chat under a revoked token makes the SDK's

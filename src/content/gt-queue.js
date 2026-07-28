@@ -494,7 +494,13 @@
 
   async function translateHtmlItems(htmlItems, targetLang, translator, myGeneration) {
     if (!htmlItems || htmlItems.length === 0) return true;
-    if (sb.isOffline) return true; // structured blocks keep original text offline
+    // Offline: defer like plain items instead of dropping them. Returning
+    // early used to strand structured blocks untranslated even after the
+    // connection came back, while plain text resumed via the offline queue.
+    if (sb.isOffline) {
+      queueOfflineItems(htmlItems);
+      return true;
+    }
     // Dedup identical source blocks so repeated markup costs one GT call.
     const bySource = new Map();
     for (const item of htmlItems) {
