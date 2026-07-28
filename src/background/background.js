@@ -100,9 +100,21 @@ function _gtFetchDedup(text, tl, sl) {
   const existing = _inflightGT.get(key);
   if (existing) return existing;
 
-  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
+  // Lesson text goes in the POST BODY, never the URL. Two reasons:
+  //   1. Chrome Web Store guidance is to keep user data out of URLs/query
+  //      strings, which end up in logs, history, and referrers.
+  //   2. Since v4 translates inline-mixed blocks as HTML, `text` can be a
+  //      whole block's markup — several kB — which overruns practical URL
+  //      length limits. Verified 2026-07-27: the same endpoint accepts POST
+  //      with a form-encoded `q` and returns the identical response shape
+  //      (checked against a 3.4 kB HTML block, tags and hrefs preserved).
+  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t`;
   const expireTimer = setTimeout(() => _inflightGT.delete(key), _GT_INFLIGHT_TTL_MS);
-  const promise = fetchWithRetry(url)
+  const promise = fetchWithRetry(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+    body: new URLSearchParams({ q: text }).toString(),
+  })
     .then((resp) => resp.json())
     .then((data) => parseGTResponse(data, text))
     .finally(() => {

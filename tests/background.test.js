@@ -479,3 +479,55 @@ describe('runtime message dispatch — GOOGLE_TRANSLATE rate-limit path', () => 
     expect(sendResponse).not.toHaveBeenCalled();
   });
 });
+
+// Review finding: lesson text was sent in the Google Translate URL's `q=`
+// query string. CWS guidance is to keep user data out of URLs, and since v4
+// sends whole HTML blocks the query also overruns practical URL length
+// limits. Verified live 2026-07-27 that the endpoint accepts POST with a
+// form-encoded `q` and returns the identical response shape.
+describe('Google Translate request shape', () => {
+  let originalFetch;
+  beforeEach(() => {
+    originalFetch = global.fetch;
+    _inflightGT.clear();
+  });
+  afterEach(() => {
+    global.fetch = originalFetch;
+    _inflightGT.clear();
+  });
+
+  test('sends the text in the POST body, never in the URL', async () => {
+    let seen = null;
+    global.fetch = jest.fn((url, opts) => {
+      seen = { url, opts };
+      return Promise.resolve({ ok: true, json: async () => [[['t', 's']]] });
+    });
+
+    const secret = 'Lesson body with <a href="/private/path">a link</a>';
+    await _gtFetchDedup(secret, 'ko', 'en');
+
+    expect(seen.opts.method).toBe('POST');
+    expect(seen.opts.headers['Content-Type']).toMatch(/application\/x-www-form-urlencoded/);
+    // The URL keeps only the non-sensitive routing parameters.
+    expect(seen.url).not.toContain('q=');
+    expect(seen.url).not.toContain('private');
+    expect(seen.url).toContain('client=gtx');
+    expect(seen.url).toContain('tl=ko');
+    // ...and the text travels in the body, correctly encoded.
+    expect(new URLSearchParams(seen.opts.body).get('q')).toBe(secret);
+  });
+
+  test('a multi-kB HTML block that would overrun a URL is still sent whole', async () => {
+    let body = null;
+    global.fetch = jest.fn((_url, opts) => {
+      body = opts.body;
+      return Promise.resolve({ ok: true, json: async () => [[['t', 's']]] });
+    });
+
+    const block = '<p>See <a href="/docs">the documentation</a> for details.</p> '.repeat(60);
+    expect(block.length).toBeGreaterThan(3000);
+    await _gtFetchDedup(block, 'ko', 'en');
+
+    expect(new URLSearchParams(body).get('q')).toBe(block);
+  });
+});

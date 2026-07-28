@@ -153,9 +153,19 @@ async function registerStubs(context) {
   // Google Translate — return canned Korean for known strings; fall back
   // to a marker so unmapped strings show up clearly in assertions.
   await context.route('https://translate.googleapis.com/**', async (route) => {
-    const url = new URL(route.request().url());
-    const q = url.searchParams.get('q') || '';
-    const decoded = decodeURIComponent(q);
+    const request = route.request();
+    const url = new URL(request.url());
+    // Since v4 the extension sends `q` in the POST body (lesson text must not
+    // sit in a URL, and HTML blocks overrun URL length limits). Read the body
+    // first and keep the query fallback so this stub still works if a caller
+    // ever uses GET.
+    let q = url.searchParams.get('q') || '';
+    if (request.method() === 'POST') {
+      const body = request.postData() || '';
+      q = new URLSearchParams(body).get('q') || '';
+    }
+    // URLSearchParams already decodes; a query-string value still needs it.
+    const decoded = request.method() === 'POST' ? q : decodeURIComponent(q);
     // Content-script `el.textContent.trim()` preserves internal whitespace,
     // so the same paragraph can hit GT with embedded newlines/double-spaces
     // depending on HTML formatting. Normalize both sides so our GT_KO map

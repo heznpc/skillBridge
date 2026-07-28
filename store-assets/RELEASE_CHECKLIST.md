@@ -28,8 +28,8 @@ dashboard upload.
   `package.json`, versioned dictionary metadata, and `CHANGELOG.md`.
 - ✅ Historical `CHANGELOG.md` sections through v3.5.41 remain immutable
 - ✅ The verified v4.0.0 upload artifact contains 65 files and has SHA-256
-  `274249d04ddd052d6a9c36e30112a5345d353d217ef311285b401723574ff78b`
-  (709,429 bytes). It includes `src/bridge/puter.js`,
+  `204e70ca933b9910048e0d36158707f2e1f1b5db1375ef9ff230f8cba70bfe3d`
+  (709,878 bytes). It includes `src/bridge/puter.js`,
   `src/lib/page-bridge.js`, and the bundled HTML-GT path. This bundled ZIP is the
   **only** CWS upload artifact; the compatibility alias `npm run build:zip`
   resolves to this same safe command.
@@ -51,7 +51,7 @@ dashboard upload.
   disclosures for live legacy v1.0.1 and the unpublished candidate. Remove or
   archive the legacy section only after the replacement version is confirmed
   live in the CWS dashboard and update the listing/privacy answers together.
-- ✅ `npm run release:verify` passed on 2026-07-27: lint, format, 651 unit
+- ✅ `npm run release:verify` passed on 2026-07-27: lint, format, 662 unit
   tests, translation/glossary/i18n checks, live selector and 22-course map
   checks, first-user/popup smoke, Firefox build, store capture, 65-file ZIP
   integrity, and all 42 Chromium E2E tests across seven resource-bounded
@@ -138,24 +138,40 @@ stale against the next CWS candidate — fix these:
   executable fetches/WebAssembly, eval, and Function constructors. The final ZIP
   must pass that gate with zero findings. Answer **No** for remote code only for
   this scanned bundled artifact; never substitute the raw source/developer ZIP.
-- **Data usage → check "Website content".** Page text is sent to Google
-  Translate when translation is requested. In v4.0.0 a signed-in AI Tutor also
-  sends the tutor message plus lesson context (course title, up to five
-  headings) to Claude via Puter, but only after the user sends a Tutor message.
-  Page translation never invokes Puter or an AI model. With the local engine
-  selected, Tutor text goes only to the user's own localhost server.
-  Learning-tool state is never transmitted.
-  Leaving Website content unchecked while the description says page text is
-  sent off-device is an inconsistency reviewers reject. Local-only data
-  (bookmarks, resume, flashcards, progress, settings) is not collected, so
-  location, browsing history, and user activity stay unchecked.
+- **Data usage — v4.0.0 needs THREE categories, not one.** The 3.5.x answer
+  ("Website content" only) described a build with no Tutor; re-answer from the
+  actual v4 data flows:
+  - ✅ **Website content** — page text goes to Google Translate when
+    translation is requested (in the POST body, not the URL). For inline-mixed
+    blocks the block's markup is sent, so link targets and image addresses
+    inside it are included.
+  - ✅ **Personal communications** — the Tutor is a chat. The user's message,
+    plus lesson context (course title, up to 8 headings, and up to 2,000
+    characters of the lesson text they are viewing), is sent to Claude via
+    Puter when they send a Tutor message, and the conversation is stored on
+    their device. Chat content is user-authored communication; do not classify
+    it as website content only.
+  - ✅ **Authentication information** — the cloud Tutor requires a Puter
+    sign-in and the Puter SDK holds the resulting auth token in the page's
+    local storage. SkillBridge never receives, transmits, or stores that token
+    itself, but the flow is present in the package and must be declared.
+  - ❌ Location, browsing history, user activity, financial, health, and
+    personally identifiable information stay **unchecked**: learning-tool
+    state (bookmarks, resume, flashcards, progress, settings) and the lesson
+    URL recorded with each chat are stored locally and never transmitted.
+  - With the local engine selected, Tutor text goes only to the user's own
+    localhost server; with the Tutor off, no AI request is made at all.
+    Page translation never invokes Puter or an AI model in any mode.
   Keep the three confirmations checked (transfer to a service provider to perform
   the requested feature is an approved use case, not a sale).
 - **Permission and site-access justifications** — paste from `STORE_LISTING.md`
-  "Permission Justifications". The next candidate declares `storage` + `alarms` + three
+  "Permission Justifications". The v4.0.0 candidate declares `storage` + `alarms` + three
   explicit `host_permissions` (`*.skilljar.com`, `translate.googleapis.com`,
-  `api.github.com`) plus the scoped
-  `https://claude.com/resources/tutorials/*` content-script match. The old
+  `api.github.com`), the scoped
+  `https://claude.com/resources/tutorials/*` content-script match, **and the
+  optional** `http://localhost/*` + `http://127.0.0.1/*` host permissions
+  (requested at runtime only when the user picks the on-device Tutor engine —
+  justify it as reaching a local AI server the user runs themselves). The old
   `activeTab` / `tabs` justification fields disappear
   after upload (those permissions are no longer in the manifest); `alarms` and
   `api.github.com` and the Claude tutorial match each need an accurate line.
