@@ -162,5 +162,7 @@ describe('Firefox build file copying', () => {
   test('copies license and third-party notices', () => {
     expect(fs.existsSync(path.join(DIST_DIR, 'LICENSE'))).toBe(true);
     expect(fs.existsSync(path.join(DIST_DIR, 'THIRD_PARTY_NOTICES.md'))).toBe(true);
+    expect(fs.existsSync(path.join(DIST_DIR, 'licenses', 'Apache-2.0.txt'))).toBe(true);
+    expect(fs.existsSync(path.join(DIST_DIR, 'licenses', 'heyputer-kv.js-MIT.txt'))).toBe(true);
   });
 });

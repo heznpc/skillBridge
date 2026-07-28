@@ -25,18 +25,29 @@ global.chrome.runtime.onMessage = { addListener: (fn) => runtimeMessageListeners
 const sharedSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'shared', 'runtime-constants.js'), 'utf8');
 const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'background', 'background.js'), 'utf8');
 const originalSetTimeout = setTimeout;
+const originalClearTimeout = clearTimeout;
 let timerDelegate = (...args) => originalSetTimeout(...args);
+let clearTimerDelegate = (...args) => originalClearTimeout(...args);
 
 // Extract pure functions via eval
 const fns = new Function(
   'setTimer',
+  'clearTimer',
   `
   const setTimeout = (...args) => setTimer(...args);
+	  const clearTimeout = (...args) => clearTimer(...args);
 	  ${sharedSrc}
 	  ${src}
-  return { gtLangCode, parseGTResponse, isNewerVersion, _rateLimiter, fetchWithRetry, registerAlarms, _gtFetchDedup, _inflightGT, _gtKey };
+  return {
+    gtLangCode, parseGTResponse, isNewerVersion, _rateLimiter, fetchWithRetry,
+    registerAlarms, _gtFetchDedup, _inflightGT, _gtKey,
+    _registerCloudFrame, _registerCloudClient, _cloudFrames, _cloudClients, _cloudActive,
+  };
 `,
-)((...args) => timerDelegate(...args));
+)(
+  (...args) => timerDelegate(...args),
+  (...args) => clearTimerDelegate(...args),
+);
 
 const {
   gtLangCode,
@@ -48,6 +59,11 @@ const {
   _gtFetchDedup,
   _inflightGT,
   _gtKey,
+  _registerCloudFrame,
+  _registerCloudClient,
+  _cloudFrames,
+  _cloudClients,
+  _cloudActive,
 } = fns;
 
 // ── Tests ──────────────────────────────────────────────────────
@@ -254,6 +270,7 @@ describe('_gtFetchDedup — in-flight dedup', () => {
   test('TTL forces map entry deletion if fetch never settles', async () => {
     jest.useFakeTimers();
     timerDelegate = (...args) => setTimeout(...args);
+    clearTimerDelegate = (...args) => clearTimeout(...args);
     try {
       // fetch returns a promise that never resolves — simulates a hung
       // upstream. Without the TTL, _inflightGT.has(key) would return
@@ -269,6 +286,7 @@ describe('_gtFetchDedup — in-flight dedup', () => {
       expect(_inflightGT.has(_gtKey('hung-key', 'ko', 'en'))).toBe(false);
     } finally {
       timerDelegate = (...args) => originalSetTimeout(...args);
+      clearTimerDelegate = (...args) => originalClearTimeout(...args);
       jest.useRealTimers();
     }
   });
@@ -529,5 +547,60 @@ describe('Google Translate request shape', () => {
     await _gtFetchDedup(block, 'ko', 'en');
 
     expect(new URLSearchParams(body).get('q')).toBe(block);
+  });
+});
+
+function brokerPort({ name, url, tabId = 7 }) {
+  const messageListeners = [];
+  const disconnectListeners = [];
+  const port = {
+    name,
+    sender: { id: 'test', url, tab: { id: tabId, url } },
+    posted: [],
+    disconnected: false,
+    postMessage: jest.fn((msg) => port.posted.push(msg)),
+    disconnect: jest.fn(() => {
+      port.disconnected = true;
+      disconnectListeners.forEach((fn) => fn());
+    }),
+    onMessage: { addListener: (fn) => messageListeners.push(fn) },
+    onDisconnect: { addListener: (fn) => disconnectListeners.push(fn) },
+    emitMessage: (msg) => messageListeners.forEach((fn) => fn(msg)),
+  };
+  return port;
+}
+
+describe('cloud broker frame replacement', () => {
+  beforeEach(() => {
+    _cloudFrames.clear();
+    _cloudClients.clear();
+    _cloudActive.clear();
+  });
+
+  test('aborts and deterministically fails active requests before replacing a frame', () => {
+    const client = brokerPort({ name: 'sb-cloud-chat-client', url: 'https://course.skilljar.com/lesson' });
+    const firstFrame = brokerPort({ name: 'sb-puter-frame', url: 'src/bridge/puter-frame.html' });
+    _registerCloudClient(client);
+    _registerCloudFrame(firstFrame);
+    firstFrame.emitMessage({ type: 'ready' });
+    firstFrame.emitMessage({ type: 'auth-ui', visible: true });
+    client.emitMessage({ type: 'start', id: 'active', prompt: 'hello', model: 'claude-sonnet-4-6' });
+    expect(_cloudActive.size).toBe(1);
+    const clientMessagesBeforeHeartbeat = client.posted.length;
+    firstFrame.emitMessage({ type: 'keepalive', id: 'active' });
+    firstFrame.emitMessage({ type: 'keepalive', id: 'stale-id' });
+    expect(_cloudActive.size).toBe(1);
+    expect(client.posted).toHaveLength(clientMessagesBeforeHeartbeat);
+
+    const replacement = brokerPort({ name: 'sb-puter-frame', url: 'src/bridge/puter-frame.html' });
+    _registerCloudFrame(replacement);
+
+    expect(firstFrame.posted).toContainEqual({ type: 'abort', id: 'active' });
+    expect(firstFrame.disconnected).toBe(true);
+    expect(_cloudActive.size).toBe(0);
+    expect(client.posted).toContainEqual({ type: 'error', id: 'active', error: 'Puter broker replaced' });
+    expect(client.posted).toContainEqual({ type: 'auth-ui', visible: false });
+    expect(_cloudFrames.get(7)?.port).toBe(replacement);
+    expect(client.posted).not.toContainEqual({ type: 'unavailable' });
   });
 });

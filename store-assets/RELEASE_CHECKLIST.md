@@ -1,9 +1,10 @@
 # Release Checklist — CWS v4.0.0
 
-> Refreshed 2026-07-27 for the v4.0.0 CWS build. The upload artifact keeps
+> Refreshed 2026-07-28 for the v4.0.0 CWS build. The upload artifact keeps
 > translation and local learning tools AND ships the AI Tutor: the AI gateway is
-> pinned ON and `src/bridge/puter.js` + `src/lib/page-bridge.js` are included by
-> design. Tutor requests happen only after the user signs in to Puter (free). An
+> pinned ON and the bundled Puter client runs inside an isolated extension-origin
+> frame connected through validated extension ports; `src/lib/page-bridge.js` is
+> not shipped. Tutor requests happen only after the user signs in to Puter (free). An
 > optional on-device engine (a user-run OpenAI-compatible server on localhost)
 > is selectable in the popup. This is the source of truth for the next dashboard
 > upload.
@@ -27,12 +28,15 @@ dashboard upload.
 - ✅ Final ZIP release identity is `4.0.0` across `manifest.json`,
   `package.json`, versioned dictionary metadata, and `CHANGELOG.md`.
 - ✅ Historical `CHANGELOG.md` sections through v3.5.41 remain immutable
-- ✅ The verified v4.0.0 upload artifact contains 65 files and has SHA-256
-  `204e70ca933b9910048e0d36158707f2e1f1b5db1375ef9ff230f8cba70bfe3d`
-  (709,878 bytes). It includes `src/bridge/puter.js`,
-  `src/lib/page-bridge.js`, and the bundled HTML-GT path. This bundled ZIP is the
-  **only** CWS upload artifact; the compatibility alias `npm run build:zip`
-  resolves to this same safe command.
+- ✅ Final v4.0.0 upload artifact recorded 2026-07-28 after the last
+  `npm run release:verify`: **70 files, 706,563 bytes**, SHA-256
+  `f67fb382f79f9e92e9627b610032355f6dbb2d8d248ecfa14f8b39968bea28be`. The extracted ZIP was diffed against `dist/bundled` and is byte-for-byte
+  identical, and `scripts/check-rhc.js` reports zero findings against BOTH the
+  built directory and the extracted archive. It includes the isolated Puter
+  frame, sanitized `src/bridge/puter.js`, third-party notices/licenses, and the
+  bundled HTML-GT path, and does not include `src/lib/page-bridge.js`. This
+  bundled ZIP is the **only** CWS upload artifact; the compatibility alias
+  `npm run build:zip` resolves to this same safe command.
 - ⛔ Never upload `store-assets/skillbridge-developer.zip` (generated only by the
   explicit `npm run build:developer:zip` command), the repository root, or the
   Firefox build to CWS. Raw/developer source retains Puter SDK features that the
@@ -40,6 +44,11 @@ dashboard upload.
 - ✅ All 33 `_locales/*/messages.json` descriptions cover translation and local
   learning tools; `npm run check:i18n` enforces the 132-character limit.
 - ✅ Nominative-use sweep clean (`SkillBridge — AI Course Translator`, no Anthropic-as-product-modifier)
+- ✅ Bundled Puter dependencies are identified from their npm releases:
+  `@heyputer/puter.js@2.2.11` (Apache-2.0) and its bundled
+  `@heyputer/kv.js@0.2.1` dependency (MIT). The ZIP includes both license texts,
+  `THIRD_PARTY_NOTICES.md`, and a prominent CWS modification notice in the
+  sanitized Puter file.
 - ✅ Privacy URL is `https://heznpc.github.io/skillBridge/privacy` — **capital "B"**.
   GitHub Pages repo-path segments are case-sensitive: the lowercase
   `/skillbridge/privacy` returns **404** (verified 2026-06-02), which the CWS
@@ -51,14 +60,21 @@ dashboard upload.
   disclosures for live legacy v1.0.1 and the unpublished candidate. Remove or
   archive the legacy section only after the replacement version is confirmed
   live in the CWS dashboard and update the listing/privacy answers together.
-- ✅ `npm run release:verify` passed on 2026-07-27: lint, format, 662 unit
-  tests, translation/glossary/i18n checks, live selector and 22-course map
-  checks, first-user/popup smoke, Firefox build, store capture, 65-file ZIP
-  integrity, and all 42 Chromium E2E tests across seven resource-bounded
-  batches. The live CWS check still reports v1.0.1, updated 2026-03-10.
-  Dictionary freshness reports 10 recruiting-state dictionaries as
+- ✅ `npm run release:verify` passed on 2026-07-28: lint, format, **676 unit
+  tests across 38 suites**, translation/glossary/i18n checks, live selector and
+  22-course map checks, first-user/popup smoke, Firefox build, store capture,
+  ZIP integrity, and **all 46 Chromium E2E tests across seven resource-bounded
+  batches** (including the live-Ollama local-engine round trip). The live CWS
+  check still reports v1.0.1, updated 2026-03-10.
+  Dictionary freshness reports the recruiting-state dictionaries as
   review-needed; that is not a native review stamp. Rerun the gate immediately
   before dashboard upload if the artifact changes.
+- ⏳ Promo media regenerated 2026-07-28 from the current `demo.webm`
+  (`node scripts/build-promo-media.js`): both v4.0.0 MP4s, thumbnails, and
+  `promo-media-manifest.json` hashes now match the files on disk. The
+  screenshot capture stage (`npm run capture:store`) was **not** re-run — the
+  `shotkit` CLI is not installed on this machine — so the five 1280×800
+  screenshots are the previously captured set.
 - ✅ AI-content gate wired into `manifest.json:content_scripts[].js` (PR #145 hotfix)
 - ✅ CWS-drift watcher will keep this from drifting 3 months again
 - ✅ Italian dictionary live (PR #140) — timed with Anthropic Milan office opening 2026-05-27
@@ -74,6 +90,22 @@ against the file before fixing — the 2026-06-10 audit caught `Slack → "Lento
 dictionary's `_meta.lastAudited` and run `npm run docs` so the README QA table
 reflects it. Three-layer QA model: `docs/TRANSLATION_QA.md`.
 
+**Status for this submission (2026-07-28) — PARTIAL, still a gate:**
+- ✅ A rule-based term pass ran across **all 12** locales: the common noun
+  `subagent` is now translated per `docs/TRANSLATION_RULES.md` (pt-BR
+  subagentes · ru субагент declensions · vi tác tử con · id subagen · ko
+  서브에이전트 · ja サブエージェント · zh 子代理 · es subagentes · fr sous-agents ·
+  it subagenti · de Subagenten), plus the four confirmed reviewer fixes
+  (pt-BR `powered by`, vi `Streaming responses`, id `Enroll in Course`, id
+  captions wording). `glossary`, `check:dicts`, `validate`, and `check:locales`
+  all pass; `_meta.lastUpdated` is stamped on all 12.
+- ✅ Full per-entry semantic review **completed** for: pt-BR, ru, vi, id —
+  these carry `_meta.lastAudited = 2026-07-28`.
+- ⛔ Full per-entry semantic review **NOT completed** for: ko, ja, zh-CN,
+  zh-TW, es, fr, it, de. Their `lastAudited` deliberately still reads
+  2026-06-10. Do not treat this convention as satisfied until those eight are
+  reviewed and re-stamped.
+
 The release identity and changelog are now fixed at v4.0.0. After the external
 permission scope is confirmed, rerun all gates and generate the bundled ZIP.
 Never reuse the existing `v3.5.41` release identity.
@@ -83,8 +115,12 @@ Never reuse the existing `v3.5.41` release identity.
 Status: **resolved**. The non-infringing icon shipped in v3.5.35 (a rising
 half-sun over the SkillBridge bridge — no Claude-mark / radial spark). The
 `assets/icons/icon{16,32,48,128}.png` on `main` are the current set; upload
-`assets/icons/icon128.png` in step 3. Because the icon changed, re-capture the
-screenshots in step 2.
+`assets/icons/icon128.png` in step 3. On 2026-07-28 the 128 icon was reframed
+mechanically for the store tile — the same mark, scaled to 96×96 and centred on
+a transparent 128×128 canvas (16 px margin) instead of bleeding to the canvas
+edge. No new artwork was drawn. The toolbar sizes (16/32/48) are unchanged, and
+the mark does not appear inside the five page screenshots, so that reframe does
+not by itself invalidate them.
 
 ### 2. Regenerate store screenshots (one command)
 
@@ -138,30 +174,40 @@ stale against the next CWS candidate — fix these:
   executable fetches/WebAssembly, eval, and Function constructors. The final ZIP
   must pass that gate with zero findings. Answer **No** for remote code only for
   this scanned bundled artifact; never substitute the raw source/developer ZIP.
-- **Data usage — v4.0.0 needs THREE categories, not one.** The 3.5.x answer
-  ("Website content" only) described a build with no Tutor; re-answer from the
-  actual v4 data flows:
+- **Data usage — v4.0.0 needs FIVE categories, not one.** Chrome's policy treats
+  local processing/storage and third-party sign-in as handling too; re-answer
+  from the actual v4 data flows:
   - ✅ **Website content** — page text goes to Google Translate when
     translation is requested (in the POST body, not the URL). For inline-mixed
     blocks the block's markup is sent, so link targets and image addresses
     inside it are included.
   - ✅ **Personal communications** — the Tutor is a chat. The user's message,
-    plus lesson context (course title, up to 8 headings, and up to 2,000
-    characters of the lesson text they are viewing), is sent to Claude via
-    Puter when they send a Tutor message, and the conversation is stored on
-    their device. Chat content is user-authored communication; do not classify
+    plus lesson context (course title, up to 8 section headings, and up to
+    2,000 characters of lesson text — a short opening plus the text near their
+    current position), is sent to Claude via Puter when they send a Tutor
+    message, and the conversation is stored on their device. Chat content is user-authored communication; do not classify
     it as website content only.
   - ✅ **Authentication information** — the cloud Tutor requires a Puter
-    sign-in and the Puter SDK holds the resulting auth token in the page's
-    local storage. SkillBridge never receives, transmits, or stores that token
-    itself, but the flow is present in the package and must be declared.
-  - ❌ Location, browsing history, user activity, financial, health, and
-    personally identifiable information stay **unchecked**: learning-tool
-    state (bookmarks, resume, flashcards, progress, settings) and the lesson
-    URL recorded with each chat are stored locally and never transmitted.
+    sign-in. The Puter SDK holds the resulting auth token and Puter application
+    identifier in an isolated extension-origin frame, not in the course page's
+    storage. The operator does not receive either value, but the bundled flow
+    still handles authentication data and must be declared.
+  - ✅ **Web history** — recent lessons store the supported lesson URL, title,
+    and visit time; bookmarks and Tutor-history records also contain the lesson
+    URL. This data stays local, but local handling still requires disclosure.
+  - ✅ **User activity** — scroll position, visit/progress timestamps,
+    flashcard review state, and bookmark activity are stored locally for the
+    visible resume and study features. They are not sent to analytics or the
+    SkillBridge operator.
+  - ❌ **Personally identifiable information** stays **unchecked** — the CWS
+    sanitizer disables the SDK's automatic `/whoami`/`getUser` profile lookups,
+    and the Tutor path handles no username, user UUID, email status, or other
+    Puter User-object fields. The stored `app_uid` is a Puter application
+    identifier, not a user identifier.
+  - ❌ Location, financial/payment, and health information also stay **unchecked**.
   - With the local engine selected, Tutor text goes only to the user's own
     localhost server; with the Tutor off, no AI request is made at all.
-    Page translation never invokes Puter or an AI model in any mode.
+    Page translation never invokes Puter, Claude, or the Tutor model in any mode.
   Keep the three confirmations checked (transfer to a service provider to perform
   the requested feature is an approved use case, not a sale).
 - **Permission and site-access justifications** — paste from `STORE_LISTING.md`

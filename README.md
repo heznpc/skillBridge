@@ -91,7 +91,7 @@ That's it.
 
 ### 🌐 Full Page Translation
 
-Course headings, paragraphs, lists, navigation, cards, and supported code comments are translated, with AI-specific terms handled through curated dictionaries and protected-term restoration. Course controls and CJK font rendering remain intact. Text not already covered by the packaged dictionary or local cache is translated through Google Translate. Paragraphs that mix prose with links or buttons are only translated through the structure-preserving AI path — where that path isn't available they keep their original text, so link and button labels are never lost.
+Course headings, paragraphs, lists, navigation, cards, and supported code comments are translated, with AI-specific terms handled through curated dictionaries and protected-term restoration. Course controls and CJK font rendering remain intact. Text not already covered by the packaged dictionary or local cache is translated through Google Translate. Paragraphs that mix prose with links or buttons use Google Translate's structure-preserving HTML mode; if that path cannot safely reconcile the result, they keep their original markup so links and controls are never lost.
 
 <div align="center">
 <img src="assets/screenshots/01-lesson-translated.png" alt="Lesson page with curriculum fully translated" width="720" />
@@ -103,7 +103,7 @@ Course headings, paragraphs, lists, navigation, cards, and supported code commen
 
 The CWS edition includes spaced-repetition flashcards, bookmarks, Continue/Recent links, a local progress dashboard, an in-lesson outline, reading progress, and PDF export. Learning-tool state stays in the browser.
 
-> **AI Tutor & accounts:** the published build includes the AI Tutor (Claude Sonnet 4.6) via the bundled Puter bridge. The tutor uses a **free Puter sign-in** — no API key and no SkillBridge account. Page translation and the local learning tools need no account at all; only the optional tutor prompts for sign-in.
+> **AI Tutor & accounts:** the v4 CWS candidate includes the AI Tutor (Claude Sonnet 4.6, falling back to Sonnet 4.5) through an isolated bundled Puter runtime. The tutor uses a **free Puter sign-in** — no API key and no SkillBridge account. Page translation and the local learning tools need no account at all; only the optional cloud tutor prompts for sign-in.
 
 ### 🎬 Auto-Subtitles
 
@@ -186,10 +186,14 @@ npm run build:bundle
 Also works in Brave, Arc, Opera, Vivaldi, and other Chromium-based browsers.
 
 > Loading the repository root instead selects the raw developer configuration.
-> That source tree retains an optional Puter-based AI gateway that is not active
-> in the candidate CWS runtime. Its packaged Puter SDK contains lazy remote
-> JavaScript/WebAssembly paths. Review the source and privacy implications before
-> using that developer-only path; never treat it as the CWS artifact.
+> Both builds contain the optional Puter-based cloud Tutor, but only
+> `dist/bundled` contains the CWS-sanitized SDK: packaging disables unused remote
+> TLS-socket imports, a `Function`-constructor fallback, and automatic User/profile
+> lookups, unused eager filesystem-socket/resource-access startup, and the SDK's
+> hidden automatic token reauthentication. The visible SkillBridge frame owns
+> stale-session recovery and sign-in consent. The SDK runs in an isolated extension-origin frame instead of the
+> course page's main JavaScript world. Never upload the repository root or
+> developer ZIP in place of the scanned CWS artifact.
 
 ### Firefox (Beta)
 
@@ -223,7 +227,7 @@ Page text
        └─ Cache result locally for up to 30 days
 ```
 
-Text not covered by the packaged dictionary or local cache is sent to Google Translate when translation is requested. Paragraphs that mix prose with links/buttons are translated structure-preserving through Google Translate's HTML mode. Page translation never invokes an AI model. The optional cloud Tutor uses Claude through the bundled Puter bridge only when you send a Tutor message; local and off Tutor modes are also available. See the [Privacy Policy](PRIVACY_POLICY.md) for the full data flow.
+Text not covered by the packaged dictionary or local cache is sent to Google Translate when translation is requested. Paragraphs that mix prose with links/buttons are translated structure-preserving through Google Translate's HTML mode. Page translation does not invoke Puter, Claude, or the Tutor model. The optional cloud Tutor uses Claude through an isolated bundled Puter runtime only when you send a Tutor message; local and off Tutor modes are also available. See the [Privacy Policy](PRIVACY_POLICY.md) for the full data flow.
 
 ## Architecture & engineering decisions
 
@@ -291,18 +295,18 @@ review is the final layer:
 <!-- LOCALE_QA_START -->
 | Language | Code | Entries | Last curated | Last LLM audit | Native review |
 |---|---|---:|---|---|---|
-| 한국어 | `ko` | 1129 | 2026-04-02 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| 日本語 | `ja` | 1129 | 2026-04-02 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| 中文(简体) | `zh-CN` | 1129 | 2026-04-02 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| 中文(繁體) | `zh-TW` | 1129 | 2026-04-02 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| Español | `es` | 1129 | 2026-04-02 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| Français | `fr` | 1129 | 2026-04-02 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| Italiano | `it` | 1129 | 2026-06-03 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| Deutsch | `de` | 1129 | 2026-04-02 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| Português (BR) | `pt-BR` | 1129 | 2026-04-02 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| Русский | `ru` | 1129 | 2026-04-02 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| Tiếng Việt | `vi` | 1129 | 2026-04-02 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| Bahasa Indonesia | `id` | 1129 | 2026-06-17 | 2026-06-17 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| 한국어 | `ko` | 1129 | 2026-07-28 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| 日本語 | `ja` | 1129 | 2026-07-28 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| 中文(简体) | `zh-CN` | 1129 | 2026-07-28 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| 中文(繁體) | `zh-TW` | 1129 | 2026-07-28 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Español | `es` | 1129 | 2026-07-28 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Français | `fr` | 1129 | 2026-07-28 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Italiano | `it` | 1129 | 2026-07-28 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Deutsch | `de` | 1129 | 2026-07-28 | 2026-06-10 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Português (BR) | `pt-BR` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Русский | `ru` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Tiếng Việt | `vi` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Bahasa Indonesia | `id` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
 <!-- LOCALE_QA_END -->
 
 🙋 **Native speakers wanted** — a first native pass on your locale takes
@@ -320,7 +324,7 @@ These claims describe the unpublished candidate, not live legacy v1.0.1:
 - **Local learning state** — original/translated text is cached in IndexedDB;
   preferences, flashcard review state, bookmarks, recent lessons, and scroll
   positions use `chrome.storage.local`; progress summaries are calculated locally
-- **AI is user-invoked** — page translation never calls an AI model; only a cloud Tutor message reaches Claude through Puter, while local and off Tutor modes remain available
+- **The AI Tutor is user-invoked** — page translation uses the disclosed Google Translate path but never calls Puter, Claude, or the Tutor model; only a cloud Tutor message reaches Claude through Puter, while local and off Tutor modes remain available
 - **Open source** — every line of code is auditable right here
 
 See our full [Privacy Policy](PRIVACY_POLICY.md).
@@ -334,7 +338,7 @@ See our full [Privacy Policy](PRIVACY_POLICY.md).
 | Curated Dictionaries | Hand-tuned JSON (1,100+ × 12 languages) |
 | Translation Cache | IndexedDB |
 | Local Learning Tools | `chrome.storage.local` + IndexedDB |
-| AI Tutor | Claude Sonnet 4.6 via bundled Puter bridge (free Puter sign-in) |
+| AI Tutor | Claude Sonnet 4.6, with an automatic Sonnet 4.5 fallback, via isolated bundled Puter runtime (free Puter sign-in) |
 | CJK Font Rendering | Local system/Noto fallback stacks |
 
 > **Built with [Claude Code](https://docs.anthropic.com/en/docs/claude-code).**
@@ -359,7 +363,7 @@ Yes! SkillBridge supports **Chrome**, **Firefox**, and **Edge** (plus Brave, Arc
 <details>
 <summary><strong>Do I need an API key or account?</strong></summary>
 
-No. The unpublished CWS candidate translates through packaged dictionaries, local cache, and Google Translate without an account, email, password, user API key, or human-check. The repository's optional Puter-based developer path is not included in that package. See the version notice above for the currently published legacy v1.0.1 boundary.
+Translation and the local learning tools need no account, email, password, user API key, or human-check. The optional cloud Tutor is included in the CWS candidate and requires a separate free Puter sign-in; the local Tutor engine and off mode do not. SkillBridge's operator never receives the Puter session token or account details. See the version notice above for the currently published legacy v1.0.1 boundary.
 </details>
 
 <details>
@@ -396,7 +400,7 @@ No. SkillBridge is an unofficial community project. It is not affiliated with, e
 
 ## Disclaimer
 
-SkillBridge is a personal translation tool, similar to your browser's built-in translate feature. Text is translated on-the-fly in your browser — never stored or redistributed.
+SkillBridge is a personal translation and study tool. It caches original and translated lesson text locally for up to 30 days, stores local learning state and Tutor history, sends requested translation text to Google Translate, and sends only user-invoked cloud Tutor requests to Claude through Puter. See the [Privacy Policy](PRIVACY_POLICY.md) for exact data flows and retention.
 
 > **SkillBridge** is an unofficial, independent community project. It is not affiliated with, endorsed by, or sponsored by Anthropic or Skilljar. References to "Anthropic", "Claude", "Skilljar", and `anthropic.skilljar.com` are nominative — they describe the third-party platform and content this extension translates. All trademarks remain the property of their respective owners.
 

@@ -6,7 +6,7 @@ sync with the uploaded ZIP, the CWS Privacy tab, and `PRIVACY_POLICY.md`.
 ## What's New — paste into the CWS "What's new" field after version assignment
 
 - 🤖 AI Tutor: ask about the lesson you are reading. Uses a free Puter sign-in — no API key, no SkillBridge account.
-- 💻 New on-device option: run the tutor against your own local AI server (Ollama or any OpenAI-compatible server) so tutor text never leaves your machine — or turn the tutor off and use translation only.
+- 💻 New on-device option: run the tutor against Ollama or another compatible OpenAI-style server on your own localhost so tutor text never leaves your machine — or turn the tutor off and use translation only.
 - 🔗 Better translation of mixed content: paragraphs containing links, inline code, and emphasis keep their structure and destinations intact instead of being flattened.
 - 🔒 No SkillBridge account: translation and learning tools need no sign-in at all.
 - 🌐 Translation continues through packaged dictionaries, local cache, and Google Translate.
@@ -38,7 +38,7 @@ Premium languages include 1,100+ packaged entries for technical terms and produc
 Use spaced-repetition flashcards, bookmarks, Continue/Recent links, a progress dashboard, an in-lesson outline, reading progress, and PDF export. Preferences and learning-tool state stay in the browser.
 
 🎓 EXAM AND CERTIFICATION SAFETY
-Course-quiz answer choices are never translated, so they remain aligned with the canonical English answers. On recognized proctored certification routes, SkillBridge disables translation and injected UI entirely.
+On recognized course-quiz pages, answer choices are skipped by translation so they remain aligned with the canonical English answers. On recognized proctored certification routes, SkillBridge disables translation and injected UI entirely. Detection is pattern-based, so learners should still turn the extension off for any proctored exam.
 
 🎬 AUTO-SUBTITLES
 For supported embedded course videos, SkillBridge asks the existing player to enable translated subtitles. It does not fetch captions and does not request YouTube host permission.
@@ -81,12 +81,13 @@ SkillBridge does not operate a translation server. Page text that is not already
 
 🔒 CWS PRIVACY AND PACKAGE BOUNDARY
 
-Page translation (Google Translate + curated dictionaries) and the local learning tools work with no account. Translation never calls an AI model. The optional cloud AI Tutor reaches Claude through the bundled Puter bridge only when you send a Tutor message; its first use opens a free Puter sign-in. A user-run local engine and an off mode are also available. The extension does not request YouTube host access and uses no analytics, tracking, advertising, SkillBridge account, email, password, or user API key.
+Page translation (Google Translate + curated dictionaries) and the local learning tools work with no account. Translation never calls Puter, Claude, or the Tutor model. The optional cloud AI Tutor reaches Claude through a bundled Puter client only when you send a Tutor message; its first use opens a separate free Puter sign-in. The client runs in an isolated extension-origin frame, not the course page's JavaScript world. A user-run local engine and an off mode are also available. The extension does not request YouTube host access and uses no analytics, tracking, advertising, SkillBridge account, or user API key. SkillBridge's operator does not receive Puter authentication/session data.
 
 Third-party requests made by the CWS edition:
 
 • Google Translate — visible page text selected for translation and the requested language.
 • GitHub Releases API — a periodic public update check; no course text or learning-tool data.
+• Puter — cloud Tutor sign-in/session handling, followed by the user's Tutor message and limited lesson context routed to Claude. Inside its isolated extension frame, the bundled SDK stores a session token and Puter application identifier; the CWS build disables automatic User/profile lookups. SkillBridge's operator receives none of this data.
 
 Settings, bookmarks, flashcard review state, recent lessons, and scroll positions are stored in `chrome.storage.local`. Original and translated text is cached separately in IndexedDB. Progress summaries are calculated locally from that state rather than separately stored or transmitted.
 
@@ -106,7 +107,7 @@ Education
 
 ## Language
 
-All languages
+English (single listing locale; the extension UI supports 32 languages)
 
 ## Permission Justifications
 

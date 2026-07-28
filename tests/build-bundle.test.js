@@ -32,6 +32,7 @@ describe('bundled artifact shape', () => {
     expect(scripts['build:bundle:zip']).toContain('rm -f store-assets/skillbridge.zip');
     expect(scripts['build:developer:zip']).toContain('skillbridge-developer.zip');
     expect(scripts['build:developer:zip']).toContain('LICENSE THIRD_PARTY_NOTICES.md');
+    expect(scripts['build:developer:zip']).toContain('licenses/');
   });
 
   test('creates a bundled manifest with bundled content and background paths', () => {
@@ -82,24 +83,70 @@ describe('bundled artifact shape', () => {
     expect(fs.existsSync(path.join(DIST_DIR, 'assets', 'screenshots'))).toBe(false);
   });
 
-  test('copies the license without notices for dependencies not shipped in CWS', () => {
+  test('ships all license and notice files for the bundled Puter dependencies', () => {
     expect(fs.existsSync(path.join(DIST_DIR, 'LICENSE'))).toBe(true);
-    // The repo notice currently documents Puter.js only. The CWS edition does
-    // not ship Puter, so copying that notice would misdescribe the artifact.
-    expect(fs.existsSync(path.join(DIST_DIR, 'THIRD_PARTY_NOTICES.md'))).toBe(false);
+    expect(fs.existsSync(path.join(DIST_DIR, 'THIRD_PARTY_NOTICES.md'))).toBe(true);
+    expect(fs.existsSync(path.join(DIST_DIR, 'licenses', 'Apache-2.0.txt'))).toBe(true);
+    expect(fs.existsSync(path.join(DIST_DIR, 'licenses', 'heyputer-kv.js-MIT.txt'))).toBe(true);
+
+    const notices = fs.readFileSync(path.join(DIST_DIR, 'THIRD_PARTY_NOTICES.md'), 'utf8');
+    expect(notices).toContain('@heyputer/puter.js` 2.2.11');
+    expect(notices).toContain('Apache License 2.0');
+    expect(notices).toContain('@heyputer/kv.js` 0.2.1');
   });
 
-  test('ships the Puter bridge and pins the AI gateway on (v4 tutor)', () => {
+  test('ships the extension-origin Puter broker without the retired page-world bridge', () => {
     const manifest = JSON.parse(fs.readFileSync(path.join(DIST_DIR, 'manifest.json'), 'utf8'));
     const resources = manifest.web_accessible_resources.flatMap((entry) => entry.resources);
-    expect(resources).toContain('src/lib/page-bridge.js');
-    expect(resources).toContain('src/bridge/puter.js');
-    expect(fs.existsSync(path.join(DIST_DIR, 'src', 'lib', 'page-bridge.js'))).toBe(true);
+    expect(resources).toContain('src/bridge/puter-frame.html');
+    expect(resources).not.toContain('src/lib/page-bridge.js');
+    expect(resources).not.toContain('src/bridge/puter.js');
+    expect(fs.existsSync(path.join(DIST_DIR, 'src', 'lib', 'page-bridge.js'))).toBe(false);
+    expect(fs.existsSync(path.join(DIST_DIR, 'src', 'bridge', 'puter-frame.html'))).toBe(true);
+    expect(fs.existsSync(path.join(DIST_DIR, 'src', 'bridge', 'puter-frame-init.js'))).toBe(true);
+    expect(fs.existsSync(path.join(DIST_DIR, 'src', 'bridge', 'puter-frame.js'))).toBe(true);
     expect(fs.existsSync(path.join(DIST_DIR, 'src', 'bridge', 'puter.js'))).toBe(true);
+    const sdk = fs.readFileSync(path.join(DIST_DIR, 'src', 'bridge', 'puter.js'), 'utf8');
+    expect(sdk).toContain('SkillBridge CWS modification notice (2026-07-28)');
+    expect(sdk).not.toContain('(async()=>{try{const e=await this.auth.whoami()');
+    expect(sdk).not.toContain(',this.getUser().then(e=>{this.whoami=e})');
+    expect(sdk).not.toContain('puter.getUser().then(e=>{puter.onAuth(e)})');
+    expect(sdk).not.toContain('xn.getUser().then(e=>{xn.onAuth(e)})');
+    expect(sdk).not.toContain('this.cacheUpdateTimer=null,this.initializeSocket();const t={}');
+    expect(sdk).not.toContain(
+      'setAuthToken(e){this.authToken=e,"gui"===this.puter.env&&(this.checkCacheAndPurge(),this.startCacheUpdateTimer()),this.initializeSocket()}',
+    );
+    expect(sdk).not.toContain('setAPIOrigin(e){this.APIOrigin=e,this.initializeSocket()}');
+    expect(sdk).not.toContain(',this.updateSubmodules(),this.request_rao_(),this.getUser().then(e=>{this.whoami=e})');
+    expect(sdk).not.toContain(
+      'if("token_auth_failed"===h?.code&&"web"===puter.env)try{puter.resetAuthToken(),await puter.ui.authenticateWithPuter()}',
+    );
+    // Keep the APIs themselves: Tutor auth/chat still need token/origin state;
+    // only their eager FS/RAO side effects are removed.
+    expect(sdk).toContain('setAuthToken(e){this.authToken=e');
+    expect(sdk).toContain('setAPIOrigin(e){this.APIOrigin=e}');
+    expect(sdk).toContain('async request_rao_(){');
+    const init = fs.readFileSync(path.join(DIST_DIR, 'src', 'bridge', 'puter-frame-init.js'), 'utf8');
+    expect(init).toContain("new Set([globalThis.location.origin, 'https://puter.com'])");
+    expect(init).toContain('stopImmediatePropagation');
     expect(fs.readFileSync(path.join(DIST_DIR, 'content.bundle.js'), 'utf8')).toContain(
       '__SKILLBRIDGE_AI_GATEWAY_ENABLED__',
     );
+    const content = fs.readFileSync(path.join(DIST_DIR, 'content.bundle.js'), 'utf8');
+    expect(content).toContain('sb-cloud-chat-client');
+    expect(content).not.toContain('CHAT_STREAM_CHUNK');
+    expect(content).not.toContain('CHAT_STREAM_END');
+    expect(content).not.toContain('systemPrompt');
     expect(fs.readFileSync(path.join(DIST_DIR, 'src', 'shared', 'build-config.js'), 'utf8')).toContain('value:true');
+  });
+
+  test('cloud broker messages never carry Puter tokens or account profiles', () => {
+    const broker = fs.readFileSync(path.join(DIST_DIR, 'src', 'bridge', 'puter-frame.js'), 'utf8');
+    const background = fs.readFileSync(path.join(DIST_DIR, 'background.bundle.js'), 'utf8');
+    for (const forbidden of ['username:', 'uuid:', 'profile:', 'authToken:']) {
+      expect(broker).not.toContain(forbidden);
+      expect(background).not.toContain(forbidden);
+    }
   });
 
   test('does not copy repo-only development surfaces', () => {

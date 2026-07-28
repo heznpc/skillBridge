@@ -98,6 +98,8 @@ const GT_KO = {
   // ambiguous common-word wrong-forms like 인류학적/인류 were removed from the
   // dictionary because they corrupt correct prose; see protected-terms.test.js.)
   'Anthropic released Claude as a frontier model.': '앤스로픽은 클로드를 프런티어 모델로 출시했습니다.',
+  '<p id="p-offline-structured">Read <a id="offline-doc-link" href="/docs">the documentation</a> carefully.</p>':
+    '<p id="p-offline-structured"><a id="offline-doc-link" href="/docs">문서</a>를 주의 깊게 읽으세요.</p>',
   // Code-comment fixture (tests/e2e/code-comments.spec.js). The Python
   // `# This is a Claude prompt example` comment gets translated by
   // translateCodeComments — the line's leading `# ` is preserved
@@ -164,8 +166,8 @@ async function registerStubs(context) {
       const body = request.postData() || '';
       q = new URLSearchParams(body).get('q') || '';
     }
-    // URLSearchParams already decodes; a query-string value still needs it.
-    const decoded = request.method() === 'POST' ? q : decodeURIComponent(q);
+    // URLSearchParams decodes both query and form values exactly once.
+    const decoded = q;
     // Content-script `el.textContent.trim()` preserves internal whitespace,
     // so the same paragraph can hit GT with embedded newlines/double-spaces
     // depending on HTML formatting. Normalize both sides so our GT_KO map

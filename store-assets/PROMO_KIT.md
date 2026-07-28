@@ -108,7 +108,9 @@ hashes are committed in the media manifest.
 1. Release-candidate title card.
 2. The actual bundled extension running against a neutral deterministic fixture:
    translate a lesson, ask the in-page Tutor, then show flashcards.
-3. Return to the title card. No mocked extension UI or AI Tutor footage.
+3. Return to the title card. The extension UI and Tutor rendering path are the
+   real bundle; the external Puter/Claude response is replaced with a fixed
+   streaming stub so the footage is login-free and reproducible.
 
 The videos are silent by design; the visual captions and title cards carry the
 message without a narration or music-license dependency.

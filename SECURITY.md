@@ -20,12 +20,15 @@ an alternate intake channel within 72 hours.
   exam answers outside the browser beyond the documented Google Translate path
   ([README — Privacy & Security](README.md#privacy--security),
   [PRIVACY_POLICY.md](PRIVACY_POLICY.md)).
-- **CWS package boundary** — any path that enables the optional AI gateway or
-  packages `src/bridge/puter.js` / `src/lib/page-bridge.js` into the CWS ZIP.
+- **CWS package boundary** — remotely hosted executable code, origin or message
+  spoofing, or any divergence between the sanitized bundled Puter/Tutor runtime
+  and the scanned CWS ZIP.
 - **Content-script injection** — XSS, CSP bypass, prototype pollution,
-  or any path through translator output that lets remote content reach
-  `innerHTML` without escaping (`src/lib/gemini-block.js` `escapeHtml`
-  is the single chokepoint — bugs there are critical).
+  or any path through translator output that reaches `innerHTML` without the
+  matching safety gate. Plain generated text passes through
+  `src/lib/gemini-block.js` `escapeHtml`; structure-preserving Google Translate
+  HTML passes through the `src/lib/dom-safe.js` allowlist sanitizer and
+  `src/content/gt-queue.js` structural-integrity check before reconciliation.
 - **Exam-mode safety bypass** — anything that lets the extension
   translate proctored exam content or quiz answer choices in
   violation of the standing "things we will not do" list (see TODO.md).
@@ -38,10 +41,11 @@ an alternate intake channel within 72 hours.
 ## What's out of scope
 
 - Bugs in Anthropic Academy itself (report to Anthropic).
-- Bugs in Google Translate itself, or in Puter.js when testing the optional raw
-  developer build — report those service bugs to the relevant vendor.
-- Reports that concern only model output from the optional raw developer build,
-  without an extension security-boundary failure.
+- Bugs in Google Translate or Puter's own service that do not cross a
+  SkillBridge extension boundary — report those service bugs to the relevant
+  vendor.
+- Reports that concern only model output, without an extension
+  security-boundary failure.
 - Theoretical browser-engine bugs in Chrome / Firefox / Edge — report
   to the browser vendor.
 
@@ -53,11 +57,10 @@ an alternate intake channel within 72 hours.
 - **Patch + release** for confirmed criticals: within 14 days. Lower
   severity findings are scheduled into the normal release cadence and
   noted in the published advisory.
-- **Public disclosure**: coordinated with the reporter via the
-  GHSA. Default embargo is until the fix is published in a release
-  build that is live on at least one store (currently: the manual
-  developer-mode install path, since the Chrome Web Store listing is
-  pending re-publication after icon redesign — see `README.md`).
+- **Public disclosure**: coordinated with the reporter via the GHSA. The
+  default embargo lasts until a fixed release is publicly available. A manual
+  developer-mode build is not treated as store publication; while the Chrome
+  Web Store listing is paused, disclosure timing is agreed case by case.
 
 ## Hall of fame
 
@@ -72,9 +75,16 @@ GHSA), listed publicly only with the researcher's explicit consent.
   for each CWS upload (`actions/attest-build-provenance` step in
   `cd.yml`). Verify via
   [`gh attestation verify`](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations/using-artifact-attestations-to-establish-provenance-for-builds).
-- Chrome Web Store ZIP: the build must pin the AI gateway off, omit
-  `src/bridge/puter.js` and `src/lib/page-bridge.js`, and pass the automated RHC
-  scan before upload.
-- Raw developer source: the optional `src/bridge/puter.js` hash is recorded in
-  `THIRD_PARTY_NOTICES.md` and checked by the maintenance workflow. This file is
-  not part of the CWS artifact.
+- Chrome Web Store ZIP: the build pins the Tutor gateway on and runs the
+  packaged Puter client in an isolated extension-origin frame connected through
+  validated extension ports. The course page's main JavaScript world receives
+  neither the SDK/session token nor Tutor transport messages; the visible Tutor
+  UI itself remains part of the page DOM. Packaging disables unused remote TLS-socket imports, the
+  `Function`-constructor fallback, automatic User/profile lookups, and unused
+  eager filesystem-socket/resource-access startup, plus hidden automatic token
+  reauthentication so the visible frame owns stale-session recovery, and must
+  pass the automated RHC scan before upload. The ZIP also carries the third-party
+  licenses and modification notice.
+- Vendored source: the raw `src/bridge/puter.js` hash is recorded in
+  `THIRD_PARTY_NOTICES.md` and checked by the maintenance workflow. The CWS
+  artifact contains a build-time-sanitized copy, not this raw file byte-for-byte.

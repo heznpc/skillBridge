@@ -377,6 +377,188 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   _logMisroutedMessage(msg);
 });
 
+// ==================== CLOUD AI BROKER (extension-origin Puter frame) ====================
+
+const _CLOUD_MAX_PAYLOAD_CHARS = 200_000;
+const _CLOUD_ALLOWED_MODELS = new Set([
+  'claude-sonnet-4-6',
+  'claude-sonnet-4-5',
+  'claude-haiku-4-5',
+  'claude-opus-4-8',
+  'claude-opus-4-7',
+  'claude-opus-4-6',
+  'claude-opus-4-5',
+]);
+const _cloudFrames = new Map(); // tabId -> { port, ready }
+const _cloudClients = new Map(); // tabId -> Set<Port>
+const _cloudActive = new Map(); // `${tabId}:${id}` -> client Port
+
+function _cloudKey(tabId, id) {
+  return `${tabId}:${id}`;
+}
+
+function _safePortPost(port, msg) {
+  try {
+    port.postMessage(msg);
+    return true;
+  } catch (_e) {
+    return false;
+  }
+}
+
+function _isPuterFramePort(port) {
+  const expected = chrome.runtime.getURL('src/bridge/puter-frame.html');
+  return (
+    port?.sender?.id === chrome.runtime.id && port?.sender?.url === expected && Number.isInteger(port?.sender?.tab?.id)
+  );
+}
+
+function _isAllowedCloudClient(port) {
+  if (port?.sender?.id !== chrome.runtime.id || !Number.isInteger(port?.sender?.tab?.id)) return false;
+  try {
+    const url = new URL(port.sender.url || port.sender.tab.url || '');
+    if (url.protocol === 'https:' && (url.hostname === 'skilljar.com' || url.hostname.endsWith('.skilljar.com'))) {
+      return true;
+    }
+    if (url.protocol === 'https:' && url.hostname === 'claude.com' && url.pathname.startsWith('/resources/tutorials')) {
+      return true;
+    }
+    // Production never grants this pattern. The E2E helper adds it only to
+    // its temporary manifest so the real broker can run against localhost.
+    const testHosts = chrome.runtime.getManifest().host_permissions || [];
+    return (
+      (url.hostname === 'localhost' || url.hostname === '127.0.0.1') &&
+      testHosts.some((pattern) => pattern === 'http://localhost:*/*' || pattern === 'http://127.0.0.1:*/*')
+    );
+  } catch (_e) {
+    return false;
+  }
+}
+
+function _failCloudTabActive(tabId, framePort, error) {
+  for (const [key, client] of _cloudActive) {
+    if (!key.startsWith(`${tabId}:`)) continue;
+    const id = key.slice(String(tabId).length + 1);
+    _safePortPost(framePort, { type: 'abort', id });
+    _cloudActive.delete(key);
+    _safePortPost(client, { type: 'error', id, error });
+  }
+}
+
+function _registerCloudFrame(port) {
+  if (!_isPuterFramePort(port)) {
+    port.disconnect();
+    return;
+  }
+  const tabId = port.sender.tab.id;
+  const previous = _cloudFrames.get(tabId)?.port;
+  const entry = { port, ready: false };
+  // Install the replacement first so a synchronous old-port disconnect event
+  // cannot delete the new frame entry or send a spurious unavailable signal.
+  _cloudFrames.set(tabId, entry);
+  if (previous && previous !== port) {
+    _failCloudTabActive(tabId, previous, 'Puter broker replaced');
+    for (const client of _cloudClients.get(tabId) || []) {
+      _safePortPost(client, { type: 'auth-ui', visible: false });
+    }
+    try {
+      previous.disconnect();
+    } catch (_e) {
+      /* already disconnected */
+    }
+  }
+  port.onMessage.addListener((msg) => {
+    if (!msg || _cloudFrames.get(tabId)?.port !== port) return;
+    if (msg.type === 'ready') {
+      entry.ready = true;
+      for (const client of _cloudClients.get(tabId) || []) _safePortPost(client, { type: 'ready' });
+      return;
+    }
+    if (msg.type === 'auth-ui') {
+      for (const client of _cloudClients.get(tabId) || []) {
+        _safePortPost(client, { type: 'auth-ui', visible: msg.visible === true });
+      }
+      return;
+    }
+    if (typeof msg.id !== 'string') return;
+    const key = _cloudKey(tabId, msg.id);
+    const client = _cloudActive.get(key);
+    if (!client) return;
+    // A message on an actually active frame request resets MV3's service-
+    // worker idle timer. It has no reply and is ignored for stale/forged ids.
+    if (msg.type === 'keepalive') return;
+    if (msg.type === 'chunk' && typeof msg.text === 'string') {
+      _safePortPost(client, { type: 'chunk', id: msg.id, text: msg.text });
+    } else if (msg.type === 'done') {
+      _cloudActive.delete(key);
+      _safePortPost(client, { type: 'done', id: msg.id });
+    } else if (msg.type === 'error') {
+      _cloudActive.delete(key);
+      _safePortPost(client, { type: 'error', id: msg.id, error: String(msg.error || 'Puter chat failed') });
+    }
+  });
+  port.onDisconnect.addListener(() => {
+    if (_cloudFrames.get(tabId)?.port !== port) return;
+    _cloudFrames.delete(tabId);
+    _failCloudTabActive(tabId, port, 'Puter broker closed');
+    for (const client of _cloudClients.get(tabId) || []) _safePortPost(client, { type: 'unavailable' });
+  });
+}
+
+function _registerCloudClient(port) {
+  if (!_isAllowedCloudClient(port)) {
+    port.disconnect();
+    return;
+  }
+  const tabId = port.sender.tab.id;
+  const clients = _cloudClients.get(tabId) || new Set();
+  clients.add(port);
+  _cloudClients.set(tabId, clients);
+  if (_cloudFrames.get(tabId)?.ready) _safePortPost(port, { type: 'ready' });
+  port.onMessage.addListener((msg) => {
+    if (!msg || typeof msg.id !== 'string' || msg.id.length > 128) return;
+    const key = _cloudKey(tabId, msg.id);
+    const frame = _cloudFrames.get(tabId);
+    if (msg.type === 'abort') {
+      if (_cloudActive.get(key) === port) {
+        _cloudActive.delete(key);
+        _safePortPost(frame?.port, { type: 'abort', id: msg.id });
+      }
+      return;
+    }
+    if (msg.type !== 'start') return;
+    if (!frame?.ready) {
+      _safePortPost(port, { type: 'error', id: msg.id, error: 'Puter broker is not ready' });
+      return;
+    }
+    if (
+      _cloudActive.has(key) ||
+      typeof msg.prompt !== 'string' ||
+      msg.prompt.length === 0 ||
+      msg.prompt.length > _CLOUD_MAX_PAYLOAD_CHARS ||
+      !_CLOUD_ALLOWED_MODELS.has(msg.model)
+    ) {
+      _safePortPost(port, { type: 'error', id: msg.id, error: 'Invalid cloud Tutor request' });
+      return;
+    }
+    _cloudActive.set(key, port);
+    if (!_safePortPost(frame.port, { type: 'start', id: msg.id, prompt: msg.prompt, model: msg.model })) {
+      _cloudActive.delete(key);
+      _safePortPost(port, { type: 'error', id: msg.id, error: 'Puter broker is unavailable' });
+    }
+  });
+  port.onDisconnect.addListener(() => {
+    clients.delete(port);
+    if (clients.size === 0) _cloudClients.delete(tabId);
+    const frame = _cloudFrames.get(tabId)?.port;
+    for (const [key, owner] of _cloudActive) {
+      if (owner !== port) continue;
+      _cloudActive.delete(key);
+      _safePortPost(frame, { type: 'abort', id: key.slice(String(tabId).length + 1) });
+    }
+  });
+}
+
 // ==================== LOCAL AI ENGINE (OpenAI-compatible: Ollama, LM Studio, …) ====================
 // Content scripts cannot reach http://localhost cross-origin, so the service
 // worker proxies the streaming chat over a Port. Needs the optional host
@@ -511,6 +693,14 @@ async function _streamLocalChat(port, req) {
 
 if (typeof chrome !== 'undefined' && chrome.runtime?.onConnect) {
   chrome.runtime.onConnect.addListener((port) => {
+    if (port.name === 'sb-puter-frame') {
+      _registerCloudFrame(port);
+      return;
+    }
+    if (port.name === 'sb-cloud-chat-client') {
+      _registerCloudClient(port);
+      return;
+    }
     if (port.name !== 'sb-local-chat') return;
     let started = false;
     port.onMessage.addListener((req) => {

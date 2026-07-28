@@ -85,9 +85,9 @@ async function openTranslatedLesson(page, context, baseUrl) {
   await page.goto(`${baseUrl}${LESSON_URL}`, { waitUntil: 'networkidle' });
   await evalInContentWorld(context, 'suppressOnboarding');
   await evalInContentWorld(context, 'switchLanguage', KO);
-  await page
-    .waitForFunction(() => /[가-힣]/.test(document.querySelector('#p-1')?.textContent || ''), null, { timeout: 15_000 })
-    .catch(() => {});
+  await page.waitForFunction(() => /[가-힣]/.test(document.querySelector('#p-1')?.textContent || ''), null, {
+    timeout: 15_000,
+  });
 }
 
 module.exports = {
@@ -109,8 +109,13 @@ module.exports = {
     const MAP = { ...GT_KO, ...frozen };
     const recorded = {};
     await context.route('https://translate.googleapis.com/**', async (route) => {
-      const q = new URL(route.request().url()).searchParams.get('q') || '';
-      const norm = decodeURIComponent(q).replace(/\s+/g, ' ').trim();
+      const request = route.request();
+      let q = new URL(request.url()).searchParams.get('q') || '';
+      if (request.method() === 'POST') {
+        q = new URLSearchParams(request.postData() || '').get('q') || '';
+      }
+      // URLSearchParams decodes query and form values exactly once.
+      const norm = q.replace(/\s+/g, ' ').trim();
       if (flags && flags.freeze) {
         // Record mode: hit real GT, capture its output, fulfill with the real response.
         const resp = await route.fetch();
@@ -219,7 +224,7 @@ module.exports = {
     },
     {
       name: '05-exam-safe',
-      caption: 'Exam-safe: quiz answers are never translated',
+      caption: 'Exam-safe: recognized quiz answers stay untranslated',
       async run({ page, context, baseUrl }) {
         await page.goto(`${baseUrl}${QUIZ_URL}`, { waitUntil: 'networkidle' });
         await evalInContentWorld(context, 'suppressOnboarding');
@@ -263,7 +268,7 @@ module.exports = {
       width,
       height,
       replacements: {
-        EYEBROW: 'v4.0.0 · RELEASE CANDIDATE',
+        EYEBROW: 'v4.0.0 · AI COURSE TRANSLATOR',
         HEADLINE: 'Learn in your language.\nKeep technical terms intact.',
         BODY: '32 languages · local study tools · exam-safe translation',
         CTA: 'Built for supported AI courses',
@@ -279,11 +284,9 @@ module.exports = {
       await evalInContentWorld(context, 'suppressOnboarding');
       await page.waitForTimeout(900);
       await evalInContentWorld(context, 'switchLanguage', KO); // watch it translate
-      await page
-        .waitForFunction(() => /[가-힣]/.test(document.querySelector('#p-1')?.textContent || ''), null, {
-          timeout: 15_000,
-        })
-        .catch(() => {});
+      await page.waitForFunction(() => /[가-힣]/.test(document.querySelector('#p-1')?.textContent || ''), null, {
+        timeout: 15_000,
+      });
       await page.waitForTimeout(1400);
       await evalInContentWorld(context, 'injectSidebar');
       await evalInContentWorld(context, 'toggleSidebar');

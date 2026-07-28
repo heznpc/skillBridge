@@ -87,9 +87,8 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "src/lib/page-bridge.js",
         "src/data/*",
-        "src/bridge/puter.js",
+        "src/bridge/puter-frame.html",
         "assets/icons/*",
         "src/shared/constants.json",
         "src/shared/runtime-constants.js",
@@ -98,7 +97,12 @@
       "matches": ["https://*.skilljar.com/*"]
     },
     {
-      "resources": ["src/data/*", "src/shared/runtime-constants.js", "src/content/styles/*.css"],
+      "resources": [
+        "src/data/*",
+        "src/bridge/puter-frame.html",
+        "src/shared/runtime-constants.js",
+        "src/content/styles/*.css"
+      ],
       "matches": ["https://claude.com/*"]
     }
   ]

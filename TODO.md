@@ -1,6 +1,6 @@
 # SkillBridge TODO
 
-> Last refreshed: 2026-07-24 (next CWS release: v4.0.0)
+> Last refreshed: 2026-07-28 (next CWS release: v4.0.0)
 
 Items below are concrete engineering / ops work. Anything strategic — what
 markets we enter, what we charge, what features we accept — is an owner
@@ -28,11 +28,11 @@ current privacy/package changes and must not be reused for the upload.
   evidence for the optional raw developer path, not CWS release evidence: the
   v4.0.0 CWS package ships the AI Tutor and the bundled Puter client.
 
-- [ ] **Optional raw-developer Puter smoke (not a CWS release gate).** The CWS
-  E2E suite loads only `dist/bundled`, where AI is disabled and Puter/page bridge
-  files are omitted. If the raw AI path is maintained later, give it a separate,
-  explicit remote-code-aware harness that sends only synthetic prompts and
-  classifies auth/network/model failures. Do not use that path as CWS evidence.
+- [x] **Separate raw-developer Puter evidence from the CWS runtime.** The v4 CWS
+  E2E suite now exercises the bundled Tutor through its extension-origin frame;
+  the retired page-world bridge is absent from `dist/bundled`. The repository's
+  raw vendored SDK remains maintenance input, not an upload artifact or CWS
+  runtime-evidence substitute.
 
 - [~] **PR the E2E runner stabilization.** The five-stable-batch runner in
   `scripts/run-e2e.js` is now PR'd (#241, runner-only); local `npm run test:e2e`
@@ -40,8 +40,13 @@ current privacy/package changes and must not be reused for the upload.
   - DoD: runner-only PR, local `npm run test:e2e` green, `git diff --check`
     green, GitHub `e2e` job green.
 
-- [ ] **Run pre-release dictionary QA.** Before every store submission, run one
-  reviewer pass per 12 premium dictionaries, verify findings against
+- [ ] **Run pre-release dictionary QA.** *(partial — 4 of 12 done 2026-07-28)*
+  A rule-based `subagent` term pass plus the four confirmed reviewer fixes
+  landed across all 12 locales, and every structural gate passes. Full
+  per-entry semantic review is complete only for **pt-BR, ru, vi, id** (those
+  four carry `_meta.lastAudited = 2026-07-28`); **ko, ja, zh-CN, zh-TW, es,
+  fr, it, de** are still unreviewed and intentionally keep their older
+  `lastAudited`. Finish those eight, verify findings against
   `src/data/*.json`, fix only confirmed semantic errors, stamp
   `_meta.lastAudited`, and run `npm run docs`.
   - DoD: README QA table reflects the refreshed audits; structural gates still
@@ -49,11 +54,15 @@ current privacy/package changes and must not be reused for the upload.
   - Verify: `npm run glossary`, `npm run validate`,
     `npm run check:dict-coverage`, `npm run check:locales`, `npm run docs`.
 
-- [x] **Build, smoke, and freeze the upload artifact.** The bundled extension
-  was regenerated immediately before the real-bundle release smoke.
-  Completed 2026-07-24: full release verification passed and the inspected
-  63-file ZIP was frozen at SHA-256
-  `c81fdbe5fac854974f5dc673358918f1e8098368edac375d440750217df600f6`.
+- [x] **Build, smoke, and freeze the upload artifact.** *(2026-07-28)*
+  `npm run release:verify` passed (676 unit across 38 suites, 46 Chromium E2E),
+  the ZIP was rebuilt and recorded as **70 files / 706,563 bytes / SHA-256
+  `f67fb382f79f9e92e9627b610032355f6dbb2d8d248ecfa14f8b39968bea28be`**, the
+  extracted archive diffs byte-for-byte against `dist/bundled`, and
+  `check-rhc` is clean on both. Promo MP4s/thumbnails/manifest were
+  regenerated from the current `demo.webm`; the screenshot capture stage was
+  not re-run (`shotkit` is not installed here), so the five page screenshots
+  are the previously captured set.
   - DoD: `dist/bundled` is fresh, first-user smoke passes, bundled zip is
     rebuilt, and generated store assets match the current icon/listing state.
   - Verify: `npm run release:smoke`, then `npm run release:verify` before the
@@ -64,7 +73,8 @@ current privacy/package changes and must not be reused for the upload.
   current change set. After external scope approval, run `npm run release:verify`, generate only
   `store-assets/skillbridge-bundled.zip`, refresh listing copy/media, set the
   capital-B privacy URL, answer remote code = NO only after inspecting that exact
-  uploaded package, check Website content, and paste current permission
+  uploaded package, select every data category listed in
+  `store-assets/RELEASE_CHECKLIST.md`, and paste current permission
   justifications.
   - Owner-only: CWS dashboard access, privacy-practices form, review wait.
   - DoD: CWS review submitted/accepted and `npm run check:cws-drift` no longer
@@ -80,7 +90,9 @@ current privacy/package changes and must not be reused for the upload.
 - [ ] **Manual real-tab bundled-extension smoke.** Load `dist/bundled` in
   Chrome and check popup startup, translation, language switch, flashcards,
   bookmarks/recent/dashboard, exam-safe disable, dark mode, the known manual
-  YouTube-caption gap, and that no Tutor/Puter request or page bridge appears.
+  YouTube-caption gap, cloud/local/off Tutor modes, and that the host page cannot
+  observe or forge Tutor transport through SDK globals or window messages. (The
+  visible Tutor UI remains in the shared page DOM by design.)
 - [ ] **Keep the publication pause.** Do not remove
   `CWS_PUBLICATION_PAUSED` during code cleanup or dashboard draft preparation.
   Only after external scope approval, a newly versioned ZIP passes all gates,
@@ -129,9 +141,9 @@ narrowed.
 
 ### Excluded by the free + local-only constraint
 - Cross-device sync of bookmarks/notes (needs a server) — device-local only.
-- Multi-model picker via user API keys (breaks free / no-key). The next CWS
-  candidate exposes no Tutor or AI model. The optional Puter path remains only
-  in raw developer source and is outside the CWS product boundary.
+- User-supplied API keys or a broad multi-model picker (breaks free / no-key).
+  The v4 CWS candidate instead offers one bundled cloud Tutor path through
+  Puter, one user-run local OpenAI-compatible endpoint, and an off mode.
 - Any server-side feature.
 
 ### Release / ops (feature train)
@@ -262,6 +274,7 @@ the new E2E suite.
   via a hard-coded menu of diagnostic ops (see `tests/e2e/helpers/
   extension.js`) — if you add a new op, add it to that switch, don't try
   to pass arbitrary functions through.
-- **Puter.js developer-path risk** — the optional raw developer AI path depends
-  on a third party and contains lazy remote-code paths. It is disabled and
-  omitted from the next CWS package; do not let it re-enter the CWS artifact.
+- **Puter.js package risk** — both the CWS and raw developer Tutor paths depend
+  on a third party. The raw vendored SDK contains lazy remote-code and unused
+  startup paths; only the build-time-sanitized, RHC-scanned copy in
+  `dist/bundled` may enter the CWS artifact.

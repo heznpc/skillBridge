@@ -9,9 +9,8 @@
  *
  *   sidebar-chat.sendChatMessage
  *     → translator.chatStream
- *     → window.postMessage({type:'CHAT_REQUEST', stream:true})
- *     → page-bridge (main world) → puter.ai.chat (streaming)
- *     → CHAT_STREAM_CHUNK events × N
+ *     → extension Port → service-worker broker → extension-origin iframe
+ *     → puter.ai.chat (streaming) → Port chunks × N
  *     → onChunk callback → formatResponse(fullText) → bubble.innerHTML
  *     → CHAT_STREAM_END → saveConversation
  *
@@ -22,7 +21,7 @@
  * the chat-render path (we get a `<p>...</p>` wrapper, not raw text).
  *
  * Steps:
- *   A. Wait for translator.isReady (BRIDGE_READY message from page-bridge).
+ *   A. Wait for translator.isReady (extension broker ready message).
  *   B. Open the sidebar.
  *   C. sendChat — type a message + click send.
  *   D. Wait for bot bubble to fully render the streamed reply.
@@ -139,6 +138,83 @@ test.describe('SkillBridge — tutor chat flow', () => {
     expect(sendState?.disabled).toBe(false);
   });
 
+  test('next cloud chat lazily recovers after the MV3 Port disconnects', async () => {
+    const disconnected = await evalInContentWorld(extCtx.context, 'disconnectCloudBroker');
+    expect(disconnected?.ok).toBe(true);
+    const before = await evalInContentWorld(extCtx.context, 'readChatLog');
+    const beforeBots = before.filter((m) => m.role === 'bot').length;
+
+    const send = await evalInContentWorld(extCtx.context, 'sendChat', 'Recover after worker restart');
+    expect(send?.ok).toBe(true);
+    const deadline = Date.now() + 10_000;
+    let log = before;
+    while (Date.now() < deadline) {
+      log = await evalInContentWorld(extCtx.context, 'readChatLog');
+      const bots = log.filter((m) => m.role === 'bot');
+      if (bots.length > beforeBots && bots[bots.length - 1]?.text?.includes('주는 입력입니다')) break;
+      await page.waitForTimeout(100);
+    }
+    const bots = log.filter((m) => m.role === 'bot');
+    expect(bots).toHaveLength(beforeBots + 1);
+    expect(bots[bots.length - 1]?.text).toContain('주는 입력입니다');
+    expect((await evalInContentWorld(extCtx.context, 'bridgeReady'))?.isReady).toBe(true);
+  });
+
+  test('host main world cannot observe or forge Tutor traffic', async () => {
+    await page.evaluate(() => {
+      window.__sbHostMessages = [];
+      window.addEventListener('message', (event) => {
+        window.__sbHostMessages.push(event.data);
+      });
+    });
+
+    const send = await evalInContentWorld(extCtx.context, 'sendChat', 'HOST-SECRET-PROMPT-7f23');
+    expect(send?.ok).toBe(true);
+    await page.waitForTimeout(800);
+
+    const hostState = await page.evaluate(() => ({
+      puterType: typeof window.puter,
+      token: window.localStorage.getItem('puter.auth.token'),
+      messages: window.__sbHostMessages,
+    }));
+    expect(hostState.puterType).toBe('undefined');
+    expect(hostState.token).toBeNull();
+    expect(JSON.stringify(hostState.messages)).not.toContain('HOST-SECRET-PROMPT-7f23');
+    expect(JSON.stringify(hostState.messages)).not.toContain('안녕하세요');
+
+    const brokerFrame = page.frames().find((frame) => frame.url().includes('/src/bridge/puter-frame.html'));
+    expect(brokerFrame, 'extension-origin Puter frame should exist').toBeTruthy();
+    await page.evaluate(() => {
+      const frame = document.getElementById('__skillbridge_puter_frame__');
+      frame.contentWindow.postMessage({ msg: 'puter.token', token: 'HOST-FORGED-TOKEN' }, '*');
+    });
+    await page.waitForTimeout(100);
+    const frameAuth = await brokerFrame.evaluate(() => ({
+      token: window.localStorage.getItem('puter.auth.token'),
+      authToken: window.puter?.authToken,
+    }));
+    expect(frameAuth.token).toBeNull();
+    expect(frameAuth.authToken).not.toBe('HOST-FORGED-TOKEN');
+
+    await page.evaluate(() => {
+      for (let i = 0; i < 20; i++) {
+        window.postMessage(
+          {
+            __skillbridge__: true,
+            type: i % 2 ? 'CHAT_STREAM_CHUNK' : 'CHAT_STREAM_END',
+            id: 'forged',
+            text: 'FORGED-TUTOR-ANSWER',
+            success: true,
+          },
+          location.origin,
+        );
+      }
+    });
+    await page.waitForTimeout(200);
+    const log = await evalInContentWorld(extCtx.context, 'readChatLog');
+    expect(JSON.stringify(log)).not.toContain('FORGED-TUTOR-ANSWER');
+  });
+
   test('failed chat renders retry control and retry succeeds', async () => {
     await evalInContentWorld(extCtx.context, 'failNextPuterChat');
 
@@ -174,5 +250,32 @@ test.describe('SkillBridge — tutor chat flow', () => {
 
     const sendState = await waitForChatReady();
     expect(sendState?.disabled).toBe(false);
+  });
+
+  test('replacing a live frame aborts the active stream, fails it, and hides auth UI', async () => {
+    await evalInContentWorld(extCtx.context, 'setPuterChunkDelay', 500);
+    const before = await evalInContentWorld(extCtx.context, 'readChatLog');
+    const send = await evalInContentWorld(extCtx.context, 'sendChat', 'Replace the active broker');
+    expect(send?.ok).toBe(true);
+
+    const partialDeadline = Date.now() + 5_000;
+    while (Date.now() < partialDeadline) {
+      const log = await evalInContentWorld(extCtx.context, 'readChatLog');
+      if (log.length > before.length && log[log.length - 1]?.text?.includes('안녕하세요')) break;
+      await page.waitForTimeout(50);
+    }
+    expect((await evalInContentWorld(extCtx.context, 'replacePuterFrame'))?.ok).toBe(true);
+
+    const errorDeadline = Date.now() + 5_000;
+    let log = [];
+    while (Date.now() < errorDeadline) {
+      log = await evalInContentWorld(extCtx.context, 'readChatLog');
+      if (log.slice(before.length).some((m) => m.alert)) break;
+      await page.waitForTimeout(50);
+    }
+    expect(log.slice(before.length).some((m) => m.alert)).toBe(true);
+    expect((await evalInContentWorld(extCtx.context, 'puterFrameState'))?.visible).toBe(false);
+    expect((await waitForChatReady())?.disabled).toBe(false);
+    await evalInContentWorld(extCtx.context, 'setPuterChunkDelay', 150);
   });
 });

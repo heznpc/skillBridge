@@ -298,53 +298,50 @@ describe('CHAT_ABORT wiring (M-1 regression guard)', () => {
   });
 });
 
-// ── M-1 content-side: translator.js must emit CHAT_ABORT on BOTH the
-//    user-initiated abort path AND the stream timeout path (audit V1).
-describe('translator.js emits CHAT_ABORT on both abort and timeout', () => {
+// ── M-1 content-side: translator.js must relay an abort over the
+//    extension Port on BOTH the user-initiated and timeout paths (audit V1).
+describe('translator.js relays cloud abort on both abort and timeout', () => {
   const translatorSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'translator.js'), 'utf8');
 
-  test('_postAbort helper builds CHAT_ABORT with full required shape', () => {
+  test('_postAbort helper sends the request id only through the cloud Port', () => {
     // _postAbort is the shared chokepoint used by both onAbort and the
     // setTimeout. The PR consolidated to avoid the V1 regression where
     // the timeout path quietly let the bridge keep streaming. Pin the
-    // helper's structure here so a future refactor that drops fields
-    // (id, nonce, target origin) fails fast.
+    // helper's structure here so a future refactor cannot restore the retired
+    // host-window transport or drop the request id.
     const m = translatorSrc.match(/const\s+_postAbort\s*=\s*\(\)\s*=>\s*\{([\s\S]+?)\};/);
     expect(m).not.toBeNull();
     const body = m[1];
-    expect(body).toMatch(/window\.postMessage\s*\(/);
-    expect(body).toMatch(/type:\s*['"]CHAT_ABORT['"]/);
-    expect(body).toMatch(/\bid,/); // shorthand `id: id`
-    expect(body).toMatch(/__nonce__:\s*this\._bridgeNonce/);
-    expect(body).toMatch(/window\.location\.origin/);
+    expect(body).toMatch(/this\._cloudPort\?\.postMessage\s*\(/);
+    expect(body).toMatch(/type:\s*['"]abort['"]/);
+    expect(body).toMatch(/\bid\s*\}/); // shorthand `id: id`
+    expect(body).not.toMatch(/window\.postMessage/);
+    expect(body).not.toMatch(/__nonce__/);
   });
 
-  test('onAbort calls _postAbort() then cleanup() then reject(AbortError)', () => {
-    // Order matters: cleanup() removes the message listener; calling it
-    // before _postAbort would let the abort message race against
-    // teardown.
+  test('onAbort calls _postAbort() before settling with AbortError', () => {
     const m = translatorSrc.match(/const\s+onAbort\s*=\s*\(\)\s*=>\s*\{([\s\S]+?)\};/);
     expect(m).not.toBeNull();
     const body = m[1];
     const postIdx = body.indexOf('_postAbort()');
-    const cleanupIdx = body.indexOf('cleanup()');
-    const rejectIdx = body.indexOf('reject(');
+    const finishIdx = body.indexOf('finish(reject');
     expect(postIdx).toBeGreaterThanOrEqual(0);
-    expect(cleanupIdx).toBeGreaterThan(postIdx);
-    expect(rejectIdx).toBeGreaterThan(cleanupIdx);
+    expect(finishIdx).toBeGreaterThan(postIdx);
     expect(body).toMatch(/AbortError/);
   });
 
-  test('stream timeout body ALSO calls _postAbort (audit V1 regression guard)', () => {
-    // Before this fix, the setTimeout callback was `cleanup() + reject` —
-    // bridge kept generating tokens until Puter completed naturally on
-    // every 60s timeout. Assert _postAbort is in the callback.
-    const m = translatorSrc.match(
-      /setTimeout\s*\(\s*\(\)\s*=>\s*\{([\s\S]+?)\},\s*SKILLBRIDGE_THRESHOLDS\.CHAT_STREAM_TIMEOUT/,
-    );
-    expect(m).not.toBeNull();
-    const body = m[1];
+  test('idle watchdog aborts upstream and is rearmed by every chunk (audit V1 regression guard)', () => {
+    // Before this fix, timeout settlement left the broker generating tokens.
+    // The cloud path now uses a 90s *idle* watchdog, so pin both halves of the
+    // contract: timeout aborts upstream, and every received chunk rearms it.
+    const start = translatorSrc.indexOf('const armWatchdog = () => {');
+    const end = translatorSrc.indexOf('\n        };', start);
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(end).toBeGreaterThan(start);
+    const body = translatorSrc.slice(start, end);
     expect(body).toMatch(/_postAbort\(\)/);
     expect(body).toMatch(/Stream timed out/);
+    expect(body).toMatch(/cloudIdleTimeout/);
+    expect(translatorSrc).toMatch(/chunk\(text\)\s*\{\s*armWatchdog\(\);/);
   });
 });

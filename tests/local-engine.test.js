@@ -119,7 +119,11 @@ describe('local stream cancellation + dead-port safety (source contract)', () =>
     expect(bgSrc).toContain('const controller = new AbortController();');
     expect(bgSrc).toContain('signal: controller.signal,');
     // onDisconnect must abort, not just flip a flag.
-    const disconnectBlock = bgSrc.slice(bgSrc.indexOf('port.onDisconnect.addListener'));
+    const localStream = bgSrc.slice(
+      bgSrc.indexOf('async function _streamLocalChat'),
+      bgSrc.indexOf('chrome.runtime.onConnect'),
+    );
+    const disconnectBlock = localStream.slice(localStream.indexOf('port.onDisconnect.addListener'));
     expect(disconnectBlock.slice(0, 260)).toContain('controller.abort()');
   });
 

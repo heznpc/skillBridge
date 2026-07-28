@@ -534,6 +534,22 @@ async function evalInContentWorld(context, op, arg) {
                 bridgeReady: () => ({
                   isReady: !!(window._sb && window._sb.translator && window._sb.translator.isReady),
                 }),
+                disconnectCloudBroker: () => {
+                  const translator = window._sb?.translator;
+                  if (!translator?._cloudPort) return { error: 'cloud broker Port not present' };
+                  translator._cloudPort.disconnect();
+                  return { ok: true };
+                },
+                replacePuterFrame: () => {
+                  const translator = window._sb?.translator;
+                  if (!translator?._createPuterFrame) return { error: 'Puter frame factory not present' };
+                  translator._createPuterFrame();
+                  return { ok: true };
+                },
+                puterFrameState: () => {
+                  const frame = document.getElementById('__skillbridge_puter_frame__');
+                  return { present: !!frame, visible: !!frame && frame.style.display !== 'none' };
+                },
                 // Simulate the user typing in the chat input + clicking send.
                 // This exercises the full sidebar-chat.sendChatMessage path:
                 //   input.value = text → click handler → translator.chatStream
@@ -554,13 +570,13 @@ async function evalInContentWorld(context, op, arg) {
                   const sendBtn = window._sb.$id('si18n-chat-send');
                   return { present: !!sendBtn, disabled: !!sendBtn?.disabled };
                 },
-                failNextPuterChat: () => {
-                  document.documentElement.setAttribute('data-sb-e2e-fail-chat-count', '1');
+                failNextPuterChat: async () => {
+                  await chrome.storage.local.set({ sb_e2e_fail_chat_count: 1 });
                   return { ok: true };
                 },
-                setPuterChunkDelay: (delayMs) => {
+                setPuterChunkDelay: async (delayMs) => {
                   const delay = Number(delayMs) || 150;
-                  document.documentElement.dataset.sbE2eChunkDelayMs = String(delay);
+                  await chrome.storage.local.set({ sb_e2e_chunk_delay: delay });
                   return { ok: true, delay };
                 },
                 clickRetryButton: () => {

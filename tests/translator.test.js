@@ -78,13 +78,11 @@ describe('SkilljarTranslator', () => {
       localOnly._openDB = jest.fn().mockResolvedValue(undefined);
       localOnly._cleanupExpiredCache = jest.fn().mockResolvedValue(undefined);
       localOnly._checkStorageQuota = jest.fn().mockResolvedValue(undefined);
-      localOnly._setupMessageListener = jest.fn();
-      localOnly._injectPageBridgeWithRetry = jest.fn();
+      localOnly._connectCloudBrokerWithRetry = jest.fn();
 
       await expect(localOnly.initialize()).resolves.toBe(true);
       expect(localOnly._openDB).toHaveBeenCalledTimes(1);
-      expect(localOnly._setupMessageListener).not.toHaveBeenCalled();
-      expect(localOnly._injectPageBridgeWithRetry).not.toHaveBeenCalled();
+      expect(localOnly._connectCloudBrokerWithRetry).not.toHaveBeenCalled();
     });
   });
 
@@ -414,14 +412,16 @@ describe('Language JSON files', () => {
   });
 });
 
-describe('chatStream — bridge-not-ready propagates as a rejection', () => {
-  test('rejects (does not silently resolve to a string) when the bridge is not ready', async () => {
+describe('chatStream — broker recovery failures propagate as a rejection', () => {
+  test('attempts lazy recovery, then rejects instead of silently resolving', async () => {
     const t = new SkilljarTranslator();
     t.isReady = false;
+    t._ensureCloudBroker = jest.fn().mockRejectedValue(new Error('Cloud broker unavailable'));
     // The sole caller (sidebar-chat) discards chatStream's return value and
     // relies on a thrown error to render the error bubble + retry button. If
     // this resolves to a string instead, the "thinking…" spinner is stranded
     // forever with no error and no retry.
-    await expect(t.chatStream('hello', 'ko', '', () => {}, {})).rejects.toThrow('Bridge not ready');
+    await expect(t.chatStream('hello', 'ko', '', () => {}, {})).rejects.toThrow('Cloud broker unavailable');
+    expect(t._ensureCloudBroker).toHaveBeenCalledTimes(1);
   });
 });

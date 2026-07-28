@@ -106,8 +106,8 @@ const _CAPS_NONE = Object.freeze({
   youtubeSubtitles: false,
 });
 // anthropic.skilljar.com + the localhost/127.0.0.1 E2E fixture: full local
-// feature set. The build flag independently decides whether the AI bridge is
-// present (false in the Chrome Web Store artifact).
+// feature set. The build flag independently decides whether the AI Tutor
+// transport is present (enabled in the v4 Chrome Web Store artifact).
 const _CAPS_FULL = Object.freeze({
   platform: PLATFORM_IDS.SKILLJAR,
   trusted: true,

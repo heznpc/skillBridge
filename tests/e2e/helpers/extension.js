@@ -83,7 +83,7 @@ function registerTempDir(dir) {
  * content_scripts.matches to also include http://localhost:*. Returns the
  * patched dir path.
  */
-function makePatchedExtension() {
+function makePatchedExtension({ puterStub = true } = {}) {
   if (!extensionBundleReady()) {
     buildBundleForE2E();
   }
@@ -100,10 +100,10 @@ function makePatchedExtension() {
     fs.cpSync(EXTENSION_SRC, extDir, { recursive: true });
   }
 
-  return patchExtensionDir(extDir);
+  return patchExtensionDir(extDir, { puterStub });
 }
 
-function patchExtensionDir(extDir) {
+function patchExtensionDir(extDir, { puterStub = true } = {}) {
   const manifestPath = path.join(extDir, 'manifest.json');
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
   for (const cs of manifest.content_scripts) {
@@ -131,17 +131,17 @@ function patchExtensionDir(extDir) {
   // production-shaped page bridge still loads this exact extension URL, so the
   // Tutor message/streaming path remains end-to-end without a real sign-in.
   const puterStubPath = path.join(extDir, 'src', 'bridge', 'puter.js');
-  if (fs.existsSync(puterStubPath)) {
+  if (puterStub && fs.existsSync(puterStubPath)) {
     fs.writeFileSync(puterStubPath, PUTER_STREAM_STUB);
   }
 
   return extDir;
 }
 
-async function launchExtension() {
+async function launchExtension({ puterStub = true } = {}) {
   let lastError = null;
   for (let attempt = 1; attempt <= 3; attempt++) {
-    const extensionPath = makePatchedExtension();
+    const extensionPath = makePatchedExtension({ puterStub });
     const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skillbridge-e2e-'));
     registerTempDir(userDataDir);
     let context = null;

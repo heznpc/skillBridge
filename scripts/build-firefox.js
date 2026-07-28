@@ -85,6 +85,7 @@ for (const dir of ['_locales', 'src']) {
   copyDir(path.join(ROOT, dir), path.join(DIST_DIR, dir));
 }
 copyDir(path.join(ROOT, 'assets', 'icons'), path.join(DIST_DIR, 'assets', 'icons'));
+copyDir(path.join(ROOT, 'licenses'), path.join(DIST_DIR, 'licenses'));
 fs.copyFileSync(path.join(ROOT, 'LICENSE'), path.join(DIST_DIR, 'LICENSE'));
 fs.copyFileSync(path.join(ROOT, 'THIRD_PARTY_NOTICES.md'), path.join(DIST_DIR, 'THIRD_PARTY_NOTICES.md'));
 

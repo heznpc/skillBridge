@@ -78,6 +78,8 @@ async function build() {
   copyDir(path.join(ROOT, '_locales'), path.join(DIST, '_locales'));
   copyDir(path.join(ROOT, 'src/data'), path.join(DIST, 'src/data'));
   fs.copyFileSync(path.join(ROOT, 'LICENSE'), path.join(DIST, 'LICENSE'));
+  fs.copyFileSync(path.join(ROOT, 'THIRD_PARTY_NOTICES.md'), path.join(DIST, 'THIRD_PARTY_NOTICES.md'));
+  copyDir(path.join(ROOT, 'licenses'), path.join(DIST, 'licenses'));
 
   // Copy other web-accessible resources
   fs.mkdirSync(path.join(DIST, 'src/lib'), { recursive: true });
@@ -85,9 +87,11 @@ async function build() {
   fs.mkdirSync(path.join(DIST, 'src/bridge'), { recursive: true });
   fs.mkdirSync(path.join(DIST, 'src/content/styles'), { recursive: true });
   fs.copyFileSync(path.join(ROOT, 'src/content/styles/fab.css'), path.join(DIST, 'src/content/styles/fab.css'));
-  // AI tutor bridge (v4): the page-world loader + vendored Puter SDK ship as
-  // web-accessible resources so the tutor works in the CWS build.
-  fs.copyFileSync(path.join(ROOT, 'src/lib/page-bridge.js'), path.join(DIST, 'src/lib/page-bridge.js'));
+  // AI tutor broker (v4): Puter runs only in an extension-origin iframe. The
+  // host main world receives neither the SDK nor Tutor prompts/chunks.
+  for (const name of ['puter-frame.html', 'puter-frame-init.js', 'puter-frame.js']) {
+    fs.copyFileSync(path.join(ROOT, 'src/bridge', name), path.join(DIST, 'src/bridge', name));
+  }
   writeCwsSafePuter(path.join(ROOT, 'src/bridge/puter.js'), path.join(DIST, 'src/bridge/puter.js'));
   fs.copyFileSync(
     path.join(ROOT, 'src/shared/runtime-constants.js'),
@@ -168,6 +172,30 @@ const PUTER_GLOBAL_FUNCTION_FALLBACK =
   'const ve="undefined"!=typeof self?self:"undefined"!=typeof window?window:Function("return this")();';
 const PUTER_GLOBAL_FUNCTION_REPLACEMENT =
   'const ve="undefined"!=typeof self?self:"undefined"!=typeof window?window:globalThis;';
+const PUTER_PREFIX_LOGGER_PROFILE_LOOKUP =
+  '(async()=>{try{const e=await this.auth.whoami(),n=`[${e?.app_name??this.appInstanceID??"HOST"}]`;t=t.fields({prefix:n}),this.logger=t}catch(e){this.debugMode&&console.error("Failed to initialize prefix logger",e)}})(),';
+const PUTER_AUTO_USER_PROFILE_LOOKUP = ',this.getUser().then(e=>{this.whoami=e})';
+const PUTER_INSTANCE_AUTH_PROFILE_CALLBACK =
+  ',puter.onAuth&&"function"==typeof puter.onAuth&&puter.getUser().then(e=>{puter.onAuth(e)})';
+const PUTER_SINGLETON_AUTH_PROFILE_CALLBACK =
+  ',xn.onAuth&&"function"==typeof xn.onAuth&&xn.getUser().then(e=>{xn.onAuth(e)})';
+const PUTER_FS_CONSTRUCTOR_SOCKET_INIT = 'this.cacheUpdateTimer=null,this.initializeSocket();const t={}';
+const PUTER_FS_SET_TOKEN_SOCKET_INIT =
+  'setAuthToken(e){this.authToken=e,"gui"===this.puter.env&&(this.checkCacheAndPurge(),this.startCacheUpdateTimer()),this.initializeSocket()}';
+const PUTER_FS_SET_ORIGIN_SOCKET_INIT = 'setAPIOrigin(e){this.APIOrigin=e,this.initializeSocket()}';
+const PUTER_SINGLETON_SET_TOKEN_RAO =
+  ',this.updateSubmodules(),this.request_rao_(),this.getUser().then(e=>{this.whoami=e})';
+const PUTER_INTERNAL_TOKEN_REAUTH =
+  'if("token_auth_failed"===h?.code&&"web"===puter.env)try{puter.resetAuthToken(),await puter.ui.authenticateWithPuter()}catch(e){return n({error:{code:"auth_canceled",message:"Authentication canceled"}})}';
+const PUTER_MODIFICATION_NOTICE = `/*
+ * SkillBridge CWS modification notice (2026-07-28): Heznpc changed this
+ * @heyputer/puter.js 2.2.11 distribution by disabling unused remotely hosted
+ * TLS-socket imports, replacing its Function-constructor global fallback, and
+ * disabling automatic user-profile, RAO, and filesystem-socket initialization
+ * that AI chat does not need, plus hidden internal token reauthentication so
+ * SkillBridge's visible extension-frame recovery owns that user interaction.
+ * See THIRD_PARTY_NOTICES.md and licenses/Apache-2.0.txt.
+ */\n`;
 
 function writeCwsSafePuter(srcPath, destPath) {
   const src = fs.readFileSync(srcPath, 'utf8');
@@ -184,12 +212,75 @@ function writeCwsSafePuter(srcPath, destPath) {
         'Re-audit its global-scope fallback before shipping.',
     );
   }
+  if (src.split(PUTER_PREFIX_LOGGER_PROFILE_LOOKUP).length - 1 !== 1) {
+    throw new Error('Puter SDK prefix-logger /whoami pattern changed — refusing to ship an unreviewed profile lookup.');
+  }
+  if (src.split(PUTER_AUTO_USER_PROFILE_LOOKUP).length - 1 !== 1) {
+    throw new Error(
+      'Puter SDK automatic getUser profile pattern changed — refusing to ship an unreviewed profile lookup.',
+    );
+  }
+  for (const pattern of [PUTER_INSTANCE_AUTH_PROFILE_CALLBACK, PUTER_SINGLETON_AUTH_PROFILE_CALLBACK]) {
+    if (src.split(pattern).length - 1 !== 1) {
+      throw new Error(
+        'Puter SDK auth profile callback pattern changed — refusing to ship an unreviewed profile lookup.',
+      );
+    }
+  }
+  for (const pattern of [
+    PUTER_FS_CONSTRUCTOR_SOCKET_INIT,
+    PUTER_FS_SET_TOKEN_SOCKET_INIT,
+    PUTER_FS_SET_ORIGIN_SOCKET_INIT,
+    PUTER_SINGLETON_SET_TOKEN_RAO,
+    PUTER_INTERNAL_TOKEN_REAUTH,
+  ]) {
+    if (src.split(pattern).length - 1 !== 1) {
+      throw new Error(
+        'Puter SDK automatic network-init pattern changed — refusing to ship an unreviewed startup request.',
+      );
+    }
+  }
   const sanitized = src
     .split(PUTER_REMOTE_IMPORT_EXPR)
     .join(PUTER_REMOTE_IMPORT_REPLACEMENT)
     .split(PUTER_GLOBAL_FUNCTION_FALLBACK)
-    .join(PUTER_GLOBAL_FUNCTION_REPLACEMENT);
-  fs.writeFileSync(destPath, sanitized);
+    .join(PUTER_GLOBAL_FUNCTION_REPLACEMENT)
+    .split(PUTER_FS_CONSTRUCTOR_SOCKET_INIT)
+    .join('this.cacheUpdateTimer=null;const t={}')
+    .split(PUTER_FS_SET_TOKEN_SOCKET_INIT)
+    .join(
+      'setAuthToken(e){this.authToken=e,"gui"===this.puter.env&&(this.checkCacheAndPurge(),this.startCacheUpdateTimer())}',
+    )
+    .split(PUTER_FS_SET_ORIGIN_SOCKET_INIT)
+    .join('setAPIOrigin(e){this.APIOrigin=e}')
+    .split(PUTER_SINGLETON_SET_TOKEN_RAO)
+    .join(',this.updateSubmodules(),this.getUser().then(e=>{this.whoami=e})')
+    .split(PUTER_INTERNAL_TOKEN_REAUTH)
+    .join('')
+    .split(PUTER_PREFIX_LOGGER_PROFILE_LOOKUP)
+    .join('')
+    .split(PUTER_AUTO_USER_PROFILE_LOOKUP)
+    .join(',this.whoami=null')
+    .split(PUTER_INSTANCE_AUTH_PROFILE_CALLBACK)
+    .join('')
+    .split(PUTER_SINGLETON_AUTH_PROFILE_CALLBACK)
+    .join('');
+  if (
+    [
+      PUTER_PREFIX_LOGGER_PROFILE_LOOKUP,
+      PUTER_AUTO_USER_PROFILE_LOOKUP,
+      PUTER_INSTANCE_AUTH_PROFILE_CALLBACK,
+      PUTER_SINGLETON_AUTH_PROFILE_CALLBACK,
+      PUTER_FS_CONSTRUCTOR_SOCKET_INIT,
+      PUTER_FS_SET_TOKEN_SOCKET_INIT,
+      PUTER_FS_SET_ORIGIN_SOCKET_INIT,
+      PUTER_SINGLETON_SET_TOKEN_RAO,
+      PUTER_INTERNAL_TOKEN_REAUTH,
+    ].some((pattern) => sanitized.includes(pattern))
+  ) {
+    throw new Error('Puter SDK automatic profile lookup survived sanitization.');
+  }
+  fs.writeFileSync(destPath, `${PUTER_MODIFICATION_NOTICE}${sanitized}`);
 }
 
 function copyDir(src, dest) {

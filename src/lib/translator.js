@@ -27,6 +27,14 @@ class SkilljarTranslator {
     this.supportedLanguages = SUPPORTED_LANGUAGE_MAP;
     /** Whether the user-invoked AI Tutor bridge is available on this host. */
     this.aiEnabled = aiEnabled;
+    /** @type {chrome.runtime.Port|null} Extension-only cloud Tutor channel. */
+    this._cloudPort = null;
+    /** @type {Map<string, object>} In-flight cloud Tutor streams. */
+    this._cloudPending = new Map();
+    /** @type {HTMLIFrameElement|null} Isolated Puter runtime/auth surface. */
+    this._puterFrame = null;
+    /** @type {Promise<void>|null} Serializes broker startup/recovery. */
+    this._cloudConnectPromise = null;
   }
 
   /** @returns {Promise<boolean>} true if initialization succeeded */
@@ -36,8 +44,7 @@ class SkilljarTranslator {
       await this._cleanupExpiredCache();
       await this._checkStorageQuota();
       if (this.aiEnabled) {
-        this._setupMessageListener();
-        await this._injectPageBridgeWithRetry();
+        await this._ensureCloudBroker();
       }
       return true;
     } catch (err) {
@@ -554,13 +561,13 @@ User: ${userMessage}`;
       if (engine === 'off') throw new Error('AI tutor is turned off in settings.');
       if (engine === 'local') return this._localChatStream(prompt, onChunk, opts);
 
-      if (!this.isReady) {
-        throw new Error('Bridge not ready');
-      }
+      if (!this.isReady || !this._cloudPort) await this._ensureCloudBroker();
+      if (!this.isReady || !this._cloudPort) throw new Error('Bridge not ready');
 
       return new Promise((resolve, reject) => {
         const id = crypto.randomUUID();
         let fullText = '';
+        let settled = false;
 
         // Honor an AbortSignal so callers can cancel the stream when the
         // user navigates away / closes the sidebar / switches sub-panels.
@@ -570,79 +577,76 @@ User: ${userMessage}`;
           return reject(new DOMException('Aborted', 'AbortError'));
         }
 
-        // Fire-and-forget CHAT_ABORT to the bridge. Used by both the
-        // explicit onAbort (user-initiated) and the stream timeout —
-        // 2nd-pass audit V1 found the timeout path silently let the
-        // bridge keep pulling Puter.js tokens until natural completion.
         const _postAbort = () => {
-          window.postMessage(
-            {
-              __skillbridge__: true,
-              __nonce__: this._bridgeNonce,
-              type: 'CHAT_ABORT',
-              id,
-            },
-            window.location.origin,
-          );
+          try {
+            this._cloudPort?.postMessage({ type: 'abort', id });
+          } catch (_e) {
+            /* broker already disconnected */
+          }
         };
 
-        const timeout = setTimeout(() => {
-          _postAbort();
-          cleanup();
-          reject(new Error('Stream timed out'));
-        }, SKILLBRIDGE_THRESHOLDS.CHAT_STREAM_TIMEOUT);
+        let watchdog = null;
+        const cloudIdleTimeout = Math.max(SKILLBRIDGE_THRESHOLDS.CHAT_STREAM_TIMEOUT, 90_000);
+        const armWatchdog = () => {
+          clearTimeout(watchdog);
+          watchdog = setTimeout(() => {
+            _postAbort();
+            finish(reject, new Error('Stream timed out'));
+          }, cloudIdleTimeout);
+        };
 
-        const handler = (event) => {
-          if (event.source !== window) return;
-          const data = event.data;
-          if (!data || !data.__skillbridge__) return;
-          if (this._bridgeNonce && data.__nonce__ !== this._bridgeNonce) return;
-          if (data.id !== id) return;
-
-          if (data.type === 'CHAT_STREAM_CHUNK') {
-            fullText += data.text;
-            if (onChunk) onChunk(data.text, fullText);
-          } else if (data.type === 'CHAT_STREAM_END') {
-            cleanup();
-            resolve(fullText || 'No response');
-          } else if (data.type === 'CHAT_RESPONSE') {
-            cleanup();
-            if (data.success === false) {
-              reject(new Error(data.error));
-            } else {
-              resolve(data.result || 'No response');
-            }
-          }
+        const finish = (fn, value) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(watchdog);
+          this._cloudPending.delete(id);
+          opts.signal?.removeEventListener('abort', onAbort);
+          fn(value);
         };
 
         const onAbort = () => {
           _postAbort();
-          cleanup();
-          reject(new DOMException('Aborted', 'AbortError'));
-        };
-
-        const cleanup = () => {
-          clearTimeout(timeout);
-          window.removeEventListener('message', handler);
-          opts.signal?.removeEventListener('abort', onAbort);
+          finish(reject, new DOMException('Aborted', 'AbortError'));
         };
 
         if (opts.signal) opts.signal.addEventListener('abort', onAbort, { once: true });
-        window.addEventListener('message', handler);
-
-        window.postMessage(
-          {
-            __skillbridge__: true,
-            __nonce__: this._bridgeNonce,
-            type: 'CHAT_REQUEST',
-            id,
-            systemPrompt: prompt,
-            userMessage,
-            model: SKILLBRIDGE_MODELS.CLAUDE,
-            stream: true,
+        this._cloudPending.set(id, {
+          chunk(text) {
+            armWatchdog();
+            fullText += text;
+            onChunk?.(text, fullText);
           },
-          window.location.origin,
-        );
+          done: () => finish(resolve, fullText || 'No response'),
+          error: (message) => finish(reject, new Error(message || 'Cloud AI error')),
+        });
+        armWatchdog();
+        const request = { type: 'start', id, prompt, model: SKILLBRIDGE_MODELS.CLAUDE };
+        const sendStart = (allowReconnect) => {
+          if (settled || opts.signal?.aborted) return;
+          try {
+            this._cloudPort.postMessage(request);
+          } catch (err) {
+            if (!allowReconnect) {
+              finish(reject, new Error(`Cloud AI connection failed: ${err.message}`));
+              return;
+            }
+            const deadPort = this._cloudPort;
+            this._cloudPort = null;
+            this.isReady = false;
+            try {
+              deadPort?.disconnect();
+            } catch (_e) {
+              /* already disconnected */
+            }
+            void this._ensureCloudBroker().then(
+              () => {
+                if (!settled && !opts.signal?.aborted) sendStart(false);
+              },
+              (connectErr) => finish(reject, new Error(`Cloud AI connection failed: ${connectErr.message}`)),
+            );
+          }
+        };
+        sendStart(true);
       });
     } catch (err) {
       // Synchronous setup failures (most importantly `!this.isReady` — the Puter
@@ -659,40 +663,26 @@ User: ${userMessage}`;
 
   // ==================== INTERNAL ====================
 
-  _setupMessageListener() {
-    window.addEventListener('message', (event) => {
-      if (event.source !== window) return;
-      const data = event.data;
-      if (!data || !data.__skillbridge__) return;
-
-      // Validate nonce on all bridge messages to prevent spoofing
-      if (this._bridgeNonce && data.__nonce__ !== this._bridgeNonce) return;
-
-      if (data.type === 'BRIDGE_READY') {
-        this.isReady = true;
-      }
-
-      if (data.type === 'BRIDGE_ERROR') {
-        console.error('[SkillBridge] Bridge error:', data.error);
-      }
+  _ensureCloudBroker() {
+    if (this.isReady && this._cloudPort) return Promise.resolve();
+    if (this._cloudConnectPromise) return this._cloudConnectPromise;
+    const connecting = this._connectCloudBrokerWithRetry().finally(() => {
+      if (this._cloudConnectPromise === connecting) this._cloudConnectPromise = null;
     });
+    this._cloudConnectPromise = connecting;
+    return connecting;
   }
 
-  /**
-   * Inject the packaged page bridge, retrying on a transient script-load or
-   * one-shot CSP failure. Final timeout/error after the
-   * retry budget is exhausted dispatches `skillbridge:bridgeunavailable`
-   * so the banner UI shows the user what happened.
-   */
-  async _injectPageBridgeWithRetry(maxRetries = 2) {
+  async _connectCloudBrokerWithRetry(maxRetries = 2) {
     let lastErr;
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
-        await this._injectPageBridge();
+        await this._connectCloudBroker();
+        this.bridgeFailed = false;
         return;
       } catch (err) {
         lastErr = err;
-        console.warn(`[SkillBridge] Bridge inject attempt ${attempt + 1}/${maxRetries + 1} failed:`, err.message);
+        console.warn(`[SkillBridge] Cloud broker attempt ${attempt + 1}/${maxRetries + 1} failed:`, err.message);
         if (attempt < maxRetries) {
           await new Promise((r) => setTimeout(r, 500 * Math.pow(2, attempt)));
         }
@@ -703,46 +693,113 @@ User: ${userMessage}`;
     throw lastErr;
   }
 
-  _injectPageBridge() {
-    return new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        // Reject so the retry wrapper can attempt re-injection. The wrapper
-        // dispatches the unavailable banner only after all retries fail.
-        reject(new Error('Bridge ready timeout'));
-      }, SKILLBRIDGE_THRESHOLDS.BRIDGE_READY_TIMEOUT);
+  _createPuterFrame() {
+    const frameUrl = chrome.runtime.getURL('src/bridge/puter-frame.html');
+    document.getElementById('__skillbridge_puter_frame__')?.remove();
+    const frame = document.createElement('iframe');
+    frame.id = '__skillbridge_puter_frame__';
+    frame.src = frameUrl;
+    frame.title = 'SkillBridge Puter sign-in';
+    frame.setAttribute('aria-hidden', 'true');
+    Object.assign(frame.style, {
+      display: 'none',
+      position: 'fixed',
+      inset: '0',
+      width: '100vw',
+      height: '100vh',
+      border: '0',
+      zIndex: '2147483647',
+      background: 'transparent',
+    });
+    (document.documentElement || document.body).appendChild(frame);
+    this._puterFrame = frame;
+  }
 
-      const onReady = (event) => {
-        if (event.source !== window) return;
-        if (event.data?.__skillbridge__ && event.data.type === 'BRIDGE_READY') {
-          clearTimeout(timeout);
-          window.removeEventListener('message', onReady);
+  _setPuterAuthVisible(visible) {
+    if (!this._puterFrame) return;
+    this._puterFrame.style.display = visible ? 'block' : 'none';
+    this._puterFrame.setAttribute('aria-hidden', visible ? 'false' : 'true');
+  }
+
+  _connectCloudBroker() {
+    return new Promise((resolve, reject) => {
+      const previousPort = this._cloudPort;
+      this._cloudPort = null;
+      this.isReady = false;
+      if (previousPort) {
+        try {
+          previousPort.disconnect();
+        } catch (_e) {
+          /* already disconnected */
+        }
+      }
+      const timeout = setTimeout(() => {
+        cleanupReady();
+        try {
+          port?.disconnect();
+        } catch (_e) {
+          /* already disconnected */
+        }
+        reject(new Error('Cloud broker ready timeout'));
+      }, SKILLBRIDGE_THRESHOLDS.BRIDGE_READY_TIMEOUT);
+      this._createPuterFrame();
+      let port;
+      try {
+        port = chrome.runtime.connect({ name: 'sb-cloud-chat-client' });
+      } catch (err) {
+        clearTimeout(timeout);
+        reject(err);
+        return;
+      }
+      this._cloudPort = port;
+      let waiting = true;
+      const cleanupReady = () => {
+        if (!waiting) return;
+        waiting = false;
+        clearTimeout(timeout);
+      };
+      port.onMessage.addListener((msg) => {
+        if (!msg || this._cloudPort !== port) return;
+        if (msg.type === 'ready') {
+          cleanupReady();
           this.isReady = true;
           resolve();
+          return;
         }
-        if (event.data?.__skillbridge__ && event.data.type === 'BRIDGE_ERROR') {
-          clearTimeout(timeout);
-          window.removeEventListener('message', onReady);
-          reject(new Error(event.data.error));
+        if (msg.type === 'unavailable') {
+          this.isReady = false;
+          this._setPuterAuthVisible(false);
+          for (const pending of this._cloudPending.values()) pending.error('Puter broker unavailable');
+          this._cloudPending.clear();
+          return;
         }
-      };
-      window.addEventListener('message', onReady);
-
-      // Generate nonce for postMessage origin validation
-      this._bridgeNonce = crypto.randomUUID();
-      const script = document.createElement('script');
-      script.id = '__skillbridge_loader__';
-      script.src = chrome.runtime.getURL('src/lib/page-bridge.js');
-      script.dataset.nonce = this._bridgeNonce;
-      script.dataset.puterUrl = chrome.runtime.getURL('src/bridge/puter.js');
-      script.onload = () => {
-        script.remove();
-      };
-      script.onerror = () => {
-        clearTimeout(timeout);
-        window.removeEventListener('message', onReady);
-        reject(new Error('Failed to inject page-bridge.js'));
-      };
-      (document.head || document.documentElement).appendChild(script);
+        if (msg.type === 'auth-ui') {
+          this._setPuterAuthVisible(msg.visible === true);
+          return;
+        }
+        if (typeof msg.id !== 'string') return;
+        const pending = this._cloudPending.get(msg.id);
+        if (!pending) return;
+        if (msg.type === 'chunk' && typeof msg.text === 'string') pending.chunk(msg.text);
+        else if (msg.type === 'done') {
+          this._setPuterAuthVisible(false);
+          pending.done();
+        } else if (msg.type === 'error') {
+          this._setPuterAuthVisible(false);
+          pending.error(msg.error);
+        }
+      });
+      port.onDisconnect.addListener(() => {
+        if (this._cloudPort !== port) return;
+        const wasWaiting = waiting;
+        cleanupReady();
+        this._cloudPort = null;
+        this.isReady = false;
+        this._setPuterAuthVisible(false);
+        for (const pending of this._cloudPending.values()) pending.error('Cloud AI connection closed');
+        this._cloudPending.clear();
+        if (wasWaiting) reject(new Error('Cloud broker connection closed'));
+      });
     });
   }
 }

@@ -12,7 +12,7 @@
     "glossary": "node scripts/check-glossary.js",
     "validate": "node scripts/validate-translations.js",
     "build:zip": "npm run build:bundle:zip",
-    "build:developer:zip": "rm -f store-assets/skillbridge-developer.zip && zip -r store-assets/skillbridge-developer.zip manifest.json _locales/ src/ assets/icons/ LICENSE THIRD_PARTY_NOTICES.md -x '*.DS_Store'",
+    "build:developer:zip": "rm -f store-assets/skillbridge-developer.zip && zip -r store-assets/skillbridge-developer.zip manifest.json _locales/ src/ assets/icons/ LICENSE THIRD_PARTY_NOTICES.md licenses/ -x '*.DS_Store'",
     "build:firefox": "node scripts/build-firefox.js",
     "build:firefox:zip": "npm run build:firefox && cd dist/firefox && rm -f ../../store-assets/skillbridge-firefox.zip && zip -r ../../store-assets/skillbridge-firefox.zip . -x '*.DS_Store'",
     "check:selectors": "node scripts/check-selectors.js",
