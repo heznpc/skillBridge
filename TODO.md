@@ -1,6 +1,6 @@
 # SkillBridge TODO
 
-> Last refreshed: 2026-07-29 (next CWS release: v4.0.0)
+> Last refreshed: 2026-07-30 (next CWS release: v4.0.0)
 
 Items below are concrete engineering / ops work. Anything strategic — what
 markets we enter, what we charge, what features we accept — is an owner
@@ -102,6 +102,30 @@ current privacy/package changes and must not be reused for the upload.
   `mnao305/chrome-extension-upload` v6.0.0 with the dashboard-ready and
   target-listing guards still in place. Re-check this only when the action or
   Chrome Web Store API announces a new migration window.
+
+### P1.5 — post-4.0.0 follow-ups (accepted at submission, 2026-07-30)
+
+Residual gaps from the pre-merge review (PR #276). None are release blockers —
+each failure mode converges on a visible tutor error, not silent data loss —
+but they are the honest boundary of what was verified.
+
+- [ ] **Live first-run sign-in verification.** The on-device round trip used an
+  already-signed-in Puter session. Verify the full first-run path on the shipped
+  build (sign-in card → popup → token persist → streamed answer), including one
+  deliberately slow (>90s) sign-in to exercise the keepalive relay for real.
+- [ ] **Forced-401 recovery drill.** Revoke the token mid-session (Puter
+  dashboard) and confirm the broker's re-sign-in loop and the init capture
+  filter behave against the *real* SDK's 401 auth dialog, not the test fakes.
+- [ ] **v3.5.41 → 4.0.0 upgrade-path test.** Load 3.5.41, sign in, then update
+  in place to 4.0.0 and assert: legacy host-storage keys scrubbed on next
+  lesson visit, settings survive, tutor works without re-onboarding.
+- [ ] **Sidebar `_currentEngine()` display-only fail-open.** On a stalled
+  storage read the offline notice can mis-fire for a working local engine
+  (translator's send path fails closed, so this is UX only). Align it with
+  `_getAiEngine`'s fail-closed contract or document why not.
+- [ ] **Local format gate.** CI caught a Prettier drift post-push (PR #276,
+  first `validate` run). Add `prettier --check` to the pre-push/local pipeline
+  so the formatting gate runs before CI, not in it.
 
 ### P2 — service quality after the store build is live
 
