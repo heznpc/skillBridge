@@ -1,6 +1,6 @@
 # Release Checklist — CWS v4.0.0
 
-> Refreshed 2026-07-29 for the v4.0.0 CWS build. The upload artifact keeps
+> Refreshed 2026-07-30 for the v4.0.0 CWS build. The upload artifact keeps
 > translation and local learning tools AND ships the AI Tutor: the AI gateway is
 > pinned ON and the bundled Puter client runs in Chrome's ISOLATED content-script
 > world on the trusted course host, connected through validated extension ports;
@@ -29,9 +29,15 @@ dashboard upload.
 - ✅ Final ZIP release identity is `4.0.0` across `manifest.json`,
   `package.json`, versioned dictionary metadata, and `CHANGELOG.md`.
 - ✅ Historical `CHANGELOG.md` sections through v3.5.41 remain immutable
-- ✅ Final v4.0.0 upload artifact recorded 2026-07-29 after the last integrated
-  release gates: **69 files, 714,228 bytes**, SHA-256
-  `4315e09ac59516f2c7c52aa5fc18d11efb73c0b69c386281fc693ddc0bfa7a1e`. The extracted ZIP was diffed against `dist/bundled` and is byte-for-byte
+- ✅ Final v4.0.0 upload artifact rebuilt 2026-07-30 from merged `main`
+  (`d6541a8`, PR #276) after the pre-merge security review fixes:
+  **69 files, 715,243 bytes**, SHA-256
+  `2750797c2f3cc319295af48b04381e7dba1e8f6f9ebac4efb45531b532a31b2f`.
+  This supersedes the 2026-07-29 candidate
+  (`4315e09a…`), which predates those fixes and must not be uploaded.
+  Note: `zip` records mtimes, so rebuilding yields a different hash for
+  identical content — verify this hash against the file you actually submit
+  rather than rebuilding after reading it here. The extracted ZIP was diffed against `dist/bundled` and is byte-for-byte
   identical, and `scripts/check-rhc.js` reports zero findings against BOTH the
   built directory and the extracted archive. It includes the isolated Puter
   content broker, sanitized `src/bridge/puter.js`, third-party notices/licenses, and the
@@ -71,7 +77,7 @@ dashboard upload.
   Dictionary freshness reports the recruiting-state dictionaries as
   review-needed; that is not a native review stamp. Rerun the gate immediately
   before dashboard upload if the artifact changes.
-- ✅ Promo media regenerated 2026-07-29 from the current `demo.webm`: all five
+- ✅ Promo media regenerated 2026-07-30 from the current `demo.webm`: all five
   1280×800 screenshots and the promo tile were recaptured from the current CWS
   bundle and inspected; both v4.0.0 MP4s, thumbnails, and
   `promo-media-manifest.json` hashes match the files on disk.

@@ -6,7 +6,7 @@
   "publicIdentity": "Heznpc",
   "source": {
     "path": "store-assets/demo.webm",
-    "sha256": "bc480a6f47d692dd9b4aa4129dfedf5f307ec18ee2114bb7855fe549db3f014d",
+    "sha256": "6dec7272447aa445bf646e94cb67fea68fe9fd0269e2db49db798499f5d89e3c",
     "runtime": "dist/bundled",
     "captureEnvironment": "neutral deterministic fixture; not the live Skilljar UI"
   },
@@ -43,23 +43,23 @@
   "assets": [
     {
       "path": "store-assets/skillbridge-v4.0.0-demo-landscape.mp4",
-      "sha256": "cc361a3aeb4d2e60d33ebf426125083e37344c2d068088fe8b129e7da070e932",
+      "sha256": "fa01cf156bc4a044ba36f0b6c34d1f45d66c91ba0d4811120dfa7dd35b18f77e",
       "codec": "h264",
       "width": 1280,
       "height": 720,
       "fps": "25/1",
-      "durationSeconds": 11.76,
-      "bytes": 714878
+      "durationSeconds": 11.72,
+      "bytes": 618763
     },
     {
       "path": "store-assets/skillbridge-v4.0.0-demo-short.mp4",
-      "sha256": "7abb715be37c0be1b7d0f492b83e0671658182616a5a43dafde0d16ca28e5ed9",
+      "sha256": "68a065ac17bcae17f510212aad89fb55c2948828144d8ddb0df4bc2c7e85caf1",
       "codec": "h264",
       "width": 1080,
       "height": 1920,
       "fps": "25/1",
-      "durationSeconds": 11.76,
-      "bytes": 678969
+      "durationSeconds": 11.72,
+      "bytes": 647738
     }
   ]
 }
