@@ -1,6 +1,6 @@
 # SkillBridge TODO
 
-> Last refreshed: 2026-07-29 (next CWS release: v4.0.0)
+> Last refreshed: 2026-07-30 (next CWS release: v4.0.0)
 
 Items below are concrete engineering / ops work. Anything strategic — what
 markets we enter, what we charge, what features we accept — is an owner
@@ -15,66 +15,66 @@ current privacy/package changes and must not be reused for the upload.
 ### P0 — must close before public release
 
 - [x] **Raw developer path: Gemini verification model record.**
-  Audited 2026-06-24: `gemini-2.0-flash` (the runtime default in
-  `src/lib/constants.js`, used for verify/translate) is still **active** on Puter,
-  not retired (Puter's own model page shows no deprecation). The original framing
-  here — "retired primary, swap it" — was an *unverified premise* (its own DoD
-  said "after a real Puter acceptance smoke confirms the exact model id", and no
-  such smoke had run). The real defect was the **fallback**: `gemini-1.5-flash`
-  (in the page-bridge allowlist + `_MODEL_FALLBACKS`) was shut down — the whole
-  Gemini 1.5/1.0 line 404s now — so it gave zero resilience if the primary were
-  ever rejected. Fixed by pointing the fallback at the live same-generation
-  `gemini-2.0-flash-lite`; primary stays `gemini-2.0-flash`. This is historical
-  evidence for the optional raw developer path, not CWS release evidence: the
-  v4.0.0 CWS package ships the AI Tutor and the bundled Puter client.
+      Audited 2026-06-24: `gemini-2.0-flash` (the runtime default in
+      `src/lib/constants.js`, used for verify/translate) is still **active** on Puter,
+      not retired (Puter's own model page shows no deprecation). The original framing
+      here — "retired primary, swap it" — was an _unverified premise_ (its own DoD
+      said "after a real Puter acceptance smoke confirms the exact model id", and no
+      such smoke had run). The real defect was the **fallback**: `gemini-1.5-flash`
+      (in the page-bridge allowlist + `_MODEL_FALLBACKS`) was shut down — the whole
+      Gemini 1.5/1.0 line 404s now — so it gave zero resilience if the primary were
+      ever rejected. Fixed by pointing the fallback at the live same-generation
+      `gemini-2.0-flash-lite`; primary stays `gemini-2.0-flash`. This is historical
+      evidence for the optional raw developer path, not CWS release evidence: the
+      v4.0.0 CWS package ships the AI Tutor and the bundled Puter client.
 
 - [x] **Separate raw-developer Puter evidence from the CWS runtime.** The v4 CWS
-  E2E suite now exercises the bundled Tutor through its isolated content broker;
-  the retired page-world bridge and extension-origin frame are absent from
-  `dist/bundled`. The repository's
-  raw vendored SDK remains maintenance input, not an upload artifact or CWS
-  runtime-evidence substitute.
+      E2E suite now exercises the bundled Tutor through its isolated content broker;
+      the retired page-world bridge and extension-origin frame are absent from
+      `dist/bundled`. The repository's
+      raw vendored SDK remains maintenance input, not an upload artifact or CWS
+      runtime-evidence substitute.
 
 - [x] **PR the E2E runner stabilization.** PR #241 merged as `e36008b` with its
-  `e2e` and other required checks green. The current runner now covers all specs
-  in eight resource-bounded batches; local `npm run test:e2e` is green.
+      `e2e` and other required checks green. The current runner now covers all specs
+      in eight resource-bounded batches; local `npm run test:e2e` is green.
   - DoD: runner-only PR, local `npm run test:e2e` green, `git diff --check`
     green, GitHub `e2e` job green.
 
-- [x] **Run pre-release dictionary QA.** *(12 of 12 done 2026-07-28)*
-  A rule-based `subagent` term pass plus the four confirmed reviewer fixes
-  landed across all 12 locales, and every structural gate passes. Full
-  per-entry semantic review is complete for **pt-BR, ru, vi, id, ko, ja,
-  zh-CN, zh-TW, es, fr, it, and de**; all 12 carry
-  `_meta.lastAudited = 2026-07-28` after confirmed findings were applied.
+- [x] **Run pre-release dictionary QA.** _(12 of 12 done 2026-07-28)_
+      A rule-based `subagent` term pass plus the four confirmed reviewer fixes
+      landed across all 12 locales, and every structural gate passes. Full
+      per-entry semantic review is complete for **pt-BR, ru, vi, id, ko, ja,
+      zh-CN, zh-TW, es, fr, it, and de**; all 12 carry
+      `_meta.lastAudited = 2026-07-28` after confirmed findings were applied.
   - DoD: README QA table reflects the refreshed audits; structural gates still
     pass after semantic fixes.
   - Verify: `npm run glossary`, `npm run validate`,
     `npm run check:dict-coverage`, `npm run check:locales`, `npm run docs`.
 
-- [x] **Build, smoke, and freeze the upload artifact.** *(2026-07-29)*
-  The integrated release gates passed (**695 unit tests across 38 suites and
-  49 Chromium E2E tests across eight resource-bounded batches**, including the
-  malicious Puter-query stored-token regression and the live Ollama round trip).
-  The ZIP was rebuilt and recorded as **69 files / 713,791 bytes / SHA-256
-  `227aafe440ce747f5caeab9a2830615876afdcdf68d7bef962ba30b144a3dd66`**, the
-  extracted archive diffs byte-for-byte against `dist/bundled`, and
-  `check-rhc` is clean on both. Promo MP4s/thumbnails/manifest were
-  regenerated from the current `demo.webm`; all five 1280×800 screenshots and
-  the promo tile were recaptured from the current CWS bundle and inspected.
+- [x] **Build, smoke, and freeze the upload artifact.** _(2026-07-29)_
+      The integrated release gates passed (**695 unit tests across 38 suites and
+      49 Chromium E2E tests across eight resource-bounded batches**, including the
+      malicious Puter-query stored-token regression and the live Ollama round trip).
+      The ZIP was rebuilt and recorded as **69 files / 713,791 bytes / SHA-256
+      `227aafe440ce747f5caeab9a2830615876afdcdf68d7bef962ba30b144a3dd66`**, the
+      extracted archive diffs byte-for-byte against `dist/bundled`, and
+      `check-rhc` is clean on both. Promo MP4s/thumbnails/manifest were
+      regenerated from the current `demo.webm`; all five 1280×800 screenshots and
+      the promo tile were recaptured from the current CWS bundle and inspected.
   - DoD: `dist/bundled` is fresh, first-user smoke passes, bundled zip is
     rebuilt, and generated store assets match the current icon/listing state.
   - Verify: `npm run release:smoke`, then `npm run release:verify` before the
     final upload window.
 
 - [ ] **Upload the v4.0.0 bundled CWS candidate and fix the privacy tab.** The
-  public listing is still legacy `v1.0.1`; `v3.5.41` does not identify the
-  current change set. After external scope approval, run `npm run release:verify`, generate only
-  `store-assets/skillbridge-bundled.zip`, refresh listing copy/media, set the
-  capital-B privacy URL, answer remote code = NO only after inspecting that exact
-  uploaded package, select every data category listed in
-  `store-assets/RELEASE_CHECKLIST.md`, and paste current permission
-  justifications.
+      public listing is still legacy `v1.0.1`; `v3.5.41` does not identify the
+      current change set. After external scope approval, run `npm run release:verify`, generate only
+      `store-assets/skillbridge-bundled.zip`, refresh listing copy/media, set the
+      capital-B privacy URL, answer remote code = NO only after inspecting that exact
+      uploaded package, select every data category listed in
+      `store-assets/RELEASE_CHECKLIST.md`, and paste current permission
+      justifications.
   - Owner-only: CWS dashboard access, privacy-practices form, review wait.
   - DoD: CWS review submitted/accepted and `npm run check:cws-drift` no longer
     fails for version drift.
@@ -82,37 +82,61 @@ current privacy/package changes and must not be reused for the upload.
 ### P1 — quality gates before/around submission
 
 - [x] **Regenerate and inspect store assets.** Run `npm run capture:store` or
-  the "Capture store assets" workflow, inspect screenshots/promo tile/listing
-  description, then upload the media to the store listing. Regenerated and
-  visually inspected the five screenshots and promo tile on 2026-07-29; upload
-  remains part of the dashboard step.
+      the "Capture store assets" workflow, inspect screenshots/promo tile/listing
+      description, then upload the media to the store listing. Regenerated and
+      visually inspected the five screenshots and promo tile on 2026-07-29; upload
+      remains part of the dashboard step.
 - [ ] **Manual real-tab bundled-extension smoke.** Load `dist/bundled` in
-  Chrome and check popup startup, translation, language switch, flashcards,
-  bookmarks/recent/dashboard, exam-safe disable, dark mode, the known manual
-  YouTube-caption gap, cloud/local/off Tutor modes, and that the host page cannot
-  observe or forge the extension-Port Tutor transport through SDK globals or
-  window messages. The visible Tutor UI remains in the shared page DOM, so this
-  check does not claim that keyboard events or rendered chat text are hidden.
+      Chrome and check popup startup, translation, language switch, flashcards,
+      bookmarks/recent/dashboard, exam-safe disable, dark mode, the known manual
+      YouTube-caption gap, cloud/local/off Tutor modes, and that the host page cannot
+      observe or forge the extension-Port Tutor transport through SDK globals or
+      window messages. The visible Tutor UI remains in the shared page DOM, so this
+      check does not claim that keyboard events or rendered chat text are hidden.
 - [ ] **Keep the publication pause.** Do not remove
-  `CWS_PUBLICATION_PAUSED` during code cleanup or dashboard draft preparation.
-  Only after external scope approval, a newly versioned ZIP passes all gates,
-  and listing/media/privacy fields match should the owner set
-  `CWS_DASHBOARD_READY_VERSION` and separately authorize unpausing publication.
+      `CWS_PUBLICATION_PAUSED` during code cleanup or dashboard draft preparation.
+      Only after external scope approval, a newly versioned ZIP passes all gates,
+      and listing/media/privacy fields match should the owner set
+      `CWS_DASHBOARD_READY_VERSION` and separately authorize unpausing publication.
 - [x] **CWS CD upload action on the current pinned path.** The workflow uses
-  `mnao305/chrome-extension-upload` v6.0.0 with the dashboard-ready and
-  target-listing guards still in place. Re-check this only when the action or
-  Chrome Web Store API announces a new migration window.
+      `mnao305/chrome-extension-upload` v6.0.0 with the dashboard-ready and
+      target-listing guards still in place. Re-check this only when the action or
+      Chrome Web Store API announces a new migration window.
+
+### P1.5 — post-4.0.0 follow-ups (accepted at submission, 2026-07-30)
+
+Residual gaps from the pre-merge review (PR #276). None are release blockers —
+each failure mode converges on a visible tutor error, not silent data loss —
+but they are the honest boundary of what was verified.
+
+- [ ] **Live first-run sign-in verification.** The on-device round trip used an
+      already-signed-in Puter session. Verify the full first-run path on the shipped
+      build (sign-in card → popup → token persist → streamed answer), including one
+      deliberately slow (>90s) sign-in to exercise the keepalive relay for real.
+- [ ] **Forced-401 recovery drill.** Revoke the token mid-session (Puter
+      dashboard) and confirm the broker's re-sign-in loop and the init capture
+      filter behave against the _real_ SDK's 401 auth dialog, not the test fakes.
+- [ ] **v3.5.41 → 4.0.0 upgrade-path test.** Load 3.5.41, sign in, then update
+      in place to 4.0.0 and assert: legacy host-storage keys scrubbed on next
+      lesson visit, settings survive, tutor works without re-onboarding.
+- [ ] **Sidebar `_currentEngine()` display-only fail-open.** On a stalled
+      storage read the offline notice can mis-fire for a working local engine
+      (translator's send path fails closed, so this is UX only). Align it with
+      `_getAiEngine`'s fail-closed contract or document why not.
+- [ ] **Local format gate.** CI caught a Prettier drift post-push (PR #276,
+      first `validate` run). Add `prettier --check` to the pre-push/local pipeline
+      so the formatting gate runs before CI, not in it.
 
 ### P2 — service quality after the store build is live
 
 - [ ] **Telemetry / feedback-loop decision.** The telemetry doc is still a
-  proposal, and the sink decision is unresolved because server-side telemetry
-  conflicts with the public no-backend constraint. Decide between local export,
-  opt-in error reporting, or no telemetry; update privacy copy in the same PR
-  if anything ships.
+      proposal, and the sink decision is unresolved because server-side telemetry
+      conflicts with the public no-backend constraint. Decide between local export,
+      opt-in error reporting, or no telemetry; update privacy copy in the same PR
+      if anything ships.
 - [x] **Performance budget E2E.** Measure visible H1/body translation and
-  below-fold lazy translation against declared CI-safe budgets
-  (`tests/e2e/performance-budget.spec.js`).
+      below-fold lazy translation against declared CI-safe budgets
+      (`tests/e2e/performance-budget.spec.js`).
 
 ## Learning companion — local-only & free (shipped: v3.5.36–3.5.39)
 
@@ -125,21 +149,22 @@ translation, these help **all** learners incl. English — audience isn't
 narrowed.
 
 - [x] **SRS scheduling for flashcards** (v3.5.36). Per-card due dates
-  (box 0→1d / 1→3d / 2→7d) + "Review due (N)" mode. `chat-flashcards.js`.
+      (box 0→1d / 1→3d / 2→7d) + "Review due (N)" mode. `chat-flashcards.js`.
 - [x] **Lesson / position bookmarks** (v3.5.36). Mark a specific lesson +
-  scroll position; bookmark list in the sidebar. `bookmarks.js`.
+      scroll position; bookmark list in the sidebar. `bookmarks.js`.
 - [x] **Global resume ("이어보기")** (v3.5.36). Last-visited lesson + exact
-  position tracked across courses (SPA-safe URL poll); Continue/Recent
-  launcher in the sidebar. `resume.js`.
+      position tracked across courses (SPA-safe URL poll); Continue/Recent
+      launcher in the sidebar. `resume.js`.
 - [x] **"My learning" overlay** (v3.5.36). Bookmarks + Continue + Recent are
-  grouped under the single "Tools" menu in the sidebar header. `sidebar-chat.js`.
+      grouped under the single "Tools" menu in the sidebar header. `sidebar-chat.js`.
 - [x] **In-lesson TOC + reading-progress bar** (v3.5.36). DOM-only, no storage.
-  `reading-aid.js`.
+      `reading-aid.js`.
 - [ ] **Highlights / notes.** Per-lesson, local.
 - [ ] (optional) **"Report wrong term"** — local queue + export. GitHub
-  auto-link deferred (learner audience ≠ GitHub users).
+      auto-link deferred (learner audience ≠ GitHub users).
 
 ### Excluded by the free + local-only constraint
+
 - Cross-device sync of bookmarks/notes (needs a server) — device-local only.
 - User-supplied API keys or a broad multi-model picker (breaks free / no-key).
   The v4 CWS candidate instead offers one bundled cloud Tutor path through
@@ -147,24 +172,25 @@ narrowed.
 - Any server-side feature.
 
 ### Release / ops (feature train)
+
 - [x] Icon redesign (v3.5.35, on `main`) — distinct mark.
 - [x] Bundle the features above into releases (v3.5.36–3.5.41, all on `main`):
-  version bumps + `npm run docs` resync + PRs + `npm run build:bundle:zip`.
-  `store-assets/skillbridge-bundled.zip` rebuilt at 3.5.41.
+      version bumps + `npm run docs` resync + PRs + `npm run build:bundle:zip`.
+      `store-assets/skillbridge-bundled.zip` rebuilt at 3.5.41.
 - [ ] **Complete the service-completion board above before dashboard upload.**
-  Store is stuck at 1.0.1; everything since is repo-only. See
-  [store-assets/RELEASE_CHECKLIST.md](store-assets/RELEASE_CHECKLIST.md).
+      Store is stuck at 1.0.1; everything since is repo-only. See
+      [store-assets/RELEASE_CHECKLIST.md](store-assets/RELEASE_CHECKLIST.md).
 
 ## Outreach blockers (after store refresh)
 
 - [ ] **Trademark resolution.** We've been contacted about the name.
-  Until either safe use is confirmed or we rebrand, public outreach is on
-  hold. **Blocks Ambassador application and Korea-language blog posts** —
-  a takedown after a growth push erases the acquisition we paid for.
-  *(Owner: human, not engineering.)*
+      Until either safe use is confirmed or we rebrand, public outreach is on
+      hold. **Blocks Ambassador application and Korea-language blog posts** —
+      a takedown after a growth push erases the acquisition we paid for.
+      _(Owner: human, not engineering.)_
 - [ ] **Ambassador application.** Drafted; submission blocked on
-  trademark resolution. Free, single-audience, traction-demonstrated — we
-  fit the program profile.
+      trademark resolution. Free, single-audience, traction-demonstrated — we
+      fit the program profile.
 
 ## Next (this month)
 
@@ -173,27 +199,27 @@ narrowed.
   parallel localized listings caused drift (#158) for marginal per-market gain.
   The in-product UI stays localized in 12 premium languages (and the browser-facing
   extension name/description in the 33 `_locales/` Chrome-metadata locales); only the
-  Chrome Web Store *listing copy* (screenshots / long description) is EN-only.
+  Chrome Web Store _listing copy_ (screenshots / long description) is EN-only.
 - [ ] **Head-to-head comparison content** (post-trademark, post-CWS-
-  refresh). Specifically: AI terminology fidelity and certification
-  pass-rate impact vs Chrome built-in translate. Anchors the
-  "certificate accessibility" framing with evidence. Blocked on telemetry
-  for the pass-rate half.
+      refresh). Specifically: AI terminology fidelity and certification
+      pass-rate impact vs Chrome built-in translate. Anchors the
+      "certificate accessibility" framing with evidence. Blocked on telemetry
+      for the pass-rate half.
 
 ## Later (when we have a real signal)
 
 - [ ] **Memory leak profiling on long-running tabs.** v3.5.9 (stream
-  cleanup) and v3.5.10 (timer leak) found two; the pattern suggests more.
-  SPA navigation churn + Chrome heap snapshot diff. Probably needs a
-  dedicated harness; the current E2E suite is functional, not memory-
-  oriented.
+      cleanup) and v3.5.10 (timer leak) found two; the pattern suggests more.
+      SPA navigation churn + Chrome heap snapshot diff. Probably needs a
+      dedicated harness; the current E2E suite is functional, not memory-
+      oriented.
 - [ ] **`tsconfig` strict ratchet.** Currently `strict: false` to avoid
-  surfacing pre-existing nullability warnings. Tighten file-by-file as
-  JSDoc gets added.
+      surfacing pre-existing nullability warnings. Tighten file-by-file as
+      JSDoc gets added.
 - [ ] **Raw-developer Puter fallback decision** (only if that optional path is
-  maintained). This cannot broaden the CWS candidate: any replacement must stay
-  behind the developer build boundary unless its code, privacy, and store-policy
-  implications are reviewed as a separate product-scope decision.
+      maintained). This cannot broaden the CWS candidate: any replacement must stay
+      behind the developer build boundary unless its code, privacy, and store-policy
+      implications are reviewed as a separate product-scope decision.
 
 ## Done — shipped this cycle (2026-05-11 → 05-15)
 
@@ -204,6 +230,7 @@ covered, all sidebar-chat big files split, positioning rewritten around
 certificate-accessibility and Korea-first weighting."
 
 **Refactors:**
+
 - `sidebar-chat.js`: 1224 → 559 lines (–54%) split across 4 modules
   (`chat-render.js`, `chat-history.js`, `chat-flashcards.js`, plus core
   panel infrastructure)
@@ -254,7 +281,7 @@ the new E2E suite.
 ## Production bottlenecks to remember
 
 - **Firefox AMO publishing** — `cd-firefox.yml` ready; needs `AMO_API_KEY`
-  + `AMO_API_SECRET` in GitHub Secrets.
+  - `AMO_API_SECRET` in GitHub Secrets.
 - **CWS reviewer expectations** — upload only the output of
   `npm run build:bundle:zip` (`store-assets/skillbridge-bundled.zip`). The raw
   developer ZIP is deliberately separate and is never a CWS artifact.
@@ -272,7 +299,7 @@ the new E2E suite.
 - **MV3 extension content-script CSP** — forbids `eval` / `new Function`
   inside content scripts. The E2E harness bridges into the isolated world
   via a hard-coded menu of diagnostic ops (see `tests/e2e/helpers/
-  extension.js`) — if you add a new op, add it to that switch, don't try
+extension.js`) — if you add a new op, add it to that switch, don't try
   to pass arbitrary functions through.
 - **Puter.js package risk** — both the CWS and raw developer Tutor paths depend
   on a third party. The raw vendored SDK contains lazy remote-code and unused
