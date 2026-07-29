@@ -6,9 +6,9 @@
  * video → description. This file owns the SkillBridge-specific parts:
  *
  *   - prepareExtension: reuse the E2E helper's makePatchedExtension(), which
- *     copies dist/bundled, widens the manifest to localhost, and swaps in the
- *     streaming Puter stub (so the AI-tutor scene gets a deterministic reply).
- *   - setup(): reuse the E2E network stubs (GitHub / Puter), serve the styled
+ *     copies the CWS-shaped dist/bundled artifact, widens its manifest to
+ *     localhost, and replaces Puter with a deterministic streaming stub.
+ *   - setup(): reuse the E2E network stubs, serve the styled
  *     store fixtures, and translate via a FROZEN offline map so captures are
  *     reproducible. --live-gt hits real Google Translate; --freeze re-records
  *     the frozen map from a live run (the spec's "freeze해 시드").
@@ -48,13 +48,26 @@ const QUIZ_URL = '/quiz';
 const DISCLAIMER = 'Unofficial · independent project · not affiliated with or endorsed by Anthropic';
 const KO = 'ko';
 
-/** Poll until the page-bridge (Puter stub) is ready so chat can stream. */
+/** Poll until the bundled Tutor bridge is ready for the deterministic stub. */
 async function waitBridge(context, page) {
-  for (let i = 0; i < 40; i++) {
-    const b = await evalInContentWorld(context, 'bridgeReady');
-    if (b && b.isReady) return;
+  const deadline = Date.now() + 10_000;
+  while (Date.now() < deadline) {
+    const bridge = await evalInContentWorld(context, 'bridgeReady');
+    if (bridge?.isReady) return;
     await page.waitForTimeout(250);
   }
+  throw new Error('Tutor bridge did not become ready for store capture');
+}
+
+/** Wait until all deterministic Tutor response chunks have rendered. */
+async function waitTutorReply(context, page) {
+  const deadline = Date.now() + 10_000;
+  while (Date.now() < deadline) {
+    const messages = await evalInContentWorld(context, 'readChatLog');
+    if (messages?.some((message) => message.role === 'bot' && message.text?.includes('입력입니다'))) return;
+    await page.waitForTimeout(150);
+  }
+  throw new Error('Tutor reply did not finish rendering for store capture');
 }
 
 /** Poll until the content script has fully initialized (exam detection, translator). */
@@ -72,9 +85,9 @@ async function openTranslatedLesson(page, context, baseUrl) {
   await page.goto(`${baseUrl}${LESSON_URL}`, { waitUntil: 'networkidle' });
   await evalInContentWorld(context, 'suppressOnboarding');
   await evalInContentWorld(context, 'switchLanguage', KO);
-  await page
-    .waitForFunction(() => /[가-힣]/.test(document.querySelector('#p-1')?.textContent || ''), null, { timeout: 15_000 })
-    .catch(() => {});
+  await page.waitForFunction(() => /[가-힣]/.test(document.querySelector('#p-1')?.textContent || ''), null, {
+    timeout: 15_000,
+  });
 }
 
 module.exports = {
@@ -83,11 +96,11 @@ module.exports = {
   disclaimer: DISCLAIMER,
   description: { from: 'store-assets/STORE_LISTING.md' },
 
-  // dist/bundled (copied + manifest widened to localhost + streaming Puter stub).
+  // CWS-equivalent dist/bundled, copied and widened to localhost for fixtures.
   prepareExtension: () => makePatchedExtension(),
 
   async setup({ context, flags }) {
-    // GitHub + Puter stubs (and a GT_KO route we override below).
+    // Shared E2E network stubs; makePatchedExtension supplies the Tutor SDK stub.
     await registerStubs(context);
 
     // Google Translate: deterministic frozen map by default.
@@ -96,8 +109,13 @@ module.exports = {
     const MAP = { ...GT_KO, ...frozen };
     const recorded = {};
     await context.route('https://translate.googleapis.com/**', async (route) => {
-      const q = new URL(route.request().url()).searchParams.get('q') || '';
-      const norm = decodeURIComponent(q).replace(/\s+/g, ' ').trim();
+      const request = route.request();
+      let q = new URL(request.url()).searchParams.get('q') || '';
+      if (request.method() === 'POST') {
+        q = new URLSearchParams(request.postData() || '').get('q') || '';
+      }
+      // URLSearchParams decodes query and form values exactly once.
+      const norm = q.replace(/\s+/g, ' ').trim();
       if (flags && flags.freeze) {
         // Record mode: hit real GT, capture its output, fulfill with the real response.
         const resp = await route.fetch();
@@ -165,7 +183,7 @@ module.exports = {
     },
     {
       name: '02-language-select',
-      caption: 'Pick from 32 languages — onboarding offers one for you',
+      caption: 'Choose from 32 languages on first run',
       async run({ page, context, baseUrl }) {
         await page.goto(`${baseUrl}${LESSON_URL}`, { waitUntil: 'networkidle' });
         await evalInContentWorld(context, 'showWelcomeBanner', KO);
@@ -175,15 +193,15 @@ module.exports = {
     },
     {
       name: '03-sidebar-tutor',
-      caption: 'Ask the in-page AI tutor, grounded in the lesson',
+      caption: 'Ask about the lesson without leaving the page',
       async run({ page, context, baseUrl }) {
         await openTranslatedLesson(page, context, baseUrl);
         await evalInContentWorld(context, 'injectSidebar');
         await evalInContentWorld(context, 'toggleSidebar');
         await waitBridge(context, page);
         await evalInContentWorld(context, 'sendChat', '프롬프트가 무엇인가요?');
-        await page.waitForSelector('#si18n-chat-messages .si18n-chat-bot', { timeout: 10_000 });
-        await page.waitForTimeout(900); // let the streamed reply finish
+        await waitTutorReply(context, page);
+        await page.waitForTimeout(300);
         await evalInContentWorld(context, 'cleanForCapture');
         await page.waitForTimeout(150);
       },
@@ -196,8 +214,8 @@ module.exports = {
         await evalInContentWorld(context, 'injectSidebar');
         await evalInContentWorld(context, 'toggleSidebar');
         await evalInContentWorld(context, 'toggleFlashcardPanel');
-        // The flashcard UI renders into #si18n-panel-chat; #si18n-fc-container
-        // is the card area (present whether the deck is empty or not).
+        // #si18n-fc-container is the card area (present whether the deck is
+        // empty or not) on top of the CWS language-panel base surface.
         await page.waitForSelector('#si18n-fc-container', { timeout: 8_000 });
         await page.waitForTimeout(700);
         await evalInContentWorld(context, 'cleanForCapture');
@@ -206,7 +224,7 @@ module.exports = {
     },
     {
       name: '05-exam-safe',
-      caption: 'Exam-safe: quiz answers are never translated',
+      caption: 'Exam-safe: recognized quiz answers stay untranslated',
       async run({ page, context, baseUrl }) {
         await page.goto(`${baseUrl}${QUIZ_URL}`, { waitUntil: 'networkidle' });
         await evalInContentWorld(context, 'suppressOnboarding');
@@ -234,10 +252,29 @@ module.exports = {
       height: 280,
       replacements: {
         TAGLINE:
-          "Take Anthropic's free AI courses in 32 languages — accurate AI terminology, an in-page AI tutor, exam-safe.",
+          'Translate AI courses into 32 languages — curated terminology, local study tools, and exam safeguards.',
         DISCLAIMER: 'Unofficial · not affiliated with or endorsed by Anthropic',
       },
     },
+    ...[
+      ['promo-social-landscape-1200x675', 1200, 675],
+      ['promo-social-square-1080x1080', 1080, 1080],
+      ['promo-social-portrait-1080x1350', 1080, 1350],
+      ['promo-video-thumbnail-1280x720', 1280, 720],
+      ['promo-short-thumbnail-1080x1920', 1080, 1920],
+    ].map(([name, width, height]) => ({
+      name,
+      template: path.join(TEMPLATES, 'promo-social.html'),
+      width,
+      height,
+      replacements: {
+        EYEBROW: 'v4.0.0 · AI COURSE TRANSLATOR',
+        HEADLINE: 'Learn in your language.\nKeep technical terms intact.',
+        BODY: '32 languages · local study tools · exam-safe translation',
+        CTA: 'Built for supported AI courses',
+        DISCLAIMER: 'Unofficial · independent · not affiliated with or endorsed by Anthropic',
+      },
+    })),
   ],
 
   demo: {
@@ -247,19 +284,17 @@ module.exports = {
       await evalInContentWorld(context, 'suppressOnboarding');
       await page.waitForTimeout(900);
       await evalInContentWorld(context, 'switchLanguage', KO); // watch it translate
-      await page
-        .waitForFunction(() => /[가-힣]/.test(document.querySelector('#p-1')?.textContent || ''), null, {
-          timeout: 15_000,
-        })
-        .catch(() => {});
+      await page.waitForFunction(() => /[가-힣]/.test(document.querySelector('#p-1')?.textContent || ''), null, {
+        timeout: 15_000,
+      });
       await page.waitForTimeout(1400);
       await evalInContentWorld(context, 'injectSidebar');
       await evalInContentWorld(context, 'toggleSidebar');
       await waitBridge(context, page);
       await evalInContentWorld(context, 'sendChat', '프롬프트가 무엇인가요?');
-      await page.waitForSelector('#si18n-chat-messages .si18n-chat-bot', { timeout: 10_000 }).catch(() => {});
-      await page.waitForTimeout(1600);
-      await evalInContentWorld(context, 'toggleFlashcardPanel'); // peek flashcards
+      await waitTutorReply(context, page);
+      await page.waitForTimeout(1400);
+      await evalInContentWorld(context, 'toggleFlashcardPanel');
       await page.waitForTimeout(1800);
     },
   },

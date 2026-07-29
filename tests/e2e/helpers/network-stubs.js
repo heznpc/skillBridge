@@ -1,14 +1,16 @@
 /**
  * SkillBridge — Playwright network-stub helpers.
  *
- * The extension talks to three external services:
+ * The extension talks to two external services during the non-Tutor flows
+ * that use this helper:
  *   1. translate.googleapis.com — for the GT batch translation pass
  *   2. api.github.com — for the version-check alarm
- *   3. js.puter.com — for the Puter SDK that powers the AI tutor bridge
  *
  * In E2E we don't want any test traffic leaving the runner, and we want
  * deterministic translations so assertions can match exact strings. These
- * helpers register `context.route()` interceptors covering all three.
+ * helpers register `context.route()` interceptors covering both. Tutor specs
+ * replace the vendored SDK file through helpers/puter-stream-stub.js instead
+ * of intercepting a remote script URL.
  *
  * Also stubs the Skilljar host itself so we don't hit anthropic.skilljar.com
  * from CI.
@@ -98,6 +100,8 @@ const GT_KO = {
   // ambiguous common-word wrong-forms like 인류학적/인류 were removed from the
   // dictionary because they corrupt correct prose; see protected-terms.test.js.)
   'Anthropic released Claude as a frontier model.': '앤스로픽은 클로드를 프런티어 모델로 출시했습니다.',
+  '<p id="p-offline-structured">Read <a id="offline-doc-link" href="/docs">the documentation</a> carefully.</p>':
+    '<p id="p-offline-structured"><a id="offline-doc-link" href="/docs">문서</a>를 주의 깊게 읽으세요.</p>',
   // Code-comment fixture (tests/e2e/code-comments.spec.js). The Python
   // `# This is a Claude prompt example` comment gets translated by
   // translateCodeComments — the line's leading `# ` is preserved
@@ -108,12 +112,9 @@ const GT_KO = {
   'This is a Claude prompt example': '클로드 프롬프트 예시',
   // Cache E2E (tests/e2e/idb-cache.spec.js). The string is deliberately
   // NOT in any static dictionary so the first lookup misses → GT call;
-  // the second lookup must hit the IDB cache the verify queue wrote.
-  // Length ≥ 80 chars + at least one period/comma/colon is required —
-  // queueGeminiVerify skips shorter / simpler text (GEMINI_MIN_TEXT=80,
-  // MIN_COMPLEX_TEXT=120). The verify queue is what writes the cache.
-  'Cache me through the IDB layer; this sentence is long enough to clear the GEMINI_MIN_TEXT threshold.':
-    'IDB 레이어를 통해 캐시하세요; 이 문장은 GEMINI_MIN_TEXT 임계값을 통과할 만큼 깁니다.',
+  // the second lookup must hit the IDB cache written directly by translate().
+  'Cache this course sentence through the IndexedDB translation layer.':
+    'IndexedDB 번역 레이어를 통해 이 강의 문장을 캐시하세요.',
   // Lazy translation E2E (tests/e2e/lazy-translate.spec.js). Distinctive
   // strings so we can detect by Hangul presence whether the lazy path
   // queued this paragraph or not.
@@ -156,9 +157,19 @@ async function registerStubs(context) {
   // Google Translate — return canned Korean for known strings; fall back
   // to a marker so unmapped strings show up clearly in assertions.
   await context.route('https://translate.googleapis.com/**', async (route) => {
-    const url = new URL(route.request().url());
-    const q = url.searchParams.get('q') || '';
-    const decoded = decodeURIComponent(q);
+    const request = route.request();
+    const url = new URL(request.url());
+    // Since v4 the extension sends `q` in the POST body (lesson text must not
+    // sit in a URL, and HTML blocks overrun URL length limits). Read the body
+    // first and keep the query fallback so this stub still works if a caller
+    // ever uses GET.
+    let q = url.searchParams.get('q') || '';
+    if (request.method() === 'POST') {
+      const body = request.postData() || '';
+      q = new URLSearchParams(body).get('q') || '';
+    }
+    // URLSearchParams decodes both query and form values exactly once.
+    const decoded = q;
     // Content-script `el.textContent.trim()` preserves internal whitespace,
     // so the same paragraph can hit GT with embedded newlines/double-spaces
     // depending on HTML formatting. Normalize both sides so our GT_KO map
@@ -180,66 +191,6 @@ async function registerStubs(context) {
       contentType: 'application/json',
       body: JSON.stringify({ tag_name: 'v3.5.16' }),
     });
-  });
-
-  // Puter SDK stub. Two callers exercise this:
-  //   - golden / exam / SPA specs never send a chat, so they only need
-  //     `window.puter.ai` to exist so page-bridge.js's `loadPuter()` resolves
-  //     and emits BRIDGE_READY (which flips translator.isReady=true).
-  //   - tutor-chat spec sends a chat — for that the `chat(prompt, opts)` fn
-  //     must (a) when called with `{stream:true}`, return an async iterable
-  //     yielding `{text}` chunks (the real SDK's contract; see page-bridge
-  //     `for await (const chunk of response)` loop), and (b) when called
-  //     non-streaming, return `{message:{content:'...'}}`.
-  //
-  // We hardcode a Korean-ish three-chunk reply so the tutor-chat spec can
-  // assert the streamed text shows up in the bot bubble verbatim.
-  const PUTER_STUB = `
-    (function () {
-      const STREAM_CHUNKS = ['안녕하세요! ', '프롬프트는 Claude에게 ', '주는 입력입니다.'];
-      window.puter = {
-        // The page bridge gates background verify/translate on auth state to avoid
-        // tripping Puter's sign-in prompt for signed-out users; the e2e suite models
-        // a signed-in user so those paths run and stay under test.
-        authToken: 'e2e-stub-token',
-        ai: {
-          chat: async function (prompt, opts) {
-            if (opts && opts.stream) {
-              return {
-                [Symbol.asyncIterator]() {
-                  let i = 0;
-                  return {
-                    async next() {
-                      // Throttle slightly so the test sees incremental
-                      // chunks, not a single batch — exercising the
-                      // CHAT_STREAM_CHUNK → onChunk → DOM-update path.
-                      await new Promise((r) => setTimeout(r, 20));
-                      if (i >= STREAM_CHUNKS.length) return { done: true };
-                      return { done: false, value: { text: STREAM_CHUNKS[i++] } };
-                    },
-                  };
-                },
-              };
-            }
-            return { message: { content: STREAM_CHUNKS.join('') } };
-          },
-        },
-      };
-    })();
-  `;
-  await context.route('https://js.puter.com/**', async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/javascript',
-      body: PUTER_STUB,
-    });
-  });
-
-  // Puter backend — the SDK's whoami / socket.io calls happen as soon as
-  // it loads; without stubs they hit the real api.puter.com and pollute
-  // logs with 401/400 noise. Return harmless empties.
-  await context.route('https://api.puter.com/**', async (route) => {
-    await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
   });
 }
 

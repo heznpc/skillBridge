@@ -16,7 +16,7 @@
  * `originalTexts` / `translatedTexts` Maps). Cross-module helpers
  * (safeReplaceText, getTranslatableElements, updateLangClass,
  * detectExamPage, showTermPreview) are read off `_sb`; protected-term
- * restoration and Gemini-block translation come from their respective
+ * restoration and inline-tag detection come from their respective
  * `window._protectedTerms` / `window._geminiBlock` globals.
  *
  * Public surface (on `window._sb._gt`):
@@ -26,7 +26,6 @@
  *   - `bumpGeneration()` — for switchLanguage to invalidate stale callbacks
  *   - `get gtGeneration` — read-only view of the counter
  *   - `flushOfflinePending(currentLang)` — re-queue items deferred during an offline window
- *   - `removeVerifySpinner(el)` — called from the translator's `onTranslationUpdate` callback when Gemini verification lands
  *
  * Also re-attaches `isLikelyEnglish` onto `_sb` for back-compat with
  * `code-comments.js` (which calls `sb.isLikelyEnglish(...)` while scanning
@@ -158,8 +157,8 @@
     // the lazy IntersectionObserver call processOneElement() directly on freshly
     // inserted nodes, so a Skilljar quiz that renders its answers AFTER the initial
     // pass would otherwise translate them — violating the exam contract and then
-    // caching the leaked text + sending it to Gemini. Bailing here keeps exam text
-    // out of the GT queue, the IndexedDB cache, and the verify path entirely.
+    // caching or transmitting the leaked text. Bailing here keeps exam text
+    // out of the GT queue and the IndexedDB cache entirely.
     if (sb.isExamPage) {
       const examSkip = EXAM_SKIP_SELECTORS.join(', ');
       if (el.matches(examSkip) || el.closest(examSkip)) return null;
@@ -173,8 +172,10 @@
     const translator = sb.translator;
     const elementMatch = translator.staticLookup(fullText);
     if (elementMatch) {
-      sb.safeReplaceText(el, elementMatch);
-      return 'static';
+      if (sb.safeReplaceText(el, elementMatch) !== false) return 'static';
+      // Guard refused the collapse (block carries link/button labels) — fall
+      // through to the per-node static pass below, which replaces text node
+      // by node and never flattens inline structure.
     }
 
     let allNodesMatched = true;
@@ -317,7 +318,7 @@
   }
 
   // ============================================================
-  // GT QUEUE — batching, caching, Gemini verify scheduling
+  // GT QUEUE — batching, caching, structure-preserving HTML translation
   // ============================================================
 
   /**
@@ -325,6 +326,14 @@
    * @param {string} targetLang
    * @param {boolean} [alreadyVisible] — if true, skip viewport re-check (caller already classified)
    */
+  // Deep check, unlike hasInlineTags (which only looks at DIRECT children and
+  // so misses wrapper shapes like <p><span>text <a>link</a></span></p>). Any
+  // block carrying a link/button label must never take the flattening
+  // safeReplaceText path — see partitionAfterCacheLookup.
+  function _hasInteractiveEls(el) {
+    return !!el.querySelector('a, button, summary, [role="button"], [role="link"]');
+  }
+
   function queueForGoogleTranslate(elements, targetLang, alreadyVisible) {
     const _hasInlineTags = window._geminiBlock.hasInlineTags;
     if (alreadyVisible) {
@@ -332,7 +341,13 @@
         if (gtTranslateQueue.length >= SKILLBRIDGE_THRESHOLDS.GT_QUEUE_MAX) break;
         const text = el.textContent.trim();
         if (!text || text.length < 4) continue;
-        gtTranslateQueue.push({ el, text, targetLang, needsGemini: _hasInlineTags(el) });
+        gtTranslateQueue.push({
+          el,
+          text,
+          targetLang,
+          hasInlineTags: _hasInlineTags(el),
+          hasInteractive: _hasInteractiveEls(el),
+        });
       }
     } else {
       const visibleItems = [];
@@ -345,7 +360,13 @@
           break;
         const text = el.textContent.trim();
         if (!text || text.length < 4) continue;
-        const item = { el, text, targetLang, needsGemini: _hasInlineTags(el) };
+        const item = {
+          el,
+          text,
+          targetLang,
+          hasInlineTags: _hasInlineTags(el),
+          hasInteractive: _hasInteractiveEls(el),
+        };
         (isInViewport(el) ? visibleItems : offscreenItems).push(item);
       }
       gtTranslateQueue.push(...visibleItems, ...offscreenItems);
@@ -353,40 +374,39 @@
     processGTQueue();
   }
 
-  function partitionAfterCacheLookup(batch, cacheResults, geminiQueue, originalTexts) {
+  function partitionAfterCacheLookup(batch, cacheResults, originalTexts, htmlQueue) {
     const uncached = [];
-    const useGeminiBlocks = sb.hostCaps?.bridge !== false;
+    // Blocks with inline tags or interactive labels are "structured": they must
+    // keep their markup. They always take the deterministic HTML-GT path; the
+    // presence of an authenticated AI bridge must never change translation's
+    // network or privacy behavior. Plain-text blocks take the flat GT path.
+    const isStructured = (item) => item.hasInlineTags || item.hasInteractive;
 
     for (let i = 0; i < batch.length; i++) {
       const item = batch[i];
       const cached = cacheResults[i];
       if (cached) {
         if (!item.el?.parentNode) continue;
-        if (item.needsGemini && useGeminiBlocks) {
+        // The flat cache is keyed by textContent and cannot safely fill a
+        // structured block (it would blank link/button labels) — re-translate
+        // it through the structure-preserving path instead of applying flat.
+        if (isStructured(item)) {
           uncached.push(item);
           continue;
         }
         const translated = window._protectedTerms.restoreProtectedTerms(cached);
-        sb.safeReplaceText(item.el, translated);
+        if (sb.safeReplaceText(item.el, translated) === false) continue;
         trackTranslatedElement(item.text, item.el);
         continue;
       }
       uncached.push(item);
     }
 
-    const gtItems = uncached.filter((item) => !item.needsGemini || !useGeminiBlocks);
-    const geminiItems = useGeminiBlocks ? uncached.filter((item) => item.needsGemini) : [];
-    queueGeminiBlockCandidates(geminiItems, geminiQueue, originalTexts);
-    return gtItems;
-  }
-
-  function queueGeminiBlockCandidates(geminiItems, geminiQueue, originalTexts) {
-    for (const item of geminiItems) {
-      if (item.el && item.el.parentNode) {
-        if (!originalTexts.has(item.el)) originalTexts.set(item.el, item.el.innerHTML);
-        geminiQueue.push({ el: item.el, targetLang: item.targetLang });
-      }
+    const structured = uncached.filter(isStructured);
+    if (htmlQueue) {
+      for (const item of structured) if (item.el?.parentNode) htmlQueue.push(item);
     }
+    return uncached.filter((item) => !isStructured(item));
   }
 
   function queueOfflineItems(gtItems) {
@@ -403,21 +423,17 @@
     return textToItems;
   }
 
-  function applyGoogleTranslations(uniqueTexts, translations, textToItems, translator, targetLang) {
+  async function applyGoogleTranslations(uniqueTexts, translations, textToItems, translator, targetLang) {
     for (let i = 0; i < uniqueTexts.length; i++) {
       let translated = translations[i];
       if (!translated || translated === uniqueTexts[i]) continue;
       translated = window._protectedTerms.restoreProtectedTerms(translated);
       const items = textToItems.get(uniqueTexts[i]);
-      let verifyQueued = false;
+      await translator._cacheTranslation(uniqueTexts[i], translated, targetLang);
       for (const item of items) {
         if (!item.el?.parentNode) continue;
-        sb.safeReplaceText(item.el, translated);
+        if (sb.safeReplaceText(item.el, translated) === false) continue;
         trackTranslatedElement(item.text, item.el);
-        if (!verifyQueued) {
-          verifyQueued = !!translator.queueGeminiVerify(item.text, translated, targetLang);
-        }
-        if (verifyQueued) addVerifySpinner(item.el);
       }
     }
   }
@@ -435,23 +451,85 @@
 
     if (gtGeneration !== myGeneration) return false;
 
-    applyGoogleTranslations(uniqueTexts, translations, textToItems, translator, targetLang);
+    await applyGoogleTranslations(uniqueTexts, translations, textToItems, translator, targetLang);
     return true;
   }
 
-  function flushGeminiBlockQueue(geminiQueue, translator, originalTexts, myGeneration) {
-    for (const { el, targetLang } of geminiQueue) {
-      if (el && el.parentNode) {
-        window._geminiBlock.queueGeminiBlockTranslation(el, targetLang, {
-          translator,
-          originalTexts,
-          isLikelyEnglish,
-          generation: myGeneration,
-          getGeneration: () => gtGeneration,
-          getCurrentLang: () => sb.currentLang,
-        });
+  // ==================== HTML-GT (structure-preserving, no AI) ====================
+
+  // Restore protected/brand terms in the visible text of a reconciled block,
+  // reusing the single protected-terms chokepoint. GT (HTML mode) translates
+  // all inner text including brand terms, so this corrects them deterministically.
+  function _restoreProtectedInTextNodes(el) {
+    const restore = window._protectedTerms?.restoreProtectedTerms;
+    if (!restore) return;
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    for (const node of nodes) {
+      if (node.parentElement?.closest('code, pre, script, style')) continue;
+      node.textContent = restore(node.textContent);
+    }
+  }
+
+  // Fold GT's translated HTML back into the original element via the integrity
+  // gate + node-reconciliation module. Returns false (keep original) on any
+  // gate failure — never renders a blanked/corrupted structure.
+  function _applyHtmlTranslation(el, translatedHtml) {
+    const domSafe = window._sbDomSafe;
+    const htmlGt = window._sbHtmlGt;
+    if (!domSafe || !htmlGt) return false;
+    const clean = domSafe.sanitizeInlineHtml(translatedHtml);
+    // Parse into an INERT document: innerHTML on a live-document element
+    // fetches image sources at parse time, before checkTagIntegrity can
+    // reject a block whose srcs a hostile GT response rewrote. Nodes that
+    // pass the gate are adopted into the live document by reconcileHtml.
+    const container = document.implementation.createHTMLDocument('').createElement(el.tagName);
+    container.innerHTML = clean;
+    let root = container;
+    if (container.children.length === 1 && container.firstElementChild.tagName === el.tagName) {
+      root = container.firstElementChild;
+    }
+    if (!htmlGt.checkTagIntegrity(el, root)) return false;
+    if (!htmlGt.reconcileHtml(el, root)) return false;
+    _restoreProtectedInTextNodes(el);
+    return true;
+  }
+
+  async function translateHtmlItems(htmlItems, targetLang, translator, myGeneration) {
+    if (!htmlItems || htmlItems.length === 0) return true;
+    // Offline: defer like plain items instead of dropping them. Returning
+    // early used to strand structured blocks untranslated even after the
+    // connection came back, while plain text resumed via the offline queue.
+    if (sb.isOffline) {
+      queueOfflineItems(htmlItems);
+      return true;
+    }
+    // Dedup identical source blocks so repeated markup costs one GT call.
+    const bySource = new Map();
+    for (const item of htmlItems) {
+      if (!item.el?.parentNode) continue;
+      const src = item.el.outerHTML;
+      if (!bySource.has(src)) bySource.set(src, []);
+      bySource.get(src).push(item);
+    }
+    const sources = [...bySource.keys()];
+    if (sources.length === 0) return true;
+
+    const translations = await translator.googleTranslateBatch(sources, targetLang);
+    if (gtGeneration !== myGeneration) return false;
+
+    for (let i = 0; i < sources.length; i++) {
+      const translatedHtml = translations[i];
+      if (!translatedHtml || translatedHtml === sources[i]) continue;
+      for (const item of bySource.get(sources[i])) {
+        if (!item.el?.parentNode) continue;
+        if (_applyHtmlTranslation(item.el, translatedHtml)) {
+          trackTranslatedElement(item.text, item.el);
+        }
       }
     }
+    return true;
   }
 
   async function processGTQueue() {
@@ -460,7 +538,6 @@
     const myGeneration = gtGeneration;
     const totalItems = gtTranslateQueue.length;
     let processedItems = 0;
-    const geminiQueue = [];
     const translator = sb.translator;
     const originalTexts = sb.originalTexts;
 
@@ -479,9 +556,12 @@
 
         if (gtGeneration !== myGeneration) return;
 
-        const gtItems = partitionAfterCacheLookup(batch, cacheResults, geminiQueue, originalTexts);
+        const htmlItems = [];
+        const gtItems = partitionAfterCacheLookup(batch, cacheResults, originalTexts, htmlItems);
         const gtStillFresh = await translateGoogleItems(gtItems, targetLang, translator, myGeneration);
         if (!gtStillFresh) return;
+        const htmlStillFresh = await translateHtmlItems(htmlItems, targetLang, translator, myGeneration);
+        if (!htmlStillFresh) return;
 
         processedItems += batch.length;
         sb.updateTranslationProgress?.(80 + Math.round((processedItems / totalItems) * 15));
@@ -499,13 +579,6 @@
       // generation will trigger its own preview.
       if (gtGeneration === myGeneration) {
         setTimeout(() => sb.showTermPreview?.(), 1500);
-      }
-
-      // Flush any block-translation work queued during this generation.
-      // Stale generations are discarded here and re-checked by the consumer
-      // before it writes async Gemini output into the DOM.
-      if (gtGeneration === myGeneration) {
-        flushGeminiBlockQueue(geminiQueue, translator, originalTexts, myGeneration);
       }
     }
   }
@@ -559,18 +632,6 @@
         originalComments.delete(key);
       }
     }
-  }
-
-  function addVerifySpinner(el) {
-    if (el.querySelector('.si18n-verify-spinner')) return;
-    const spinner = document.createElement('span');
-    spinner.className = 'si18n-verify-spinner';
-    spinner.innerHTML = '<span class="si18n-dot"></span><span class="si18n-dot"></span><span class="si18n-dot"></span>';
-    el.appendChild(spinner);
-  }
-
-  function removeVerifySpinner(el) {
-    el.querySelector('.si18n-verify-spinner')?.remove();
   }
 
   // ============================================================
@@ -635,7 +696,6 @@
     reset,
     bumpGeneration,
     flushOfflinePending,
-    removeVerifySpinner,
     get gtGeneration() {
       return gtGeneration;
     },

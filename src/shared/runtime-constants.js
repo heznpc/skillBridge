@@ -9,7 +9,6 @@
 
   const constants = Object.freeze({
     GT_LANG_MAP: Object.freeze({ 'zh-CN': 'zh-CN', 'zh-TW': 'zh-TW', 'pt-BR': 'pt' }),
-    YOUTUBE_CLIENT_VERSION: '2.20260415.01.00',
   });
 
   root.SB_SHARED_CONSTANTS = constants;

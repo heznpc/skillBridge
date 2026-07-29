@@ -9,12 +9,14 @@
  */
 
 const { spawnSync } = require('child_process');
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
 const NPM = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const NPX = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+const UNZIP = process.platform === 'win32' ? 'unzip.exe' : 'unzip';
 
 const args = new Set(process.argv.slice(2));
 
@@ -71,6 +73,157 @@ function assertFile(file, minBytes = 1) {
   if (size < minBytes) throw new Error(`Artifact is too small: ${file} (${size} bytes)`);
 }
 
+function sha256(file) {
+  return crypto
+    .createHash('sha256')
+    .update(fs.readFileSync(path.join(ROOT, file)))
+    .digest('hex');
+}
+
+function verifyPromoMedia() {
+  const manifest = JSON.parse(readText('store-assets/promo-media-manifest.json'));
+  if (manifest.version !== JSON.parse(readText('manifest.json')).version) {
+    throw new Error(`Promo manifest version drift: ${manifest.version}`);
+  }
+  const sourcePath = manifest.source?.path;
+  if (typeof sourcePath !== 'string' || !sourcePath) throw new Error('Promo manifest source path is missing');
+  assertFile(sourcePath, 1024);
+  if (sha256(sourcePath) !== manifest.source.sha256) {
+    throw new Error(`Promo source hash drift: ${sourcePath}`);
+  }
+  if (!Array.isArray(manifest.assets) || manifest.assets.length !== 2) {
+    throw new Error('Promo manifest must describe the landscape and short videos');
+  }
+  for (const asset of manifest.assets) {
+    if (typeof asset?.path !== 'string' || !asset.path) throw new Error('Promo manifest asset path is missing');
+    assertFile(asset.path, 100_000);
+    if (sha256(asset.path) !== asset.sha256) throw new Error(`Promo asset hash drift: ${asset.path}`);
+  }
+  const expectedThumbnails = new Map([
+    ['store-assets/promo-video-thumbnail-1280x720.png', [1280, 720]],
+    ['store-assets/promo-short-thumbnail-1080x1920.png', [1080, 1920]],
+  ]);
+  if (!Array.isArray(manifest.thumbnails) || manifest.thumbnails.length !== expectedThumbnails.size) {
+    throw new Error('Promo manifest must describe both video thumbnails');
+  }
+  for (const thumbnail of manifest.thumbnails) {
+    const dimensions = expectedThumbnails.get(thumbnail?.path);
+    if (!dimensions) throw new Error(`Unexpected promo thumbnail: ${thumbnail?.path}`);
+    const [width, height] = dimensions;
+    if (thumbnail.width !== width || thumbnail.height !== height) {
+      throw new Error(`Promo thumbnail dimension drift: ${thumbnail.path}`);
+    }
+    assertFile(thumbnail.path, 1024);
+    if (sha256(thumbnail.path) !== thumbnail.sha256) {
+      throw new Error(`Promo thumbnail hash drift: ${thumbnail.path}`);
+    }
+    expectedThumbnails.delete(thumbnail.path);
+  }
+  if (expectedThumbnails.size) {
+    throw new Error(`Promo manifest is missing thumbnails: ${[...expectedThumbnails.keys()].join(', ')}`);
+  }
+}
+
+function runCaptured(label, command, commandArgs, options = {}) {
+  const result = spawnSync(command, commandArgs, {
+    cwd: options.cwd || ROOT,
+    encoding: 'utf8',
+    timeout: options.timeoutMs || 60_000,
+    maxBuffer: 10 * 1024 * 1024,
+  });
+  if (result.error) {
+    throw new Error(`${label} failed: ${result.error.message}`);
+  }
+  if (result.signal) {
+    throw new Error(`${label} failed with signal ${result.signal}`);
+  }
+  if (result.status !== 0) {
+    const detail = (result.stderr || result.stdout || '').trim();
+    throw new Error(`${label} failed with exit code ${result.status}${detail ? `: ${detail}` : ''}`);
+  }
+  return result.stdout || '';
+}
+
+function listBundleFiles(bundleDir) {
+  const files = [];
+
+  function visit(dir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const absolute = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        visit(absolute);
+      } else if (entry.isFile()) {
+        files.push(path.relative(bundleDir, absolute).split(path.sep).join('/'));
+      } else {
+        throw new Error(`Unsupported bundle entry type: ${path.relative(bundleDir, absolute)}`);
+      }
+    }
+  }
+
+  visit(bundleDir);
+  return files.sort();
+}
+
+function parseZipFileEntries(output) {
+  const files = [];
+  const seen = new Set();
+
+  for (const rawLine of output.split(/\r?\n/)) {
+    const raw = rawLine.replace(/^(?:\.\/)+/, '');
+    const isDirectory = raw.endsWith('/');
+    const entryPath = isDirectory ? raw.replace(/\/+$/, '') : raw;
+    if (!entryPath) continue;
+    if (
+      entryPath.includes('\\') ||
+      entryPath.includes('\0') ||
+      path.posix.isAbsolute(entryPath) ||
+      /^[A-Za-z]:/.test(entryPath)
+    ) {
+      throw new Error(`Unsafe ZIP entry path: ${rawLine}`);
+    }
+
+    const normalized = path.posix.normalize(entryPath);
+    if (normalized !== entryPath || normalized === '..' || normalized.startsWith('../')) {
+      throw new Error(`Unsafe ZIP entry path: ${rawLine}`);
+    }
+    if (isDirectory) continue;
+    if (seen.has(normalized)) {
+      throw new Error(`Duplicate ZIP file entry: ${normalized}`);
+    }
+    seen.add(normalized);
+    files.push(normalized);
+  }
+
+  return files.sort();
+}
+
+function assertMatchingFileLists(bundleFiles, zipFiles) {
+  const bundleSet = new Set(bundleFiles);
+  const zipSet = new Set(zipFiles);
+  const missing = bundleFiles.filter((file) => !zipSet.has(file));
+  const extra = zipFiles.filter((file) => !bundleSet.has(file));
+
+  if (missing.length || extra.length) {
+    const summarize = (files) =>
+      `${files.slice(0, 10).join(', ')}${files.length > 10 ? ` (+${files.length - 10} more)` : ''}`;
+    const details = [];
+    if (missing.length) details.push(`missing from ZIP: ${summarize(missing)}`);
+    if (extra.length) details.push(`not present in dist/bundled: ${summarize(extra)}`);
+    throw new Error(`Upload ZIP file list does not match dist/bundled (${details.join('; ')})`);
+  }
+}
+
+function verifyZipMatchesBundle({
+  zipPath = path.join(ROOT, 'store-assets', 'skillbridge-bundled.zip'),
+  bundleDir = path.join(ROOT, 'dist', 'bundled'),
+} = {}) {
+  runCaptured('Upload ZIP integrity check', UNZIP, ['-tqq', zipPath]);
+  const zipFiles = parseZipFileEntries(runCaptured('Upload ZIP entry listing', UNZIP, ['-Z1', zipPath]));
+  const bundleFiles = listBundleFiles(bundleDir);
+  assertMatchingFileLists(bundleFiles, zipFiles);
+  return { fileCount: bundleFiles.length };
+}
+
 function extractCourseCount(text, label) {
   const match = text.match(/All\s+(\d+)\s+currently-published courses/i);
   if (!match) throw new Error(`Could not find supported-course count in ${label}`);
@@ -121,6 +274,7 @@ function verifyArtifacts() {
     'store-assets/04-flashcards.png',
     'store-assets/05-exam-safe.png',
     'store-assets/skillbridge-bundled.zip',
+    'store-assets/promo-media-manifest.json',
   ]) {
     assertFile(file, file.endsWith('.png') || file.endsWith('.zip') ? 1024 : 1);
   }
@@ -137,14 +291,22 @@ function verifyArtifacts() {
     throw new Error('Bundled manifest does not point at background.bundle.js');
   }
 
-  console.log('✓ release artifacts are present and internally consistent');
+  const zipVerification = verifyZipMatchesBundle();
+  verifyPromoMedia();
+
+  console.log(
+    `✓ release artifacts are present and internally consistent (${zipVerification.fileCount} ZIP files verified)`,
+  );
 }
 
 function smoke() {
   runNpm('Build production extension bundle', 'build:bundle');
-  run('First-user install/translate smoke E2E', NPX, ['playwright', 'test', 'tests/e2e/first-user-flow.spec.js'], {
-    timeoutMs: 180_000,
-  });
+  run(
+    'First-user and action-popup smoke E2E',
+    NPX,
+    ['playwright', 'test', 'tests/e2e/first-user-flow.spec.js', 'tests/e2e/popup.spec.js'],
+    { timeoutMs: 180_000 },
+  );
 }
 
 function localQualityGates() {
@@ -169,6 +331,7 @@ function preflight({ includeFullE2e, includeStoreCapture }) {
   runNpm('Build Firefox artifact', 'build:firefox');
   if (includeStoreCapture) {
     runNpm('Regenerate store assets from the production bundle', 'capture:store');
+    runNode('Regenerate promo video derivatives', 'scripts/build-promo-media.js');
   } else {
     console.log('\n==> Verify store description is generated from the current listing source');
     verifyStoreDescriptionSync();
@@ -180,22 +343,33 @@ function preflight({ includeFullE2e, includeStoreCapture }) {
     runNpm('Full E2E suite', 'test:e2e');
   } else {
     console.log('\nFull E2E suite is reserved for npm run release:verify.');
-    console.log('Preflight covers upload-readiness plus the first-user install/translate path.');
+    console.log('Preflight covers upload-readiness plus first-user and action-popup paths.');
   }
 }
 
-try {
-  if (MODES.smoke) {
-    smoke();
-  } else if (MODES.postUpload) {
-    runNode('Post-upload CWS drift check', 'scripts/check-cws-drift.js', ['--json']);
-  } else if (MODES.full) {
-    preflight({ includeFullE2e: true, includeStoreCapture: true });
-  } else {
-    preflight({ includeFullE2e: false, includeStoreCapture: false });
+function main() {
+  try {
+    if (MODES.smoke) {
+      smoke();
+    } else if (MODES.postUpload) {
+      runNode('Post-upload CWS drift check', 'scripts/check-cws-drift.js', ['--json']);
+    } else if (MODES.full) {
+      preflight({ includeFullE2e: true, includeStoreCapture: true });
+    } else {
+      preflight({ includeFullE2e: false, includeStoreCapture: false });
+    }
+    console.log('\nRelease pipeline finished successfully.');
+  } catch (err) {
+    console.error(`\nRelease pipeline stopped: ${err.message}`);
+    process.exit(1);
   }
-  console.log('\nRelease pipeline finished successfully.');
-} catch (err) {
-  console.error(`\nRelease pipeline stopped: ${err.message}`);
-  process.exit(1);
 }
+
+if (require.main === module) main();
+
+module.exports = {
+  assertMatchingFileLists,
+  listBundleFiles,
+  parseZipFileEntries,
+  verifyZipMatchesBundle,
+};

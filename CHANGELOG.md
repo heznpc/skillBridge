@@ -6,6 +6,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [4.0.0] - 2026-07-29
+
+### Added
+- The AI tutor is bundled again in the Chrome Web Store build (Claude Sonnet via a free Puter sign-in). It answers questions about the current lesson; no SkillBridge account is required. Reverses the no-AI boundary of the 3.5.x candidates.
+- Local (on-device) AI tutor engine. A new popup selector chooses the tutor engine — Cloud (Claude, no setup), Local (Ollama / any OpenAI-compatible server), or Off (translation only). Local mode adds server-URL + model configuration, an optional `http://localhost/*` host permission requested only when Local is selected, a reachability probe that classifies connected / CORS-blocked / not-found, and CORS onboarding (OLLAMA_ORIGINS) guidance. In Local mode nothing leaves the device — the service worker proxies the streaming chat to localhost.
+
+### Changed
+- Inline-mixed blocks (links, inline code, emphasis) are translated as HTML through the same Google Translate endpoint the extension already uses (`translate_a/single?client=gtx`), which preserves tags and hrefs when the block's markup is sent in the POST body and reconciles the result back into the original DOM nodes without `innerHTML` assignment. A tag/href integrity gate falls back to the original block on any mismatch, replacing the previous flat-text + placeholder path.
+- Store, README, privacy, permission, and contributor copy corrected to v4 reality: the AI tutor ships and uses a free Puter sign-in, while translation and local study tools need no account.
+- The CWS build no longer pins the AI gateway off. A sanitized Puter SDK and Tutor broker ship as exact-host ISOLATED content scripts; Tutor prompts and response chunks stay on validated extension ports, and accepted session fields persist in extension storage instead of course-site storage.
+
+### Removed
+- The page-world Puter bridge and extension-origin Tutor frame from earlier candidates are absent from the CWS artifact. `scripts/check-rhc.js` remains a mandatory build gate for the sanitized bundled SDK.
+
+## [3.5.42] - 2026-07-24
+
+### Security
+- The Chrome Web Store builder now pins the optional AI gateway off, omits the Puter SDK and page-world bridge from the artifact and web-accessible resources, and fails the build on detected remote or indirect executable-code sinks. The generic `build:zip` command now resolves to this CWS-safe bundle; raw source packaging is explicitly named `build:developer:zip`.
+- Removed the unused YouTube host permission and the dead background `FETCH_URL`/InnerTube proxy path. Embedded subtitle control continues through the existing iframe player API without direct YouTube fetch access.
+
+### Fixed
+- The packaged action popup now copies every local HTML dependency, loads selectors before constants, and runs in a real Chromium extension context during release smoke tests.
+- The no-AI CWS sidebar now keeps dashboard, flashcards, bookmarks, recent lessons, PDF export, focus handling, language state, and localized labels working across local sub-panel open/close cycles.
+- CWS translation cache initialization is independent of the AI bridge; Google Translate results are cached directly without creating a verification queue or permanent spinner.
+
+### Changed
+- CWS-facing locale, store, privacy, permission, and test descriptions now distinguish the unpublished no-AI candidate from the currently published legacy build. AI-only browser specs remain archived references outside the CWS release runner.
+
 ## [3.5.41] - 2026-06-23
 
 ### Fixed

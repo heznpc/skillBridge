@@ -9,27 +9,23 @@
 // ==================== AI MODELS ====================
 
 const SKILLBRIDGE_MODELS = {
-  GEMINI: 'gemini-2.0-flash',
   CLAUDE: 'claude-sonnet-4-6',
 };
 
 // ==================== DEFAULTS ====================
 
-// Gemini "keep-English" fallback, used by getKeepEnglishTerms() only when a locale
+// Protected-term fallback, used by getKeepEnglishTerms() only when a locale
 // has no _protected keys. Brand/product/file-format proper nouns ONLY — generic
 // concept words (skill, Subagent, Enterprise, Personal, Plugin, Dispatch) were
 // dropped here to match PR #218, which removed them from the per-locale _protected
 // blocks because they are translated natively per locale (see docs/TRANSLATION_RULES.md
-// §1). Keeping them would tell Gemini to keep ordinary words English.
+// §1). Keeping them would leave ordinary words untranslated.
 const DEFAULT_PROTECTED_TERMS = 'API, SDK, Claude, Anthropic, Claude Code, Cowork, Computer Use, SKILL.md, frontmatter';
 
 const SB_SHARED_CONSTANTS = globalThis.SB_SHARED_CONSTANTS;
 if (!SB_SHARED_CONSTANTS) {
   throw new Error('[SkillBridge] src/shared/runtime-constants.js must load before constants.js');
 }
-
-// YouTube InnerTube client version — generated from src/shared/constants.json.
-const YOUTUBE_CLIENT_VERSION = SB_SHARED_CONSTANTS.YOUTUBE_CLIENT_VERSION;
 
 // ==================== CERTIFICATION EXAM (full disable) ====================
 // Proctored certification exams — extension must NOT run at all.
@@ -116,24 +112,23 @@ const TUTOR_EXAM_LABELS = {
 // ==================== THRESHOLDS ====================
 
 const SKILLBRIDGE_THRESHOLDS = {
-  GEMINI_MIN_TEXT: 80,
-  GEMINI_ALPHA_RATIO: 0.5,
-  MIN_COMPLEX_TEXT: 120,
   GT_BATCH_SIZE: 10,
-  GEMINI_BATCH_SIZE: 3,
-  VERIFY_QUEUE_MAX: 500,
   PENDING_NODES_MAX: 500,
   VIEWPORT_CHUNK_SIZE: 50, // Elements per idle-callback chunk
   CACHE_TTL_MS: 30 * 24 * 60 * 60 * 1000, // 30 days
   CHAT_STREAM_TIMEOUT: 60000, // 60s timeout for AI tutor streaming
+  // Local (on-device) engine: a cold model load happens BEFORE the first
+  // token, so the first-token window must be far more generous than the
+  // cloud's. Measured on an M4/16GB: gemma3:4b cold ≈ 10.7s, gemma4:12b
+  // cold ≈ 196s. 240s covers a large cold load; after the first token the
+  // shared CHAT_STREAM_TIMEOUT applies as an inter-token idle watchdog, so
+  // a server that stalls mid-generation still fails fast.
+  LOCAL_FIRST_TOKEN_TIMEOUT: 240000,
   GT_MAX_RETRIES: 3, // Max retries for Google Translate requests
   GT_BASE_DELAY: 500, // Base delay (ms) for exponential backoff
   GT_RATE_LIMIT_PER_MIN: 120, // Max Google Translate requests per minute
   GT_QUEUE_MAX: 200, // Max items in the Google Translate queue
   BRIDGE_READY_TIMEOUT: 20000, // 20s timeout waiting for Puter.js bridge
-  REQUEST_TIMEOUT: 30000, // 30s timeout for individual AI requests
-  PENDING_CALLBACKS_MAX: 100, // Max concurrent pending bridge callbacks
-  CALLBACK_STALE_MS: 120000, // Auto-cleanup callbacks older than 2 min
   STORAGE_QUOTA_WARN: 0.9, // Warn when storage usage exceeds 90%
   STORAGE_EVICT_TARGET: 0.7, // Evict old entries until usage drops below 70%
 };
@@ -142,11 +137,7 @@ const SKILLBRIDGE_THRESHOLDS = {
 
 const SKILLBRIDGE_DELAYS = {
   GT_BATCH: 100,
-  GEMINI_BATCH: 300,
   DOM_DEBOUNCE: 300,
-  VERIFY_QUEUE: 1000,
-  VERIFY_QUEUE_RETRY: 2000,
-  BRIDGE_READY_VERIFY: 500,
   LATE_CONTENT: 1500,
   SIDEBAR_BIND: 100,
   TEXT_SELECTION: 10,
@@ -154,7 +145,6 @@ const SKILLBRIDGE_DELAYS = {
   PROGRESS_HIDE: 300,
   PROGRESS_REMOVE: 400,
   WELCOME_BANNER: 1500,
-  TEXT_UPDATE_FADE: 500,
   IDLE_TIMEOUT: 1000, // requestIdleCallback timeout (ms) for offscreen work
   OVERLAY_REMOVE: 200, // delay before removing overlay element after fade-out
 };
@@ -707,20 +697,20 @@ const A11Y_LABELS = {
     ru: 'Загрузка',
     vi: 'Đang tải',
   },
-  backToChat: {
-    en: 'Back to chat',
-    ko: '채팅으로 돌아가기',
-    id: 'Kembali ke obrolan',
-    it: 'Torna alla chat',
-    ja: 'チャットに戻る',
-    'zh-CN': '返回聊天',
-    'zh-TW': '返回聊天',
-    es: 'Volver al chat',
-    fr: 'Retour au chat',
-    de: 'Zurück zum Chat',
-    'pt-BR': 'Voltar ao chat',
-    ru: 'Вернуться в чат',
-    vi: 'Quay lại trò chuyện',
+  backToSidebar: {
+    en: 'Back to learning sidebar',
+    ko: '학습 사이드바로 돌아가기',
+    id: 'Kembali ke bilah sisi belajar',
+    it: 'Torna alla barra di studio',
+    ja: '学習サイドバーに戻る',
+    'zh-CN': '返回学习侧栏',
+    'zh-TW': '返回學習側欄',
+    es: 'Volver al panel de estudio',
+    fr: "Retour au panneau d'étude",
+    de: 'Zurück zur Lernseitenleiste',
+    'pt-BR': 'Voltar ao painel de estudo',
+    ru: 'Вернуться к учебной панели',
+    vi: 'Quay lại thanh bên học tập',
   },
   removeQuote: {
     en: 'Remove quote',
@@ -935,34 +925,34 @@ const POPUP_LABELS = {
     vi: 'Ngôn ngữ đích',
   },
   premiumTier: {
-    en: '\u2605 Premium (Static Dict + AI Verify)',
-    id: '\u2605 Premium (Kamus Statis + Verifikasi AI)',
-    it: '\u2605 Premium (Dizionario statico + Verifica AI)',
-    ko: '\u2605 프리미엄 (정적 사전 + AI 검증)',
-    ja: '\u2605 プレミアム（静的辞書＋AI検証）',
-    'zh-CN': '\u2605 高级（静态词典＋AI验证）',
-    'zh-TW': '\u2605 進階（靜態詞典＋AI驗證）',
-    es: '\u2605 Premium (Diccionario + IA)',
-    fr: '\u2605 Premium (Dictionnaire + IA)',
-    de: '\u2605 Premium (Wörterbuch + KI)',
-    'pt-BR': '\u2605 Premium (Dicionário + IA)',
-    ru: '\u2605 Премиум (Словарь + ИИ-проверка)',
-    vi: '\u2605 Cao cấp (Từ điển + AI xác minh)',
+    en: '\u2605 Curated terminology',
+    ko: '\u2605 엄선된 용어집',
+    id: '\u2605 Terminologi terkurasi',
+    it: '\u2605 Terminologia curata',
+    ja: '\u2605 厳選された用語',
+    'zh-CN': '\u2605 精选术语',
+    'zh-TW': '\u2605 精選術語',
+    es: '\u2605 Terminología revisada',
+    fr: '\u2605 Terminologie vérifiée',
+    de: '\u2605 Kuratierte Fachbegriffe',
+    'pt-BR': '\u2605 Terminologia revisada',
+    ru: '\u2605 Проверенная терминология',
+    vi: '\u2605 Thuật ngữ chọn lọc',
   },
   standardTier: {
-    en: 'Google Translate + AI Verify',
-    ko: 'Google 번역 + AI 검증',
-    id: 'Google Translate + Verifikasi AI',
-    it: 'Google Translate + Verifica AI',
-    ja: 'Google翻訳＋AI検証',
-    'zh-CN': 'Google翻译＋AI验证',
-    'zh-TW': 'Google翻譯＋AI驗證',
-    es: 'Google Translate + verificaci\u00f3n IA',
-    fr: 'Google Traduction + v\u00e9rification IA',
-    de: 'Google \u00dcbersetzer + KI-Pr\u00fcfung',
-    'pt-BR': 'Google Tradutor + verificação IA',
-    ru: 'Google Переводчик + ИИ-проверка',
-    vi: 'Google Dịch + AI xác minh',
+    en: 'Google Translate',
+    ko: 'Google 번역',
+    id: 'Google Translate',
+    it: 'Google Translate',
+    ja: 'Google 翻訳',
+    'zh-CN': 'Google 翻译',
+    'zh-TW': 'Google 翻譯',
+    es: 'Google Translate',
+    fr: 'Google Traduction',
+    de: 'Google Übersetzer',
+    'pt-BR': 'Google Tradutor',
+    ru: 'Google Переводчик',
+    vi: 'Google Dịch',
   },
   openSidebar: {
     en: 'Open AI Tutor Sidebar',
@@ -1026,8 +1016,337 @@ const POPUP_LABELS = {
   },
 };
 
+// v4 A5/A4 — tutor engine selector + on-device (local) configuration.
+const ENGINE_LABELS = {
+  engineLabel: {
+    en: 'AI Tutor Engine',
+    ko: 'AI 튜터 엔진',
+    id: 'Mesin Tutor AI',
+    it: 'Motore del tutor IA',
+    ja: 'AIチューターエンジン',
+    'zh-CN': 'AI 导师引擎',
+    'zh-TW': 'AI 導師引擎',
+    es: 'Motor del tutor IA',
+    fr: 'Moteur du tuteur IA',
+    de: 'KI-Tutor-Engine',
+    'pt-BR': 'Motor do tutor IA',
+    ru: 'Движок ИИ-репетитора',
+    vi: 'Bộ máy gia sư AI',
+  },
+  cloudOption: {
+    en: 'Cloud — Claude (no setup)',
+    ko: '클라우드 — Claude (설정 불필요)',
+    id: 'Cloud — Claude (tanpa penyiapan)',
+    it: 'Cloud — Claude (nessuna configurazione)',
+    ja: 'クラウド — Claude（設定不要）',
+    'zh-CN': '云端 — Claude（无需设置）',
+    'zh-TW': '雲端 — Claude（無需設定）',
+    es: 'Nube — Claude (sin configuración)',
+    fr: 'Cloud — Claude (sans configuration)',
+    de: 'Cloud — Claude (ohne Einrichtung)',
+    'pt-BR': 'Nuvem — Claude (sem configuração)',
+    ru: 'Облако — Claude (без настройки)',
+    vi: 'Đám mây — Claude (không cần cài đặt)',
+  },
+  localOption: {
+    en: 'Local — Ollama / on-device',
+    ko: '로컬 — Ollama / 온디바이스',
+    id: 'Lokal — Ollama / di perangkat',
+    it: 'Locale — Ollama / sul dispositivo',
+    ja: 'ローカル — Ollama／オンデバイス',
+    'zh-CN': '本地 — Ollama / 设备端',
+    'zh-TW': '本地 — Ollama / 裝置端',
+    es: 'Local — Ollama / en el dispositivo',
+    fr: 'Local — Ollama / sur l’appareil',
+    de: 'Lokal — Ollama / auf dem Gerät',
+    'pt-BR': 'Local — Ollama / no dispositivo',
+    ru: 'Локально — Ollama / на устройстве',
+    vi: 'Cục bộ — Ollama / trên thiết bị',
+  },
+  offOption: {
+    en: 'Off — translation only',
+    ko: '끄기 — 번역만 사용',
+    id: 'Mati — hanya terjemahan',
+    it: 'Off — solo traduzione',
+    ja: 'オフ — 翻訳のみ',
+    'zh-CN': '关闭 — 仅翻译',
+    'zh-TW': '關閉 — 僅翻譯',
+    es: 'Desactivado — solo traducción',
+    fr: 'Désactivé — traduction seule',
+    de: 'Aus — nur Übersetzung',
+    'pt-BR': 'Desligado — apenas tradução',
+    ru: 'Выкл. — только перевод',
+    vi: 'Tắt — chỉ dịch',
+  },
+  localBaseUrl: {
+    en: 'Local server URL',
+    ko: '로컬 서버 주소',
+    id: 'URL server lokal',
+    it: 'URL del server locale',
+    ja: 'ローカルサーバー URL',
+    'zh-CN': '本地服务器地址',
+    'zh-TW': '本地伺服器網址',
+    es: 'URL del servidor local',
+    fr: 'URL du serveur local',
+    de: 'URL des lokalen Servers',
+    'pt-BR': 'URL do servidor local',
+    ru: 'URL локального сервера',
+    vi: 'URL máy chủ cục bộ',
+  },
+  localModel: {
+    en: 'Model name',
+    ko: '모델 이름',
+    id: 'Nama model',
+    it: 'Nome del modello',
+    ja: 'モデル名',
+    'zh-CN': '模型名称',
+    'zh-TW': '模型名稱',
+    es: 'Nombre del modelo',
+    fr: 'Nom du modèle',
+    de: 'Modellname',
+    'pt-BR': 'Nome do modelo',
+    ru: 'Название модели',
+    vi: 'Tên mô hình',
+  },
+  onDeviceHint: {
+    en: 'Runs on your own machine via Ollama or any OpenAI-compatible server. Nothing is sent to the cloud. Requires a running local server.',
+    ko: 'Ollama 등 OpenAI 호환 서버로 내 컴퓨터에서 실행됩니다. 클라우드로 전송되는 데이터가 없으며, 로컬 서버가 실행 중이어야 합니다.',
+    id: 'Berjalan di komputer Anda via Ollama atau server yang kompatibel dengan OpenAI. Tidak ada data yang dikirim ke cloud. Perlu server lokal yang berjalan.',
+    it: 'Funziona sul tuo computer tramite Ollama o un server compatibile con OpenAI. Nulla viene inviato al cloud. Richiede un server locale attivo.',
+    ja: 'Ollama など OpenAI 互換サーバーで自分の PC 上で動作します。クラウドには何も送信されません。ローカルサーバーの起動が必要です。',
+    'zh-CN':
+      '通过 Ollama 或任何兼容 OpenAI 的服务器在你自己的电脑上运行。不会向云端发送任何数据。需要本地服务器处于运行状态。',
+    'zh-TW':
+      '透過 Ollama 或任何相容 OpenAI 的伺服器在你自己的電腦上執行。不會向雲端傳送任何資料。需要本地伺服器處於執行狀態。',
+    es: 'Se ejecuta en tu propio equipo mediante Ollama o cualquier servidor compatible con OpenAI. No se envía nada a la nube. Requiere un servidor local en ejecución.',
+    fr: 'Fonctionne sur votre machine via Ollama ou tout serveur compatible OpenAI. Rien n’est envoyé vers le cloud. Nécessite un serveur local en cours d’exécution.',
+    de: 'Läuft auf Ihrem eigenen Rechner über Ollama oder einen OpenAI-kompatiblen Server. Nichts wird in die Cloud gesendet. Erfordert einen laufenden lokalen Server.',
+    'pt-BR':
+      'Executa na sua própria máquina via Ollama ou qualquer servidor compatível com OpenAI. Nada é enviado para a nuvem. Requer um servidor local em execução.',
+    ru: 'Работает на вашем компьютере через Ollama или любой OpenAI-совместимый сервер. Ничего не отправляется в облако. Требуется запущенный локальный сервер.',
+    vi: 'Chạy trên máy của bạn qua Ollama hoặc bất kỳ máy chủ tương thích OpenAI nào. Không có dữ liệu nào được gửi lên đám mây. Cần một máy chủ cục bộ đang chạy.',
+  },
+  // Hardware guidance from the measured local-engine benchmark (M4/16GB:
+  // gemma3:4b usable at ~0.8s warm TTFT; gemma4:12b unusable — 196s cold,
+  // ~5 chars/s, and it swapped the whole machine). Chrome's own built-in
+  // model is intentionally not an engine here: it needs a far newer Chrome
+  // than this extension's minimum and is not available to most users, so the
+  // supported on-device route is a local server.
+  hardwareHint: {
+    en: 'A ~4B model (e.g. gemma3:4b) is the practical choice on 16 GB of RAM; 12B and larger want ~24 GB or more. The first answer is slower because the model loads. Chrome’s own built-in AI is not used — run a local server instead.',
+    ko: '램 16GB에서는 4B급 모델(예: gemma3:4b)이 실용적입니다. 12B 이상은 24GB 이상을 권장합니다. 첫 응답은 모델 적재 때문에 느립니다. Chrome 내장 AI는 사용하지 않으며, 로컬 서버를 실행하는 방식입니다.',
+    id: 'Model ~4B (misalnya gemma3:4b) adalah pilihan praktis pada RAM 16 GB; 12B atau lebih besar memerlukan ~24 GB atau lebih. Jawaban pertama lebih lambat karena model dimuat. AI bawaan Chrome tidak digunakan — jalankan server lokal.',
+    it: 'Un modello ~4B (es. gemma3:4b) è la scelta pratica con 16 GB di RAM; da 12B in su servono ~24 GB o più. La prima risposta è più lenta perché il modello viene caricato. L’IA integrata di Chrome non viene usata: usa un server locale.',
+    ja: 'メモリ 16GB では 4B 級モデル（例: gemma3:4b）が実用的です。12B 以上は 24GB 以上を推奨します。初回の応答はモデル読み込みのため遅くなります。Chrome 内蔵 AI は使用せず、ローカルサーバーを実行します。',
+    'zh-CN':
+      '在 16 GB 内存下，约 4B 的模型（如 gemma3:4b）较为实用；12B 及更大的模型建议 24 GB 以上。首次回答会因加载模型而较慢。不使用 Chrome 内置 AI，请运行本地服务器。',
+    'zh-TW':
+      '在 16 GB 記憶體下，約 4B 的模型（如 gemma3:4b）較為實用；12B 及更大的模型建議 24 GB 以上。首次回答會因載入模型而較慢。不使用 Chrome 內建 AI，請執行本地伺服器。',
+    es: 'Un modelo de ~4B (p. ej. gemma3:4b) es la opción práctica con 16 GB de RAM; de 12B en adelante conviene tener ~24 GB o más. La primera respuesta es más lenta porque se carga el modelo. No se usa la IA integrada de Chrome: ejecuta un servidor local.',
+    fr: 'Un modèle ~4B (par ex. gemma3:4b) est le choix pratique avec 16 Go de RAM ; à partir de 12B, prévoyez ~24 Go ou plus. La première réponse est plus lente car le modèle se charge. L’IA intégrée de Chrome n’est pas utilisée : lancez un serveur local.',
+    de: 'Ein ~4B-Modell (z. B. gemma3:4b) ist bei 16 GB RAM die praktische Wahl; ab 12B sind ~24 GB oder mehr sinnvoll. Die erste Antwort ist langsamer, weil das Modell geladen wird. Chromes eigene integrierte KI wird nicht genutzt — betreiben Sie stattdessen einen lokalen Server.',
+    'pt-BR':
+      'Um modelo de ~4B (ex.: gemma3:4b) é a escolha prática com 16 GB de RAM; de 12B em diante, ~24 GB ou mais. A primeira resposta é mais lenta porque o modelo é carregado. A IA integrada do Chrome não é usada — execute um servidor local.',
+    ru: 'При 16 ГБ ОЗУ практичный выбор — модель ~4B (например, gemma3:4b); для 12B и больше нужно ~24 ГБ и более. Первый ответ медленнее из-за загрузки модели. Встроенный ИИ Chrome не используется — запустите локальный сервер.',
+    vi: 'Với 16 GB RAM, mô hình ~4B (ví dụ gemma3:4b) là lựa chọn thực tế; từ 12B trở lên nên có ~24 GB hoặc hơn. Câu trả lời đầu tiên chậm hơn vì phải tải mô hình. AI tích hợp của Chrome không được dùng — hãy chạy một máy chủ cục bộ.',
+  },
+  // v4: the cloud Tutor's sign-in must be started by a trusted click on the
+  // isolated broker's own overlay so Puter's window.open call receives user
+  // activation. The initial page chat send only asks the broker to show it.
+  signInTitle: {
+    en: 'Sign in to use the AI tutor',
+    ko: 'AI 튜터를 사용하려면 로그인하세요',
+    id: 'Masuk untuk menggunakan tutor AI',
+    it: 'Accedi per usare il tutor IA',
+    ja: 'AIチューターを使うにはサインインしてください',
+    'zh-CN': '登录后即可使用 AI 导师',
+    'zh-TW': '登入後即可使用 AI 導師',
+    es: 'Inicia sesión para usar el tutor de IA',
+    fr: 'Connectez-vous pour utiliser le tuteur IA',
+    de: 'Melden Sie sich an, um den KI-Tutor zu nutzen',
+    'pt-BR': 'Faça login para usar o tutor de IA',
+    ru: 'Войдите, чтобы использовать ИИ-репетитора',
+    vi: 'Đăng nhập để sử dụng gia sư AI',
+  },
+  signInBody: {
+    en: 'The tutor answers through a free Puter account. Translation and the study tools keep working without it.',
+    ko: '튜터는 무료 Puter 계정을 통해 답변합니다. 번역과 학습 도구는 로그인 없이도 계속 사용할 수 있습니다.',
+    id: 'Tutor menjawab melalui akun Puter gratis. Terjemahan dan alat belajar tetap berjalan tanpanya.',
+    it: 'Il tutor risponde tramite un account Puter gratuito. Traduzione e strumenti di studio funzionano comunque.',
+    ja: 'チューターは無料の Puter アカウント経由で回答します。翻訳と学習ツールはサインインなしでも使えます。',
+    'zh-CN': '导师通过免费的 Puter 账户作答。翻译和学习工具无需登录即可继续使用。',
+    'zh-TW': '導師透過免費的 Puter 帳戶作答。翻譯和學習工具不需登入即可繼續使用。',
+    es: 'El tutor responde mediante una cuenta gratuita de Puter. La traducción y las herramientas de estudio siguen funcionando sin ella.',
+    fr: 'Le tuteur répond via un compte Puter gratuit. La traduction et les outils d’étude fonctionnent sans cela.',
+    de: 'Der Tutor antwortet über ein kostenloses Puter-Konto. Übersetzung und Lernwerkzeuge funktionieren auch ohne.',
+    'pt-BR':
+      'O tutor responde por meio de uma conta gratuita do Puter. A tradução e as ferramentas de estudo continuam funcionando sem ela.',
+    ru: 'Репетитор отвечает через бесплатный аккаунт Puter. Перевод и учебные инструменты работают и без него.',
+    vi: 'Gia sư trả lời thông qua tài khoản Puter miễn phí. Dịch và các công cụ học tập vẫn hoạt động mà không cần tài khoản.',
+  },
+  signInButton: {
+    en: 'Sign in with Puter (free)',
+    ko: 'Puter로 로그인 (무료)',
+    id: 'Masuk dengan Puter (gratis)',
+    it: 'Accedi con Puter (gratuito)',
+    ja: 'Puter でサインイン（無料）',
+    'zh-CN': '使用 Puter 登录（免费）',
+    'zh-TW': '使用 Puter 登入（免費）',
+    es: 'Iniciar sesión con Puter (gratis)',
+    fr: 'Se connecter avec Puter (gratuit)',
+    de: 'Mit Puter anmelden (kostenlos)',
+    'pt-BR': 'Entrar com o Puter (gratuito)',
+    ru: 'Войти через Puter (бесплатно)',
+    vi: 'Đăng nhập bằng Puter (miễn phí)',
+  },
+  signInCancel: {
+    en: 'Not now',
+    ko: '나중에',
+    id: 'Nanti saja',
+    it: 'Non ora',
+    ja: '今はしない',
+    'zh-CN': '暂不登录',
+    'zh-TW': '暫不登入',
+    es: 'Ahora no',
+    fr: 'Plus tard',
+    de: 'Jetzt nicht',
+    'pt-BR': 'Agora não',
+    ru: 'Не сейчас',
+    vi: 'Để sau',
+  },
+  statusChecking: {
+    en: 'Checking local server…',
+    ko: '로컬 서버 확인 중…',
+    id: 'Memeriksa server lokal…',
+    it: 'Verifica del server locale…',
+    ja: 'ローカルサーバーを確認中…',
+    'zh-CN': '正在检查本地服务器…',
+    'zh-TW': '正在檢查本地伺服器…',
+    es: 'Comprobando el servidor local…',
+    fr: 'Vérification du serveur local…',
+    de: 'Lokaler Server wird geprüft…',
+    'pt-BR': 'Verificando o servidor local…',
+    ru: 'Проверка локального сервера…',
+    vi: 'Đang kiểm tra máy chủ cục bộ…',
+  },
+  statusOk: {
+    en: 'Connected to local server',
+    ko: '로컬 서버에 연결됨',
+    id: 'Terhubung ke server lokal',
+    it: 'Connesso al server locale',
+    ja: 'ローカルサーバーに接続しました',
+    'zh-CN': '已连接到本地服务器',
+    'zh-TW': '已連線到本地伺服器',
+    es: 'Conectado al servidor local',
+    fr: 'Connecté au serveur local',
+    de: 'Mit lokalem Server verbunden',
+    'pt-BR': 'Conectado ao servidor local',
+    ru: 'Подключено к локальному серверу',
+    vi: 'Đã kết nối tới máy chủ cục bộ',
+  },
+  statusCors: {
+    en: 'Server reachable, but it blocked the request. Start Ollama with OLLAMA_ORIGINS="chrome-extension://*" (or set it in your OpenAI-compatible server).',
+    ko: '서버에 접근했지만 요청이 차단되었습니다. Ollama를 OLLAMA_ORIGINS="chrome-extension://*" 로 실행하세요(또는 OpenAI 호환 서버에 설정).',
+    id: 'Server dapat dijangkau, tetapi permintaan diblokir. Jalankan Ollama dengan OLLAMA_ORIGINS="chrome-extension://*" (atau atur di server yang kompatibel dengan OpenAI).',
+    it: 'Server raggiungibile, ma la richiesta è stata bloccata. Avvia Ollama con OLLAMA_ORIGINS="chrome-extension://*" (o impostalo nel tuo server compatibile con OpenAI).',
+    ja: 'サーバーには到達しましたがブロックされました。OLLAMA_ORIGINS="chrome-extension://*" を設定して Ollama を起動してください（OpenAI 互換サーバーの場合は同等の設定を）。',
+    'zh-CN':
+      '可访问服务器但被拦截。请使用 OLLAMA_ORIGINS="chrome-extension://*" 启动 Ollama（或在兼容 OpenAI 的服务器中设置）。',
+    'zh-TW':
+      '可存取伺服器但被攔截。請使用 OLLAMA_ORIGINS="chrome-extension://*" 啟動 Ollama（或在相容 OpenAI 的伺服器中設定）。',
+    es: 'Servidor accesible, pero bloqueó la solicitud. Inicia Ollama con OLLAMA_ORIGINS="chrome-extension://*" (o configúralo en tu servidor compatible con OpenAI).',
+    fr: 'Serveur accessible, mais il a bloqué la requête. Lancez Ollama avec OLLAMA_ORIGINS="chrome-extension://*" (ou configurez-le sur votre serveur compatible OpenAI).',
+    de: 'Server erreichbar, aber die Anfrage wurde blockiert. Starten Sie Ollama mit OLLAMA_ORIGINS="chrome-extension://*" (oder legen Sie es in Ihrem OpenAI-kompatiblen Server fest).',
+    'pt-BR':
+      'Servidor acessível, mas a solicitação foi bloqueada. Inicie o Ollama com OLLAMA_ORIGINS="chrome-extension://*" (ou defina no seu servidor compatível com OpenAI).',
+    ru: 'Сервер доступен, но запрос заблокирован. Запустите Ollama с OLLAMA_ORIGINS="chrome-extension://*" (или задайте это в вашем OpenAI-совместимом сервере).',
+    vi: 'Máy chủ tiếp cận được nhưng đã chặn. Khởi động Ollama với OLLAMA_ORIGINS="chrome-extension://*" (hoặc đặt trong máy chủ tương thích OpenAI của bạn).',
+  },
+  statusUnreachable: {
+    en: 'No local server found. Start Ollama (or your local server) and check the URL.',
+    ko: '로컬 서버를 찾을 수 없습니다. Ollama(또는 로컬 서버)를 실행하고 주소를 확인하세요.',
+    id: 'Server lokal tidak ditemukan. Jalankan Ollama (atau server lokal Anda) dan periksa URL-nya.',
+    it: 'Nessun server locale trovato. Avvia Ollama (o il tuo server locale) e controlla l’URL.',
+    ja: 'ローカルサーバーが見つかりません。Ollama（またはローカルサーバー）を起動し、URL を確認してください。',
+    'zh-CN': '未找到本地服务器。请启动 Ollama（或你的本地服务器）并检查地址。',
+    'zh-TW': '找不到本地伺服器。請啟動 Ollama（或你的本地伺服器）並檢查網址。',
+    es: 'No se encontró un servidor local. Inicia Ollama (o tu servidor local) y verifica la URL.',
+    fr: 'Aucun serveur local trouvé. Lancez Ollama (ou votre serveur local) et vérifiez l’URL.',
+    de: 'Kein lokaler Server gefunden. Starten Sie Ollama (oder Ihren lokalen Server) und prüfen Sie die URL.',
+    'pt-BR': 'Nenhum servidor local encontrado. Inicie o Ollama (ou seu servidor local) e verifique a URL.',
+    ru: 'Локальный сервер не найден. Запустите Ollama (или ваш локальный сервер) и проверьте URL.',
+    vi: 'Không tìm thấy máy chủ cục bộ. Hãy khởi động Ollama (hoặc máy chủ cục bộ của bạn) và kiểm tra URL.',
+  },
+  // Tutor-side messages for engine states that a retry can never fix. The
+  // sidebar used to render the generic "an error occurred" bubble with a retry
+  // button for these, so a deliberately-off tutor looked like a transient
+  // failure and retrying deleted and re-sent the message in a loop.
+  tutorOff: {
+    en: 'The AI tutor is turned off. Turn it back on in the SkillBridge popup (AI Tutor Engine) to ask questions.',
+    ko: 'AI 튜터가 꺼져 있습니다. 질문하려면 SkillBridge 팝업의 “AI 튜터 엔진”에서 다시 켜주세요.',
+    id: 'Tutor AI dimatikan. Aktifkan kembali di popup SkillBridge (Mesin Tutor AI) untuk bertanya.',
+    it: 'Il tutor IA è disattivato. Riattivalo nel popup di SkillBridge (Motore del tutor IA) per fare domande.',
+    ja: 'AIチューターはオフになっています。質問するには SkillBridge のポップアップ（AIチューターエンジン）でオンに戻してください。',
+    'zh-CN': 'AI 导师已关闭。如需提问，请在 SkillBridge 弹窗（AI 导师引擎）中重新开启。',
+    'zh-TW': 'AI 導師已關閉。如需提問，請在 SkillBridge 彈出視窗（AI 導師引擎）中重新開啟。',
+    es: 'El tutor de IA está desactivado. Vuelve a activarlo en la ventana de SkillBridge (Motor del tutor IA) para preguntar.',
+    fr: 'Le tuteur IA est désactivé. Réactivez-le dans la fenêtre SkillBridge (Moteur du tuteur IA) pour poser des questions.',
+    de: 'Der KI-Tutor ist ausgeschaltet. Schalten Sie ihn im SkillBridge-Popup (KI-Tutor-Engine) wieder ein, um Fragen zu stellen.',
+    'pt-BR':
+      'O tutor de IA está desligado. Ligue-o novamente no popup do SkillBridge (Motor do tutor IA) para fazer perguntas.',
+    ru: 'ИИ-репетитор отключён. Включите его снова во всплывающем окне SkillBridge («Движок ИИ-репетитора»), чтобы задавать вопросы.',
+    vi: 'Gia sư AI đang tắt. Hãy bật lại trong cửa sổ SkillBridge (Bộ máy gia sư AI) để đặt câu hỏi.',
+  },
+  tutorSignInRequired: {
+    en: 'The AI tutor needs a (free) Puter sign-in. Send your question again and complete the sign-in window that opens.',
+    ko: 'AI 튜터는 무료 Puter 로그인이 필요합니다. 질문을 다시 보내고 열리는 로그인 창을 완료해 주세요.',
+    id: 'Tutor AI memerlukan masuk Puter (gratis). Kirim pertanyaan lagi dan selesaikan jendela masuk yang terbuka.',
+    it: 'Il tutor IA richiede l’accesso a Puter (gratuito). Invia di nuovo la domanda e completa la finestra di accesso.',
+    ja: 'AIチューターには（無料の）Puter サインインが必要です。もう一度質問を送信し、開いたサインイン画面を完了してください。',
+    'zh-CN': 'AI 导师需要（免费的）Puter 登录。请重新发送问题，并在弹出的登录窗口中完成登录。',
+    'zh-TW': 'AI 導師需要（免費的）Puter 登入。請重新傳送問題，並在彈出的登入視窗中完成登入。',
+    es: 'El tutor de IA necesita un inicio de sesión (gratuito) en Puter. Envía la pregunta de nuevo y completa la ventana de inicio de sesión.',
+    fr: 'Le tuteur IA nécessite une connexion Puter (gratuite). Renvoyez votre question et terminez la fenêtre de connexion qui s’ouvre.',
+    de: 'Der KI-Tutor benötigt eine (kostenlose) Puter-Anmeldung. Senden Sie die Frage erneut und schließen Sie das Anmeldefenster ab.',
+    'pt-BR':
+      'O tutor de IA precisa de um login (gratuito) no Puter. Envie a pergunta novamente e conclua a janela de login.',
+    ru: 'ИИ-репетитору нужен (бесплатный) вход в Puter. Отправьте вопрос снова и завершите вход в открывшемся окне.',
+    vi: 'Gia sư AI cần đăng nhập Puter (miễn phí). Hãy gửi lại câu hỏi và hoàn tất cửa sổ đăng nhập mở ra.',
+  },
+  tutorLocalUnreachable: {
+    en: 'Could not reach your local AI server. Check that it is running and that the address in the SkillBridge popup is correct.',
+    ko: '로컬 AI 서버에 연결할 수 없습니다. 서버가 실행 중인지, SkillBridge 팝업의 주소가 맞는지 확인해 주세요.',
+    id: 'Tidak dapat menjangkau server AI lokal Anda. Pastikan server berjalan dan alamat di popup SkillBridge benar.',
+    it: 'Impossibile raggiungere il tuo server IA locale. Verifica che sia in esecuzione e che l’indirizzo nel popup di SkillBridge sia corretto.',
+    ja: 'ローカル AI サーバーに接続できませんでした。サーバーが起動しているか、SkillBridge のポップアップのアドレスが正しいかを確認してください。',
+    'zh-CN': '无法连接到你的本地 AI 服务器。请确认它正在运行，并检查 SkillBridge 弹窗中的地址是否正确。',
+    'zh-TW': '無法連線到你的本地 AI 伺服器。請確認它正在執行，並檢查 SkillBridge 彈出視窗中的網址是否正確。',
+    es: 'No se pudo conectar con tu servidor de IA local. Comprueba que esté en ejecución y que la dirección en la ventana de SkillBridge sea correcta.',
+    fr: 'Impossible de joindre votre serveur IA local. Vérifiez qu’il est lancé et que l’adresse dans la fenêtre SkillBridge est correcte.',
+    de: 'Ihr lokaler KI-Server war nicht erreichbar. Prüfen Sie, ob er läuft und ob die Adresse im SkillBridge-Popup korrekt ist.',
+    'pt-BR':
+      'Não foi possível acessar seu servidor de IA local. Verifique se ele está em execução e se o endereço no popup do SkillBridge está correto.',
+    ru: 'Не удалось подключиться к вашему локальному ИИ-серверу. Убедитесь, что он запущен, и проверьте адрес во всплывающем окне SkillBridge.',
+    vi: 'Không thể kết nối tới máy chủ AI cục bộ của bạn. Hãy kiểm tra máy chủ đang chạy và địa chỉ trong cửa sổ SkillBridge là đúng.',
+  },
+  permDenied: {
+    en: 'Permission for the local server was declined. The local engine can’t run without it.',
+    ko: '로컬 서버 접근 권한이 거부되었습니다. 권한 없이는 로컬 엔진을 사용할 수 없습니다.',
+    id: 'Izin untuk server lokal ditolak. Mesin lokal tidak dapat berjalan tanpanya.',
+    it: 'Autorizzazione per il server locale rifiutata. Il motore locale non può funzionare senza.',
+    ja: 'ローカルサーバーへのアクセス許可が拒否されました。許可がないとローカルエンジンは動作しません。',
+    'zh-CN': '本地服务器权限被拒绝。没有该权限，本地引擎无法运行。',
+    'zh-TW': '本地伺服器權限被拒絕。沒有該權限，本地引擎無法執行。',
+    es: 'Se rechazó el permiso para el servidor local. El motor local no puede funcionar sin él.',
+    fr: 'L’autorisation pour le serveur local a été refusée. Le moteur local ne peut pas fonctionner sans elle.',
+    de: 'Die Berechtigung für den lokalen Server wurde abgelehnt. Ohne sie kann die lokale Engine nicht laufen.',
+    'pt-BR': 'A permissão para o servidor local foi recusada. O motor local não funciona sem ela.',
+    ru: 'Разрешение для локального сервера отклонено. Без него локальный движок не работает.',
+    vi: 'Quyền truy cập máy chủ cục bộ đã bị từ chối. Bộ máy cục bộ không thể chạy nếu thiếu quyền này.',
+  },
+};
+
 const SKILLBRIDGE_MODEL_LABELS = {
-  GEMINI: 'Gemini 2.0 Flash',
   CLAUDE: 'Claude Sonnet 4.6',
 };
 
@@ -1070,19 +1389,19 @@ const SHORTCUT_LABELS = {
 
 const SHORTCUT_DESCRIPTIONS = {
   toggleSidebar: {
-    en: 'Toggle AI Tutor',
-    ko: 'AI 튜터 열기/닫기',
-    id: 'Alihkan AI Tutor',
-    it: 'Attiva/disattiva AI Tutor',
-    ja: 'AIチューター切替',
-    'zh-CN': '切换AI导师',
-    'zh-TW': '切換AI導師',
-    es: 'Abrir/cerrar tutor IA',
-    fr: 'Ouvrir/fermer tuteur IA',
-    de: 'KI-Tutor umschalten',
-    'pt-BR': 'Abrir/fechar tutor IA',
-    ru: 'Вкл/выкл ИИ-репетитора',
-    vi: 'Bật/tắt gia sư AI',
+    en: 'Toggle learning sidebar',
+    ko: '학습 사이드바 열기/닫기',
+    id: 'Alihkan bilah sisi belajar',
+    it: 'Attiva/disattiva barra di studio',
+    ja: '学習サイドバー切替',
+    'zh-CN': '切换学习侧栏',
+    'zh-TW': '切換學習側欄',
+    es: 'Abrir/cerrar panel de estudio',
+    fr: "Ouvrir/fermer le panneau d'étude",
+    de: 'Lernseitenleiste umschalten',
+    'pt-BR': 'Abrir/fechar painel de estudo',
+    ru: 'Открыть/закрыть учебную панель',
+    vi: 'Bật/tắt thanh bên học tập',
   },
   toggleFlashcards: {
     en: 'Vocabulary cards',

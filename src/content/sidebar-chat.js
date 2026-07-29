@@ -45,8 +45,8 @@
       btn.id = 'skillbridge-fab';
       btn.setAttribute('role', 'button');
       btn.setAttribute('tabindex', '0');
-      // On translation-only hosts (claude.com tutorials — no AI-tutor bridge)
-      // the FAB opens a language picker, so label + icon say "language".
+      // When the active build/host has no AI bridge, the FAB opens a language
+      // picker, so its label and icon describe the feature that is available.
       const translateOnly = sb.hostCaps?.bridge === false;
       const fabLabel = sb.t(translateOnly ? CHOOSE_LANGUAGE_LABEL : A11Y_LABELS.openTutor);
       btn.setAttribute('aria-label', fabLabel);
@@ -97,7 +97,7 @@
     sidebar.className = 'skillbridge-sidebar';
     sidebar.setAttribute('role', 'dialog');
     sidebar.setAttribute('aria-modal', 'true');
-    sidebar.setAttribute('aria-label', 'SkillBridge Tutor');
+    sidebar.setAttribute('aria-label', sb.hostCaps?.bridge === false ? 'SkillBridge' : 'SkillBridge Tutor');
     sidebar.innerHTML = getSidebarHTML();
     // Mount inside the shadow UI root so the host page's CSS can't reach the
     // sidebar; it's styled by the adopted (transformed) content CSS.
@@ -150,10 +150,14 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
           <span>${sb.t(FLASHCARD_LABELS.openFlashcards)}</span>
         </button>
-        <button class="si18n-tools-item" id="si18n-history-btn" role="menuitem" type="button">
+        ${
+          translateOnly
+            ? ''
+            : `<button class="si18n-tools-item" id="si18n-history-btn" role="menuitem" type="button">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           <span>${sb.t(A11Y_LABELS.chatHistory)}</span>
-        </button>
+        </button>`
+        }
         <button class="si18n-tools-item" id="si18n-pdf-btn" role="menuitem" type="button">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
           <span>${sb.t(PDF_EXPORT_LABELS.title)}</span>
@@ -188,9 +192,8 @@
     `;
   }
 
-  // Translation-only hosts (claude.com tutorials): the sidebar body is a
-  // language picker instead of the AI-tutor chat. sb.switchLanguage is
-  // bridge-free, so this works without the Puter/Gemini bridge.
+  // AI-disabled builds/hosts use a language picker instead of the tutor chat.
+  // sb.switchLanguage is bridge-free, so local learning tools still work.
   function langPanelHTML() {
     const options = AVAILABLE_LANGUAGES.map(
       (l) =>
@@ -226,16 +229,22 @@
     sb.$id('si18n-recent-btn')?.addEventListener('click', () => sb._chat.toggleRecentPanel?.());
     sb.$id('si18n-dash-btn')?.addEventListener('click', () => sb._chat.toggleDashboardPanel?.());
     if (sb.hostCaps?.bridge === false) {
-      // Translation-only host: wire the language picker instead of the chat.
-      sb.$id('si18n-sidebar-lang-select')?.addEventListener('change', (e) => {
-        sb.switchLanguage(e.target.value).catch((err) =>
-          console.error('[SkillBridge] Sidebar language change error:', err),
-        );
-      });
+      bindLanguagePanelEvents();
     } else {
       bindChatInputEvents();
       bindExampleQuestions();
     }
+  }
+
+  function bindLanguagePanelEvents() {
+    // AI-disabled surface: wire the language picker instead of the chat.
+    // This runs at initial mount and after a local sub-panel restores the
+    // language panel's saved HTML.
+    sb.$id('si18n-sidebar-lang-select')?.addEventListener('change', (e) => {
+      sb.switchLanguage(e.target.value).catch((err) =>
+        console.error('[SkillBridge] Sidebar language change error:', err),
+      );
+    });
   }
 
   function bindExampleQuestions() {
@@ -271,29 +280,44 @@
         sendChatMessage();
       }
     });
+    // Binding runs on a deferred timer after the sidebar HTML is injected, so
+    // there is a window where the buttons exist but do nothing. Mark the
+    // moment handlers are live: a click before this attribute appears is
+    // silently lost (the E2E harness waits for it; a human cannot realistically
+    // click within the same ~100 ms of the panel appearing).
+    sb.$id('skillbridge-sidebar')?.setAttribute('data-sb-bound', '1');
   }
 
   function restoreChatPanelEvents() {
-    bindChatInputEvents();
-    bindExampleQuestions();
+    if (sb.hostCaps?.bridge === false) {
+      bindLanguagePanelEvents();
+    } else {
+      bindChatInputEvents();
+      bindExampleQuestions();
+    }
   }
 
   function updateLocalizedLabels() {
     const headerLangSelect = sb.$id('si18n-header-lang-select');
     if (headerLangSelect) headerLangSelect.value = sb.currentLang;
+    const sidebarLangSelect = sb.$id('si18n-sidebar-lang-select');
+    if (sidebarLangSelect) sidebarLangSelect.value = sb.currentLang;
+    const sidebarLangLabel = sb.$('.si18n-lang-panel-label');
+    if (sidebarLangLabel) sidebarLangLabel.textContent = sb.t(CHOOSE_LANGUAGE_LABEL);
 
     const messagesEl = sb.$id('si18n-chat-messages');
-    if (!messagesEl) return;
-    const firstBubble = messagesEl.querySelector('.si18n-chat-bot .si18n-chat-bubble');
-    if (firstBubble && messagesEl.children.length <= 2) {
-      firstBubble.textContent = getTutorGreeting();
+    if (messagesEl) {
+      const firstBubble = messagesEl.querySelector('.si18n-chat-bot .si18n-chat-bubble');
+      if (firstBubble && messagesEl.children.length <= 2) {
+        firstBubble.textContent = getTutorGreeting();
+      }
+      const chatInput = sb.$id('si18n-chat-input');
+      if (chatInput) chatInput.placeholder = sb.t(CHAT_PLACEHOLDERS);
+      const sendBtn = sb.$id('si18n-chat-send');
+      if (sendBtn) sendBtn.textContent = sb.t(SEND_LABELS);
+      const askLabel = sb.$('.si18n-ask-tutor-label');
+      if (askLabel) askLabel.textContent = sb.t(ASK_TUTOR_LABELS);
     }
-    const chatInput = sb.$id('si18n-chat-input');
-    if (chatInput) chatInput.placeholder = sb.t(CHAT_PLACEHOLDERS);
-    const sendBtn = sb.$id('si18n-chat-send');
-    if (sendBtn) sendBtn.textContent = sb.t(SEND_LABELS);
-    const askLabel = sb.$('.si18n-ask-tutor-label');
-    if (askLabel) askLabel.textContent = sb.t(ASK_TUTOR_LABELS);
 
     // The sidebar chrome is built once and was previously not re-localized, so
     // switching language after the sidebar existed left the tools button, the
@@ -309,6 +333,7 @@
     if (closeBtn) closeBtn.setAttribute('aria-label', sb.t(A11Y_LABELS.closeSidebar));
 
     const menuItems = [
+      ['si18n-dash-btn', sb.t(MENU_LABELS.dashboard)],
       ['si18n-recent-btn', sb.t(RESUME_LABELS.openRecent)],
       ['si18n-bm-btn', sb.t(BOOKMARK_LABELS.openBookmarks)],
       ['si18n-fc-btn', sb.t(FLASHCARD_LABELS.openFlashcards)],
@@ -351,6 +376,33 @@
     });
   }
 
+  // Selected tutor engine ('cloud' | 'local' | 'off'); defaults to cloud.
+  async function _currentEngine() {
+    try {
+      // Bounded like translator._getAiEngine: a slow chrome.storage read must
+      // not delay the offline notice (or any send) by more than a moment.
+      const read = chrome.storage.local.get('sb_ai_engine');
+      const timeout = new Promise((resolve) => setTimeout(() => resolve(null), 1500));
+      const result = await Promise.race([read, timeout]);
+      return result?.sb_ai_engine || 'cloud';
+    } catch {
+      return 'cloud';
+    }
+  }
+
+  // Map a chat failure to a localized explanation when a retry cannot help.
+  // Returns null for genuinely transient failures (network blip, upstream
+  // hiccup), which keep the retry affordance.
+  function _finalErrorMessage(err) {
+    const msg = String(err?.message || '');
+    if (/turned off in settings/i.test(msg)) return sb.t(ENGINE_LABELS.tutorOff);
+    if (/sign-in required/i.test(msg)) return sb.t(ENGINE_LABELS.tutorSignInRequired);
+    if (/Cannot reach local AI server|Local AI engine unavailable|Local AI connection closed/i.test(msg)) {
+      return sb.t(ENGINE_LABELS.tutorLocalUnreachable);
+    }
+    return null;
+  }
+
   async function sendChatMessage() {
     if (sb.certDisabled) return;
     if (isSending) return;
@@ -362,8 +414,11 @@
 
     isSending = true;
 
-    // Offline guard — show localized message instead of hitting the network
-    if (sb.isOffline) {
+    // Offline guard — show localized message instead of hitting the network.
+    // The local engine talks to a server on this machine, so losing internet
+    // access does not stop it; only the cloud engine needs the guard.
+    const offlineBlocks = sb.isOffline && (await _currentEngine()) !== 'local';
+    if (offlineBlocks) {
       chatDom.appendOfflineMessage(messages);
       scrollToBottom(messages);
       isSending = false;
@@ -428,6 +483,13 @@
         chatDom.finishStreamingBubble(bubble);
         return;
       }
+      // Deterministic engine states: retrying re-runs the same failure, so
+      // explain the cause instead of offering a retry button.
+      const finalMessage = _finalErrorMessage(err);
+      if (finalMessage) {
+        chatDom.renderFinalError(bubble, finalMessage);
+        return;
+      }
       chatDom.renderRetryableError(bubble, sb.t(A11Y_LABELS.retry), () => {
         const failedBotMsg = bubble.closest('.si18n-chat-msg');
         const failedUserMsg = failedBotMsg?.previousElementSibling;
@@ -475,10 +537,12 @@
         }
       }
 
-      // Focus the chat input when sidebar opens
+      // Move focus into the modal. The AI-enabled edition prefers chat;
+      // bridge-free CWS/local surfaces start at the language selector.
       setTimeout(() => {
-        const chatInput = sb.$id('si18n-chat-input');
-        if (chatInput) chatInput.focus();
+        const initialControl =
+          sb.$id('si18n-chat-input') || sb.$id('si18n-sidebar-lang-select') || sb.$id('si18n-tools-btn');
+        initialControl?.focus();
       }, SKILLBRIDGE_DELAYS.SIDEBAR_BIND);
 
       // Add focus trap

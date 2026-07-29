@@ -1,52 +1,38 @@
 /**
  * SkillBridge — AI Course Translator - Translation Engine v3.0
  *
- * Translation priority (3-tier with background verification):
+ * Translation priority:
  * 1. Static JSON dictionary (instant, no network)
- * 2. IndexedDB cache of Gemini-verified translations (instant)
- * 3. Google Translate via background proxy (fast, ~200ms)
- *    → Then Gemini 2.0 Flash verifies in background
- *    → If improved, updates DOM + caches result
+ * 2. IndexedDB translation cache (instant)
+ * 3. Google Translate via background proxy (fast, ~200ms), then cache locally
  *
  * Copyright respecting: translates on-the-fly only
  */
 
 class SkilljarTranslator {
-  constructor() {
+  constructor({ aiEnabled = true } = {}) {
     /** @type {Record<string, string>} Merged flat dictionary from JSON */
     this.staticDict = {};
     /** @type {Record<string, string>} Lowercase lookup mirror of staticDict */
     this._lowerDict = {};
     /** @type {Record<string, string[]>} Protected terms loaded from JSON */
     this._protectedTerms = {};
-    /** @type {boolean} True once the page bridge is ready (Gemini + AI Tutor) */
+    /** @type {boolean} True once the optional AI Tutor bridge is ready */
     this.isReady = false;
-    /** @type {Map<string, function>} Pending request callbacks keyed by ID */
-    this.pendingCallbacks = new Map();
-    /** @type {IDBDatabase|null} IndexedDB handle for verified translation cache */
+    /** @type {IDBDatabase|null} IndexedDB handle for the translation cache */
     this._db = null;
-    /** @type {Array<{original: string, googleTranslation: string, targetLang: string}>} */
-    this._verifyQueue = [];
-    /** @type {Promise|null} Lock for verify queue processing */
-    this._verifyLock = null;
-    /** @type {Array<function>} Callbacks when Gemini improves a translation */
-    this._onUpdateCallbacks = [];
     /** @type {string[]} ISO codes with static dictionaries */
     this.premiumLanguages = PREMIUM_LANGUAGE_CODES;
     /** @type {Record<string, string>} ISO code to language name */
     this.supportedLanguages = SUPPORTED_LANGUAGE_MAP;
-    /** Bumped on every active-language switch; verify items stamped with the
-     *  generation at queue time get filtered if it changes mid-flight. */
-    this._langGeneration = 0;
-  }
-
-  /**
-   * Called by content.js when the user switches language. Invalidates any
-   * verify-queue work targeting the old language so we don't write stale
-   * translations into the now-current page.
-   */
-  bumpLangGeneration() {
-    this._langGeneration++;
+    /** Whether the user-invoked AI Tutor bridge is available on this host. */
+    this.aiEnabled = aiEnabled;
+    /** @type {chrome.runtime.Port|null} Extension-only cloud Tutor channel. */
+    this._cloudPort = null;
+    /** @type {Map<string, object>} In-flight cloud Tutor streams. */
+    this._cloudPending = new Map();
+    /** @type {Promise<void>|null} Serializes broker startup/recovery. */
+    this._cloudConnectPromise = null;
   }
 
   /** @returns {Promise<boolean>} true if initialization succeeded */
@@ -55,8 +41,9 @@ class SkilljarTranslator {
       await this._openDB();
       await this._cleanupExpiredCache();
       await this._checkStorageQuota();
-      this._setupMessageListener();
-      await this._injectPageBridgeWithRetry();
+      if (this.aiEnabled) {
+        await this._ensureCloudBroker();
+      }
       return true;
     } catch (err) {
       console.error('[SkillBridge] Init failed:', err);
@@ -134,14 +121,6 @@ class SkilljarTranslator {
     } catch (err) {
       console.warn('[SkillBridge] Cache eviction failed:', err);
     }
-  }
-
-  /**
-   * Register a callback for when Gemini finishes verifying a translation.
-   * @param {(originalText: string, finalTranslation: string, targetLang: string, wasImproved: boolean) => void} callback
-   */
-  onTranslationUpdate(callback) {
-    this._onUpdateCallbacks.push(callback);
   }
 
   // ==================== STATIC DICTIONARY ====================
@@ -274,7 +253,7 @@ class SkilljarTranslator {
   }
 
   /**
-   * Look up a cached Gemini-verified translation.
+   * Look up a cached translation.
    * @param {string} text — original English text
    * @param {string} targetLang — ISO 639-1
    * @returns {Promise<string|null>}
@@ -360,7 +339,7 @@ class SkilljarTranslator {
 
   /**
    * Reject obvious garbage before persisting it for 30 days. Covers the
-   * cases we've observed: GT/Gemini returning a partial HTML error page,
+   * cases we've observed: translation services returning a partial HTML error page,
    * untranslated ASCII when a non-Latin target was requested, or a wildly
    * inflated string that's likely the model echoing the prompt.
    */
@@ -369,7 +348,7 @@ class SkilljarTranslator {
     if (translation.length > original.length * 10) return false;
     // HTML tag at start = error page, not a translation
     if (/<\s*[a-z!][^>]*>/i.test(translation)) return false;
-    // For non-Latin targets, mostly-ASCII output usually means the model
+    // For non-Latin targets, mostly-ASCII output usually means the service
     // refused or returned an error string in English.
     const NON_LATIN = new Set(['ko', 'ja', 'zh-CN', 'zh-TW', 'ru', 'ar', 'hi', 'th', 'he', 'el', 'uk', 'bn']);
     if (NON_LATIN.has(targetLang) && translation.length > 20) {
@@ -432,205 +411,10 @@ class SkilljarTranslator {
     }
   }
 
-  // ==================== GEMINI VERIFICATION ====================
-
-  /**
-   * Queue a text for background Gemini verification.
-   * Skips short/simple strings where Google Translate is sufficient.
-   * @param {string} originalText — English source
-   * @param {string} googleTranslation — Google Translate output
-   * @param {string} targetLang — ISO 639-1
-   * @returns {boolean} true if queued, false if filtered out
-   */
-  queueGeminiVerify(originalText, googleTranslation, targetLang) {
-    if (!originalText || !googleTranslation) return false;
-    const text = originalText.trim();
-
-    // Skip if too short — Google Translate handles these fine
-    if (text.length < SKILLBRIDGE_THRESHOLDS.GEMINI_MIN_TEXT) return false;
-
-    // Skip if mostly numbers/symbols (e.g. "6 minutes", "10-15 min")
-    const alphaRatio = text.replace(/[^a-zA-Z]/g, '').length / text.length;
-    if (alphaRatio < SKILLBRIDGE_THRESHOLDS.GEMINI_ALPHA_RATIO) return false;
-
-    // Skip simple patterns: time, dates, labels
-    if (/^\d+[\s-]+\w+$/.test(text)) return false; // "6 minutes"
-    if (/^(estimated|about|approx)/i.test(text) && text.length < 60) return false;
-    if (/^(module|lesson|chapter|section|part)\s+\d/i.test(text)) return false;
-
-    // Only verify sentences with real prose (has periods, commas, or is long)
-    const hasComplexity =
-      text.includes('.') ||
-      text.includes(',') ||
-      text.includes(':') ||
-      text.length > SKILLBRIDGE_THRESHOLDS.MIN_COMPLEX_TEXT;
-    if (!hasComplexity) return false;
-
-    // Cap queue size to prevent memory growth on large pages
-    if (this._verifyQueue.length >= SKILLBRIDGE_THRESHOLDS.VERIFY_QUEUE_MAX) {
-      const dropped = this._verifyQueue.shift();
-      // Cache the Google Translate result as-is so it's at least persisted
-      this._cacheTranslation(dropped.original, dropped.googleTranslation, dropped.targetLang);
-    }
-    this._verifyQueue.push({
-      original: text,
-      googleTranslation,
-      targetLang,
-      _gen: this._langGeneration,
-    });
-
-    this._kickVerifyQueue();
-    return true;
-  }
-
-  /**
-   * Schedule the verify-queue runner. Re-kicks itself if items arrive during
-   * the brief window between the while loop draining and the lock clearing
-   * (previously these tail items sat un-verified until the next manual
-   * trigger, which on a quiet page is "never").
-   */
-  _kickVerifyQueue() {
-    if (this._verifyLock) return;
-    this._verifyLock = new Promise((resolve) => {
-      setTimeout(() => {
-        this._runVerifyQueue().finally(() => {
-          this._verifyLock = null;
-          resolve();
-          if (this._verifyQueue.length > 0 && this.isReady) {
-            this._kickVerifyQueue();
-          }
-        });
-      }, SKILLBRIDGE_DELAYS.VERIFY_QUEUE);
-    });
-  }
-
-  async _runVerifyQueue() {
-    if (!this.isReady) {
-      await new Promise((r) => setTimeout(r, SKILLBRIDGE_DELAYS.VERIFY_QUEUE_RETRY));
-      if (!this.isReady) return;
-    }
-
-    while (this._verifyQueue.length > 0) {
-      const batch = this._verifyQueue.splice(0, SKILLBRIDGE_THRESHOLDS.GEMINI_BATCH_SIZE);
-      // Filter stale items (user switched language while we were waiting).
-      const fresh = batch.filter((item) => item._gen === this._langGeneration);
-      if (fresh.length > 0) {
-        await Promise.all(fresh.map((item) => this._verifySingle(item)));
-      }
-      if (this._verifyQueue.length > 0) {
-        await new Promise((r) => setTimeout(r, SKILLBRIDGE_DELAYS.GEMINI_BATCH));
-      }
-    }
-  }
-
-  _buildVerifyPrompt(original, googleTranslation, targetLang) {
-    const langName = this.supportedLanguages[targetLang] || targetLang;
-    return `You are a translation quality reviewer for technical education content (Anthropic AI courses).
-
-ORIGINAL (English):
-${original}
-
-GOOGLE TRANSLATE (${langName}):
-${googleTranslation}
-
-TASK: Review the Google Translate output. If it is accurate and natural-sounding, reply with EXACTLY "OK". If it needs improvement, provide ONLY the corrected translation (no explanations, no "OK", just the improved text).
-
-RULES:
-- Keep technical terms (API, SDK, Claude, Anthropic, AI Fluency, 4Ds) in English
-- Ensure natural ${langName} grammar and phrasing
-- Fix any awkward literal translations
-- Preserve the original meaning precisely`;
-  }
-
-  async _keepGoogleTranslation(original, googleTranslation, targetLang) {
-    const safeGoogleTranslation = this._restoreProtectedTerms(googleTranslation);
-    await this._cacheTranslation(original, safeGoogleTranslation, targetLang);
-    this._notifyUpdate(original, safeGoogleTranslation, targetLang, false);
-  }
-
-  _isVerifyOkReply(trimResult) {
-    // The model is asked to reply EXACTLY "OK", but LLMs routinely add
-    // trailing punctuation or quotes ("OK.", "OK!", '"OK"'). Normalize
-    // surrounding quotes/whitespace + trailing .! and case before matching.
-    const okCheck = trimResult.replace(/^["'\s]+|["'\s.!]+$/g, '').toLowerCase();
-    return okCheck === 'ok';
-  }
-
-  _isUnsafeVerifyReplacement(trimResult, original) {
-    // Verify only runs on source text >= GEMINI_MIN_TEXT (80 chars), so a
-    // result that is empty or far shorter than the source is not a translation;
-    // the upper bound + prompt-echo markers catch returned explanations.
-    const tooShort = trimResult.length < Math.max(15, original.length * 0.25);
-    return (
-      !trimResult ||
-      tooShort ||
-      trimResult.length > original.length * 5 ||
-      trimResult.includes('ORIGINAL') ||
-      trimResult.includes('GOOGLE TRANSLATE')
-    );
-  }
-
-  async _applyVerifyResult(original, googleTranslation, targetLang, result) {
-    // Empty/absent result — the verify was skipped (the signed-out background
-    // path replies result:'') or the model returned nothing. Keep the Google
-    // translation and notify so the verify spinner is cleared.
-    if (!result) {
-      await this._keepGoogleTranslation(original, googleTranslation, targetLang);
-      return;
-    }
-
-    const trimResult = result.trim();
-    if (this._isVerifyOkReply(trimResult) || this._isUnsafeVerifyReplacement(trimResult, original)) {
-      await this._keepGoogleTranslation(original, googleTranslation, targetLang);
-      return;
-    }
-
-    const safeTrimResult = this._restoreProtectedTerms(trimResult);
-    await this._cacheTranslation(original, safeTrimResult, targetLang);
-    this._notifyUpdate(original, safeTrimResult, targetLang, true);
-  }
-
-  async _verifySingle({ original, googleTranslation, targetLang, _gen }) {
-    // Re-check generation after the await fence — the user can switch
-    // language while we're inside Gemini, and writing the result then would
-    // place stale-language text into a now-current page.
-    if (_gen !== undefined && _gen !== this._langGeneration) return;
-    try {
-      const prompt = this._buildVerifyPrompt(original, googleTranslation, targetLang);
-
-      const result = await this._sendRequest({
-        type: 'VERIFY_REQUEST',
-        systemPrompt: prompt,
-        model: SKILLBRIDGE_MODELS.GEMINI,
-      });
-
-      // Bridge round-trip can take seconds; re-check before writing result.
-      if (_gen !== undefined && _gen !== this._langGeneration) return;
-
-      await this._applyVerifyResult(original, googleTranslation, targetLang, result);
-    } catch (err) {
-      console.warn(`[SkillBridge] Gemini verify failed for "${original.substring(0, 30)}...":`, err.message);
-      await this._keepGoogleTranslation(original, googleTranslation, targetLang);
-    }
-  }
-
-  /**
-   * Notify all registered update callbacks.
-   */
-  _notifyUpdate(original, translation, targetLang, wasImproved) {
-    for (const cb of this._onUpdateCallbacks) {
-      try {
-        cb(original, translation, targetLang, wasImproved);
-      } catch (e) {
-        console.warn('[SkillBridge] Update callback error:', e);
-      }
-    }
-  }
-
   // ==================== MAIN TRANSLATE API ====================
 
   /**
-   * Translate text. Priority: static dict -> cache -> Google Translate + Gemini verify.
+   * Translate text. Priority: static dict -> cache -> Google Translate.
    * @param {string} text — English source text
    * @param {string} targetLang — ISO 639-1
    * @returns {Promise<{text: string, source: 'static'|'cache'|'google'|'original'}>}
@@ -643,7 +427,7 @@ RULES:
     const staticResult = this.staticLookup(text);
     if (staticResult) return { text: this._restoreProtectedTerms(staticResult), source: 'static' };
 
-    // 2. IndexedDB cache of Gemini-verified translations (instant)
+    // 2. IndexedDB translation cache (instant)
     const cached = await this.cachedLookup(text, targetLang);
     if (cached) return { text: cached, source: 'cache' };
 
@@ -651,8 +435,7 @@ RULES:
     const gtResult = await this.googleTranslate(text, targetLang);
     if (gtResult) {
       const safeGtResult = this._restoreProtectedTerms(gtResult);
-      // Queue background Gemini verification
-      this.queueGeminiVerify(text, safeGtResult, targetLang);
+      await this._cacheTranslation(text, safeGtResult, targetLang);
       return { text: safeGtResult, source: 'google' };
     }
 
@@ -670,6 +453,87 @@ RULES:
    * @param {{isExamPage?: boolean}} [opts={}]
    * @returns {Promise<string>} complete response text
    */
+  // Selected tutor engine: 'cloud' (default) | 'local' | 'off'.
+  async _getAiEngine() {
+    // The engine preference is a privacy gate: 'local' and 'off' promise the
+    // user that no prompt leaves this machine. If the chrome.storage read
+    // stalls or fails, fail CLOSED — reject so the sidebar shows a retryable
+    // error — rather than defaulting into the cloud path, which would ship
+    // the prompt plus lesson context to Puter against the stored preference.
+    const read = chrome.storage.local.get('sb_ai_engine');
+    const timeout = new Promise((_resolve, reject) =>
+      setTimeout(() => reject(new Error('Tutor engine preference read timed out')), 1500),
+    );
+    const result = await Promise.race([read, timeout]);
+    return result?.sb_ai_engine || 'cloud';
+  }
+
+  // Stream a tutor reply from a local OpenAI-compatible server (Ollama, …).
+  // The service worker does the localhost fetch and relays tokens over a Port;
+  // this mirrors the cloud chatStream contract: onChunk(delta, fullText),
+  // resolves with the full text, honors opts.signal.
+  async _localChatStream(prompt, onChunk, opts = {}) {
+    const { sb_local_base, sb_local_model } = await chrome.storage.local.get(['sb_local_base', 'sb_local_model']);
+    return new Promise((resolve, reject) => {
+      let port;
+      try {
+        port = chrome.runtime.connect({ name: 'sb-local-chat' });
+      } catch (err) {
+        reject(new Error(`Local AI engine unavailable: ${err.message}`));
+        return;
+      }
+      let fullText = '';
+      let settled = false;
+      // Without a watchdog a local server that accepts the connection but
+      // never answers (cold-load stall, OOM) left the sidebar spinner running
+      // forever with the send button disabled. Two windows: a generous one
+      // for the first token (cold model load) and the shared cloud idle
+      // timeout between tokens once generation is flowing.
+      let watchdog = null;
+      const armWatchdog = (ms) => {
+        if (watchdog) clearTimeout(watchdog);
+        watchdog = setTimeout(() => finish(reject, new Error('Local AI stream timed out')), ms);
+      };
+      const finish = (fn, arg) => {
+        if (settled) return;
+        settled = true;
+        if (watchdog) clearTimeout(watchdog);
+        opts.signal?.removeEventListener('abort', onAbort);
+        try {
+          port.disconnect();
+        } catch {
+          /* already gone */
+        }
+        fn(arg);
+      };
+      const onAbort = () => finish(reject, new DOMException('Aborted', 'AbortError'));
+      port.onMessage.addListener((msg) => {
+        if (settled || !msg) return;
+        if (msg.type === 'chunk') {
+          armWatchdog(SKILLBRIDGE_THRESHOLDS.CHAT_STREAM_TIMEOUT);
+          fullText += msg.delta;
+          onChunk?.(msg.delta, fullText);
+        } else if (msg.type === 'done') {
+          finish(resolve, fullText || 'No response');
+        } else if (msg.type === 'error') {
+          finish(reject, new Error(msg.error || 'Local AI error'));
+        }
+      });
+      port.onDisconnect.addListener(() => finish(reject, new Error('Local AI connection closed')));
+      if (opts.signal) {
+        if (opts.signal.aborted) return onAbort();
+        opts.signal.addEventListener('abort', onAbort, { once: true });
+      }
+      armWatchdog(SKILLBRIDGE_THRESHOLDS.LOCAL_FIRST_TOKEN_TIMEOUT);
+      port.postMessage({
+        type: 'start',
+        messages: [{ role: 'user', content: prompt }],
+        baseUrl: sb_local_base || 'http://localhost:11434/v1',
+        model: sb_local_model || 'gemma3:4b',
+      });
+    });
+  }
+
   async chatStream(userMessage, targetLang, courseContext = '', onChunk, opts = {}) {
     try {
       const langName = this.supportedLanguages[targetLang] || 'English';
@@ -692,13 +556,21 @@ ${courseContext ? `Current course context: ${courseContext}` : ''}
 
 User: ${userMessage}`;
 
-      if (!this.isReady) {
-        throw new Error('Bridge not ready');
-      }
+      // Route to the selected AI engine (settings, chrome.storage.local):
+      // 'cloud' (default) = Claude via the Puter bridge; 'local' = an
+      // OpenAI-compatible server (Ollama) proxied by the service worker;
+      // 'off' = no tutor.
+      const engine = await this._getAiEngine();
+      if (engine === 'off') throw new Error('AI tutor is turned off in settings.');
+      if (engine === 'local') return this._localChatStream(prompt, onChunk, opts);
+
+      if (!this.isReady || !this._cloudPort) await this._ensureCloudBroker();
+      if (!this.isReady || !this._cloudPort) throw new Error('Bridge not ready');
 
       return new Promise((resolve, reject) => {
         const id = crypto.randomUUID();
         let fullText = '';
+        let settled = false;
 
         // Honor an AbortSignal so callers can cancel the stream when the
         // user navigates away / closes the sidebar / switches sub-panels.
@@ -708,79 +580,95 @@ User: ${userMessage}`;
           return reject(new DOMException('Aborted', 'AbortError'));
         }
 
-        // Fire-and-forget CHAT_ABORT to the bridge. Used by both the
-        // explicit onAbort (user-initiated) and the stream timeout —
-        // 2nd-pass audit V1 found the timeout path silently let the
-        // bridge keep pulling Puter.js tokens until natural completion.
         const _postAbort = () => {
-          window.postMessage(
-            {
-              __skillbridge__: true,
-              __nonce__: this._bridgeNonce,
-              type: 'CHAT_ABORT',
-              id,
-            },
-            window.location.origin,
-          );
+          try {
+            this._cloudPort?.postMessage({ type: 'abort', id });
+          } catch (_e) {
+            /* broker already disconnected */
+          }
         };
 
-        const timeout = setTimeout(() => {
-          _postAbort();
-          cleanup();
-          reject(new Error('Stream timed out'));
-        }, SKILLBRIDGE_THRESHOLDS.CHAT_STREAM_TIMEOUT);
+        let watchdog = null;
+        const cloudIdleTimeout = Math.max(SKILLBRIDGE_THRESHOLDS.CHAT_STREAM_TIMEOUT, 90_000);
+        const armWatchdog = () => {
+          clearTimeout(watchdog);
+          watchdog = setTimeout(() => {
+            _postAbort();
+            finish(reject, new Error('Stream timed out'));
+          }, cloudIdleTimeout);
+        };
 
-        const handler = (event) => {
-          if (event.source !== window) return;
-          const data = event.data;
-          if (!data || !data.__skillbridge__) return;
-          if (this._bridgeNonce && data.__nonce__ !== this._bridgeNonce) return;
-          if (data.id !== id) return;
-
-          if (data.type === 'CHAT_STREAM_CHUNK') {
-            fullText += data.text;
-            if (onChunk) onChunk(data.text, fullText);
-          } else if (data.type === 'CHAT_STREAM_END') {
-            cleanup();
-            resolve(fullText || 'No response');
-          } else if (data.type === 'CHAT_RESPONSE') {
-            cleanup();
-            if (data.success === false) {
-              reject(new Error(data.error));
-            } else {
-              resolve(data.result || 'No response');
-            }
-          }
+        const finish = (fn, value) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(watchdog);
+          this._cloudPending.delete(id);
+          opts.signal?.removeEventListener('abort', onAbort);
+          fn(value);
         };
 
         const onAbort = () => {
           _postAbort();
-          cleanup();
-          reject(new DOMException('Aborted', 'AbortError'));
-        };
-
-        const cleanup = () => {
-          clearTimeout(timeout);
-          window.removeEventListener('message', handler);
-          opts.signal?.removeEventListener('abort', onAbort);
+          finish(reject, new DOMException('Aborted', 'AbortError'));
         };
 
         if (opts.signal) opts.signal.addEventListener('abort', onAbort, { once: true });
-        window.addEventListener('message', handler);
-
-        window.postMessage(
-          {
-            __skillbridge__: true,
-            __nonce__: this._bridgeNonce,
-            type: 'CHAT_REQUEST',
-            id,
-            systemPrompt: prompt,
-            userMessage,
-            model: SKILLBRIDGE_MODELS.CLAUDE,
-            stream: true,
+        this._cloudPending.set(id, {
+          chunk(text) {
+            armWatchdog();
+            fullText += text;
+            onChunk?.(text, fullText);
           },
-          window.location.origin,
-        );
+          // The broker keepalives every 20s while a request is genuinely in
+          // flight (including while its sign-in overlay is open); without this
+          // the 90s idle watchdog kills a first-run sign-in mid-popup.
+          keepalive: () => armWatchdog(),
+          done: () => finish(resolve, fullText || 'No response'),
+          error: (message) => finish(reject, new Error(message || 'Cloud AI error')),
+        });
+        armWatchdog();
+        // The isolated broker owns the sign-in card and cannot read the
+        // extension UI's language state, so ship only the resolved labels.
+        const t = (map) => map[this.currentLang] || map[targetLang] || map.en;
+        const request = {
+          type: 'start',
+          id,
+          prompt,
+          model: SKILLBRIDGE_MODELS.CLAUDE,
+          labels: {
+            title: t(ENGINE_LABELS.signInTitle),
+            body: t(ENGINE_LABELS.signInBody),
+            button: t(ENGINE_LABELS.signInButton),
+            cancel: t(ENGINE_LABELS.signInCancel),
+            error: t(ENGINE_LABELS.tutorSignInRequired),
+          },
+        };
+        const sendStart = (allowReconnect) => {
+          if (settled || opts.signal?.aborted) return;
+          try {
+            this._cloudPort.postMessage(request);
+          } catch (err) {
+            if (!allowReconnect) {
+              finish(reject, new Error(`Cloud AI connection failed: ${err.message}`));
+              return;
+            }
+            const deadPort = this._cloudPort;
+            this._cloudPort = null;
+            this.isReady = false;
+            try {
+              deadPort?.disconnect();
+            } catch (_e) {
+              /* already disconnected */
+            }
+            void this._ensureCloudBroker().then(
+              () => {
+                if (!settled && !opts.signal?.aborted) sendStart(false);
+              },
+              (connectErr) => finish(reject, new Error(`Cloud AI connection failed: ${connectErr.message}`)),
+            );
+          }
+        };
+        sendStart(true);
       });
     } catch (err) {
       // Synchronous setup failures (most importantly `!this.isReady` — the Puter
@@ -797,52 +685,26 @@ User: ${userMessage}`;
 
   // ==================== INTERNAL ====================
 
-  _setupMessageListener() {
-    window.addEventListener('message', (event) => {
-      if (event.source !== window) return;
-      const data = event.data;
-      if (!data || !data.__skillbridge__) return;
-
-      // Validate nonce on all bridge messages to prevent spoofing
-      if (this._bridgeNonce && data.__nonce__ !== this._bridgeNonce) return;
-
-      if (data.type === 'BRIDGE_READY') {
-        this.isReady = true;
-        // Process any pending verify queue now that bridge is ready
-        if (this._verifyQueue.length > 0) {
-          this._kickVerifyQueue();
-        }
-      }
-
-      if (data.type === 'BRIDGE_ERROR') {
-        console.error('[SkillBridge] Bridge error:', data.error);
-      }
-
-      if (data.type === 'TRANSLATE_RESPONSE' || data.type === 'CHAT_RESPONSE' || data.type === 'VERIFY_RESPONSE') {
-        const cb = this.pendingCallbacks.get(data.id);
-        if (cb) {
-          this.pendingCallbacks.delete(data.id);
-          cb(data);
-        }
-      }
+  _ensureCloudBroker() {
+    if (this.isReady && this._cloudPort) return Promise.resolve();
+    if (this._cloudConnectPromise) return this._cloudConnectPromise;
+    const connecting = this._connectCloudBrokerWithRetry().finally(() => {
+      if (this._cloudConnectPromise === connecting) this._cloudConnectPromise = null;
     });
+    this._cloudConnectPromise = connecting;
+    return connecting;
   }
 
-  /**
-   * Inject the page bridge, retrying on transient failure (CDN hiccup,
-   * one-shot CSP transient, network drop). Final timeout/error after the
-   * retry budget is exhausted dispatches `skillbridge:bridgeunavailable`
-   * so the banner UI shows the user what happened.
-   */
-  async _injectPageBridgeWithRetry(maxRetries = 2) {
+  async _connectCloudBrokerWithRetry(maxRetries = 2) {
     let lastErr;
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
-        await this._injectPageBridge();
+        await this._connectCloudBroker();
+        this.bridgeFailed = false;
         return;
       } catch (err) {
         lastErr = err;
-        console.warn(`[SkillBridge] Bridge inject attempt ${attempt + 1}/${maxRetries + 1} failed:`, err.message);
+        console.warn(`[SkillBridge] Cloud broker attempt ${attempt + 1}/${maxRetries + 1} failed:`, err.message);
         if (attempt < maxRetries) {
           await new Promise((r) => setTimeout(r, 500 * Math.pow(2, attempt)));
         }
@@ -853,93 +715,81 @@ User: ${userMessage}`;
     throw lastErr;
   }
 
-  _injectPageBridge() {
+  _connectCloudBroker() {
     return new Promise((resolve, reject) => {
+      const previousPort = this._cloudPort;
+      this._cloudPort = null;
+      this.isReady = false;
+      if (previousPort) {
+        try {
+          previousPort.disconnect();
+        } catch (_e) {
+          /* already disconnected */
+        }
+      }
       const timeout = setTimeout(() => {
-        // Reject so the retry wrapper can attempt re-injection. The wrapper
-        // dispatches the unavailable banner only after all retries fail.
-        reject(new Error('Bridge ready timeout'));
+        cleanupReady();
+        try {
+          port?.disconnect();
+        } catch (_e) {
+          /* already disconnected */
+        }
+        reject(new Error('Cloud broker ready timeout'));
       }, SKILLBRIDGE_THRESHOLDS.BRIDGE_READY_TIMEOUT);
-
-      const onReady = (event) => {
-        if (event.source !== window) return;
-        if (event.data?.__skillbridge__ && event.data.type === 'BRIDGE_READY') {
-          clearTimeout(timeout);
-          window.removeEventListener('message', onReady);
-          this.isReady = true;
-          resolve();
-        }
-        if (event.data?.__skillbridge__ && event.data.type === 'BRIDGE_ERROR') {
-          clearTimeout(timeout);
-          window.removeEventListener('message', onReady);
-          reject(new Error(event.data.error));
-        }
-      };
-      window.addEventListener('message', onReady);
-
-      // Generate nonce for postMessage origin validation
-      this._bridgeNonce = crypto.randomUUID();
-      const script = document.createElement('script');
-      script.id = '__skillbridge_loader__';
-      script.src = chrome.runtime.getURL('src/lib/page-bridge.js');
-      script.dataset.nonce = this._bridgeNonce;
-      script.dataset.puterUrl = chrome.runtime.getURL('src/bridge/puter.js');
-      script.onload = () => {
-        script.remove();
-      };
-      script.onerror = () => {
+      let port;
+      try {
+        // The isolated Puter content script deliberately reconnects only on a
+        // user-driven Tutor attempt. This revives its broker endpoint after an
+        // MV3 service-worker idle shutdown without creating a passive wake loop.
+        globalThis.__SKILLBRIDGE_ENSURE_PUTER_BROKER__?.();
+        port = chrome.runtime.connect({ name: 'sb-cloud-chat-client' });
+      } catch (err) {
         clearTimeout(timeout);
-        window.removeEventListener('message', onReady);
-        reject(new Error('Failed to inject page-bridge.js'));
-      };
-      (document.head || document.documentElement).appendChild(script);
-    });
-  }
-
-  _sendRequest(message) {
-    return new Promise((resolve, reject) => {
-      if (!this.isReady) {
-        reject(new Error('Bridge not ready'));
+        reject(err);
         return;
       }
-
-      const id = crypto.randomUUID();
-      message.id = id;
-      message.__skillbridge__ = true;
-      message.__nonce__ = this._bridgeNonce;
-
-      // Evict stale callbacks before adding new one
-      if (this.pendingCallbacks.size >= SKILLBRIDGE_THRESHOLDS.PENDING_CALLBACKS_MAX) {
-        const now = Date.now();
-        for (const [cbId, cb] of this.pendingCallbacks) {
-          if (cb._ts && now - cb._ts > SKILLBRIDGE_THRESHOLDS.CALLBACK_STALE_MS) {
-            this.pendingCallbacks.delete(cbId);
-          }
-        }
-        // Hard cap: drop oldest if still over limit
-        if (this.pendingCallbacks.size >= SKILLBRIDGE_THRESHOLDS.PENDING_CALLBACKS_MAX) {
-          const oldest = this.pendingCallbacks.keys().next().value;
-          this.pendingCallbacks.delete(oldest);
-        }
-      }
-
-      const timeout = setTimeout(() => {
-        this.pendingCallbacks.delete(id);
-        reject(new Error('Request timed out'));
-      }, SKILLBRIDGE_THRESHOLDS.REQUEST_TIMEOUT);
-
-      const handler = (response) => {
+      this._cloudPort = port;
+      let waiting = true;
+      const cleanupReady = () => {
+        if (!waiting) return;
+        waiting = false;
         clearTimeout(timeout);
-        if (response.success === false && response.error) {
-          reject(new Error(response.error));
-        } else {
-          resolve(response.result);
-        }
       };
-      handler._ts = Date.now();
-      this.pendingCallbacks.set(id, handler);
-
-      window.postMessage(message, window.location.origin);
+      port.onMessage.addListener((msg) => {
+        if (!msg || this._cloudPort !== port) return;
+        if (msg.type === 'ready') {
+          cleanupReady();
+          this.isReady = true;
+          resolve();
+          return;
+        }
+        if (msg.type === 'unavailable') {
+          this.isReady = false;
+          for (const pending of this._cloudPending.values()) pending.error('Puter broker unavailable');
+          this._cloudPending.clear();
+          return;
+        }
+        if (typeof msg.id !== 'string') return;
+        const pending = this._cloudPending.get(msg.id);
+        if (!pending) return;
+        if (msg.type === 'chunk' && typeof msg.text === 'string') pending.chunk(msg.text);
+        else if (msg.type === 'keepalive') pending.keepalive?.();
+        else if (msg.type === 'done') {
+          pending.done();
+        } else if (msg.type === 'error') {
+          pending.error(msg.error);
+        }
+      });
+      port.onDisconnect.addListener(() => {
+        if (this._cloudPort !== port) return;
+        const wasWaiting = waiting;
+        cleanupReady();
+        this._cloudPort = null;
+        this.isReady = false;
+        for (const pending of this._cloudPending.values()) pending.error('Cloud AI connection closed');
+        this._cloudPending.clear();
+        if (wasWaiting) reject(new Error('Cloud broker connection closed'));
+      });
     });
   }
 }

@@ -1,7 +1,7 @@
 /**
  * Unit tests for background.js pure functions.
  *
- * Tests: gtLangCode, parseGTResponse, isYouTubeUrl, isAllowedFetchUrl, isNewerVersion
+ * Tests: gtLangCode, parseGTResponse, isNewerVersion
  */
 
 /* global describe, test, expect, beforeEach, afterEach, jest */
@@ -25,24 +25,34 @@ global.chrome.runtime.onMessage = { addListener: (fn) => runtimeMessageListeners
 const sharedSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'shared', 'runtime-constants.js'), 'utf8');
 const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'background', 'background.js'), 'utf8');
 const originalSetTimeout = setTimeout;
+const originalClearTimeout = clearTimeout;
 let timerDelegate = (...args) => originalSetTimeout(...args);
+let clearTimerDelegate = (...args) => originalClearTimeout(...args);
 
 // Extract pure functions via eval
 const fns = new Function(
   'setTimer',
+  'clearTimer',
   `
   const setTimeout = (...args) => setTimer(...args);
+	  const clearTimeout = (...args) => clearTimer(...args);
 	  ${sharedSrc}
 	  ${src}
-  return { gtLangCode, parseGTResponse, isYouTubeUrl, isAllowedFetchUrl, isNewerVersion, _rateLimiter, fetchWithRetry, registerAlarms, _gtFetchDedup, _inflightGT, _gtKey };
+  return {
+    gtLangCode, parseGTResponse, isNewerVersion, _rateLimiter, fetchWithRetry,
+    registerAlarms, _gtFetchDedup, _inflightGT, _gtKey,
+    _isPuterBrokerPort, _isAllowedCloudClient, _registerCloudBroker, _registerCloudClient,
+    _cloudBrokers, _cloudClients, _cloudActive,
+  };
 `,
-)((...args) => timerDelegate(...args));
+)(
+  (...args) => timerDelegate(...args),
+  (...args) => clearTimerDelegate(...args),
+);
 
 const {
   gtLangCode,
   parseGTResponse,
-  isYouTubeUrl,
-  isAllowedFetchUrl,
   isNewerVersion,
   _rateLimiter,
   fetchWithRetry,
@@ -50,6 +60,13 @@ const {
   _gtFetchDedup,
   _inflightGT,
   _gtKey,
+  _isPuterBrokerPort,
+  _isAllowedCloudClient,
+  _registerCloudBroker,
+  _registerCloudClient,
+  _cloudBrokers,
+  _cloudClients,
+  _cloudActive,
 } = fns;
 
 // ── Tests ──────────────────────────────────────────────────────
@@ -256,6 +273,7 @@ describe('_gtFetchDedup — in-flight dedup', () => {
   test('TTL forces map entry deletion if fetch never settles', async () => {
     jest.useFakeTimers();
     timerDelegate = (...args) => setTimeout(...args);
+    clearTimerDelegate = (...args) => clearTimeout(...args);
     try {
       // fetch returns a promise that never resolves — simulates a hung
       // upstream. Without the TTL, _inflightGT.has(key) would return
@@ -271,56 +289,9 @@ describe('_gtFetchDedup — in-flight dedup', () => {
       expect(_inflightGT.has(_gtKey('hung-key', 'ko', 'en'))).toBe(false);
     } finally {
       timerDelegate = (...args) => originalSetTimeout(...args);
+      clearTimerDelegate = (...args) => originalClearTimeout(...args);
       jest.useRealTimers();
     }
-  });
-});
-
-describe('isYouTubeUrl', () => {
-  test('accepts www.youtube.com', () => {
-    expect(isYouTubeUrl('https://www.youtube.com/watch?v=abc')).toBe(true);
-  });
-
-  test('accepts subdomains of youtube.com', () => {
-    expect(isYouTubeUrl('https://m.youtube.com/watch?v=abc')).toBe(true);
-  });
-
-  test('rejects non-YouTube URLs', () => {
-    expect(isYouTubeUrl('https://www.google.com')).toBe(false);
-  });
-
-  test('rejects invalid URLs', () => {
-    expect(isYouTubeUrl('not-a-url')).toBe(false);
-  });
-
-  test('rejects spoofed hostnames', () => {
-    expect(isYouTubeUrl('https://fake-youtube.com/embed')).toBe(false);
-  });
-});
-
-describe('isAllowedFetchUrl', () => {
-  test('allows www.youtube.com', () => {
-    expect(isAllowedFetchUrl('https://www.youtube.com/watch?v=test')).toBe(true);
-  });
-
-  test('allows translate.googleapis.com', () => {
-    expect(isAllowedFetchUrl('https://translate.googleapis.com/translate?q=test')).toBe(true);
-  });
-
-  test('allows m.youtube.com', () => {
-    expect(isAllowedFetchUrl('https://m.youtube.com/embed/abc')).toBe(true);
-  });
-
-  test('rejects arbitrary domains', () => {
-    expect(isAllowedFetchUrl('https://evil.com')).toBe(false);
-  });
-
-  test('rejects invalid URLs', () => {
-    expect(isAllowedFetchUrl('not-a-url')).toBe(false);
-  });
-
-  test('rejects spoofed subdomains', () => {
-    expect(isAllowedFetchUrl('https://fake-youtube.com/embed')).toBe(false);
   });
 });
 
@@ -527,5 +498,241 @@ describe('runtime message dispatch — GOOGLE_TRANSLATE rate-limit path', () => 
 
     expect(keepAlive).toBeUndefined();
     expect(sendResponse).not.toHaveBeenCalled();
+  });
+});
+
+// Review finding: lesson text was sent in the Google Translate URL's `q=`
+// query string. CWS guidance is to keep user data out of URLs, and since v4
+// sends whole HTML blocks the query also overruns practical URL length
+// limits. Verified live 2026-07-27 that the endpoint accepts POST with a
+// form-encoded `q` and returns the identical response shape.
+describe('Google Translate request shape', () => {
+  let originalFetch;
+  beforeEach(() => {
+    originalFetch = global.fetch;
+    _inflightGT.clear();
+  });
+  afterEach(() => {
+    global.fetch = originalFetch;
+    _inflightGT.clear();
+  });
+
+  test('sends the text in the POST body, never in the URL', async () => {
+    let seen = null;
+    global.fetch = jest.fn((url, opts) => {
+      seen = { url, opts };
+      return Promise.resolve({ ok: true, json: async () => [[['t', 's']]] });
+    });
+
+    const secret = 'Lesson body with <a href="/private/path">a link</a>';
+    await _gtFetchDedup(secret, 'ko', 'en');
+
+    expect(seen.opts.method).toBe('POST');
+    expect(seen.opts.headers['Content-Type']).toMatch(/application\/x-www-form-urlencoded/);
+    // The URL keeps only the non-sensitive routing parameters.
+    expect(seen.url).not.toContain('q=');
+    expect(seen.url).not.toContain('private');
+    expect(seen.url).toContain('client=gtx');
+    expect(seen.url).toContain('tl=ko');
+    // ...and the text travels in the body, correctly encoded.
+    expect(new URLSearchParams(seen.opts.body).get('q')).toBe(secret);
+  });
+
+  test('a multi-kB HTML block that would overrun a URL is still sent whole', async () => {
+    let body = null;
+    global.fetch = jest.fn((_url, opts) => {
+      body = opts.body;
+      return Promise.resolve({ ok: true, json: async () => [[['t', 's']]] });
+    });
+
+    const block = '<p>See <a href="/docs">the documentation</a> for details.</p> '.repeat(60);
+    expect(block.length).toBeGreaterThan(3000);
+    await _gtFetchDedup(block, 'ko', 'en');
+
+    expect(new URLSearchParams(body).get('q')).toBe(block);
+  });
+});
+
+function brokerPort({
+  name,
+  url,
+  tabId = 7,
+  frameId = 0,
+  id = 'test',
+  documentId = `document-${tabId}`,
+  documentLifecycle = 'active',
+}) {
+  const messageListeners = [];
+  const disconnectListeners = [];
+  const port = {
+    name,
+    sender: { id, url, frameId, documentId, documentLifecycle, tab: { id: tabId, url } },
+    posted: [],
+    disconnected: false,
+    postMessage: jest.fn((msg) => port.posted.push(msg)),
+    disconnect: jest.fn(() => {
+      port.disconnected = true;
+      disconnectListeners.forEach((fn) => fn());
+    }),
+    onMessage: { addListener: (fn) => messageListeners.push(fn) },
+    onDisconnect: { addListener: (fn) => disconnectListeners.push(fn) },
+    emitMessage: (msg) => messageListeners.forEach((fn) => fn(msg)),
+  };
+  return port;
+}
+
+describe('isolated cloud broker replacement', () => {
+  beforeEach(() => {
+    _cloudBrokers.clear();
+    _cloudClients.clear();
+    _cloudActive.clear();
+  });
+
+  test('aborts and deterministically fails active requests before replacing a broker', () => {
+    const client = brokerPort({
+      name: 'sb-cloud-chat-client',
+      url: 'https://anthropic.skilljar.com/lesson',
+    });
+    const firstFrame = brokerPort({
+      name: 'sb-puter-content',
+      url: 'https://anthropic.skilljar.com/lesson',
+    });
+    _registerCloudClient(client);
+    _registerCloudBroker(firstFrame);
+    firstFrame.emitMessage({ type: 'ready' });
+    client.emitMessage({ type: 'start', id: 'active', prompt: 'hello', model: 'claude-sonnet-4-6' });
+    expect(_cloudActive.size).toBe(1);
+    const clientMessagesBeforeHeartbeat = client.posted.length;
+    // A keepalive on an actually active request is relayed so the client can
+    // rearm its idle watchdog through a long sign-in; a stale/forged id is
+    // dropped and never reaches any client.
+    firstFrame.emitMessage({ type: 'keepalive', id: 'active' });
+    firstFrame.emitMessage({ type: 'keepalive', id: 'stale-id' });
+    expect(_cloudActive.size).toBe(1);
+    expect(client.posted).toHaveLength(clientMessagesBeforeHeartbeat + 1);
+    expect(client.posted).toContainEqual({ type: 'keepalive', id: 'active' });
+    expect(client.posted).not.toContainEqual({ type: 'keepalive', id: 'stale-id' });
+
+    const replacement = brokerPort({
+      name: 'sb-puter-content',
+      url: 'https://anthropic.skilljar.com/lesson',
+    });
+    _registerCloudBroker(replacement);
+
+    expect(firstFrame.posted).toContainEqual({ type: 'abort', id: 'active' });
+    expect(firstFrame.disconnected).toBe(true);
+    expect(_cloudActive.size).toBe(0);
+    expect(client.posted).toContainEqual({ type: 'error', id: 'active', error: 'Puter broker replaced' });
+    expect(_cloudBrokers.get(7)?.port).toBe(replacement);
+    expect(client.posted).not.toContainEqual({ type: 'unavailable' });
+  });
+
+  test('accepts only the exact trusted top-frame content broker', () => {
+    const trusted = brokerPort({
+      name: 'sb-puter-content',
+      url: 'https://anthropic.skilljar.com/course',
+    });
+    const tenant = brokerPort({ name: 'sb-puter-content', url: 'https://other.skilljar.com/course' });
+    const subframe = brokerPort({
+      name: 'sb-puter-content',
+      url: 'https://anthropic.skilljar.com/course',
+      frameId: 2,
+    });
+    const wrongExtension = brokerPort({
+      name: 'sb-puter-content',
+      url: 'https://anthropic.skilljar.com/course',
+      id: 'attacker-extension',
+    });
+    const wrongProtocol = brokerPort({
+      name: 'sb-puter-content',
+      url: 'http://anthropic.skilljar.com/course',
+    });
+    const prerender = brokerPort({
+      name: 'sb-puter-content',
+      url: 'https://anthropic.skilljar.com/course',
+      documentLifecycle: 'prerender',
+    });
+    const missingDocument = brokerPort({
+      name: 'sb-puter-content',
+      url: 'https://anthropic.skilljar.com/course',
+      documentId: null,
+    });
+
+    expect(_isPuterBrokerPort(trusted)).toBe(true);
+    expect(_isPuterBrokerPort(tenant)).toBe(false);
+    expect(_isPuterBrokerPort(subframe)).toBe(false);
+    expect(_isPuterBrokerPort(wrongExtension)).toBe(false);
+    expect(_isPuterBrokerPort(wrongProtocol)).toBe(false);
+    expect(_isPuterBrokerPort(prerender)).toBe(false);
+    expect(_isPuterBrokerPort(missingDocument)).toBe(false);
+  });
+
+  test('accepts only exact active top-frame clients and pairs the same document', () => {
+    const broker = brokerPort({
+      name: 'sb-puter-content',
+      url: 'https://anthropic.skilljar.com/course',
+      documentId: 'broker-document',
+    });
+    const matching = brokerPort({
+      name: 'sb-cloud-chat-client',
+      url: 'https://anthropic.skilljar.com/course',
+      documentId: 'broker-document',
+    });
+    const stale = brokerPort({
+      name: 'sb-cloud-chat-client',
+      url: 'https://anthropic.skilljar.com/course',
+      documentId: 'old-document',
+    });
+    const prerender = brokerPort({
+      name: 'sb-cloud-chat-client',
+      url: 'https://anthropic.skilljar.com/course',
+      documentLifecycle: 'prerender',
+    });
+    const tenant = brokerPort({
+      name: 'sb-cloud-chat-client',
+      url: 'https://other.skilljar.com/course',
+    });
+    const wrongExtension = brokerPort({
+      name: 'sb-cloud-chat-client',
+      url: 'https://anthropic.skilljar.com/course',
+      id: 'attacker-extension',
+    });
+    const subframe = brokerPort({
+      name: 'sb-cloud-chat-client',
+      url: 'https://anthropic.skilljar.com/course',
+      frameId: 1,
+    });
+    const wrongProtocol = brokerPort({
+      name: 'sb-cloud-chat-client',
+      url: 'http://anthropic.skilljar.com/course',
+    });
+    const missingDocument = brokerPort({
+      name: 'sb-cloud-chat-client',
+      url: 'https://anthropic.skilljar.com/course',
+      documentId: null,
+    });
+
+    expect(_isAllowedCloudClient(matching)).toBe(true);
+    expect(_isAllowedCloudClient(prerender)).toBe(false);
+    expect(_isAllowedCloudClient(tenant)).toBe(false);
+    expect(_isAllowedCloudClient(wrongExtension)).toBe(false);
+    expect(_isAllowedCloudClient(subframe)).toBe(false);
+    expect(_isAllowedCloudClient(wrongProtocol)).toBe(false);
+    expect(_isAllowedCloudClient(missingDocument)).toBe(false);
+
+    _registerCloudBroker(broker);
+    _registerCloudClient(matching);
+    _registerCloudClient(stale);
+    broker.emitMessage({ type: 'ready' });
+    expect(matching.posted).toContainEqual({ type: 'ready' });
+    expect(stale.posted).not.toContainEqual({ type: 'ready' });
+
+    stale.emitMessage({ type: 'start', id: 'stale', prompt: 'hello', model: 'claude-sonnet-4-6' });
+    expect(stale.posted).toContainEqual({
+      type: 'error',
+      id: 'stale',
+      error: 'Puter broker is not ready',
+    });
+    expect(broker.posted).not.toContainEqual(expect.objectContaining({ id: 'stale' }));
   });
 });

@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "面向 anthropic.skilljar.com 上的免费 AI 课程的多语言学习助手。翻译课程页面并通过页面内 AI 导师学习 — 无需 API 密钥。",
+    "message": "将 AI 课程翻译成 32 种语言，并使用精选术语、抽认卡、书签和本地学习工具。",
     "description": "Extension description"
   }
 }

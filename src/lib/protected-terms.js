@@ -115,8 +115,8 @@
    * @returns {string}
    */
   function restoreProtectedTerms(text) {
-    // Defensive: callers occasionally pass `null` (e.g. when a Gemini stream
-    // aborts mid-flight), and the previous implementation would throw
+    // Defensive: callers occasionally pass `null` (e.g. when a translation
+    // request aborts), and the previous implementation would throw
     // "Cannot read .includes of null" instead of returning a safe fallback.
     if (text == null) return '';
     if (typeof text !== 'string') return text;
@@ -144,7 +144,7 @@
   }
 
   /**
-   * Return the keep-English string for Gemini prompts.
+   * Return the locale's keep-English term list.
    * @returns {string}
    */
   function getKeepEnglishTerms() {

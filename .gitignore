@@ -40,3 +40,6 @@ store-assets/description.md
 # Stray files in root
 /content.css
 /skillBridge logo.png
+
+# playwright-mcp server session dumps (accidentally committed once via #217)
+.playwright-mcp/

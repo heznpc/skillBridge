@@ -85,7 +85,7 @@
       'dashboard',
       `
       <div class="si18n-history-header">
-        <button class="si18n-history-back" id="si18n-dash-back" aria-label="${sb.t(A11Y_LABELS.backToChat)}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <button class="si18n-history-back" id="si18n-dash-back" aria-label="${sb.t(A11Y_LABELS.backToSidebar)}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
         <span class="si18n-history-title">${sb.t(DASHBOARD_LABELS.title)}</span>
       </div>
       <div class="si18n-history-list" id="si18n-dash-body"></div>

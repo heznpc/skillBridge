@@ -18,17 +18,20 @@
     '.si18n-ask-tutor-btn',
   ];
 
-  const NON_AI_SURFACE_SELECTORS = [...CERTIFICATION_SURFACE_SELECTORS, '#si18n-toc-toggle', '#si18n-toc-panel'];
+  const NON_AI_CONTENT_SURFACE_SELECTORS = [
+    ...CERTIFICATION_SURFACE_SELECTORS,
+    '#si18n-toc-toggle',
+    '#si18n-toc-panel',
+  ];
 
   function removeUiHost(doc, sb) {
-    const uiHost = doc.getElementById('skillbridge-root');
-    if (uiHost) uiHost.remove();
+    doc.getElementById('skillbridge-root')?.remove();
     if (sb) sb._uiHost = null;
   }
 
   function removeSelectors(doc, selectors) {
-    for (const sel of selectors) {
-      doc.querySelectorAll(sel).forEach((el) => el.remove());
+    for (const selector of selectors) {
+      doc.querySelectorAll(selector).forEach((element) => element.remove());
     }
   }
 
@@ -39,7 +42,7 @@
 
   window._sbContentSurface = {
     CERTIFICATION_SURFACE_SELECTORS,
-    NON_AI_SURFACE_SELECTORS,
+    NON_AI_CONTENT_SURFACE_SELECTORS,
     removeContentSurfaces,
   };
 })();

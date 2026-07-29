@@ -2,11 +2,13 @@
 /**
  * SkillBridge — i18n Key Coverage Check
  *
- * Two checks:
+ * Two groups of checks:
  *   (1) `_locales/<lang>/messages.json` files all share the same key set as the
  *       English baseline. Chrome rejects an extension if `default_locale` keys
  *       are missing in other locales used at install time, and divergence
  *       silently falls back to English without warning.
+ *       The same pass enforces Chrome Web Store's 132-character limit for
+ *       `extDescription.message` in every locale.
  *   (2) The label dictionaries declared in `src/lib/constants.js`
  *       (POPUP_LABELS, A11Y_LABELS, etc.) are object-shaped and every language
  *       sub-object exposes the same key set, so nested labels never quietly
@@ -23,6 +25,7 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '..');
 const LOCALES_DIR = path.join(ROOT, '_locales');
 const CONSTANTS_FILE = path.join(ROOT, 'src', 'lib', 'constants.js');
+const EXT_DESCRIPTION_MAX_CHARS = 132;
 
 let errors = 0;
 let warnings = 0;
@@ -51,6 +54,20 @@ if (!fs.existsSync(baselinePath)) {
   const baselineKeys = new Set(Object.keys(baseline));
   const locales = fs.readdirSync(LOCALES_DIR).filter((d) => fs.statSync(path.join(LOCALES_DIR, d)).isDirectory());
 
+  function checkExtensionDescription(lang, data) {
+    const message = data.extDescription?.message;
+    if (typeof message !== 'string' || !message.trim()) {
+      log.fail(`${lang}: extDescription.message must be a non-empty string`);
+      return;
+    }
+    const chars = [...message].length;
+    if (chars > EXT_DESCRIPTION_MAX_CHARS) {
+      log.fail(`${lang}: extDescription.message is ${chars} characters (max ${EXT_DESCRIPTION_MAX_CHARS})`);
+    }
+  }
+
+  checkExtensionDescription(baselineLocale, baseline);
+
   for (const lang of locales) {
     if (lang === baselineLocale) continue;
     const file = path.join(LOCALES_DIR, lang, 'messages.json');
@@ -65,6 +82,7 @@ if (!fs.existsSync(baselinePath)) {
       log.fail(`Invalid JSON in ${lang}/messages.json: ${e.message}`);
       continue;
     }
+    checkExtensionDescription(lang, data);
     const keys = new Set(Object.keys(data));
     const missing = [...baselineKeys].filter((k) => !keys.has(k));
     const extra = [...keys].filter((k) => !baselineKeys.has(k));

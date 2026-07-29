@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "Skilljar kursları için çok dilli öğrenme asistanı. Kursları çevirin ve yapay zeka eğitmenliğiyle öğrenin — API anahtarı gerekmez.",
+    "message": "Yapay zekâ kurslarını seçilmiş terimler, bilgi kartları, yer imleri ve yerel çalışma araçlarıyla 32 dile çevirin.",
     "description": "Extension description"
   }
 }

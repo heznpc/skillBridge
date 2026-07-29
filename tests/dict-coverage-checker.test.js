@@ -169,22 +169,27 @@ describe('check-dict-coverage.js — fault injection', () => {
   test('Check 7 does NOT flag a translated term that is not protected in that locale', () => {
     // Real-data assertion (no mutation) proving Check 7 is PER-LOCALE, not a global
     // term blocklist. Precondition is asserted explicitly so the test can never go
-    // vacuous: de TRANSLATES "Skills" (claudePlatform.Skills = "Fähigkeiten") while
+    // vacuous: ru TRANSLATES "Skills" (claudePlatform.Skills = "Навыки") while
     // ja's _protected DOES register "Skills". If Check 7 were global it would flag
-    // de here; because protection is scoped to each dict's own _protected, it must
+    // ru here; because protection is scoped to each dict's own _protected, it must
     // not — and the full real-data run stays clean (exit 0).
+    //
+    // ru is the fixture locale on purpose: the 2026-07-28 pass moved the product
+    // term to English wherever the sentence means the Claude Skills product, but
+    // deliberately left ru untouched for a native reviewer, so ru is the one
+    // dictionary that still renders the product natively.
     const DATA = path.join(__dirname, '..', 'src', 'data');
-    const de = JSON.parse(fs.readFileSync(path.join(DATA, 'de.json'), 'utf8'));
+    const ru = JSON.parse(fs.readFileSync(path.join(DATA, 'ru.json'), 'utf8'));
     const ja = JSON.parse(fs.readFileSync(path.join(DATA, 'ja.json'), 'utf8'));
-    // Precondition: de translates Skills, ja protects it, de does NOT protect it.
-    expect(de.claudePlatform.Skills).not.toBe('Skills');
+    // Precondition: ru translates Skills, ja protects it, ru does NOT protect it.
+    expect(ru.claudePlatform.Skills).not.toBe('Skills');
     expect(Object.keys(ja._protected)).toContain('Skills');
-    expect(Object.keys(de._protected)).not.toContain('Skills');
+    expect(Object.keys(ru._protected)).not.toContain('Skills');
 
     const r = run({});
     expect(r.code).toBe(0);
-    // No de Skills violation surfaced (the per-locale scoping held).
-    expect(r.out).not.toMatch(/de:.*Skills.*_protected/);
+    // No ru Skills violation surfaced (the per-locale scoping held).
+    expect(r.out).not.toMatch(/ru:.*Skills.*_protected/);
   });
 
   test('_protected key divergence between languages is allowed (NOT flagged)', () => {

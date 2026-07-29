@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "ผู้ช่วยการเรียนรู้หลายภาษาสำหรับคอร์ส บน Skilljar แปลคอร์สและเรียนรู้ด้วยการสอนจาก AI — ไม่ต้องใช้คีย์ API",
+    "message": "แปลคอร์ส AI เป็น 32 ภาษา พร้อมคำศัพท์ที่คัดสรร แฟลชการ์ด บุ๊กมาร์ก และเครื่องมือเรียนในเครื่อง",
     "description": "Extension description"
   }
 }

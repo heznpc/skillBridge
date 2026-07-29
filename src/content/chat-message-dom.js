@@ -29,7 +29,7 @@
   }
 
   function appendOfflineMessage(messages) {
-    appendBotMessage(messages, sb.escapeHtml(sb.t(TUTOR_OFFLINE_LABELS)), ' role="presentation"');
+    appendBotMessage(messages, sb.escapeHtml(sb.t(TUTOR_OFFLINE_LABELS)));
     messages.lastElementChild?.querySelector('.si18n-chat-bubble')?.setAttribute('role', 'alert');
   }
 
@@ -77,6 +77,16 @@
     bubble?.classList.remove('si18n-streaming-cursor');
   }
 
+  // A failure a retry cannot fix (tutor switched off, sign-in needed, local
+  // server down): show WHY instead of the generic error + retry button, which
+  // implied a transient problem and re-sent the same doomed request.
+  function renderFinalError(bubble, message) {
+    if (!bubble) return;
+    bubble.classList.remove('si18n-streaming-cursor');
+    bubble.setAttribute('role', 'alert');
+    bubble.textContent = message;
+  }
+
   function renderRetryableError(bubble, retryLabel, onRetry) {
     if (!bubble) return;
     bubble.classList.remove('si18n-streaming-cursor');
@@ -102,6 +112,7 @@
     startStreamingBubble,
     renderStreamingText,
     finishStreamingBubble,
+    renderFinalError,
     renderRetryableError,
     appendExamWarning,
   };

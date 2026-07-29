@@ -6,7 +6,7 @@ description: >-
   material — Claude 101, Claude Code, agent skills, subagents, MCP (Model
   Context Protocol), the Claude API, extended thinking, cloud deployment
   (Bedrock / Vertex AI), or AI Fluency. Translates and explains course terms
-  correctly across 11 languages using a curated dictionary, keeps brand and
+  correctly across 12 languages using a curated dictionary, keeps brand and
   API terms untranslated, knows the Academy course catalog, and can quiz or
   flashcard the learner in their own language.
 ---
@@ -39,7 +39,7 @@ extension's canonical dictionaries — do not invent terms, read these files:
 
 - `data/index.json` — manifest: which languages and files are available.
 - `data/terms.<lang>.json` — the dictionary for one language. Languages:
-  `de`, `es`, `fr`, `it`, `ja`, `ko`, `pt-BR`, `ru`, `vi`, `zh-CN`, `zh-TW`.
+  `de`, `es`, `fr`, `id`, `it`, `ja`, `ko`, `pt-BR`, `ru`, `vi`, `zh-CN`, `zh-TW`.
   Each file has two parts:
   - `terms` — `{ "English term": "correct localized rendering" }`. ~1000
     rows per language drawn from real course material.

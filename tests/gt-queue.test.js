@@ -79,10 +79,33 @@ describe('isLikelyEnglish', () => {
   });
 });
 
-describe('inline-tag fallback routing', () => {
-  test('translation-only hosts send inline-tag items through GT instead of leaving them untranslated', () => {
-    expect(src).toContain('const useGeminiBlocks = sb.hostCaps?.bridge !== false;');
-    expect(src).toContain('const gtItems = uncached.filter((item) => !item.needsGemini || !useGeminiBlocks);');
-    expect(src).toContain('const geminiItems = useGeminiBlocks ? uncached.filter((item) => item.needsGemini) : [];');
+describe('inline routing invariants', () => {
+  test('structured blocks never take the flattening flat-GT path', () => {
+    // Structured blocks (inline tags or interactive labels) must never be
+    // flattened by safeReplaceText. They always ride the deterministic,
+    // structure-preserving HTML-GT path, even when the AI bridge is available.
+    expect(src).not.toContain('const useGeminiBlocks = sb.hostCaps?.bridge !== false;');
+    expect(src).toContain('const isStructured = (item) => item.hasInlineTags || item.hasInteractive;');
+    // flat GT path gets plain-text blocks only
+    expect(src).toContain('return uncached.filter((item) => !isStructured(item));');
+    // every structured block is routed to the HTML-GT queue, not flattened
+    expect(src).toContain('for (const item of structured) if (item.el?.parentNode) htmlQueue.push(item);');
+    expect(src).not.toContain('queueGeminiBlockTranslation');
+  });
+
+  test('HTML-GT path applies through the integrity gate + reconciliation', () => {
+    // The structure-preserving path never assigns el.innerHTML; it gates on
+    // tag/href integrity and reconciles original nodes back in.
+    expect(src).toContain('if (!htmlGt.checkTagIntegrity(el, root)) return false;');
+    expect(src).toContain('if (!htmlGt.reconcileHtml(el, root)) return false;');
+    expect(src).toContain('_restoreProtectedInTextNodes(el)');
+  });
+
+  test('interactive detection is a deep query, not a direct-children check', () => {
+    // hasInlineTags only inspects direct children, so wrapper shapes like
+    // <p><span>text <a>link</a></span></p> slip past it. The routing guard
+    // must therefore use a descendant query.
+    expect(src).toContain('el.querySelector(\'a, button, summary, [role="button"], [role="link"]\')');
+    expect(src).toContain('hasInteractive: _hasInteractiveEls(el)');
   });
 });

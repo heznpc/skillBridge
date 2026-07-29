@@ -76,6 +76,29 @@
         border-color: #e07a5f;
       }
 
+      .field input[type='text'] {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid #e7e5e4;
+        border-radius: 8px;
+        font-size: 13px;
+        background: white;
+        color: #1c1917;
+      }
+
+      .field input[type='text']:focus {
+        outline: 2px solid #e07a5f;
+        outline-offset: -2px;
+        border-color: #e07a5f;
+      }
+
+      .field-hint {
+        font-size: 11px;
+        line-height: 1.5;
+        color: #6b6560;
+        margin-top: 6px;
+      }
+
       .btn-sidebar {
         width: 100%;
         padding: 10px;
@@ -191,6 +214,29 @@
         <span id="comment-translate-label"></span>
       </label>
 
+      <div class="field" id="engine-field" style="display: none">
+        <label id="engine-label" for="engine-select"></label>
+        <select id="engine-select">
+          <option value="cloud" id="engine-opt-cloud"></option>
+          <option value="local" id="engine-opt-local"></option>
+          <option value="off" id="engine-opt-off"></option>
+        </select>
+      </div>
+
+      <div id="local-config" style="display: none">
+        <div class="field">
+          <label id="local-base-label" for="local-base-input"></label>
+          <input type="text" id="local-base-input" spellcheck="false" placeholder="http://localhost:11434/v1" />
+        </div>
+        <div class="field">
+          <label id="local-model-label" for="local-model-input"></label>
+          <input type="text" id="local-model-input" spellcheck="false" placeholder="gemma3:4b" />
+        </div>
+        <p class="field-hint" id="on-device-hint"></p>
+        <p class="field-hint" id="hardware-hint"></p>
+        <p class="field-hint" id="local-status" role="status" aria-live="polite"></p>
+      </div>
+
       <div id="status" class="status"></div>
     </div>
 
@@ -216,7 +262,9 @@
     <div class="footer" id="footer"></div>
 
     <script src="../lib/browser-polyfill.js"></script>
+    <script src="../shared/build-config.js"></script>
     <script src="../shared/runtime-constants.js"></script>
+    <script src="../lib/selectors.js"></script>
     <script src="../lib/constants.js"></script>
     <script src="popup.js"></script>
   </body>
