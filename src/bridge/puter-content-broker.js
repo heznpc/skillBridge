@@ -431,7 +431,8 @@
         authRetried = true;
         clearTimeout(session.watchdog);
         await clearAuth();
-        if (!(await requestSignInFor(request.id, request.labels)) || session.cancelled) throw new Error(SAFE_AUTH_ERROR);
+        if (!(await requestSignInFor(request.id, request.labels)) || session.cancelled)
+          throw new Error(SAFE_AUTH_ERROR);
         session.arm();
         response = await callChat(request.prompt, model, session);
       }
