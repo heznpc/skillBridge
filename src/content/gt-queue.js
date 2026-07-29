@@ -480,7 +480,11 @@
     const htmlGt = window._sbHtmlGt;
     if (!domSafe || !htmlGt) return false;
     const clean = domSafe.sanitizeInlineHtml(translatedHtml);
-    const container = document.createElement(el.tagName);
+    // Parse into an INERT document: innerHTML on a live-document element
+    // fetches image sources at parse time, before checkTagIntegrity can
+    // reject a block whose srcs a hostile GT response rewrote. Nodes that
+    // pass the gate are adopted into the live document by reconcileHtml.
+    const container = document.implementation.createHTMLDocument('').createElement(el.tagName);
     container.innerHTML = clean;
     let root = container;
     if (container.children.length === 1 && container.firstElementChild.tagName === el.tagName) {

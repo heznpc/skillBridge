@@ -506,6 +506,28 @@ describe('Puter isolated-world content broker', () => {
     await flushUntil(() => broker.posted.some((message) => message.type === 'error'));
   });
 
+  test('aborting one request keeps the shared sign-in overlay open for a concurrent waiter', async () => {
+    const broker = bootBroker();
+    await flushUntil(() => broker.posted.some((message) => message.type === 'ready'));
+    broker.listeners.message[0]({ type: 'start', id: 'first', prompt: 'question' });
+    broker.listeners.message[0]({ type: 'start', id: 'second', prompt: 'question' });
+    await flushUntil(() => broker.posted.some((message) => message.type === 'auth-ui' && message.visible));
+    const host = broker.isolatedGlobal.document.created.find((node) =>
+      node.attributes.has('data-skillbridge-puter-auth'),
+    );
+    expect(host.attributes.has('data-open')).toBe(true);
+
+    // One session cancelling must not yank the overlay from the other waiter.
+    broker.listeners.message[0]({ type: 'abort', id: 'first' });
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(host.attributes.has('data-open')).toBe(true);
+
+    // The last waiter leaving closes it.
+    broker.listeners.message[0]({ type: 'abort', id: 'second' });
+    await flushUntil(() => !host.attributes.has('data-open'));
+  });
+
   test('returns the upstream iterator on abort and stops without done', async () => {
     let resolveNext;
     const upstreamReturn = jest.fn(async () => {

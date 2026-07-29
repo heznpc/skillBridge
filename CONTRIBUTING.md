@@ -438,7 +438,7 @@ exactly what executes.
 - **Why static dictionaries?** For the 1,100+ most critical AI/ML terms, human-curated translations are simply better than any MT engine. These are the terms that matter most for comprehension.
 - **Why bundle the Puter SDK?** It is how the AI Tutor reaches Claude without SkillBridge running a backend or asking for an API key — the user signs in to Puter (free) and their own quota is used. It ships inside the package; no remote script tag is added.
 - **Why a local engine option?** Some users would rather not send tutor questions to any cloud. Pointing the Tutor at an OpenAI-compatible server they run themselves (e.g. Ollama) keeps that text on their machine; the service worker proxies it because a page context cannot reach `localhost`.
-- **Why separate build outputs?** `npm run build:bundle:zip` produces the only CWS-safe ZIP. `npm run build:developer:zip` is an explicit raw-source artifact and must never be uploaded to CWS; `npm run build:zip` aliases the safe bundled command.
+- **Why separate build outputs?** `npm run build:bundle:zip` produces the only CWS-safe ZIP. `npm run build:developer:zip` is an explicit raw-source artifact and must never be uploaded to CWS; `npm run build:zip` aliases the safe bundled command. **Security caveat:** the developer zip (and any unpacked load of the repo root) runs the *raw* Puter SDK — the storage/query-param/profile-lookup hardening is applied at build time by `scripts/build-bundle.js`, so it only exists in `dist/` artifacts. Treat unpacked dev loads as unhardened and never use them with a real Puter account you care about.
 
 ---
 

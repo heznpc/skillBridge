@@ -181,7 +181,9 @@ describe('sanitizer keeps the tags the integrity gate tracks', () => {
   // Mirrors _applyHtmlTranslation: sanitize, then re-wrap in a container of
   // the original tag (the inline sanitizer strips the block wrapper itself).
   function applyLikePipeline(originalEl, translatedHtml) {
-    const container = document.createElement(originalEl.tagName);
+    // Mirrors gt-queue._applyHtmlTranslation: parse into an INERT document so
+    // no image source can fetch before the integrity gate runs.
+    const container = document.implementation.createHTMLDocument('').createElement(originalEl.tagName);
     container.innerHTML = sanitizeInlineHtml(translatedHtml);
     let root = container;
     if (container.children.length === 1 && container.firstElementChild.tagName === originalEl.tagName) {
@@ -215,5 +217,21 @@ describe('sanitizer keeps the tags the integrity gate tracks', () => {
     );
     expect(out).not.toMatch(/javascript:/i);
     expect(out).not.toMatch(/onerror/i);
+  });
+
+  test('inline data:image and blob: img sources survive sanitization so the gate can match them', () => {
+    // Dropping these silently kept every block with an inline base64 image in
+    // English forever: the original kept its src, the sanitized translation
+    // lost it, and the elementKey multisets never matched again.
+    const dataSrc = 'data:image/png;base64,iVBORw0KGgo=';
+    const orig = el(`<p>See <img src="${dataSrc}"> the diagram.</p>`);
+    const rootEl = applyLikePipeline(orig, `<p>다이어그램 <img src="${dataSrc}">을 보세요.</p>`);
+    expect(checkTagIntegrity(orig, rootEl)).toBe(true);
+
+    const kept = sanitizeInlineHtml(`<img src="${dataSrc}"><img src="blob:https://a.example/x">`);
+    expect(kept).toContain('data:image/');
+    expect(kept).toContain('blob:');
+    // Non-image data: payloads stay banned.
+    expect(sanitizeInlineHtml('<img src="data:text/html,<script>1</script>">')).not.toContain('data:text');
   });
 });

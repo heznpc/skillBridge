@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-## [4.0.0] - 2026-07-24
+## [4.0.0] - 2026-07-29
 
 ### Added
 - The AI tutor is bundled again in the Chrome Web Store build (Claude Sonnet via a free Puter sign-in). It answers questions about the current lesson; no SkillBridge account is required. Reverses the no-AI boundary of the 3.5.x candidates.

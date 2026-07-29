@@ -39,6 +39,11 @@
     error: 'Sign-in did not complete. Please try again.',
   });
   const active = new Map();
+  // Session ids currently awaiting the shared sign-in overlay. Only the last
+  // waiter may close the overlay on cancel; without this, aborting one
+  // request (e.g. a sub-panel switch) yanked the overlay out from under a
+  // concurrent session, which then failed with SAFE_AUTH_ERROR.
+  const authWaiters = new Set();
   const privateStorage = globalThis.__SKILLBRIDGE_PUTER_STORAGE__;
   if (!privateStorage || globalThis.localStorage !== privateStorage) {
     throw new Error('SkillBridge private Puter storage is unavailable');
@@ -169,6 +174,10 @@
     authUi.go.textContent = authLabels.button;
     authUi.cancel.textContent = authLabels.cancel;
   };
+  // `auth-ui` / `auth-failed` are deliberately id-less local signals: the
+  // background relay drops them, and the overlay itself is the user-facing
+  // surface. They exist so the broker runtime tests (and future diagnostics)
+  // can observe overlay state on the Port without a DOM harness.
   const showAuth = (visible) => {
     if (authUi?.host) {
       if (visible) authUi.host.setAttribute?.('data-open', '');
@@ -253,6 +262,15 @@
     };
     const gated = globalThis.__SKILLBRIDGE_WITH_PUTER_MESSAGE_GATE__;
     return typeof gated === 'function' ? gated(start) : start();
+  }
+
+  async function requestSignInFor(sessionId, labels) {
+    authWaiters.add(sessionId);
+    try {
+      return await requestSignIn(labels);
+    } finally {
+      authWaiters.delete(sessionId);
+    }
   }
 
   function requestSignIn(labels) {
@@ -357,7 +375,8 @@
         /* best-effort upstream cancellation */
       }
       if (reason) send({ type: 'error', id: this.id, error: reason });
-      cancelAuthGate?.();
+      authWaiters.delete(this.id);
+      if (authWaiters.size === 0) cancelAuthGate?.();
     }
     finish() {
       clearTimeout(this.watchdog);
@@ -386,7 +405,7 @@
       if (!globalThis.puter?.ai?.chat) throw new Error(SAFE_CHAT_ERROR);
       applyLabels(request.labels);
       if (!isAuthed()) {
-        if (!(await requestSignIn(request.labels))) throw new Error(SAFE_AUTH_ERROR);
+        if (!(await requestSignInFor(request.id, request.labels))) throw new Error(SAFE_AUTH_ERROR);
         if (session.cancelled) return;
       }
       const model = selectModel(request.model);
@@ -399,7 +418,7 @@
           authRetried = true;
           clearTimeout(session.watchdog);
           await clearAuth();
-          if (!(await requestSignIn(request.labels)) || session.cancelled) throw err;
+          if (!(await requestSignInFor(request.id, request.labels)) || session.cancelled) throw err;
           session.arm();
           return callChat(request.prompt, model, session);
         }
@@ -412,7 +431,7 @@
         authRetried = true;
         clearTimeout(session.watchdog);
         await clearAuth();
-        if (!(await requestSignIn(request.labels)) || session.cancelled) throw new Error(SAFE_AUTH_ERROR);
+        if (!(await requestSignInFor(request.id, request.labels)) || session.cancelled) throw new Error(SAFE_AUTH_ERROR);
         session.arm();
         response = await callChat(request.prompt, model, session);
       }

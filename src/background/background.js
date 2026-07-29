@@ -414,10 +414,18 @@ function _cloudDocumentKey(port) {
   const sender = port?.sender;
   if (typeof sender?.documentId === 'string' && sender.documentId) return sender.documentId;
   // Firefox's MessageSender support has varied across releases. Keep the beta
-  // build usable with a URL-scoped fallback; the CWS/Chromium build fails
+  // build usable with an origin-scoped fallback; the CWS/Chromium build fails
   // closed unless Chrome supplies the documentId guaranteed by its minimum
-  // supported version.
-  if (_isFirefoxBuild() && typeof sender?.url === 'string' && sender.url) return `firefox:${sender.url}`;
+  // supported version. Origin, not full URL: skilljar navigates lessons with
+  // history.pushState, and a URL-keyed broker stopped matching clients that
+  // connected after such a navigation until a full reload.
+  if (_isFirefoxBuild() && typeof sender?.url === 'string' && sender.url) {
+    try {
+      return `firefox:${new URL(sender.url).origin}`;
+    } catch (_e) {
+      return null;
+    }
+  }
   return null;
 }
 

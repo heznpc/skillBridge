@@ -293,8 +293,8 @@ describe('tutor error surfacing for deterministic engine states', () => {
 
   test('the thrown strings the mapper keys on still exist in the sources', () => {
     expect(trSrc).toContain("throw new Error('AI tutor is turned off in settings.')");
-    const bridgeSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'page-bridge.js'), 'utf8');
-    expect(bridgeSrc).toContain('Puter sign-in required');
+    const brokerSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'bridge', 'puter-content-broker.js'), 'utf8');
+    expect(brokerSrc).toContain('Puter sign-in required');
     expect(bgSrc).toContain('Cannot reach local AI server');
     expect(trSrc).toContain('Local AI engine unavailable');
   });
