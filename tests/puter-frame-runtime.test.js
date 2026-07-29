@@ -208,3 +208,120 @@ describe('Puter extension-frame runtime', () => {
     expect(runtime.posted).not.toContainEqual(expect.objectContaining({ type: 'done', id: 'cold' }));
   });
 });
+
+// Regression: the cloud Tutor could never be signed into.
+//
+// Chrome scopes user activation per frame and does not propagate it into a
+// cross-origin iframe. The send button lives in the host page, so the
+// extension-origin Puter frame was never activated and the SDK's window.open
+// sign-in popup was blocked — the user saw the frame's own empty overlay flash
+// for a few seconds and the chat failed with a generic error. The sign-in must
+// therefore be started by a click INSIDE the frame.
+describe('Puter frame — in-frame sign-in gate', () => {
+  function bootFrameWithCard(chat, { authToken = null, signIn } = {}) {
+    const listeners = { message: [], disconnect: [] };
+    const posted = [];
+    const handlers = new Map();
+    const el = (id) => ({
+      id,
+      disabled: false,
+      textContent: '',
+      classList: { toggle: jest.fn() },
+      addEventListener: (type, fn) => handlers.set(`${id}:${type}`, fn),
+      removeEventListener: () => {},
+    });
+    const nodes = {
+      'sb-auth': el('sb-auth'),
+      'sb-auth-title': el('sb-auth-title'),
+      'sb-auth-body': el('sb-auth-body'),
+      'sb-auth-go': el('sb-auth-go'),
+      'sb-auth-cancel': el('sb-auth-cancel'),
+    };
+    const port = {
+      postMessage: jest.fn((m) => posted.push(m)),
+      onMessage: { addListener: (fn) => listeners.message.push(fn) },
+      onDisconnect: { addListener: (fn) => listeners.disconnect.push(fn) },
+    };
+    const puter = {
+      authToken,
+      resetAuthToken: jest.fn(() => {
+        puter.authToken = null;
+      }),
+      ai: { chat },
+      auth: { signIn: signIn || jest.fn(async () => {}) },
+    };
+    const frameGlobal = {
+      puter,
+      document: { getElementById: (id) => nodes[id] || null },
+      localStorage: { getItem: () => null, removeItem: () => {} },
+    };
+    new Function('chrome', 'globalThis', frameSrc)({ runtime: { connect: jest.fn(() => port) } }, frameGlobal);
+    return { listeners, posted, puter, nodes, click: (id) => handlers.get(`${id}:click`)?.() };
+  }
+
+  test('a signed-out request shows the card and does NOT call chat until the user clicks', async () => {
+    const chat = jest.fn(async () => streamOf('hi'));
+    const f = bootFrameWithCard(chat, { authToken: null });
+    f.listeners.message[0]({
+      type: 'start',
+      id: 'r1',
+      prompt: 'q',
+      model: 'claude-haiku-4-5',
+      labels: { title: 'T', body: 'B', button: 'Go', cancel: 'No' },
+    });
+    await new Promise((r) => setTimeout(r, 0));
+
+    // Card is painted and shown; chat has NOT been called yet.
+    expect(chat).not.toHaveBeenCalled();
+    expect(f.nodes['sb-auth-title'].textContent).toBe('T');
+    expect(f.nodes['sb-auth-go'].textContent).toBe('Go');
+    expect(f.posted.some((m) => m.type === 'auth-ui' && m.visible === true)).toBe(true);
+
+    // Unwind: a gate left open keeps the session's 20s keepalive interval
+    // alive and would hold the test runner open.
+    f.click('sb-auth-cancel');
+    await flushUntil(() => f.posted.some((m) => m.type === 'error'));
+  });
+
+  test('clicking the in-frame button runs signIn() and then the chat', async () => {
+    const chat = jest.fn(async () => streamOf('answer'));
+    const signIn = jest.fn(async function () {
+      this && null;
+    });
+    const f = bootFrameWithCard(chat, { authToken: null, signIn });
+    f.listeners.message[0]({ type: 'start', id: 'r2', prompt: 'q', model: 'claude-haiku-4-5' });
+    await new Promise((r) => setTimeout(r, 0));
+    // Simulate the real user gesture happening inside the frame.
+    f.puter.authToken = 'fresh-token';
+    f.click('sb-auth-go');
+    await flushUntil(() => f.posted.some((m) => m.type === 'done'));
+
+    expect(signIn).toHaveBeenCalledTimes(1);
+    expect(chat).toHaveBeenCalledTimes(1);
+    expect(f.posted.filter((m) => m.type === 'chunk').map((m) => m.text)).toEqual(['answer']);
+    // The card is dismissed once the stream starts.
+    expect(f.posted.some((m) => m.type === 'auth-ui' && m.visible === false)).toBe(true);
+  });
+
+  test('declining the card fails the request with the sign-in reason and never calls chat', async () => {
+    const chat = jest.fn(async () => streamOf('never'));
+    const f = bootFrameWithCard(chat, { authToken: null });
+    f.listeners.message[0]({ type: 'start', id: 'r3', prompt: 'q', model: 'claude-haiku-4-5' });
+    await new Promise((r) => setTimeout(r, 0));
+    f.click('sb-auth-cancel');
+    await flushUntil(() => f.posted.some((m) => m.type === 'error'));
+
+    expect(chat).not.toHaveBeenCalled();
+    expect(f.posted.find((m) => m.type === 'error').error).toMatch(/sign-in required/i);
+  });
+
+  test('an already-signed-in request never shows the card', async () => {
+    const chat = jest.fn(async () => streamOf('ok'));
+    const f = bootFrameWithCard(chat, { authToken: 'existing' });
+    f.listeners.message[0]({ type: 'start', id: 'r4', prompt: 'q', model: 'claude-haiku-4-5' });
+    await flushUntil(() => f.posted.some((m) => m.type === 'done'));
+
+    expect(chat).toHaveBeenCalledTimes(1);
+    expect(f.posted.some((m) => m.type === 'auth-ui' && m.visible === true)).toBe(false);
+  });
+});

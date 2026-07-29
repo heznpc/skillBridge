@@ -542,7 +542,15 @@ function _registerCloudClient(port) {
       return;
     }
     _cloudActive.set(key, port);
-    if (!_safePortPost(frame.port, { type: 'start', id: msg.id, prompt: msg.prompt, model: msg.model })) {
+    if (
+      !_safePortPost(frame.port, {
+        type: 'start',
+        id: msg.id,
+        prompt: msg.prompt,
+        model: msg.model,
+        labels: msg.labels,
+      })
+    ) {
       _cloudActive.delete(key);
       _safePortPost(port, { type: 'error', id: msg.id, error: 'Puter broker is unavailable' });
     }

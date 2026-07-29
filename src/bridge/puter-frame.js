@@ -75,6 +75,80 @@
   const isModelError = (err) =>
     /\b(model|invalid|deprecated|unsupported|not[ _-]?found|404)\b/i.test(errorText(err) || String(err));
 
+  // ---- In-frame sign-in gate -------------------------------------------
+  // Chrome scopes user activation per frame and does not propagate it into a
+  // cross-origin iframe. The host page's send button therefore cannot activate
+  // this frame, and Puter's window.open sign-in popup is blocked when the chat
+  // call tries to authenticate implicitly. So we render our own card here and
+  // start signIn() from a click that happens INSIDE this document.
+  const doc = globalThis.document || null;
+  const byId = (id) => (doc && doc.getElementById ? doc.getElementById(id) : null);
+  const authEl = {
+    root: byId('sb-auth'),
+    title: byId('sb-auth-title'),
+    body: byId('sb-auth-body'),
+    go: byId('sb-auth-go'),
+    cancel: byId('sb-auth-cancel'),
+  };
+  // True only when this document actually carries the sign-in card.
+  const hasAuthCard = () => !!(authEl.root && authEl.go && authEl.cancel);
+  let authLabels = null;
+
+  function paintAuthCard() {
+    if (!hasAuthCard() || !authLabels) return;
+    authEl.title.textContent = authLabels.title || '';
+    authEl.body.textContent = authLabels.body || '';
+    authEl.go.textContent = authLabels.button || '';
+    authEl.cancel.textContent = authLabels.cancel || '';
+  }
+
+  function showAuthCard(visible) {
+    if (authEl.root && authEl.root.classList) authEl.root.classList.toggle('sb-visible', !!visible);
+    send({ type: 'auth-ui', visible: !!visible });
+  }
+
+  // Resolves true once the user has completed sign-in, false if they declined.
+  function requestSignIn() {
+    return new Promise((resolve) => {
+      // No card in this document (non-browser harness): fall back to the SDK's
+      // own prompt by letting the chat call proceed, exactly as before.
+      if (!hasAuthCard()) {
+        send({ type: 'auth-ui', visible: true });
+        return resolve(true);
+      }
+      paintAuthCard();
+      showAuthCard(true);
+      const cleanup = () => {
+        authEl.go.removeEventListener('click', onGo);
+        authEl.cancel.removeEventListener('click', onCancel);
+        authEl.go.disabled = false;
+      };
+      const onCancel = () => {
+        cleanup();
+        showAuthCard(false);
+        resolve(false);
+      };
+      async function onGo() {
+        authEl.go.disabled = true;
+        try {
+          // This call now carries THIS frame's user activation.
+          await globalThis.puter?.auth?.signIn?.();
+          cleanup();
+          showAuthCard(false);
+          resolve(isAuthed());
+        } catch (_e) {
+          // Popup closed or sign-in cancelled — leave the card up so the user
+          // can try again rather than failing the whole chat silently.
+          authEl.go.disabled = false;
+        }
+      }
+      authEl.go.addEventListener('click', onGo);
+      authEl.cancel.addEventListener('click', onCancel);
+    });
+  }
+
+  const hideAuthCardOnCancel = () => showAuthCard(false);
+
   class Session {
     constructor(id) {
       this.id = id;
@@ -101,7 +175,7 @@
         /* best-effort upstream cancellation */
       }
       if (reason) send({ type: 'error', id: this.id, error: reason });
-      send({ type: 'auth-ui', visible: false });
+      hideAuthCardOnCancel();
     }
     finish() {
       clearTimeout(this.watchdog);
@@ -129,9 +203,17 @@
     try {
       if (!globalThis.puter?.ai?.chat) throw new Error('Puter chat unavailable');
       const model = selectModel(req.model);
+      if (req.labels && typeof req.labels === 'object') authLabels = req.labels;
+      if (!isAuthed()) {
+        // Ask first, in this frame, so the popup inherits a real user gesture.
+        const signedIn = await requestSignIn();
+        if (session.cancelled) return;
+        if (!signedIn) {
+          throw new Error('Puter sign-in required — the AI tutor needs a free Puter session.');
+        }
+      }
       const wasAuthed = isAuthed();
       let authRetried = false;
-      if (!wasAuthed) send({ type: 'auth-ui', visible: true });
       session.arm();
       const callWithAuthRecovery = async () => {
         try {
@@ -140,7 +222,7 @@
           if (session.cancelled || authRetried || !wasAuthed || !isRevoked(err)) throw err;
           authRetried = true;
           resetStaleAuth();
-          send({ type: 'auth-ui', visible: true });
+          if (!(await requestSignIn())) throw err;
           return callChat(req.prompt, model, session);
         }
       };
@@ -149,7 +231,9 @@
         if (authRetried) throw new Error(errorText(response) || 'Puter authentication failed after retry');
         authRetried = true;
         resetStaleAuth();
-        send({ type: 'auth-ui', visible: true });
+        if (!(await requestSignIn())) {
+          throw new Error('Puter sign-in required — the AI tutor needs a free Puter session.');
+        }
         response = await callChat(req.prompt, model, session);
       }
       if (isStream(response)) session.iterator = response[Symbol.asyncIterator]();
@@ -164,7 +248,7 @@
       if (!isStream(response)) {
         throw new Error(errorText(response) || 'Puter sign-in required — the AI tutor needs a free Puter session.');
       }
-      send({ type: 'auth-ui', visible: false });
+      showAuthCard(false);
       while (!session.cancelled) {
         session.arm();
         const next = await session.iterator.next();

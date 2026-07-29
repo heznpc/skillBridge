@@ -620,7 +620,22 @@ User: ${userMessage}`;
           error: (message) => finish(reject, new Error(message || 'Cloud AI error')),
         });
         armWatchdog();
-        const request = { type: 'start', id, prompt, model: SKILLBRIDGE_MODELS.CLAUDE };
+        // The sign-in card lives inside the extension frame (it needs that
+        // frame's own user activation), so it cannot read the page's language
+        // state — ship the resolved strings with the request.
+        const t = (map) => map[this.currentLang] || map[targetLang] || map.en;
+        const request = {
+          type: 'start',
+          id,
+          prompt,
+          model: SKILLBRIDGE_MODELS.CLAUDE,
+          labels: {
+            title: t(ENGINE_LABELS.signInTitle),
+            body: t(ENGINE_LABELS.signInBody),
+            button: t(ENGINE_LABELS.signInButton),
+            cancel: t(ENGINE_LABELS.signInCancel),
+          },
+        };
         const sendStart = (allowReconnect) => {
           if (settled || opts.signal?.aborted) return;
           try {
