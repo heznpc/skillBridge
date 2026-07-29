@@ -3,9 +3,8 @@
  *
  * Handles:
  * 1. Google Translate API proxy (fast initial translation)
- * 2. General CORS proxy for YouTube
- * 3. Badge management
- * 4. Periodic maintenance via Chrome Alarms (cache cleanup, version check)
+ * 2. Badge management
+ * 3. Periodic maintenance via Chrome Alarms (cache cleanup, version check)
  */
 
 try {
@@ -22,15 +21,13 @@ try {
 }
 
 const _BG_SHARED_CONSTANTS = globalThis.SB_SHARED_CONSTANTS || {};
-if (!_BG_SHARED_CONSTANTS.GT_LANG_MAP || !_BG_SHARED_CONSTANTS.YOUTUBE_CLIENT_VERSION) {
+if (!_BG_SHARED_CONSTANTS.GT_LANG_MAP) {
   console.warn('[SkillBridge BG] Shared runtime constants missing or incomplete.');
 }
 
 function gtLangCode(lang) {
   return _BG_SHARED_CONSTANTS.GT_LANG_MAP?.[lang] || lang;
 }
-
-const _BG_YT_CLIENT_VERSION = _BG_SHARED_CONSTANTS.YOUTUBE_CLIENT_VERSION;
 
 function parseGTResponse(data, fallback) {
   if (!data || !Array.isArray(data[0])) return fallback;
@@ -45,27 +42,6 @@ function parseGTResponse(data, fallback) {
     }
   }
   return translated || fallback;
-}
-
-function isYouTubeUrl(url) {
-  try {
-    const u = new URL(url);
-    return u.hostname === 'www.youtube.com' || u.hostname.endsWith('.youtube.com');
-  } catch {
-    return false;
-  }
-}
-
-// URL allowlist for FETCH_URL — only permit known trusted domains
-const _ALLOWED_FETCH_DOMAINS = ['www.youtube.com', 'youtube.com', 'm.youtube.com', 'translate.googleapis.com'];
-
-function isAllowedFetchUrl(url) {
-  try {
-    const u = new URL(url);
-    return _ALLOWED_FETCH_DOMAINS.some((d) => u.hostname === d || u.hostname.endsWith('.' + d));
-  } catch {
-    return false;
-  }
 }
 
 // ==================== RATE LIMITER ====================
@@ -124,9 +100,21 @@ function _gtFetchDedup(text, tl, sl) {
   const existing = _inflightGT.get(key);
   if (existing) return existing;
 
-  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
+  // Lesson text goes in the POST BODY, never the URL. Two reasons:
+  //   1. Chrome Web Store guidance is to keep user data out of URLs/query
+  //      strings, which end up in logs, history, and referrers.
+  //   2. Since v4 translates inline-mixed blocks as HTML, `text` can be a
+  //      whole block's markup — several kB — which overruns practical URL
+  //      length limits. Verified 2026-07-27: the same endpoint accepts POST
+  //      with a form-encoded `q` and returns the identical response shape
+  //      (checked against a 3.4 kB HTML block, tags and hrefs preserved).
+  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t`;
   const expireTimer = setTimeout(() => _inflightGT.delete(key), _GT_INFLIGHT_TTL_MS);
-  const promise = fetchWithRetry(url)
+  const promise = fetchWithRetry(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+    body: new URLSearchParams({ q: text }).toString(),
+  })
     .then((resp) => resp.json())
     .then((data) => parseGTResponse(data, text))
     .finally(() => {
@@ -279,7 +267,7 @@ chrome.runtime.onInstalled.addListener((details) => {
 // All cross-context messages use ONE of two discriminator fields:
 //
 //   { type: 'SCREAMING_SNAKE' }   — addressed to the background worker
-//                                   (FETCH_URL, GOOGLE_TRANSLATE, ...)
+//                                   (GOOGLE_TRANSLATE, ...)
 //   { action: 'camelCase' }       — addressed to a content script
 //                                   (cacheCleanup, setLanguage, toggleSidebar, ...)
 //
@@ -303,36 +291,14 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   // Verify sender is this extension
   if (sender.id !== chrome.runtime.id) return;
 
-  if (msg.type === 'FETCH_URL') {
-    if (!isAllowedFetchUrl(msg.url)) {
-      sendResponse({ ok: false, error: 'URL not in allowlist' });
-      return true;
-    }
-    const fetchOpts = {};
-    const headers = {};
-    // Support POST requests (used for InnerTube API)
-    if (msg.method === 'POST' && msg.body) {
-      fetchOpts.method = 'POST';
-      fetchOpts.body = msg.body;
-      headers['Content-Type'] = 'application/json';
-      // InnerTube API needs origin + client headers
-      if (isYouTubeUrl(msg.url) && msg.url.includes('/youtubei/')) {
-        headers['Origin'] = 'https://www.youtube.com';
-        headers['Referer'] = 'https://www.youtube.com/';
-        headers['X-Youtube-Client-Name'] = '1';
-        if (_BG_YT_CLIENT_VERSION) headers['X-Youtube-Client-Version'] = _BG_YT_CLIENT_VERSION;
-      }
-    }
-    fetchOpts.headers = headers;
-    // Route through fetchWithRetry so 5xx/429s back off, 4xx fails fast,
-    // and the abuse-pattern contract is consistent with the GT path.
-    fetchWithRetry(msg.url, fetchOpts)
-      .then((resp) => resp.text())
-      .then((text) => sendResponse({ ok: true, data: text }))
-      .catch((err) => {
-        console.error(`[SkillBridge BG] FETCH_URL error: ${err.message}`);
-        sendResponse({ ok: false, error: err.message });
-      });
+  // Local AI engine reachability probe (v4 A5.3). Content/popup can't fetch
+  // localhost cross-origin, so the SW does it and classifies the result:
+  // ok / cors (403 → OLLAMA_ORIGINS) / unreachable (server down or no
+  // host permission). GET /models is cheap and needs no model loaded.
+  if (msg.type === 'CHECK_LOCAL_ENGINE') {
+    _checkLocalEngine(msg.baseUrl)
+      .then((result) => sendResponse(result))
+      .catch((err) => sendResponse({ ok: false, status: 'unreachable', error: err.message }));
     return true;
   }
 
@@ -410,6 +376,414 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   // looks like a misrouted content-script message instead of swallowing it.
   _logMisroutedMessage(msg);
 });
+
+// ==================== CLOUD AI BROKER (isolated Puter content script) ====================
+
+const _CLOUD_MAX_PAYLOAD_CHARS = 200_000;
+const _CLOUD_ALLOWED_MODELS = new Set([
+  'claude-sonnet-4-6',
+  'claude-sonnet-4-5',
+  'claude-haiku-4-5',
+  'claude-opus-4-8',
+  'claude-opus-4-7',
+  'claude-opus-4-6',
+  'claude-opus-4-5',
+]);
+const _cloudBrokers = new Map(); // tabId -> { isolated broker port, ready }
+const _cloudClients = new Map(); // tabId -> Set<Port>
+const _cloudActive = new Map(); // `${tabId}:${id}` -> client Port
+
+function _cloudKey(tabId, id) {
+  return `${tabId}:${id}`;
+}
+
+function _safePortPost(port, msg) {
+  try {
+    port.postMessage(msg);
+    return true;
+  } catch (_e) {
+    return false;
+  }
+}
+
+function _isFirefoxBuild() {
+  return !!chrome.runtime.getManifest().browser_specific_settings?.gecko;
+}
+
+function _cloudDocumentKey(port) {
+  const sender = port?.sender;
+  if (typeof sender?.documentId === 'string' && sender.documentId) return sender.documentId;
+  // Firefox's MessageSender support has varied across releases. Keep the beta
+  // build usable with an origin-scoped fallback; the CWS/Chromium build fails
+  // closed unless Chrome supplies the documentId guaranteed by its minimum
+  // supported version. Origin, not full URL: skilljar navigates lessons with
+  // history.pushState, and a URL-keyed broker stopped matching clients that
+  // connected after such a navigation until a full reload.
+  if (_isFirefoxBuild() && typeof sender?.url === 'string' && sender.url) {
+    try {
+      return `firefox:${new URL(sender.url).origin}`;
+    } catch (_e) {
+      return null;
+    }
+  }
+  return null;
+}
+
+function _isActiveCloudDocument(port) {
+  const lifecycle = port?.sender?.documentLifecycle;
+  return lifecycle === 'active' || (_isFirefoxBuild() && lifecycle == null);
+}
+
+function _sameCloudDocument(first, second) {
+  const firstKey = _cloudDocumentKey(first);
+  return !!firstKey && firstKey === _cloudDocumentKey(second);
+}
+
+function _isPuterBrokerPort(port) {
+  if (
+    port?.sender?.id !== chrome.runtime.id ||
+    port?.sender?.frameId !== 0 ||
+    !Number.isInteger(port?.sender?.tab?.id) ||
+    !_isActiveCloudDocument(port) ||
+    !_cloudDocumentKey(port)
+  ) {
+    return false;
+  }
+  try {
+    const url = new URL(port.sender.url || '');
+    if (url.protocol === 'https:' && url.hostname === 'anthropic.skilljar.com') return true;
+    // Production never grants these patterns. The E2E harness adds them only
+    // to a temporary manifest so the actual broker can run against localhost.
+    const testHosts = chrome.runtime.getManifest().host_permissions || [];
+    return (
+      url.protocol === 'http:' &&
+      (url.hostname === 'localhost' || url.hostname === '127.0.0.1') &&
+      testHosts.some((pattern) => pattern === 'http://localhost:*/*' || pattern === 'http://127.0.0.1:*/*')
+    );
+  } catch (_e) {
+    return false;
+  }
+}
+
+function _isAllowedCloudClient(port) {
+  if (
+    port?.sender?.id !== chrome.runtime.id ||
+    port?.sender?.frameId !== 0 ||
+    !Number.isInteger(port?.sender?.tab?.id) ||
+    !_isActiveCloudDocument(port) ||
+    !_cloudDocumentKey(port)
+  ) {
+    return false;
+  }
+  try {
+    const url = new URL(port.sender.url || port.sender.tab.url || '');
+    if (url.protocol === 'https:' && url.hostname === 'anthropic.skilljar.com') return true;
+    // Production never grants this pattern. The E2E helper adds it only to
+    // its temporary manifest so the real broker can run against localhost.
+    const testHosts = chrome.runtime.getManifest().host_permissions || [];
+    return (
+      url.protocol === 'http:' &&
+      (url.hostname === 'localhost' || url.hostname === '127.0.0.1') &&
+      testHosts.some((pattern) => pattern === 'http://localhost:*/*' || pattern === 'http://127.0.0.1:*/*')
+    );
+  } catch (_e) {
+    return false;
+  }
+}
+
+function _failCloudTabActive(tabId, brokerPort, error) {
+  for (const [key, client] of _cloudActive) {
+    if (!key.startsWith(`${tabId}:`)) continue;
+    const id = key.slice(String(tabId).length + 1);
+    _safePortPost(brokerPort, { type: 'abort', id });
+    _cloudActive.delete(key);
+    _safePortPost(client, { type: 'error', id, error });
+  }
+}
+
+function _registerCloudBroker(port) {
+  if (!_isPuterBrokerPort(port)) {
+    port.disconnect();
+    return;
+  }
+  const tabId = port.sender.tab.id;
+  const previous = _cloudBrokers.get(tabId)?.port;
+  const entry = { port, ready: false };
+  // Install the replacement first so a synchronous old-port disconnect event
+  // cannot delete the new broker entry or send a spurious unavailable signal.
+  _cloudBrokers.set(tabId, entry);
+  if (previous && previous !== port) {
+    _failCloudTabActive(tabId, previous, 'Puter broker replaced');
+    try {
+      previous.disconnect();
+    } catch (_e) {
+      /* already disconnected */
+    }
+  }
+  port.onMessage.addListener((msg) => {
+    if (!msg || _cloudBrokers.get(tabId)?.port !== port) return;
+    if (msg.type === 'ready') {
+      entry.ready = true;
+      for (const client of _cloudClients.get(tabId) || []) {
+        if (_sameCloudDocument(client, port)) _safePortPost(client, { type: 'ready' });
+      }
+      return;
+    }
+    if (typeof msg.id !== 'string') return;
+    const key = _cloudKey(tabId, msg.id);
+    const client = _cloudActive.get(key);
+    if (!client) return;
+    // A message on an actually active broker request resets MV3's service-
+    // worker idle timer, and is relayed so the client can keep its own idle
+    // watchdog alive through a long sign-in (account creation easily exceeds
+    // the 90s stream timeout). Stale/forged ids never reach a client.
+    if (msg.type === 'keepalive') {
+      _safePortPost(client, { type: 'keepalive', id: msg.id });
+      return;
+    }
+    if (msg.type === 'chunk' && typeof msg.text === 'string') {
+      _safePortPost(client, { type: 'chunk', id: msg.id, text: msg.text });
+    } else if (msg.type === 'done') {
+      _cloudActive.delete(key);
+      _safePortPost(client, { type: 'done', id: msg.id });
+    } else if (msg.type === 'error') {
+      _cloudActive.delete(key);
+      _safePortPost(client, { type: 'error', id: msg.id, error: String(msg.error || 'Puter chat failed') });
+    }
+  });
+  port.onDisconnect.addListener(() => {
+    if (_cloudBrokers.get(tabId)?.port !== port) return;
+    _cloudBrokers.delete(tabId);
+    _failCloudTabActive(tabId, port, 'Puter broker closed');
+    for (const client of _cloudClients.get(tabId) || []) {
+      if (_sameCloudDocument(client, port)) _safePortPost(client, { type: 'unavailable' });
+    }
+  });
+}
+
+function _registerCloudClient(port) {
+  if (!_isAllowedCloudClient(port)) {
+    port.disconnect();
+    return;
+  }
+  const tabId = port.sender.tab.id;
+  const clients = _cloudClients.get(tabId) || new Set();
+  clients.add(port);
+  _cloudClients.set(tabId, clients);
+  const connectedBroker = _cloudBrokers.get(tabId);
+  if (connectedBroker?.ready && _sameCloudDocument(port, connectedBroker.port)) {
+    _safePortPost(port, { type: 'ready' });
+  }
+  port.onMessage.addListener((msg) => {
+    if (!msg || typeof msg.id !== 'string' || msg.id.length > 128) return;
+    const key = _cloudKey(tabId, msg.id);
+    const broker = _cloudBrokers.get(tabId);
+    if (msg.type === 'abort') {
+      if (_cloudActive.get(key) === port) {
+        _cloudActive.delete(key);
+        _safePortPost(broker?.port, { type: 'abort', id: msg.id });
+      }
+      return;
+    }
+    if (msg.type !== 'start') return;
+    if (!broker?.ready || !_sameCloudDocument(port, broker.port)) {
+      _safePortPost(port, { type: 'error', id: msg.id, error: 'Puter broker is not ready' });
+      return;
+    }
+    if (
+      _cloudActive.has(key) ||
+      typeof msg.prompt !== 'string' ||
+      msg.prompt.length === 0 ||
+      msg.prompt.length > _CLOUD_MAX_PAYLOAD_CHARS ||
+      !_CLOUD_ALLOWED_MODELS.has(msg.model)
+    ) {
+      _safePortPost(port, { type: 'error', id: msg.id, error: 'Invalid cloud Tutor request' });
+      return;
+    }
+    _cloudActive.set(key, port);
+    if (
+      !_safePortPost(broker.port, {
+        type: 'start',
+        id: msg.id,
+        prompt: msg.prompt,
+        model: msg.model,
+        labels: msg.labels,
+      })
+    ) {
+      _cloudActive.delete(key);
+      _safePortPost(port, { type: 'error', id: msg.id, error: 'Puter broker is unavailable' });
+    }
+  });
+  port.onDisconnect.addListener(() => {
+    clients.delete(port);
+    if (clients.size === 0) _cloudClients.delete(tabId);
+    const broker = _cloudBrokers.get(tabId)?.port;
+    for (const [key, owner] of _cloudActive) {
+      if (owner !== port) continue;
+      _cloudActive.delete(key);
+      if (_sameCloudDocument(port, broker)) {
+        _safePortPost(broker, { type: 'abort', id: key.slice(String(tabId).length + 1) });
+      }
+    }
+  });
+}
+
+// ==================== LOCAL AI ENGINE (OpenAI-compatible: Ollama, LM Studio, …) ====================
+// Content scripts cannot reach http://localhost cross-origin, so the service
+// worker proxies the streaming chat over a Port. Needs the optional host
+// permission for http://localhost/* (requested when the user enables the
+// local engine). Any OpenAI-compatible `/v1/chat/completions` server works.
+
+// Pure: turn one SSE line into a token delta, the DONE sentinel, or null.
+// Exported for unit tests via the standard src-extraction pattern.
+function _parseSseDelta(line) {
+  const s = String(line || '').trim();
+  if (!s.startsWith('data:')) return null;
+  const payload = s.slice(5).trim();
+  if (payload === '[DONE]') return { done: true };
+  try {
+    const delta = JSON.parse(payload)?.choices?.[0]?.delta?.content;
+    return delta ? { delta } : null;
+  } catch {
+    return null; // keep-alive / partial frame
+  }
+}
+
+async function _checkLocalEngine(baseUrl) {
+  const base = String(baseUrl || 'http://localhost:11434/v1').replace(/\/+$/, '');
+  try {
+    const resp = await fetch(`${base}/models`, { method: 'GET' });
+    if (resp.ok) {
+      let models = [];
+      try {
+        const data = await resp.json();
+        models = Array.isArray(data?.data) ? data.data.map((m) => m.id).filter(Boolean) : [];
+      } catch {
+        /* non-JSON body is fine — reachability is what matters */
+      }
+      return { ok: true, status: 'ok', models };
+    }
+    if (resp.status === 403) return { ok: false, status: 'cors', httpStatus: 403 };
+    return { ok: false, status: 'error', httpStatus: resp.status };
+  } catch (err) {
+    return { ok: false, status: 'unreachable', error: err.message };
+  }
+}
+
+async function _streamLocalChat(port, req) {
+  const base = String(req.baseUrl || 'http://localhost:11434/v1').replace(/\/+$/, '');
+  let aborted = false;
+  // A disconnect must actually CANCEL the upstream request. Ollama stops
+  // generating only when the connection closes, so without this a cancelled
+  // chat (sidebar closed, user sent again) left the server generating the
+  // whole completion — burning GPU and contending with the next request.
+  const controller = new AbortController();
+  // Once the port is gone every postMessage throws ("disconnected port
+  // object"); a throw inside the catch below would surface as an unhandled
+  // rejection in the service worker. Route every reply through this guard.
+  const send = (msg) => {
+    if (aborted) return;
+    try {
+      port.postMessage(msg);
+    } catch (_e) {
+      aborted = true;
+    }
+  };
+  port.onDisconnect.addListener(() => {
+    aborted = true;
+    try {
+      controller.abort();
+    } catch (_e) {
+      /* already aborted */
+    }
+  });
+  let reader = null;
+  try {
+    const resp = await fetch(`${base}/chat/completions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: req.model || 'gemma3:4b',
+        stream: true,
+        messages: Array.isArray(req.messages) ? req.messages : [{ role: 'user', content: String(req.prompt || '') }],
+      }),
+    });
+    if (aborted) {
+      // Disconnected while the request was in flight — drop the body so the
+      // server stops generating instead of streaming into a closed port.
+      try {
+        await resp.body?.cancel();
+      } catch (_e) {
+        /* best-effort */
+      }
+      return;
+    }
+    if (!resp.ok) {
+      const hint = resp.status === 403 ? ' — set OLLAMA_ORIGINS to allow the extension origin' : '';
+      send({ type: 'error', error: `Local AI server returned HTTP ${resp.status}${hint}` });
+      return;
+    }
+    reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    while (!aborted) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop() || '';
+      for (const line of lines) {
+        if (aborted) break;
+        const parsed = _parseSseDelta(line);
+        if (!parsed) continue;
+        if (parsed.done) {
+          send({ type: 'done' });
+          return;
+        }
+        send({ type: 'chunk', delta: parsed.delta });
+      }
+    }
+    if (!aborted) send({ type: 'done' });
+  } catch (err) {
+    // An abort is our own cancellation, not a server failure.
+    if (aborted || err?.name === 'AbortError') return;
+    send({ type: 'error', error: `Cannot reach local AI server: ${err.message}` });
+  } finally {
+    if (aborted && reader) {
+      try {
+        await reader.cancel();
+      } catch (_e) {
+        /* best-effort upstream cancellation */
+      }
+    }
+  }
+}
+
+if (typeof chrome !== 'undefined' && chrome.runtime?.onConnect) {
+  chrome.runtime.onConnect.addListener((port) => {
+    if (port.name === 'sb-puter-content') {
+      _registerCloudBroker(port);
+      return;
+    }
+    if (port.name === 'sb-cloud-chat-client') {
+      _registerCloudClient(port);
+      return;
+    }
+    if (port.name !== 'sb-local-chat') return;
+    let started = false;
+    port.onMessage.addListener((req) => {
+      // One stream per port; a second 'start' would race two readers onto it.
+      if (!req || req.type !== 'start' || started) return;
+      started = true;
+      // Defense in depth: nothing above should reject, but an unhandled
+      // rejection here would be an opaque service-worker error.
+      void _streamLocalChat(port, req).catch((err) => {
+        console.warn('[SkillBridge] Local chat stream failed:', err?.message || err);
+      });
+    });
+  });
+}
 
 // Badge to show active language
 chrome.storage.onChanged.addListener((changes, area) => {

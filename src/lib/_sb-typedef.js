@@ -46,7 +46,7 @@
  * @property {(text: string) => boolean} isLikelyEnglish
  * @property {(newLang: string, opts?: { onDone?: () => void }) => Promise<void>} switchLanguage
  * @property {() => { url: string; title: string; lang: string; lessonText?: string }} getPageContext
- * @property {?() => void} safeReplaceText
+ * @property {?(el: Element, newText: string) => boolean} safeReplaceText
  * @property {?() => void} updateLangClass
  * @property {() => boolean} detectExamPage
  * @property {?(el: HTMLElement, text: string, lang: string) => void} showTermPreview
@@ -116,12 +116,6 @@
  * @property {(text: string) => string} restoreProtectedTerms
  * @property {() => void} resetProtectedTerms
  * @property {() => string} getKeepEnglishTerms
- */
-
-/**
- * @typedef {Object} GeminiBlockApi
- * @property {(text: string) => string} escapeHtml
- * @property {(text: string) => string} sanitizeFromGemini
  */
 
 // This file is JSDoc-only — no runtime code. The empty `void 0` keeps it a

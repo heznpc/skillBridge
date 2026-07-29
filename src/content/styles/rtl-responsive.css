@@ -75,12 +75,6 @@ body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-retry-btn {
   margin-right: 8px;
 }
 
-/* Verify spinner — flip margin */
-body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-verify-spinner {
-  margin-left: 0;
-  margin-right: 6px;
-}
-
 /* Progress toast — anchor left instead of right */
 body:is(.si18n-lang-ar, .si18n-lang-he) #si18n-progress-toast {
   right: auto;
@@ -214,7 +208,6 @@ body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-dark-toggle-btn {
 
   .si18n-streaming-cursor::after,
   .si18n-thinking-dots .si18n-dot,
-  .si18n-verify-spinner .si18n-dot,
   #si18n-progress-bar .si18n-progress-fill,
   #si18n-progress-toast .si18n-progress-spinner {
     animation-duration: 0.01ms !important;

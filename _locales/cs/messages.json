@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "Vícejazyčný učební asistent pro kurzy na Skilljar. Překládejte kurzy a učte se s AI doučováním — bez nutnosti API klíče.",
+    "message": "Překládejte kurzy AI do 32 jazyků s odbornými termíny, kartičkami, záložkami a místními studijními nástroji.",
     "description": "Extension description"
   }
 }

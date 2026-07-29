@@ -9,20 +9,19 @@
  *
  *   sidebar-chat.sendChatMessage
  *     → translator.chatStream
- *     → window.postMessage({type:'CHAT_REQUEST', stream:true})
- *     → page-bridge (main world) → puter.ai.chat (streaming)
- *     → CHAT_STREAM_CHUNK events × N
+ *     → extension Port → service-worker broker → isolated content broker
+ *     → puter.ai.chat (streaming) → Port chunks × N
  *     → onChunk callback → formatResponse(fullText) → bubble.innerHTML
  *     → CHAT_STREAM_END → saveConversation
  *
- * The Puter SDK stub in helpers/network-stubs.js returns an async-iterable
+ * The vendored-SDK replacement in helpers/puter-stream-stub.js returns an async-iterable
  * three-chunk Korean reply; the spec asserts every chunk's text ends up
  * in the bot bubble (proving the streaming pipeline didn't silently
  * coalesce or drop a chunk), and that the response was sanitized through
  * the chat-render path (we get a `<p>...</p>` wrapper, not raw text).
  *
  * Steps:
- *   A. Wait for translator.isReady (BRIDGE_READY message from page-bridge).
+ *   A. Wait for translator.isReady (extension broker ready message).
  *   B. Open the sidebar.
  *   C. sendChat — type a message + click send.
  *   D. Wait for bot bubble to fully render the streamed reply.
@@ -54,9 +53,9 @@ test.describe('SkillBridge — tutor chat flow', () => {
 
     await page.goto(`${fixture.baseUrl}/lesson`);
 
-    // Wait for the namespace to be assembled, then for the bridge to be
-    // ready (Puter stub loaded + BRIDGE_READY emitted). chatStream throws
-    // "Bridge not ready" if called before isReady.
+    // Wait for the namespace to be assembled, then for the isolated broker to
+    // be ready (Puter stub loaded + broker ready emitted). chatStream throws
+    // if called before isReady.
     const deadline = Date.now() + 20_000;
     while (Date.now() < deadline) {
       const snap = await evalInContentWorld(extCtx.context, 'snapshot');
@@ -66,7 +65,7 @@ test.describe('SkillBridge — tutor chat flow', () => {
     }
     const bridge = await evalInContentWorld(extCtx.context, 'bridgeReady');
     if (!bridge?.isReady) {
-      throw new Error("Page bridge didn't become ready in 20s — Puter stub probably broken");
+      throw new Error("Puter broker didn't become ready in 20s — Puter stub probably broken");
     }
 
     // Step B: open the sidebar so the chat UI is in the DOM.
@@ -130,13 +129,94 @@ test.describe('SkillBridge — tutor chat flow', () => {
     // it in `<p>...</p>`. v3.5.13's chat-render split refactored this path.
     expect(botBubble?.html).toMatch(/^<p>/);
 
-    // No error bubble (CHAT_ERROR_LABELS) — would indicate the stream
-    // threw or page-bridge couldn't load the Puter stub.
+    // No error bubble (CHAT_ERROR_LABELS) — would indicate the isolated
+    // broker could not load or stream from the Puter stub.
     const errorishBubble = log.find((m) => m.alert);
     expect(errorishBubble, 'should not render an error bubble').toBeUndefined();
 
     const sendState = await waitForChatReady();
     expect(sendState?.disabled).toBe(false);
+  });
+
+  test('next cloud chat lazily reconnects both client and broker after MV3 Port loss', async () => {
+    // A replacement broker makes the background disconnect the real isolated
+    // broker. Dropping the replacement then leaves the tab with no registered
+    // broker, which reproduces the state after a service-worker idle restart.
+    expect((await evalInContentWorld(extCtx.context, 'replacePuterBroker'))?.ok).toBe(true);
+    expect((await evalInContentWorld(extCtx.context, 'disconnectReplacementBroker'))?.ok).toBe(true);
+    const unavailableDeadline = Date.now() + 5_000;
+    while (Date.now() < unavailableDeadline) {
+      if (!(await evalInContentWorld(extCtx.context, 'bridgeReady'))?.isReady) break;
+      await page.waitForTimeout(50);
+    }
+    expect((await evalInContentWorld(extCtx.context, 'bridgeReady'))?.isReady).toBe(false);
+    const before = await evalInContentWorld(extCtx.context, 'readChatLog');
+    const beforeBots = before.filter((m) => m.role === 'bot').length;
+
+    const send = await evalInContentWorld(extCtx.context, 'sendChat', 'Recover after worker restart');
+    expect(send?.ok).toBe(true);
+    const deadline = Date.now() + 10_000;
+    let log = before;
+    while (Date.now() < deadline) {
+      log = await evalInContentWorld(extCtx.context, 'readChatLog');
+      const bots = log.filter((m) => m.role === 'bot');
+      if (bots.length > beforeBots && bots[bots.length - 1]?.text?.includes('주는 입력입니다')) break;
+      await page.waitForTimeout(100);
+    }
+    const bots = log.filter((m) => m.role === 'bot');
+    expect(bots).toHaveLength(beforeBots + 1);
+    expect(bots[bots.length - 1]?.text).toContain('주는 입력입니다');
+    expect((await evalInContentWorld(extCtx.context, 'bridgeReady'))?.isReady).toBe(true);
+  });
+
+  test('host main world cannot observe or forge Tutor transport via SDK globals or window messages', async () => {
+    await page.evaluate(() => {
+      window.__sbHostMessages = [];
+      window.addEventListener('message', (event) => {
+        window.__sbHostMessages.push(event.data);
+      });
+    });
+
+    const send = await evalInContentWorld(extCtx.context, 'sendChat', 'HOST-SECRET-PROMPT-7f23');
+    expect(send?.ok).toBe(true);
+    await page.waitForTimeout(800);
+
+    const hostState = await page.evaluate(() => ({
+      puterType: typeof window.puter,
+      token: window.localStorage.getItem('puter.auth.token'),
+      messages: window.__sbHostMessages,
+    }));
+    expect(hostState.puterType).toBe('undefined');
+    expect(hostState.token).toBeNull();
+    expect(JSON.stringify(hostState.messages)).not.toContain('HOST-SECRET-PROMPT-7f23');
+    expect(JSON.stringify(hostState.messages)).not.toContain('안녕하세요');
+
+    await page.evaluate(() => {
+      window.postMessage({ msg: 'puter.token', token: 'HOST-FORGED-TOKEN' }, location.origin);
+    });
+    await page.waitForTimeout(100);
+    const brokerState = await evalInContentWorld(extCtx.context, 'puterBrokerState', 'HOST-FORGED-TOKEN');
+    expect(brokerState?.sdkPresent).toBe(true);
+    expect(brokerState?.privateStorageReady).toBe(true);
+    expect(brokerState?.liveTokenMatches).toBe(false);
+
+    await page.evaluate(() => {
+      for (let i = 0; i < 20; i++) {
+        window.postMessage(
+          {
+            __skillbridge__: true,
+            type: i % 2 ? 'CHAT_STREAM_CHUNK' : 'CHAT_STREAM_END',
+            id: 'forged',
+            text: 'FORGED-TUTOR-ANSWER',
+            success: true,
+          },
+          location.origin,
+        );
+      }
+    });
+    await page.waitForTimeout(200);
+    const log = await evalInContentWorld(extCtx.context, 'readChatLog');
+    expect(JSON.stringify(log)).not.toContain('FORGED-TUTOR-ANSWER');
   });
 
   test('failed chat renders retry control and retry succeeds', async () => {
@@ -174,5 +254,31 @@ test.describe('SkillBridge — tutor chat flow', () => {
 
     const sendState = await waitForChatReady();
     expect(sendState?.disabled).toBe(false);
+  });
+
+  test('replacing a live broker aborts and fails the active stream', async () => {
+    await evalInContentWorld(extCtx.context, 'setPuterChunkDelay', 500);
+    const before = await evalInContentWorld(extCtx.context, 'readChatLog');
+    const send = await evalInContentWorld(extCtx.context, 'sendChat', 'Replace the active broker');
+    expect(send?.ok).toBe(true);
+
+    const partialDeadline = Date.now() + 5_000;
+    while (Date.now() < partialDeadline) {
+      const log = await evalInContentWorld(extCtx.context, 'readChatLog');
+      if (log.length > before.length && log[log.length - 1]?.text?.includes('안녕하세요')) break;
+      await page.waitForTimeout(50);
+    }
+    expect((await evalInContentWorld(extCtx.context, 'replacePuterBroker'))?.ok).toBe(true);
+
+    const errorDeadline = Date.now() + 5_000;
+    let log = [];
+    while (Date.now() < errorDeadline) {
+      log = await evalInContentWorld(extCtx.context, 'readChatLog');
+      if (log.slice(before.length).some((m) => m.alert)) break;
+      await page.waitForTimeout(50);
+    }
+    expect(log.slice(before.length).some((m) => m.alert)).toBe(true);
+    expect((await waitForChatReady())?.disabled).toBe(false);
+    await evalInContentWorld(extCtx.context, 'setPuterChunkDelay', 150);
   });
 });

@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "Assistente de aprendizado multilíngue para os cursos gratuitos de IA em anthropic.skilljar.com. Traduza páginas de curso e aprenda com um tutor de IA integrado — sem chave API.",
+    "message": "Traduza cursos de IA para 32 idiomas com termos revisados, flashcards, favoritos e ferramentas de estudo locais.",
     "description": "Extension description"
   }
 }

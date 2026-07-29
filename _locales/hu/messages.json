@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "Többnyelvű tanulási asszisztens az Skilljar kurzusaihoz. Fordítson kurzusokat és tanuljon AI oktatással — API-kulcs nem szükséges.",
+    "message": "Fordítson AI-kurzusokat 32 nyelvre ellenőrzött szakkifejezésekkel, kártyákkal, könyvjelzőkkel és helyi eszközökkel.",
     "description": "Extension description"
   }
 }

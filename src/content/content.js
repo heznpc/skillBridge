@@ -411,7 +411,10 @@
       currentLang = stored.targetLanguage || 'en';
       isExamPage = sb.hostCaps.examDetection ? detectExamPage() : false;
 
-      translator = new SkilljarTranslator();
+      translator = new SkilljarTranslator({ aiEnabled: sb.hostCaps.bridge !== false });
+      if (!translator.aiEnabled) {
+        await translator.initialize();
+      }
 
       if (currentLang !== 'en') {
         await translator.loadStaticTranslations(currentLang);
@@ -427,11 +430,9 @@
         window._sb.injectHeaderLanguageSelect?.();
         window._sb.injectDarkModeToggle?.();
       }
-      // The AI-tutor sidebar / FAB / Puter bridge run only on trusted hosts
-      // (anthropic.skilljar.com + the localhost E2E fixture). Other Skilljar
-      // tenants get dictionary + Google Translate but not the bridge (its
-      // postMessage nonce is readable by any page-world script); claude.com
-      // tutorials are translation-only. See getHostCapabilities (platform.js).
+      // Sidebar/FAB availability is host-scoped. Its body is either the AI
+      // tutor (developer build on a trusted host) or the bridge-free language
+      // and local-tools surface (CWS build / translation-only host).
       if (sb.hostCaps.sidebar) {
         window._sb.injectSidebar?.();
       }
@@ -458,30 +459,7 @@
         setTimeout(() => sb._gt.applyStaticTranslations(currentLang), SKILLBRIDGE_DELAYS.LATE_CONTENT);
       }
 
-      translator.onTranslationUpdate((originalText, finalTranslation, targetLang, wasImproved) => {
-        if (targetLang !== currentLang) return;
-        const entries = translatedTexts.get(originalText);
-        if (!entries) return;
-
-        // Prune detached elements to prevent memory leak
-        const live = entries.filter((e) => e.el?.parentNode);
-        if (live.length === 0) {
-          translatedTexts.delete(originalText);
-          return;
-        }
-        if (live.length < entries.length) translatedTexts.set(originalText, live);
-
-        for (const entry of live) {
-          sb._gt.removeVerifySpinner(entry.el);
-          if (wasImproved) {
-            safeReplaceText(entry.el, window._protectedTerms.restoreProtectedTerms(finalTranslation));
-            entry.el.classList.add('si18n-text-updated');
-            setTimeout(() => entry.el.classList.remove('si18n-text-updated'), SKILLBRIDGE_DELAYS.TEXT_UPDATE_FADE);
-          }
-        }
-      });
-
-      if (sb.hostCaps.bridge) {
+      if (translator.aiEnabled) {
         translator.initialize().catch((err) => {
           console.warn('[SkillBridge] Bridge init failed (AI features unavailable):', err);
         });
@@ -596,7 +574,11 @@
     subtitleManager = null;
     if (translator) restoreOriginal();
     sidebarVisible = false;
-    window._sbContentSurface.removeContentSurfaces(document, sb, window._sbContentSurface.NON_AI_SURFACE_SELECTORS);
+    window._sbContentSurface.removeContentSurfaces(
+      document,
+      sb,
+      window._sbContentSurface.NON_AI_CONTENT_SURFACE_SELECTORS,
+    );
   }
 
   async function switchLanguage(newLang, opts = {}) {
@@ -605,10 +587,6 @@
 
     if (!opts.skipRestore) restoreOriginal();
     currentLang = newLang;
-    // Invalidate any in-flight verify-queue work targeting the previous lang
-    // so its callbacks don't write stale translations into the now-current
-    // page. Mirrors content.js's gtGeneration counter for the GT pipeline.
-    translator?.bumpLangGeneration?.();
 
     try {
       if (newLang === 'en') {
@@ -622,8 +600,8 @@
       // (disk/cache timing resolves loads out of order). currentLang is set
       // synchronously to the latest request, so if it no longer equals this
       // call's target the call is stale — bail rather than paint a now-wrong
-      // language over the page. bumpLangGeneration() above guards the verify
-      // queue; this guards the static-apply path it doesn't cover.
+      // language over the page. The generation check in the GT queue handles
+      // network results; this guards the static-apply path as well.
       if (currentLang !== newLang) return;
       sb._gt.applyStaticTranslations(newLang);
       window._sb.updateLocalizedLabels?.();
@@ -662,7 +640,7 @@
   function safeReplaceText(el, newText) {
     if (el.children.length === 0) {
       el.textContent = newText;
-      return;
+      return true;
     }
 
     // `newText` is the translation of the element's ENTIRE visible text,
@@ -679,13 +657,13 @@
     //
     // Writing the whole translation into the FIRST meaningful descendant text
     // node and clearing every other one removes the duplication while keeping
-    // the inline elements in place (links stay clickable, the wrapping
-    // <strong> survives). Code/pre/script/style text is preserved untouched,
-    // so inline <code> fragments are never overwritten.
+    // formatting elements (<strong>, <em>) in place. Code/pre/script/style
+    // text is preserved untouched, so inline <code> fragments are never
+    // overwritten.
     const meaningful = getTextNodes(el);
     if (meaningful.length === 0) {
       el.textContent = newText;
-      return;
+      return true;
     }
     const target = meaningful[0];
 
@@ -701,8 +679,23 @@
       if (node.parentElement?.closest('code, pre, script, style')) continue;
       toBlank.push(node);
     }
+
+    // INVARIANT — never destroy an interactive element's visible label.
+    // Collapsing a mixed block into a single text node would either blank a
+    // link/button's text (leaving a clickable dead spot) or, when the first
+    // meaningful node sits inside the control, swallow the whole sentence
+    // into its label. Both are worse than showing the original English, so
+    // refuse the replacement and leave the DOM untouched. Routing in
+    // gt-queue keeps such blocks on the structure-preserving AI path; this
+    // guard is the last line of defense if one slips through (cache replay,
+    // future routing regressions).
+    const INTERACTIVE = 'a, button, summary, [role="button"], [role="link"]';
+    if (toBlank.some((node) => node.parentElement?.closest(INTERACTIVE))) return false;
+    if (toBlank.length > 0 && target.parentElement?.closest(INTERACTIVE)) return false;
+
     target.textContent = newText;
     for (const node of toBlank) node.textContent = '';
+    return true;
   }
 
   // Local copy — gt-queue.js has its own (private to the GT pipeline).
@@ -796,7 +789,7 @@
     contentScope: null,
     sidebar: true,
     fab: true,
-    bridge: true,
+    bridge: globalThis.__SKILLBRIDGE_AI_GATEWAY_ENABLED__ !== false,
     headerControls: true,
     keyboardShortcuts: true,
     readingAid: true,

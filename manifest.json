@@ -2,18 +2,14 @@
   "manifest_version": 3,
   "name": "__MSG_extName__",
   "description": "__MSG_extDescription__",
-  "version": "3.5.41",
+  "version": "4.0.0",
   "minimum_chrome_version": "124",
   "author": "Heznpc",
   "homepage_url": "https://github.com/heznpc/skillbridge",
   "default_locale": "en",
   "permissions": ["storage", "alarms"],
-  "host_permissions": [
-    "https://*.skilljar.com/*",
-    "https://*.youtube.com/*",
-    "https://translate.googleapis.com/*",
-    "https://api.github.com/*"
-  ],
+  "host_permissions": ["https://*.skilljar.com/*", "https://translate.googleapis.com/*", "https://api.github.com/*"],
+  "optional_host_permissions": ["http://localhost/*", "http://127.0.0.1/*"],
   "action": {
     "default_popup": "src/popup/popup.html",
     "default_icon": {
@@ -43,6 +39,7 @@
         "src/content/content-term-preview.js",
         "src/content/content-surface.js",
         "src/content/content.js",
+        "src/content/html-gt.js",
         "src/content/gt-queue.js",
         "src/content/banners.js",
         "src/content/code-comments.js",
@@ -66,7 +63,6 @@
       "css": [
         "src/content/styles/base.css",
         "src/content/styles/sidebar-chat.css",
-        "src/content/styles/verification.css",
         "src/content/styles/banners-header-progress.css",
         "src/content/styles/ask-tutor.css",
         "src/content/styles/history.css",
@@ -78,6 +74,16 @@
         "src/content/styles/banners-term-dashboard.css"
       ],
       "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://anthropic.skilljar.com/*"],
+      "js": [
+        "src/bridge/puter-content-init.js",
+        "src/bridge/puter.js",
+        "src/bridge/puter-content-broker.js"
+      ],
+      "run_at": "document_end",
+      "world": "ISOLATED"
     }
   ],
   "background": {
@@ -91,9 +97,7 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "src/lib/page-bridge.js",
         "src/data/*",
-        "src/bridge/puter.js",
         "assets/icons/*",
         "src/shared/constants.json",
         "src/shared/runtime-constants.js",
@@ -102,7 +106,11 @@
       "matches": ["https://*.skilljar.com/*"]
     },
     {
-      "resources": ["src/data/*", "src/shared/runtime-constants.js", "src/content/styles/*.css"],
+      "resources": [
+        "src/data/*",
+        "src/shared/runtime-constants.js",
+        "src/content/styles/*.css"
+      ],
       "matches": ["https://claude.com/*"]
     }
   ]

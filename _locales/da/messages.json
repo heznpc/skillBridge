@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "Flersproget læringsassistent til Skilljar-kurser. Oversæt kurser og lær med AI-vejledning — ingen API-nøgle påkrævet.",
+    "message": "Oversæt AI-kurser til 32 sprog med kuraterede fagudtryk, flashcards, bogmærker og lokale studieværktøjer.",
     "description": "Extension description"
   }
 }

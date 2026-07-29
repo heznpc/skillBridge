@@ -17,7 +17,8 @@ const constants = new Function(`${sharedSrc}\n${selectorsSrc}\n${constantsSrc}; 
   SKILLBRIDGE_MODELS, SKILLBRIDGE_THRESHOLDS, SKILLBRIDGE_DELAYS, SKILLBRIDGE_LIMITS,
   PREMIUM_LANGUAGES, AVAILABLE_LANGUAGES, AVAILABLE_LANGUAGE_CODES,
   SUPPORTED_LANGUAGE_MAP, POPUP_LABELS, DEFAULT_PROTECTED_TERMS,
-  YOUTUBE_CLIENT_VERSION, SKILLBRIDGE_MODEL_LABELS,
+  ENGINE_LABELS,
+  SKILLBRIDGE_MODEL_LABELS,
   SHORTCUT_LABELS, SHORTCUT_DESCRIPTIONS,
   EXAM_URL_PATTERNS, EXAM_SKIP_SELECTORS, EXAM_BANNER_LABELS, TUTOR_EXAM_LABELS,
   CERT_DISABLE_PATTERNS, FLASHCARD_COURSE_MAP, FLASHCARD_BOX,
@@ -31,6 +32,7 @@ const {
   PREMIUM_LANGUAGES,
   AVAILABLE_LANGUAGES,
   POPUP_LABELS,
+  ENGINE_LABELS,
   DEFAULT_PROTECTED_TERMS,
   SHORTCUT_LABELS,
   SHORTCUT_DESCRIPTIONS,
@@ -38,11 +40,6 @@ const {
 } = constants;
 
 describe('SKILLBRIDGE_MODELS', () => {
-  test('defines Gemini model', () => {
-    expect(SKILLBRIDGE_MODELS.GEMINI).toBeDefined();
-    expect(SKILLBRIDGE_MODELS.GEMINI).toContain('gemini');
-  });
-
   test('defines Claude model', () => {
     expect(SKILLBRIDGE_MODELS.CLAUDE).toBeDefined();
     expect(SKILLBRIDGE_MODELS.CLAUDE).toContain('claude');
@@ -55,21 +52,12 @@ describe('SKILLBRIDGE_THRESHOLDS', () => {
     expect(SKILLBRIDGE_THRESHOLDS.GT_BATCH_SIZE).toBeLessThanOrEqual(50);
   });
 
-  test('GEMINI_MIN_TEXT is positive', () => {
-    expect(SKILLBRIDGE_THRESHOLDS.GEMINI_MIN_TEXT).toBeGreaterThan(0);
-  });
-
   test('CACHE_TTL_MS is at least 1 day', () => {
     expect(SKILLBRIDGE_THRESHOLDS.CACHE_TTL_MS).toBeGreaterThanOrEqual(86400000);
   });
 
   test('GT_RATE_LIMIT_PER_MIN is positive', () => {
     expect(SKILLBRIDGE_THRESHOLDS.GT_RATE_LIMIT_PER_MIN).toBeGreaterThan(0);
-  });
-
-  test('VERIFY_QUEUE_MAX caps queue size', () => {
-    expect(SKILLBRIDGE_THRESHOLDS.VERIFY_QUEUE_MAX).toBeGreaterThan(0);
-    expect(SKILLBRIDGE_THRESHOLDS.VERIFY_QUEUE_MAX).toBeLessThanOrEqual(1000);
   });
 });
 
@@ -132,6 +120,46 @@ describe('UI Labels (i18n)', () => {
     for (const [_key, map] of Object.entries(POPUP_LABELS)) {
       for (const code of coreI18nCodes) {
         expect(map[code]).toBeDefined();
+      }
+    }
+  });
+});
+
+describe('ENGINE_LABELS (v4 tutor engine selector)', () => {
+  const EXPECTED_KEYS = [
+    'engineLabel',
+    'cloudOption',
+    'localOption',
+    'offOption',
+    'localBaseUrl',
+    'localModel',
+    'onDeviceHint',
+    // Hardware guidance from the measured benchmark + the Chrome-built-in-AI
+    // note (v4 A4), and the tutor-side messages for engine states a retry
+    // cannot fix.
+    'hardwareHint',
+    'tutorOff',
+    'tutorSignInRequired',
+    'tutorLocalUnreachable',
+    'statusChecking',
+    'statusOk',
+    'statusCors',
+    'statusUnreachable',
+    'permDenied',
+  ];
+
+  test('defines every engine-selector string', () => {
+    for (const key of EXPECTED_KEYS) {
+      expect(ENGINE_LABELS[key]).toBeDefined();
+    }
+  });
+
+  test('every entry covers the full i18n locale set', () => {
+    const codes = ['en', 'ko', 'id', 'it', 'ja', 'zh-CN', 'zh-TW', 'es', 'fr', 'de', 'pt-BR', 'ru', 'vi'];
+    for (const [_key, map] of Object.entries(ENGINE_LABELS)) {
+      for (const code of codes) {
+        expect(typeof map[code]).toBe('string');
+        expect(map[code].length).toBeGreaterThan(0);
       }
     }
   });

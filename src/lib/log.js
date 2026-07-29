@@ -12,11 +12,6 @@
 // keyboard-shortcuts, etc.) so log lines from new and old call sites read
 // uniformly in DevTools.
 //
-// Note: `src/lib/page-bridge.js` is intentionally NOT a consumer of this
-// module. It runs in the host page's main world (not the extension
-// context), where neither `window._skillbridgeLog` nor a `require()` of
-// this file would resolve.
-//
 // Usage:
 //   const log = createLogger('Translator');
 //   log.info('cache hit', { lang, key });

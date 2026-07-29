@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "Wielojęzyczny asystent nauki do kursów na Skilljar. Tłumacz kursy i ucz się z korepetycjami AI — klucz API nie jest wymagany.",
+    "message": "Tłumacz kursy AI na 32 języki z dobraną terminologią, fiszkami, zakładkami i lokalnymi narzędziami do nauki.",
     "description": "Extension description"
   }
 }

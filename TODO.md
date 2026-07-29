@@ -1,19 +1,20 @@
 # SkillBridge TODO
 
-> Last refreshed: 2026-06-24 (v3.5.41 service-completion audit)
+> Last refreshed: 2026-07-29 (next CWS release: v4.0.0)
 
 Items below are concrete engineering / ops work. Anything strategic — what
 markets we enter, what we charge, what features we accept — is an owner
 decision made directly, not tracked here.
 
-The top board tracks the remaining work before the current `v3.5.41` code can
-be treated as the real public service, not just a repo-ready release candidate.
+The top board tracks the remaining work before a newly versioned CWS candidate
+can replace the live legacy v1.0.1. The existing `v3.5.41` tag predates the
+current privacy/package changes and must not be reused for the upload.
 
-## Service completion board (v3.5.41)
+## Service completion board (next CWS version: v4.0.0)
 
 ### P0 — must close before public release
 
-- [x] **Gemini verification model — verified live; dead fallback replaced.**
+- [x] **Raw developer path: Gemini verification model record.**
   Audited 2026-06-24: `gemini-2.0-flash` (the runtime default in
   `src/lib/constants.js`, used for verify/translate) is still **active** on Puter,
   not retired (Puter's own model page shows no deprecation). The original framing
@@ -23,46 +24,56 @@ be treated as the real public service, not just a repo-ready release candidate.
   (in the page-bridge allowlist + `_MODEL_FALLBACKS`) was shut down — the whole
   Gemini 1.5/1.0 line 404s now — so it gave zero resilience if the primary were
   ever rejected. Fixed by pointing the fallback at the live same-generation
-  `gemini-2.0-flash-lite`; primary stays `gemini-2.0-flash`. The real Puter smoke
-  (next item) remains the only way to re-confirm exact model ids before a submit.
+  `gemini-2.0-flash-lite`; primary stays `gemini-2.0-flash`. This is historical
+  evidence for the optional raw developer path, not CWS release evidence: the
+  v4.0.0 CWS package ships the AI Tutor and the bundled Puter client.
 
-- [ ] **Add an opt-in real Puter model smoke.** Current E2E swaps in a Puter
-  stub, so it proves the extension bridge contract but not real model
-  availability. Add a separate manual/opt-in smoke that loads the real bundled
-  `src/bridge/puter.js`, sends only a synthetic prompt, and classifies
-  auth/network/model failures clearly.
-  - DoD: smoke path is excluded from default CI unless an explicit env/session
-    is available; failure output says whether the issue is auth, network,
-    model alias rejection, or bridge breakage.
-  - Candidate command: `E2E_REAL_PUTER=1 E2E_HEADED=1 npx playwright test tests/e2e/tutor-chat-real.spec.js --workers=1`.
+- [x] **Separate raw-developer Puter evidence from the CWS runtime.** The v4 CWS
+  E2E suite now exercises the bundled Tutor through its isolated content broker;
+  the retired page-world bridge and extension-origin frame are absent from
+  `dist/bundled`. The repository's
+  raw vendored SDK remains maintenance input, not an upload artifact or CWS
+  runtime-evidence substitute.
 
-- [~] **PR the E2E runner stabilization.** The five-stable-batch runner in
-  `scripts/run-e2e.js` is now PR'd (#241, runner-only); local `npm run test:e2e`
-  is green. Awaiting CI `e2e` job + merge.
+- [x] **PR the E2E runner stabilization.** PR #241 merged as `e36008b` with its
+  `e2e` and other required checks green. The current runner now covers all specs
+  in eight resource-bounded batches; local `npm run test:e2e` is green.
   - DoD: runner-only PR, local `npm run test:e2e` green, `git diff --check`
     green, GitHub `e2e` job green.
 
-- [ ] **Run pre-release dictionary QA.** Before every store submission, run one
-  reviewer pass per 12 premium dictionaries, verify findings against
-  `src/data/*.json`, fix only confirmed semantic errors, stamp
-  `_meta.lastAudited`, and run `npm run docs`.
+- [x] **Run pre-release dictionary QA.** *(12 of 12 done 2026-07-28)*
+  A rule-based `subagent` term pass plus the four confirmed reviewer fixes
+  landed across all 12 locales, and every structural gate passes. Full
+  per-entry semantic review is complete for **pt-BR, ru, vi, id, ko, ja,
+  zh-CN, zh-TW, es, fr, it, and de**; all 12 carry
+  `_meta.lastAudited = 2026-07-28` after confirmed findings were applied.
   - DoD: README QA table reflects the refreshed audits; structural gates still
     pass after semantic fixes.
   - Verify: `npm run glossary`, `npm run validate`,
     `npm run check:dict-coverage`, `npm run check:locales`, `npm run docs`.
 
-- [ ] **Build, smoke, and freeze the upload artifact.** Regenerate the bundled
-  extension immediately before upload, then run the real-bundle release smoke.
+- [x] **Build, smoke, and freeze the upload artifact.** *(2026-07-29)*
+  The integrated release gates passed (**695 unit tests across 38 suites and
+  49 Chromium E2E tests across eight resource-bounded batches**, including the
+  malicious Puter-query stored-token regression and the live Ollama round trip).
+  The ZIP was rebuilt and recorded as **69 files / 713,791 bytes / SHA-256
+  `227aafe440ce747f5caeab9a2830615876afdcdf68d7bef962ba30b144a3dd66`**, the
+  extracted archive diffs byte-for-byte against `dist/bundled`, and
+  `check-rhc` is clean on both. Promo MP4s/thumbnails/manifest were
+  regenerated from the current `demo.webm`; all five 1280×800 screenshots and
+  the promo tile were recaptured from the current CWS bundle and inspected.
   - DoD: `dist/bundled` is fresh, first-user smoke passes, bundled zip is
     rebuilt, and generated store assets match the current icon/listing state.
   - Verify: `npm run release:smoke`, then `npm run release:verify` before the
     final upload window.
 
-- [ ] **Upload `v3.5.41` to CWS and fix the privacy tab.** The public listing is
-  still `v1.0.1`; local code is `v3.5.41`. Upload
+- [ ] **Upload the v4.0.0 bundled CWS candidate and fix the privacy tab.** The
+  public listing is still legacy `v1.0.1`; `v3.5.41` does not identify the
+  current change set. After external scope approval, run `npm run release:verify`, generate only
   `store-assets/skillbridge-bundled.zip`, refresh listing copy/media, set the
-  capital-B privacy URL, answer remote code = NO only after the new package is
-  uploaded, check Website content, and paste current permission
+  capital-B privacy URL, answer remote code = NO only after inspecting that exact
+  uploaded package, select every data category listed in
+  `store-assets/RELEASE_CHECKLIST.md`, and paste current permission
   justifications.
   - Owner-only: CWS dashboard access, privacy-practices form, review wait.
   - DoD: CWS review submitted/accepted and `npm run check:cws-drift` no longer
@@ -70,17 +81,23 @@ be treated as the real public service, not just a repo-ready release candidate.
 
 ### P1 — quality gates before/around submission
 
-- [ ] **Regenerate and inspect store assets.** Run `npm run capture:store` or
+- [x] **Regenerate and inspect store assets.** Run `npm run capture:store` or
   the "Capture store assets" workflow, inspect screenshots/promo tile/listing
-  description, then upload the media to the store listing.
+  description, then upload the media to the store listing. Regenerated and
+  visually inspected the five screenshots and promo tile on 2026-07-29; upload
+  remains part of the dashboard step.
 - [ ] **Manual real-tab bundled-extension smoke.** Load `dist/bundled` in
-  Chrome and check translation, language switch, tutor open/chat, flashcards,
-  exam-safe disable, dark mode, and the known manual YouTube-caption gap.
-- [ ] **Publication pause/CD path check.** If `CWS_PUBLICATION_PAUSED` is set,
-  decide whether this release is manual-only or whether the variable should be
-  removed before relying on the CD upload path. Before live publish, set
-  `CWS_DASHBOARD_READY_VERSION` to the manifest version only after the CWS
-  dashboard listing/media/privacy fields are refreshed.
+  Chrome and check popup startup, translation, language switch, flashcards,
+  bookmarks/recent/dashboard, exam-safe disable, dark mode, the known manual
+  YouTube-caption gap, cloud/local/off Tutor modes, and that the host page cannot
+  observe or forge the extension-Port Tutor transport through SDK globals or
+  window messages. The visible Tutor UI remains in the shared page DOM, so this
+  check does not claim that keyboard events or rendered chat text are hidden.
+- [ ] **Keep the publication pause.** Do not remove
+  `CWS_PUBLICATION_PAUSED` during code cleanup or dashboard draft preparation.
+  Only after external scope approval, a newly versioned ZIP passes all gates,
+  and listing/media/privacy fields match should the owner set
+  `CWS_DASHBOARD_READY_VERSION` and separately authorize unpausing publication.
 - [x] **CWS CD upload action on the current pinned path.** The workflow uses
   `mnao305/chrome-extension-upload` v6.0.0 with the dashboard-ready and
   target-listing guards still in place. Re-check this only when the action or
@@ -93,8 +110,6 @@ be treated as the real public service, not just a repo-ready release candidate.
   conflicts with the public no-backend constraint. Decide between local export,
   opt-in error reporting, or no telemetry; update privacy copy in the same PR
   if anything ships.
-- [ ] **YouTube `_BG_YT_CLIENT_VERSION` auto-bump GH Action.** Currently manual
-  every few weeks; copy the shipped drift-watcher pattern.
 - [x] **Performance budget E2E.** Measure visible H1/body translation and
   below-fold lazy translation against declared CI-safe budgets
   (`tests/e2e/performance-budget.spec.js`).
@@ -117,7 +132,7 @@ narrowed.
   position tracked across courses (SPA-safe URL poll); Continue/Recent
   launcher in the sidebar. `resume.js`.
 - [x] **"My learning" overlay** (v3.5.36). Bookmarks + Continue + Recent are
-  grouped under the single "Tools" menu in the tutor header. `sidebar-chat.js`.
+  grouped under the single "Tools" menu in the sidebar header. `sidebar-chat.js`.
 - [x] **In-lesson TOC + reading-progress bar** (v3.5.36). DOM-only, no storage.
   `reading-aid.js`.
 - [ ] **Highlights / notes.** Per-lesson, local.
@@ -126,9 +141,9 @@ narrowed.
 
 ### Excluded by the free + local-only constraint
 - Cross-device sync of bookmarks/notes (needs a server) — device-local only.
-- Multi-model picker via user API keys (breaks free / no-key). Claude via
-  Puter.js stays the only tutor model; verification models remain internal
-  implementation details.
+- User-supplied API keys or a broad multi-model picker (breaks free / no-key).
+  The v4 CWS candidate instead offers one bundled cloud Tutor path through
+  Puter, one user-run local OpenAI-compatible endpoint, and an off mode.
 - Any server-side feature.
 
 ### Release / ops (feature train)
@@ -175,9 +190,10 @@ narrowed.
 - [ ] **`tsconfig` strict ratchet.** Currently `strict: false` to avoid
   surfacing pre-existing nullability warnings. Tighten file-by-file as
   JSDoc gets added.
-- [ ] **Puter.js fallback layer** (only triggered by the standing
-  sunset condition). If Puter signals instability, we revisit the "no
-  API key" rule. Design exists in head only; not started.
+- [ ] **Raw-developer Puter fallback decision** (only if that optional path is
+  maintained). This cannot broaden the CWS candidate: any replacement must stay
+  behind the developer build boundary unless its code, privacy, and store-policy
+  implications are reviewed as a separate product-scope decision.
 
 ## Done — shipped this cycle (2026-05-11 → 05-15)
 
@@ -239,8 +255,9 @@ the new E2E suite.
 
 - **Firefox AMO publishing** — `cd-firefox.yml` ready; needs `AMO_API_KEY`
   + `AMO_API_SECRET` in GitHub Secrets.
-- **CWS reviewer expectations** — raw `src/` zip submission keeps reviews
-  fast. If we ever switch to bundled-only output, expect slower reviews.
+- **CWS reviewer expectations** — upload only the output of
+  `npm run build:bundle:zip` (`store-assets/skillbridge-bundled.zip`). The raw
+  developer ZIP is deliberately separate and is never a CWS artifact.
 - **Anthropic Academy DOM stability** — selectors live in
   `src/lib/selectors.js`. `scripts/check-selectors.js` runs on every PR
   (`validate` job) AND on a 6h cron (`selectors-drift` workflow) — auto-
@@ -257,7 +274,7 @@ the new E2E suite.
   via a hard-coded menu of diagnostic ops (see `tests/e2e/helpers/
   extension.js`) — if you add a new op, add it to that switch, don't try
   to pass arbitrary functions through.
-- **Puter.js single point of failure** — the tutor pillar depends on a
-  third party we don't control. No mitigation today (would violate the
-  "no API key" rule). A standing sunset trigger covers what
-  happens if Puter changes terms.
+- **Puter.js package risk** — both the CWS and raw developer Tutor paths depend
+  on a third party. The raw vendored SDK contains lazy remote-code and unused
+  startup paths; only the build-time-sanitized, RHC-scanned copy in
+  `dist/bundled` may enter the CWS artifact.

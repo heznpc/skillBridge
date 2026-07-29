@@ -39,7 +39,7 @@ function loadDashboardWithStorage(storage) {
       mastered: { en: 'Mastered' },
     },
     { title: { en: 'Recent' } },
-    { backToChat: { en: 'Back' } },
+    { backToSidebar: { en: 'Back' } },
   );
   return fakeWindow._sb._chat.collectDashboardStats;
 }

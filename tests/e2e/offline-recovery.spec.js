@@ -42,6 +42,20 @@ test.describe('SkillBridge — offline GT recovery', () => {
   });
 
   test('deferred GT items translate after online event', async () => {
+    await page.evaluate(() => {
+      const p = document.createElement('p');
+      p.id = 'p-offline-structured';
+      p.innerHTML = 'Read <a id="offline-doc-link" href="/docs">the documentation</a> carefully.';
+      const link = p.querySelector('a');
+      const state = { p, link, clicks: 0 };
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        state.clicks++;
+      });
+      window.__sbOfflineStructured = state;
+      document.querySelector('#lesson-main').prepend(p);
+    });
+
     const offline = await evalInContentWorld(extCtx.context, 'dispatchOffline');
     expect(offline?.isOffline).toBe(true);
 
@@ -50,6 +64,7 @@ test.describe('SkillBridge — offline GT recovery', () => {
 
     let pt = await evalInContentWorld(extCtx.context, 'pageText');
     expect(pt.pProtected).toContain('Anthropic released Claude');
+    await expect(page.locator('#p-offline-structured')).toContainText('Read the documentation carefully.');
 
     const online = await evalInContentWorld(extCtx.context, 'dispatchOnline');
     expect(online?.isOffline).toBe(false);
@@ -64,5 +79,18 @@ test.describe('SkillBridge — offline GT recovery', () => {
     expect(pt.pProtected).toContain('Anthropic');
     expect(pt.pProtected).toContain('Claude');
     expect(pt.pProtected).toContain('프런티어 모델');
+
+    await expect(page.locator('#p-offline-structured')).toContainText('문서를 주의 깊게 읽으세요.');
+    const preserved = await page.evaluate(() => {
+      const currentLink = document.querySelector('#offline-doc-link');
+      currentLink.click();
+      return {
+        paragraphIdentity: window.__sbOfflineStructured.p === document.querySelector('#p-offline-structured'),
+        linkIdentity: window.__sbOfflineStructured.link === currentLink,
+        href: currentLink.getAttribute('href'),
+        clicks: window.__sbOfflineStructured.clicks,
+      };
+    });
+    expect(preserved).toEqual({ paragraphIdentity: true, linkIdentity: true, href: '/docs', clicks: 1 });
   });
 });

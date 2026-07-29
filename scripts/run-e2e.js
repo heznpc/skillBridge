@@ -19,20 +19,18 @@ const npxCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 const workers = process.env.E2E_WORKERS || '1';
 const tempPrefix = 'skillbridge-e2e-';
 const tempExtPrefix = 'skillbridge-e2e-ext-';
+// This runner validates every CWS runtime surface, including the bundled Tutor,
+// local-engine permission flow, streaming cancellation, and chat history.
 const batches = [
   [
     'tests/e2e/a11y.spec.js',
     'tests/e2e/first-user-flow.spec.js',
+    'tests/e2e/popup.spec.js',
     'tests/e2e/keyboard-shortcuts.spec.js',
     'tests/e2e/viewport-polish.spec.js',
     'tests/e2e/shadow-isolation.spec.js',
   ],
-  [
-    'tests/e2e/chat-history.spec.js',
-    'tests/e2e/code-comments.spec.js',
-    'tests/e2e/dashboard.spec.js',
-    'tests/e2e/exam-mode.spec.js',
-  ],
+  ['tests/e2e/code-comments.spec.js', 'tests/e2e/dashboard.spec.js', 'tests/e2e/exam-mode.spec.js'],
   [
     'tests/e2e/golden-translation.spec.js',
     'tests/e2e/idb-cache.spec.js',
@@ -42,9 +40,39 @@ const batches = [
     'tests/e2e/pdf-export.spec.js',
     'tests/e2e/protected-terms.spec.js',
   ],
-  ['tests/e2e/rapid-switch.spec.js', 'tests/e2e/spa-navigation.spec.js', 'tests/e2e/stream-cancel.spec.js'],
-  ['tests/e2e/tutor-chat.spec.js', 'tests/e2e/tutor-offline.spec.js', 'tests/e2e/youtube-lifecycle.spec.js'],
+  ['tests/e2e/rapid-switch.spec.js', 'tests/e2e/spa-navigation.spec.js'],
+  [
+    'tests/e2e/chat-history.spec.js',
+    'tests/e2e/stream-cancel.spec.js',
+    'tests/e2e/tutor-chat.spec.js',
+    'tests/e2e/tutor-offline.spec.js',
+  ],
+  ['tests/e2e/puter-frame-boot.spec.js'],
+  ['tests/e2e/local-engine-live.spec.js'],
+  ['tests/e2e/youtube-lifecycle.spec.js'],
 ];
+
+function verifyBatchCoverage() {
+  const e2eDir = path.join(__dirname, '..', 'tests', 'e2e');
+  const discovered = fs
+    .readdirSync(e2eDir)
+    .filter((name) => name.endsWith('.spec.js'))
+    .map((name) => `tests/e2e/${name}`)
+    .sort();
+  const listed = batches.flat();
+  const duplicates = listed.filter((file, index) => listed.indexOf(file) !== index);
+  const listedSet = new Set(listed);
+  const discoveredSet = new Set(discovered);
+  const missing = discovered.filter((file) => !listedSet.has(file));
+  const unknown = listed.filter((file) => !discoveredSet.has(file));
+  if (duplicates.length || missing.length || unknown.length) {
+    const parts = [];
+    if (duplicates.length) parts.push(`duplicates: ${[...new Set(duplicates)].join(', ')}`);
+    if (missing.length) parts.push(`missing: ${missing.join(', ')}`);
+    if (unknown.length) parts.push(`unknown: ${unknown.join(', ')}`);
+    throw new Error(`E2E batch coverage mismatch (${parts.join('; ')})`);
+  }
+}
 
 function run(cmd, args, options = {}) {
   const started = Date.now();
@@ -76,6 +104,7 @@ function cleanupE2ETempState() {
 }
 
 cleanupE2ETempState();
+verifyBatchCoverage();
 run(npmCmd, ['run', 'build:bundle']);
 for (let i = 0; i < batches.length; i++) {
   cleanupE2ETempState();

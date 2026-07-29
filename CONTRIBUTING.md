@@ -30,10 +30,13 @@ Thank you for your interest in contributing! SkillBridge makes Anthropic's educa
 git clone https://github.com/heznpc/skillbridge.git
 cd skillbridge
 
-# 2. Load in Chrome
+npm install
+npm run build:bundle
+
+# 2. Load the CWS-equivalent build in Chrome
 #    → chrome://extensions
 #    → Enable "Developer Mode" (top-right toggle)
-#    → "Load unpacked" → select the project folder
+#    → "Load unpacked" → select dist/bundled
 
 # 3. Navigate to https://anthropic.skilljar.com
 #    → Open the extension popup → select a language
@@ -42,7 +45,10 @@ cd skillbridge
 
 > **Note:** The extension activates on `anthropic.skilljar.com` (Anthropic Academy's learning platform powered by Skilljar).
 
-No build step. No npm install. It just works.
+`dist/bundled` is the supported CWS-equivalent build (minified, with the
+sanitized Puter Tutor broker and AI gateway flag on). Loading the repository
+root instead runs the raw, un-minified developer configuration and is not
+release or Tutor-runtime evidence.
 
 ---
 
@@ -51,15 +57,21 @@ No build step. No npm install. It just works.
 **Requirements:**
 - Google Chrome, Firefox, or Edge (latest)
 - A text editor (VS Code recommended)
-- A free [Puter.js](https://puter.com) account (for AI Tutor testing — optional)
+- A Puter account only if explicitly testing the optional raw developer AI path
 
 **Loading the Extension:**
 
 Chrome / Edge:
 1. Open `chrome://extensions` (Chrome) or `edge://extensions` (Edge)
 2. Enable **Developer Mode** (toggle in top-right)
-3. Click **Load unpacked** and select the project root folder
+3. Run `npm run build:bundle`, then click **Load unpacked** and select `dist/bundled`
 4. The SkillBridge icon should appear in your toolbar
+
+Loading the project root is a separate developer-only mode: it runs the raw
+source instead of the built bundle. The supported CWS-equivalent
+`dist/bundled` contains the reviewed, sanitized Puter SDK plus
+`puter-content-init.js` and `puter-content-broker.js`; it does not ship the
+retired page-world bridge or extension-frame broker.
 
 Firefox:
 1. Run `npm run build:firefox` to generate the Firefox-compatible build
@@ -86,7 +98,7 @@ Tests cover the translation engine, dictionary loading, cache logic, protected t
 - Open DevTools (F12) → Console tab → filter by `[SkillBridge]` to see extension logs
 - The background service worker has its own console — click "service worker" link on the extensions page
 - Network tab → filter `translate.googleapis.com` to inspect translation API calls
-- Application tab → IndexedDB → `skillbridge-cache` / `skillbridge-tutor` to inspect stored data
+- Application tab → IndexedDB → `skillbridge-cache` to inspect CWS cache data (`skillbridge-tutor` applies only to the raw developer AI path)
 
 > For the full testing and debugging guide (breakpoints, troubleshooting, data flow, IndexedDB schema), see **[TESTING.md](TESTING.md)**.
 
@@ -103,13 +115,13 @@ skillbridge/
 │   ├── content/
 │   │   ├── content.js         # Main content script — DOM translation, init, GT queue
 │   │   ├── header-controls.js # Header language selector, dark mode, welcome banner
-│   │   ├── sidebar-chat.js    # AI Tutor sidebar, chat, conversation history
-│   │   ├── text-selection.js  # Text selection "Ask Tutor" button
+│   │   ├── sidebar-chat.js    # Sidebar shell — AI tutor chat + local learning tools
+│   │   ├── text-selection.js  # Selection helper — "Ask tutor" on selected text
 │   │   └── styles/            # Content CSS partials (sidebar, transcript panel, fonts)
 │   ├── background/
-│   │   └── background.js      # Service worker — Google Translate proxy + URL fetcher
+│   │   └── background.js      # Service worker — Google Translate, update checks, cache cleanup
 │   ├── bridge/
-│   │   └── puter.js           # Bundled Puter.js library (MV3 compliant)
+│   │   └── puter.js           # Vendored Puter SDK (AI tutor) — ships in the CWS bundle
 │   ├── popup/
 │   │   ├── popup.html         # Extension popup UI
 │   │   └── popup.js           # Popup logic
@@ -117,11 +129,11 @@ skillbridge/
 │   │   ├── browser-polyfill.js   # Cross-browser API compatibility shim
 │   │   ├── constants.js       # Shared constants, thresholds, i18n labels, URL patterns
 │   │   ├── selectors.js       # Centralized Skilljar DOM selectors (quiz, content, catalog)
-│   │   ├── translator.js      # Translation engine (Static → Cache → GT + Gemini)
+│   │   ├── translator.js      # CWS: Static → Cache → GT; raw developer path may add Gemini
 │   │   ├── youtube-subtitles.js  # YouTube auto-subtitle enabler
-│   │   └── page-bridge.js     # Puter.js main-world bridge (for AI Tutor)
+│   │   └── page-bridge.js     # Puter main-world bridge (AI tutor) — ships in the CWS bundle
 │   └── data/                  # Static JSON translation dictionaries
-│       ├── ko.json            # English → Korean (570+ entries)
+│       ├── ko.json            # English → Korean (1,100+ entries)
 │       ├── ja.json            # English → Japanese
 │       ├── zh-CN.json         # English → Chinese Simplified
 │       ├── es.json            # English → Spanish
@@ -168,7 +180,7 @@ src/data/ko.json (Korean example — 1,100+ entries; 12 premium locales, key-par
 └── _protected     → GT mistranslations to auto-correct (rules: docs/TRANSLATION_RULES.md §2)
 ```
 
-> **How matching works:** The extension tries to match the **exact English text** of each element on the page against dictionary keys. If found, the curated translation is used instantly — no Google Translate, no delay. For text not in the dictionary, the system falls back to Google Translate → Gemini AI verification.
+> **How matching works:** The extension tries to match the **exact English text** of each element on the page against dictionary keys. If found, the curated translation is used instantly — no Google Translate, no delay. In the CWS-equivalent build, text not in the dictionary falls back to Google Translate and is cached locally. The raw developer configuration may additionally enable Gemini verification through Puter.
 
 #### a) Fix a Translation — ⏱️ 2 minutes
 
@@ -246,7 +258,7 @@ These checks also run automatically in CI on every PR.
 
 #### e) Add a New Standard Language
 
-Standard languages use Google Translate + Gemini verification (no dictionary). To add one:
+Standard languages use Google Translate in the CWS-equivalent build (no dictionary). The raw developer configuration may optionally add Gemini verification. To add one:
 1. Add the language code and name to `AVAILABLE_LANGUAGES` in `src/lib/constants.js`
 2. Add the language name to `_YT_LANG_NAMES` in `src/lib/constants.js`
 3. Test that Google Translate returns reasonable results for the content
@@ -260,7 +272,7 @@ Standard languages use Google Translate + Gemini verification (no dictionary). T
 The translation pipeline lives in `src/lib/translator.js`, with thresholds configured in `src/lib/constants.js`:
 
 ```
-Static Dictionary → IndexedDB Cache → Google Translate + Gemini Verification
+Static Dictionary → IndexedDB Cache → Google Translate → local result cache
 ```
 
 Key constants in `constants.js` (v2.1.0+):
@@ -271,13 +283,19 @@ Key constants in `constants.js` (v2.1.0+):
 - **`DEFAULT_PROTECTED_TERMS`** — Fallback list of terms to keep in English (Cowork, Dispatch, Computer Use, Subagent, etc.).
 
 Areas that need work:
-- **Gemini trigger heuristics** — the `queueGeminiVerify()` function decides which texts get AI-verified. Thresholds are in `SKILLBRIDGE_THRESHOLDS` (constants.js)
 - **Batch processing** — the Google Translate queue processes in batches of `GT_BATCH_SIZE`. Performance tuning is welcome
 - **Cache eviction strategy** — IndexedDB cache entries expire after 30 days; smarter invalidation (e.g., per-dictionary-version) could improve freshness
 
-#### AI Tutor (Claude Sonnet 4.6)
+#### AI Tutor and CWS Package Boundary
 
-The tutor lives in `src/content/sidebar-chat.js` (sidebar UI, chat, conversation history) and uses `src/lib/page-bridge.js` to communicate with Puter.js in the main world. Text selection quoting is in `src/content/text-selection.js`.
+The CWS candidate includes the Tutor/chat modules and a packaged Puter client
+running in Chrome's isolated content-script world on the trusted course host.
+The Tutor contacts Claude only after the user sends
+a message; page translation never calls Puter or an AI model. The CWS builder
+removes unused remote TLS-socket imports and dynamic-code fallback from the
+vendored SDK, then fails if `scripts/check-rhc.js` finds executable remote-code
+patterns in `dist/bundled`. The raw repository and developer ZIP are not the
+scanned CWS upload artifact.
 
 #### YouTube Features
 
@@ -310,9 +328,8 @@ The tutor lives in `src/content/sidebar-chat.js` (sidebar UI, chat, conversation
 > `window._skillbridgeLog.createLogger('ModuleName')` is available
 > globally inside content scripts. Prefer it over bare
 > `console.log/warn/error` so DevTools severity filtering works and
-> module names appear in user bug reports. (Background service-worker
-> and `src/lib/page-bridge.js` — which runs in the page world — are
-> intentionally not consumers of this module; see `src/lib/log.js`
+> module names appear in user bug reports. (The background service worker and
+> isolated Puter broker are intentionally not consumers of this module; see `src/lib/log.js`
 > header.) Existing call sites are kept as-is; there's no bulk-refactor
 > mandate.
 
@@ -407,19 +424,21 @@ background.js proxies to Google Translate API
   ↓
 translator.js receives Google translation
   ↓
-queueGeminiVerify() decides: does this need AI verification?
-  ↓ (yes, if text is complex enough)
-Gemini 2.0 Flash reviews and optionally improves the translation
-  ↓
 Result cached in IndexedDB for future visits
 ```
 
+A Puter-backed Gemini review step can refine complex translations. Since
+v4.0.0 it ships in the CWS bundle along with the AI Tutor, but it runs only
+after the user signs in to Puter — until then the translation flow above is
+exactly what executes.
+
 ### Key Design Decisions
 
-- **Why Google Translate + Gemini instead of just one?** Google Translate is fast and free. Gemini catches domain-specific errors (e.g., translating "Claude" as a person's name). Two-tier gives us speed AND quality.
-- **Why static dictionaries?** For the 570+ most critical AI/ML terms, human-curated translations are simply better than any MT engine. These are the terms that matter most for comprehension.
-- **Why Puter.js for the AI Tutor?** It provides free access to Claude Sonnet 4.6 without requiring users to have API keys. The "user-pays" model means the extension itself costs nothing.
-- **Why no build step?** Lower barrier to entry for contributors. Clone, load, done.
+- **Why Google Translate in CWS?** It translates every page without requiring any account, so translation works before (or entirely without) a Puter sign-in. Curated dictionaries and protected-term restoration handle domain-specific terminology locally.
+- **Why static dictionaries?** For the 1,100+ most critical AI/ML terms, human-curated translations are simply better than any MT engine. These are the terms that matter most for comprehension.
+- **Why bundle the Puter SDK?** It is how the AI Tutor reaches Claude without SkillBridge running a backend or asking for an API key — the user signs in to Puter (free) and their own quota is used. It ships inside the package; no remote script tag is added.
+- **Why a local engine option?** Some users would rather not send tutor questions to any cloud. Pointing the Tutor at an OpenAI-compatible server they run themselves (e.g. Ollama) keeps that text on their machine; the service worker proxies it because a page context cannot reach `localhost`.
+- **Why separate build outputs?** `npm run build:bundle:zip` produces the only CWS-safe ZIP. `npm run build:developer:zip` is an explicit raw-source artifact and must never be uploaded to CWS; `npm run build:zip` aliases the safe bundled command. **Security caveat:** the developer zip (and any unpacked load of the repo root) runs the *raw* Puter SDK — the storage/query-param/profile-lookup hardening is applied at build time by `scripts/build-bundle.js`, so it only exists in `dist/` artifacts. Treat unpacked dev loads as unhardened and never use them with a real Puter account you care about.
 
 ---
 
@@ -427,9 +446,11 @@ Result cached in IndexedDB for future visits
 
 **This is an unofficial community project.** It is not affiliated with, endorsed by, or sponsored by Anthropic.
 
-SkillBridge translates content **on-the-fly** for personal learning purposes. It does NOT store, permanently cache, or redistribute any original Skilljar course content. The extension only caches the translated outputs (not the originals) in the user's local IndexedDB.
+SkillBridge translates content **on-the-fly** for personal learning purposes and does not redistribute course content. The local IndexedDB translation cache stores original text, translated text, target language, and timestamps for up to 30 days so a page can reuse prior results; users can clear it through browser site-data controls.
 
-All contributions must maintain this approach — no scraping, no content storage, no redistribution.
+All contributions must maintain this approach — no bulk scraping, no
+server-side course archive, and no redistribution. Any local cache expansion
+must remain feature-scoped, documented, user-clearable, and retention-limited.
 
 "Anthropic", "Claude", and "Skilljar" are trademarks of their respective owners.
 

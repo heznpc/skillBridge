@@ -8,10 +8,10 @@
  * alarm path. The cache helpers have unit tests in isolation but
  * there's been no end-to-end proof of the full lifecycle:
  *
- *   translator.translate(text, lang)
+ *   CWS translator.translate(text, lang)
  *     → cachedLookup miss
  *     → googleTranslate fires (source: 'google')
- *     → queueGeminiVerify (async; eventually writes cache)
+ *     → writes the GT result directly to IDB
  *
  *   later — same (text, lang):
  *     → cachedLookup HIT
@@ -28,7 +28,7 @@ const { test, expect } = require('@playwright/test');
 const { launchExtension, closeExtension, evalInContentWorld } = require('./helpers/extension');
 const { registerStubs, startFixtureServer, stopFixtureServer } = require('./helpers/network-stubs');
 
-test.describe('SkillBridge — translator IDB cache', () => {
+test.describe('SkillBridge — CWS direct-GT IDB cache', () => {
   /** @type {Awaited<ReturnType<typeof launchExtension>>} */
   let extCtx;
   /** @type {import('@playwright/test').Page} */
@@ -45,16 +45,22 @@ test.describe('SkillBridge — translator IDB cache', () => {
 
     await page.goto(`${fixture.baseUrl}/lesson`);
 
-    // Wait for the translator IDB to be ready (the bridge populates _db
-    // during init). The `snapshot.methods.gt` check is a proxy for the
-    // translator being usable.
+    // The CWS artifact deliberately has no page bridge. Storage initialization
+    // must still complete so GT results can be cached directly.
     const deadline = Date.now() + 15_000;
+    let snap = null;
     while (Date.now() < deadline) {
-      const snap = await evalInContentWorld(extCtx.context, 'snapshot');
-      const bridge = await evalInContentWorld(extCtx.context, 'bridgeReady');
-      if (snap?.init && snap?.sb && snap?.methods?.gt && bridge?.isReady) break;
+      snap = await evalInContentWorld(extCtx.context, 'snapshot');
+      if (snap?.init && snap?.sb && snap?.methods?.gt && snap?.translator?.cacheReady) break;
       await page.waitForTimeout(250);
     }
+    if (!snap?.translator?.cacheReady) {
+      throw new Error(`CWS translator cache did not initialize: ${JSON.stringify(snap)}`);
+    }
+    // v4: the AI tutor ships, so the full-cap host has the bridge enabled.
+    // The GT→IDB cache lifecycle below is independent of the AI layer.
+    expect(snap.hostCaps?.bridge).toBe(true);
+    expect(snap.translator).toMatchObject({ aiEnabled: true, cacheReady: true });
   });
 
   test.afterAll(async () => {
@@ -63,24 +69,16 @@ test.describe('SkillBridge — translator IDB cache', () => {
   });
 
   test('first translate hits GT; second hits cache; different lang misses cache', async () => {
-    // Length ≥ 80 chars + a semicolon (complexity marker) — required to
-    // pass queueGeminiVerify's filters (GEMINI_MIN_TEXT=80,
-    // MIN_COMPLEX_TEXT=120). Shorter texts intentionally don't get
-    // verified-and-cached; the cache only protects sentences worth
-    // running through the Gemini verifier.
-    const TEXT = 'Cache me through the IDB layer; this sentence is long enough to clear the GEMINI_MIN_TEXT threshold.';
-    const KO = 'IDB 레이어를 통해 캐시하세요; 이 문장은 GEMINI_MIN_TEXT 임계값을 통과할 만큼 깁니다.';
+    const TEXT = 'Cache this course sentence through the IndexedDB translation layer.';
+    const KO = 'IndexedDB 번역 레이어를 통해 이 강의 문장을 캐시하세요.';
 
     // === Cycle 1: cold miss → GT ===
     const cold = await evalInContentWorld(extCtx.context, 'translateOnce', { text: TEXT, lang: 'ko' });
     expect(cold.text).toBe(KO);
     expect(cold.source).toBe('google');
 
-    // The cache write happens asynchronously through queueGeminiVerify
-    // (translator pushes the GT result onto a verify queue that runs in
-    // the background, and the post-verify resolution path calls
-    // _cacheTranslation). Poll the next translate() until we see the
-    // cache hit — the wait is bounded by `deadline`.
+    // Poll translate() until the IndexedDB transaction commits and the cache
+    // is observed.
     const deadline = Date.now() + 6_000;
     let warm = cold;
     while (Date.now() < deadline) {

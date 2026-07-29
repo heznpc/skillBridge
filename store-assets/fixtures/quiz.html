@@ -16,41 +16,39 @@
     The exam-safe contract: title + question translate, answer options DO NOT.
   -->
   <style>
-    :root { --ink:#1c1917; --muted:#6b6560; --accent:#e07a5f; --navy:#3d405b; --line:#e7e5e4; --bg:#fafaf9; }
+    :root { --ink:#1f1e1b; --muted:#69655f; --accent:#d96f52; --line:#dedad3; --bg:#f8f7f3; }
     * { box-sizing: border-box; }
     html, body { margin: 0; }
-    body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:var(--ink); background:var(--bg); }
-    .site-header { background:var(--navy); color:#fff; display:flex; align-items:center; padding:0 28px; height:58px; }
-    .site-header .logo { display:flex; align-items:center; gap:10px; font-weight:700; font-size:16px; }
-    .site-header .logo .dot { width:22px; height:22px; border-radius:6px; background:linear-gradient(135deg,#e07a5f,#f2cc8f); }
+    body { font-family:Arial,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; color:var(--ink); background:var(--bg); }
+    /* Neutral test host; this is not a facsimile of the live Skilljar header. */
+    .site-header { background:var(--bg); color:var(--ink); display:flex; align-items:center; justify-content:flex-end; padding:0 30px; height:64px; border-bottom:1px solid var(--line); }
     #header-right { margin-left:auto; display:flex; align-items:center; gap:18px; }
-    .header-links-container { display:flex; gap:18px; }
-    .header-links-container a { color:#e9e9f0; text-decoration:none; font-size:14px; }
-    #si18n-header-lang select { padding:6px 10px; border-radius:7px; border:1px solid #5a5d77; background:#2e3047; color:#fff; font-size:13px; }
-    main { max-width:760px; margin:40px auto; padding:0 28px; }
-    .eyebrow { color:var(--accent); font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:.08em; }
-    h1 { font-size:28px; margin:6px 0 18px; }
+    .header-links-container { display:flex; gap:30px; }
+    .header-links-container a { color:var(--ink); text-decoration:none; font-size:15px; }
+    #si18n-header-lang select { padding:8px 12px; border-radius:7px; border:1px solid var(--line); background:#fff; color:var(--ink); font-size:13px; }
+    main { max-width:820px; margin:58px auto; padding:0 28px; }
+    .eyebrow { color:var(--muted); font-weight:600; font-size:13px; letter-spacing:.02em; }
+    h1 { font-family:Georgia,'Times New Roman',serif; font-size:42px; font-weight:400; margin:12px 0 22px; letter-spacing:-.02em; }
     #quiz-question { font-size:18px; line-height:1.5; margin:0 0 22px; font-weight:600; }
     .quiz-form { display:flex; flex-direction:column; gap:12px; }
-    .answer-option { display:flex; align-items:center; gap:12px; padding:15px 18px; background:#fff;
-      border:1px solid var(--line); border-radius:12px; font-size:15px; cursor:pointer; }
+    .answer-option { display:flex; align-items:center; gap:12px; padding:17px 18px; background:#fff;
+      border:1px solid var(--line); border-radius:3px; font-size:15px; cursor:pointer; }
     .answer-option:hover { border-color:var(--accent); }
     .answer-option input { accent-color:var(--accent); width:17px; height:17px; }
   </style>
 </head>
 <body>
   <header class="site-header">
-    <span class="logo"><span class="dot"></span>Academy</span>
     <div id="header-right">
       <div class="header-links-container">
-        <a href="#">Catalog</a>
-        <a href="#">My Courses</a>
+        <a href="#">Academy</a>
+        <a href="#">Courses</a>
       </div>
     </div>
   </header>
 
   <main id="lesson-main">
-    <div class="eyebrow">Knowledge check</div>
+    <div class="eyebrow">Building with the Claude API / Knowledge check</div>
     <h1 id="quiz-title">Claude Fundamentals Quiz</h1>
     <p id="quiz-question">Which model is best suited for fast, high-volume classification tasks?</p>
 

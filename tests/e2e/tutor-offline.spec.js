@@ -65,4 +65,48 @@ test.describe('SkillBridge — tutor offline guard', () => {
     expect(alertBubble?.text.length).toBeGreaterThan(0);
     await evalInContentWorld(extCtx.context, 'dispatchOnline');
   });
+
+  test('offline state still allows the selected localhost Tutor engine', async () => {
+    let localCalls = 0;
+    await extCtx.context.route('http://localhost:11434/v1/chat/completions', async (route) => {
+      localCalls++;
+      await route.fulfill({
+        status: 200,
+        headers: { 'Content-Type': 'text/event-stream' },
+        body: 'data: {"choices":[{"delta":{"content":"LOCAL_OFFLINE_OK"}}]}\n\n' + 'data: [DONE]\n\n',
+      });
+    });
+
+    const [serviceWorker] = extCtx.context.serviceWorkers();
+    await serviceWorker.evaluate(async () => {
+      await chrome.storage.local.set({
+        sb_ai_engine: 'local',
+        sb_local_base: 'http://localhost:11434/v1',
+        sb_local_model: 'e2e-local-model',
+      });
+    });
+
+    const before = await evalInContentWorld(extCtx.context, 'readChatLog');
+    const priorAlerts = before.filter((message) => message.alert).length;
+    const offline = await evalInContentWorld(extCtx.context, 'dispatchOffline');
+    expect(offline?.isOffline).toBe(true);
+
+    const send = await evalInContentWorld(extCtx.context, 'sendChat', 'Use the local engine while offline.');
+    expect(send?.ok).toBe(true);
+
+    const deadline = Date.now() + 8_000;
+    let log = [];
+    while (Date.now() < deadline) {
+      log = await evalInContentWorld(extCtx.context, 'readChatLog');
+      if (log.some((message) => message.role === 'bot' && message.text.includes('LOCAL_OFFLINE_OK'))) break;
+      await page.waitForTimeout(150);
+    }
+
+    expect(localCalls).toBe(1);
+    expect(log.some((message) => message.role === 'bot' && message.text.includes('LOCAL_OFFLINE_OK'))).toBe(true);
+    expect(log.filter((message) => message.alert).length).toBe(priorAlerts);
+
+    await serviceWorker.evaluate(async () => chrome.storage.local.set({ sb_ai_engine: 'cloud' }));
+    await evalInContentWorld(extCtx.context, 'dispatchOnline');
+  });
 });

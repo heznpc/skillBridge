@@ -6,11 +6,11 @@
  * here via process.platform so the test exercises the same branch the handler
  * takes on the host OS):
  *
- *   - Mod+Shift+S  → toggle the tutor sidebar
+ *   - Mod+Shift+S  → toggle the learning-tools sidebar
  *   - Mod+Shift+F  → open the sidebar and toggle the flashcards panel
  *   - Mod+Shift+/  → toggle the shortcuts help overlay
  *   - Escape       → close the overlay when it's open
- *   - /            → focus the chat input when the sidebar is open
+ *   - /            → focus the tutor chat input (AI-enabled sidebar)
  *   - Mod+Shift+L  → toggle dark mode (si18n-dark class on <html>)
  *
  * a11y.spec.js covers the overlay's ARIA shape; this spec covers that the key
@@ -66,10 +66,14 @@ test.describe('SkillBridge — keyboard shortcuts', () => {
   const snapshot = () => evalInContentWorld(extCtx.context, 'snapshot');
   const sidebarVisible = async () => (await snapshot()).sidebarVisible;
   const flashcardsVisible = async () => (await snapshot()).methods.chat.state.flashcardPanelOpen;
-  const chatInputFocused = () =>
+  const sidebarInputState = () =>
     page.evaluate(() => {
       const root = document.getElementById('skillbridge-root')?.shadowRoot;
-      return root?.activeElement?.id === 'si18n-chat-input';
+      return {
+        languageSelect: !!root?.getElementById('si18n-sidebar-lang-select'),
+        chatInput: !!root?.getElementById('si18n-chat-input'),
+        activeId: root?.activeElement?.id || null,
+      };
     });
 
   test('Mod+Shift+/ opens the shortcuts overlay and Escape closes it', async () => {
@@ -78,6 +82,11 @@ test.describe('SkillBridge — keyboard shortcuts', () => {
     await page.keyboard.press(`${MOD}+Shift+Slash`);
     // showHelpOverlay appends synchronously; give the handler a beat regardless.
     await expect.poll(overlayPresent, { timeout: 3_000 }).toBe(true);
+    const descriptions = await page.locator('.si18n-shortcut-desc').allTextContents();
+    expect(descriptions).toContain('Toggle learning sidebar');
+    // v4: the AI tutor ships, so the sidebar has a chat input and the overlay
+    // lists the "Focus chat input" (/) shortcut.
+    expect(descriptions.join(' ')).toMatch(/Focus chat input/i);
 
     await page.keyboard.press('Escape');
     // hideHelpOverlay removes after an OVERLAY_REMOVE transition delay, so poll.
@@ -97,7 +106,7 @@ test.describe('SkillBridge — keyboard shortcuts', () => {
     await expect.poll(isDark, { timeout: 3_000 }).toBe(before);
   });
 
-  test('Mod+Shift+S toggles the tutor sidebar and Escape closes it', async () => {
+  test('Mod+Shift+S toggles the learning-tools sidebar and Escape closes it', async () => {
     if (await sidebarVisible()) {
       await page.keyboard.press(`${MOD}+Shift+KeyS`);
       await expect.poll(sidebarVisible, { timeout: 3_000 }).toBe(false);
@@ -110,7 +119,7 @@ test.describe('SkillBridge — keyboard shortcuts', () => {
     await expect.poll(sidebarVisible, { timeout: 3_000 }).toBe(false);
   });
 
-  test('Mod+Shift+F opens flashcards and / focuses chat when sidebar is open', async () => {
+  test('Mod+Shift+F opens flashcards and / focuses the tutor chat input', async () => {
     if (await sidebarVisible()) {
       await page.keyboard.press('Escape');
       await expect.poll(sidebarVisible, { timeout: 3_000 }).toBe(false);
@@ -123,7 +132,22 @@ test.describe('SkillBridge — keyboard shortcuts', () => {
     await page.keyboard.press(`${MOD}+Shift+KeyF`);
     await expect.poll(flashcardsVisible, { timeout: 3_000 }).toBe(false);
 
-    await page.keyboard.press('Slash');
-    await expect.poll(chatInputFocused, { timeout: 3_000 }).toBe(true);
+    // v4 (AI tutor build): the sidebar carries a chat input, so pressing / (not
+    // in a field) focuses it and consumes the key.
+    if (!(await sidebarVisible())) {
+      await page.keyboard.press(`${MOD}+Shift+KeyS`);
+      await expect.poll(sidebarVisible, { timeout: 3_000 }).toBe(true);
+    }
+    const beforeSlash = await sidebarInputState();
+    expect(beforeSlash.chatInput, 'AI sidebar exposes a chat input').toBe(true);
+    const consumed = await page.evaluate(
+      () =>
+        !document.body.dispatchEvent(
+          new window.KeyboardEvent('keydown', { key: '/', code: 'Slash', bubbles: true, cancelable: true }),
+        ),
+    );
+    expect(consumed, '/ should focus the tutor chat input and consume the key').toBe(true);
+    const afterSlash = await sidebarInputState();
+    expect(afterSlash.activeId).toBe('si18n-chat-input');
   });
 });

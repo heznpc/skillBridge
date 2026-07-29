@@ -4,7 +4,7 @@
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "anthropic.skilljar.com 의 무료 AI 강의를 위한 다국어 학습 도우미. 강의 페이지를 번역하고 페이지 내 AI 튜터와 함께 학습하세요 — API 키 불필요.",
+    "message": "AI 강의를 32개 언어로 번역하고 엄선된 용어, 플래시카드, 북마크, 로컬 학습 도구를 이용하세요.",
     "description": "Extension description"
   }
 }
