@@ -603,10 +603,15 @@ describe('isolated cloud broker replacement', () => {
     client.emitMessage({ type: 'start', id: 'active', prompt: 'hello', model: 'claude-sonnet-4-6' });
     expect(_cloudActive.size).toBe(1);
     const clientMessagesBeforeHeartbeat = client.posted.length;
+    // A keepalive on an actually active request is relayed so the client can
+    // rearm its idle watchdog through a long sign-in; a stale/forged id is
+    // dropped and never reaches any client.
     firstFrame.emitMessage({ type: 'keepalive', id: 'active' });
     firstFrame.emitMessage({ type: 'keepalive', id: 'stale-id' });
     expect(_cloudActive.size).toBe(1);
-    expect(client.posted).toHaveLength(clientMessagesBeforeHeartbeat);
+    expect(client.posted).toHaveLength(clientMessagesBeforeHeartbeat + 1);
+    expect(client.posted).toContainEqual({ type: 'keepalive', id: 'active' });
+    expect(client.posted).not.toContainEqual({ type: 'keepalive', id: 'stale-id' });
 
     const replacement = brokerPort({
       name: 'sb-puter-content',

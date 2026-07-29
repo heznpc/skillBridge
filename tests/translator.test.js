@@ -413,7 +413,12 @@ describe('Language JSON files', () => {
 });
 
 describe('chatStream — broker recovery failures propagate as a rejection', () => {
+  afterEach(() => {
+    delete global.chrome.storage;
+  });
+
   test('attempts lazy recovery, then rejects instead of silently resolving', async () => {
+    global.chrome.storage = { local: { get: jest.fn(async () => ({})) } };
     const t = new SkilljarTranslator();
     t.isReady = false;
     t._ensureCloudBroker = jest.fn().mockRejectedValue(new Error('Cloud broker unavailable'));
@@ -423,5 +428,49 @@ describe('chatStream — broker recovery failures propagate as a rejection', () 
     // forever with no error and no retry.
     await expect(t.chatStream('hello', 'ko', '', () => {}, {})).rejects.toThrow('Cloud broker unavailable');
     expect(t._ensureCloudBroker).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('chatStream — engine preference is a privacy gate that fails closed', () => {
+  afterEach(() => {
+    delete global.chrome.storage;
+    jest.useRealTimers();
+  });
+
+  test('rejects instead of defaulting to cloud when the preference read stalls', async () => {
+    jest.useFakeTimers();
+    // A stalled chrome.storage read must NOT fall back to 'cloud': the user
+    // may have selected 'local' or 'off', which promise that no prompt leaves
+    // the machine. Fail closed with a retryable rejection.
+    global.chrome.storage = { local: { get: jest.fn(() => new Promise(() => {})) } };
+    const t = new SkilljarTranslator();
+    t.isReady = true;
+    t._cloudPort = { postMessage: jest.fn() };
+    const pending = t.chatStream('hello', 'ko', '', () => {}, {});
+    const assertion = expect(pending).rejects.toThrow('Tutor engine preference read timed out');
+    await jest.advanceTimersByTimeAsync(1500);
+    await assertion;
+    expect(t._cloudPort.postMessage).not.toHaveBeenCalled();
+  });
+
+  test('rejects instead of defaulting to cloud when the preference read throws', async () => {
+    global.chrome.storage = {
+      local: {
+        get: jest.fn(async () => {
+          throw new Error('storage backend gone');
+        }),
+      },
+    };
+    const t = new SkilljarTranslator();
+    t.isReady = true;
+    t._cloudPort = { postMessage: jest.fn() };
+    await expect(t.chatStream('hello', 'ko', '', () => {}, {})).rejects.toThrow('storage backend gone');
+    expect(t._cloudPort.postMessage).not.toHaveBeenCalled();
+  });
+
+  test('honors the stored off/local preference from a healthy read', async () => {
+    global.chrome.storage = { local: { get: jest.fn(async () => ({ sb_ai_engine: 'off' })) } };
+    const t = new SkilljarTranslator();
+    await expect(t.chatStream('hello', 'ko', '', () => {}, {})).rejects.toThrow('turned off in settings');
   });
 });

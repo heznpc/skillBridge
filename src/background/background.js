@@ -526,8 +526,13 @@ function _registerCloudBroker(port) {
     const client = _cloudActive.get(key);
     if (!client) return;
     // A message on an actually active broker request resets MV3's service-
-    // worker idle timer. It has no reply and is ignored for stale/forged ids.
-    if (msg.type === 'keepalive') return;
+    // worker idle timer, and is relayed so the client can keep its own idle
+    // watchdog alive through a long sign-in (account creation easily exceeds
+    // the 90s stream timeout). Stale/forged ids never reach a client.
+    if (msg.type === 'keepalive') {
+      _safePortPost(client, { type: 'keepalive', id: msg.id });
+      return;
+    }
     if (msg.type === 'chunk' && typeof msg.text === 'string') {
       _safePortPost(client, { type: 'chunk', id: msg.id, text: msg.text });
     } else if (msg.type === 'done') {

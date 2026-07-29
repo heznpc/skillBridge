@@ -78,6 +78,35 @@ function createDocument() {
 function createIsolatedGlobal() {
   const rawListeners = new Map();
   let hostStorageReads = 0;
+  // Legacy v3.5.x page-world state: the SDK persisted its token into the host
+  // page's REAL localStorage. Init must scrub `puter.*` keys on boot (exactly
+  // one host-storage access) and leave the host app's own keys alone.
+  const hostStorageData = new Map([
+    ['puter.auth.token', 'legacy-page-world-token'],
+    ['puter.app.id', 'legacy-app'],
+    ['skilljar.pref', 'keep-me'],
+  ]);
+  const hostStorage = {
+    get length() {
+      return hostStorageData.size;
+    },
+    key(index) {
+      const name = Array.from(hostStorageData.keys())[Number(index)];
+      return name === undefined ? null : name;
+    },
+    getItem(key) {
+      return hostStorageData.has(key) ? hostStorageData.get(key) : null;
+    },
+    setItem(key, value) {
+      hostStorageData.set(key, String(value));
+    },
+    removeItem(key) {
+      hostStorageData.delete(key);
+    },
+    clear() {
+      hostStorageData.clear();
+    },
+  };
   const isolatedGlobal = {
     document: createDocument(),
     location: { search: '' },
@@ -98,15 +127,27 @@ function createIsolatedGlobal() {
     enumerable: true,
     get() {
       hostStorageReads += 1;
-      throw new Error('host localStorage must not be touched');
+      return hostStorage;
     },
   });
   new Function('globalThis', initSrc)(isolatedGlobal);
   return {
     isolatedGlobal,
     hostStorageReads: () => hostStorageReads,
+    hostStorageData,
     dispatchWindowMessage(event) {
-      for (const listener of [...(rawListeners.get('message') || [])]) listener(event);
+      // Mirror DOM semantics for stopImmediatePropagation so the init file's
+      // first-registered capture filter can actually block later listeners.
+      let stopped = false;
+      const original = event.stopImmediatePropagation;
+      event.stopImmediatePropagation = () => {
+        stopped = true;
+        if (typeof original === 'function') original.call(event);
+      };
+      for (const listener of [...(rawListeners.get('message') || [])]) {
+        if (stopped) break;
+        listener(event);
+      }
     },
   };
 }
@@ -238,11 +279,49 @@ describe('Puter isolated-world initialization', () => {
     expect(global.PUTER_API_ORIGIN).toBe('https://api.puter.com');
     expect(global.PUTER_ORIGIN).toBe('https://puter.com');
     expect(global.localStorage).toBe(global.__SKILLBRIDGE_PUTER_STORAGE__);
-    expect(isolated.hostStorageReads()).toBe(0);
+    // Exactly one host-storage access: the legacy v3 page-world token scrub.
+    expect(isolated.hostStorageReads()).toBe(1);
+    expect(isolated.hostStorageData.has('puter.auth.token')).toBe(false);
+    expect(isolated.hostStorageData.has('puter.app.id')).toBe(false);
+    expect(isolated.hostStorageData.get('skilljar.pref')).toBe('keep-me');
 
     global.localStorage.setItem('puter.auth.token', 'private');
     expect(global.localStorage.getItem('puter.auth.token')).toBe('private');
     expect(global.localStorage.length).toBe(1);
+  });
+
+  test('drops forged puter.* control messages before listeners registered outside any gate', () => {
+    const isolated = createIsolatedGlobal();
+    const global = isolated.isolatedGlobal;
+    global.__SKILLBRIDGE_RELEASE_PUTER_INIT_GATE__();
+
+    // The SDK's driver layer registers its auth-dialog listener asynchronously
+    // after a 401 — outside the init/broker gates and with no origin check of
+    // its own. The first-registered capture filter must protect it anyway.
+    const unguardedSdkListener = jest.fn();
+    global.addEventListener('message', unguardedSdkListener);
+
+    isolated.dispatchWindowMessage({
+      isTrusted: true,
+      origin: 'https://lesson.skilljar.com',
+      data: { msg: 'puter.token', token: 'attacker-token' },
+    });
+    isolated.dispatchWindowMessage({
+      isTrusted: false,
+      origin: 'https://puter.com',
+      data: { msg: 'puter.token', token: 'attacker-token' },
+    });
+    expect(unguardedSdkListener).not.toHaveBeenCalled();
+
+    // Non-Puter host messaging is untouched, and genuine Puter control
+    // messages from the official origin still arrive.
+    isolated.dispatchWindowMessage({ isTrusted: true, origin: 'https://lesson.skilljar.com', data: { kind: 'host' } });
+    isolated.dispatchWindowMessage({
+      isTrusted: true,
+      origin: 'https://puter.com',
+      data: { msg: 'puter.token', token: 'genuine' },
+    });
+    expect(unguardedSdkListener).toHaveBeenCalledTimes(2);
   });
 
   test('fails closed without reading host storage when localStorage cannot be replaced', () => {
@@ -311,7 +390,8 @@ describe('Puter isolated-world content broker', () => {
     expect(broker.isolatedGlobal.localStorage.getItem('puter.auth.token')).toBe('persisted-token');
     expect(broker.isolatedGlobal.localStorage.getItem('puter.app.id')).toBe('persisted-app');
     expect(broker.whoami).not.toHaveBeenCalled();
-    expect(broker.hostStorageReads()).toBe(0);
+    // The single permitted host-storage access is init's legacy-token scrub.
+    expect(broker.hostStorageReads()).toBe(1);
   });
 
   test('reconnects the broker on demand after an MV3 service-worker Port disconnect', async () => {
@@ -386,7 +466,8 @@ describe('Puter isolated-world content broker', () => {
       ' world',
     ]);
     expect(broker.whoami).not.toHaveBeenCalled();
-    expect(broker.hostStorageReads()).toBe(0);
+    // The single permitted host-storage access is init's legacy-token scrub.
+    expect(broker.hostStorageReads()).toBe(1);
   });
 
   test.each([

@@ -3,6 +3,23 @@
 
   const PUTER_ORIGIN = 'https://puter.com';
 
+  // v3.5.x ran the Puter SDK in the page world, which persisted the auth
+  // token into the host page's REAL localStorage. Scrub that legacy state on
+  // every boot, before anything below can throw and before the shim hides the
+  // host store from this world: a leftover token would otherwise stay
+  // readable by page scripts indefinitely.
+  try {
+    const hostStorage = globalThis.localStorage;
+    const legacyKeys = [];
+    for (let i = 0; i < hostStorage.length; i += 1) {
+      const key = hostStorage.key(i);
+      if (typeof key === 'string' && key.startsWith('puter.')) legacyKeys.push(key);
+    }
+    for (const key of legacyKeys) hostStorage.removeItem(key);
+  } catch (_e) {
+    /* host storage unavailable (sandboxed document) — nothing to scrub */
+  }
+
   // Puter treats a number of `puter.*` query parameters as trusted app
   // bootstrap state. On a lesson URL that would let an attacker-selected link
   // switch the SDK into app mode and replace its API origin before the broker
@@ -85,6 +102,26 @@
   const nativeRemove = globalThis.removeEventListener;
   const records = [];
   let gateDepth = 0;
+
+  // The SDK also registers message listeners OUTSIDE any gate: its driver
+  // layer reacts to a 401 by asynchronously opening the auth dialog, whose
+  // listener accepts `{msg: 'puter.token', token}` with no origin check. This
+  // capture listener is registered before the SDK evaluates, so it runs first
+  // and drops forged Puter control messages before any SDK listener sees
+  // them. It only touches events carrying the `puter.*` control shape, so
+  // host-page messaging is unaffected.
+  nativeAdd.call(
+    globalThis,
+    'message',
+    (event) => {
+      const msg = event?.data?.msg;
+      if (typeof msg !== 'string' || !msg.startsWith('puter.')) return;
+      if (event.isTrusted !== true || event.origin !== PUTER_ORIGIN) {
+        event.stopImmediatePropagation();
+      }
+    },
+    true,
+  );
 
   const captureFlag = (options) => (typeof options === 'boolean' ? options : !!options?.capture);
   const dispatch = (listener, event) => {

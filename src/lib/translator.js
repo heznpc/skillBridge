@@ -455,18 +455,17 @@ class SkilljarTranslator {
    */
   // Selected tutor engine: 'cloud' (default) | 'local' | 'off'.
   async _getAiEngine() {
-    try {
-      // A storage read must never gate the tutor indefinitely: under heavy
-      // browser load chrome.storage IPC can stall for seconds, and every chat
-      // begins with this call. Fall back to the default engine if it is slow —
-      // the preference read is best-effort, not a correctness gate.
-      const read = chrome.storage.local.get('sb_ai_engine');
-      const timeout = new Promise((resolve) => setTimeout(() => resolve(null), 1500));
-      const result = await Promise.race([read, timeout]);
-      return result?.sb_ai_engine || 'cloud';
-    } catch {
-      return 'cloud';
-    }
+    // The engine preference is a privacy gate: 'local' and 'off' promise the
+    // user that no prompt leaves this machine. If the chrome.storage read
+    // stalls or fails, fail CLOSED — reject so the sidebar shows a retryable
+    // error — rather than defaulting into the cloud path, which would ship
+    // the prompt plus lesson context to Puter against the stored preference.
+    const read = chrome.storage.local.get('sb_ai_engine');
+    const timeout = new Promise((_resolve, reject) =>
+      setTimeout(() => reject(new Error('Tutor engine preference read timed out')), 1500),
+    );
+    const result = await Promise.race([read, timeout]);
+    return result?.sb_ai_engine || 'cloud';
   }
 
   // Stream a tutor reply from a local OpenAI-compatible server (Ollama, …).
@@ -620,6 +619,10 @@ User: ${userMessage}`;
             fullText += text;
             onChunk?.(text, fullText);
           },
+          // The broker keepalives every 20s while a request is genuinely in
+          // flight (including while its sign-in overlay is open); without this
+          // the 90s idle watchdog kills a first-run sign-in mid-popup.
+          keepalive: () => armWatchdog(),
           done: () => finish(resolve, fullText || 'No response'),
           error: (message) => finish(reject, new Error(message || 'Cloud AI error')),
         });
@@ -770,6 +773,7 @@ User: ${userMessage}`;
         const pending = this._cloudPending.get(msg.id);
         if (!pending) return;
         if (msg.type === 'chunk' && typeof msg.text === 'string') pending.chunk(msg.text);
+        else if (msg.type === 'keepalive') pending.keepalive?.();
         else if (msg.type === 'done') {
           pending.done();
         } else if (msg.type === 'error') {
