@@ -45,10 +45,10 @@ npm run build:bundle
 
 > **Note:** The extension activates on `anthropic.skilljar.com` (Anthropic Academy's learning platform powered by Skilljar).
 
-`dist/bundled` is the CWS-equivalent build (minified, same AI tutor as the raw
-source — the bundled Puter bridge ships and the AI gateway flag is on). Loading
-the repository root instead runs the raw, un-minified developer configuration;
-both include the opt-in Puter AI path.
+`dist/bundled` is the supported CWS-equivalent build (minified, with the
+sanitized Puter Tutor broker and AI gateway flag on). Loading the repository
+root instead runs the raw, un-minified developer configuration and is not
+release or Tutor-runtime evidence.
 
 ---
 
@@ -68,10 +68,10 @@ Chrome / Edge:
 4. The SkillBridge icon should appear in your toolbar
 
 Loading the project root is a separate developer-only mode: it runs the raw
-source instead of the built bundle. Both surfaces ship the Puter SDK and page
-bridge — since v4.0.0 the AI Tutor is part of the CWS package, so
-`dist/bundled` intentionally contains `src/bridge/puter.js` and
-`src/lib/page-bridge.js`.
+source instead of the built bundle. The supported CWS-equivalent
+`dist/bundled` contains the reviewed, sanitized Puter SDK plus
+`puter-content-init.js` and `puter-content-broker.js`; it does not ship the
+retired page-world bridge or extension-frame broker.
 
 Firefox:
 1. Run `npm run build:firefox` to generate the Firefox-compatible build
@@ -288,8 +288,9 @@ Areas that need work:
 
 #### AI Tutor and CWS Package Boundary
 
-The CWS candidate includes the Tutor/chat modules, `src/lib/page-bridge.js`,
-and a packaged Puter client. The Tutor contacts Claude only after the user sends
+The CWS candidate includes the Tutor/chat modules and a packaged Puter client
+running in Chrome's isolated content-script world on the trusted course host.
+The Tutor contacts Claude only after the user sends
 a message; page translation never calls Puter or an AI model. The CWS builder
 removes unused remote TLS-socket imports and dynamic-code fallback from the
 vendored SDK, then fails if `scripts/check-rhc.js` finds executable remote-code
@@ -327,9 +328,8 @@ scanned CWS upload artifact.
 > `window._skillbridgeLog.createLogger('ModuleName')` is available
 > globally inside content scripts. Prefer it over bare
 > `console.log/warn/error` so DevTools severity filtering works and
-> module names appear in user bug reports. (Background service-worker
-> and `src/lib/page-bridge.js` — which runs in the page world — are
-> intentionally not consumers of this module; see `src/lib/log.js`
+> module names appear in user bug reports. (The background service worker and
+> isolated Puter broker are intentionally not consumers of this module; see `src/lib/log.js`
 > header.) Existing call sites are kept as-is; there's no bulk-refactor
 > mandate.
 

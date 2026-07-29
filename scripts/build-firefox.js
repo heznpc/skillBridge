@@ -20,6 +20,8 @@
 
 const fs = require('fs');
 const path = require('path');
+const { writeCwsSafePuter } = require('./build-bundle');
+const { assertNoRemoteHostedCode } = require('./check-rhc');
 
 const ROOT = path.resolve(__dirname, '..');
 const DIST_DIR = path.join(ROOT, 'dist', 'firefox');
@@ -52,6 +54,11 @@ if (firefoxManifest.background?.service_worker) {
 
 // 3. Remove Chrome-specific fields
 delete firefoxManifest.minimum_chrome_version;
+for (const contentScript of firefoxManifest.content_scripts || []) {
+  // Firefox content scripts already default to the isolated extension world;
+  // omit Chrome's explicit manifest key for Firefox 121 compatibility.
+  delete contentScript.world;
+}
 
 // ── Write Firefox manifest ───────────────────────────────────
 
@@ -84,6 +91,11 @@ function copyDir(src, dest) {
 for (const dir of ['_locales', 'src']) {
   copyDir(path.join(ROOT, dir), path.join(DIST_DIR, dir));
 }
+// Firefox uses the same reviewed SDK transform as the Chrome package. Raw
+// vendored Puter code is useful for source auditing, but must not be the
+// runtime copy because it contains unused remote imports and host-storage
+// accesses that SkillBridge does not need.
+writeCwsSafePuter(path.join(ROOT, 'src', 'bridge', 'puter.js'), path.join(DIST_DIR, 'src', 'bridge', 'puter.js'));
 copyDir(path.join(ROOT, 'assets', 'icons'), path.join(DIST_DIR, 'assets', 'icons'));
 copyDir(path.join(ROOT, 'licenses'), path.join(DIST_DIR, 'licenses'));
 fs.copyFileSync(path.join(ROOT, 'LICENSE'), path.join(DIST_DIR, 'LICENSE'));
@@ -91,8 +103,10 @@ fs.copyFileSync(path.join(ROOT, 'THIRD_PARTY_NOTICES.md'), path.join(DIST_DIR, '
 
 // Write the Firefox-specific manifest
 fs.writeFileSync(path.join(DIST_DIR, 'manifest.json'), JSON.stringify(firefoxManifest, null, 2) + '\n');
+assertNoRemoteHostedCode(DIST_DIR);
 
 console.log('Firefox build complete: dist/firefox/');
+console.log('Remote-hosted-code check: clean');
 console.log('');
 console.log('Firefox manifest differences:');
 console.log('  + browser_specific_settings.gecko.id = "skillbridge@heznpc"');

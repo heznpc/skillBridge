@@ -9,6 +9,7 @@
  */
 
 const { spawnSync } = require('child_process');
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
@@ -70,6 +71,57 @@ function assertFile(file, minBytes = 1) {
   if (!fs.existsSync(abs)) throw new Error(`Missing required artifact: ${file}`);
   const size = fs.statSync(abs).size;
   if (size < minBytes) throw new Error(`Artifact is too small: ${file} (${size} bytes)`);
+}
+
+function sha256(file) {
+  return crypto
+    .createHash('sha256')
+    .update(fs.readFileSync(path.join(ROOT, file)))
+    .digest('hex');
+}
+
+function verifyPromoMedia() {
+  const manifest = JSON.parse(readText('store-assets/promo-media-manifest.json'));
+  if (manifest.version !== JSON.parse(readText('manifest.json')).version) {
+    throw new Error(`Promo manifest version drift: ${manifest.version}`);
+  }
+  const sourcePath = manifest.source?.path;
+  if (typeof sourcePath !== 'string' || !sourcePath) throw new Error('Promo manifest source path is missing');
+  assertFile(sourcePath, 1024);
+  if (sha256(sourcePath) !== manifest.source.sha256) {
+    throw new Error(`Promo source hash drift: ${sourcePath}`);
+  }
+  if (!Array.isArray(manifest.assets) || manifest.assets.length !== 2) {
+    throw new Error('Promo manifest must describe the landscape and short videos');
+  }
+  for (const asset of manifest.assets) {
+    if (typeof asset?.path !== 'string' || !asset.path) throw new Error('Promo manifest asset path is missing');
+    assertFile(asset.path, 100_000);
+    if (sha256(asset.path) !== asset.sha256) throw new Error(`Promo asset hash drift: ${asset.path}`);
+  }
+  const expectedThumbnails = new Map([
+    ['store-assets/promo-video-thumbnail-1280x720.png', [1280, 720]],
+    ['store-assets/promo-short-thumbnail-1080x1920.png', [1080, 1920]],
+  ]);
+  if (!Array.isArray(manifest.thumbnails) || manifest.thumbnails.length !== expectedThumbnails.size) {
+    throw new Error('Promo manifest must describe both video thumbnails');
+  }
+  for (const thumbnail of manifest.thumbnails) {
+    const dimensions = expectedThumbnails.get(thumbnail?.path);
+    if (!dimensions) throw new Error(`Unexpected promo thumbnail: ${thumbnail?.path}`);
+    const [width, height] = dimensions;
+    if (thumbnail.width !== width || thumbnail.height !== height) {
+      throw new Error(`Promo thumbnail dimension drift: ${thumbnail.path}`);
+    }
+    assertFile(thumbnail.path, 1024);
+    if (sha256(thumbnail.path) !== thumbnail.sha256) {
+      throw new Error(`Promo thumbnail hash drift: ${thumbnail.path}`);
+    }
+    expectedThumbnails.delete(thumbnail.path);
+  }
+  if (expectedThumbnails.size) {
+    throw new Error(`Promo manifest is missing thumbnails: ${[...expectedThumbnails.keys()].join(', ')}`);
+  }
 }
 
 function runCaptured(label, command, commandArgs, options = {}) {
@@ -222,6 +274,7 @@ function verifyArtifacts() {
     'store-assets/04-flashcards.png',
     'store-assets/05-exam-safe.png',
     'store-assets/skillbridge-bundled.zip',
+    'store-assets/promo-media-manifest.json',
   ]) {
     assertFile(file, file.endsWith('.png') || file.endsWith('.zip') ? 1024 : 1);
   }
@@ -239,6 +292,7 @@ function verifyArtifacts() {
   }
 
   const zipVerification = verifyZipMatchesBundle();
+  verifyPromoMedia();
 
   console.log(
     `✓ release artifacts are present and internally consistent (${zipVerification.fileCount} ZIP files verified)`,
@@ -277,6 +331,7 @@ function preflight({ includeFullE2e, includeStoreCapture }) {
   runNpm('Build Firefox artifact', 'build:firefox');
   if (includeStoreCapture) {
     runNpm('Regenerate store assets from the production bundle', 'capture:store');
+    runNode('Regenerate promo video derivatives', 'scripts/build-promo-media.js');
   } else {
     console.log('\n==> Verify store description is generated from the current listing source');
     verifyStoreDescriptionSync();

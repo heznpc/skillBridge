@@ -90,19 +90,19 @@ describe('extension-only cloud Tutor broker', () => {
     ports.length = 0;
     elements.clear();
     jest.clearAllMocks();
+    global.__SKILLBRIDGE_ENSURE_PUTER_BROKER__ = jest.fn(() => true);
     translator = new SkilljarTranslator();
   });
 
   afterEach(() => jest.useRealTimers());
 
-  test('creates a chrome-extension iframe and serializes duplicate connection attempts', async () => {
+  test('connects to the isolated broker without page DOM transport and serializes duplicate attempts', async () => {
     const first = translator._ensureCloudBroker();
     const duplicate = translator._ensureCloudBroker();
     expect(duplicate).toBe(first);
     expect(chrome.runtime.connect).toHaveBeenCalledTimes(1);
-    const frame = elements.get('__skillbridge_puter_frame__');
-    expect(frame.src).toBe('chrome-extension://test/src/bridge/puter-frame.html');
-    expect(frame.style.display).toBe('none');
+    expect(global.__SKILLBRIDGE_ENSURE_PUTER_BROKER__).toHaveBeenCalledTimes(1);
+    expect(elements.has('__skillbridge_puter_frame__')).toBe(false);
     expect(translator.isReady).toBe(false);
 
     ports[0].emitMessage({ type: 'ready' });
@@ -123,6 +123,7 @@ describe('extension-only cloud Tutor broker', () => {
     const start = ports[0].posted.find((msg) => msg.type === 'start');
     expect(start).toEqual(expect.objectContaining({ id: 'request-uuid', model: expect.any(String) }));
     expect(start.prompt).toContain('question');
+    expect(start.labels.error).toBeTruthy();
     expect(start).not.toHaveProperty('userMessage');
     expect(start).not.toHaveProperty('systemPrompt');
     expect(start).not.toHaveProperty('token');
@@ -145,6 +146,7 @@ describe('extension-only cloud Tutor broker', () => {
     translator._getAiEngine = jest.fn(async () => 'cloud');
     const result = translator.chatStream('after restart', 'ko', '', null);
     await flushUntil(() => ports.length === 2);
+    expect(global.__SKILLBRIDGE_ENSURE_PUTER_BROKER__).toHaveBeenCalledTimes(2);
     ports[1].emitMessage({ type: 'ready' });
     await flushUntil(() => ports[1].posted.some((msg) => msg.type === 'start'));
     const start = ports[1].posted.find((msg) => msg.type === 'start');
@@ -209,15 +211,12 @@ describe('extension-only cloud Tutor broker', () => {
     expect(ports[0].posted.filter((msg) => msg.type === 'abort')).toHaveLength(0);
   });
 
-  test('shows the isolated frame only during broker-declared auth UI', async () => {
+  test('ignores broker-internal auth UI messages without mutating the host DOM', async () => {
     const connecting = translator._ensureCloudBroker();
     ports[0].emitMessage({ type: 'ready' });
     await connecting;
-    const frame = elements.get('__skillbridge_puter_frame__');
     ports[0].emitMessage({ type: 'auth-ui', visible: true });
-    expect(frame.style.display).toBe('block');
-    expect(frame.getAttribute('aria-hidden')).toBe('false');
     ports[0].emitMessage({ type: 'auth-ui', visible: false });
-    expect(frame.style.display).toBe('none');
+    expect(elements.has('__skillbridge_puter_frame__')).toBe(false);
   });
 });

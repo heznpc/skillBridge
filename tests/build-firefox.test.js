@@ -95,8 +95,15 @@ describe('Firefox manifest transformations', () => {
     expect(firefoxManifest.host_permissions).toEqual(chromeManifest.host_permissions);
   });
 
-  test('preserves content_scripts', () => {
-    expect(firefoxManifest.content_scripts).toEqual(chromeManifest.content_scripts);
+  test('preserves content_scripts while omitting Chrome-only world declarations', () => {
+    const expectedContentScripts = chromeManifest.content_scripts.map((contentScript) => {
+      const compatibleContentScript = { ...contentScript };
+      delete compatibleContentScript.world;
+      return compatibleContentScript;
+    });
+
+    expect(firefoxManifest.content_scripts).toEqual(expectedContentScripts);
+    expect(firefoxManifest.content_scripts[1].world).toBeUndefined();
   });
 
   test('preserves web_accessible_resources', () => {

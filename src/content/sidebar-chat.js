@@ -280,6 +280,12 @@
         sendChatMessage();
       }
     });
+    // Binding runs on a deferred timer after the sidebar HTML is injected, so
+    // there is a window where the buttons exist but do nothing. Mark the
+    // moment handlers are live: a click before this attribute appears is
+    // silently lost (the E2E harness waits for it; a human cannot realistically
+    // click within the same ~100 ms of the panel appearing).
+    sb.$id('skillbridge-sidebar')?.setAttribute('data-sb-bound', '1');
   }
 
   function restoreChatPanelEvents() {
@@ -373,8 +379,12 @@
   // Selected tutor engine ('cloud' | 'local' | 'off'); defaults to cloud.
   async function _currentEngine() {
     try {
-      const { sb_ai_engine } = await chrome.storage.local.get('sb_ai_engine');
-      return sb_ai_engine || 'cloud';
+      // Bounded like translator._getAiEngine: a slow chrome.storage read must
+      // not delay the offline notice (or any send) by more than a moment.
+      const read = chrome.storage.local.get('sb_ai_engine');
+      const timeout = new Promise((resolve) => setTimeout(() => resolve(null), 1500));
+      const result = await Promise.race([read, timeout]);
+      return result?.sb_ai_engine || 'cloud';
     } catch {
       return 'cloud';
     }

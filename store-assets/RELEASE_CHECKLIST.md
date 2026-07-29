@@ -1,9 +1,10 @@
 # Release Checklist — CWS v4.0.0
 
-> Refreshed 2026-07-28 for the v4.0.0 CWS build. The upload artifact keeps
+> Refreshed 2026-07-29 for the v4.0.0 CWS build. The upload artifact keeps
 > translation and local learning tools AND ships the AI Tutor: the AI gateway is
-> pinned ON and the bundled Puter client runs inside an isolated extension-origin
-> frame connected through validated extension ports; `src/lib/page-bridge.js` is
+> pinned ON and the bundled Puter client runs in Chrome's ISOLATED content-script
+> world on the trusted course host, connected through validated extension ports;
+> `src/lib/page-bridge.js` is
 > not shipped. Tutor requests happen only after the user signs in to Puter (free). An
 > optional on-device engine (a user-run OpenAI-compatible server on localhost)
 > is selectable in the popup. This is the source of truth for the next dashboard
@@ -28,12 +29,12 @@ dashboard upload.
 - ✅ Final ZIP release identity is `4.0.0` across `manifest.json`,
   `package.json`, versioned dictionary metadata, and `CHANGELOG.md`.
 - ✅ Historical `CHANGELOG.md` sections through v3.5.41 remain immutable
-- ✅ Final v4.0.0 upload artifact recorded 2026-07-28 after the last
-  `npm run release:verify`: **70 files, 706,563 bytes**, SHA-256
-  `f67fb382f79f9e92e9627b610032355f6dbb2d8d248ecfa14f8b39968bea28be`. The extracted ZIP was diffed against `dist/bundled` and is byte-for-byte
+- ✅ Final v4.0.0 upload artifact recorded 2026-07-29 after the last integrated
+  release gates: **69 files, 714,228 bytes**, SHA-256
+  `4315e09ac59516f2c7c52aa5fc18d11efb73c0b69c386281fc693ddc0bfa7a1e`. The extracted ZIP was diffed against `dist/bundled` and is byte-for-byte
   identical, and `scripts/check-rhc.js` reports zero findings against BOTH the
   built directory and the extracted archive. It includes the isolated Puter
-  frame, sanitized `src/bridge/puter.js`, third-party notices/licenses, and the
+  content broker, sanitized `src/bridge/puter.js`, third-party notices/licenses, and the
   bundled HTML-GT path, and does not include `src/lib/page-bridge.js`. This
   bundled ZIP is the **only** CWS upload artifact; the compatibility alias
   `npm run build:zip` resolves to this same safe command.
@@ -60,21 +61,20 @@ dashboard upload.
   disclosures for live legacy v1.0.1 and the unpublished candidate. Remove or
   archive the legacy section only after the replacement version is confirmed
   live in the CWS dashboard and update the listing/privacy answers together.
-- ✅ `npm run release:verify` passed on 2026-07-28: lint, format, **676 unit
+- ✅ Integrated release verification passed on 2026-07-29: lint, format, **696 unit
   tests across 38 suites**, translation/glossary/i18n checks, live selector and
   22-course map checks, first-user/popup smoke, Firefox build, store capture,
-  ZIP integrity, and **all 46 Chromium E2E tests across seven resource-bounded
-  batches** (including the live-Ollama local-engine round trip). The live CWS
+  ZIP integrity, and **all 52 Chromium E2E tests across eight resource-bounded
+  batches** (including the malicious Puter-query stored-token regression and
+  the live-Ollama local-engine round trip). The live CWS
   check still reports v1.0.1, updated 2026-03-10.
   Dictionary freshness reports the recruiting-state dictionaries as
   review-needed; that is not a native review stamp. Rerun the gate immediately
   before dashboard upload if the artifact changes.
-- ⏳ Promo media regenerated 2026-07-28 from the current `demo.webm`
-  (`node scripts/build-promo-media.js`): both v4.0.0 MP4s, thumbnails, and
-  `promo-media-manifest.json` hashes now match the files on disk. The
-  screenshot capture stage (`npm run capture:store`) was **not** re-run — the
-  `shotkit` CLI is not installed on this machine — so the five 1280×800
-  screenshots are the previously captured set.
+- ✅ Promo media regenerated 2026-07-29 from the current `demo.webm`: all five
+  1280×800 screenshots and the promo tile were recaptured from the current CWS
+  bundle and inspected; both v4.0.0 MP4s, thumbnails, and
+  `promo-media-manifest.json` hashes match the files on disk.
 - ✅ AI-content gate wired into `manifest.json:content_scripts[].js` (PR #145 hotfix)
 - ✅ CWS-drift watcher will keep this from drifting 3 months again
 - ✅ Italian dictionary live (PR #140) — timed with Anthropic Milan office opening 2026-05-27
@@ -90,7 +90,7 @@ against the file before fixing — the 2026-06-10 audit caught `Slack → "Lento
 dictionary's `_meta.lastAudited` and run `npm run docs` so the README QA table
 reflects it. Three-layer QA model: `docs/TRANSLATION_QA.md`.
 
-**Status for this submission (2026-07-28) — PARTIAL, still a gate:**
+**Status for this submission (2026-07-28) — COMPLETE:**
 - ✅ A rule-based term pass ran across **all 12** locales: the common noun
   `subagent` is now translated per `docs/TRANSLATION_RULES.md` (pt-BR
   subagentes · ru субагент declensions · vi tác tử con · id subagen · ko
@@ -99,12 +99,10 @@ reflects it. Three-layer QA model: `docs/TRANSLATION_QA.md`.
   (pt-BR `powered by`, vi `Streaming responses`, id `Enroll in Course`, id
   captions wording). `glossary`, `check:dicts`, `validate`, and `check:locales`
   all pass; `_meta.lastUpdated` is stamped on all 12.
-- ✅ Full per-entry semantic review **completed** for: pt-BR, ru, vi, id —
-  these carry `_meta.lastAudited = 2026-07-28`.
-- ⛔ Full per-entry semantic review **NOT completed** for: ko, ja, zh-CN,
-  zh-TW, es, fr, it, de. Their `lastAudited` deliberately still reads
-  2026-06-10. Do not treat this convention as satisfied until those eight are
-  reviewed and re-stamped.
+- ✅ Full per-entry semantic review completed for all 12 premium locales:
+  pt-BR, ru, vi, id, ko, ja, zh-CN, zh-TW, es, fr, it, and de. Every file
+  carries `_meta.lastAudited = 2026-07-28`; confirmed high-confidence semantic
+  and terminology findings were applied before the structural gates passed.
 
 The release identity and changelog are now fixed at v4.0.0. After the external
 permission scope is confirmed, rerun all gates and generate the bundled ZIP.
@@ -189,9 +187,11 @@ stale against the next CWS candidate — fix these:
     it as website content only.
   - ✅ **Authentication information** — the cloud Tutor requires a Puter
     sign-in. The Puter SDK holds the resulting auth token and Puter application
-    identifier in an isolated extension-origin frame, not in the course page's
-    storage. The operator does not receive either value, but the bundled flow
-    still handles authentication data and must be declared.
+    identifier in extension storage, not in the course page's persistent
+    storage. Puter returns the sign-in result to the HTTPS opener through
+    browser window messaging, which the course page may be able to observe
+    during sign-in. The operator does not receive either value, but the bundled
+    flow still handles authentication data and must be declared.
   - ✅ **Web history** — recent lessons store the supported lesson URL, title,
     and visit time; bookmarks and Tutor-history records also contain the lesson
     URL. This data stays local, but local handling still requires disclosure.

@@ -133,10 +133,25 @@ const assets = [landscapeVideo, shortVideo].map((file) => ({
   sha256: sha256(file),
   ...probe(file),
 }));
+const thumbnails = [landscapeCover, shortCover].map((file) => ({
+  path: path.relative(ROOT, file),
+  sha256: sha256(file),
+  ...probe(file),
+}));
 
 for (const asset of assets) {
   if (asset.codec !== 'h264' || asset.durationSeconds < 10 || asset.bytes < 100_000) {
     throw new Error(`Promo output failed validation: ${JSON.stringify(asset)}`);
+  }
+}
+const expectedThumbnailSizes = new Map([
+  [path.relative(ROOT, landscapeCover), [1280, 720]],
+  [path.relative(ROOT, shortCover), [1080, 1920]],
+]);
+for (const thumbnail of thumbnails) {
+  const [width, height] = expectedThumbnailSizes.get(thumbnail.path) || [];
+  if (thumbnail.codec !== 'png' || thumbnail.width !== width || thumbnail.height !== height || thumbnail.bytes < 1024) {
+    throw new Error(`Promo thumbnail failed validation: ${JSON.stringify(thumbnail)}`);
   }
 }
 
@@ -160,10 +175,17 @@ const manifest = {
     'The CWS bundle ships the AI Tutor (Claude via the bundled Puter client, free Puter sign-in).',
     'The AI Tutor can instead run on-device against a user-run OpenAI-compatible server, or be turned off.',
   ],
+  thumbnails,
   assets,
 };
 
 fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
 console.log(
-  `Promo media ready:\n${assets.map((asset) => `- ${asset.path} (${asset.width}x${asset.height}, ${asset.durationSeconds.toFixed(2)}s)`).join('\n')}`,
+  `Promo media ready:\n${[...thumbnails, ...assets]
+    .map((asset) =>
+      asset.durationSeconds > 0
+        ? `- ${asset.path} (${asset.width}x${asset.height}, ${asset.durationSeconds.toFixed(2)}s)`
+        : `- ${asset.path} (${asset.width}x${asset.height})`,
+    )
+    .join('\n')}`,
 );

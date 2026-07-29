@@ -128,8 +128,8 @@ function patchExtensionDir(extDir, { puterStub = true } = {}) {
   fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
 
   // Replace the bundled Puter client with a deterministic local stub. The
-  // production-shaped page bridge still loads this exact extension URL, so the
-  // Tutor message/streaming path remains end-to-end without a real sign-in.
+  // production-shaped isolated broker loads this exact content-script path,
+  // so Tutor message/streaming remains end-to-end without a real sign-in.
   const puterStubPath = path.join(extDir, 'src', 'bridge', 'puter.js');
   if (puterStub && fs.existsSync(puterStubPath)) {
     fs.writeFileSync(puterStubPath, PUTER_STREAM_STUB);

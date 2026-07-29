@@ -34,7 +34,7 @@
 
   <h2>Version Status — Read This First</h2>
   <p>As of July 28, 2026, the Chrome Web Store still publishes <strong>SkillBridge v1.0.1</strong>. That legacy version includes a bundled Puter client used for Gemini translation review and the Claude-powered AI Tutor, and it declares YouTube host access.</p>
-  <p>A replacement candidate (<strong>v4.0.0</strong>) is being prepared, but <strong>publication is paused and that candidate is not yet available from the Chrome Web Store</strong>. The candidate keeps the AI Tutor, runs its bundled Puter client in an isolated extension-origin frame, removes YouTube host access, and adds an on-device tutor option:</p>
+  <p>A replacement candidate (<strong>v4.0.0</strong>) is being prepared, but <strong>publication is paused and that candidate is not yet available from the Chrome Web Store</strong>. The candidate keeps the AI Tutor, runs its bundled Puter client in Chrome's isolated content-script world on the trusted course host, removes YouTube host access, and adds an on-device tutor option:</p>
   <ul>
     <li><strong>AI Tutor (cloud, default)</strong> — tutor questions go through the bundled Puter client to Claude; the user signs in to Puter (free) when they first use it. Translation and the local study tools need no account.</li>
     <li><strong>AI Tutor (local/on-device, optional)</strong> — the user can instead point the Tutor at an OpenAI-compatible server they run themselves (for example Ollama), and tutor text goes only to that local address.</li>
@@ -102,7 +102,7 @@
 
   <h2>Next Chrome Web Store Candidate (Unpublished)</h2>
   <h3>CWS Package Boundary</h3>
-  <p>The candidate includes an AI Tutor using Claude — Sonnet 4.6, falling back to Sonnet 4.5 if that model is unavailable — through the bundled Puter client. The client initializes inside an isolated extension-origin frame on supported pages and exchanges Tutor requests with the extension through authenticated extension ports; it is not exposed to the course page's JavaScript. The CWS build disables the SDK's unused eager network initialization, and no Puter authentication or AI request is made until the user sends a cloud Tutor message. The first such use opens a free Puter sign-in. Page translation never invokes Puter, Claude, or the Tutor model: it uses curated dictionaries, the local cache, Google Translate, deterministic protected-term restoration, and structure-preserving HTML reconciliation. Selecting the local or off Tutor engine prevents Tutor messages from going to Puter.</p>
+  <p>The candidate includes an AI Tutor using Claude — Sonnet 4.6, falling back to Sonnet 4.5 if that model is unavailable — through the bundled Puter client. The client initializes in Chrome's ISOLATED content-script world only on the top-level <code>anthropic.skilljar.com</code> page and exchanges Tutor requests through authenticated extension ports. Its SDK object and extension-port payloads are not exposed to the course page's main JavaScript world. The visible Tutor UI remains in the shared page DOM, however, so course-page scripts may observe keyboard events and rendered questions or answers. The CWS build disables the SDK's unused eager network and host-storage initialization, and no Puter authentication or AI request is made until the user sends a cloud Tutor message. The first such use opens a free Puter sign-in. Puter's HTTPS sign-in returns its result to the opener through browser window messaging, so the course page may also observe that authentication event while sign-in is happening; SkillBridge stores the accepted token only in extension storage. Page translation never invokes Puter, Claude, or the Tutor model: it uses curated dictionaries, the local cache, Google Translate, deterministic protected-term restoration, and structure-preserving HTML reconciliation. Selecting the local or off Tutor engine prevents Tutor messages from going to Puter.</p>
 
   <h3>Data Stored Locally by the Candidate</h3>
   <ul>
@@ -110,6 +110,7 @@
     <li><strong>Learning-tool state (<code>chrome.storage.local</code>)</strong> — flashcard review state, bookmarks, recent lessons, and scroll positions.</li>
     <li><strong>Translation cache (IndexedDB)</strong> — original text, translated text, target language, and a timestamp are cached in <code>skillbridge-cache</code> for up to 30 days. This does not depend on the <code>storage</code> extension permission.</li>
     <li><strong>AI Tutor chat history (IndexedDB)</strong> — your question, the tutor's answer, the language, the lesson heading, a timestamp, and the lesson URL are stored on your device so the sidebar can show past conversations. This never leaves your device except as the tutor request itself (to Puter, or to your own local server when the on-device engine is selected).</li>
+    <li><strong>Puter session (<code>chrome.storage.local</code>)</strong> — after a successful cloud Tutor sign-in, the accepted session token and application identifier are stored in extension storage so the session can resume. They are not stored in the course site's local storage.</li>
     <li><strong>Progress summaries</strong> — calculated locally from stored course state; they are not separately persisted or transmitted.</li>
     <li><strong>Curated dictionaries</strong> — packaged with the extension.</li>
   </ul>
@@ -132,7 +133,7 @@
     </tr>
     <tr>
       <td>Puter authentication</td>
-      <td>Sign-in and session data handled inside the isolated extension-origin frame. The bundled SDK stores a Puter session token and application identifier there. The CWS build disables the SDK's automatic User/profile lookups, so it does not retrieve a username, user UUID, email status, or other User-object fields. SkillBridge's operator does not receive the token or application identifier</td>
+      <td>Sign-in and session data handled by the bundled client in an ISOLATED content-script world. Puter returns the sign-in result to the HTTPS opener through browser window messaging, which the course page may be able to observe during sign-in. SkillBridge validates the result and stores the accepted token and application identifier in <code>chrome.storage.local</code>, not course-site storage. The CWS build disables automatic User/profile lookups, so it does not retrieve a username, user UUID, email status, or other User-object fields. SkillBridge's operator does not receive the token or application identifier</td>
       <td>Authenticate and resume the cloud Tutor session</td>
       <td><a href="https://puter.com/privacy">Puter Privacy Policy</a></td>
     </tr>
@@ -153,7 +154,7 @@
 
   <h3>Data Not Received by the SkillBridge Operator</h3>
   <ul>
-    <li>The operator does not receive your name, email address, Puter session token, Puter application identifier, or payment information. The isolated Puter frame handles only the authentication/session data described above for the cloud Tutor.</li>
+    <li>The operator does not receive your name, email address, Puter session token, Puter application identifier, or payment information. The isolated Tutor broker handles only the authentication/session data described above for the cloud Tutor.</li>
     <li>No browsing history outside the pages where the extension is configured to run</li>
     <li>No analytics, telemetry, advertising identifier, or marketing profile</li>
     <li>Recent-lesson URLs/titles, timestamps, scroll positions, bookmarks, flashcard review activity, and Tutor history are handled locally but are not sent to the operator or an analytics service.</li>
@@ -163,7 +164,7 @@
   <h3>Candidate Permissions</h3>
   <table>
     <tr><th>Permission or site access</th><th>Purpose</th></tr>
-    <tr><td><code>storage</code></td><td>Save preferences, flashcard review state, bookmarks, recent lessons, and scroll positions in <code>chrome.storage.local</code></td></tr>
+    <tr><td><code>storage</code></td><td>Save preferences, Tutor engine settings, flashcard review state, bookmarks, recent lessons, scroll positions, and the accepted Puter session token/application identifier in <code>chrome.storage.local</code></td></tr>
     <tr><td><code>alarms</code></td><td>Run periodic cache cleanup and public release checks</td></tr>
     <tr><td><code>*.skilljar.com</code></td><td>Translate supported AI-course pages hosted on Skilljar</td></tr>
     <tr><td><code>claude.com/resources/tutorials</code> (content-script match)</td><td>Translate Claude tutorial pages</td></tr>
@@ -186,7 +187,7 @@
     <li><strong>Translation cache:</strong> up to 30 days, unless the user clears it sooner.</li>
     <li><strong>Preferences and learning-tool state:</strong> retained locally until the user clears extension or site data.</li>
     <li><strong>Tutor history:</strong> retained locally until the user clears extension or site data; older entries can be pruned if browser storage is exhausted.</li>
-    <li><strong>Puter session:</strong> the token and application identifier remain in the extension-origin frame's browser storage until Puter resets the session or the user clears the extension's data.</li>
+    <li><strong>Puter session:</strong> the token and application identifier remain in <code>chrome.storage.local</code> until Puter resets the session, SkillBridge clears a rejected session, or the user clears the extension's data.</li>
     <li><strong>Third-party processing:</strong> Google, Puter, GitHub, and any local server selected by the user control their own logs and retention under their respective policies or configuration.</li>
   </ul>
 

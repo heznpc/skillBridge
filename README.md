@@ -186,14 +186,20 @@ npm run build:bundle
 Also works in Brave, Arc, Opera, Vivaldi, and other Chromium-based browsers.
 
 > Loading the repository root instead selects the raw developer configuration.
-> Both builds contain the optional Puter-based cloud Tutor, but only
-> `dist/bundled` contains the CWS-sanitized SDK: packaging disables unused remote
+> Use `dist/bundled` for supported Tutor testing: only that build contains the
+> reviewed CWS-sanitized SDK. Packaging disables unused remote
 > TLS-socket imports, a `Function`-constructor fallback, and automatic User/profile
 > lookups, unused eager filesystem-socket/resource-access startup, and the SDK's
-> hidden automatic token reauthentication. The visible SkillBridge frame owns
-> stale-session recovery and sign-in consent. The SDK runs in an isolated extension-origin frame instead of the
-> course page's main JavaScript world. Never upload the repository root or
-> developer ZIP in place of the scanned CWS artifact.
+> hidden automatic token reauthentication and persistent host-page caches. The
+> SDK runs in Chrome's isolated content-script world only on
+> `anthropic.skilljar.com`; Tutor network payloads use validated extension ports,
+> not page-world messaging. The visible Tutor remains in the shared page DOM, so
+> course-page scripts may observe keyboard events and rendered chat text.
+> SkillBridge persists the minimum Puter session fields in extension storage, not
+> the course site's storage. Puter's HTTPS sign-in returns its result to the opener
+> with browser window messaging, so the course page may also observe that transient
+> authentication event. Never upload the repository root or developer ZIP in place
+> of the scanned CWS artifact.
 
 ### Firefox (Beta)
 

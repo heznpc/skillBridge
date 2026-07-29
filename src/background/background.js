@@ -377,7 +377,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   _logMisroutedMessage(msg);
 });
 
-// ==================== CLOUD AI BROKER (extension-origin Puter frame) ====================
+// ==================== CLOUD AI BROKER (isolated Puter content script) ====================
 
 const _CLOUD_MAX_PAYLOAD_CHARS = 200_000;
 const _CLOUD_ALLOWED_MODELS = new Set([
@@ -389,7 +389,7 @@ const _CLOUD_ALLOWED_MODELS = new Set([
   'claude-opus-4-6',
   'claude-opus-4-5',
 ]);
-const _cloudFrames = new Map(); // tabId -> { port, ready }
+const _cloudBrokers = new Map(); // tabId -> { isolated broker port, ready }
 const _cloudClients = new Map(); // tabId -> Set<Port>
 const _cloudActive = new Map(); // `${tabId}:${id}` -> client Port
 
@@ -406,27 +406,49 @@ function _safePortPost(port, msg) {
   }
 }
 
-function _isPuterFramePort(port) {
-  const expected = chrome.runtime.getURL('src/bridge/puter-frame.html');
-  return (
-    port?.sender?.id === chrome.runtime.id && port?.sender?.url === expected && Number.isInteger(port?.sender?.tab?.id)
-  );
+function _isFirefoxBuild() {
+  return !!chrome.runtime.getManifest().browser_specific_settings?.gecko;
 }
 
-function _isAllowedCloudClient(port) {
-  if (port?.sender?.id !== chrome.runtime.id || !Number.isInteger(port?.sender?.tab?.id)) return false;
+function _cloudDocumentKey(port) {
+  const sender = port?.sender;
+  if (typeof sender?.documentId === 'string' && sender.documentId) return sender.documentId;
+  // Firefox's MessageSender support has varied across releases. Keep the beta
+  // build usable with a URL-scoped fallback; the CWS/Chromium build fails
+  // closed unless Chrome supplies the documentId guaranteed by its minimum
+  // supported version.
+  if (_isFirefoxBuild() && typeof sender?.url === 'string' && sender.url) return `firefox:${sender.url}`;
+  return null;
+}
+
+function _isActiveCloudDocument(port) {
+  const lifecycle = port?.sender?.documentLifecycle;
+  return lifecycle === 'active' || (_isFirefoxBuild() && lifecycle == null);
+}
+
+function _sameCloudDocument(first, second) {
+  const firstKey = _cloudDocumentKey(first);
+  return !!firstKey && firstKey === _cloudDocumentKey(second);
+}
+
+function _isPuterBrokerPort(port) {
+  if (
+    port?.sender?.id !== chrome.runtime.id ||
+    port?.sender?.frameId !== 0 ||
+    !Number.isInteger(port?.sender?.tab?.id) ||
+    !_isActiveCloudDocument(port) ||
+    !_cloudDocumentKey(port)
+  ) {
+    return false;
+  }
   try {
-    const url = new URL(port.sender.url || port.sender.tab.url || '');
-    if (url.protocol === 'https:' && (url.hostname === 'skilljar.com' || url.hostname.endsWith('.skilljar.com'))) {
-      return true;
-    }
-    if (url.protocol === 'https:' && url.hostname === 'claude.com' && url.pathname.startsWith('/resources/tutorials')) {
-      return true;
-    }
-    // Production never grants this pattern. The E2E helper adds it only to
-    // its temporary manifest so the real broker can run against localhost.
+    const url = new URL(port.sender.url || '');
+    if (url.protocol === 'https:' && url.hostname === 'anthropic.skilljar.com') return true;
+    // Production never grants these patterns. The E2E harness adds them only
+    // to a temporary manifest so the actual broker can run against localhost.
     const testHosts = chrome.runtime.getManifest().host_permissions || [];
     return (
+      url.protocol === 'http:' &&
       (url.hostname === 'localhost' || url.hostname === '127.0.0.1') &&
       testHosts.some((pattern) => pattern === 'http://localhost:*/*' || pattern === 'http://127.0.0.1:*/*')
     );
@@ -435,32 +457,55 @@ function _isAllowedCloudClient(port) {
   }
 }
 
-function _failCloudTabActive(tabId, framePort, error) {
+function _isAllowedCloudClient(port) {
+  if (
+    port?.sender?.id !== chrome.runtime.id ||
+    port?.sender?.frameId !== 0 ||
+    !Number.isInteger(port?.sender?.tab?.id) ||
+    !_isActiveCloudDocument(port) ||
+    !_cloudDocumentKey(port)
+  ) {
+    return false;
+  }
+  try {
+    const url = new URL(port.sender.url || port.sender.tab.url || '');
+    if (url.protocol === 'https:' && url.hostname === 'anthropic.skilljar.com') return true;
+    // Production never grants this pattern. The E2E helper adds it only to
+    // its temporary manifest so the real broker can run against localhost.
+    const testHosts = chrome.runtime.getManifest().host_permissions || [];
+    return (
+      url.protocol === 'http:' &&
+      (url.hostname === 'localhost' || url.hostname === '127.0.0.1') &&
+      testHosts.some((pattern) => pattern === 'http://localhost:*/*' || pattern === 'http://127.0.0.1:*/*')
+    );
+  } catch (_e) {
+    return false;
+  }
+}
+
+function _failCloudTabActive(tabId, brokerPort, error) {
   for (const [key, client] of _cloudActive) {
     if (!key.startsWith(`${tabId}:`)) continue;
     const id = key.slice(String(tabId).length + 1);
-    _safePortPost(framePort, { type: 'abort', id });
+    _safePortPost(brokerPort, { type: 'abort', id });
     _cloudActive.delete(key);
     _safePortPost(client, { type: 'error', id, error });
   }
 }
 
-function _registerCloudFrame(port) {
-  if (!_isPuterFramePort(port)) {
+function _registerCloudBroker(port) {
+  if (!_isPuterBrokerPort(port)) {
     port.disconnect();
     return;
   }
   const tabId = port.sender.tab.id;
-  const previous = _cloudFrames.get(tabId)?.port;
+  const previous = _cloudBrokers.get(tabId)?.port;
   const entry = { port, ready: false };
   // Install the replacement first so a synchronous old-port disconnect event
-  // cannot delete the new frame entry or send a spurious unavailable signal.
-  _cloudFrames.set(tabId, entry);
+  // cannot delete the new broker entry or send a spurious unavailable signal.
+  _cloudBrokers.set(tabId, entry);
   if (previous && previous !== port) {
     _failCloudTabActive(tabId, previous, 'Puter broker replaced');
-    for (const client of _cloudClients.get(tabId) || []) {
-      _safePortPost(client, { type: 'auth-ui', visible: false });
-    }
     try {
       previous.disconnect();
     } catch (_e) {
@@ -468,15 +513,11 @@ function _registerCloudFrame(port) {
     }
   }
   port.onMessage.addListener((msg) => {
-    if (!msg || _cloudFrames.get(tabId)?.port !== port) return;
+    if (!msg || _cloudBrokers.get(tabId)?.port !== port) return;
     if (msg.type === 'ready') {
       entry.ready = true;
-      for (const client of _cloudClients.get(tabId) || []) _safePortPost(client, { type: 'ready' });
-      return;
-    }
-    if (msg.type === 'auth-ui') {
       for (const client of _cloudClients.get(tabId) || []) {
-        _safePortPost(client, { type: 'auth-ui', visible: msg.visible === true });
+        if (_sameCloudDocument(client, port)) _safePortPost(client, { type: 'ready' });
       }
       return;
     }
@@ -484,7 +525,7 @@ function _registerCloudFrame(port) {
     const key = _cloudKey(tabId, msg.id);
     const client = _cloudActive.get(key);
     if (!client) return;
-    // A message on an actually active frame request resets MV3's service-
+    // A message on an actually active broker request resets MV3's service-
     // worker idle timer. It has no reply and is ignored for stale/forged ids.
     if (msg.type === 'keepalive') return;
     if (msg.type === 'chunk' && typeof msg.text === 'string') {
@@ -498,10 +539,12 @@ function _registerCloudFrame(port) {
     }
   });
   port.onDisconnect.addListener(() => {
-    if (_cloudFrames.get(tabId)?.port !== port) return;
-    _cloudFrames.delete(tabId);
+    if (_cloudBrokers.get(tabId)?.port !== port) return;
+    _cloudBrokers.delete(tabId);
     _failCloudTabActive(tabId, port, 'Puter broker closed');
-    for (const client of _cloudClients.get(tabId) || []) _safePortPost(client, { type: 'unavailable' });
+    for (const client of _cloudClients.get(tabId) || []) {
+      if (_sameCloudDocument(client, port)) _safePortPost(client, { type: 'unavailable' });
+    }
   });
 }
 
@@ -514,20 +557,23 @@ function _registerCloudClient(port) {
   const clients = _cloudClients.get(tabId) || new Set();
   clients.add(port);
   _cloudClients.set(tabId, clients);
-  if (_cloudFrames.get(tabId)?.ready) _safePortPost(port, { type: 'ready' });
+  const connectedBroker = _cloudBrokers.get(tabId);
+  if (connectedBroker?.ready && _sameCloudDocument(port, connectedBroker.port)) {
+    _safePortPost(port, { type: 'ready' });
+  }
   port.onMessage.addListener((msg) => {
     if (!msg || typeof msg.id !== 'string' || msg.id.length > 128) return;
     const key = _cloudKey(tabId, msg.id);
-    const frame = _cloudFrames.get(tabId);
+    const broker = _cloudBrokers.get(tabId);
     if (msg.type === 'abort') {
       if (_cloudActive.get(key) === port) {
         _cloudActive.delete(key);
-        _safePortPost(frame?.port, { type: 'abort', id: msg.id });
+        _safePortPost(broker?.port, { type: 'abort', id: msg.id });
       }
       return;
     }
     if (msg.type !== 'start') return;
-    if (!frame?.ready) {
+    if (!broker?.ready || !_sameCloudDocument(port, broker.port)) {
       _safePortPost(port, { type: 'error', id: msg.id, error: 'Puter broker is not ready' });
       return;
     }
@@ -543,7 +589,7 @@ function _registerCloudClient(port) {
     }
     _cloudActive.set(key, port);
     if (
-      !_safePortPost(frame.port, {
+      !_safePortPost(broker.port, {
         type: 'start',
         id: msg.id,
         prompt: msg.prompt,
@@ -558,11 +604,13 @@ function _registerCloudClient(port) {
   port.onDisconnect.addListener(() => {
     clients.delete(port);
     if (clients.size === 0) _cloudClients.delete(tabId);
-    const frame = _cloudFrames.get(tabId)?.port;
+    const broker = _cloudBrokers.get(tabId)?.port;
     for (const [key, owner] of _cloudActive) {
       if (owner !== port) continue;
       _cloudActive.delete(key);
-      _safePortPost(frame, { type: 'abort', id: key.slice(String(tabId).length + 1) });
+      if (_sameCloudDocument(port, broker)) {
+        _safePortPost(broker, { type: 'abort', id: key.slice(String(tabId).length + 1) });
+      }
     }
   });
 }
@@ -701,8 +749,8 @@ async function _streamLocalChat(port, req) {
 
 if (typeof chrome !== 'undefined' && chrome.runtime?.onConnect) {
   chrome.runtime.onConnect.addListener((port) => {
-    if (port.name === 'sb-puter-frame') {
-      _registerCloudFrame(port);
+    if (port.name === 'sb-puter-content') {
+      _registerCloudBroker(port);
       return;
     }
     if (port.name === 'sb-cloud-chat-client') {

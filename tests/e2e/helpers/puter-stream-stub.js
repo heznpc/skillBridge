@@ -1,9 +1,9 @@
 /**
  * Stream-friendly Puter SDK stub used by the extension-bundle E2E patch.
  *
- * page-bridge.js loads the bundled SDK from
- * chrome.runtime.getURL('src/bridge/puter.js'). The E2E helper replaces that
- * file in a temporary bundle so no account or external AI request is needed.
+ * The isolated content-script manifest loads the bundled SDK path directly.
+ * The E2E helper replaces that file in a temporary bundle so no account or
+ * external AI request is needed.
  */
 
 const PUTER_STREAM_STUB = `
@@ -12,19 +12,38 @@ const PUTER_STREAM_STUB = `
   // 150ms per chunk → 450ms total stream. Slow enough for the cancel
   // spec to interrupt between chunks but still fast enough that the
   // tutor-chat spec finishes under its 10s deadline.
-  window.__sbE2eChunkDelayMs = 150;
+  globalThis.__sbE2eChunkDelayMs = 150;
   // Mirror the vendored SDK's unsafe auth-message behavior. The production
-  // puter-frame-init.js capture filter must stop hostile host origins before
+  // puter-content-init.js capture filter must stop hostile host origins before
   // this listener can persist a forged token.
-  window.addEventListener('message', function (event) {
+  globalThis.addEventListener('message', function (event) {
     if (event.data && event.data.msg === 'puter.token') {
-      window.puter.authToken = event.data.token;
-      window.localStorage.setItem('puter.auth.token', event.data.token);
+      globalThis.puter.setAuthToken(event.data.token);
     }
   });
-  window.puter = {
+  globalThis.puter = {
     // Models a signed-in user so the Tutor can run without a sign-in prompt.
     authToken: 'e2e-stub-token',
+    appID: null,
+    setAuthToken(token) {
+      this.authToken = token;
+      globalThis.__SKILLBRIDGE_PUTER_STORAGE__?.setItem('puter.auth.token', token);
+    },
+    resetAuthToken() {
+      this.authToken = null;
+      globalThis.__SKILLBRIDGE_PUTER_STORAGE__?.removeItem('puter.auth.token');
+    },
+    setAppID(appID) {
+      this.appID = appID;
+      globalThis.__SKILLBRIDGE_PUTER_STORAGE__?.setItem('puter.app.id', appID);
+    },
+    auth: {
+      signIn: async function () {
+        globalThis.puter.setAuthToken('e2e-stub-token');
+        globalThis.puter.setAppID('e2e-stub-app');
+        return { success: true, token: 'e2e-stub-token', app_uid: 'e2e-stub-app' };
+      },
+    },
     ai: {
       chat: async function (prompt, opts) {
         const state = await chrome.storage.local.get(['sb_e2e_fail_chat_count', 'sb_e2e_chunk_delay']);
@@ -34,14 +53,14 @@ const PUTER_STREAM_STUB = `
           throw new Error('E2E forced chat failure');
         }
         const delay = Number(state.sb_e2e_chunk_delay);
-        if (Number.isFinite(delay) && delay > 0) window.__sbE2eChunkDelayMs = delay;
+        if (Number.isFinite(delay) && delay > 0) globalThis.__sbE2eChunkDelayMs = delay;
         if (opts && opts.stream) {
           return {
             [Symbol.asyncIterator]() {
               let i = 0;
               return {
                 async next() {
-                  await new Promise((r) => setTimeout(r, window.__sbE2eChunkDelayMs || 150));
+                  await new Promise((r) => setTimeout(r, globalThis.__sbE2eChunkDelayMs || 150));
                   if (i >= STREAM_CHUNKS.length) return { done: true };
                   return { done: false, value: { text: STREAM_CHUNKS[i++] } };
                 },

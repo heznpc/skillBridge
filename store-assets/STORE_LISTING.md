@@ -81,13 +81,13 @@ SkillBridge does not operate a translation server. Page text that is not already
 
 🔒 CWS PRIVACY AND PACKAGE BOUNDARY
 
-Page translation (Google Translate + curated dictionaries) and the local learning tools work with no account. Translation never calls Puter, Claude, or the Tutor model. The optional cloud AI Tutor reaches Claude through a bundled Puter client only when you send a Tutor message; its first use opens a separate free Puter sign-in. The client runs in an isolated extension-origin frame, not the course page's JavaScript world. A user-run local engine and an off mode are also available. The extension does not request YouTube host access and uses no analytics, tracking, advertising, SkillBridge account, or user API key. SkillBridge's operator does not receive Puter authentication/session data.
+Page translation (Google Translate + curated dictionaries) and the local learning tools work with no account. Translation never calls Puter, Claude, or the Tutor model. The optional cloud AI Tutor reaches Claude through a bundled Puter client only when you send a Tutor message; its first use opens a separate free Puter sign-in. The client runs in Chrome's isolated content-script world on the trusted course host, and Tutor network payloads use validated extension ports rather than page-world messaging. The visible Tutor remains in the shared page DOM, so course-page scripts may observe keyboard events and rendered chat text. Puter returns sign-in through browser window messaging, which the course page may also observe; SkillBridge then stores the accepted session only in extension storage. A user-run local engine and an off mode are also available. The extension does not request YouTube host access and uses no analytics, tracking, advertising, SkillBridge account, or user API key. SkillBridge's operator does not receive Puter authentication/session data.
 
 Third-party requests made by the CWS edition:
 
 • Google Translate — visible page text selected for translation and the requested language.
 • GitHub Releases API — a periodic public update check; no course text or learning-tool data.
-• Puter — cloud Tutor sign-in/session handling, followed by the user's Tutor message and limited lesson context routed to Claude. Inside its isolated extension frame, the bundled SDK stores a session token and Puter application identifier; the CWS build disables automatic User/profile lookups. SkillBridge's operator receives none of this data.
+• Puter — cloud Tutor sign-in/session handling, followed by the user's Tutor message and limited lesson context routed to Claude. The bundled SDK runs in an isolated content-script world and stores the accepted session token and Puter application identifier in extension storage; the CWS build disables automatic User/profile lookups. Puter returns the sign-in result to the HTTPS opener through browser window messaging, which the course page may be able to observe during sign-in. SkillBridge's operator receives none of this data.
 
 Settings, bookmarks, flashcard review state, recent lessons, and scroll positions are stored in `chrome.storage.local`. Original and translated text is cached separately in IndexedDB. Progress summaries are calculated locally from that state rather than separately stored or transmitted.
 
@@ -113,7 +113,7 @@ English (single listing locale; the extension UI supports 32 languages)
 
 ### storage
 
-Stores the selected language, display preferences, flashcard review state, bookmarks, recent lessons, and scroll positions in `chrome.storage.local`. The IndexedDB translation cache does not depend on this permission, and progress summaries are calculated rather than separately stored.
+Stores the selected language, display preferences, Tutor engine settings, flashcard review state, bookmarks, recent lessons, and scroll positions in `chrome.storage.local`. After a successful cloud Tutor sign-in, it also stores the accepted Puter session token and application identifier there so the session can resume; SkillBridge's operator never receives them. The IndexedDB translation cache and Tutor conversation history do not depend on this permission, and progress summaries are calculated rather than separately stored.
 
 ### alarms
 

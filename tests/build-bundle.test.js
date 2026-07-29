@@ -39,6 +39,13 @@ describe('bundled artifact shape', () => {
     const manifest = JSON.parse(fs.readFileSync(path.join(DIST_DIR, 'manifest.json'), 'utf8'));
     expect(manifest.content_scripts[0].js).toEqual(['content.bundle.js']);
     expect(manifest.content_scripts[0].css).toEqual(['content.bundle.css']);
+    expect(manifest.content_scripts[1]).toEqual(
+      expect.objectContaining({
+        matches: ['https://anthropic.skilljar.com/*'],
+        world: 'ISOLATED',
+        js: ['src/bridge/puter-content-init.js', 'src/bridge/puter.js', 'src/bridge/puter-content-broker.js'],
+      }),
+    );
     expect(manifest.background.service_worker).toBe('background.bundle.js');
     expect(manifest.host_permissions).not.toContain('https://*.youtube.com/*');
   });
@@ -95,19 +102,27 @@ describe('bundled artifact shape', () => {
     expect(notices).toContain('@heyputer/kv.js` 0.2.1');
   });
 
-  test('ships the extension-origin Puter broker without the retired page-world bridge', () => {
+  test('ships the isolated-world Puter broker without a web-accessible bridge', () => {
     const manifest = JSON.parse(fs.readFileSync(path.join(DIST_DIR, 'manifest.json'), 'utf8'));
     const resources = manifest.web_accessible_resources.flatMap((entry) => entry.resources);
-    expect(resources).toContain('src/bridge/puter-frame.html');
+    expect(resources).not.toContain('src/bridge/puter-frame.html');
     expect(resources).not.toContain('src/lib/page-bridge.js');
     expect(resources).not.toContain('src/bridge/puter.js');
     expect(fs.existsSync(path.join(DIST_DIR, 'src', 'lib', 'page-bridge.js'))).toBe(false);
-    expect(fs.existsSync(path.join(DIST_DIR, 'src', 'bridge', 'puter-frame.html'))).toBe(true);
-    expect(fs.existsSync(path.join(DIST_DIR, 'src', 'bridge', 'puter-frame-init.js'))).toBe(true);
-    expect(fs.existsSync(path.join(DIST_DIR, 'src', 'bridge', 'puter-frame.js'))).toBe(true);
+    expect(fs.existsSync(path.join(DIST_DIR, 'src', 'bridge', 'puter-frame.html'))).toBe(false);
+    expect(fs.existsSync(path.join(DIST_DIR, 'src', 'bridge', 'puter-frame-init.js'))).toBe(false);
+    expect(fs.existsSync(path.join(DIST_DIR, 'src', 'bridge', 'puter-frame.js'))).toBe(false);
+    expect(fs.existsSync(path.join(DIST_DIR, 'src', 'bridge', 'puter-content-init.js'))).toBe(true);
+    expect(fs.existsSync(path.join(DIST_DIR, 'src', 'bridge', 'puter-content-broker.js'))).toBe(true);
     expect(fs.existsSync(path.join(DIST_DIR, 'src', 'bridge', 'puter.js'))).toBe(true);
     const sdk = fs.readFileSync(path.join(DIST_DIR, 'src', 'bridge', 'puter.js'), 'utf8');
-    expect(sdk).toContain('SkillBridge CWS modification notice (2026-07-28)');
+    expect(sdk).toContain('SkillBridge CWS modification notice (2026-07-29)');
+    expect(sdk).toContain('globalThis.__SKILLBRIDGE_PUTER_STORAGE__');
+    expect(sdk).not.toContain('globalThis.localStorage');
+    expect(sdk).not.toContain('new URLSearchParams(globalThis.location?.search)');
+    expect(sdk).toContain('new URLSearchParams()');
+    expect(sdk).not.toContain('dbName:"puter_cache"');
+    expect(sdk).not.toContain('customElements.define("puter-dialog",cn)');
     expect(sdk).not.toContain('(async()=>{try{const e=await this.auth.whoami()');
     expect(sdk).not.toContain(',this.getUser().then(e=>{this.whoami=e})');
     expect(sdk).not.toContain('puter.getUser().then(e=>{puter.onAuth(e)})');
@@ -126,9 +141,10 @@ describe('bundled artifact shape', () => {
     expect(sdk).toContain('setAuthToken(e){this.authToken=e');
     expect(sdk).toContain('setAPIOrigin(e){this.APIOrigin=e}');
     expect(sdk).toContain('async request_rao_(){');
-    const init = fs.readFileSync(path.join(DIST_DIR, 'src', 'bridge', 'puter-frame-init.js'), 'utf8');
-    expect(init).toContain("new Set([globalThis.location.origin, 'https://puter.com'])");
-    expect(init).toContain('stopImmediatePropagation');
+    const init = fs.readFileSync(path.join(DIST_DIR, 'src', 'bridge', 'puter-content-init.js'), 'utf8');
+    expect(init).toContain("'https://puter.com'");
+    expect(init).toContain('event?.isTrusted !== true || event.origin !== PUTER_ORIGIN');
+    expect(init).toContain('nativeAdd.call(this, type, wrapped, options)');
     expect(fs.readFileSync(path.join(DIST_DIR, 'content.bundle.js'), 'utf8')).toContain(
       '__SKILLBRIDGE_AI_GATEWAY_ENABLED__',
     );
@@ -141,7 +157,7 @@ describe('bundled artifact shape', () => {
   });
 
   test('cloud broker messages never carry Puter tokens or account profiles', () => {
-    const broker = fs.readFileSync(path.join(DIST_DIR, 'src', 'bridge', 'puter-frame.js'), 'utf8');
+    const broker = fs.readFileSync(path.join(DIST_DIR, 'src', 'bridge', 'puter-content-broker.js'), 'utf8');
     const background = fs.readFileSync(path.join(DIST_DIR, 'background.bundle.js'), 'utf8');
     for (const forbidden of ['username:', 'uuid:', 'profile:', 'authToken:']) {
       expect(broker).not.toContain(forbidden);

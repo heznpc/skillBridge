@@ -74,6 +74,16 @@
         "src/content/styles/banners-term-dashboard.css"
       ],
       "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://anthropic.skilljar.com/*"],
+      "js": [
+        "src/bridge/puter-content-init.js",
+        "src/bridge/puter.js",
+        "src/bridge/puter-content-broker.js"
+      ],
+      "run_at": "document_end",
+      "world": "ISOLATED"
     }
   ],
   "background": {
@@ -88,7 +98,6 @@
     {
       "resources": [
         "src/data/*",
-        "src/bridge/puter-frame.html",
         "assets/icons/*",
         "src/shared/constants.json",
         "src/shared/runtime-constants.js",
@@ -99,7 +108,6 @@
     {
       "resources": [
         "src/data/*",
-        "src/bridge/puter-frame.html",
         "src/shared/runtime-constants.js",
         "src/content/styles/*.css"
       ],

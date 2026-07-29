@@ -20,7 +20,7 @@ file when checked on 2026-07-28.
 
 ### SkillBridge CWS modifications
 
-The Chrome Web Store build modifies the bundled file on 2026-07-28. It:
+The Chrome Web Store build modifies the bundled file on 2026-07-29. It:
 
 1. disables unused remotely hosted `web-streams-polyfill` and Rust TLS socket
    imports; and
@@ -31,7 +31,16 @@ The Chrome Web Store build modifies the bundled file on 2026-07-28. It:
 4. disables eager Puter filesystem-socket and resource-access initialization
    that the Tutor's AI chat path does not use; and
 5. disables the SDK's hidden automatic token reauthentication so SkillBridge's
-   visible isolated frame can own stale-session recovery and user consent.
+   visible Tutor flow can own stale-session recovery and user consent; and
+6. redirects every SDK `localStorage` access to an in-memory facade and disables
+   the unused persistent `puter_cache` IndexedDB initialization. The isolated
+   broker alone stores the accepted session token and application identifier in
+   `chrome.storage.local`; and
+7. disables the unused SDK dialog custom-element registration, which is not
+   available in Chrome's isolated content-script registry. SkillBridge owns the
+   visible sign-in card instead; and
+8. removes host-page `puter.*` query bootstrap parsing so a crafted lesson URL
+   cannot switch SDK mode or redirect authenticated API traffic.
 
 These changes make the packaged SDK comply with Chrome Manifest V3's ban on
 remotely hosted executable code. The modified packaged file carries the same

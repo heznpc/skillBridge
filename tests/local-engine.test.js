@@ -53,8 +53,12 @@ describe('tutor engine routing', () => {
     expect(trSrc).toContain("if (engine === 'local') return this._localChatStream(prompt, onChunk, opts);");
   });
 
-  test('engine defaults to cloud when unset', () => {
-    expect(trSrc).toContain("return sb_ai_engine || 'cloud';");
+  test('engine defaults to cloud when unset, and the pref read is time-bounded', () => {
+    // The storage read is raced against a timeout so a stalled chrome.storage
+    // IPC can never gate the tutor (source of a batch-load E2E flake where the
+    // offline notice/chat reply never appeared).
+    expect(trSrc).toContain("return result?.sb_ai_engine || 'cloud';");
+    expect(trSrc).toMatch(/Promise\.race\(\[read, timeout\]\)/);
   });
 
   test('local engine uses the SW proxy Port and honors AbortSignal', () => {
@@ -307,7 +311,7 @@ describe('offline behavior', () => {
     expect(sidebarSrc).toContain("const offlineBlocks = sb.isOffline && (await _currentEngine()) !== 'local';");
     expect(sidebarSrc).toContain('if (offlineBlocks) {');
     expect(sidebarSrc).toContain('async function _currentEngine()');
-    expect(sidebarSrc).toContain("return sb_ai_engine || 'cloud';");
+    expect(sidebarSrc).toContain("return result?.sb_ai_engine || 'cloud';");
   });
 
   test('structured HTML blocks are deferred offline, not dropped', () => {

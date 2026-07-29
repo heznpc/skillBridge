@@ -1150,10 +1150,9 @@ const ENGINE_LABELS = {
     ru: 'При 16 ГБ ОЗУ практичный выбор — модель ~4B (например, gemma3:4b); для 12B и больше нужно ~24 ГБ и более. Первый ответ медленнее из-за загрузки модели. Встроенный ИИ Chrome не используется — запустите локальный сервер.',
     vi: 'Với 16 GB RAM, mô hình ~4B (ví dụ gemma3:4b) là lựa chọn thực tế; từ 12B trở lên nên có ~24 GB hoặc hơn. Câu trả lời đầu tiên chậm hơn vì phải tải mô hình. AI tích hợp của Chrome không được dùng — hãy chạy một máy chủ cục bộ.',
   },
-  // v4: the cloud Tutor's sign-in must be started by a click INSIDE the
-  // extension-origin frame. Chrome does not propagate user activation into a
-  // cross-origin iframe, so a click on the page's send button leaves the frame
-  // unactivated and window.open (Puter's sign-in popup) is blocked.
+  // v4: the cloud Tutor's sign-in must be started by a trusted click on the
+  // isolated broker's own overlay so Puter's window.open call receives user
+  // activation. The initial page chat send only asks the broker to show it.
   signInTitle: {
     en: 'Sign in to use the AI tutor',
     ko: 'AI 튜터를 사용하려면 로그인하세요',

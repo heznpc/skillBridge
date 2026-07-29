@@ -87,9 +87,11 @@ async function build() {
   fs.mkdirSync(path.join(DIST, 'src/bridge'), { recursive: true });
   fs.mkdirSync(path.join(DIST, 'src/content/styles'), { recursive: true });
   fs.copyFileSync(path.join(ROOT, 'src/content/styles/fab.css'), path.join(DIST, 'src/content/styles/fab.css'));
-  // AI tutor broker (v4): Puter runs only in an extension-origin iframe. The
-  // host main world receives neither the SDK nor Tutor prompts/chunks.
-  for (const name of ['puter-frame.html', 'puter-frame-init.js', 'puter-frame.js']) {
+  // AI Tutor broker (v4): Puter runs as a declarative ISOLATED-world content
+  // script on the one trusted course host. The host main world receives
+  // neither the SDK object nor Tutor prompts/chunks, and the SDK's synchronous
+  // storage calls are redirected to the private facade installed by init.
+  for (const name of ['puter-content-init.js', 'puter-content-broker.js']) {
     fs.copyFileSync(path.join(ROOT, 'src/bridge', name), path.join(DIST, 'src/bridge', name));
   }
   writeCwsSafePuter(path.join(ROOT, 'src/bridge/puter.js'), path.join(DIST, 'src/bridge/puter.js'));
@@ -172,6 +174,15 @@ const PUTER_GLOBAL_FUNCTION_FALLBACK =
   'const ve="undefined"!=typeof self?self:"undefined"!=typeof window?window:Function("return this")();';
 const PUTER_GLOBAL_FUNCTION_REPLACEMENT =
   'const ve="undefined"!=typeof self?self:"undefined"!=typeof window?window:globalThis;';
+const PUTER_GLOBAL_STORAGE_REF = 'globalThis.localStorage';
+const PUTER_GLOBAL_STORAGE_REF_COUNT = 4;
+const PUTER_HOST_QUERY_PARAMS = 'new URLSearchParams(globalThis.location?.search)';
+const PUTER_HOST_INDEXEDDB_INIT =
+  'constructor(){this._cache=new n({dbName:"puter_cache"}),this._opscache=new n,this.modules_=[];';
+const PUTER_PRIVATE_CACHE_INIT =
+  'constructor(){this._cache={flushall:()=>{}},this._opscache=this._cache,this.modules_=[];';
+const PUTER_CUSTOM_ELEMENT_REGISTRATION =
+  'cn.__proto__===globalThis.HTMLElement&&customElements.define("puter-dialog",cn);';
 const PUTER_PREFIX_LOGGER_PROFILE_LOOKUP =
   '(async()=>{try{const e=await this.auth.whoami(),n=`[${e?.app_name??this.appInstanceID??"HOST"}]`;t=t.fields({prefix:n}),this.logger=t}catch(e){this.debugMode&&console.error("Failed to initialize prefix logger",e)}})(),';
 const PUTER_AUTO_USER_PROFILE_LOOKUP = ',this.getUser().then(e=>{this.whoami=e})';
@@ -188,12 +199,17 @@ const PUTER_SINGLETON_SET_TOKEN_RAO =
 const PUTER_INTERNAL_TOKEN_REAUTH =
   'if("token_auth_failed"===h?.code&&"web"===puter.env)try{puter.resetAuthToken(),await puter.ui.authenticateWithPuter()}catch(e){return n({error:{code:"auth_canceled",message:"Authentication canceled"}})}';
 const PUTER_MODIFICATION_NOTICE = `/*
- * SkillBridge CWS modification notice (2026-07-28): Heznpc changed this
+ * SkillBridge CWS modification notice (2026-07-29): Heznpc changed this
  * @heyputer/puter.js 2.2.11 distribution by disabling unused remotely hosted
  * TLS-socket imports, replacing its Function-constructor global fallback, and
  * disabling automatic user-profile, RAO, and filesystem-socket initialization
  * that AI chat does not need, plus hidden internal token reauthentication so
- * SkillBridge's visible extension-frame recovery owns that user interaction.
+ * SkillBridge's visible Tutor recovery owns that user interaction. All SDK
+ * localStorage references are scoped to SkillBridge's in-memory facade and
+ * the unused host IndexedDB cache is disabled; the broker alone persists the
+ * minimum session fields in extension storage. Host-page Puter bootstrap
+ * query parameters are ignored. The unused SDK dialog custom element is also
+ * disabled because ISOLATED content scripts have no registry.
  * See THIRD_PARTY_NOTICES.md and licenses/Apache-2.0.txt.
  */\n`;
 
@@ -210,6 +226,26 @@ function writeCwsSafePuter(srcPath, destPath) {
     throw new Error(
       'Puter SDK Function-constructor fallback not found — the vendored SDK changed. ' +
         'Re-audit its global-scope fallback before shipping.',
+    );
+  }
+  if (src.split(PUTER_GLOBAL_STORAGE_REF).length - 1 !== PUTER_GLOBAL_STORAGE_REF_COUNT) {
+    throw new Error(
+      'Puter SDK global localStorage pattern changed — refusing to ship an SDK that may touch host storage.',
+    );
+  }
+  if (src.split(PUTER_HOST_QUERY_PARAMS).length - 1 !== 1) {
+    throw new Error(
+      'Puter SDK host-query bootstrap pattern changed — refusing to ship an SDK that may redirect auth traffic.',
+    );
+  }
+  if (src.split(PUTER_HOST_INDEXEDDB_INIT).length - 1 !== 1) {
+    throw new Error(
+      'Puter SDK host IndexedDB initialization pattern changed — refusing to ship an SDK that may touch host storage.',
+    );
+  }
+  if (src.split(PUTER_CUSTOM_ELEMENT_REGISTRATION).length - 1 !== 1) {
+    throw new Error(
+      'Puter SDK dialog registration pattern changed — refusing to ship an unreviewed isolated-world UI path.',
     );
   }
   if (src.split(PUTER_PREFIX_LOGGER_PROFILE_LOOKUP).length - 1 !== 1) {
@@ -245,6 +281,14 @@ function writeCwsSafePuter(srcPath, destPath) {
     .join(PUTER_REMOTE_IMPORT_REPLACEMENT)
     .split(PUTER_GLOBAL_FUNCTION_FALLBACK)
     .join(PUTER_GLOBAL_FUNCTION_REPLACEMENT)
+    .split(PUTER_GLOBAL_STORAGE_REF)
+    .join('globalThis.__SKILLBRIDGE_PUTER_STORAGE__')
+    .split(PUTER_HOST_QUERY_PARAMS)
+    .join('new URLSearchParams()')
+    .split(PUTER_HOST_INDEXEDDB_INIT)
+    .join(PUTER_PRIVATE_CACHE_INIT)
+    .split(PUTER_CUSTOM_ELEMENT_REGISTRATION)
+    .join('void 0;')
     .split(PUTER_FS_CONSTRUCTOR_SOCKET_INIT)
     .join('this.cacheUpdateTimer=null;const t={}')
     .split(PUTER_FS_SET_TOKEN_SOCKET_INIT)
@@ -276,11 +320,18 @@ function writeCwsSafePuter(srcPath, destPath) {
       PUTER_FS_SET_ORIGIN_SOCKET_INIT,
       PUTER_SINGLETON_SET_TOKEN_RAO,
       PUTER_INTERNAL_TOKEN_REAUTH,
+      PUTER_HOST_QUERY_PARAMS,
     ].some((pattern) => sanitized.includes(pattern))
   ) {
     throw new Error('Puter SDK automatic profile lookup survived sanitization.');
   }
-  fs.writeFileSync(destPath, `${PUTER_MODIFICATION_NOTICE}${sanitized}`);
+  const privateStorageWrapper =
+    '((localStorage)=>{\n' +
+    '"use strict";\n' +
+    'if(!localStorage)throw new Error("SkillBridge: private Puter storage unavailable");\n' +
+    sanitized +
+    '\n})(globalThis.__SKILLBRIDGE_PUTER_STORAGE__);\n';
+  fs.writeFileSync(destPath, `${PUTER_MODIFICATION_NOTICE}${privateStorageWrapper}`);
 }
 
 function copyDir(src, dest) {
@@ -332,7 +383,11 @@ function copyHtmlEntrypoint(relativeHtmlPath) {
   }
 }
 
-build().catch((err) => {
-  console.error('Build failed:', err);
-  process.exit(1);
-});
+if (require.main === module) {
+  build().catch((err) => {
+    console.error('Build failed:', err);
+    process.exit(1);
+  });
+}
+
+module.exports = { writeCwsSafePuter };

@@ -76,13 +76,19 @@ GHSA), listed publicly only with the researcher's explicit consent.
   `cd.yml`). Verify via
   [`gh attestation verify`](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations/using-artifact-attestations-to-establish-provenance-for-builds).
 - Chrome Web Store ZIP: the build pins the Tutor gateway on and runs the
-  packaged Puter client in an isolated extension-origin frame connected through
-  validated extension ports. The course page's main JavaScript world receives
-  neither the SDK/session token nor Tutor transport messages; the visible Tutor
-  UI itself remains part of the page DOM. Packaging disables unused remote TLS-socket imports, the
+  packaged Puter client in Chrome's ISOLATED content-script world on the exact
+  trusted course host, connected through validated extension ports. The SDK
+  object and extension-port payloads are isolated from the course page's main
+  JavaScript world. The visible Tutor UI remains part of the shared page DOM,
+  however, so host scripts may observe keyboard events and rendered chat text.
+  Puter's HTTPS sign-in protocol returns its result to the opener through a
+  window message, which the host page may be able to observe during sign-in;
+  SkillBridge therefore makes no stronger claim that the token is never visible
+  in transit. It persists the token only in extension storage. Packaging disables unused remote TLS-socket imports, the
   `Function`-constructor fallback, automatic User/profile lookups, and unused
-  eager filesystem-socket/resource-access startup, plus hidden automatic token
-  reauthentication so the visible frame owns stale-session recovery, and must
+  eager filesystem-socket/resource-access startup, host-page storage/cache
+  initialization, plus hidden automatic token reauthentication so SkillBridge
+  owns stale-session recovery, and must
   pass the automated RHC scan before upload. The ZIP also carries the third-party
   licenses and modification notice.
 - Vendored source: the raw `src/bridge/puter.js` hash is recorded in

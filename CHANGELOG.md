@@ -13,12 +13,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Local (on-device) AI tutor engine. A new popup selector chooses the tutor engine — Cloud (Claude, no setup), Local (Ollama / any OpenAI-compatible server), or Off (translation only). Local mode adds server-URL + model configuration, an optional `http://localhost/*` host permission requested only when Local is selected, a reachability probe that classifies connected / CORS-blocked / not-found, and CORS onboarding (OLLAMA_ORIGINS) guidance. In Local mode nothing leaves the device — the service worker proxies the streaming chat to localhost.
 
 ### Changed
-- Inline-mixed blocks (links, inline code, emphasis) are translated as HTML through the same Google Translate endpoint the extension already uses (`translate_a/single?client=gtx`), which preserves tags and hrefs when the block's markup is sent as the query and reconciling the result back into the original DOM nodes without `innerHTML` assignment. A tag/href integrity gate falls back to the original block on any mismatch, replacing the previous flat-text + placeholder path.
+- Inline-mixed blocks (links, inline code, emphasis) are translated as HTML through the same Google Translate endpoint the extension already uses (`translate_a/single?client=gtx`), which preserves tags and hrefs when the block's markup is sent in the POST body and reconciles the result back into the original DOM nodes without `innerHTML` assignment. A tag/href integrity gate falls back to the original block on any mismatch, replacing the previous flat-text + placeholder path.
 - Store, README, privacy, permission, and contributor copy corrected to v4 reality: the AI tutor ships and uses a free Puter sign-in, while translation and local study tools need no account.
-- The CWS build no longer pins the AI gateway off; the Puter SDK and page-world bridge ship in the artifact and web-accessible resources.
+- The CWS build no longer pins the AI gateway off. A sanitized Puter SDK and Tutor broker ship as exact-host ISOLATED content scripts; Tutor prompts and response chunks stay on validated extension ports, and accepted session fields persist in extension storage instead of course-site storage.
 
 ### Removed
-- `scripts/check-rhc.js` and its build/test wiring — the self-imposed remote-hosted-code scanner added after the last Puter-bundled release. The bundled tutor is a first-party integration, not remote-hosted code.
+- The page-world Puter bridge and extension-origin Tutor frame from earlier candidates are absent from the CWS artifact. `scripts/check-rhc.js` remains a mandatory build gate for the sanitized bundled SDK.
 
 ## [3.5.42] - 2026-07-24
 

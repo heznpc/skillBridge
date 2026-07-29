@@ -188,12 +188,14 @@ Stored keys: `targetLanguage`, `autoTranslate`, `darkMode`, `welcomeShown`, `fab
 
 **Fix:** Make sure you're on `anthropic.skilljar.com`, not `anthropic.com/learn` (which redirects).
 
-### Raw developer AI gateway issues
+### AI Tutor runtime issues
 
-`Bridge not ready`, Puter authentication, and AI Tutor troubleshooting apply
-only when the repository root is loaded as an unpacked developer build. The CWS
-bundle must not initialize the page bridge or make Puter requests. If it does,
-stop release testing and treat that as a package-boundary defect.
+Use `dist/bundled` for CWS-equivalent Tutor testing. The repository root retains
+the raw vendored SDK and legacy page-bridge sources for maintenance, so a
+root-loaded result is not evidence for the upload artifact. The CWS bundle must
+not initialize the legacy page bridge or contact Puter during passive page load.
+After the user sends a cloud Tutor message, however, a Puter sign-in and AI
+request are expected through the bundled isolated content broker.
 
 ### Google Translate rate limiting
 

@@ -52,8 +52,8 @@ async function evalInContentWorld(context, op, arg) {
       return await sw.evaluate(
         async ([opName, payload]) => {
           // Query by URL pattern, not active-tab: Playwright sometimes loses
-          // "current window" focus when the page-bridge injects its
-          // web_accessible_resource <script>, and `{active:true}` then returns
+          // "current window" focus during extension-driven page work, and
+          // `{active:true}` then returns
           // a tab from a different window that the extension has no host
           // permission for. Matching on the fixture URL is unambiguous.
           const allTabs = await chrome.tabs.query({ url: ['http://localhost/*', 'http://localhost:*/*'] });
@@ -527,8 +527,8 @@ async function evalInContentWorld(context, op, arg) {
                   h1: document.querySelector('h1') && document.querySelector('h1').textContent,
                   p: document.querySelector('p') && document.querySelector('p').textContent,
                 }),
-                // Whether the page-bridge has finished initializing and the
-                // tutor is callable. Used by tutor-chat.spec.js to gate the
+                // Whether the isolated broker has finished initializing and
+                // the Tutor is callable. Used by tutor-chat.spec.js to gate the
                 // first sendChat — translator.chatStream throws "Bridge not
                 // ready" if you call it before BRIDGE_READY lands.
                 bridgeReady: () => ({
@@ -540,27 +540,49 @@ async function evalInContentWorld(context, op, arg) {
                   translator._cloudPort.disconnect();
                   return { ok: true };
                 },
-                replacePuterFrame: () => {
-                  const translator = window._sb?.translator;
-                  if (!translator?._createPuterFrame) return { error: 'Puter frame factory not present' };
-                  translator._createPuterFrame();
+                replacePuterBroker: () => {
+                  const replacement = chrome.runtime.connect({ name: 'sb-puter-content' });
+                  replacement.postMessage({ type: 'ready' });
+                  globalThis.__sbE2eReplacementBroker = replacement;
                   return { ok: true };
                 },
-                puterFrameState: () => {
-                  const frame = document.getElementById('__skillbridge_puter_frame__');
-                  return { present: !!frame, visible: !!frame && frame.style.display !== 'none' };
+                disconnectReplacementBroker: () => {
+                  const replacement = globalThis.__sbE2eReplacementBroker;
+                  if (!replacement) return { error: 'replacement broker Port not present' };
+                  replacement.disconnect();
+                  delete globalThis.__sbE2eReplacementBroker;
+                  return { ok: true };
+                },
+                puterBrokerState: async (expectedToken) => {
+                  const persisted = await chrome.storage.local.get('sb_puter_auth_token');
+                  const liveToken = globalThis.puter?.authToken;
+                  return {
+                    sdkPresent: typeof globalThis.puter?.ai?.chat === 'function',
+                    privateStorageReady: !!globalThis.__SKILLBRIDGE_PUTER_STORAGE__,
+                    liveTokenPresent: typeof liveToken === 'string' && liveToken.length > 0,
+                    liveTokenMatches: liveToken === expectedToken,
+                    persistedTokenMatches: persisted.sb_puter_auth_token === expectedToken,
+                  };
                 },
                 // Simulate the user typing in the chat input + clicking send.
                 // This exercises the full sidebar-chat.sendChatMessage path:
                 //   input.value = text → click handler → translator.chatStream
-                //   → CHAT_REQUEST postMessage → page-bridge → puter stub →
-                //   CHAT_STREAM_CHUNK events → onChunk → formatResponse →
-                //   bubble.innerHTML update → CHAT_STREAM_END → saveConversation.
-                sendChat: (text) => {
+                //   → runtime Port → isolated Puter broker → puter stub →
+                //   stream chunks → onChunk → formatResponse → bubble update
+                //   → saveConversation.
+                sendChat: async (text) => {
                   const input = window._sb.$id('si18n-chat-input');
                   const sendBtn = window._sb.$id('si18n-chat-send');
                   if (!input || !sendBtn) {
                     return { error: 'chat UI not present — open sidebar first' };
+                  }
+                  // bindSidebarEvents runs on a deferred timer; a click before
+                  // it lands is silently swallowed (batch-load flake). Wait for
+                  // the product's bound marker before clicking.
+                  const bindDeadline = Date.now() + 5000;
+                  while (!window._sb.$id('skillbridge-sidebar')?.hasAttribute('data-sb-bound')) {
+                    if (Date.now() > bindDeadline) return { error: 'sidebar events never bound' };
+                    await new Promise((r) => setTimeout(r, 50));
                   }
                   input.value = text;
                   sendBtn.click();

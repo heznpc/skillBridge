@@ -1,6 +1,6 @@
 # SkillBridge TODO
 
-> Last refreshed: 2026-07-28 (next CWS release: v4.0.0)
+> Last refreshed: 2026-07-29 (next CWS release: v4.0.0)
 
 Items below are concrete engineering / ops work. Anything strategic — what
 markets we enter, what we charge, what features we accept — is an owner
@@ -29,40 +29,39 @@ current privacy/package changes and must not be reused for the upload.
   v4.0.0 CWS package ships the AI Tutor and the bundled Puter client.
 
 - [x] **Separate raw-developer Puter evidence from the CWS runtime.** The v4 CWS
-  E2E suite now exercises the bundled Tutor through its extension-origin frame;
-  the retired page-world bridge is absent from `dist/bundled`. The repository's
+  E2E suite now exercises the bundled Tutor through its isolated content broker;
+  the retired page-world bridge and extension-origin frame are absent from
+  `dist/bundled`. The repository's
   raw vendored SDK remains maintenance input, not an upload artifact or CWS
   runtime-evidence substitute.
 
-- [~] **PR the E2E runner stabilization.** The five-stable-batch runner in
-  `scripts/run-e2e.js` is now PR'd (#241, runner-only); local `npm run test:e2e`
-  is green. Awaiting CI `e2e` job + merge.
+- [x] **PR the E2E runner stabilization.** PR #241 merged as `e36008b` with its
+  `e2e` and other required checks green. The current runner now covers all specs
+  in eight resource-bounded batches; local `npm run test:e2e` is green.
   - DoD: runner-only PR, local `npm run test:e2e` green, `git diff --check`
     green, GitHub `e2e` job green.
 
-- [ ] **Run pre-release dictionary QA.** *(partial — 4 of 12 done 2026-07-28)*
+- [x] **Run pre-release dictionary QA.** *(12 of 12 done 2026-07-28)*
   A rule-based `subagent` term pass plus the four confirmed reviewer fixes
   landed across all 12 locales, and every structural gate passes. Full
-  per-entry semantic review is complete only for **pt-BR, ru, vi, id** (those
-  four carry `_meta.lastAudited = 2026-07-28`); **ko, ja, zh-CN, zh-TW, es,
-  fr, it, de** are still unreviewed and intentionally keep their older
-  `lastAudited`. Finish those eight, verify findings against
-  `src/data/*.json`, fix only confirmed semantic errors, stamp
-  `_meta.lastAudited`, and run `npm run docs`.
+  per-entry semantic review is complete for **pt-BR, ru, vi, id, ko, ja,
+  zh-CN, zh-TW, es, fr, it, and de**; all 12 carry
+  `_meta.lastAudited = 2026-07-28` after confirmed findings were applied.
   - DoD: README QA table reflects the refreshed audits; structural gates still
     pass after semantic fixes.
   - Verify: `npm run glossary`, `npm run validate`,
     `npm run check:dict-coverage`, `npm run check:locales`, `npm run docs`.
 
-- [x] **Build, smoke, and freeze the upload artifact.** *(2026-07-28)*
-  `npm run release:verify` passed (676 unit across 38 suites, 46 Chromium E2E),
-  the ZIP was rebuilt and recorded as **70 files / 706,563 bytes / SHA-256
-  `f67fb382f79f9e92e9627b610032355f6dbb2d8d248ecfa14f8b39968bea28be`**, the
+- [x] **Build, smoke, and freeze the upload artifact.** *(2026-07-29)*
+  The integrated release gates passed (**695 unit tests across 38 suites and
+  49 Chromium E2E tests across eight resource-bounded batches**, including the
+  malicious Puter-query stored-token regression and the live Ollama round trip).
+  The ZIP was rebuilt and recorded as **69 files / 713,791 bytes / SHA-256
+  `227aafe440ce747f5caeab9a2830615876afdcdf68d7bef962ba30b144a3dd66`**, the
   extracted archive diffs byte-for-byte against `dist/bundled`, and
   `check-rhc` is clean on both. Promo MP4s/thumbnails/manifest were
-  regenerated from the current `demo.webm`; the screenshot capture stage was
-  not re-run (`shotkit` is not installed here), so the five page screenshots
-  are the previously captured set.
+  regenerated from the current `demo.webm`; all five 1280×800 screenshots and
+  the promo tile were recaptured from the current CWS bundle and inspected.
   - DoD: `dist/bundled` is fresh, first-user smoke passes, bundled zip is
     rebuilt, and generated store assets match the current icon/listing state.
   - Verify: `npm run release:smoke`, then `npm run release:verify` before the
@@ -85,14 +84,15 @@ current privacy/package changes and must not be reused for the upload.
 - [x] **Regenerate and inspect store assets.** Run `npm run capture:store` or
   the "Capture store assets" workflow, inspect screenshots/promo tile/listing
   description, then upload the media to the store listing. Regenerated and
-  visually inspected the five screenshots and promo tile on 2026-07-24; upload
+  visually inspected the five screenshots and promo tile on 2026-07-29; upload
   remains part of the dashboard step.
 - [ ] **Manual real-tab bundled-extension smoke.** Load `dist/bundled` in
   Chrome and check popup startup, translation, language switch, flashcards,
   bookmarks/recent/dashboard, exam-safe disable, dark mode, the known manual
   YouTube-caption gap, cloud/local/off Tutor modes, and that the host page cannot
-  observe or forge Tutor transport through SDK globals or window messages. (The
-  visible Tutor UI remains in the shared page DOM by design.)
+  observe or forge the extension-Port Tutor transport through SDK globals or
+  window messages. The visible Tutor UI remains in the shared page DOM, so this
+  check does not claim that keyboard events or rendered chat text are hidden.
 - [ ] **Keep the publication pause.** Do not remove
   `CWS_PUBLICATION_PAUSED` during code cleanup or dashboard draft preparation.
   Only after external scope approval, a newly versioned ZIP passes all gates,

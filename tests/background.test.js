@@ -41,7 +41,8 @@ const fns = new Function(
   return {
     gtLangCode, parseGTResponse, isNewerVersion, _rateLimiter, fetchWithRetry,
     registerAlarms, _gtFetchDedup, _inflightGT, _gtKey,
-    _registerCloudFrame, _registerCloudClient, _cloudFrames, _cloudClients, _cloudActive,
+    _isPuterBrokerPort, _isAllowedCloudClient, _registerCloudBroker, _registerCloudClient,
+    _cloudBrokers, _cloudClients, _cloudActive,
   };
 `,
 )(
@@ -59,9 +60,11 @@ const {
   _gtFetchDedup,
   _inflightGT,
   _gtKey,
-  _registerCloudFrame,
+  _isPuterBrokerPort,
+  _isAllowedCloudClient,
+  _registerCloudBroker,
   _registerCloudClient,
-  _cloudFrames,
+  _cloudBrokers,
   _cloudClients,
   _cloudActive,
 } = fns;
@@ -550,12 +553,20 @@ describe('Google Translate request shape', () => {
   });
 });
 
-function brokerPort({ name, url, tabId = 7 }) {
+function brokerPort({
+  name,
+  url,
+  tabId = 7,
+  frameId = 0,
+  id = 'test',
+  documentId = `document-${tabId}`,
+  documentLifecycle = 'active',
+}) {
   const messageListeners = [];
   const disconnectListeners = [];
   const port = {
     name,
-    sender: { id: 'test', url, tab: { id: tabId, url } },
+    sender: { id, url, frameId, documentId, documentLifecycle, tab: { id: tabId, url } },
     posted: [],
     disconnected: false,
     postMessage: jest.fn((msg) => port.posted.push(msg)),
@@ -570,20 +581,25 @@ function brokerPort({ name, url, tabId = 7 }) {
   return port;
 }
 
-describe('cloud broker frame replacement', () => {
+describe('isolated cloud broker replacement', () => {
   beforeEach(() => {
-    _cloudFrames.clear();
+    _cloudBrokers.clear();
     _cloudClients.clear();
     _cloudActive.clear();
   });
 
-  test('aborts and deterministically fails active requests before replacing a frame', () => {
-    const client = brokerPort({ name: 'sb-cloud-chat-client', url: 'https://course.skilljar.com/lesson' });
-    const firstFrame = brokerPort({ name: 'sb-puter-frame', url: 'src/bridge/puter-frame.html' });
+  test('aborts and deterministically fails active requests before replacing a broker', () => {
+    const client = brokerPort({
+      name: 'sb-cloud-chat-client',
+      url: 'https://anthropic.skilljar.com/lesson',
+    });
+    const firstFrame = brokerPort({
+      name: 'sb-puter-content',
+      url: 'https://anthropic.skilljar.com/lesson',
+    });
     _registerCloudClient(client);
-    _registerCloudFrame(firstFrame);
+    _registerCloudBroker(firstFrame);
     firstFrame.emitMessage({ type: 'ready' });
-    firstFrame.emitMessage({ type: 'auth-ui', visible: true });
     client.emitMessage({ type: 'start', id: 'active', prompt: 'hello', model: 'claude-sonnet-4-6' });
     expect(_cloudActive.size).toBe(1);
     const clientMessagesBeforeHeartbeat = client.posted.length;
@@ -592,15 +608,126 @@ describe('cloud broker frame replacement', () => {
     expect(_cloudActive.size).toBe(1);
     expect(client.posted).toHaveLength(clientMessagesBeforeHeartbeat);
 
-    const replacement = brokerPort({ name: 'sb-puter-frame', url: 'src/bridge/puter-frame.html' });
-    _registerCloudFrame(replacement);
+    const replacement = brokerPort({
+      name: 'sb-puter-content',
+      url: 'https://anthropic.skilljar.com/lesson',
+    });
+    _registerCloudBroker(replacement);
 
     expect(firstFrame.posted).toContainEqual({ type: 'abort', id: 'active' });
     expect(firstFrame.disconnected).toBe(true);
     expect(_cloudActive.size).toBe(0);
     expect(client.posted).toContainEqual({ type: 'error', id: 'active', error: 'Puter broker replaced' });
-    expect(client.posted).toContainEqual({ type: 'auth-ui', visible: false });
-    expect(_cloudFrames.get(7)?.port).toBe(replacement);
+    expect(_cloudBrokers.get(7)?.port).toBe(replacement);
     expect(client.posted).not.toContainEqual({ type: 'unavailable' });
+  });
+
+  test('accepts only the exact trusted top-frame content broker', () => {
+    const trusted = brokerPort({
+      name: 'sb-puter-content',
+      url: 'https://anthropic.skilljar.com/course',
+    });
+    const tenant = brokerPort({ name: 'sb-puter-content', url: 'https://other.skilljar.com/course' });
+    const subframe = brokerPort({
+      name: 'sb-puter-content',
+      url: 'https://anthropic.skilljar.com/course',
+      frameId: 2,
+    });
+    const wrongExtension = brokerPort({
+      name: 'sb-puter-content',
+      url: 'https://anthropic.skilljar.com/course',
+      id: 'attacker-extension',
+    });
+    const wrongProtocol = brokerPort({
+      name: 'sb-puter-content',
+      url: 'http://anthropic.skilljar.com/course',
+    });
+    const prerender = brokerPort({
+      name: 'sb-puter-content',
+      url: 'https://anthropic.skilljar.com/course',
+      documentLifecycle: 'prerender',
+    });
+    const missingDocument = brokerPort({
+      name: 'sb-puter-content',
+      url: 'https://anthropic.skilljar.com/course',
+      documentId: null,
+    });
+
+    expect(_isPuterBrokerPort(trusted)).toBe(true);
+    expect(_isPuterBrokerPort(tenant)).toBe(false);
+    expect(_isPuterBrokerPort(subframe)).toBe(false);
+    expect(_isPuterBrokerPort(wrongExtension)).toBe(false);
+    expect(_isPuterBrokerPort(wrongProtocol)).toBe(false);
+    expect(_isPuterBrokerPort(prerender)).toBe(false);
+    expect(_isPuterBrokerPort(missingDocument)).toBe(false);
+  });
+
+  test('accepts only exact active top-frame clients and pairs the same document', () => {
+    const broker = brokerPort({
+      name: 'sb-puter-content',
+      url: 'https://anthropic.skilljar.com/course',
+      documentId: 'broker-document',
+    });
+    const matching = brokerPort({
+      name: 'sb-cloud-chat-client',
+      url: 'https://anthropic.skilljar.com/course',
+      documentId: 'broker-document',
+    });
+    const stale = brokerPort({
+      name: 'sb-cloud-chat-client',
+      url: 'https://anthropic.skilljar.com/course',
+      documentId: 'old-document',
+    });
+    const prerender = brokerPort({
+      name: 'sb-cloud-chat-client',
+      url: 'https://anthropic.skilljar.com/course',
+      documentLifecycle: 'prerender',
+    });
+    const tenant = brokerPort({
+      name: 'sb-cloud-chat-client',
+      url: 'https://other.skilljar.com/course',
+    });
+    const wrongExtension = brokerPort({
+      name: 'sb-cloud-chat-client',
+      url: 'https://anthropic.skilljar.com/course',
+      id: 'attacker-extension',
+    });
+    const subframe = brokerPort({
+      name: 'sb-cloud-chat-client',
+      url: 'https://anthropic.skilljar.com/course',
+      frameId: 1,
+    });
+    const wrongProtocol = brokerPort({
+      name: 'sb-cloud-chat-client',
+      url: 'http://anthropic.skilljar.com/course',
+    });
+    const missingDocument = brokerPort({
+      name: 'sb-cloud-chat-client',
+      url: 'https://anthropic.skilljar.com/course',
+      documentId: null,
+    });
+
+    expect(_isAllowedCloudClient(matching)).toBe(true);
+    expect(_isAllowedCloudClient(prerender)).toBe(false);
+    expect(_isAllowedCloudClient(tenant)).toBe(false);
+    expect(_isAllowedCloudClient(wrongExtension)).toBe(false);
+    expect(_isAllowedCloudClient(subframe)).toBe(false);
+    expect(_isAllowedCloudClient(wrongProtocol)).toBe(false);
+    expect(_isAllowedCloudClient(missingDocument)).toBe(false);
+
+    _registerCloudBroker(broker);
+    _registerCloudClient(matching);
+    _registerCloudClient(stale);
+    broker.emitMessage({ type: 'ready' });
+    expect(matching.posted).toContainEqual({ type: 'ready' });
+    expect(stale.posted).not.toContainEqual({ type: 'ready' });
+
+    stale.emitMessage({ type: 'start', id: 'stale', prompt: 'hello', model: 'claude-sonnet-4-6' });
+    expect(stale.posted).toContainEqual({
+      type: 'error',
+      id: 'stale',
+      error: 'Puter broker is not ready',
+    });
+    expect(broker.posted).not.toContainEqual(expect.objectContaining({ id: 'stale' }));
   });
 });

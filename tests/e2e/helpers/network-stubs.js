@@ -1,14 +1,16 @@
 /**
  * SkillBridge — Playwright network-stub helpers.
  *
- * The extension talks to three external services:
+ * The extension talks to two external services during the non-Tutor flows
+ * that use this helper:
  *   1. translate.googleapis.com — for the GT batch translation pass
  *   2. api.github.com — for the version-check alarm
- *   3. js.puter.com — for the Puter SDK that powers the AI tutor bridge
  *
  * In E2E we don't want any test traffic leaving the runner, and we want
  * deterministic translations so assertions can match exact strings. These
- * helpers register `context.route()` interceptors covering all three.
+ * helpers register `context.route()` interceptors covering both. Tutor specs
+ * replace the vendored SDK file through helpers/puter-stream-stub.js instead
+ * of intercepting a remote script URL.
  *
  * Also stubs the Skilljar host itself so we don't hit anthropic.skilljar.com
  * from CI.
@@ -189,64 +191,6 @@ async function registerStubs(context) {
       contentType: 'application/json',
       body: JSON.stringify({ tag_name: 'v3.5.16' }),
     });
-  });
-
-  // Puter SDK stub. Two callers exercise this:
-  //   - golden / exam / SPA specs never send a chat, so they only need
-  //     `window.puter.ai` to exist so page-bridge.js's `loadPuter()` resolves
-  //     and emits BRIDGE_READY (which flips translator.isReady=true).
-  //   - tutor-chat spec sends a chat — for that the `chat(prompt, opts)` fn
-  //     must (a) when called with `{stream:true}`, return an async iterable
-  //     yielding `{text}` chunks (the real SDK's contract; see page-bridge
-  //     `for await (const chunk of response)` loop), and (b) when called
-  //     non-streaming, return `{message:{content:'...'}}`.
-  //
-  // We hardcode a Korean-ish three-chunk reply so the tutor-chat spec can
-  // assert the streamed text shows up in the bot bubble verbatim.
-  const PUTER_STUB = `
-    (function () {
-      const STREAM_CHUNKS = ['안녕하세요! ', '프롬프트는 Claude에게 ', '주는 입력입니다.'];
-      window.puter = {
-        // Model a signed-in Tutor session without a real Puter account.
-        authToken: 'e2e-stub-token',
-        ai: {
-          chat: async function (prompt, opts) {
-            if (opts && opts.stream) {
-              return {
-                [Symbol.asyncIterator]() {
-                  let i = 0;
-                  return {
-                    async next() {
-                      // Throttle slightly so the test sees incremental
-                      // chunks, not a single batch — exercising the
-                      // CHAT_STREAM_CHUNK → onChunk → DOM-update path.
-                      await new Promise((r) => setTimeout(r, 20));
-                      if (i >= STREAM_CHUNKS.length) return { done: true };
-                      return { done: false, value: { text: STREAM_CHUNKS[i++] } };
-                    },
-                  };
-                },
-              };
-            }
-            return { message: { content: STREAM_CHUNKS.join('') } };
-          },
-        },
-      };
-    })();
-  `;
-  await context.route('https://js.puter.com/**', async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/javascript',
-      body: PUTER_STUB,
-    });
-  });
-
-  // Puter backend — the SDK's whoami / socket.io calls happen as soon as
-  // it loads; without stubs they hit the real api.puter.com and pollute
-  // logs with 401/400 noise. Return harmless empties.
-  await context.route('https://api.puter.com/**', async (route) => {
-    await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
   });
 }
 

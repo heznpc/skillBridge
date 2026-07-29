@@ -31,8 +31,6 @@ class SkilljarTranslator {
     this._cloudPort = null;
     /** @type {Map<string, object>} In-flight cloud Tutor streams. */
     this._cloudPending = new Map();
-    /** @type {HTMLIFrameElement|null} Isolated Puter runtime/auth surface. */
-    this._puterFrame = null;
     /** @type {Promise<void>|null} Serializes broker startup/recovery. */
     this._cloudConnectPromise = null;
   }
@@ -458,8 +456,14 @@ class SkilljarTranslator {
   // Selected tutor engine: 'cloud' (default) | 'local' | 'off'.
   async _getAiEngine() {
     try {
-      const { sb_ai_engine } = await chrome.storage.local.get('sb_ai_engine');
-      return sb_ai_engine || 'cloud';
+      // A storage read must never gate the tutor indefinitely: under heavy
+      // browser load chrome.storage IPC can stall for seconds, and every chat
+      // begins with this call. Fall back to the default engine if it is slow —
+      // the preference read is best-effort, not a correctness gate.
+      const read = chrome.storage.local.get('sb_ai_engine');
+      const timeout = new Promise((resolve) => setTimeout(() => resolve(null), 1500));
+      const result = await Promise.race([read, timeout]);
+      return result?.sb_ai_engine || 'cloud';
     } catch {
       return 'cloud';
     }
@@ -620,9 +624,8 @@ User: ${userMessage}`;
           error: (message) => finish(reject, new Error(message || 'Cloud AI error')),
         });
         armWatchdog();
-        // The sign-in card lives inside the extension frame (it needs that
-        // frame's own user activation), so it cannot read the page's language
-        // state — ship the resolved strings with the request.
+        // The isolated broker owns the sign-in card and cannot read the
+        // extension UI's language state, so ship only the resolved labels.
         const t = (map) => map[this.currentLang] || map[targetLang] || map.en;
         const request = {
           type: 'start',
@@ -634,6 +637,7 @@ User: ${userMessage}`;
             body: t(ENGINE_LABELS.signInBody),
             button: t(ENGINE_LABELS.signInButton),
             cancel: t(ENGINE_LABELS.signInCancel),
+            error: t(ENGINE_LABELS.tutorSignInRequired),
           },
         };
         const sendStart = (allowReconnect) => {
@@ -708,34 +712,6 @@ User: ${userMessage}`;
     throw lastErr;
   }
 
-  _createPuterFrame() {
-    const frameUrl = chrome.runtime.getURL('src/bridge/puter-frame.html');
-    document.getElementById('__skillbridge_puter_frame__')?.remove();
-    const frame = document.createElement('iframe');
-    frame.id = '__skillbridge_puter_frame__';
-    frame.src = frameUrl;
-    frame.title = 'SkillBridge Puter sign-in';
-    frame.setAttribute('aria-hidden', 'true');
-    Object.assign(frame.style, {
-      display: 'none',
-      position: 'fixed',
-      inset: '0',
-      width: '100vw',
-      height: '100vh',
-      border: '0',
-      zIndex: '2147483647',
-      background: 'transparent',
-    });
-    (document.documentElement || document.body).appendChild(frame);
-    this._puterFrame = frame;
-  }
-
-  _setPuterAuthVisible(visible) {
-    if (!this._puterFrame) return;
-    this._puterFrame.style.display = visible ? 'block' : 'none';
-    this._puterFrame.setAttribute('aria-hidden', visible ? 'false' : 'true');
-  }
-
   _connectCloudBroker() {
     return new Promise((resolve, reject) => {
       const previousPort = this._cloudPort;
@@ -757,9 +733,12 @@ User: ${userMessage}`;
         }
         reject(new Error('Cloud broker ready timeout'));
       }, SKILLBRIDGE_THRESHOLDS.BRIDGE_READY_TIMEOUT);
-      this._createPuterFrame();
       let port;
       try {
+        // The isolated Puter content script deliberately reconnects only on a
+        // user-driven Tutor attempt. This revives its broker endpoint after an
+        // MV3 service-worker idle shutdown without creating a passive wake loop.
+        globalThis.__SKILLBRIDGE_ENSURE_PUTER_BROKER__?.();
         port = chrome.runtime.connect({ name: 'sb-cloud-chat-client' });
       } catch (err) {
         clearTimeout(timeout);
@@ -783,13 +762,8 @@ User: ${userMessage}`;
         }
         if (msg.type === 'unavailable') {
           this.isReady = false;
-          this._setPuterAuthVisible(false);
           for (const pending of this._cloudPending.values()) pending.error('Puter broker unavailable');
           this._cloudPending.clear();
-          return;
-        }
-        if (msg.type === 'auth-ui') {
-          this._setPuterAuthVisible(msg.visible === true);
           return;
         }
         if (typeof msg.id !== 'string') return;
@@ -797,10 +771,8 @@ User: ${userMessage}`;
         if (!pending) return;
         if (msg.type === 'chunk' && typeof msg.text === 'string') pending.chunk(msg.text);
         else if (msg.type === 'done') {
-          this._setPuterAuthVisible(false);
           pending.done();
         } else if (msg.type === 'error') {
-          this._setPuterAuthVisible(false);
           pending.error(msg.error);
         }
       });
@@ -810,7 +782,6 @@ User: ${userMessage}`;
         cleanupReady();
         this._cloudPort = null;
         this.isReady = false;
-        this._setPuterAuthVisible(false);
         for (const pending of this._cloudPending.values()) pending.error('Cloud AI connection closed');
         this._cloudPending.clear();
         if (wasWaiting) reject(new Error('Cloud broker connection closed'));
