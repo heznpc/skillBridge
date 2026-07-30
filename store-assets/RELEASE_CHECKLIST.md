@@ -296,6 +296,19 @@ the `cws-drift.yml` workflow via `workflow_dispatch` — it should report `OK`
 
 ## What's already automated
 
+- `scripts/check-permission-docs.js` (`npm run check:permission-docs`, and a
+  required CI step) compares `manifest.json` against the three documents CWS
+  review reads: the `Candidate Permissions` tables in `PRIVACY_POLICY.md` and
+  `docs/privacy.html`, and the `Permission Justifications` headings in
+  `STORE_LISTING.md`. Set equality, so both directions fail — a granted host no
+  document discloses, and a document claiming a permission the manifest does not
+  request. It also holds a list of retired capabilities (currently
+  `api.github.com` and `GitHub Releases`) that must appear in no document at all,
+  because that stale claim lived in a third-party services table and in prose
+  where a permission-table comparison would never look. **When you remove a
+  network capability, add it to `RETIRED` in that script** — that is the moment
+  every document describing it goes stale. The legacy v1.0.1 sections are
+  excluded by design so that record can stay while publication is paused.
 - `scripts/check-cws-drift.js` runs against the live listing weekly (Monday 06:30
   UTC) + on every `main` push that touches `manifest.json`. Opens a single
   GitHub issue when drift exceeds 5 patches OR the published version is older

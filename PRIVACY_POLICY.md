@@ -127,7 +127,7 @@ The candidate lets the user run the AI Tutor against a local OpenAI-compatible s
 
 ### Chrome Web Store Limited Use
 
-SkillBridge handles user data only to provide or improve its disclosed, user-facing translation, local study, Tutor, and update-check features. It transfers user data only when necessary to provide those features, comply with law, address security, or as part of a merger or asset transfer. SkillBridge does not sell user data, use it for credit decisions, or use or transfer it for personalized advertising. The operator does not allow humans to read handled user data except with the user's affirmative agreement for a specific support purpose, when necessary for security, to comply with law, or after aggregation and anonymization for internal operations.
+SkillBridge handles user data only to provide or improve its disclosed, user-facing translation, local study, and Tutor features. It transfers user data only when necessary to provide those features, comply with law, address security, or as part of a merger or asset transfer. SkillBridge does not sell user data, use it for credit decisions, or use or transfer it for personalized advertising. The operator does not allow humans to read handled user data except with the user's affirmative agreement for a specific support purpose, when necessary for security, to comply with law, or after aggregation and anonymization for internal operations.
 
 ### Data Security
 

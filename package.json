@@ -22,6 +22,7 @@
     "check:locales": "node scripts/check-locale-contamination.js",
     "check:dict-coverage": "node scripts/check-dict-coverage.js",
     "check:academy": "node scripts/check-academy-courses.js",
+    "check:permission-docs": "node scripts/check-permission-docs.js",
     "check:plugin": "node scripts/build-plugin.js --check",
     "check:cws-drift": "node scripts/check-cws-drift.js",
     "build:plugin": "node scripts/build-plugin.js",
