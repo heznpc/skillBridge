@@ -145,7 +145,12 @@ describe('check-permission-docs', () => {
   });
 
   test('a dropped row is caught even though the other two surfaces still agree', () => {
-    const rows = ROWS.filter(([cell]) => !cell.includes('translate.googleapis.com'));
+    // Exact cell match, not a hostname substring search. A `.includes()` on a
+    // host reads as the broken-URL-check antipattern (CodeQL
+    // js/incomplete-url-substring-sanitization) even in a fixture filter, and a
+    // test is a poor place to teach that shape.
+    const DROPPED_CELL = '`translate.googleapis.com`';
+    const rows = ROWS.filter(([cell]) => cell !== DROPPED_CELL);
     const problems = findPermissionDocMismatches(inputs({ privacyHtml: privacyHtml(rows) }));
     expect(problems).toEqual([
       'docs/privacy.html "Candidate Permissions": manifest declares `translate.googleapis.com` but no entry discloses it',
