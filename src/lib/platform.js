@@ -105,16 +105,41 @@ const _CAPS_NONE = Object.freeze({
   examDetection: false,
   youtubeSubtitles: false,
 });
-// anthropic.skilljar.com + the localhost/127.0.0.1 E2E fixture: full local
-// feature set. The build flag independently decides whether the AI Tutor
-// transport is present (enabled in the v4 Chrome Web Store artifact).
+// True only when the manifest grants the PORTED localhost patterns. The E2E
+// harness (`makePatchedExtension`) pushes `http://localhost:*/*` +
+// `http://127.0.0.1:*/*` into `host_permissions` on a throwaway manifest copy;
+// the shipped manifest declares only the portless `http://localhost/*` form,
+// and only under `optional_host_permissions`, which `getManifest()` does not
+// report here. So this cannot be true in a released build. Mirrors the check
+// `background.js` already uses to admit an E2E Tutor broker, so the trusted
+// fixture host is decided by one signal instead of a hard-coded branch that
+// also ships to users.
+const _TEST_HOSTS_GRANTED = (() => {
+  try {
+    const required = globalThis.chrome?.runtime?.getManifest?.().host_permissions || [];
+    return required.some((pattern) => pattern === 'http://localhost:*/*' || pattern === 'http://127.0.0.1:*/*');
+  } catch (_e) {
+    return false;
+  }
+})();
+
+// anthropic.skilljar.com (+ the localhost E2E fixture when the harness has
+// granted the ported patterns above): full local feature set. The build flag
+// independently decides whether the AI Tutor transport is present.
+//
+// `=== true` on purpose. `!== false` treated an ABSENT flag as "enabled",
+// which made a security-adjacent gate fail open in any context that forgot to
+// load build-config.js. The flag is now defined explicitly in both builds:
+// `src/shared/build-config.js` is the first content script in the manifest and
+// `scripts/build-bundle.js` pins the same non-writable value at the head of
+// content.bundle.js.
 const _CAPS_FULL = Object.freeze({
   platform: PLATFORM_IDS.SKILLJAR,
   trusted: true,
   contentScope: null,
   sidebar: true,
   fab: true,
-  bridge: globalThis.__SKILLBRIDGE_AI_GATEWAY_ENABLED__ !== false,
+  bridge: globalThis.__SKILLBRIDGE_AI_GATEWAY_ENABLED__ === true,
   headerControls: true,
   keyboardShortcuts: true,
   readingAid: true,
@@ -167,7 +192,12 @@ function getHostCapabilities(host) {
   const h = (host || (typeof location !== 'undefined' ? location.hostname : '') || '')
     .replace(/\.$/, '')
     .replace(/^www\./, '');
-  if (h === 'anthropic.skilljar.com' || h === 'localhost' || h === '127.0.0.1') return _CAPS_FULL;
+  if (h === 'anthropic.skilljar.com') return _CAPS_FULL;
+  // Fixture hosts are trusted only under the E2E manifest — see
+  // _TEST_HOSTS_GRANTED. In a released build these fall through to _CAPS_NONE,
+  // so a local page can never claim the trusted profile even if some future
+  // change lets a content script run there.
+  if (_TEST_HOSTS_GRANTED && (h === 'localhost' || h === '127.0.0.1')) return _CAPS_FULL;
   if (h === 'claude.com') return _CAPS_CLAUDE_TUTORIALS;
   // Delegate Skilljar-host classification to detectPlatform so the host regex
   // lives in exactly one place (PLATFORM_PATTERNS).

@@ -57,7 +57,11 @@ async function hasSkillBridgeContentScript(tabId) {
   return false;
 }
 
-const _POPUP_AI_GATEWAY_ENABLED = globalThis.__SKILLBRIDGE_AI_GATEWAY_ENABLED__ !== false;
+// `=== true`, not `!== false`: popup.html loads ../shared/build-config.js
+// before this file, so the flag is always an explicit boolean here. Treating an
+// absent flag as enabled would surface the Tutor engine selector in a build
+// that has no Tutor transport.
+const _POPUP_AI_GATEWAY_ENABLED = globalThis.__SKILLBRIDGE_AI_GATEWAY_ENABLED__ === true;
 
 document.addEventListener('DOMContentLoaded', async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });

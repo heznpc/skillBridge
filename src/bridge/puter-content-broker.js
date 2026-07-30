@@ -37,7 +37,15 @@
     button: 'Sign in',
     cancel: 'Cancel',
     error: 'Sign-in did not complete. Please try again.',
+    // "Cancel" alone left the card to reappear on the next question with no way
+    // out and no statement of the alternatives, which made the sign-in prompt
+    // the first dead end a v1.0.1 upgrader met. These two give the card an exit
+    // that sticks and a pointer to the on-device engine.
+    disable: 'Turn off the tutor',
+    localHint: 'Prefer to keep everything on your device? Choose the on-device tutor from the toolbar icon.',
+    off: 'The AI tutor is turned off. Turn it back on in the SkillBridge popup to ask questions.',
   });
+  const ENGINE_STORAGE_KEY = 'sb_ai_engine';
   const active = new Map();
   // Session ids currently awaiting the shared sign-in overlay. Only the last
   // waiter may close the overlay on cancel; without this, aborting one
@@ -53,6 +61,9 @@
   let authLabels = { ...DEFAULT_LABELS };
   let authGatePromise = null;
   let cancelAuthGate = null;
+  // Set when the user chose "turn off the tutor" on the current gate, so the
+  // reply reports that choice instead of the generic sign-in-required error.
+  let engineTurnedOff = false;
   let acceptedToken = null;
   let acceptedAppUid = null;
 
@@ -109,6 +120,9 @@
       button: safeLabel(labels.button, DEFAULT_LABELS.button),
       cancel: safeLabel(labels.cancel, DEFAULT_LABELS.cancel),
       error: safeLabel(labels.error, DEFAULT_LABELS.error),
+      disable: safeLabel(labels.disable, DEFAULT_LABELS.disable),
+      localHint: safeLabel(labels.localHint, DEFAULT_LABELS.localHint),
+      off: safeLabel(labels.off, DEFAULT_LABELS.off),
     };
   };
 
@@ -132,10 +146,15 @@
       h2 { margin: 0 0 10px; font: 700 20px/1.35 inherit; }
       p { margin: 0; font: 400 15px/1.55 inherit; }
       .error { min-height: 1.45em; margin-top: 12px; color: #b42318; }
-      .actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+      .hint { margin-top: 14px; font: 400 13px/1.5 inherit; color: #52607a; }
+      /* Three actions no longer fit one right-aligned row at 420px in every
+         locale (German and Russian in particular), so wrap and keep the
+         primary action last. */
+      .actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; margin-top: 18px; }
       button { border: 1px solid #cbd5e1; border-radius: 9px; padding: 9px 14px; background: #fff;
         color: #172033; font: 600 14px/1.2 inherit; cursor: pointer; }
       button.primary { border-color: #2563eb; background: #2563eb; color: #fff; }
+      button.quiet { border-color: transparent; color: #52607a; font-weight: 500; }
       button:disabled { cursor: wait; opacity: .65; }
     `;
     const backdrop = doc.createElement('div');
@@ -149,8 +168,16 @@
     const error = doc.createElement('p');
     error.className = 'error';
     error.setAttribute?.('role', 'status');
+    const hint = doc.createElement('p');
+    hint.className = 'hint';
     const actions = doc.createElement('div');
     actions.className = 'actions';
+    // Ordered least-to-most committal, primary last: turn off (durable exit),
+    // not now (defer), sign in.
+    const disable = doc.createElement('button');
+    disable.type = 'button';
+    disable.className = 'quiet';
+    disable.dataset.sbAction = 'disable';
     const cancel = doc.createElement('button');
     cancel.type = 'button';
     cancel.dataset.sbAction = 'cancel';
@@ -158,12 +185,12 @@
     go.type = 'button';
     go.className = 'primary';
     go.dataset.sbAction = 'sign-in';
-    actions.append?.(cancel, go);
-    card.append?.(title, body, error, actions);
+    actions.append?.(disable, cancel, go);
+    card.append?.(title, body, error, actions, hint);
     backdrop.append?.(card);
     shadow.append?.(style, backdrop);
     (doc.documentElement || doc.body)?.append?.(host);
-    return { host, title, body, error, cancel, go };
+    return { host, title, body, error, hint, cancel, go, disable };
   }
 
   const authUi = createAuthOverlay();
@@ -173,6 +200,8 @@
     authUi.body.textContent = authLabels.body;
     authUi.go.textContent = authLabels.button;
     authUi.cancel.textContent = authLabels.cancel;
+    authUi.disable.textContent = authLabels.disable;
+    authUi.hint.textContent = authLabels.localHint;
   };
   // `auth-ui` / `auth-failed` are deliberately id-less local signals: the
   // background relay drops them, and the overlay itself is the user-facing
@@ -264,6 +293,9 @@
     return typeof gated === 'function' ? gated(start) : start();
   }
 
+  /** Which message a declined gate should produce. */
+  const declinedError = () => (engineTurnedOff ? authLabels.off : SAFE_AUTH_ERROR);
+
   async function requestSignInFor(sessionId, labels) {
     authWaiters.add(sessionId);
     try {
@@ -278,6 +310,9 @@
     paintAuth();
     if (authGatePromise) return authGatePromise;
     if (!authUi) return Promise.resolve(false);
+    // Only a fresh gate clears it, so concurrent waiters sharing one overlay
+    // all see the same outcome and a later gate does not inherit it.
+    engineTurnedOff = false;
     authGatePromise = new Promise((resolve) => {
       let settled = false;
       const finish = (result) => {
@@ -285,13 +320,38 @@
         settled = true;
         authUi?.go.removeEventListener?.('click', onGo);
         authUi?.cancel.removeEventListener?.('click', onCancel);
+        authUi?.disable.removeEventListener?.('click', onDisable);
         if (authUi?.go) authUi.go.disabled = false;
+        if (authUi?.disable) authUi.disable.disabled = false;
         cancelAuthGate = null;
         authGatePromise = null;
         showAuth(false);
         resolve(result);
       };
       const onCancel = () => finish(false);
+      // The durable exit. Writing the preference here (rather than only
+      // dismissing) is the whole point: "Not now" reopens the card on the next
+      // question, which is what made this a dead end. If the write fails we say
+      // so instead of pretending the tutor is off — translator._getAiEngine
+      // reads the same key and would keep routing to the cloud.
+      const onDisable = (event) => {
+        if (event?.isTrusted !== true || authUi?.disable.disabled) return;
+        authUi.disable.disabled = true;
+        authUi.error.textContent = '';
+        void (async () => {
+          try {
+            await chrome.storage.local.set({ [ENGINE_STORAGE_KEY]: 'off' });
+          } catch (_e) {
+            if (settled) return;
+            authUi.error.textContent = authLabels.error;
+            authUi.disable.disabled = false;
+            return;
+          }
+          if (settled) return;
+          engineTurnedOff = true;
+          finish(false);
+        })();
+      };
       const onGo = (event) => {
         if (event?.isTrusted !== true || authUi?.go.disabled) return;
         authUi.go.disabled = true;
@@ -345,6 +405,7 @@
       cancelAuthGate = () => finish(false);
       authUi?.go.addEventListener?.('click', onGo);
       authUi?.cancel.addEventListener?.('click', onCancel);
+      authUi?.disable.addEventListener?.('click', onDisable);
       showAuth(true);
     });
     return authGatePromise;
@@ -405,7 +466,7 @@
       if (!globalThis.puter?.ai?.chat) throw new Error(SAFE_CHAT_ERROR);
       applyLabels(request.labels);
       if (!isAuthed()) {
-        if (!(await requestSignInFor(request.id, request.labels))) throw new Error(SAFE_AUTH_ERROR);
+        if (!(await requestSignInFor(request.id, request.labels))) throw new Error(declinedError());
         if (session.cancelled) return;
       }
       const model = selectModel(request.model);
@@ -418,7 +479,9 @@
           authRetried = true;
           clearTimeout(session.watchdog);
           await clearAuth();
-          if (!(await requestSignInFor(request.id, request.labels)) || session.cancelled) throw err;
+          if (!(await requestSignInFor(request.id, request.labels)) || session.cancelled) {
+            throw engineTurnedOff ? new Error(declinedError()) : err;
+          }
           session.arm();
           return callChat(request.prompt, model, session);
         }
@@ -432,7 +495,7 @@
         clearTimeout(session.watchdog);
         await clearAuth();
         if (!(await requestSignInFor(request.id, request.labels)) || session.cancelled)
-          throw new Error(SAFE_AUTH_ERROR);
+          throw new Error(declinedError());
         session.arm();
         response = await callChat(request.prompt, model, session);
       }
@@ -459,7 +522,15 @@
       if (!session.cancelled) send({ type: 'done', id: request.id });
     } catch (err) {
       if (!session.cancelled) {
-        const publicError = isRevoked(err) || err?.message === SAFE_AUTH_ERROR ? SAFE_AUTH_ERROR : SAFE_CHAT_ERROR;
+        // `authLabels.off` is already length-capped by safeLabel, so passing it
+        // through cannot smuggle an oversized payload upstream. Everything else
+        // still collapses to the two generic strings.
+        const publicError =
+          err?.message === authLabels.off
+            ? authLabels.off
+            : isRevoked(err) || err?.message === SAFE_AUTH_ERROR
+              ? SAFE_AUTH_ERROR
+              : SAFE_CHAT_ERROR;
         send({ type: 'error', id: request.id, error: publicError });
       }
     } finally {

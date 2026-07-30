@@ -1,7 +1,7 @@
 /**
  * Unit tests for background.js pure functions.
  *
- * Tests: gtLangCode, parseGTResponse, isNewerVersion
+ * Tests: gtLangCode, parseGTResponse
  */
 
 /* global describe, test, expect, beforeEach, afterEach, jest */
@@ -39,7 +39,7 @@ const fns = new Function(
 	  ${sharedSrc}
 	  ${src}
   return {
-    gtLangCode, parseGTResponse, isNewerVersion, _rateLimiter, fetchWithRetry,
+    gtLangCode, parseGTResponse, _rateLimiter, fetchWithRetry,
     registerAlarms, _gtFetchDedup, _inflightGT, _gtKey,
     _isPuterBrokerPort, _isAllowedCloudClient, _registerCloudBroker, _registerCloudClient,
     _cloudBrokers, _cloudClients, _cloudActive,
@@ -53,7 +53,6 @@ const fns = new Function(
 const {
   gtLangCode,
   parseGTResponse,
-  isNewerVersion,
   _rateLimiter,
   fetchWithRetry,
   registerAlarms,
@@ -295,33 +294,6 @@ describe('_gtFetchDedup — in-flight dedup', () => {
   });
 });
 
-describe('isNewerVersion', () => {
-  test('detects newer major version', () => {
-    expect(isNewerVersion('2.0.0', '1.0.0')).toBe(true);
-  });
-
-  test('detects newer minor version', () => {
-    expect(isNewerVersion('1.1.0', '1.0.0')).toBe(true);
-  });
-
-  test('detects newer patch version', () => {
-    expect(isNewerVersion('1.0.1', '1.0.0')).toBe(true);
-  });
-
-  test('returns false for same version', () => {
-    expect(isNewerVersion('1.0.0', '1.0.0')).toBe(false);
-  });
-
-  test('returns false for older version', () => {
-    expect(isNewerVersion('1.0.0', '2.0.0')).toBe(false);
-  });
-
-  test('handles different length versions', () => {
-    expect(isNewerVersion('1.0.1', '1.0')).toBe(true);
-    expect(isNewerVersion('1.0', '1.0.1')).toBe(false);
-  });
-});
-
 // ── Rate Limiter Tests ────────────────────────────────────────
 
 describe('_rateLimiter', () => {
@@ -440,14 +412,24 @@ describe('fetchWithRetry', () => {
 // ── registerAlarms Tests ──────────────────────────────────────
 
 describe('registerAlarms', () => {
-  test('registers cache-cleanup and version-check alarms', () => {
+  test('registers only the cache-cleanup alarm', () => {
     const created = [];
     chrome.alarms.create = (name, opts) => created.push({ name, ...opts });
+    chrome.alarms.clear = () => {};
     registerAlarms();
-    expect(created).toEqual([
-      { name: 'cache-cleanup', periodInMinutes: 1440 },
-      { name: 'version-check', periodInMinutes: 10080 },
-    ]);
+    expect(created).toEqual([{ name: 'cache-cleanup', periodInMinutes: 1440 }]);
+  });
+
+  // Chrome persists alarms across extension updates, so every user upgrading
+  // from a build that registered the weekly GitHub Releases poll still carries
+  // it. Without this the retired alarm keeps firing for the life of the install,
+  // reaching for a host permission the manifest no longer requests.
+  test('clears the retired version-check alarm left behind by an upgrade', () => {
+    const cleared = [];
+    chrome.alarms.create = () => {};
+    chrome.alarms.clear = (name) => cleared.push(name);
+    registerAlarms();
+    expect(cleared).toEqual(['version-check']);
   });
 });
 

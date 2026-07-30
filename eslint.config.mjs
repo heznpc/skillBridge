@@ -80,6 +80,7 @@ export default [
         HISTORY_LABELS: 'readonly',
         HISTORY_DB_NAME: 'readonly',
         HISTORY_STORE: 'readonly',
+        CACHE_DB_VERSION: 'readonly',
         POPUP_LABELS: 'readonly',
         ENGINE_LABELS: 'readonly',
         SKILLBRIDGE_MODEL_LABELS: 'readonly',
@@ -192,6 +193,13 @@ export default [
         __dirname: 'readonly',
         process: 'readonly',
         Buffer: 'readonly',
+        // Specs serialize callbacks into the browser via `page.evaluate`, so
+        // these resolve in the page — not in the Node process ESLint is
+        // modelling here. Declared so a spec can read the course page's own
+        // storage (the upgrade spec checks that v1.0.1's `puter.*` keys are
+        // scrubbed) without silencing no-undef file-wide.
+        localStorage: 'readonly',
+        indexedDB: 'readonly',
       },
     },
   },

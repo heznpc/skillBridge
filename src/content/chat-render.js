@@ -33,18 +33,25 @@
   function formatResponse(text) {
     const escaped = sb.escapeHtml(text);
 
-    // Ensure markdown block elements start on new lines
-    // (avoid lookbehind for wider browser compatibility)
-    const normalized = escaped
-      .replace(/([^\n#])(#{2,3}\s)/g, '$1\n$2')
-      .replace(/([^\n])(-\s)/g, '$1\n$2')
-      .replace(/([^\n])(\d+[.)]\s)/g, '$1\n$2');
+    // Fenced code blocks are split out BEFORE any prose handling. Running the
+    // block-normalization regexes or applyInline over source code corrupts it
+    // three ways: `- ` inside code gains an injected newline and becomes a
+    // list item, `1. ` likewise, and the fence's own backticks feed
+    // applyInline's `` `(.*?)` `` rule so ```` ```python ```` renders as an
+    // empty <code></code> plus a stray backtick. An AI-course tutor emits
+    // fenced code constantly, so this is the common path, not an edge case.
+    //
+    // The fence's info string (```python) is deliberately dropped rather than
+    // turned into a language class: the value is model-controlled and nothing
+    // in the UI highlights syntax, so it would be attack surface for no gain.
+    const FENCE = /^\s*```/;
 
-    const lines = normalized.split('\n');
     const out = [];
     let listBuf = [];
     let listOrdered = false;
     let paraBuf = [];
+    /** @type {string[]|null} Non-null while inside a fence. */
+    let fenceBuf = null;
 
     const flushList = () => {
       if (!listBuf.length) return;
@@ -57,42 +64,81 @@
       out.push(`<p>${applyInline(paraBuf.join('<br>'))}</p>`);
       paraBuf = [];
     };
+    const flushFence = () => {
+      if (fenceBuf === null) return;
+      // Already escaped by escapeHtml above; joined verbatim so indentation
+      // and blank lines survive. <pre> preserves them.
+      out.push(`<pre><code>${fenceBuf.join('\n')}</code></pre>`);
+      fenceBuf = null;
+    };
 
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed) {
+    for (const rawLine of escaped.split('\n')) {
+      if (FENCE.test(rawLine)) {
+        if (fenceBuf === null) {
+          flushList();
+          flushPara();
+          fenceBuf = [];
+        } else {
+          flushFence();
+        }
+        continue;
+      }
+      if (fenceBuf !== null) {
+        fenceBuf.push(rawLine);
+        continue;
+      }
+
+      // Prose only. The normalization below used to run once over the whole
+      // string; per-line is equivalent (every pattern anchors on a non-newline
+      // preceding character, so no match ever spanned a line break) and keeps
+      // it away from fenced content.
+      const pieces = rawLine
+        .replace(/([^\n#])(#{2,3}\s)/g, '$1\n$2')
+        .replace(/([^\n])(-\s)/g, '$1\n$2')
+        .replace(/([^\n])(\d+[.)]\s)/g, '$1\n$2')
+        .split('\n');
+
+      for (const line of pieces) {
+        const trimmed = line.trim();
+        if (!trimmed) {
+          flushList();
+          flushPara();
+          continue;
+        }
+        const hMatch = trimmed.match(/^(#{2,3})\s+(.+)/);
+        if (hMatch) {
+          flushList();
+          flushPara();
+          out.push(`<h3>${applyInline(hMatch[2])}</h3>`);
+          continue;
+        }
+        const ulMatch = trimmed.match(/^[-*]\s+(.*)/);
+        if (ulMatch) {
+          if (listBuf.length && listOrdered) flushList();
+          listOrdered = false;
+          flushPara();
+          listBuf.push(ulMatch[1]);
+          continue;
+        }
+        const olMatch = trimmed.match(/^\d+[.)]\s+(.*)/);
+        if (olMatch) {
+          if (listBuf.length && !listOrdered) flushList();
+          listOrdered = true;
+          flushPara();
+          listBuf.push(olMatch[1]);
+          continue;
+        }
         flushList();
-        flushPara();
-        continue;
+        paraBuf.push(trimmed);
       }
-      const hMatch = trimmed.match(/^(#{2,3})\s+(.+)/);
-      if (hMatch) {
-        flushList();
-        flushPara();
-        out.push(`<h3>${applyInline(hMatch[2])}</h3>`);
-        continue;
-      }
-      const ulMatch = trimmed.match(/^[-*]\s+(.*)/);
-      if (ulMatch) {
-        if (listBuf.length && listOrdered) flushList();
-        listOrdered = false;
-        flushPara();
-        listBuf.push(ulMatch[1]);
-        continue;
-      }
-      const olMatch = trimmed.match(/^\d+[.)]\s+(.*)/);
-      if (olMatch) {
-        if (listBuf.length && !listOrdered) flushList();
-        listOrdered = true;
-        flushPara();
-        listBuf.push(olMatch[1]);
-        continue;
-      }
-      flushList();
-      paraBuf.push(trimmed);
     }
     flushList();
     flushPara();
+    // An unterminated fence is the NORMAL mid-stream state: chatStream calls
+    // formatResponse on the accumulated text after every chunk, so the closing
+    // fence has not arrived yet. Render what we have as code instead of
+    // leaking the ``` marker into a paragraph.
+    flushFence();
     return out.join('');
   }
 

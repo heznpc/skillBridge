@@ -227,6 +227,32 @@ html.si18n-dark .si18n-sidebar-lang-select {
   font-size: 12px !important;
 }
 
+/* Fenced code blocks from formatResponse. Scroll horizontally rather than
+   wrapping: a wrapped code line in a narrow sidebar is harder to read than a
+   scrolled one, and wrapping misrepresents the source. */
+.si18n-chat-bubble pre {
+  margin: 6px 0 !important;
+  padding: 8px 10px !important;
+  background: rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 6px;
+  overflow-x: auto;
+  max-width: 100%;
+  font-family: 'SF Mono', 'Menlo', monospace !important;
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+}
+/* Reset the inline-code chip styling inherited from the rule above — a block
+   of code must not render as a run of padded, rounded inline chips. */
+.si18n-chat-bubble pre code {
+  background: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  white-space: pre !important;
+}
+
 /* Tutor streaming cursor */
 .si18n-streaming-cursor::after {
   content: '▊';

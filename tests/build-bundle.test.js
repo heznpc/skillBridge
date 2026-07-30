@@ -156,6 +156,33 @@ describe('bundled artifact shape', () => {
     expect(fs.readFileSync(path.join(DIST_DIR, 'src', 'shared', 'build-config.js'), 'utf8')).toContain('value:true');
   });
 
+  // `src/shared/build-config.js` is now the first entry in
+  // content_scripts[].js (so the AI gateway flag is an explicit boolean in the
+  // raw build too, letting the readers use `=== true` instead of failing open).
+  // That means the bundled content script defines the flag TWICE: once from the
+  // gate the builder prepends, once from the concatenated build-config.js.
+  // build-config.js guards on `typeof === 'boolean'`; drop that guard and the
+  // second Object.defineProperty throws on a non-configurable property — at the
+  // very top of content.bundle.js, killing the extension on every page. No
+  // other test would catch it, so execute the sequence here.
+  test('the prepended gate and the concatenated build-config do not collide', () => {
+    const gate =
+      "Object.defineProperty(globalThis,'__SKILLBRIDGE_AI_GATEWAY_ENABLED__',{value:true,writable:false,configurable:false});";
+    const buildConfig = fs.readFileSync(path.join(ROOT, 'src', 'shared', 'build-config.js'), 'utf8');
+    const root = {};
+    expect(() => new Function('globalThis', `${gate}\n${buildConfig}`)(root)).not.toThrow();
+    expect(root.__SKILLBRIDGE_AI_GATEWAY_ENABLED__).toBe(true);
+  });
+
+  test('build-config runs before the modules that read the gateway flag', () => {
+    const scripts = JSON.parse(fs.readFileSync(path.join(ROOT, 'manifest.json'), 'utf8')).content_scripts[0].js;
+    const configIndex = scripts.indexOf('src/shared/build-config.js');
+    expect(configIndex).toBeGreaterThanOrEqual(0);
+    // platform.js bakes the flag into a frozen _CAPS_FULL at evaluation time.
+    expect(configIndex).toBeLessThan(scripts.indexOf('src/lib/platform.js'));
+    expect(configIndex).toBeLessThan(scripts.indexOf('src/content/content.js'));
+  });
+
   test('cloud broker messages never carry Puter tokens or account profiles', () => {
     const broker = fs.readFileSync(path.join(DIST_DIR, 'src', 'bridge', 'puter-content-broker.js'), 'utf8');
     const background = fs.readFileSync(path.join(DIST_DIR, 'background.bundle.js'), 'utf8');

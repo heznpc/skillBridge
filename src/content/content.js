@@ -789,7 +789,10 @@
     contentScope: null,
     sidebar: true,
     fab: true,
-    bridge: globalThis.__SKILLBRIDGE_AI_GATEWAY_ENABLED__ !== false,
+    // `=== true` like platform.js: an absent flag must not enable the Tutor
+    // transport. This fallback only runs when platform.js failed to load, and
+    // degrading to translation-only is the safe direction there.
+    bridge: globalThis.__SKILLBRIDGE_AI_GATEWAY_ENABLED__ === true,
     headerControls: true,
     keyboardShortcuts: true,
     readingAid: true,

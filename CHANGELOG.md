@@ -4,6 +4,13 @@ All notable changes to SkillBridge are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+Sections are ordered newest release date first. Version numbers are **not**
+monotonic down the file: `3.0.0` (2026-03-04) sits below `2.0.0` (2026-03-17)
+because the early numbering was reassigned during the March rewrite. Dates are
+the reliable axis. Only `1.0.0` and `1.0.1` were ever published to the Chrome
+Web Store; every `2.x`/`3.x` section describes a version that was tagged in this
+repository but never shipped to users.
+
 ## [Unreleased]
 
 ## [4.0.0] - 2026-07-29
@@ -662,6 +669,23 @@ Total: +24 tests against code paths that had zero coverage.
 ### Security
 - Security hardening — nonce on all postMessage, UUID request IDs
 - Exam prompt guard for AI tutor
+
+## [1.0.1] - 2026-03-10
+
+The version published to the Chrome Web Store, and — until v4.0.0 is uploaded —
+the only build any user is running. It carries the bundled Puter client (Gemini
+translation review plus the Claude AI Tutor), `storage`/`activeTab`/`tabs`, and
+`https://*.youtube.com/*` host access.
+
+### Fixed
+- Tutor chat bubbles override Skilljar's global CSS instead of inheriting course-page typography
+- Chat and history font sizes unified; chat bubbles pinned to the system font stack
+- Chat history preserves markdown by storing the raw streamed text rather than the rendered output
+- Dark-mode table styling
+- Added missing Lesson Reflection translations
+
+### Removed
+- Google site-verification file
 
 ## [3.0.0] - 2026-03-04
 

@@ -20,7 +20,29 @@ const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'manifest
 // platform.js loads as a content-script IIFE. Run it via Function with
 // our own `globalThis` so the CommonJS export branch fires. The window
 // branch is harmless (we don't read window._sbPlatform here).
-const _fakeGlobal = { module: { exports: {} } };
+//
+// `__SKILLBRIDGE_AI_GATEWAY_ENABLED__: true` mirrors the real runtime:
+// `src/shared/build-config.js` is the FIRST content script in the manifest, so
+// platform.js never evaluates with the flag absent. No `chrome` is provided,
+// which mirrors the shipped manifest too — the E2E-only localhost patterns are
+// not granted, so fixture hosts are untrusted here (see the dedicated tests).
+/** Re-evaluate platform.js against a custom global and return its exports. */
+function loadPlatform(globalOverrides = {}) {
+  const fake = { module: { exports: {} }, ...globalOverrides };
+  new Function('globalThis', src)(fake);
+  return fake.module.exports;
+}
+/** A manifest shaped like the one `makePatchedExtension` writes for E2E. */
+function e2eChrome() {
+  return {
+    runtime: {
+      getManifest: () => ({
+        host_permissions: ['https://*.skilljar.com/*', 'http://localhost:*/*', 'http://127.0.0.1:*/*'],
+      }),
+    },
+  };
+}
+const _fakeGlobal = { module: { exports: {} }, __SKILLBRIDGE_AI_GATEWAY_ENABLED__: true };
 new Function('globalThis', src)(_fakeGlobal);
 const {
   detectPlatform,
@@ -305,10 +327,52 @@ describe('getHostCapabilities', () => {
     expect(c.readingAid).toBe(true);
   });
 
-  test('localhost / 127.0.0.1 (E2E fixture) get the full profile too', () => {
-    expect(getHostCapabilities('localhost').bridge).toBe(true);
-    expect(getHostCapabilities('127.0.0.1').sidebar).toBe(true);
-    expect(getHostCapabilities('localhost').contentScope).toBeNull();
+  // The fixture-host trust branch used to be unconditional, which meant the
+  // SHIPPED artifact carried a rule granting `trusted: true` + `bridge: true`
+  // to any page on localhost. It is now derived from the manifest, so it can
+  // only be true under the throwaway E2E manifest.
+  test('localhost / 127.0.0.1 get the full profile ONLY under the E2E manifest', () => {
+    const e2e = loadPlatform({ __SKILLBRIDGE_AI_GATEWAY_ENABLED__: true, chrome: e2eChrome() });
+    expect(e2e.getHostCapabilities('localhost').bridge).toBe(true);
+    expect(e2e.getHostCapabilities('localhost').trusted).toBe(true);
+    expect(e2e.getHostCapabilities('127.0.0.1').sidebar).toBe(true);
+    expect(e2e.getHostCapabilities('localhost').contentScope).toBeNull();
+  });
+
+  test('the shipped manifest does NOT grant the fixture hosts anything', () => {
+    // Production declares the portless form, and only as OPTIONAL — which
+    // `getManifest().host_permissions` does not report.
+    const shipped = loadPlatform({
+      __SKILLBRIDGE_AI_GATEWAY_ENABLED__: true,
+      chrome: {
+        runtime: {
+          getManifest: () => ({
+            host_permissions: ['https://*.skilljar.com/*', 'https://translate.googleapis.com/*'],
+            optional_host_permissions: ['http://localhost/*', 'http://127.0.0.1/*'],
+          }),
+        },
+      },
+    });
+    expect(shipped.getHostCapabilities('localhost').platform).toBe(PLATFORM_IDS.UNKNOWN);
+    expect(shipped.getHostCapabilities('localhost').trusted).toBe(false);
+    expect(shipped.getHostCapabilities('localhost').bridge).toBe(false);
+    expect(shipped.getHostCapabilities('127.0.0.1').bridge).toBe(false);
+  });
+
+  test('a missing chrome runtime (unit/Node context) leaves the fixture hosts untrusted', () => {
+    expect(getHostCapabilities('localhost').platform).toBe(PLATFORM_IDS.UNKNOWN);
+    expect(getHostCapabilities('127.0.0.1').trusted).toBe(false);
+  });
+
+  // The gate guards the Tutor transport, so an ABSENT flag must read as
+  // disabled. `!== false` used to treat "not loaded" as "enabled".
+  test('an absent build flag fails CLOSED — no bridge', () => {
+    const noFlag = loadPlatform({ chrome: e2eChrome() });
+    const caps = noFlag.getHostCapabilities('anthropic.skilljar.com');
+    expect(caps.trusted).toBe(true);
+    expect(caps.sidebar).toBe(true);
+    // Everything local still works; only the AI transport is withheld.
+    expect(caps.bridge).toBe(false);
   });
 
   test('CWS build gate disables only the full-profile AI bridge', () => {

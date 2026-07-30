@@ -196,6 +196,28 @@
   font-size: 12px !important;
   font-family: 'SF Mono', 'Menlo', monospace;
 }
+/* Saved conversations replay the same formatResponse output, so the detail
+   view needs the fenced-code rules too. */
+.si18n-history-detail .si18n-chat-bubble pre {
+  margin: 6px 0 !important;
+  padding: 8px 10px !important;
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 6px;
+  overflow-x: auto;
+  max-width: 100%;
+  font-family: 'SF Mono', 'Menlo', monospace !important;
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+}
+.si18n-history-detail .si18n-chat-bubble pre code {
+  background: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  white-space: pre !important;
+}
 .si18n-history-detail .si18n-chat-bubble h3 {
   font-family: inherit !important;
   font-size: 14px !important;
