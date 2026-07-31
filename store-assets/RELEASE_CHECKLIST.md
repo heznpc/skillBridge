@@ -270,16 +270,50 @@ final ZIP passes `npm run release:verify`, and steps 3 and 3b are complete.
 Listing copy, icon, screenshots, promo tile, privacy URL, privacy-practices
 answers, and permission justifications must all match this checklist.
 
+> ⚠️ **CD has never uploaded anything.** Treat the automated path as unproven,
+> not as a fallback. A `CWS_REFRESH_TOKEN` was never issued, and the workflow's
+> readiness step only checks that the secrets are **non-empty** — so the gap
+> stayed invisible until a manual dispatch on 2026-07-31 reached the upload step
+> and failed with a bare `HTTP 400` from Google's token endpoint. There is no
+> `cws-v*` tag in the repository, which is the durable evidence: every published
+> build to date, including v1.0.1, was uploaded by hand in the dashboard.
+>
+> Before relying on CD, run `npm run cws:auth` (see `scripts/cws-auth.js`). It
+> mints a refresh token, **proves it against the live listing**, and only then
+> writes the repo secrets — so a bad credential fails on your machine with a
+> named cause instead of in CI with a status code. `npm run cws:auth:verify`
+> answers "are the current secrets actually good?" without minting anything.
+>
+> Three prerequisites from the
+> [official API guide](https://developer.chrome.com/docs/webstore/using-api)
+> that are easy to miss:
+>
+> - The publishing account needs 2-Step Verification enabled.
+> - The Store listing and Privacy tabs must be filled in **before** the API can
+>   publish an item. The API is not a way around steps 3 and 3b.
+> - Items publish with their **existing** visibility settings. If visibility was
+>   changed by hand in the dashboard, the API cannot publish until you have
+>   manually published once under the new visibility.
+>
+> For a CI path that does not hinge on a user token that can be revoked or
+> expire, the API also supports a service account. That is the sturdier option
+> if CD is ever meant to be load-bearing.
+
 While the pause remains set, CD skips the live upload step. Removing it later
-re-enables the CWS upload path on the next eligible push. The workflow builds
-and uploads the same bundled artifact named in step 3:
-`store-assets/skillbridge-bundled.zip`.
+would enable the CWS upload path on the next eligible push — assuming a working
+token exists by then. The workflow builds and uploads the same bundled artifact
+named in step 3: `store-assets/skillbridge-bundled.zip`.
 
 Safety rails in the CD workflow:
 
 - `CWS_EXTENSION_ID` must match the SkillBridge listing used by
   `scripts/check-cws-drift.js`, so a cross-project secret cannot upload the zip
-  to the wrong listing.
+  to the wrong listing. This rail fired for real on 2026-07-31: the stored
+  secret did not match `oancfldkbnajdadgekkjpdnhepjjcdln` and the run refused to
+  upload. The secret was reset to that value — a public identifier that already
+  appears in the listing URL and in the tracked drift script, so it is not a
+  credential. The other three CWS secrets predate any successful upload and
+  should be treated as unverified until `npm run cws:auth:verify` passes.
 - Manual `publish=false` runs are draft-only and do not create the live
   `cws-v*` deployed tag; only a successful live publish does.
 
