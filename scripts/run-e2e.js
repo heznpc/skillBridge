@@ -25,6 +25,9 @@ const batches = [
   [
     'tests/e2e/a11y.spec.js',
     'tests/e2e/first-user-flow.spec.js',
+    // Sits next to first-user-flow on purpose: one covers a new install, the
+    // other the upgrade from the build the store actually serves.
+    'tests/e2e/upgrade-from-legacy.spec.js',
     'tests/e2e/popup.spec.js',
     'tests/e2e/keyboard-shortcuts.spec.js',
     'tests/e2e/viewport-polish.spec.js',

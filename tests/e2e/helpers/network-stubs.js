@@ -1,14 +1,16 @@
 /**
  * SkillBridge — Playwright network-stub helpers.
  *
- * The extension talks to two external services during the non-Tutor flows
- * that use this helper:
- *   1. translate.googleapis.com — for the GT batch translation pass
- *   2. api.github.com — for the version-check alarm
+ * The extension talks to one external service during the non-Tutor flows that
+ * use this helper: translate.googleapis.com, for the GT batch translation pass.
+ * (v4.0.0 also stubbed api.github.com for a weekly release-check alarm. That
+ * feature and its host permission were removed, so a stub here would only
+ * suggest a request the extension no longer makes — the route is gone. If a
+ * github.com request ever reappears in a run, that is a finding, not noise.)
  *
  * In E2E we don't want any test traffic leaving the runner, and we want
  * deterministic translations so assertions can match exact strings. These
- * helpers register `context.route()` interceptors covering both. Tutor specs
+ * helpers register `context.route()` interceptors covering that. Tutor specs
  * replace the vendored SDK file through helpers/puter-stream-stub.js instead
  * of intercepting a remote script URL.
  *
@@ -180,16 +182,6 @@ async function registerStubs(context) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify(buildGTResponse(translated)),
-    });
-  });
-
-  // 3. GitHub version check — return our own version so no badge appears
-  //    and the alarm path doesn't 403.
-  await context.route('https://api.github.com/**', async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ tag_name: 'v3.5.16' }),
     });
   });
 }

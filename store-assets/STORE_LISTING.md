@@ -5,16 +5,24 @@ sync with the uploaded ZIP, the CWS Privacy tab, and `PRIVACY_POLICY.md`.
 
 ## What's New — paste into the CWS "What's new" field after version assignment
 
-- 🤖 AI Tutor: ask about the lesson you are reading. Uses a free Puter sign-in — no API key, no SkillBridge account.
-- 💻 New on-device option: run the tutor against Ollama or another compatible OpenAI-style server on your own localhost so tutor text never leaves your machine — or turn the tutor off and use translation only.
-- 🔗 Better translation of mixed content: paragraphs containing links, inline code, and emphasis keep their structure and destinations intact instead of being flattened.
-- 🔒 No SkillBridge account: translation and learning tools need no sign-in at all.
-- 🌐 Translation continues through packaged dictionaries, local cache, and Google Translate.
-- 🃏 Local learning tools include spaced-repetition flashcards, bookmarks, Continue/Recent, progress dashboard, outline, and PDF export.
-- 🎬 Auto-subtitles remain available without requesting YouTube host access.
-- 🧹 Removed an unused YouTube network proxy and its host permission.
-- 🪟 Repaired the extension popup and added final-bundle browser coverage.
-- 🎨 Updated extension icon and isolated panels from host-page styles.
+**Baseline: v1.0.1, not the 3.5.x candidates.** Every installed user is on
+v1.0.1 (uploaded 2026-03-10) — the 2.x/3.x versions were tagged in the
+repository but never published, so no user has ever run them. Copy written
+against a 3.5.x baseline reads as nonsense here: it announces the AI Tutor as
+new (v1.0.1 already had a Claude tutor), and words like "continues", "remains",
+and "repaired" point at builds the reader never received. Keep this field
+relative to v1.0.1 until a v4 build is actually live.
+
+- 🌐 32 languages, up from a single Google Translate pass. 12 of them ship 1,100+ curated entries for AI/technical terms, and a protected-term step re-fixes known mistranslations after translation and on cache hits.
+- 🔗 Paragraphs that mix links, inline code, and emphasis keep their structure and link destinations instead of being flattened into plain text.
+- 🃏 New local study tools: spaced-repetition flashcards, bookmarks, Continue/Recent lessons, a progress dashboard, an in-lesson outline, reading progress, and PDF export. All of it stays in your browser.
+- 🎓 New exam and certification safety: quiz answer choices are left in English so they still match the canonical answers, and recognized proctored certification routes disable the extension entirely.
+- 💻 The AI Tutor can now run on your own device. Point it at Ollama or another OpenAI-compatible server on your localhost and tutor text never leaves your machine — or switch the tutor off and use translation only. Cloud remains the default and still needs only a free Puter sign-in, no API key and no SkillBridge account.
+- 🔒 Tutor hardening: the bundled Puter client now runs in Chrome's isolated content-script world instead of the page world, tutor traffic uses validated extension ports, and the accepted session is kept in extension storage rather than course-site storage.
+- 🧹 Fewer permissions than v1.0.1: YouTube host access, `activeTab`, and `tabs` are all gone. Auto-subtitles still work — SkillBridge asks the embedded player rather than fetching anything from YouTube.
+- 📡 Translations are cached locally for up to 30 days, so previously read lessons stay readable offline with a visible offline status instead of a silent failure.
+- 🌙 Dark mode, right-to-left layouts, keyboard shortcuts, and panels isolated from course-page styling.
+- 🎨 New extension icon.
 
 ## Title (max 75 chars)
 
@@ -86,7 +94,6 @@ Page translation (Google Translate + curated dictionaries) and the local learnin
 Third-party requests made by the CWS edition:
 
 • Google Translate — visible page text selected for translation and the requested language.
-• GitHub Releases API — a periodic public update check; no course text or learning-tool data.
 • Puter — cloud Tutor sign-in/session handling, followed by the user's Tutor message and limited lesson context routed to Claude. The bundled SDK runs in an isolated content-script world and stores the accepted session token and Puter application identifier in extension storage; the CWS build disables automatic User/profile lookups. Puter returns the sign-in result to the HTTPS opener through browser window messaging, which the course page may be able to observe during sign-in. SkillBridge's operator receives none of this data.
 
 Settings, bookmarks, flashcard review state, recent lessons, and scroll positions are stored in `chrome.storage.local`. Original and translated text is cached separately in IndexedDB. Progress summaries are calculated locally from that state rather than separately stored or transmitted.
@@ -117,7 +124,7 @@ Stores the selected language, display preferences, Tutor engine settings, flashc
 
 ### alarms
 
-Schedules periodic cache cleanup and public release checks without keeping the service worker alive.
+Schedules periodic translation-cache cleanup without keeping the service worker alive. This is the permission's only use; v4.0.0 removed the earlier periodic release check.
 
 ### Host permission: *.skilljar.com
 
@@ -130,10 +137,6 @@ Allows translation to run only on Claude tutorial paths, rather than across all 
 ### Host permission: translate.googleapis.com
 
 Allows page text selected for translation to be sent to Google Translate. No account credential or learning-tool state is included.
-
-### Host permission: api.github.com
-
-Used only for a read-only request to the public Releases API so the extension can display an update badge. No user, lesson, or learning-tool content is sent.
 
 ### Optional host permission: http://localhost/*, http://127.0.0.1/*
 

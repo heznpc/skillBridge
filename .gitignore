@@ -43,3 +43,9 @@ store-assets/description.md
 
 # playwright-mcp server session dumps (accidentally committed once via #217)
 .playwright-mcp/
+
+# CWS dashboard metric exports (installs/removals/WAU by region, language, OS).
+# Untracked on purpose: no build script or gate reads them, they are stale the
+# day after export, and they are listing business metrics rather than anything
+# the extension is built from. Re-export from the dashboard when needed.
+csv/

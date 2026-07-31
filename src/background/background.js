@@ -156,17 +156,29 @@ async function fetchWithRetry(url, opts = {}, maxRetries = 3, baseDelay = 500) {
 // ==================== CHROME ALARMS (MAINTENANCE) ====================
 
 const _ALARM_CACHE_CLEANUP = 'cache-cleanup';
-const _ALARM_VERSION_CHECK = 'version-check';
-const _GITHUB_REPO = 'heznpc/skillbridge';
+
+// A weekly GitHub Releases poll used to live here, badging the toolbar icon
+// when a newer tag existed. Removed for v4.0.0: the Chrome Web Store updates
+// installed extensions on its own, so the badge told users something Chrome had
+// already handled — while costing a required `api.github.com` host permission,
+// a third-party data-flow row in the privacy policy, a store permission
+// justification, and one outbound request per user per week. Nothing advertised
+// the feature (it is absent from the README and the listing copy), so dropping
+// it removes review surface without removing a capability anyone was promised.
+// The developer build does not keep it either: checking the repository is what
+// a developer does anyway.
 
 /**
  * Register maintenance alarms on install/update.
  * - cache-cleanup: fires every 24 hours (1440 min)
- * - version-check: fires every 7 days (10080 min)
  */
 function registerAlarms() {
   chrome.alarms.create(_ALARM_CACHE_CLEANUP, { periodInMinutes: 1440 });
-  chrome.alarms.create(_ALARM_VERSION_CHECK, { periodInMinutes: 10080 });
+  // Chrome persists alarms across extension updates, so every user upgrading
+  // from a build that registered the weekly release poll still carries it.
+  // Clear it here instead of waiting up to 7 days for its one stray fire.
+  // Safe to delete once no supported upgrade path can still hold it.
+  chrome.alarms.clear('version-check');
 }
 
 /**
@@ -188,64 +200,19 @@ async function handleCacheCleanup() {
   }
 }
 
-/**
- * Version check — compare local version with latest GitHub release.
- * If a newer version exists, set badge text to "!" as a notification.
- */
-async function handleVersionCheck() {
-  try {
-    const manifest = chrome.runtime.getManifest();
-    const localVersion = manifest.version;
-
-    // Anonymous GitHub API quota is 60/h per IP — with hundreds of users on
-    // the same residential ranges, 403s are common. fetchWithRetry's 4xx
-    // fail-fast bails immediately on 403/404 (no point retrying without auth)
-    // and backs off transient 5xx.
-    const resp = await fetchWithRetry(`https://api.github.com/repos/${_GITHUB_REPO}/releases/latest`, {
-      headers: { Accept: 'application/vnd.github.v3+json' },
-    });
-    const release = await resp.json();
-    const remoteVersion = (release.tag_name || '').replace(/^v/, '');
-
-    if (remoteVersion && remoteVersion !== localVersion && isNewerVersion(remoteVersion, localVersion)) {
-      console.debug(`[SkillBridge] New version available: ${remoteVersion} (current: ${localVersion})`);
-      chrome.action.setBadgeText({ text: '!' });
-      chrome.action.setBadgeBackgroundColor({ color: '#E07A5F' });
-    } else {
-      console.debug(`[SkillBridge] Version check: up to date (${localVersion})`);
-    }
-  } catch (err) {
-    console.warn('[SkillBridge] Version check error:', err.message);
-  }
-}
-
-/**
- * Simple semver comparison: returns true if a > b.
- * Handles x.y.z format; falls back to string comparison for non-numeric.
- */
-function isNewerVersion(a, b) {
-  const pa = a.split('.').map(Number);
-  const pb = b.split('.').map(Number);
-  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-    const na = pa[i] || 0;
-    const nb = pb[i] || 0;
-    if (na > nb) return true;
-    if (na < nb) return false;
-  }
-  return false;
-}
-
 // Alarm listener
 chrome.alarms.onAlarm.addListener((alarm) => {
   switch (alarm.name) {
     case _ALARM_CACHE_CLEANUP:
       handleCacheCleanup();
       break;
-    case _ALARM_VERSION_CHECK:
-      handleVersionCheck();
-      break;
     default:
-      console.warn(`[SkillBridge] Unknown alarm: ${alarm.name}`);
+      // Reached on upgrade from a build that registered other alarms: Chrome
+      // persists alarms across updates, so the retired weekly `version-check`
+      // keeps firing for existing users until it is cleared. Drop it rather
+      // than logging a warning every 7 days forever.
+      console.debug(`[SkillBridge] Clearing retired alarm: ${alarm.name}`);
+      chrome.alarms.clear(alarm.name);
   }
 });
 
@@ -660,6 +627,33 @@ async function _checkLocalEngine(baseUrl) {
         models = Array.isArray(data?.data) ? data.data.map((m) => m.id).filter(Boolean) : [];
       } catch {
         /* non-JSON body is fine — reachability is what matters */
+      }
+      // Reachable is not the same as usable, and the difference is invisible
+      // to a bodyless GET. Chrome omits `Origin` on this GET but attaches
+      // `Origin: chrome-extension://<id>` to the JSON POST the tutor actually
+      // sends, so a default-configured Ollama answers 200 here and 403 there.
+      // Probing with the GET alone therefore reported "connected" to every
+      // install that had not set OLLAMA_ORIGINS and pushed the failure into
+      // the user's first tutor question — where the 13-language guidance
+      // behind `status: 'cors'` never ran, leaving only an untranslated
+      // English error. So re-probe using the POST's shape. The body is
+      // deliberately invalid: an allowed origin fails request validation with
+      // 400 without loading a model, a blocked origin still answers 403.
+      try {
+        const chatResp = await fetch(`${base}/chat/completions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: '{}',
+        });
+        try {
+          await chatResp.body?.cancel();
+        } catch (_e) {
+          /* best-effort — the validation error body is tiny */
+        }
+        if (chatResp.status === 403) return { ok: false, status: 'cors', httpStatus: 403 };
+      } catch (_err) {
+        // Keep the GET's verdict. Reachability is already proven, so a
+        // probe-only transport hiccup must not downgrade a working server.
       }
       return { ok: true, status: 'ok', models };
     }

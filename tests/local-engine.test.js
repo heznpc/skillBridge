@@ -86,14 +86,14 @@ describe('_checkLocalEngine (local reachability probe)', () => {
     });
   });
 
-  test('trailing slashes in the base URL are normalized', async () => {
-    let requested = '';
+  test('trailing slashes in the base URL are normalized on both probe requests', async () => {
+    const requested = [];
     const check = makeCheck(async (url) => {
-      requested = url;
+      requested.push(url);
       return { ok: true, status: 200, json: async () => OK_MODELS };
     });
     await check('http://localhost:11434/v1///');
-    expect(requested).toBe('http://localhost:11434/v1/models');
+    expect(requested).toEqual(['http://localhost:11434/v1/models', 'http://localhost:11434/v1/chat/completions']);
   });
 
   test('403 → { status: cors } (blocked origin — OLLAMA_ORIGINS)', async () => {
@@ -112,6 +112,86 @@ describe('_checkLocalEngine (local reachability probe)', () => {
 
   test('SW registers the CHECK_LOCAL_ENGINE handler', () => {
     expect(bgSrc).toContain("msg.type === 'CHECK_LOCAL_ENGINE'");
+  });
+});
+
+// Measured against a real Ollama 0.32.3 on 2026-07-30, driving the packaged
+// bundle in Chromium:
+//
+//   SW GET  /v1/models           -> 200   (Chrome sends no Origin on a bodyless GET)
+//   SW POST /v1/chat/completions -> 403   (Chrome attaches chrome-extension://<id>)
+//
+// So the reachability GET structurally cannot observe the block the tutor's
+// POST will hit. Before this, the popup rendered "Connected to local server"
+// and the first question failed with an untranslated English error, while the
+// 13-language OLLAMA_ORIGINS guidance behind `status: 'cors'` was unreachable
+// for a default install. The probe now matches the chat request's shape.
+describe('_checkLocalEngine — origin block is detected at probe time, not first chat', () => {
+  const OK_MODELS = { data: [{ id: 'gemma3:4b' }] };
+  const reply = (url, { chatStatus }) =>
+    url.endsWith('/models')
+      ? { ok: true, status: 200, json: async () => OK_MODELS }
+      : { ok: chatStatus < 400, status: chatStatus };
+
+  test('models 200 + chat 403 → cors, so the popup shows the OLLAMA_ORIGINS guidance', async () => {
+    const check = makeCheck(async (url) => reply(url, { chatStatus: 403 }));
+    expect(await check('http://localhost:11434/v1')).toEqual({
+      ok: false,
+      status: 'cors',
+      httpStatus: 403,
+    });
+  });
+
+  test('models 200 + chat 400 → ok: an allowed origin fails validation, not authorization', async () => {
+    const check = makeCheck(async (url) => reply(url, { chatStatus: 400 }));
+    expect(await check('http://localhost:11434/v1')).toEqual({
+      ok: true,
+      status: 'ok',
+      models: ['gemma3:4b'],
+    });
+  });
+
+  test('the origin probe sends the chat shape but cannot load a model', async () => {
+    let chatInit = null;
+    const check = makeCheck(async (url, init) => {
+      if (url.endsWith('/chat/completions')) chatInit = init;
+      return reply(url, { chatStatus: 400 });
+    });
+    await check('http://localhost:11434/v1');
+    // Same method and content type as the real tutor request — that is what
+    // makes Chrome attach the Origin header the server judges.
+    expect(chatInit.method).toBe('POST');
+    expect(chatInit.headers['Content-Type']).toBe('application/json');
+    // An empty object cannot name a model or carry messages, so a permitted
+    // origin is rejected by request validation before any inference starts.
+    expect(chatInit.body).toBe('{}');
+    expect(chatInit.body).not.toContain('model');
+    expect(chatInit.body).not.toContain('messages');
+  });
+
+  test('a transport failure on the origin probe keeps the reachable verdict', async () => {
+    const check = makeCheck(async (url) => {
+      if (url.endsWith('/chat/completions')) throw new Error('socket hang up');
+      return { ok: true, status: 200, json: async () => OK_MODELS };
+    });
+    // The GET already proved the server is there; a flaky second probe must
+    // not report a working local engine as unusable.
+    expect(await check('http://localhost:11434/v1')).toEqual({
+      ok: true,
+      status: 'ok',
+      models: ['gemma3:4b'],
+    });
+  });
+
+  test('a 403 on the reachability GET still short-circuits to cors', async () => {
+    // Servers that do reject the bodyless GET must not need the second probe.
+    let chatProbed = false;
+    const check = makeCheck(async (url) => {
+      if (url.endsWith('/chat/completions')) chatProbed = true;
+      return { ok: false, status: 403 };
+    });
+    expect(await check()).toEqual({ ok: false, status: 'cors', httpStatus: 403 });
+    expect(chatProbed).toBe(false);
   });
 });
 
@@ -312,6 +392,40 @@ describe('offline behavior', () => {
     expect(sidebarSrc).toContain('if (offlineBlocks) {');
     expect(sidebarSrc).toContain('async function _currentEngine()');
     expect(sidebarSrc).toContain("return result?.sb_ai_engine || 'cloud';");
+  });
+
+  // `translator._getAiEngine()` and `sidebar._currentEngine()` are otherwise
+  // identical — same storage key, same 1500 ms race, same final fallback line.
+  // They differ in ONE word: the translator's timeout rejects, the sidebar's
+  // resolves. That asymmetry is the privacy boundary. Someone tidying the two
+  // into a shared helper, or "fixing the inconsistency", would either make the
+  // send path default into the cloud against a stored 'local'/'off' preference
+  // (fail open, the serious direction) or make a stalled read swallow the
+  // offline notice entirely. Neither shows up in any behavioural test, so pin
+  // the shapes.
+  test('only the send-path gate fails closed; the offline-notice helper does not', () => {
+    const trSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'translator.js'), 'utf8');
+    const gate = trSource.slice(trSource.indexOf('async _getAiEngine()'), trSource.indexOf('async _localChatStream('));
+    expect(gate).toMatch(/new Promise\(\(_resolve, reject\) =>/);
+    expect(gate).toContain('Tutor engine preference read timed out');
+    // No swallowing try/catch around the race — a rejected read must propagate.
+    expect(gate).not.toMatch(/catch\s*\(/);
+
+    const helper = sidebarSrc.slice(
+      // From the doc comment, not the signature — the rationale lives above it.
+      sidebarSrc.indexOf("// Selected tutor engine ('cloud' | 'local' | 'off'); defaults to cloud."),
+      sidebarSrc.indexOf('function _finalErrorMessage('),
+    );
+    expect(helper).toMatch(/new Promise\(\(resolve\) => setTimeout\(\(\) => resolve\(null\)/);
+    expect(helper).not.toContain('reject');
+    // And it must say why, so the next reader does not "align" them.
+    expect(helper).toContain('DELIBERATELY NOT');
+  });
+
+  test('the send path re-reads the preference through the fail-closed gate', () => {
+    // This is what makes the sidebar helper safe to fail open: it is not the
+    // last word on where the prompt goes.
+    expect(trSrc).toContain('const engine = await this._getAiEngine();');
   });
 
   test('structured HTML blocks are deferred offline, not dropped', () => {

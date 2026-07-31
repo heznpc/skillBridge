@@ -28,22 +28,31 @@ dashboard upload.
 
 - ✅ Final ZIP release identity is `4.0.0` across `manifest.json`,
   `package.json`, versioned dictionary metadata, and `CHANGELOG.md`.
-- ✅ Historical `CHANGELOG.md` sections through v3.5.41 remain immutable
-- ✅ Final v4.0.0 upload artifact rebuilt 2026-07-30 from merged `main`
-  (`d6541a8`, PR #276) after the pre-merge security review fixes:
-  **69 files, 715,243 bytes**, SHA-256
-  `2750797c2f3cc319295af48b04381e7dba1e8f6f9ebac4efb45531b532a31b2f`.
-  This supersedes the 2026-07-29 candidate
-  (`4315e09a…`), which predates those fixes and must not be uploaded.
-  Note: `zip` records mtimes, so rebuilding yields a different hash for
-  identical content — verify this hash against the file you actually submit
-  rather than rebuilding after reading it here. The extracted ZIP was diffed against `dist/bundled` and is byte-for-byte
+- ✅ Historical `CHANGELOG.md` sections through v3.5.41 remain immutable. One
+  section was **added**, not rewritten: `[1.0.1] - 2026-03-10` had no entry at
+  all despite being the only build users are running. Reconstructed from the
+  `v1.0.0..v1.0.1` commit range (PRs #30–#34) and the `v1.0.1` manifest, so the
+  "What's new" copy has a real baseline to be written against.
+- ✅ Final v4.0.0 upload artifact rebuilt 2026-07-30 with `npm run build:bundle:zip`
+  after the post-review defect fixes: **69 files, 719,339 bytes**, SHA-256
+  `380d3ca3c204586e7a1d4bf051c24cd1ee030ef306fd2fa686c21d3525c32be1`.
+  The extracted ZIP was diffed against `dist/bundled` and is byte-for-byte
   identical, and `scripts/check-rhc.js` reports zero findings against BOTH the
-  built directory and the extracted archive. It includes the isolated Puter
-  content broker, sanitized `src/bridge/puter.js`, third-party notices/licenses, and the
-  bundled HTML-GT path, and does not include `src/lib/page-bridge.js`. This
-  bundled ZIP is the **only** CWS upload artifact; the compatibility alias
-  `npm run build:zip` resolves to this same safe command.
+  built directory and the extracted archive. The artifact manifest was read back
+  directly: version `4.0.0`, `permissions` = storage + alarms, `host_permissions`
+  = `*.skilljar.com` + `translate.googleapis.com` only, optional localhost pair
+  intact, and `api.github.com` appears **nowhere** in the archive. It includes the
+  isolated Puter content broker, sanitized `src/bridge/puter.js`, third-party
+  notices/licenses, and the bundled HTML-GT path, and does not include
+  `src/lib/page-bridge.js`. This bundled ZIP is the **only** CWS upload artifact;
+  the compatibility alias `npm run build:zip` resolves to the same safe command.
+  Note: `zip` records mtimes, so rebuilding yields a different hash for identical
+  content — verify this hash against the file you actually submit rather than
+  rebuilding after reading it here.
+  - Superseded stamps, kept only to identify what they were: `d6541a8` (PR #276)
+    at **715,243 bytes** / `2750797c…`, which predates the local-engine probe fix;
+    and the 2026-07-29 candidate `4315e09a…`, which predates the pre-merge
+    security review fixes. Neither may be uploaded.
 - ⛔ Never upload `store-assets/skillbridge-developer.zip` (generated only by the
   explicit `npm run build:developer:zip` command), the repository root, or the
   Firefox build to CWS. Raw/developer source retains Puter SDK features that the
@@ -67,13 +76,32 @@ dashboard upload.
   disclosures for live legacy v1.0.1 and the unpublished candidate. Remove or
   archive the legacy section only after the replacement version is confirmed
   live in the CWS dashboard and update the listing/privacy answers together.
-- ✅ Integrated release verification passed on 2026-07-29: lint, format, **696 unit
-  tests across 38 suites**, translation/glossary/i18n checks, live selector and
-  22-course map checks, first-user/popup smoke, Firefox build, store capture,
-  ZIP integrity, and **all 52 Chromium E2E tests across eight resource-bounded
-  batches** (including the malicious Puter-query stored-token regression and
-  the live-Ollama local-engine round trip). The live CWS
+- ✅ Integrated release verification re-run 2026-07-30 on the post-review change
+  set: lint, typecheck, format, **693 unit tests across 36 suites**,
+  translation/glossary/i18n/dictionary checks, live selector and
+  22-course map checks, first-user/popup smoke, ZIP integrity, and
+  **52 Chromium E2E tests passing across eight resource-bounded batches**
+  (including the malicious Puter-query stored-token regression). The live CWS
   check still reports v1.0.1, updated 2026-03-10.
+  - ✅ The live-Ollama local-engine batch was run for real on 2026-07-30
+    (`gemma3:4b`, real streaming): **2 passed**. It had been self-skipping, which
+    reads as green in the summary line, and running it caught a shipped defect in
+    the local-engine probe — see the entry below. Two prerequisites, not one:
+    the server must be up **and** started as
+    `OLLAMA_ORIGINS='chrome-extension://*' ollama serve`, because Ollama rejects
+    the extension origin by default. Both are now checked explicitly and skip
+    with an actionable reason instead of a bare "not reachable".
+- ✅ Local-engine reachability probe corrected 2026-07-30. Chrome omits `Origin`
+  on a bodyless GET and attaches `Origin: chrome-extension://<id>` to the JSON
+  POST the tutor sends, so probing only `GET /v1/models` returned 200 against a
+  default Ollama and the popup reported "Connected to local server" — then the
+  user's first question failed with an untranslated English error, because the
+  13-language `OLLAMA_ORIGINS` guidance sits behind the probe's 403 branch and
+  was unreachable. The probe now re-checks with the POST's shape (deliberately
+  invalid body: 400 on a permitted origin without loading a model, 403 when
+  blocked). This makes the shipped behavior match what the `[4.0.0]` changelog
+  entry already claimed — a probe that classifies connected / CORS-blocked /
+  not-found. Verified in all three states against a real server.
   Dictionary freshness reports the recruiting-state dictionaries as
   review-needed; that is not a native review stamp. Rerun the gate immediately
   before dashboard upload if the artifact changes.
@@ -217,16 +245,21 @@ stale against the next CWS candidate — fix these:
   Keep the three confirmations checked (transfer to a service provider to perform
   the requested feature is an approved use case, not a sale).
 - **Permission and site-access justifications** — paste from `STORE_LISTING.md`
-  "Permission Justifications". The v4.0.0 candidate declares `storage` + `alarms` + three
-  explicit `host_permissions` (`*.skilljar.com`, `translate.googleapis.com`,
-  `api.github.com`), the scoped
+  "Permission Justifications". The v4.0.0 candidate declares `storage` + `alarms` + **two**
+  explicit `host_permissions` (`*.skilljar.com`, `translate.googleapis.com`),
+  the scoped
   `https://claude.com/resources/tutorials/*` content-script match, **and the
   optional** `http://localhost/*` + `http://127.0.0.1/*` host permissions
   (requested at runtime only when the user picks the on-device Tutor engine —
   justify it as reaching a local AI server the user runs themselves). The old
   `activeTab` / `tabs` justification fields disappear
   after upload (those permissions are no longer in the manifest); `alarms` and
-  `api.github.com` and the Claude tutorial match each need an accurate line.
+  the Claude tutorial match each need an accurate line.
+  - `api.github.com` is **gone** as of v4.0.0: the weekly GitHub Releases poll
+    that badged the toolbar icon was removed, since the Chrome Web Store already
+    updates installed extensions. If a justification field for it survives from
+    the v1.0.1 listing, clear it — do not re-justify a permission the manifest
+    no longer requests.
 
 ### 4. Keep publication paused
 
@@ -263,6 +296,19 @@ the `cws-drift.yml` workflow via `workflow_dispatch` — it should report `OK`
 
 ## What's already automated
 
+- `scripts/check-permission-docs.js` (`npm run check:permission-docs`, and a
+  required CI step) compares `manifest.json` against the three documents CWS
+  review reads: the `Candidate Permissions` tables in `PRIVACY_POLICY.md` and
+  `docs/privacy.html`, and the `Permission Justifications` headings in
+  `STORE_LISTING.md`. Set equality, so both directions fail — a granted host no
+  document discloses, and a document claiming a permission the manifest does not
+  request. It also holds a list of retired capabilities (currently
+  `api.github.com` and `GitHub Releases`) that must appear in no document at all,
+  because that stale claim lived in a third-party services table and in prose
+  where a permission-table comparison would never look. **When you remove a
+  network capability, add it to `RETIRED` in that script** — that is the moment
+  every document describing it goes stale. The legacy v1.0.1 sections are
+  excluded by design so that record can stay while publication is paused.
 - `scripts/check-cws-drift.js` runs against the live listing weekly (Monday 06:30
   UTC) + on every `main` push that touches `manifest.json`. Opens a single
   GitHub issue when drift exceeds 5 patches OR the published version is older

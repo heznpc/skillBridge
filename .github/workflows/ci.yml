@@ -61,6 +61,11 @@ jobs:
       - name: Check Claude Code plugin data is in sync
         run: node scripts/build-plugin.js --check
 
+      # Guards the CWS review surface: a privacy disclosure naming a service the
+      # manifest can no longer reach, or a granted host no document discloses.
+      - name: Check permission docs match manifest.json
+        run: node scripts/check-permission-docs.js
+
       - name: Install dependencies
         run: npm ci
 

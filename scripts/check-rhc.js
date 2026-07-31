@@ -40,6 +40,47 @@ const REMOTE_CODE_PATTERNS = [
   ['Function constructor is not allowed', /\b(?:new\s+)?Function\s*\(/],
 ];
 
+// `matchAll` requires the global flag, and it throws a TypeError without one —
+// which would turn a future pattern added without `g` into a crashed scan
+// instead of a clean build failure. Normalize once here rather than trusting
+// every literal above to carry the flag. `matchAll` iterates over a clone, so
+// these shared regexes never accumulate `lastIndex` state between files.
+const GLOBAL_PATTERNS = REMOTE_CODE_PATTERNS.map(([kind, pattern]) => [
+  kind,
+  pattern.flags.includes('g') ? pattern : new RegExp(pattern.source, `${pattern.flags}g`),
+]);
+
+const EXCERPT_MAX_CHARS = 160;
+// An unbounded list would let one minified vendor file bury the rest of the
+// report. Report this many hits per pattern per file, then say how many were
+// withheld.
+const MAX_MATCHES_PER_KIND = 10;
+
+/** 1-based line/column for a match offset. */
+function locate(source, index) {
+  let line = 1;
+  let lineStart = 0;
+  for (let i = 0; i < index; i += 1) {
+    if (source.charCodeAt(i) === 10) {
+      line += 1;
+      lineStart = i + 1;
+    }
+  }
+  return { line, column: index - lineStart + 1 };
+}
+
+/**
+ * The patterns above deliberately match only the SINK PREFIX — `import('https://`
+ * — so `match[0]` stops before the URL that a reader actually needs. Widen the
+ * excerpt forward from the match offset instead, stopping at the end of the
+ * line so a minified file yields one readable fragment rather than the file.
+ */
+function excerptAt(source, index) {
+  const window = source.slice(index, index + EXCERPT_MAX_CHARS);
+  const newline = window.indexOf('\n');
+  return newline === -1 ? window : window.slice(0, newline);
+}
+
 function listCodeFiles(root) {
   const files = [];
   for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
@@ -57,9 +98,22 @@ function findRemoteHostedCode(root) {
   const findings = [];
   for (const file of listCodeFiles(root)) {
     const source = fs.readFileSync(file, 'utf8');
-    for (const [kind, pattern] of REMOTE_CODE_PATTERNS) {
-      const match = source.match(pattern);
-      if (match) findings.push({ file: path.relative(root, file), kind, excerpt: match[0].slice(0, 160) });
+    const relative = path.relative(root, file);
+    for (const [kind, pattern] of GLOBAL_PATTERNS) {
+      let reported = 0;
+      let withheld = 0;
+      for (const match of source.matchAll(pattern)) {
+        if (reported >= MAX_MATCHES_PER_KIND) {
+          withheld += 1;
+          continue;
+        }
+        reported += 1;
+        const { line, column } = locate(source, match.index);
+        findings.push({ file: relative, kind, line, column, excerpt: excerptAt(source, match.index) });
+      }
+      if (withheld > 0) {
+        findings.push({ file: relative, kind, line: null, column: null, excerpt: `(+${withheld} more)` });
+      }
     }
   }
   return findings;
@@ -68,7 +122,12 @@ function findRemoteHostedCode(root) {
 function assertNoRemoteHostedCode(root) {
   const findings = findRemoteHostedCode(root);
   if (findings.length > 0) {
-    const details = findings.map(({ file, kind, excerpt }) => `- ${file}: ${kind}: ${excerpt}`).join('\n');
+    const details = findings
+      .map(({ file, kind, line, column, excerpt }) => {
+        const at = line === null ? file : `${file}:${line}:${column}`;
+        return `- ${at}: ${kind}: ${excerpt}`;
+      })
+      .join('\n');
     throw new Error(`Remote hosted code detected in ${root}:\n${details}`);
   }
   return true;
