@@ -416,6 +416,16 @@ html.si18n-dark .si18n-chat-bubble code {
   background: rgba(255, 255, 255, 0.08) !important;
   color: #fde047 !important;
 }
+html.si18n-dark .si18n-chat-bubble pre {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+/* The inline-code rule above paints code yellow, which is right for a term
+   inside a sentence and wrong for a whole block. */
+html.si18n-dark .si18n-chat-bubble pre code {
+  background: none !important;
+  color: #dedede !important;
+}
 /* Chat messages area */
 html.si18n-dark .si18n-chat-messages {
   background: transparent !important;
@@ -492,6 +502,13 @@ html.si18n-dark .si18n-history-detail .si18n-chat-bot .si18n-chat-bubble {
 html.si18n-dark .si18n-history-detail .si18n-chat-bubble code {
   background: rgba(255, 255, 255, 0.08) !important;
   color: #e0e0e0 !important;
+}
+html.si18n-dark .si18n-history-detail .si18n-chat-bubble pre {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+html.si18n-dark .si18n-history-detail .si18n-chat-bubble pre code {
+  background: none !important;
 }
 /* (Dark-mode FAB styling lives in styles/fab.css.) */
 

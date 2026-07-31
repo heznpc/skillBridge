@@ -35,6 +35,10 @@
     'strong',
     'em',
     'code',
+    // `pre` carries formatResponse's fenced code blocks. Without it the
+    // sanitizer's unknown-tag branch removes the element AND its subtree, so
+    // every tutor code sample would vanish silently.
+    'pre',
     'br',
     'button',
     'svg',

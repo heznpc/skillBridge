@@ -663,3 +663,129 @@ describe('Puter isolated-world content broker', () => {
     expect(broker.posted.filter((message) => message.type === 'keepalive')).toHaveLength(keepaliveCount);
   });
 });
+
+// The sign-in card used to offer only "sign in" and "cancel". Cancelling threw
+// SAFE_AUTH_ERROR and the card came straight back on the next question, so a
+// user who does not want a cloud tutor had no way to stop being asked — the
+// first dead end a v1.0.1 upgrader meets, on top of an already 25% uninstall
+// rate. The card now also persists sb_ai_engine='off', which is the same key
+// translator._getAiEngine reads, so the choice actually sticks.
+describe('Puter sign-in card — declining has a durable exit', () => {
+  const ENGINE_KEY = 'sb_ai_engine';
+
+  test('renders a turn-off action and an on-device hint alongside sign in', async () => {
+    const broker = bootBroker({});
+    await flushUntil(() => broker.posted.some((message) => message.type === 'ready'));
+    broker.listeners.message[0]({ type: 'start', id: 'shape', prompt: 'question' });
+    await flushUntil(() => broker.posted.some((message) => message.type === 'auth-ui' && message.visible));
+
+    expect(broker.element('sign-in')).toBeTruthy();
+    expect(broker.element('cancel')).toBeTruthy();
+    expect(broker.element('disable')).toBeTruthy();
+    expect(broker.element('disable').textContent).not.toBe('');
+
+    // The on-device engine needs chrome.permissions.request(), which a content
+    // script cannot call, so the card points at the popup rather than shipping a
+    // fourth button that cannot finish the job. That pointer is the only way a
+    // user learns the local engine exists without opening the popup first.
+    const hint = broker.isolatedGlobal.document.created.find((node) => node.className === 'hint');
+    expect(hint).toBeTruthy();
+    expect(hint.textContent).toContain('device');
+    broker.click('cancel');
+  });
+
+  test('turning the tutor off persists the preference and answers with that reason', async () => {
+    const chat = jest.fn(async () => streamOf('must-not-run'));
+    const broker = bootBroker({ chat });
+    await flushUntil(() => broker.posted.some((message) => message.type === 'ready'));
+    broker.listeners.message[0]({
+      type: 'start',
+      id: 'turn-off',
+      prompt: 'question',
+      labels: { off: 'Tutor is off. Re-enable it from the popup.' },
+    });
+    await flushUntil(() => broker.posted.some((message) => message.type === 'auth-ui' && message.visible));
+
+    broker.click('disable');
+    await flushUntil(() => broker.posted.some((message) => message.type === 'error' && message.id === 'turn-off'));
+
+    expect(broker.values.get(ENGINE_KEY)).toBe('off');
+    const error = broker.posted.find((message) => message.type === 'error' && message.id === 'turn-off');
+    // Not the generic sign-in-required string: the reply must be about the
+    // choice the user just made.
+    expect(error.error).toBe('Tutor is off. Re-enable it from the popup.');
+    expect(chat).not.toHaveBeenCalled();
+    // No session was ever authenticated, so nothing may have been stored.
+    expect(broker.values.has(TOKEN_KEY)).toBe(false);
+  });
+
+  test('a failed preference write does not claim the tutor is off', async () => {
+    const broker = bootBroker({});
+    await flushUntil(() => broker.posted.some((message) => message.type === 'ready'));
+    broker.storage.set.mockRejectedValueOnce(new Error('storage backend gone'));
+    broker.listeners.message[0]({
+      type: 'start',
+      id: 'write-fails',
+      prompt: 'question',
+      labels: { off: 'Tutor is off.', error: 'Could not save that.' },
+    });
+    await flushUntil(() => broker.posted.some((message) => message.type === 'auth-ui' && message.visible));
+
+    broker.click('disable');
+    await flushUntil(() => broker.element('disable')?.disabled === false);
+
+    expect(broker.values.has(ENGINE_KEY)).toBe(false);
+    // The gate stays open — reporting "off" while the preference is still
+    // 'cloud' would send the next question straight back to Puter.
+    expect(broker.posted.some((message) => message.type === 'error' && message.id === 'write-fails')).toBe(false);
+    broker.click('cancel');
+  });
+
+  test('cancel still reports sign-in required, not the turned-off reason', async () => {
+    const broker = bootBroker({});
+    await flushUntil(() => broker.posted.some((message) => message.type === 'ready'));
+    broker.listeners.message[0]({
+      type: 'start',
+      id: 'plain-cancel',
+      prompt: 'question',
+      labels: { off: 'Tutor is off.' },
+    });
+    await flushUntil(() => broker.posted.some((message) => message.type === 'auth-ui' && message.visible));
+
+    broker.click('cancel');
+    await flushUntil(() => broker.posted.some((message) => message.type === 'error' && message.id === 'plain-cancel'));
+
+    const error = broker.posted.find((message) => message.type === 'error' && message.id === 'plain-cancel');
+    expect(error.error).not.toBe('Tutor is off.');
+    expect(broker.values.has(ENGINE_KEY)).toBe(false);
+  });
+
+  test('a later gate does not inherit the previous turn-off outcome', async () => {
+    const broker = bootBroker({});
+    await flushUntil(() => broker.posted.some((message) => message.type === 'ready'));
+    broker.listeners.message[0]({
+      type: 'start',
+      id: 'first-off',
+      prompt: 'question',
+      labels: { off: 'Tutor is off.' },
+    });
+    await flushUntil(() => broker.posted.some((message) => message.type === 'auth-ui' && message.visible));
+    broker.click('disable');
+    await flushUntil(() => broker.posted.some((message) => message.type === 'error' && message.id === 'first-off'));
+
+    broker.listeners.message[0]({
+      type: 'start',
+      id: 'second-cancel',
+      prompt: 'question',
+      labels: { off: 'Tutor is off.' },
+    });
+    await flushUntil(
+      () => broker.posted.filter((message) => message.type === 'auth-ui' && message.visible).length >= 2,
+    );
+    broker.click('cancel');
+    await flushUntil(() => broker.posted.some((message) => message.type === 'error' && message.id === 'second-cancel'));
+
+    const error = broker.posted.find((message) => message.type === 'error' && message.id === 'second-cancel');
+    expect(error.error).not.toBe('Tutor is off.');
+  });
+});

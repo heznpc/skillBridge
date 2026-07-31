@@ -377,10 +377,28 @@
   }
 
   // Selected tutor engine ('cloud' | 'local' | 'off'); defaults to cloud.
+  //
+  // DELIBERATELY NOT the same failure mode as translator._getAiEngine(), which
+  // this otherwise mirrors line for line. Do not "align" them:
+  //
+  //   translator._getAiEngine()  timeout REJECTS  — it decides whether the
+  //     prompt and lesson context leave this machine, so an unknown preference
+  //     must abort the send. Fail closed.
+  //   _currentEngine()           timeout RESOLVES — its only caller picks which
+  //     explanation to show while offline (see `offlineBlocks` below). Nothing
+  //     is transmitted from here, and the send path re-reads the preference
+  //     through the fail-closed gate above, so falling back to the default
+  //     engine cannot cause a cloud send against a 'local'/'off' preference.
+  //
+  // Rejecting here would replace a wrong message with no message; resolving to
+  // the default costs at most a spurious offline notice for someone who is
+  // offline, on the local engine, AND hit a stalled storage read. The typed
+  // text is preserved in that case, so a retry recovers.
   async function _currentEngine() {
     try {
-      // Bounded like translator._getAiEngine: a slow chrome.storage read must
-      // not delay the offline notice (or any send) by more than a moment.
+      // Bounded so a stalled chrome.storage IPC cannot hold the send: this was
+      // the source of a batch-load E2E flake where neither the offline notice
+      // nor the reply ever appeared.
       const read = chrome.storage.local.get('sb_ai_engine');
       const timeout = new Promise((resolve) => setTimeout(() => resolve(null), 1500));
       const result = await Promise.race([read, timeout]);

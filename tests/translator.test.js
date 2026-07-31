@@ -474,3 +474,110 @@ describe('chatStream — engine preference is a privacy gate that fails closed',
     await expect(t.chatStream('hello', 'ko', '', () => {}, {})).rejects.toThrow('turned off in settings');
   });
 });
+
+// ── Cache schema migration (v4.0.0) ────────────────────────────
+// The published CWS build is v1.0.1 and it wrote into this SAME
+// `skillbridge-cache` store at version 1. Its Puter/Gemini verify step could
+// persist a non-translation ("Okay") or an empty reply as the translation
+// (v3.5.40), and rows written before v3.5.41 never had protected brand terms
+// restored. `_isValidTranslation` runs on the WRITE path only and cannot
+// detect a short, well-formed wrong answer, so the inherited rows have to be
+// dropped rather than filtered. These tests lock that migration in — without
+// them a future "tidy up the upgrade handler" change silently re-inherits a
+// poisoned 30-day cache for every upgrading user.
+describe('_openDB — inherited v1.0.1 cache is dropped, not migrated', () => {
+  /** Build a fake IDBOpenDBRequest + database that records what the handler did. */
+  function fakeOpen({ existingStores = [] }) {
+    const calls = { deleted: [], created: [], indexes: [] };
+    const storeNames = new Set(existingStores);
+    const db = {
+      objectStoreNames: { contains: (name) => storeNames.has(name) },
+      deleteObjectStore: (name) => {
+        calls.deleted.push(name);
+        storeNames.delete(name);
+      },
+      createObjectStore: (name, opts) => {
+        calls.created.push({ name, opts });
+        storeNames.add(name);
+        return { createIndex: (idx, keyPath, opts2) => calls.indexes.push({ idx, keyPath, opts2 }) };
+      },
+    };
+    return { calls, db };
+  }
+
+  let openArgs;
+  let request;
+
+  beforeEach(() => {
+    openArgs = null;
+    request = { onupgradeneeded: null, onsuccess: null, onerror: null };
+    global.indexedDB = {
+      open: (name, version) => {
+        openArgs = { name, version };
+        return request;
+      },
+    };
+  });
+
+  afterEach(() => {
+    global.indexedDB = { open: () => ({ onupgradeneeded: null, onsuccess: null, onerror: null }) };
+  });
+
+  test('opens skillbridge-cache at schema version 2', () => {
+    const t = new SkilljarTranslator();
+    t._openDB();
+    expect(openArgs).toEqual({ name: 'skillbridge-cache', version: 2 });
+  });
+
+  test('upgrading from v1 (the published 1.0.1 schema) deletes the store and recreates it', () => {
+    const t = new SkilljarTranslator();
+    t._openDB();
+    const { calls, db } = fakeOpen({ existingStores: ['translations'] });
+    request.onupgradeneeded({ target: { result: db }, oldVersion: 1 });
+
+    expect(calls.deleted).toEqual(['translations']);
+    expect(calls.created).toEqual([{ name: 'translations', opts: { keyPath: 'id' } }]);
+    // The lang index must come back with the store, or `_evictOldestEntries`
+    // and any lang-scoped query silently lose their index.
+    expect(calls.indexes).toEqual([{ idx: 'lang', keyPath: 'lang', opts2: { unique: false } }]);
+  });
+
+  test('a fresh install (oldVersion 0) creates the store without a delete', () => {
+    const t = new SkilljarTranslator();
+    t._openDB();
+    const { calls, db } = fakeOpen({ existingStores: [] });
+    request.onupgradeneeded({ target: { result: db }, oldVersion: 0 });
+
+    expect(calls.deleted).toEqual([]);
+    expect(calls.created).toEqual([{ name: 'translations', opts: { keyPath: 'id' } }]);
+    expect(calls.indexes).toEqual([{ idx: 'lang', keyPath: 'lang', opts2: { unique: false } }]);
+  });
+
+  test('a later schema bump does NOT wipe v2-era rows — the drop is scoped to 1 → 2', () => {
+    const t = new SkilljarTranslator();
+    t._openDB();
+    const { calls, db } = fakeOpen({ existingStores: ['translations'] });
+    request.onupgradeneeded({ target: { result: db }, oldVersion: 2 });
+
+    expect(calls.deleted).toEqual([]);
+    // Store already exists and is kept as-is.
+    expect(calls.created).toEqual([]);
+  });
+
+  test('resolves via onsuccess and keeps the db handle', async () => {
+    const t = new SkilljarTranslator();
+    const pending = t._openDB();
+    const handle = { objectStoreNames: { contains: () => true } };
+    request.onsuccess({ target: { result: handle } });
+    await expect(pending).resolves.toBeUndefined();
+    expect(t._db).toBe(handle);
+  });
+
+  test('a failed open resolves non-fatally and leaves the cache disabled', async () => {
+    const t = new SkilljarTranslator();
+    const pending = t._openDB();
+    request.onerror();
+    await expect(pending).resolves.toBeUndefined();
+    expect(t._db).toBeNull();
+  });
+});

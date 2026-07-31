@@ -906,6 +906,23 @@ const HISTORY_LABELS = {
 const HISTORY_DB_NAME = 'skillbridge-tutor';
 const HISTORY_STORE = 'conversations';
 
+// Translation-cache schema version, bumped 1 → 2 for v4.0.0. Version 1 is the
+// schema the PUBLISHED v1.0.1 build wrote into the same `skillbridge-cache`
+// store, so every upgrading user arrives with a store full of rows this build
+// did not produce. Those rows cannot be filtered on read:
+//   - v1.0.1 ran Google Translate output through a Puter/Gemini "verify" step
+//     that could persist a non-translation ("Okay", "OK입니다") or an empty
+//     reply in place of the translation (fixed in v3.5.40, write-path only).
+//   - Rows written before v3.5.41 never had protected brand/API terms
+//     restored.
+// `_isValidTranslation` rejects inflation, HTML error pages, and mostly-ASCII
+// output for non-Latin targets — none of which catch a short, well-formed
+// wrong answer. So the 1 → 2 migration drops the store instead. The cost is
+// one Google Translate round per visible block on the next visit, which is
+// what a fresh install already pays and well inside the 30-day TTL churn the
+// cache is built around.
+const CACHE_DB_VERSION = 2;
+
 // ==================== POPUP LABELS (i18n) ====================
 
 const POPUP_LABELS = {
@@ -1213,6 +1230,46 @@ const ENGINE_LABELS = {
     'pt-BR': 'Agora não',
     ru: 'Не сейчас',
     vi: 'Để sau',
+  },
+  // "Not now" leaves the card to reappear on the next question. This is the
+  // durable answer for someone who does not want a cloud tutor at all: it
+  // persists sb_ai_engine='off', so translation and the study tools continue
+  // and nothing asks again. The broker can write this itself — it already uses
+  // chrome.storage.local for the session token.
+  signInDisable: {
+    en: 'Turn off the tutor',
+    ko: '튜터 끄기',
+    id: 'Matikan tutor',
+    it: 'Disattiva il tutor',
+    ja: 'チューターをオフにする',
+    'zh-CN': '关闭导师',
+    'zh-TW': '關閉導師',
+    es: 'Desactivar el tutor',
+    fr: 'Désactiver le tuteur',
+    de: 'Tutor ausschalten',
+    'pt-BR': 'Desativar o tutor',
+    ru: 'Отключить репетитора',
+    vi: 'Tắt gia sư',
+  },
+  // The on-device option cannot be chosen from here: granting the optional
+  // localhost host permission requires chrome.permissions.request(), which a
+  // content script may not call. Point at the popup instead of shipping a
+  // button that cannot finish the job.
+  signInLocalHint: {
+    en: 'Prefer to keep everything on your device? Choose the on-device tutor from the SkillBridge toolbar icon.',
+    ko: '모든 처리를 내 기기에서 하고 싶으면 SkillBridge 툴바 아이콘에서 온디바이스 튜터를 선택하세요.',
+    id: 'Ingin semuanya tetap di perangkat Anda? Pilih tutor on-device dari ikon toolbar SkillBridge.',
+    it: 'Preferisci tenere tutto sul tuo dispositivo? Scegli il tutor locale dall’icona SkillBridge nella barra.',
+    ja: 'すべてを自分の端末で処理したい場合は、SkillBridge のツールバーアイコンからオンデバイスチューターを選んでください。',
+    'zh-CN': '希望所有处理都留在本机？请在 SkillBridge 工具栏图标中选择本地导师。',
+    'zh-TW': '希望所有處理都留在本機？請在 SkillBridge 工具列圖示中選擇本機導師。',
+    es: '¿Prefieres que todo se quede en tu dispositivo? Elige el tutor local desde el icono de SkillBridge en la barra.',
+    fr: 'Vous préférez tout garder sur votre appareil ? Choisissez le tuteur local depuis l’icône SkillBridge.',
+    de: 'Möchten Sie alles auf Ihrem Gerät behalten? Wählen Sie den lokalen Tutor über das SkillBridge-Symbol.',
+    'pt-BR':
+      'Prefere manter tudo no seu dispositivo? Escolha o tutor local pelo ícone do SkillBridge na barra de ferramentas.',
+    ru: 'Хотите, чтобы всё оставалось на вашем устройстве? Выберите локального репетитора через значок SkillBridge.',
+    vi: 'Muốn mọi thứ chỉ nằm trên thiết bị của bạn? Chọn gia sư trên thiết bị từ biểu tượng SkillBridge trên thanh công cụ.',
   },
   statusChecking: {
     en: 'Checking local server…',

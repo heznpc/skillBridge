@@ -3,7 +3,15 @@
  *
  * Unlike the rest of the E2E suite this test does NOT stub the AI backend:
  * it drives the real packaged extension against a REAL Ollama server on
- * http://localhost:11434. Skipped automatically if Ollama isn't reachable.
+ * http://localhost:11434.
+ *
+ * PREREQUISITE, and not just reachability: start the server as
+ *   OLLAMA_ORIGINS='chrome-extension://*' ollama serve
+ * Ollama answers 403 to the extension origin by default. Chrome omits the
+ * `Origin` header on a bodyless GET and attaches
+ * `Origin: chrome-extension://<id>` to the JSON POST, so `/v1/models` can
+ * return 200 while every tutor request is rejected. Both preconditions are
+ * checked below and skip with an actionable reason rather than going red.
  *
  * It also isolates a real correctness question about the shipped manifest:
  * `optional_host_permissions` declares `http://localhost/*` (no explicit
@@ -43,6 +51,40 @@ function ollamaReachable() {
   });
 }
 
+// Status of the request shape the tutor actually sends. Node attaches no
+// `Origin` of its own, so this supplies the one Chrome would — that header is
+// what Ollama judges, and without it this probe would see 200 and learn
+// nothing about what the extension will get. An empty body is rejected by
+// request validation (400) on a permitted origin, so no model is loaded.
+function chatOriginStatus() {
+  return new Promise((resolve) => {
+    const body = '{}';
+    const req = http.request(
+      {
+        host: 'localhost',
+        port: 11434,
+        path: '/v1/chat/completions',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(body),
+          Origin: `chrome-extension://${'a'.repeat(32)}`,
+        },
+      },
+      (res) => {
+        res.resume();
+        resolve(res.statusCode);
+      },
+    );
+    req.on('error', () => resolve(0));
+    req.setTimeout(3000, () => {
+      req.destroy();
+      resolve(0);
+    });
+    req.end(body);
+  });
+}
+
 // Patch a copy of the shipped bundle: promote the EXACT shipped optional
 // localhost pattern to a granted host permission (so no runtime dialog is
 // needed and the port-pattern question is exercised for real), add the
@@ -69,6 +111,12 @@ test.describe('SkillBridge — LIVE local engine (real Ollama)', () => {
 
   test.beforeAll(async () => {
     test.skip(!(await ollamaReachable()), 'Ollama not reachable on localhost:11434');
+    test.skip(
+      (await chatOriginStatus()) === 403,
+      'Ollama is reachable but rejects the chrome-extension origin, so the tutor cannot stream and ' +
+        'this spec cannot prove the round trip. Restart it with ' +
+        "OLLAMA_ORIGINS='chrome-extension://*' ollama serve",
+    );
     extDir = makeLiveExtension();
     userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'sb-live-ud-'));
     context = await chromium.launchPersistentContext(userDataDir, {

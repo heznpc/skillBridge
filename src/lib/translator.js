@@ -233,9 +233,16 @@ class SkilljarTranslator {
 
   _openDB() {
     return new Promise((resolve, _reject) => {
-      const req = indexedDB.open('skillbridge-cache', 1);
+      const req = indexedDB.open('skillbridge-cache', CACHE_DB_VERSION);
       req.onupgradeneeded = (e) => {
         const db = e.target.result;
+        // One-time 1 → 2 migration: drop the store the published v1.0.1 build
+        // wrote into rather than migrating its rows. See CACHE_DB_VERSION in
+        // constants.js for why those rows are unfilterable. A fresh install
+        // arrives with oldVersion 0 and skips straight to the create below.
+        if (e.oldVersion > 0 && e.oldVersion < 2 && db.objectStoreNames.contains('translations')) {
+          db.deleteObjectStore('translations');
+        }
         if (!db.objectStoreNames.contains('translations')) {
           const store = db.createObjectStore('translations', { keyPath: 'id' });
           store.createIndex('lang', 'lang', { unique: false });
@@ -460,6 +467,13 @@ class SkilljarTranslator {
     // stalls or fails, fail CLOSED — reject so the sidebar shows a retryable
     // error — rather than defaulting into the cloud path, which would ship
     // the prompt plus lesson context to Puter against the stored preference.
+    //
+    // sidebar-chat.js `_currentEngine()` is a near-identical twin whose timeout
+    // RESOLVES instead. That is intentional: it only chooses an offline
+    // explanation and transmits nothing, so it fails toward the default engine.
+    // This function is the authoritative gate; keep the reject here even if the
+    // two are ever refactored together. `tests/local-engine.test.js` locks the
+    // asymmetry.
     const read = chrome.storage.local.get('sb_ai_engine');
     const timeout = new Promise((_resolve, reject) =>
       setTimeout(() => reject(new Error('Tutor engine preference read timed out')), 1500),
@@ -641,6 +655,13 @@ User: ${userMessage}`;
             button: t(ENGINE_LABELS.signInButton),
             cancel: t(ENGINE_LABELS.signInCancel),
             error: t(ENGINE_LABELS.tutorSignInRequired),
+            disable: t(ENGINE_LABELS.signInDisable),
+            localHint: t(ENGINE_LABELS.signInLocalHint),
+            // Shown as the outcome of the "turn off" action, so the reply the
+            // user gets is about the choice they just made rather than the
+            // generic "sign-in required". Reuses the label the sidebar already
+            // shows for a disabled tutor, so the two agree.
+            off: t(ENGINE_LABELS.tutorOff),
           },
         };
         const sendStart = (allowReconnect) => {
