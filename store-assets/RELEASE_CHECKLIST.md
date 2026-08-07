@@ -33,15 +33,13 @@ dashboard upload.
   all despite being the only build users are running. Reconstructed from the
   `v1.0.0..v1.0.1` commit range (PRs #30–#34) and the `v1.0.1` manifest, so the
   "What's new" copy has a real baseline to be written against.
-- ✅ Final v4.0.0 upload artifact rebuilt 2026-07-30 with `npm run build:bundle:zip`
-  after the post-review defect fixes: **69 files, 719,339 bytes**, SHA-256
-  `380d3ca3c204586e7a1d4bf051c24cd1ee030ef306fd2fa686c21d3525c32be1`.
+- ✅ Final v4.0.0 upload artifact rebuilt 2026-08-07 with `npm run build:bundle:zip`
+  from `main` @ `f51a8fc` (through PR #280, includes the post-#276 defect fixes
+  in #278 and the CWS-token tooling in #279): **69 files, 719,339 bytes**, SHA-256
+  `79ff75499ed13a15f9207efff5b877f9e17bacfe1b28f02c8db87304dddab8ff`.
   The extracted ZIP was diffed against `dist/bundled` and is byte-for-byte
   identical, and `scripts/check-rhc.js` reports zero findings against BOTH the
-  built directory and the extracted archive. The artifact manifest was read back
-  directly: version `4.0.0`, `permissions` = storage + alarms, `host_permissions`
-  = `*.skilljar.com` + `translate.googleapis.com` only, optional localhost pair
-  intact, and `api.github.com` appears **nowhere** in the archive. It includes the
+  built directory and the extracted archive. It includes the
   isolated Puter content broker, sanitized `src/bridge/puter.js`, third-party
   notices/licenses, and the bundled HTML-GT path, and does not include
   `src/lib/page-bridge.js`. This bundled ZIP is the **only** CWS upload artifact;
@@ -51,8 +49,10 @@ dashboard upload.
   rebuilding after reading it here.
   - Superseded stamps, kept only to identify what they were: `d6541a8` (PR #276)
     at **715,243 bytes** / `2750797c…`, which predates the local-engine probe fix;
-    and the 2026-07-29 candidate `4315e09a…`, which predates the pre-merge
-    security review fixes. Neither may be uploaded.
+    the 2026-07-29 candidate `4315e09a…`, which predates the pre-merge security
+    review fixes; and the 2026-07-30 candidate `380d3ca3…` (same 719,339 bytes —
+    identical content, different mtime), which predates PRs #278–#280. None may
+    be uploaded.
 - ⛔ Never upload `store-assets/skillbridge-developer.zip` (generated only by the
   explicit `npm run build:developer:zip` command), the repository root, or the
   Firefox build to CWS. Raw/developer source retains Puter SDK features that the
@@ -76,21 +76,25 @@ dashboard upload.
   disclosures for live legacy v1.0.1 and the unpublished candidate. Remove or
   archive the legacy section only after the replacement version is confirmed
   live in the CWS dashboard and update the listing/privacy answers together.
-- ✅ Integrated release verification re-run 2026-07-30 on the post-review change
-  set: lint, typecheck, format, **693 unit tests across 36 suites**,
-  translation/glossary/i18n/dictionary checks, live selector and
-  22-course map checks, first-user/popup smoke, ZIP integrity, and
-  **52 Chromium E2E tests passing across eight resource-bounded batches**
-  (including the malicious Puter-query stored-token regression). The live CWS
-  check still reports v1.0.1, updated 2026-03-10.
-  - ✅ The live-Ollama local-engine batch was run for real on 2026-07-30
-    (`gemma3:4b`, real streaming): **2 passed**. It had been self-skipping, which
-    reads as green in the summary line, and running it caught a shipped defect in
-    the local-engine probe — see the entry below. Two prerequisites, not one:
-    the server must be up **and** started as
-    `OLLAMA_ORIGINS='chrome-extension://*' ollama serve`, because Ollama rejects
-    the extension origin by default. Both are now checked explicitly and skip
-    with an actionable reason instead of a bare "not reachable".
+- ✅ `npm run release:verify` (full pipeline, not a partial gate) re-run
+  2026-08-07 from a clean `npm ci` on `main` @ `f51a8fc`: lint, format,
+  **711 unit tests**, translation/glossary/i18n/dictionary checks, live
+  selector and 22-course map checks, first-user/popup smoke, store-asset
+  regeneration, ZIP integrity (69 files verified), and the **full 52-test
+  Chromium E2E suite across eight resource-bounded batches — 50 passed, 2
+  skipped**. The live CWS check still reports v1.0.1, updated 2026-03-10.
+  - Batch 5 (`chat-history`, `stream-cancel`, `tutor-chat`, `tutor-offline`)
+    had shown a batch-only flake: `_getAiEngine`/`_currentEngine` awaited
+    `chrome.storage.local.get('sb_ai_engine')` with no bound, so a slow IPC
+    under load could stall the very first branch every chat send takes. Fixed
+    by racing that read against a 1.5s timeout that falls back to the default
+    engine (`src/lib/translator.js`, `src/content/sidebar-chat.js`); re-ran the
+    batch 5-of-5 clean afterward, then 9/9 clean again inside this full run.
+  - The 2 skipped are the live-Ollama batch (`local-engine-live.spec.js`):
+    self-skips when no local Ollama server is reachable at test time — expected
+    on a machine not currently running `OLLAMA_ORIGINS='chrome-extension://*'
+    ollama serve`. Verified for real against `gemma3:4b` on 2026-07-30 (see
+    below); the machinery is unchanged since.
 - ✅ Local-engine reachability probe corrected 2026-07-30. Chrome omits `Origin`
   on a bodyless GET and attaches `Origin: chrome-extension://<id>` to the JSON
   POST the tutor sends, so probing only `GET /v1/models` returned 200 against a
