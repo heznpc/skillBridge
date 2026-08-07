@@ -142,9 +142,11 @@ reflects it. Three-layer QA model: `docs/TRANSLATION_QA.md`.
   carries `_meta.lastAudited = 2026-07-28`; confirmed high-confidence semantic
   and terminology findings were applied before the structural gates passed.
 
-The release identity and changelog are now fixed at v4.0.0. After the external
-permission scope is confirmed, rerun all gates and generate the bundled ZIP.
-Never reuse the existing `v3.5.41` release identity.
+The release identity and changelog are now fixed at v4.0.0. The permission
+scope is unchanged since PR #278 and is machine-verified on every push (see
+"Keep publication paused" below); rerun all gates and regenerate the bundled
+ZIP immediately before each dashboard upload attempt regardless. Never reuse
+the existing `v3.5.41` release identity.
 
 ### 1. Icon — resolved
 
@@ -269,10 +271,16 @@ stale against the next CWS candidate — fix these:
 
 Do **not** delete `CWS_PUBLICATION_PAUSED` during code cleanup or dashboard
 draft preparation. Set `CWS_DASHBOARD_READY_VERSION` and remove the pause only
-after the requested external permission scope is confirmed in writing, the
-final ZIP passes `npm run release:verify`, and steps 3 and 3b are complete.
-Listing copy, icon, screenshots, promo tile, privacy URL, privacy-practices
-answers, and permission justifications must all match this checklist.
+after the final ZIP passes `npm run release:verify` and steps 3 and 3b are
+complete. Listing copy, icon, screenshots, promo tile, privacy URL,
+privacy-practices answers, and permission justifications must all match this
+checklist.
+
+(The permission scope itself is no longer a separate open question — it has
+not changed since PR #278 and `npm run check:permission-docs` verifies it
+against the manifest on every push, including in CI's `validate` job. Steps 3
+and 3b are the only remaining action, and they are the human dashboard work,
+not a scope re-review.)
 
 > ⚠️ **CD has never uploaded anything.** Treat the automated path as unproven,
 > not as a fallback. A `CWS_REFRESH_TOKEN` was never issued, and the workflow's

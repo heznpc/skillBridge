@@ -164,8 +164,9 @@ Generic translation tools often **mistranslate brand names and technical terms**
 > the earlier `v3.5.x` candidates predate the current CWS changes and are not reused.
 > `v4.0.0` contains the unreleased candidate: it restores the bundled AI tutor,
 > adds a local on-device tutor engine, and translates inline-mixed blocks as HTML.
-> Publication of the rebuilt CWS edition remains paused while its package and
-> external permission scope are verified.
+> Its permission scope is finalized and machine-verified against the manifest on
+> every push (`npm run check:permission-docs`). Publication remains paused
+> pending the CWS dashboard upload — see `store-assets/RELEASE_CHECKLIST.md`.
 
 ### Chrome / Edge / Chromium browsers
 
