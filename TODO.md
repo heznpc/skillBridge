@@ -191,8 +191,16 @@ narrowed.
       was deliberately not attempted here — this covers the "per-lesson,
       local note-taking" half of the original bullet, not arbitrary passage
       highlighting.
-- [ ] (optional) **"Report wrong term"** — local queue + export. GitHub
-      auto-link deferred (learner audience ≠ GitHub users).
+- [x] **"Report wrong term"** _(2026-08-10)_ — append-only local queue under
+      `sb_term_reports` (unlike bookmarks/notes, not de-duped by URL: one
+      lesson can have several distinct wrong terms flagged). New "Reports"
+      Tools-menu panel: compose captures the mistranslated text plus an
+      optional correction/note; export downloads the queue as JSON via a
+      client-side Blob + `<a download>` (no `chrome.downloads` permission —
+      matches `pdf-export.js`'s existing no-extra-permission stance).
+      GitHub auto-link stays deferred, as scoped (learner audience ≠ GitHub
+      users) — this is a self-serve queue the user reviews/exports
+      themselves. `term-reports.js`.
 
 ### Excluded by the free + local-only constraint
 

@@ -360,6 +360,60 @@ async function evalInContentWorld(context, op, arg) {
                   btn.click();
                   return { ok: true };
                 },
+                toggleReportsPanel: () => {
+                  window._sb._chat.toggleReportsPanel();
+                  return true;
+                },
+                openReportCompose: () => {
+                  const root = window._sb._uiHost?.shadowRoot || document;
+                  const btn = root.getElementById('si18n-report-add');
+                  if (!btn) return { error: 'report-add button not present' };
+                  btn.click();
+                  return { ok: true };
+                },
+                cancelReportCompose: () => {
+                  const root = window._sb._uiHost?.shadowRoot || document;
+                  const btn = root.getElementById('si18n-report-cancel');
+                  if (!btn) return { error: 'report-cancel button not present' };
+                  btn.click();
+                  return { ok: true };
+                },
+                // Requires openReportCompose to have run first (both fields
+                // only exist while the compose row is mounted).
+                writeAndSaveReport: ([wrongText, correction]) => {
+                  const root = window._sb._uiHost?.shadowRoot || document;
+                  const wrongInput = root.getElementById('si18n-report-wrong');
+                  const correctionInput = root.getElementById('si18n-report-correction');
+                  const saveBtn = root.getElementById('si18n-report-save');
+                  if (!wrongInput || !correctionInput || !saveBtn) return { error: 'report compose not open' };
+                  wrongInput.value = wrongText;
+                  correctionInput.value = correction || '';
+                  saveBtn.click();
+                  return { ok: true };
+                },
+                readReportsList: () => {
+                  const root = window._sb._uiHost?.shadowRoot || document;
+                  const items = root.querySelectorAll('#si18n-report-list .si18n-bm-item');
+                  return Array.from(items).map((el) => ({
+                    wrongText: el.querySelector('.si18n-bm-title')?.textContent?.trim() || '',
+                    correction: el.querySelector('.si18n-note-preview')?.textContent?.trim() || '',
+                  }));
+                },
+                removeReportAt: (i) => {
+                  const root = window._sb._uiHost?.shadowRoot || document;
+                  const btns = root.querySelectorAll('#si18n-report-list .si18n-bm-remove');
+                  const btn = btns[Number(i)];
+                  if (!btn) return { error: 'no report remove button at index ' + i };
+                  btn.click();
+                  return { ok: true };
+                },
+                clickExportReports: () => {
+                  const root = window._sb._uiHost?.shadowRoot || document;
+                  const btn = root.getElementById('si18n-report-export');
+                  if (!btn) return { error: 'report-export button not present' };
+                  btn.click();
+                  return { ok: true };
+                },
                 toggleHistoryPanel: () => {
                   window._sb._chat.toggleHistoryPanel();
                   return true;
