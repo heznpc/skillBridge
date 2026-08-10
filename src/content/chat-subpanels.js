@@ -22,6 +22,7 @@
     flashcardPanelOpen: false,
     bookmarksPanelOpen: false,
     notesPanelOpen: false,
+    reportsPanelOpen: false,
     recentPanelOpen: false,
     dashboardPanelOpen: false,
   };
@@ -31,6 +32,7 @@
     flashcard: 'flashcardPanelOpen',
     bookmarks: 'bookmarksPanelOpen',
     notes: 'notesPanelOpen',
+    reports: 'reportsPanelOpen',
     recent: 'recentPanelOpen',
     dashboard: 'dashboardPanelOpen',
   };

@@ -150,6 +150,10 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
           <span>${sb.t(NOTE_LABELS.openNotes)}</span>
         </button>
+        <button class="si18n-tools-item" id="si18n-report-btn" role="menuitem" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L14.71 3.86a2 2 0 0 0-3.42 0Z"/><path d="M12 17h.01"/></svg>
+          <span>${sb.t(REPORT_LABELS.openReports)}</span>
+        </button>
         <button class="si18n-tools-item" id="si18n-fc-btn" role="menuitem" type="button">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
           <span>${sb.t(FLASHCARD_LABELS.openFlashcards)}</span>
@@ -231,6 +235,7 @@
     sb.$id('si18n-pdf-btn')?.addEventListener('click', () => sb.exportLessonPDF?.());
     sb.$id('si18n-bm-btn')?.addEventListener('click', () => sb._chat.toggleBookmarksPanel?.());
     sb.$id('si18n-note-btn')?.addEventListener('click', () => sb._chat.toggleNotesPanel?.());
+    sb.$id('si18n-report-btn')?.addEventListener('click', () => sb._chat.toggleReportsPanel?.());
     sb.$id('si18n-recent-btn')?.addEventListener('click', () => sb._chat.toggleRecentPanel?.());
     sb.$id('si18n-dash-btn')?.addEventListener('click', () => sb._chat.toggleDashboardPanel?.());
     if (sb.hostCaps?.bridge === false) {
@@ -342,6 +347,7 @@
       ['si18n-recent-btn', sb.t(RESUME_LABELS.openRecent)],
       ['si18n-bm-btn', sb.t(BOOKMARK_LABELS.openBookmarks)],
       ['si18n-note-btn', sb.t(NOTE_LABELS.openNotes)],
+      ['si18n-report-btn', sb.t(REPORT_LABELS.openReports)],
       ['si18n-fc-btn', sb.t(FLASHCARD_LABELS.openFlashcards)],
       ['si18n-history-btn', sb.t(A11Y_LABELS.chatHistory)],
       ['si18n-pdf-btn', sb.t(PDF_EXPORT_LABELS.title)],

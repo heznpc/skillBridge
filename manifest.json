@@ -57,6 +57,7 @@
         "src/content/chat-flashcards.js",
         "src/content/bookmarks.js",
         "src/content/notes.js",
+        "src/content/term-reports.js",
         "src/content/resume.js",
         "src/content/dashboard.js",
         "src/content/reading-aid.js",
@@ -79,11 +80,7 @@
     },
     {
       "matches": ["https://anthropic.skilljar.com/*"],
-      "js": [
-        "src/bridge/puter-content-init.js",
-        "src/bridge/puter.js",
-        "src/bridge/puter-content-broker.js"
-      ],
+      "js": ["src/bridge/puter-content-init.js", "src/bridge/puter.js", "src/bridge/puter-content-broker.js"],
       "run_at": "document_end",
       "world": "ISOLATED"
     }
@@ -108,11 +105,7 @@
       "matches": ["https://*.skilljar.com/*"]
     },
     {
-      "resources": [
-        "src/data/*",
-        "src/shared/runtime-constants.js",
-        "src/content/styles/*.css"
-      ],
+      "resources": ["src/data/*", "src/shared/runtime-constants.js", "src/content/styles/*.css"],
       "matches": ["https://claude.com/*"]
     }
   ]
