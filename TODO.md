@@ -181,7 +181,16 @@ narrowed.
       grouped under the single "Tools" menu in the sidebar header. `sidebar-chat.js`.
 - [x] **In-lesson TOC + reading-progress bar** (v3.5.36). DOM-only, no storage.
       `reading-aid.js`.
-- [ ] **Highlights / notes.** Per-lesson, local.
+- [x] **Notes.** _(2026-08-10)_ One free-text note per lesson (de-duped by
+      URL like bookmarks — saving again edits in place, saving blank deletes),
+      local-only under `sb_notes`. New "Notes" Tools-menu panel mirrors
+      `bookmarks.js`'s panel/list pattern; compose row reuses the chat
+      input/send styling. `notes.js`. True inline text-range highlighting
+      (anchoring a mark to a DOM range that survives translation-DOM
+      reconciliation and SPA re-renders) is a materially harder problem and
+      was deliberately not attempted here — this covers the "per-lesson,
+      local note-taking" half of the original bullet, not arbitrary passage
+      highlighting.
 - [ ] (optional) **"Report wrong term"** — local queue + export. GitHub
       auto-link deferred (learner audience ≠ GitHub users).
 
