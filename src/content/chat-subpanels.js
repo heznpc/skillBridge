@@ -21,6 +21,7 @@
     historyPanelOpen: false,
     flashcardPanelOpen: false,
     bookmarksPanelOpen: false,
+    notesPanelOpen: false,
     recentPanelOpen: false,
     dashboardPanelOpen: false,
   };
@@ -29,6 +30,7 @@
     history: 'historyPanelOpen',
     flashcard: 'flashcardPanelOpen',
     bookmarks: 'bookmarksPanelOpen',
+    notes: 'notesPanelOpen',
     recent: 'recentPanelOpen',
     dashboard: 'dashboardPanelOpen',
   };
