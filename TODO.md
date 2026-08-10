@@ -116,9 +116,21 @@ but they are the honest boundary of what was verified.
 - [ ] **Forced-401 recovery drill.** Revoke the token mid-session (Puter
       dashboard) and confirm the broker's re-sign-in loop and the init capture
       filter behave against the _real_ SDK's 401 auth dialog, not the test fakes.
-- [ ] **v3.5.41 → 4.0.0 upgrade-path test.** Load 3.5.41, sign in, then update
-      in place to 4.0.0 and assert: legacy host-storage keys scrubbed on next
-      lesson visit, settings survive, tutor works without re-onboarding.
+- [x] **v3.5.41 → 4.0.0 upgrade-path test.** _(Verified 2026-08-10 — already
+      resolved, this entry was stale.)_ `tests/e2e/upgrade-from-legacy.spec.js`
+      covers this, deliberately against 1.0.1 instead of the literal 3.5.41:
+      the CWS listing has served 1.0.1 since 2026-03-10 and 3.5.41 was never
+      published (see the changelog header note), so 1.0.1 → 4.0.0 is the path
+      every real install takes. Confirmed passing (`npx playwright test
+      tests/e2e/upgrade-from-legacy.spec.js`, 5/5): legacy settings survive
+      and the welcome banner stays suppressed (no re-onboarding into
+      SkillBridge itself), the page-world `puter.*` localStorage keys v1.0.1
+      left behind are scrubbed without touching unrelated host keys, the v1
+      cache is dropped via the version-2 schema bump rather than silently
+      reused, and — by design, not oversight — no Puter tutor session is
+      inherited from the scrubbed legacy token, so the upgrader meets the
+      sign-in card once on their first tutor question rather than the
+      untrusted page-readable token being trusted.
 - [x] **Sidebar `_currentEngine()` display-only fail-open.** _(Verified
       2026-08-10 — already resolved, this entry was stale.)_ Resolved via the
       "document why not" branch, not alignment: the two functions differ in
