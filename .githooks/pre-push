@@ -1,0 +1,16 @@
+#!/bin/sh
+# Mirrors CI's "Check formatting" step (.github/workflows/ci.yml) locally so a
+# prettier drift is caught before push instead of in CI (TODO.md P1.5).
+# Installed automatically by `npm install` via the "prepare" script, which
+# runs `git config core.hooksPath .githooks`.
+
+npx prettier --check 'src/**/*.{js,css,html}' 'tests/**/*.js' 'scripts/**/*.js'
+status=$?
+
+if [ $status -ne 0 ]; then
+  echo ""
+  echo "Prettier check failed. Run 'npm run format' to fix, then push again."
+  exit 1
+fi
+
+exit 0
