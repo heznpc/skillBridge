@@ -94,6 +94,8 @@ npx jest --coverage                      # generate coverage report
 
 Tests cover the translation engine, dictionary loading, cache logic, protected term replacement, and markdown formatting. **All tests must pass before submitting a PR.**
 
+`npm install` also wires a `pre-push` hook (`.githooks/pre-push`, via `git config core.hooksPath`) that runs the same `prettier --check` CI runs, so formatting drift is caught before you push instead of in CI.
+
 **Debugging:**
 - Open DevTools (F12) → Console tab → filter by `[SkillBridge]` to see extension logs
 - The background service worker has its own console — click "service worker" link on the extensions page
