@@ -119,13 +119,23 @@ but they are the honest boundary of what was verified.
 - [ ] **v3.5.41 → 4.0.0 upgrade-path test.** Load 3.5.41, sign in, then update
       in place to 4.0.0 and assert: legacy host-storage keys scrubbed on next
       lesson visit, settings survive, tutor works without re-onboarding.
-- [ ] **Sidebar `_currentEngine()` display-only fail-open.** On a stalled
-      storage read the offline notice can mis-fire for a working local engine
-      (translator's send path fails closed, so this is UX only). Align it with
-      `_getAiEngine`'s fail-closed contract or document why not.
-- [ ] **Local format gate.** CI caught a Prettier drift post-push (PR #276,
-      first `validate` run). Add `prettier --check` to the pre-push/local pipeline
-      so the formatting gate runs before CI, not in it.
+- [x] **Sidebar `_currentEngine()` display-only fail-open.** _(Verified
+      2026-08-10 — already resolved, this entry was stale.)_ Resolved via the
+      "document why not" branch, not alignment: the two functions differ in
+      one word on purpose (translator's `_getAiEngine()` timeout rejects —
+      fail closed, it gates what leaves the machine; the sidebar's
+      `_currentEngine()` timeout resolves — fail open, it only picks which
+      offline explanation to show, and the send path re-reads the preference
+      through the fail-closed gate regardless). `tests/local-engine.test.js`
+      ("only the send-path gate fails closed; the offline-notice helper does
+      not") locks the asymmetry and asserts the rationale comment is present,
+      so aligning them would break a passing test as well as reintroduce the
+      cloud-fail-open risk the asymmetry exists to prevent.
+- [x] **Local format gate.** _(2026-08-10)_ Added `.githooks/pre-push`
+      (mirrors CI's `Check formatting` step: `prettier --check` over the same
+      globs) plus a `prepare` script in `package.json` that runs
+      `git config core.hooksPath .githooks` on `npm install`, so a
+      contributor's push is blocked locally before CI ever sees the drift.
 
 ### P2 — service quality after the store build is live
 
