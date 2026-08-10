@@ -33,7 +33,12 @@ const batches = [
     'tests/e2e/viewport-polish.spec.js',
     'tests/e2e/shadow-isolation.spec.js',
   ],
-  ['tests/e2e/code-comments.spec.js', 'tests/e2e/dashboard.spec.js', 'tests/e2e/exam-mode.spec.js'],
+  [
+    'tests/e2e/code-comments.spec.js',
+    'tests/e2e/dashboard.spec.js',
+    'tests/e2e/exam-mode.spec.js',
+    'tests/e2e/notes.spec.js',
+  ],
   [
     'tests/e2e/golden-translation.spec.js',
     'tests/e2e/idb-cache.spec.js',

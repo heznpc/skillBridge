@@ -64,6 +64,7 @@ function buildSidebarHTML({ bridge }) {
     FLASHCARD_LABELS: { openFlashcards: named('openFlashcards') },
     PDF_EXPORT_LABELS: { title: named('pdfTitle') },
     BOOKMARK_LABELS: { openBookmarks: named('openBookmarks') },
+    NOTE_LABELS: { openNotes: named('openNotes') },
     RESUME_LABELS: { openRecent: named('openRecent') },
     CHAT_PLACEHOLDERS: named('chatPlaceholder'),
     SEND_LABELS: named('send'),
@@ -127,9 +128,9 @@ describe('sidebar surface when the host has no AI bridge', () => {
 
   test('local study tools stay available on a bridge-less host', () => {
     const html = buildSidebarHTML({ bridge: false });
-    // Flashcards, bookmarks, recent and the dashboard are all local; only the
-    // AI transport is missing, so removing them too would be a regression.
-    for (const id of ['si18n-fc-btn', 'si18n-bm-btn', 'si18n-recent-btn', 'si18n-dash-btn']) {
+    // Flashcards, bookmarks, notes, recent and the dashboard are all local;
+    // only the AI transport is missing, so removing them too would be a regression.
+    for (const id of ['si18n-fc-btn', 'si18n-bm-btn', 'si18n-note-btn', 'si18n-recent-btn', 'si18n-dash-btn']) {
       expect(html).toContain(id);
     }
   });

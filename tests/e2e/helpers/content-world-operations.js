@@ -310,6 +310,56 @@ async function evalInContentWorld(context, op, arg) {
                   const stats = root.querySelectorAll('.si18n-dash-stat').length;
                   return { title, stats };
                 },
+                toggleNotesPanel: () => {
+                  window._sb._chat.toggleNotesPanel();
+                  return true;
+                },
+                openNoteCompose: () => {
+                  const root = window._sb._uiHost?.shadowRoot || document;
+                  const btn = root.getElementById('si18n-note-add');
+                  if (!btn) return { error: 'note-add button not present' };
+                  btn.click();
+                  return { ok: true };
+                },
+                cancelNoteCompose: () => {
+                  const root = window._sb._uiHost?.shadowRoot || document;
+                  const btn = root.getElementById('si18n-note-cancel');
+                  if (!btn) return { error: 'note-cancel button not present' };
+                  btn.click();
+                  return { ok: true };
+                },
+                // Requires openNoteCompose to have run first (the textarea only
+                // exists while the compose row is mounted).
+                writeAndSaveNote: (text) => {
+                  const root = window._sb._uiHost?.shadowRoot || document;
+                  const textarea = root.getElementById('si18n-note-input');
+                  const saveBtn = root.getElementById('si18n-note-save');
+                  if (!textarea || !saveBtn) return { error: 'note compose not open' };
+                  textarea.value = text;
+                  saveBtn.click();
+                  return { ok: true };
+                },
+                readNoteComposeValue: () => {
+                  const root = window._sb._uiHost?.shadowRoot || document;
+                  const textarea = root.getElementById('si18n-note-input');
+                  return { open: !!textarea, value: textarea?.value ?? null };
+                },
+                readNotesList: () => {
+                  const root = window._sb._uiHost?.shadowRoot || document;
+                  const items = root.querySelectorAll('#si18n-note-list .si18n-bm-item');
+                  return Array.from(items).map((el) => ({
+                    title: el.querySelector('.si18n-bm-title')?.textContent?.trim() || '',
+                    preview: el.querySelector('.si18n-note-preview')?.textContent?.trim() || '',
+                  }));
+                },
+                removeNoteAt: (i) => {
+                  const root = window._sb._uiHost?.shadowRoot || document;
+                  const btns = root.querySelectorAll('#si18n-note-list .si18n-bm-remove');
+                  const btn = btns[Number(i)];
+                  if (!btn) return { error: 'no note remove button at index ' + i };
+                  btn.click();
+                  return { ok: true };
+                },
                 toggleHistoryPanel: () => {
                   window._sb._chat.toggleHistoryPanel();
                   return true;
