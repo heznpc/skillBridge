@@ -52,16 +52,22 @@ current privacy/package changes and must not be reused for the upload.
   - Verify: `npm run glossary`, `npm run validate`,
     `npm run check:dict-coverage`, `npm run check:locales`, `npm run docs`.
 
-- [x] **Build, smoke, and freeze the upload artifact.** _(2026-07-29)_
-      The integrated release gates passed (**695 unit tests across 38 suites and
-      49 Chromium E2E tests across eight resource-bounded batches**, including the
-      malicious Puter-query stored-token regression and the live Ollama round trip).
-      The ZIP was rebuilt and recorded as **69 files / 713,791 bytes / SHA-256
-      `227aafe440ce747f5caeab9a2830615876afdcdf68d7bef962ba30b144a3dd66`**, the
-      extracted archive diffs byte-for-byte against `dist/bundled`, and
-      `check-rhc` is clean on both. Promo MP4s/thumbnails/manifest were
-      regenerated from the current `demo.webm`; all five 1280×800 screenshots and
-      the promo tile were recaptured from the current CWS bundle and inspected.
+- [x] **Build, smoke, and freeze the upload artifact.** _(Refreshed 2026-08-11
+      — the 2026-07-29 freeze below predates this session's `notes.js` /
+      `term-reports.js` additions and was stale.)_ `npm run release:verify`
+      re-run clean: full Jest suite + all 8 E2E batches green (incl. the new
+      `notes.spec.js`/`term-reports.spec.js`, the malicious Puter-query
+      stored-token regression, and the live-Ollama batch skipping as expected
+      with no local server). The ZIP is now **114 files / 724,597 bytes /
+      SHA-256 `a1c6803b0a63e1eb463e0c75623a393590c0c1f821fd9e8e18f0b5db920f91eb`**
+      — file count moved from 69 to 114 because this recount includes the
+      per-locale directory entries the earlier count skipped, not new
+      content; the actual new content is the two feature modules plus their
+      manifest/constants/CSS wiring. Extracted archive still diffs
+      byte-for-byte against `dist/bundled`, `check-rhc` clean on both. Promo
+      assets were not regenerated this pass (no visual/listing change since
+      2026-07-29) — re-run `npm run capture:store` only if screenshots need
+      to show the new Notes/Reports panels before upload.
   - DoD: `dist/bundled` is fresh, first-user smoke passes, bundled zip is
     rebuilt, and generated store assets match the current icon/listing state.
   - Verify: `npm run release:smoke`, then `npm run release:verify` before the
