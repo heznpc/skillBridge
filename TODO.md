@@ -92,13 +92,23 @@ current privacy/package changes and must not be reused for the upload.
       description, then upload the media to the store listing. Regenerated and
       visually inspected the five screenshots and promo tile on 2026-07-29; upload
       remains part of the dashboard step.
-- [ ] **Manual real-tab bundled-extension smoke.** Load `dist/bundled` in
-      Chrome and check popup startup, translation, language switch, flashcards,
-      bookmarks/recent/dashboard, exam-safe disable, dark mode, the known manual
-      YouTube-caption gap, cloud/local/off Tutor modes, and that the host page cannot
-      observe or forge the extension-Port Tutor transport through SDK globals or
-      window messages. The visible Tutor UI remains in the shared page DOM, so this
-      check does not claim that keyboard events or rendered chat text are hidden.
+- [ ] **Manual real-tab bundled-extension smoke.** _(Partially done 2026-08-11
+      — real Chrome, real logged-in Skilljar account, real Puter-backed
+      response, driven live via claude-in-chrome.)_ Confirmed working: page
+      translation (Claude 101, full Korean), sidebar Tutor open, all 8
+      Tools-menu items render correctly localized including the two new
+      ones (**Notes** and **Reports** — composed, saved, listed, exported,
+      removed, end to end on the real account, test data cleaned up
+      afterward), Bookmarks panel opens, dark mode toggles the whole
+      surface including the sidebar, and a real chat message got a real
+      streamed Claude response with course-context injection (mentioned
+      the actual 85%-complete progress) and correct markdown rendering.
+      Still not checked: flashcards, dashboard, recent-lessons, PDF export
+      detail behavior, exam-safe disable, the known manual YouTube-caption
+      gap, local/off Tutor engine switching, and the host-page transport-
+      forgery check (that one has automated E2E coverage already —
+      `tutor-chat.spec.js` — but not a fresh manual pass this session).
+      Load `dist/bundled` in Chrome to close out the rest.
 - [ ] **Keep the publication pause.** Do not remove
       `CWS_PUBLICATION_PAUSED` during code cleanup or dashboard draft preparation.
       Only after external scope approval, a newly versioned ZIP passes all gates,
