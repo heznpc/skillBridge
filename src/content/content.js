@@ -13,12 +13,35 @@
   if (window.__skillbridge_initialized__) return;
   window.__skillbridge_initialized__ = true;
 
+  const providerApi = window._sbLmsProviders;
+  let providerResolution = providerApi?.probe?.({ document, location }) || null;
+
+  // The manifest should only inject on registered surfaces. Fail closed if its
+  // host patterns and the provider registry ever drift apart.
+  if (!providerResolution) {
+    console.info('[SkillBridge] No LMS provider matched this page — extension disabled.');
+    return;
+  }
+
   // ── Certification exam kill-switch ──────────────────────────
   // Proctored exams (CCA-F etc.): disable extension entirely so it
-  // cannot be mistaken for a cheating tool.
-  if (CERT_DISABLE_PATTERNS.some((p) => p.test(location.href))) {
+  // cannot be mistaken for a cheating tool. Keep the core pattern check as a
+  // non-bypassable safety floor in addition to the provider preflight.
+  if (CERT_DISABLE_PATTERNS.some((p) => p.test(location.href)) || providerResolution.restricted.restricted) {
     console.info('[SkillBridge] Certification exam page detected — extension disabled.');
     return;
+  }
+
+  // Page discovery is deliberately after the restricted preflight. A blocked
+  // route never proceeds into metadata, translation target, or tool discovery.
+  providerResolution = providerApi.describe(providerResolution);
+
+  function refreshProviderResolution(href = location.href) {
+    const probed = providerApi.probe({ document, location, href });
+    if (!probed || probed.restricted.restricted) return probed;
+    const next = providerApi.describe(probed);
+    if (next) providerResolution = next;
+    return next;
   }
 
   // Keep the broad Skilljar host permission safe: non-AI Skilljar tenants pause
@@ -32,8 +55,8 @@
 
   aiGate.evaluate({ logPause: true });
 
-  // Target ALL visible text elements — including Skilljar-specific
-  // Skilljar selectors are centralized in src/lib/selectors.js
+  // Target all visible text elements. Provider-specific additions live in the
+  // active provider rather than in the core translation pipeline.
   const TRANSLATABLE_SELECTOR = [
     'h1',
     'h2',
@@ -53,12 +76,6 @@
     'blockquote',
     'dt',
     'dd',
-    SKILLJAR_SELECTORS.courseBox,
-    SKILLJAR_SELECTORS.courseBoxDesc,
-    SKILLJAR_SELECTORS.ribbonText,
-    SKILLJAR_SELECTORS.courseTime,
-    SKILLJAR_SELECTORS.faqTitle,
-    `${SKILLJAR_SELECTORS.faqPost} p`,
     'div.title',
     // Course-author "course roadmap" widget (embedded HTML block). Plain divs
     // with text that `div.title` doesn't match — without these the roadmap
@@ -66,15 +83,7 @@
     // translated.
     '.crm-title',
     '.crm-card-h',
-    `${SKILLJAR_SELECTORS.lessonRow} div.title, ${SKILLJAR_SELECTORS.lessonRow} .lesson-wrapper div`,
-    SKILLJAR_SELECTORS.focusLink,
-    SKILLJAR_SELECTORS.sectionTitle,
-    SKILLJAR_SELECTORS.leftNavReturn,
-    SKILLJAR_SELECTORS.courseOverview,
-    `${SKILLJAR_SELECTORS.lessonTop} h2`,
-    SKILLJAR_SELECTORS.detailsPane,
-    SKILLJAR_SELECTORS.courseFamilyTitle,
-    SKILLJAR_SELECTORS.courseRatingText,
+    ...providerResolution.page.translationInclude,
   ].join(', ');
 
   const EXCLUDE_SELECTOR = [
@@ -92,7 +101,7 @@
     '.site-header nav',
     'nav.navbar',
     'footer',
-    SKILLJAR_SELECTORS.aiTutor, // [class*="ai-tutor"] already covers button & panel variants
+    ...providerResolution.page.translationExclude,
   ].join(', ');
 
   let translator = null;
@@ -145,12 +154,7 @@
   // ============================================================
 
   function detectExamPage() {
-    const url = location.href;
-    if (EXAM_URL_PATTERNS.some((p) => p.test(url))) return true;
-    // DOM-based detection: check for quiz forms or answer option containers
-    if (document.querySelector(SKILLJAR_SELECTORS.quizForm)) return true;
-    if (document.querySelector(SKILLJAR_SELECTORS.answerOption)) return true;
-    return false;
+    return !!refreshProviderResolution()?.page.quizDetected;
   }
 
   const moduleRegistry = new Map();
@@ -224,6 +228,15 @@
     },
     get certDisabled() {
       return isCertDisabled;
+    },
+    get provider() {
+      return providerResolution.provider;
+    },
+    get providerContext() {
+      return providerResolution.page;
+    },
+    get lessonIdentity() {
+      return providerResolution.page.lessonIdentity;
     },
     // Read-only observability seam for the YouTube subtitle-manager lifecycle
     // (created at init, torn down on cert-page nav, rebuilt on return). No
@@ -716,8 +729,7 @@
   }
 
   function getPageContext() {
-    const title =
-      document.querySelector(`h1, h2, ${SKILLJAR_SELECTORS.courseTitle}`)?.textContent || document.title || '';
+    const title = providerResolution.page.metadata.title || document.title || '';
     if (isExamPage) {
       return `Certification Exam: ${title}. Page type: exam/assessment. DO NOT help with answers.`;
     }
@@ -732,7 +744,7 @@
       .slice(0, 8)
       .map((h, i) => (i === currentIdx ? `▶ ${h.textContent.trim()}` : h.textContent.trim()))
       .join(', ');
-    const lessonBody = document.querySelector('#lesson-main, .lesson-content, .course-content, main');
+    const lessonBody = document.querySelector(providerResolution.page.contentRootSelector);
     // Viewport-centred extract: long lessons used to send only the FIRST
     // 2,000 chars, so questions about anything past the fold had no grounding.
     // Now: a short lesson opening for global context + the text from the block
@@ -774,6 +786,7 @@
   // Skilljar selector dictionary.
   sb.translatableSelector = TRANSLATABLE_SELECTOR;
   sb.excludeSelector = EXCLUDE_SELECTOR;
+  sb.examSkipSelectors = providerResolution.page.examSkipSelectors;
   // Per-host capability profile — the single source of truth (platform.js) for
   // which features may run on this host. Threaded as sb.hostCaps so every
   // host-specific behaviour reads one place instead of ad-hoc host compares.
@@ -799,11 +812,17 @@
     examDetection: true,
     youtubeSubtitles: true,
   };
-  sb.translationScope = sb.hostCaps.contentScope;
+  sb.translationScope = providerResolution.page.translationScope;
 
   const routeController = window._sbContentLifecycle.createRouteController({
     getHref: () => location.href,
-    isCertificationHref: (href) => sb.hostCaps.examDetection && CERT_DISABLE_PATTERNS.some((p) => p.test(href)),
+    isCertificationHref: (href) => {
+      // Provider context is refreshed on every SPA route before any other
+      // lifecycle work. The core patterns remain a safety floor that a future
+      // provider cannot weaken.
+      const next = refreshProviderResolution(href);
+      return CERT_DISABLE_PATTERNS.some((p) => p.test(href)) || !!next?.restricted.restricted;
+    },
     teardownCertificationSurface,
     evaluateGate: (opts) => aiGate.evaluate(opts),
     isGatePaused: () => aiGate.paused,
@@ -820,6 +839,8 @@
     ensureSubtitleManager,
     redetectExamPage: () => {
       isExamPage = sb.hostCaps.examDetection ? detectExamPage() : false;
+      sb.examSkipSelectors = providerResolution.page.examSkipSelectors;
+      sb.translationScope = providerResolution.page.translationScope;
     },
     reapplyTranslations: () => {
       if (currentLang !== 'en' && translator && isReady) {

@@ -374,6 +374,7 @@ if (typeof window !== 'undefined') {
     isPlatformSupported,
     detectAITrainingContent,
     getHostCapabilities,
+    CLAUDE_TUTORIAL_CONTENT_SCOPE,
     PLATFORM_IDS,
   };
 }

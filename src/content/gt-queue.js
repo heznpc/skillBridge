@@ -96,7 +96,7 @@
   // may not be loaded until later). content.js exposes the prebuilt strings
   // via `sb.translatableSelector` / `sb.excludeSelector` (added in v3.5.15).
   function getTranslatableElements() {
-    const examSkip = sb.isExamPage ? EXAM_SKIP_SELECTORS.join(', ') : null;
+    const examSkip = sb.isExamPage ? (sb.examSkipSelectors || EXAM_SKIP_SELECTORS).join(', ') : null;
     const TRANSLATABLE_SELECTOR = sb.translatableSelector;
     const EXCLUDE_SELECTOR = sb.excludeSelector;
     // On scoped hosts (e.g. claude.com tutorials) restrict the walk to the
@@ -160,7 +160,7 @@
     // caching or transmitting the leaked text. Bailing here keeps exam text
     // out of the GT queue and the IndexedDB cache entirely.
     if (sb.isExamPage) {
-      const examSkip = EXAM_SKIP_SELECTORS.join(', ');
+      const examSkip = (sb.examSkipSelectors || EXAM_SKIP_SELECTORS).join(', ');
       if (el.matches(examSkip) || el.closest(examSkip)) return null;
     }
 

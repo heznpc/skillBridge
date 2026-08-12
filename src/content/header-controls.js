@@ -46,8 +46,9 @@
       return;
     }
 
-    const headerRight = document.querySelector(SKILLJAR_SELECTORS.headerRight);
-    const linksContainer = headerRight?.querySelector(SKILLJAR_SELECTORS.headerLinks);
+    const anchors = sb.providerContext?.uiAnchors;
+    const headerRight = anchors?.headerRight ? document.querySelector(anchors.headerRight) : null;
+    const linksContainer = anchors?.headerLinks ? headerRight?.querySelector(anchors.headerLinks) : null;
     if (!headerRight || !linksContainer) return;
     headerRight.insertBefore(createDarkToggleButton(), linksContainer);
   }
@@ -66,9 +67,10 @@
   function injectHeaderLanguageSelect() {
     if (document.getElementById('si18n-header-lang')) return;
 
-    const headerRight = document.querySelector(SKILLJAR_SELECTORS.headerRight);
+    const anchors = sb.providerContext?.uiAnchors;
+    const headerRight = anchors?.headerRight ? document.querySelector(anchors.headerRight) : null;
     if (!headerRight) return;
-    const linksContainer = headerRight.querySelector(SKILLJAR_SELECTORS.headerLinks);
+    const linksContainer = anchors?.headerLinks ? headerRight.querySelector(anchors.headerLinks) : null;
     if (!linksContainer) return;
 
     // Header controls are *blend-in* components and stay in the light DOM by

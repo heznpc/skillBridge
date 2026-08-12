@@ -29,6 +29,7 @@
         "src/lib/selectors.js",
         "src/shared/runtime-constants.js",
         "src/lib/constants.js",
+        "src/lib/lms-provider.js",
         "src/lib/translator.js",
         "src/lib/youtube-subtitles.js",
         "src/lib/protected-terms.js",
