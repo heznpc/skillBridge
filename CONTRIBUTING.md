@@ -26,9 +26,11 @@ Thank you for your interest in contributing! SkillBridge makes Anthropic's educa
 ## Quick Start
 
 ```bash
-# 1. Fork & clone
-git clone https://github.com/heznpc/skillbridge.git
+# 1. Fork on GitHub (top-right button), then clone YOUR fork
+#    — cloning this repository directly means `git push` will fail with 403
+git clone https://github.com/YOUR_USERNAME/skillbridge.git
 cd skillbridge
+git remote add upstream https://github.com/heznpc/skillbridge.git
 
 npm install
 npm run build:bundle
@@ -402,6 +404,34 @@ git push origin fix/ko-prompt-translation
 
 # 7. Open a PR on GitHub — done!
 ```
+
+### If your PR won't open cleanly
+
+Three known traps, all recoverable:
+
+**`git push` fails with 403 / "permission denied".** You cloned this
+repository instead of your fork. You never need push access here: fork on
+GitHub, push your branch to your fork, and open the PR from there.
+
+**The compare page shows dozens of commits that aren't yours, or conflicts
+in files you never touched.** Your fork predates the March 2026 history
+rewrite — early history was renumbered, so old and current commits share
+messages but not SHAs, and Git can no longer line the two histories up.
+Don't try to merge through it; rebuild your branch on current history
+instead. Your own commits survive intact:
+
+```bash
+git fetch upstream                    # see Quick Start for adding the remote
+git checkout -b my-change-v2 upstream/main
+git cherry-pick <sha-of-your-commit>  # repeat for each commit that is yours
+git push origin my-change-v2          # then open the PR from this branch
+```
+
+**Checks sit on "workflow awaiting approval".** CI for a first-time
+contributor starts only after a maintainer approves the run — a GitHub
+safety default, not a problem with your PR. It normally gets approved at
+review time; leave a comment on the PR if it sits longer than a couple of
+days.
 
 ### Review Timeline
 
