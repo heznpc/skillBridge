@@ -411,7 +411,14 @@ Three known traps, all recoverable:
 
 **`git push` fails with 403 / "permission denied".** You cloned this
 repository instead of your fork. You never need push access here: fork on
-GitHub, push your branch to your fork, and open the PR from there.
+GitHub, push your branch to your fork, and open the PR from there. Already
+cloned and done work in it? Keep everything — just re-point the remotes:
+
+```bash
+git remote rename origin upstream
+git remote add origin https://github.com/YOUR_USERNAME/skillbridge.git
+git push -u origin your-branch-name   # then open the PR from your fork
+```
 
 **The compare page shows dozens of commits that aren't yours, or conflicts
 in files you never touched.** Your fork predates the March 2026 history
