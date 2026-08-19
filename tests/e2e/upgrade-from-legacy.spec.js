@@ -151,16 +151,19 @@ test.describe('SkillBridge — upgrade from the published v1.0.1', () => {
     expect(state.persistedTokenMatches).toBe(false);
   });
 
-  test('the shipped bundle requests cache schema v2, which is what triggers the drop', async () => {
+  test('the shipped bundle requests cache schema v3, which is what triggers the drop', async () => {
     await waitForCacheOpen(extCtx.context, page);
     const databases = await page.evaluate(async () => {
       const list = await indexedDB.databases();
       return list.map(({ name, version }) => ({ name, version }));
     });
-    // v1.0.1 wrote this same store at version 1. Requesting 2 is what makes
-    // onupgradeneeded fire for every upgrading user and drop the rows its
-    // Puter/Gemini verify step could have poisoned.
-    expect(databases).toEqual(expect.arrayContaining([{ name: 'skillbridge-cache', version: 2 }]));
+    // v1.0.1 wrote this same store at version 1, and every build before
+    // brand-term masking wrote it at 2. Requesting 3 is what makes
+    // onupgradeneeded fire for every upgrading user and drop both the rows
+    // v1.0.1's Puter/Gemini verify step could have poisoned and the v2 rows
+    // that may hold a mistranslated brand name (observed live:
+    // `ko\tAnthropic 과정` → `인류학적 과정`).
+    expect(databases).toEqual(expect.arrayContaining([{ name: 'skillbridge-cache', version: 3 }]));
   });
 
   test('the drop is scoped to the upgrade — a normal reload keeps the cache', async () => {

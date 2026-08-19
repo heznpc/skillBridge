@@ -127,6 +127,14 @@ async function evalInContentWorld(context, op, arg) {
                     },
                   };
                 },
+                // Re-run the static pass exactly as the LATE_CONTENT timer and
+                // every SPA route change do. This is the entry point that used
+                // to feed the dictionary's own output back through Google
+                // Translate; see the double-translation spec.
+                reapplyStaticTranslations: async (lang) => {
+                  window._sb._gt.applyStaticTranslations(lang);
+                  return true;
+                },
                 switchLanguage: async (lang) => {
                   await window._sb.switchLanguage(lang);
                   return true;
@@ -429,6 +437,7 @@ async function evalInContentWorld(context, op, arg) {
                   // #p-protected exists in the lesson fixture specifically for
                   // protected-terms.spec.js — the GT stub returns mistranslated
                   // content and we assert the wrong forms got fixed.
+                  brandHeading: document.querySelector('#h-brand-short')?.textContent?.trim() ?? null,
                   pProtected:
                     document.querySelector('#p-protected') && document.querySelector('#p-protected').textContent,
                   pBelowFold:

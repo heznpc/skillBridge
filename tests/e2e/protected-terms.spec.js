@@ -27,7 +27,13 @@
 
 const { test, expect } = require('@playwright/test');
 const { launchExtension, closeExtension, evalInContentWorld } = require('./helpers/extension');
-const { registerStubs, startFixtureServer, stopFixtureServer } = require('./helpers/network-stubs');
+const {
+  registerStubs,
+  startFixtureServer,
+  stopFixtureServer,
+  getGTRequestCount,
+  resetGTRequestCount,
+} = require('./helpers/network-stubs');
 
 test.describe('SkillBridge — protected terms restoration', () => {
   /** @type {Awaited<ReturnType<typeof launchExtension>>} */
@@ -132,5 +138,54 @@ test.describe('SkillBridge — protected terms restoration', () => {
     expect(pt.pProtected).toContain('Anthropic');
     expect(pt.pProtected).toContain('Claude');
     expect(pt.pProtected).toContain('프런티어 모델로');
+  });
+
+  // Idempotency invariant for the repeated static pass.
+  //
+  // Background: `applyStaticTranslations` re-runs on a LATE_CONTENT timer and
+  // on every SPA route change, re-scanning the whole page. On the live site
+  // that fed the static dictionary's own output back into Google Translate —
+  // "Anthropic courses" became "Anthropic 과정" (correct), and the next pass
+  // read that back as English (it is 82% Latin) and shipped it to GT, which
+  // returned "인류학적 과정". The IndexedDB cache still held the proof: a row
+  // keyed `ko\tAnthropic 과정`, i.e. an already-translated key.
+  //
+  // HONEST SCOPE: this asserts the invariant (a repeat pass issues no GT
+  // traffic and changes no text); it does NOT reproduce the live defect —
+  // removing the `alreadyTranslated` guard still leaves it green, because this
+  // fixture does not exercise whichever entry path re-queued the element on the
+  // real page. The user-visible half of the bug is covered structurally by
+  // brand-term masking (protected-terms.test.js, plus a 12-locale live check
+  // against the real GT endpoint), and the guard's wiring by
+  // gt-queue.test.js. Left in place because the invariant is worth pinning,
+  // but do not read a pass here as proof the re-send path is dead.
+  test('a repeated static pass never re-sends text we already translated', async () => {
+    await evalInContentWorld(extCtx.context, 'switchLanguage', 'ko');
+    await page.waitForTimeout(1500);
+
+    // "Anthropic courses" is in the static dictionary, so the first pass
+    // renders "Anthropic 과정" without touching the network. That output is
+    // 82% Latin and 12 characters — over both thresholds processOneElement
+    // uses — which is exactly what made the next pass treat it as English.
+    const before = await evalInContentWorld(extCtx.context, 'pageText');
+    expect(before.brandHeading).toBe('Anthropic 과정');
+
+    // Assert on the NETWORK, not the rendered text: a re-send is the defect
+    // itself, and whether its response happens to survive validation is
+    // incidental. Counting requests fails loudly the moment the guard goes.
+    resetGTRequestCount();
+
+    // Three more passes: the LATE_CONTENT re-scan plus SPA route changes.
+    for (let i = 0; i < 3; i++) {
+      await evalInContentWorld(extCtx.context, 'reapplyStaticTranslations', 'ko');
+      await page.waitForTimeout(500);
+    }
+
+    expect(getGTRequestCount()).toBe(0);
+    const after = await evalInContentWorld(extCtx.context, 'pageText');
+    expect(after.brandHeading).toBe('Anthropic 과정');
+    expect(after.h1).toBe(before.h1);
+    expect(after.pProtected).toContain('Anthropic');
+    expect(after.pProtected).toContain('Claude');
   });
 });

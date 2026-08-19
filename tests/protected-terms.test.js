@@ -377,3 +377,93 @@ describe('restore engine — substring/boundary safety', () => {
     expect(restoreProtectedTerms('克洛德是一个 AI 助手')).toBe('Claude是一个 AI 助手');
   });
 });
+
+// ============================================================
+// BRAND-TERM MASKING (pre-GT chokepoint)
+// ============================================================
+//
+// Regression cover for the brand-name loss found live on
+// anthropic.skilljar.com 2026-08-19: Google Translate reads "Anthropic" as the
+// adjective and renders it 인류학적 / 人類 / antrópico / Антропный in every
+// curated locale. A wrong-form blocklist cannot fix that (GT's output varies
+// run to run, and the wrong forms are ordinary words in the target language —
+// which is why those entries were removed in #172). Masking removes the term
+// from GT's view instead, so there is nothing left to mistranslate.
+describe('maskProtectedTerms / unmaskProtectedTerms', () => {
+  const { maskProtectedTerms, unmaskProtectedTerms } = fakeWindow._protectedTerms;
+
+  beforeEach(() => {
+    resetProtectedTerms();
+    buildProtectedTermsMap('ko', fakeTranslator(koProtected));
+  });
+
+  test('a protected term leaves the text as an index placeholder', () => {
+    const { text, tokens } = maskProtectedTerms('Anthropic courses');
+    expect(text).toBe('⟦0⟧ courses');
+    expect(tokens).toEqual(['Anthropic']);
+    // The whole point: the payload GT receives no longer contains the brand.
+    expect(text).not.toContain('Anthropic');
+  });
+
+  test('round-trips back to the original term', () => {
+    const { text, tokens } = maskProtectedTerms('Anthropic courses');
+    // Stand in for GT: translate the non-placeholder words only.
+    expect(unmaskProtectedTerms(text.replace('courses', '과정'), tokens)).toBe('Anthropic 과정');
+  });
+
+  test('survives a translation that reorders the placeholders', () => {
+    const { text, tokens } = maskProtectedTerms('Claude is built by Anthropic');
+    expect([...tokens].sort()).toEqual(['Anthropic', 'Claude']);
+    // Placeholders in the order they appear in the SOURCE text.
+    const [first, second] = text.match(/⟦\d+⟧/g);
+    // Korean is SOV: GT moves the trailing subject ahead of the object. Restore
+    // is by index, not position, so the reordering must survive intact.
+    expect(unmaskProtectedTerms(`${second}가 만든 ${first}`, tokens)).toBe('Anthropic가 만든 Claude');
+  });
+
+  test('token indices are assigned by term length, not position in the text', () => {
+    // Masking walks the longest term first so a multi-word term claims its
+    // words before a shorter term can. Index order therefore follows term
+    // length, which is why restoration must map by index rather than order.
+    const { text, tokens } = maskProtectedTerms('Claude is built by Anthropic');
+    expect(tokens[0]).toBe('Anthropic');
+    expect(text).toBe('⟦1⟧ is built by ⟦0⟧');
+  });
+
+  test('longest-first: a multi-word term masks as one unit', () => {
+    resetProtectedTerms();
+    buildProtectedTermsMap('ko', fakeTranslator({ ...koProtected, 'Anthropic Academy': ['앤스로픽 아카데미'] }));
+    const { text, tokens } = maskProtectedTerms('Welcome to Anthropic Academy');
+    expect(tokens).toEqual(['Anthropic Academy']);
+    expect(text).toBe('Welcome to ⟦0⟧');
+  });
+
+  test('letter-boundary anchored — never masks inside a longer word', () => {
+    // "Claudio" is a real Italian name; "APIs" is a plural, not the term.
+    expect(maskProtectedTerms('Claudio uses several APIs').tokens).toEqual([]);
+    expect(maskProtectedTerms('Claudio uses several APIs').text).toBe('Claudio uses several APIs');
+  });
+
+  test('text with no protected term is returned untouched and unmasked', () => {
+    const { text, tokens } = maskProtectedTerms('Getting started with prompts');
+    expect(tokens).toEqual([]);
+    expect(text).toBe('Getting started with prompts');
+  });
+
+  test('fails closed when the translator drops a placeholder', () => {
+    const { tokens } = maskProtectedTerms('Anthropic courses');
+    // Brand silently gone: returning the partial text would ship a lesson
+    // title with the company name deleted, so the round trip is rejected.
+    expect(unmaskProtectedTerms('과정', tokens)).toBeNull();
+  });
+
+  test('fails closed when placeholder syntax survives into the output', () => {
+    const { tokens } = maskProtectedTerms('Anthropic courses');
+    expect(unmaskProtectedTerms('⟦0⟧ 과정 ⟦', tokens)).toBeNull();
+    expect(unmaskProtectedTerms('⟦99⟧ 과정', tokens)).toBeNull();
+  });
+
+  test('no tokens → passthrough, so unmasking never blocks ordinary text', () => {
+    expect(unmaskProtectedTerms('평범한 번역문', [])).toBe('평범한 번역문');
+  });
+});

@@ -28,7 +28,7 @@ const http = require('http');
 const path = require('path');
 
 const { evalInContentWorld, makePatchedExtension } = require('./tests/e2e/helpers/extension');
-const { registerStubs, GT_KO, buildGTResponse } = require('./tests/e2e/helpers/network-stubs');
+const { registerStubs, GT_KO, buildGTResponse, translateLikeGoogle } = require('./tests/e2e/helpers/network-stubs');
 
 const FIXTURES = path.join(__dirname, 'store-assets', 'fixtures');
 const TEMPLATES = path.join(__dirname, 'store-assets', 'templates');
@@ -129,11 +129,15 @@ module.exports = {
       }
       if (flags && flags.liveGt) return route.continue(); // real Google Translate
       // Default: frozen map; unmapped strings fall back to the ORIGINAL text so
-      // a forgotten string stays clean English instead of an [UNTRANSLATED] marker.
+      // a forgotten string stays clean English instead of an [UNTRANSLATED]
+      // marker. Routed through the shared stub translator so masked requests
+      // (brand terms are hidden behind ⟦0⟧ placeholders before they reach GT)
+      // resolve against the frozen map and come back with their placeholders
+      // intact — otherwise every branded string would look "unmapped" here.
       return route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify(buildGTResponse(MAP[norm] || norm)),
+        body: JSON.stringify(buildGTResponse(translateLikeGoogle(norm, MAP, (t) => t))),
       });
     });
 
