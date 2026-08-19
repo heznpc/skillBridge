@@ -48,6 +48,12 @@
       NOT make it to the DOM.
     -->
     <p id="p-protected">Anthropic released Claude as a frontier model.</p>
+    <!-- Short heading whose STATIC translation ("Anthropic 과정") is 82% Latin
+         characters and 12 chars long — over both thresholds processOneElement
+         uses, so a second static pass used to classify our own output as
+         English and ship it to Google Translate. Reproduces the live
+         "인류학적 과정" defect; see the double-translation test. -->
+    <h2 id="h-brand-short">Anthropic courses</h2>
 
     <!--
       Code block for tests/e2e/code-comments.spec.js. The Python comment

@@ -46,6 +46,15 @@
   let gtProcessing = false;
   let gtGeneration = 0;
   let _offlinePendingItems = [];
+  // Element → the text WE last wrote into it, plus the generation we wrote it
+  // in. `applyStaticTranslations` is not one-shot: it re-runs on a LATE_CONTENT
+  // timer and on every SPA route change, re-scanning the whole page each time.
+  // Without this record our own output re-enters processOneElement as if it
+  // were source English — which is how "Anthropic courses" → static →
+  // "Anthropic 과정" → GT → "인류학적 과정" happened. Keyed by generation so a
+  // language switch (which bumps it) deliberately invalidates every mark.
+  // WeakMap so detached nodes get GC'd.
+  const _lastWritten = new WeakMap();
   // One IntersectionObserver per language generation. Constructed lazily
   // (first applyStaticTranslations call); disconnected + nulled in reset()
   // and bumpGeneration(). The generation it was built for is captured in
@@ -149,6 +158,10 @@
   function processOneElement(el, _targetLang) {
     const fullText = el.textContent.trim();
     if (!fullText || fullText.length < 2) return null;
+    // Idempotency chokepoint: never re-process text this generation already
+    // produced. Every entry path (initial scan, LATE_CONTENT re-scan, lazy
+    // observer, DOM-mutation path) lands here, so one guard covers them all.
+    if (alreadyTranslated(el, fullText)) return null;
     if (!isLikelyEnglish(fullText)) return null;
 
     // Exam/quiz safety CHOKEPOINT: never translate answer-choice elements, no
@@ -172,7 +185,10 @@
     const translator = sb.translator;
     const elementMatch = translator.staticLookup(fullText);
     if (elementMatch) {
-      if (sb.safeReplaceText(el, elementMatch) !== false) return 'static';
+      if (sb.safeReplaceText(el, elementMatch) !== false) {
+        markTranslated(el);
+        return 'static';
+      }
       // Guard refused the collapse (block carries link/button labels) — fall
       // through to the per-node static pass below, which replaces text node
       // by node and never flattens inline structure.
@@ -194,7 +210,11 @@
     }
 
     if (!allNodesMatched && fullText.length >= 10) return 'gt';
-    return matchCount > 0 ? 'static' : null;
+    if (matchCount > 0) {
+      markTranslated(el);
+      return 'static';
+    }
+    return null;
   }
 
   // ============================================================
@@ -587,10 +607,33 @@
   // BOOKKEEPING — element tracking + memory cap + verify spinner
   // ============================================================
 
+  /**
+   * Record what we just rendered into `el` so a later pass recognises it as our
+   * own output instead of fresh source text. See `_lastWritten`.
+   * @param {Element} el
+   * @returns {void}
+   */
+  function markTranslated(el) {
+    if (el) _lastWritten.set(el, { gen: gtGeneration, out: el.textContent.trim() });
+  }
+
+  /**
+   * True when `el` still holds exactly the text this generation wrote into it.
+   * A page-driven re-render changes the text and correctly clears the guard.
+   * @param {Element} el
+   * @param {string} currentText — el.textContent, already trimmed by the caller
+   * @returns {boolean}
+   */
+  function alreadyTranslated(el, currentText) {
+    const prior = _lastWritten.get(el);
+    return !!prior && prior.gen === gtGeneration && prior.out === currentText;
+  }
+
   function trackTranslatedElement(originalText, el) {
     const translatedTexts = sb.translatedTexts;
     if (!translatedTexts.has(originalText)) translatedTexts.set(originalText, []);
     translatedTexts.get(originalText).push({ el });
+    markTranslated(el);
   }
 
   function pruneDetachedEntries() {

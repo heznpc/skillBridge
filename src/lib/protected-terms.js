@@ -14,6 +14,17 @@
   let _protectedTermsLang = null;
   let _protectedKeepEnglish = '';
   let _selfDupRe = null;
+  let _maskTermsSorted = [];
+
+  // Placeholder used to hide protected terms from Google Translate. Verified
+  // 2026-08-19 against the live `translate_a/single` endpoint across all 12
+  // curated locales, including multi-token sentences in SOV languages that
+  // reorder clauses: the token survives byte-identical and its index stays
+  // addressable, so restoration maps by index rather than by position.
+  const MASK_OPEN = '\u27E6';
+  const MASK_CLOSE = '\u27E7';
+  const MASK_TOKEN_RE = /\u27E6(\d+)\u27E7/g;
+  const maskToken = (i) => `${MASK_OPEN}${i}${MASK_CLOSE}`;
 
   const CORE_PROTECTED_TERMS = Object.freeze({
     Claude: [],
@@ -96,6 +107,93 @@
       .map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
       .sort((a, b) => b.length - a.length);
     _selfDupRe = canonical.length ? new RegExp('(' + canonical.join('|') + ')\\s*[(（]\\s*\\1\\s*[)）]', 'g') : null;
+
+    // Masking table for the pre-send chokepoint (see maskProtectedTerms).
+    // Longest-first so "Anthropic Academy" masks as one unit before the bare
+    // "Anthropic" can claim its first word. Letter-boundary anchored for the
+    // same reason restore is: "API" must not match inside "APIs", and "Claude"
+    // must not match inside "Claudio".
+    _maskTermsSorted = terms
+      .filter((t) => typeof t === 'string' && t.length > 0)
+      .sort((a, b) => b.length - a.length)
+      .map((term) => {
+        const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        let re;
+        try {
+          re = new RegExp('(?<!\\p{L})' + escaped + '(?!\\p{L})', 'gu');
+        } catch (_e) {
+          re = null;
+        }
+        return { term, re };
+      })
+      .filter((t) => t.re);
+  }
+
+  /**
+   * Hide protected terms behind index placeholders before text is handed to
+   * Google Translate.
+   *
+   * This is the structural fix for brand-name loss. GT reads "Anthropic" as the
+   * adjective (anthropic/anthropology) and renders it as 인류학적 / 人類 /
+   * antrópico / Антропный in every curated locale, and no post-hoc wrong-form
+   * blocklist covers that reliably: GT's output varies between runs, and the
+   * wrong forms collide with legitimate vocabulary in the target language
+   * ("인류" is an ordinary Korean word) — which is exactly why the blocklist
+   * entries had to be removed in #172. Masking removes the term from GT's view
+   * entirely, so there is nothing to mistranslate and nothing to repair.
+   *
+   * @param {string|null|undefined} text
+   * @returns {{ text: string, tokens: string[] }} masked text + ordered originals
+   */
+  function maskProtectedTerms(text) {
+    if (typeof text !== 'string' || !text || _maskTermsSorted.length === 0) {
+      return { text: typeof text === 'string' ? text : '', tokens: [] };
+    }
+    const tokens = [];
+    let result = text;
+    for (const { term, re } of _maskTermsSorted) {
+      if (!result.includes(term)) continue;
+      result = result.replace(re, () => {
+        tokens.push(term);
+        return maskToken(tokens.length - 1);
+      });
+    }
+    return { text: result, tokens };
+  }
+
+  /**
+   * Put masked terms back after Google Translate returns.
+   *
+   * Fails CLOSED: if a placeholder was dropped or mangled in transit the caller
+   * is told the round trip is unusable, rather than being handed text with a
+   * visible placeholder or a silently missing brand name. Callers then keep the
+   * untranslated source, which is a strictly better failure than shipping a
+   * corrupted brand.
+   *
+   * @param {string|null|undefined} text — translated text containing placeholders
+   * @param {string[]} tokens — originals returned by maskProtectedTerms
+   * @returns {string|null} restored text, or null if placeholder integrity broke
+   */
+  function unmaskProtectedTerms(text, tokens) {
+    if (!Array.isArray(tokens) || tokens.length === 0) {
+      return typeof text === 'string' ? text : null;
+    }
+    if (typeof text !== 'string' || !text) return null;
+    const seen = new Set();
+    let broken = false;
+    const restored = text.replace(MASK_TOKEN_RE, (match, idx) => {
+      const i = Number(idx);
+      if (!Number.isInteger(i) || i < 0 || i >= tokens.length) {
+        broken = true;
+        return match;
+      }
+      seen.add(i);
+      return tokens[i];
+    });
+    // Every masked term must come back, and no placeholder syntax may survive.
+    if (broken || seen.size !== tokens.length) return null;
+    if (restored.includes(MASK_OPEN) || restored.includes(MASK_CLOSE)) return null;
+    return restored;
   }
 
   /**
@@ -157,5 +255,7 @@
     restoreProtectedTerms,
     resetProtectedTerms,
     getKeepEnglishTerms,
+    maskProtectedTerms,
+    unmaskProtectedTerms,
   };
 })();

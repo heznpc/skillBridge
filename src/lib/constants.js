@@ -921,7 +921,25 @@ const HISTORY_STORE = 'conversations';
 // one Google Translate round per visible block on the next visit, which is
 // what a fresh install already pays and well inside the 30-day TTL churn the
 // cache is built around.
-const CACHE_DB_VERSION = 2;
+// 2 → 3 (2026-08-19): rows written before brand-term masking can contain a
+// mistranslated brand name. Two poisoned shapes were observed live on
+// anthropic.skilljar.com, and neither is filterable after the fact:
+//   - `ko\tAnthropic 과정` → `인류학적 과정` — the KEY is already-translated
+//     text, i.e. our own static output was fed back through GT.
+//   - `ko\tThis comprehensive course ... Anthropic models on Google Cloud.` →
+//     `... 인류 모델 ...` — a first-pass GT translation that lost the brand.
+// The wrong forms collide with ordinary vocabulary in the target languages
+// ("인류" is a normal Korean word), so a targeted delete would either miss
+// rows or corrupt correct ones. Drop the store instead; the cost is one GT
+// round per visible block on the next visit.
+const CACHE_DB_VERSION = 3;
+
+// Schemas BELOW this version are dropped on upgrade instead of migrated.
+// Deliberately a separate knob from CACHE_DB_VERSION: a future bump that only
+// adds an index (say) must not silently wipe user caches. Raising this is an
+// explicit decision that the older rows are unfilterable, which has been true
+// twice — v1 predates protected-term restoration, v2 predates brand masking.
+const CACHE_DROP_BELOW_VERSION = 3;
 
 // ==================== POPUP LABELS (i18n) ====================
 

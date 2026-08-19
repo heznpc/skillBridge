@@ -151,6 +151,84 @@ function buildGTResponse(translated) {
  *
  * @param {import('@playwright/test').BrowserContext} context
  */
+// Brand/technical terms the extension masks before it calls Google Translate
+// (src/lib/protected-terms.js). Longest-first, mirroring the production sort.
+const STUB_PROTECTED_TERMS = ['Claude Code', 'Anthropic Academy', 'Anthropic', 'Claude', 'API', 'SDK'];
+const MASK_RE = /\u27E6\d+\u27E7/g;
+// Wrong renderings used by the deliberately-mistranslated fixture entries, so
+// the stub can locate where a term ended up in canned Korean that never spells
+// the term out. Kept tiny and explicit — it mirrors GT_KO, not production data.
+const STUB_WRONG_FORMS = { Anthropic: ['앤스로픽'], Claude: ['클로드'] };
+
+// Google Translate requests are issued by the background service worker, not
+// the page, so `page.on('request')` never sees them. Count here instead — this
+// handler is the one place every GT call must pass through.
+let gtRequestCount = 0;
+const getGTRequestCount = () => gtRequestCount;
+const resetGTRequestCount = () => {
+  gtRequestCount = 0;
+};
+
+/** Replace protected terms with a neutral marker so masked and unmasked forms compare equal. */
+function foldProtected(text) {
+  let folded = text.replace(MASK_RE, '\u0000');
+  for (const term of STUB_PROTECTED_TERMS) {
+    folded = folded.replace(new RegExp(`(?<!\\p{L})${term}(?!\\p{L})`, 'gu'), '\u0000');
+  }
+  return folded;
+}
+
+/**
+ * Stand in for Google Translate closely enough to exercise brand-term masking.
+ *
+ * Real GT carries `⟦0⟧`-style placeholders through untouched and translates the
+ * words around them (verified 2026-08-19 across all 12 curated locales). A stub
+ * that only did an exact-key lookup would miss every masked request and report
+ * the page as untranslated, so: match the canned entry with placeholders folded
+ * away, then hand back its Korean with the placeholders put back where the
+ * corresponding term sat. The extension unmasks and must land on the canned
+ * Korean — which is exactly the round trip under test.
+ */
+function translateLikeGoogle(normalized, map = GT_KO, onMiss = (t) => `[UNTRANSLATED:${t.slice(0, 40)}]`) {
+  const placeholders = normalized.match(MASK_RE) || [];
+  if (placeholders.length === 0) {
+    return map[normalized] || onMiss(normalized);
+  }
+  const wanted = foldProtected(normalized);
+  const sourceKey = Object.keys(map).find((key) => foldProtected(key) === wanted);
+  if (!sourceKey) return onMiss(normalized);
+
+  // Terms in the order they appear in the SOURCE line up with the placeholders
+  // in the order they appear in the masked request.
+  const termOrder = [];
+  foldProtected(
+    sourceKey.replace(new RegExp(`(?<!\\p{L})(${STUB_PROTECTED_TERMS.join('|')})(?!\\p{L})`, 'gu'), (m) => {
+      termOrder.push(m);
+      return m;
+    }),
+  );
+  // Put the placeholders back where each term's rendering sits in the canned
+  // Korean. Two wrinkles the naive form gets wrong:
+  //   - No letter boundary. Korean particles attach directly ("Claude가"), and
+  //     Hangul counts as \p{L}, so a boundary-anchored match never fires.
+  //   - Some fixture entries are DELIBERATELY mistranslated, so the English
+  //     term is absent and the wrong form stands in its place. Real GT can no
+  //     longer produce those forms through this path (it never sees the term),
+  //     which is precisely what masking guarantees — so the stub maps the wrong
+  //     form back to the placeholder to model the post-fix world.
+  let out = map[sourceKey];
+  termOrder.forEach((term, i) => {
+    const placeholder = placeholders[i];
+    if (!placeholder) return;
+    for (const form of [term, ...(STUB_WRONG_FORMS[term] || [])]) {
+      if (!out.includes(form)) continue;
+      out = out.replace(form, placeholder);
+      return;
+    }
+  });
+  return out;
+}
+
 async function registerStubs(context) {
   // The fixture itself is served from a real localhost HTTP server set up
   // separately (see startFixtureServer). Only the EXTERNAL services the
@@ -176,8 +254,9 @@ async function registerStubs(context) {
     // so the same paragraph can hit GT with embedded newlines/double-spaces
     // depending on HTML formatting. Normalize both sides so our GT_KO map
     // doesn't have to match every whitespace permutation.
+    gtRequestCount += 1;
     const normalized = decoded.replace(/\s+/g, ' ').trim();
-    const translated = GT_KO[normalized] || `[UNTRANSLATED:${normalized.slice(0, 40)}]`;
+    const translated = translateLikeGoogle(normalized);
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -186,4 +265,14 @@ async function registerStubs(context) {
   });
 }
 
-module.exports = { registerStubs, startFixtureServer, stopFixtureServer, FIXTURE_HTML, GT_KO, buildGTResponse };
+module.exports = {
+  registerStubs,
+  startFixtureServer,
+  stopFixtureServer,
+  FIXTURE_HTML,
+  GT_KO,
+  buildGTResponse,
+  getGTRequestCount,
+  resetGTRequestCount,
+  translateLikeGoogle,
+};

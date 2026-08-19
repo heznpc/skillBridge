@@ -236,11 +236,18 @@ class SkilljarTranslator {
       const req = indexedDB.open('skillbridge-cache', CACHE_DB_VERSION);
       req.onupgradeneeded = (e) => {
         const db = e.target.result;
-        // One-time 1 → 2 migration: drop the store the published v1.0.1 build
-        // wrote into rather than migrating its rows. See CACHE_DB_VERSION in
-        // constants.js for why those rows are unfilterable. A fresh install
-        // arrives with oldVersion 0 and skips straight to the create below.
-        if (e.oldVersion > 0 && e.oldVersion < 2 && db.objectStoreNames.contains('translations')) {
+        // Drop-on-upgrade for every schema below the current one, rather than
+        // migrating rows. Both bumps so far exist because the stored rows are
+        // unfilterable after the fact: v1 (published 1.0.1) predates protected-
+        // term restoration, and v2 predates brand-term masking, so a v2 row can
+        // hold a mistranslated brand name whose wrong form is an ordinary word
+        // in the target language. See CACHE_DB_VERSION in constants.js. A fresh
+        // install arrives with oldVersion 0 and skips straight to the create.
+        if (
+          e.oldVersion > 0 &&
+          e.oldVersion < CACHE_DROP_BELOW_VERSION &&
+          db.objectStoreNames.contains('translations')
+        ) {
           db.deleteObjectStore('translations');
         }
         if (!db.objectStoreNames.contains('translations')) {
@@ -378,14 +385,21 @@ class SkilljarTranslator {
    */
   async googleTranslate(text, targetLang) {
     try {
+      // Mask brand/technical terms so GT never sees them (protected-terms.js
+      // maskProtectedTerms). Unmasking fails closed, in which case we return
+      // null and the caller keeps the English source — strictly better than
+      // rendering a placeholder or a mangled brand name.
+      const pt = typeof window !== 'undefined' ? window._protectedTerms : null;
+      const masked = pt?.maskProtectedTerms ? pt.maskProtectedTerms(text.trim()) : null;
       const response = await chrome.runtime.sendMessage({
         type: 'GOOGLE_TRANSLATE',
-        text: text.trim(),
+        text: masked?.tokens.length ? masked.text : text.trim(),
         targetLang,
         sourceLang: 'en',
       });
       if (response?.ok && response.translated) {
-        return response.translated;
+        if (!masked?.tokens.length) return response.translated;
+        return pt.unmaskProtectedTerms(response.translated, masked.tokens);
       }
       return null;
     } catch (err) {
@@ -402,14 +416,27 @@ class SkilljarTranslator {
    */
   async googleTranslateBatch(texts, targetLang) {
     try {
+      // Per-text masking (see googleTranslate). Token indices restart per
+      // string and the batch response is positional, so entry i unmasks with
+      // masks[i].
+      const pt = typeof window !== 'undefined' ? window._protectedTerms : null;
+      const trimmed = texts.map((t) => t.trim());
+      const masks = pt?.maskProtectedTerms ? trimmed.map((t) => pt.maskProtectedTerms(t)) : null;
       const response = await chrome.runtime.sendMessage({
         type: 'GOOGLE_TRANSLATE_BATCH',
-        texts: texts.map((t) => t.trim()),
+        texts: masks ? masks.map((m, i) => (m.tokens.length ? m.text : trimmed[i])) : trimmed,
         targetLang,
         sourceLang: 'en',
       });
       if (response?.ok && response.translations) {
-        return response.translations;
+        if (!masks) return response.translations;
+        return response.translations.map((translated, i) => {
+          if (!masks[i].tokens.length) return translated;
+          // Unmask failure → hand back the source. applyGoogleTranslations
+          // skips entries equal to their source, so the block stays English
+          // instead of rendering a placeholder or a mistranslated brand.
+          return pt.unmaskProtectedTerms(translated, masks[i].tokens) ?? texts[i];
+        });
       }
       return texts; // return originals on failure
     } catch (err) {
