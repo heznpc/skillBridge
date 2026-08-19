@@ -220,3 +220,38 @@ describe('extension-only cloud Tutor broker', () => {
     expect(elements.has('__skillbridge_puter_frame__')).toBe(false);
   });
 });
+
+// ============================================================
+// BRAND-TERM MASKING WIRING (source contract)
+// ============================================================
+//
+// The masking itself is behaviourally tested in protected-terms.test.js; these
+// assertions pin that the GT senders actually route through it. Sending an
+// unmasked payload is the exact defect this fixes, and it is invisible in any
+// output-shape assertion — the request simply carries the brand name again.
+describe('Google Translate senders mask protected terms', () => {
+  const fs = require('fs');
+  const path = require('path');
+  const trSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'translator.js'), 'utf8');
+  const single = trSrc.slice(trSrc.indexOf('async googleTranslate('), trSrc.indexOf('async googleTranslateBatch('));
+  const batch = trSrc.slice(trSrc.indexOf('async googleTranslateBatch('));
+
+  test('single-text sender masks before send and unmasks after', () => {
+    expect(single).toContain('pt.maskProtectedTerms(text.trim())');
+    expect(single).toContain('text: masked?.tokens.length ? masked.text : text.trim()');
+    expect(single).toContain('pt.unmaskProtectedTerms(response.translated, masked.tokens)');
+  });
+
+  test('batch sender masks per text and unmasks positionally', () => {
+    expect(batch).toContain('trimmed.map((t) => pt.maskProtectedTerms(t))');
+    expect(batch).toContain('masks.map((m, i) => (m.tokens.length ? m.text : trimmed[i]))');
+    expect(batch).toContain('pt.unmaskProtectedTerms(translated, masks[i].tokens) ?? texts[i]');
+  });
+
+  test('batch falls back to the source text when unmasking fails', () => {
+    // applyGoogleTranslations skips entries equal to their source, so the
+    // block stays English rather than rendering a placeholder or a mangled
+    // brand — the failure mode this whole change exists to prevent.
+    expect(batch).toContain('?? texts[i]');
+  });
+});

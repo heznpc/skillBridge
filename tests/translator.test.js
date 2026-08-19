@@ -523,10 +523,24 @@ describe('_openDB — inherited v1.0.1 cache is dropped, not migrated', () => {
     global.indexedDB = { open: () => ({ onupgradeneeded: null, onsuccess: null, onerror: null }) };
   });
 
-  test('opens skillbridge-cache at schema version 2', () => {
+  test('opens skillbridge-cache at schema version 3', () => {
     const t = new SkilljarTranslator();
     t._openDB();
-    expect(openArgs).toEqual({ name: 'skillbridge-cache', version: 2 });
+    expect(openArgs).toEqual({ name: 'skillbridge-cache', version: 3 });
+  });
+
+  // Rows cached before brand-term masking can hold a mistranslated brand name
+  // (observed live: `ko\tAnthropic 과정` → `인류학적 과정`). The wrong forms are
+  // ordinary words in the target language, so a targeted delete would either
+  // miss rows or corrupt correct ones — the store is dropped instead.
+  test('upgrading from v2 (pre-masking rows) also deletes the store', () => {
+    const t = new SkilljarTranslator();
+    t._openDB();
+    const { calls, db } = fakeOpen({ existingStores: ['translations'] });
+    request.onupgradeneeded({ target: { result: db }, oldVersion: 2 });
+
+    expect(calls.deleted).toEqual(['translations']);
+    expect(calls.created).toEqual([{ name: 'translations', opts: { keyPath: 'id' } }]);
   });
 
   test('upgrading from v1 (the published 1.0.1 schema) deletes the store and recreates it', () => {
@@ -553,11 +567,16 @@ describe('_openDB — inherited v1.0.1 cache is dropped, not migrated', () => {
     expect(calls.indexes).toEqual([{ idx: 'lang', keyPath: 'lang', opts2: { unique: false } }]);
   });
 
-  test('a later schema bump does NOT wipe v2-era rows — the drop is scoped to 1 → 2', () => {
+  // The drop stays OPT-IN per bump: it is gated on CACHE_DROP_BELOW_VERSION,
+  // not on CACHE_DB_VERSION. A future schema bump that only adds an index must
+  // not silently wipe every user's cache, so raising the drop threshold has to
+  // be a deliberate edit. This asserts a schema at the current threshold is
+  // left alone.
+  test('a schema at the drop threshold is NOT wiped — dropping is opt-in per bump', () => {
     const t = new SkilljarTranslator();
     t._openDB();
     const { calls, db } = fakeOpen({ existingStores: ['translations'] });
-    request.onupgradeneeded({ target: { result: db }, oldVersion: 2 });
+    request.onupgradeneeded({ target: { result: db }, oldVersion: 3 });
 
     expect(calls.deleted).toEqual([]);
     // Store already exists and is kept as-is.

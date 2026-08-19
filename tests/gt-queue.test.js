@@ -109,3 +109,61 @@ describe('inline routing invariants', () => {
     expect(src).toContain('hasInteractive: _hasInteractiveEls(el)');
   });
 });
+
+// ============================================================
+// DOUBLE-TRANSLATION GUARD (source contract)
+// ============================================================
+//
+// Regression cover for the brand-name loss found live 2026-08-19. Root cause:
+// `applyStaticTranslations` re-runs on a LATE_CONTENT timer and on every SPA
+// route change and re-scans the whole page, so the static dictionary's own
+// output re-entered `processOneElement` as if it were source English:
+//
+//   "Anthropic courses" --static--> "Anthropic 과정" --GT--> "인류학적 과정"
+//
+// "Anthropic 과정" is 82% Latin characters, so `isLikelyEnglish` classified it
+// as English and sent it back to Google Translate. The IndexedDB cache still
+// held the proof: a row keyed `ko\tAnthropic 과정`, i.e. a key that was already
+// translated. These assertions pin the guard's wiring, which a DOM-free test
+// cannot exercise directly (processOneElement needs `_sb`, a translator and a
+// live document).
+describe('processOneElement re-processing guard', () => {
+  const processOne = src.slice(
+    src.indexOf('function processOneElement'),
+    src.indexOf('function applyStaticTranslations'),
+  );
+
+  test('the guard runs before the English heuristic that misclassified our output', () => {
+    const guardAt = processOne.indexOf('alreadyTranslated(el, fullText)');
+    const heuristicAt = processOne.indexOf('isLikelyEnglish(fullText)');
+    expect(guardAt).toBeGreaterThan(-1);
+    // Ordering matters: isLikelyEnglish is exactly what mis-fires on
+    // already-translated mixed text, so the guard must short-circuit first.
+    expect(guardAt).toBeLessThan(heuristicAt);
+  });
+
+  test('every successful static path records what it wrote', () => {
+    // Both static exits — whole-element replace and per-text-node replace —
+    // must mark, or the un-marked one keeps leaking into GT.
+    expect(processOne.match(/markTranslated\(el\)/g)).toHaveLength(2);
+  });
+
+  test('the GT apply path marks too, so Latin-script locales stop re-translating', () => {
+    // For es/fr/de the GT output is still >50% Latin, so without this the
+    // element would be re-sent to GT on every subsequent pass.
+    const track = src.slice(
+      src.indexOf('function trackTranslatedElement'),
+      src.indexOf('function pruneDetachedEntries'),
+    );
+    expect(track).toContain('markTranslated(el)');
+  });
+
+  test('marks are scoped to the language generation so a switch re-translates', () => {
+    expect(src).toContain('_lastWritten.set(el, { gen: gtGeneration, out: el.textContent.trim() })');
+    expect(src).toContain('prior.gen === gtGeneration && prior.out === currentText');
+  });
+
+  test('marks live in a WeakMap so detached nodes are not retained', () => {
+    expect(src).toContain('const _lastWritten = new WeakMap()');
+  });
+});
