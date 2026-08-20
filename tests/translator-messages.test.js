@@ -236,16 +236,19 @@ describe('Google Translate senders mask protected terms', () => {
   const single = trSrc.slice(trSrc.indexOf('async googleTranslate('), trSrc.indexOf('async googleTranslateBatch('));
   const batch = trSrc.slice(trSrc.indexOf('async googleTranslateBatch('));
 
+  // The whole mask object is passed, not just `mask.tokens`: unmasking also
+  // needs the delimiter counts the SOURCE contributed, so it can tell our
+  // leaked placeholder from a lesson's own ⟦ ⟧ notation.
   test('single-text sender masks before send and unmasks after', () => {
     expect(single).toContain('pt.maskProtectedTerms(text.trim())');
     expect(single).toContain('text: masked?.tokens.length ? masked.text : text.trim()');
-    expect(single).toContain('pt.unmaskProtectedTerms(response.translated, masked.tokens)');
+    expect(single).toContain('pt.unmaskProtectedTerms(response.translated, masked)');
   });
 
   test('batch sender masks per text and unmasks positionally', () => {
     expect(batch).toContain('trimmed.map((t) => pt.maskProtectedTerms(t))');
     expect(batch).toContain('masks.map((m, i) => (m.tokens.length ? m.text : trimmed[i]))');
-    expect(batch).toContain('pt.unmaskProtectedTerms(translated, masks[i].tokens) ?? texts[i]');
+    expect(batch).toContain('pt.unmaskProtectedTerms(translated, masks[i]) ?? texts[i]');
   });
 
   test('batch falls back to the source text when unmasking fails', () => {
