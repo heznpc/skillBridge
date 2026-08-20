@@ -120,6 +120,21 @@ test.describe('SkillBridge — protected terms restoration', () => {
     }
     expect(before.pProtected).toBe(original);
 
+    // seedProtectedTermCache writes straight into IndexedDB and returns
+    // `{ error: 'translator cache missing' }` if `translator._db` has not been
+    // assigned yet. Nothing above waits for that, so on a slow runner the seed
+    // ran against a half-open translator and the test failed with an error
+    // object instead of the mistranslation it meant to plant. Wait for the same
+    // readiness signal upgrade-from-legacy.spec.js uses.
+    const cacheDeadline = Date.now() + 15_000;
+    let cacheSnap = null;
+    while (Date.now() < cacheDeadline) {
+      cacheSnap = await evalInContentWorld(extCtx.context, 'snapshot');
+      if (cacheSnap?.translator?.cacheReady) break;
+      await page.waitForTimeout(200);
+    }
+    expect(cacheSnap?.translator?.cacheReady, 'translation cache never opened').toBe(true);
+
     const seeded = await evalInContentWorld(extCtx.context, 'seedProtectedTermCache');
     expect(seeded).toMatchObject({ ok: true });
 
