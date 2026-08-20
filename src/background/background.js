@@ -671,7 +671,8 @@ function _parseSseDelta(line) {
 }
 
 async function _checkLocalEngine(baseUrl) {
-  const base = String(baseUrl || 'http://localhost:11434/v1').replace(/\/+$/, '');
+  const base = _allowedLocalBase(baseUrl);
+  if (base === null) return { ok: false, status: 'unreachable', error: 'invalid base URL' };
   try {
     const resp = await fetch(`${base}/models`, { method: 'GET' });
     if (resp.ok) {
@@ -718,8 +719,83 @@ async function _checkLocalEngine(baseUrl) {
   }
 }
 
+/**
+ * Validate a user-supplied local-engine base URL before the service worker
+ * fetches it.
+ *
+ * The SW is the one context that can issue cross-origin requests without the
+ * page's CORS rules, so whatever lands here is fetched as the extension. The
+ * value reaches us from `chrome.storage.local`, which every extension context
+ * can write, and it was previously used after nothing but a trailing-slash
+ * trim. `optional_host_permissions` already narrows the blast radius to
+ * localhost, but relying on the manifest to be the only check leaves the
+ * boundary implicit — and the prompt travels in the request body, so a request
+ * that merely *leaves* is already a leak even if the response is unreadable.
+ *
+ * Mirrors the allowlist in `optional_host_permissions` deliberately: anything
+ * this accepts must also be a host Chrome granted us.
+ *
+ * @param {unknown} baseUrl
+ * @returns {string|null} normalized origin+path, or null if not allowed
+ */
+function _allowedLocalBase(baseUrl) {
+  const raw = String(baseUrl || 'http://localhost:11434/v1').replace(/\/+$/, '');
+  let url;
+  try {
+    url = new URL(raw);
+  } catch (_e) {
+    return null;
+  }
+  // Credentials in the URL would be sent to the local server verbatim, and are
+  // never part of a legitimate Ollama/OpenAI-compatible base.
+  if (url.username || url.password) return null;
+  if (url.protocol !== 'http:') return null;
+  if (url.hostname !== 'localhost' && url.hostname !== '127.0.0.1') return null;
+  // Drop any query/fragment: the caller appends `/chat/completions`, and a
+  // stray `?` would turn that suffix into part of a query string.
+  return `${url.origin}${url.pathname}`.replace(/\/+$/, '');
+}
+
+/**
+ * Gate the local-chat port the same way the cloud broker port is gated.
+ *
+ * There is no `externally_connectable`, so a web page cannot open this port at
+ * all — this is defence in depth, not the primary boundary. It costs nothing
+ * and it makes the local path's trust assumptions explicit instead of leaving
+ * them resting on one manifest key.
+ *
+ * @param {chrome.runtime.Port} port
+ * @returns {boolean}
+ */
+function _isLocalChatPort(port) {
+  if (port?.sender?.id !== chrome.runtime.id) return false;
+  if (port?.sender?.frameId !== 0) return false;
+  if (!Number.isInteger(port?.sender?.tab?.id)) return false;
+  let url;
+  try {
+    url = new URL(port.sender.url || '');
+  } catch (_e) {
+    return false;
+  }
+  // Exactly the surfaces `content_scripts` injects into — narrower would break
+  // a real install, wider would accept a frame we never run in.
+  if (url.protocol === 'https:') {
+    if (url.hostname === 'skilljar.com' || url.hostname.endsWith('.skilljar.com')) return true;
+    if (url.hostname === 'claude.com' && url.pathname.startsWith('/resources/tutorials/')) return true;
+    return false;
+  }
+  // The E2E harness patches localhost into a temporary manifest so the real
+  // broker can run against the fixture server; production never grants these.
+  const testHosts = chrome.runtime.getManifest().host_permissions || [];
+  return (
+    url.protocol === 'http:' &&
+    (url.hostname === 'localhost' || url.hostname === '127.0.0.1') &&
+    testHosts.some((pattern) => pattern === 'http://localhost:*/*' || pattern === 'http://127.0.0.1:*/*')
+  );
+}
+
 async function _streamLocalChat(port, req) {
-  const base = String(req.baseUrl || 'http://localhost:11434/v1').replace(/\/+$/, '');
+  const base = _allowedLocalBase(req.baseUrl);
   let aborted = false;
   // A disconnect must actually CANCEL the upstream request. Ollama stops
   // generating only when the connection closes, so without this a cancelled
@@ -737,6 +813,14 @@ async function _streamLocalChat(port, req) {
       aborted = true;
     }
   };
+  // Rejected here rather than at the top of the function so the reply goes
+  // through the guarded `send` above — every message on this port must, or a
+  // disconnected port turns the reply into an unhandled rejection.
+  if (base === null) {
+    send({ type: 'error', error: 'Local AI server URL must be http://localhost or http://127.0.0.1' });
+    return;
+  }
+
   port.onDisconnect.addListener(() => {
     aborted = true;
     try {
@@ -819,6 +903,10 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onConnect) {
       return;
     }
     if (port.name !== 'sb-local-chat') return;
+    if (!_isLocalChatPort(port)) {
+      port.disconnect();
+      return;
+    }
     let started = false;
     port.onMessage.addListener((req) => {
       // One stream per port; a second 'start' would race two readers onto it.
