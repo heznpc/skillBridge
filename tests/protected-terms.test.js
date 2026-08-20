@@ -406,19 +406,19 @@ describe('maskProtectedTerms / unmaskProtectedTerms', () => {
   });
 
   test('round-trips back to the original term', () => {
-    const { text, tokens } = maskProtectedTerms('Anthropic courses');
+    const mask = maskProtectedTerms('Anthropic courses');
     // Stand in for GT: translate the non-placeholder words only.
-    expect(unmaskProtectedTerms(text.replace('courses', '과정'), tokens)).toBe('Anthropic 과정');
+    expect(unmaskProtectedTerms(mask.text.replace('courses', '과정'), mask)).toBe('Anthropic 과정');
   });
 
   test('survives a translation that reorders the placeholders', () => {
-    const { text, tokens } = maskProtectedTerms('Claude is built by Anthropic');
-    expect([...tokens].sort()).toEqual(['Anthropic', 'Claude']);
+    const mask = maskProtectedTerms('Claude is built by Anthropic');
+    expect([...mask.tokens].sort()).toEqual(['Anthropic', 'Claude']);
     // Placeholders in the order they appear in the SOURCE text.
-    const [first, second] = text.match(/⟦\d+⟧/g);
+    const [first, second] = mask.text.match(/⟦\d+⟧/g);
     // Korean is SOV: GT moves the trailing subject ahead of the object. Restore
     // is by index, not position, so the reordering must survive intact.
-    expect(unmaskProtectedTerms(`${second}가 만든 ${first}`, tokens)).toBe('Anthropic가 만든 Claude');
+    expect(unmaskProtectedTerms(`${second}가 만든 ${first}`, mask)).toBe('Anthropic가 만든 Claude');
   });
 
   test('token indices are assigned by term length, not position in the text', () => {
@@ -451,19 +451,89 @@ describe('maskProtectedTerms / unmaskProtectedTerms', () => {
   });
 
   test('fails closed when the translator drops a placeholder', () => {
-    const { tokens } = maskProtectedTerms('Anthropic courses');
+    const mask = maskProtectedTerms('Anthropic courses');
     // Brand silently gone: returning the partial text would ship a lesson
     // title with the company name deleted, so the round trip is rejected.
-    expect(unmaskProtectedTerms('과정', tokens)).toBeNull();
+    expect(unmaskProtectedTerms('과정', mask)).toBeNull();
   });
 
   test('fails closed when placeholder syntax survives into the output', () => {
-    const { tokens } = maskProtectedTerms('Anthropic courses');
-    expect(unmaskProtectedTerms('⟦0⟧ 과정 ⟦', tokens)).toBeNull();
-    expect(unmaskProtectedTerms('⟦99⟧ 과정', tokens)).toBeNull();
+    const mask = maskProtectedTerms('Anthropic courses');
+    expect(unmaskProtectedTerms('⟦0⟧ 과정 ⟦', mask)).toBeNull();
+    expect(unmaskProtectedTerms('⟦99⟧ 과정', mask)).toBeNull();
   });
 
   test('no tokens → passthrough, so unmasking never blocks ordinary text', () => {
-    expect(unmaskProtectedTerms('평범한 번역문', [])).toBe('평범한 번역문');
+    expect(unmaskProtectedTerms('평범한 번역문', { tokens: [] })).toBe('평범한 번역문');
+  });
+});
+
+// ============================================================
+// PLACEHOLDER INTEGRITY (regressions found reviewing #299)
+// ============================================================
+//
+// The fail-closed contract had two holes. Both are silent — the caller is told
+// the round trip succeeded — which is the worst shape for a function whose
+// whole job is to refuse anything it cannot vouch for.
+describe('unmaskProtectedTerms integrity holes', () => {
+  const { maskProtectedTerms, unmaskProtectedTerms } = fakeWindow._protectedTerms;
+
+  beforeEach(() => {
+    resetProtectedTerms();
+    buildProtectedTermsMap('ko', fakeTranslator(koProtected));
+  });
+
+  test('a placeholder emitted twice is rejected, not silently duplicated', () => {
+    const mask = maskProtectedTerms('Anthropic builds Claude');
+    // GT glosses proper nouns by repeating them. The original set-based check
+    // ("every index appeared") waved this through and printed the brand twice
+    // where the source had it once.
+    expect(unmaskProtectedTerms('⟦0⟧는 ⟦0⟧와 ⟦1⟧를 만든다', mask)).toBeNull();
+  });
+
+  test('the same input with each placeholder once still restores', () => {
+    const mask = maskProtectedTerms('Anthropic builds Claude');
+    expect(unmaskProtectedTerms('⟦0⟧는 ⟦1⟧를 만든다', mask)).toBe('Anthropic는 Claude를 만든다');
+  });
+
+  test('a lesson that uses ⟦ ⟧ for its own notation stays translatable', () => {
+    // Denotational-semantics brackets appear in ML/AI material. Requiring zero
+    // delimiters in the output meant the source's own brackets tripped the
+    // guard, so such a block failed closed on every attempt — permanently
+    // untranslated, with no error anywhere.
+    const mask = maskProtectedTerms('Claude uses ⟦ notation');
+    expect(mask.foreign).toEqual({ open: 1, close: 0 });
+    expect(unmaskProtectedTerms('⟦0⟧는 ⟦ 표기를 쓴다', mask)).toBe('Claude는 ⟦ 표기를 쓴다');
+  });
+
+  test('our own placeholder leaking is still rejected even when the source had brackets', () => {
+    const mask = maskProtectedTerms('Claude uses ⟦ notation');
+    // One extra ⟦ beyond what the source contributed ⇒ our syntax survived.
+    expect(unmaskProtectedTerms('⟦0⟧는 ⟦ ⟦ 표기를 쓴다', mask)).toBeNull();
+  });
+
+  test('round-trip invariant: any permutation of the placeholders restores exactly', () => {
+    // Property-style: whatever order a target language puts the placeholders
+    // in, restoring must yield each term exactly as many times as the source
+    // had it. Only the ORDER may differ.
+    const source = 'Anthropic ships Claude and the API';
+    const mask = maskProtectedTerms(source);
+    const placeholders = mask.text.match(/⟦\d+⟧/g);
+    expect(placeholders).toHaveLength(mask.tokens.length);
+
+    const permutations = [
+      placeholders.join(' '),
+      [...placeholders].reverse().join(' '),
+      `${placeholders[2]} ${placeholders[0]} ${placeholders[1]}`,
+    ];
+    for (const permuted of permutations) {
+      const restored = unmaskProtectedTerms(permuted, mask);
+      expect(restored).not.toBeNull();
+      for (const term of new Set(mask.tokens)) {
+        const inSource = source.split(term).length - 1;
+        const inRestored = restored.split(term).length - 1;
+        expect(inRestored).toBe(inSource);
+      }
+    }
   });
 });
