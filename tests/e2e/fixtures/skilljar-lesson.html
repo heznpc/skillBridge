@@ -1,45 +1,37 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>Anthropic Academy — Test Lesson</title>
-</head>
-<body>
-  <!-- Minimal Skilljar-shaped DOM. The content script's TRANSLATABLE_SELECTOR
+  <head>
+    <meta charset="utf-8" />
+    <title>Anthropic Academy — Test Lesson</title>
+  </head>
+  <body>
+    <!-- Minimal Skilljar-shaped DOM. The content script's TRANSLATABLE_SELECTOR
        matches generic tags (h1, h2, p, li, ...) so we don't need the full
        Skilljar class catalog — just enough text to translate. -->
-  <header>
-    <nav>
-      <span class="nav-text">Anthropic Academy</span>
-    </nav>
-  </header>
+    <header>
+      <nav>
+        <span class="nav-text">Anthropic Academy</span>
+      </nav>
+    </header>
 
-  <main id="lesson-main">
-    <h1>Introduction to Claude</h1>
-    <h2>Course overview</h2>
+    <main id="lesson-main">
+      <h1>Introduction to Claude</h1>
+      <h2>Course overview</h2>
 
-    <p id="p-1">
-      This lesson covers prompt engineering fundamentals and how Claude
-      processes user requests.
-    </p>
+      <p id="p-1">This lesson covers prompt engineering fundamentals and how Claude processes user requests.</p>
 
-    <p id="p-2">
-      Anthropic builds AI tools for developers and researchers.
-    </p>
+      <p id="p-2">Anthropic builds AI tools for developers and researchers.</p>
 
-    <ul>
-      <li id="li-1">Understand the Claude model family</li>
-      <li id="li-2">Write effective prompts</li>
-      <li id="li-3">Handle long context conversations</li>
-    </ul>
+      <ul>
+        <li id="li-1">Understand the Claude model family</li>
+        <li id="li-2">Write effective prompts</li>
+        <li id="li-3">Handle long context conversations</li>
+      </ul>
 
-    <h3>Key concepts</h3>
-    <p id="p-3">
-      A prompt is the input you give to Claude. Better prompts produce
-      better responses.
-    </p>
+      <h3>Key concepts</h3>
+      <p id="p-3">A prompt is the input you give to Claude. Better prompts produce better responses.</p>
 
-    <!--
+      <!--
       Sentence chosen because Google Translate has historically mistranslated
       "Anthropic" as "인류학적" ("anthropological") and "Claude" as
       "클로드"/"클라우드". The GT stub deliberately returns those wrong
@@ -47,55 +39,63 @@
       tests/e2e/protected-terms.spec.js test asserts the wrong forms do
       NOT make it to the DOM.
     -->
-    <p id="p-protected">Anthropic released Claude as a frontier model.</p>
-    <!-- Short heading whose STATIC translation ("Anthropic 과정") is 82% Latin
+      <p id="p-protected">Anthropic released Claude as a frontier model.</p>
+      <!-- Short heading whose STATIC translation ("Anthropic 과정") is 82% Latin
          characters and 12 chars long — over both thresholds processOneElement
          uses, so a second static pass used to classify our own output as
          English and ship it to Google Translate. Reproduces the live
          "인류학적 과정" defect; see the double-translation test. -->
-    <h2 id="h-brand-short">Anthropic courses</h2>
+      <h2 id="h-brand-short">Anthropic courses</h2>
 
-    <!--
+      <!--
       Code block for tests/e2e/code-comments.spec.js. The Python comment
       "This is a Claude prompt example" gets translated by
       code-comments.js's translateCodeComments path. The code itself
       (def, return, pass) MUST be preserved — translating Python keywords
       breaks the user's ability to copy + run the snippet.
     -->
-    <pre id="code-fence-python"><code class="language-python"># This is a Claude prompt example
+      <pre id="code-fence-python"><code class="language-python"># This is a Claude prompt example
 def hello():
     return "world"
 </code></pre>
 
-    <!--
+      <!--
       XSS-shaped content for tests/e2e/pdf-export.spec.js. Each of these
       MUST be stripped by exportLessonPDF's pre-write sanitization before
       the printable popup renders, or v3.5.9's XSS fix has regressed.
       The harmless `<p id="p-pdf-marker">` exists so the spec can prove
       lesson body content (not just the dangerous bits) made it through.
     -->
-    <p id="p-pdf-marker">Printable content survived sanitization.</p>
+      <p id="p-pdf-marker">Printable content survived sanitization.</p>
 
-    <!--
+      <!--
       Tall spacer + below-the-fold paragraph for tests/e2e/lazy-translate.spec.js.
       With default 1280×720 viewport + rootMargin: '50% 0px' (half-viewport
       lookahead), this paragraph at >1500px down should remain un-translated
       until the user scrolls toward it. Spec asserts the bytes-saved invariant
       that the lazy IntersectionObserver path is supposed to deliver.
     -->
-    <div id="below-fold-spacer" style="height: 1800px;"></div>
-    <p id="p-below-fold">This paragraph is below the lazy-translation horizon and should stay English until scrolled.</p>
-    <script id="pdf-xss-script">window.__pdfExportXssRan = true;</script>
-    <iframe id="pdf-xss-iframe" src="about:blank"></iframe>
-    <p id="pdf-xss-onclick" onclick="window.__pdfExportXssRan = true">click me</p>
-    <a id="pdf-xss-href" href="javascript:window.__pdfExportXssRan = true">js link</a>
-    <a id="pdf-xss-ctrl" href="java&#9;script:window.__pdfExportXssRan = true">ctrl-char link</a>
-    <a id="pdf-xss-xlink" xlink:href="javascript:window.__pdfExportXssRan = true">xlink link</a>
-    <form id="pdf-xss-form" action="#"><button id="pdf-xss-formaction" type="submit" formaction="javascript:window.__pdfExportXssRan = true">submit</button></form>
-  </main>
+      <div id="below-fold-spacer" style="height: 1800px"></div>
+      <p id="p-below-fold">
+        This paragraph is below the lazy-translation horizon and should stay English until scrolled.
+      </p>
+      <script id="pdf-xss-script">
+        window.__pdfExportXssRan = true;
+      </script>
+      <iframe id="pdf-xss-iframe" src="about:blank"></iframe>
+      <p id="pdf-xss-onclick" onclick="window.__pdfExportXssRan = true">click me</p>
+      <a id="pdf-xss-href" href="javascript:window.__pdfExportXssRan = true">js link</a>
+      <a id="pdf-xss-ctrl" href="java&#9;script:window.__pdfExportXssRan = true">ctrl-char link</a>
+      <a id="pdf-xss-xlink" xlink:href="javascript:window.__pdfExportXssRan = true">xlink link</a>
+      <form id="pdf-xss-form" action="#">
+        <button id="pdf-xss-formaction" type="submit" formaction="javascript:window.__pdfExportXssRan = true">
+          submit
+        </button>
+      </form>
+    </main>
 
-  <footer>
-    <span>Copyright Anthropic</span>
-  </footer>
-</body>
+    <footer>
+      <span>Copyright Anthropic</span>
+    </footer>
+  </body>
 </html>
