@@ -83,12 +83,20 @@ const _rateLimiter = {
 
 const _inflightGT = new Map();
 
-// Max age for an in-flight entry. If `fetchWithRetry` stalls beyond this
-// (network hang, upstream stuck through retries), we force-expire the
-// entry so the next identical request can't keep bypassing the rate
-// limiter (audit V14). 30s is long enough to absorb the normal retry
-// chain (3 attempts × exponential backoff ≈ 3.5s + per-attempt timeout)
-// without surfacing as 429 to the user.
+// Hard ceiling on a single fetch attempt. `fetch` has no built-in timeout: a
+// TCP black hole or a stuck upstream leaves the promise pending forever, and
+// before this existed the whole GT pipeline (and the progress UI waiting on it)
+// stalled with it. Each attempt gets its own AbortController, so a timeout
+// cancels that attempt and falls through to the existing backoff instead of
+// hanging. 6s is ~30x the normal GT response time.
+const _GT_ATTEMPT_TIMEOUT_MS = 6_000;
+
+// Max age for an in-flight entry. Two jobs: force-expire the dedup entry so a
+// stuck request can't keep bypassing the rate limiter (audit V14), AND abort
+// the underlying request — deleting the map entry alone left the fetch running
+// and the caller waiting. Sized to sit just outside a full retry chain
+// (4 attempts × 6s + ~3.5s backoff ≈ 27.5s) so it only fires as a backstop when
+// the per-attempt aborts themselves fail to end the operation.
 const _GT_INFLIGHT_TTL_MS = 30_000;
 
 function _gtKey(text, tl, sl) {
@@ -109,11 +117,20 @@ function _gtFetchDedup(text, tl, sl) {
   //      with a form-encoded `q` and returns the identical response shape
   //      (checked against a 3.4 kB HTML block, tags and hrefs preserved).
   const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t`;
-  const expireTimer = setTimeout(() => _inflightGT.delete(key), _GT_INFLIGHT_TTL_MS);
+  // The TTL must cancel the work, not just forget about it. The signal stays
+  // attached to the Response, so this also tears down a body that stopped
+  // streaming after the headers arrived — a stall the per-attempt timeout
+  // cannot see.
+  const ttlController = new AbortController();
+  const expireTimer = setTimeout(() => {
+    ttlController.abort(new Error('GT request exceeded the in-flight TTL'));
+    _inflightGT.delete(key);
+  }, _GT_INFLIGHT_TTL_MS);
   const promise = fetchWithRetry(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
     body: new URLSearchParams({ q: text }).toString(),
+    signal: ttlController.signal,
   })
     .then((resp) => resp.json())
     .then((data) => parseGTResponse(data, text))
@@ -127,20 +144,57 @@ function _gtFetchDedup(text, tl, sl) {
 
 // ==================== EXPONENTIAL BACKOFF FETCH ====================
 
+/**
+ * Forward an external abort onto a per-attempt controller.
+ * @returns {() => void} detach function
+ */
+function _linkAbort(external, controller) {
+  if (!external) return () => {};
+  if (external.aborted) {
+    controller.abort(external.reason);
+    return () => {};
+  }
+  const onAbort = () => controller.abort(external.reason);
+  external.addEventListener('abort', onAbort, { once: true });
+  return () => external.removeEventListener('abort', onAbort);
+}
+
 async function fetchWithRetry(url, opts = {}, maxRetries = 3, baseDelay = 500) {
+  const external = opts.signal;
   let lastErr;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    // Per-attempt controller: a timeout kills THIS attempt and lets the retry
+    // chain continue, whereas aborting a shared controller would end all of them.
+    const attemptController = new AbortController();
+    const detach = _linkAbort(external, attemptController);
+    const timer = setTimeout(
+      () => attemptController.abort(new Error(`GT request timed out after ${_GT_ATTEMPT_TIMEOUT_MS}ms`)),
+      _GT_ATTEMPT_TIMEOUT_MS,
+    );
     let resp;
     try {
-      resp = await fetch(url, opts);
-      if (resp.ok) return resp;
+      resp = await fetch(url, { ...opts, signal: attemptController.signal });
+      // On success `detach` deliberately stays attached: the signal still
+      // governs the Response body, so an external abort can cancel a stalled
+      // read. It is released when the operation's controller is collected.
+      if (resp.ok) {
+        clearTimeout(timer);
+        return resp;
+      }
     } catch (err) {
-      // Network error — eligible for retry.
-      lastErr = err;
-      if (attempt === maxRetries) throw err;
+      clearTimeout(timer);
+      detach();
+      // Surface WHY it aborted — a bare AbortError says nothing about whether
+      // this was our timeout, the TTL, or a caller cancelling.
+      lastErr = attemptController.signal.reason ?? err;
+      // A caller/TTL abort is terminal; retrying would ignore the cancellation.
+      if (external?.aborted) throw lastErr;
+      if (attempt === maxRetries) throw lastErr;
       await new Promise((r) => setTimeout(r, baseDelay * Math.pow(2, attempt) + Math.random() * 200));
       continue;
     }
+    clearTimeout(timer);
+    detach();
     // Non-retryable client error (4xx except 429): fail immediately.
     if (resp.status >= 400 && resp.status < 500 && resp.status !== 429) {
       throw new Error(`HTTP ${resp.status}`);

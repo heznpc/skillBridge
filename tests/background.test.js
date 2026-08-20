@@ -255,37 +255,104 @@ describe('_gtFetchDedup — in-flight dedup', () => {
     expect(_gtKey('hello', 'ko', 'en')).not.toBe(_gtKey('hello', 'ko', 'auto'));
   });
 
-  // ── Audit V14: TTL on _inflightGT so a hung fetch can't indefinitely
-  //    bypass the rate limiter for that key.
-  test('TTL constant pinned at 30s (audit V14)', () => {
-    // Read the constant straight from source rather than ship a magic
-    // number here; if the prod value drifts, this fails fast.
+  // ── Audit V14 + GT hang fix: `fetch` has no built-in timeout, so before the
+  //    per-attempt AbortController existed a black-holed request left the whole
+  //    GT pipeline pending forever. These tests assert the request is really
+  //    CANCELLED — the previous version only checked that the dedup map entry
+  //    disappeared, which let a hung fetch survive as "expected" behaviour.
+  test('timeout constants pinned, and a full retry chain fits inside the TTL', () => {
     const src = require('fs').readFileSync(
       require('path').join(__dirname, '..', 'src', 'background', 'background.js'),
       'utf8',
     );
-    const m = src.match(/const\s+_GT_INFLIGHT_TTL_MS\s*=\s*([\d_]+)\s*;/);
-    expect(m).not.toBeNull();
-    expect(Number(m[1].replace(/_/g, ''))).toBe(30_000);
+    const num = (name) => {
+      const m = src.match(new RegExp(`const\\s+${name}\\s*=\\s*([\\d_]+)\\s*;`));
+      expect(m).not.toBeNull();
+      return Number(m[1].replace(/_/g, ''));
+    };
+    const attempt = num('_GT_ATTEMPT_TIMEOUT_MS');
+    const ttl = num('_GT_INFLIGHT_TTL_MS');
+    expect(attempt).toBe(6_000);
+    expect(ttl).toBe(30_000);
+    // 4 attempts (maxRetries 3) plus exponential backoff of 500+1000+2000ms.
+    // The TTL is a backstop for when aborting itself fails, so it must sit
+    // OUTSIDE the normal chain — otherwise it would cut healthy retries short.
+    expect(attempt * 4 + 3_500).toBeLessThan(ttl);
   });
 
-  test('TTL forces map entry deletion if fetch never settles', async () => {
+  test('a hung attempt is aborted and the chain retries to success', async () => {
     jest.useFakeTimers();
     timerDelegate = (...args) => setTimeout(...args);
     clearTimerDelegate = (...args) => clearTimeout(...args);
     try {
-      // fetch returns a promise that never resolves — simulates a hung
-      // upstream. Without the TTL, _inflightGT.has(key) would return
-      // true forever and let identical requests skip rate-limit.
-      global.fetch = jest.fn(() => new Promise(() => {}));
+      const signals = [];
+      global.fetch = jest.fn((url, opts) => {
+        signals.push(opts.signal);
+        // First attempt black-holes until something aborts it; second succeeds.
+        if (signals.length === 1) {
+          return new Promise((_res, rej) => opts.signal.addEventListener('abort', () => rej(opts.signal.reason)));
+        }
+        return Promise.resolve({ ok: true, status: 200 });
+      });
 
-      _gtFetchDedup('hung-key', 'ko', 'en');
+      const p = fetchWithRetry('https://gt.test', {}, 3, 500);
+      await jest.advanceTimersByTimeAsync(6_000);
+      // The load-bearing assertion: the hung request was actually cancelled.
+      expect(signals[0].aborted).toBe(true);
+      expect(String(signals[0].reason?.message)).toMatch(/timed out/);
+
+      await jest.advanceTimersByTimeAsync(1_000); // backoff
+      await expect(p).resolves.toMatchObject({ ok: true });
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+    } finally {
+      timerDelegate = (...args) => originalSetTimeout(...args);
+      clearTimerDelegate = (...args) => originalClearTimeout(...args);
+      jest.useRealTimers();
+    }
+  });
+
+  test('every attempt timing out rejects instead of hanging', async () => {
+    jest.useFakeTimers();
+    timerDelegate = (...args) => setTimeout(...args);
+    clearTimerDelegate = (...args) => clearTimeout(...args);
+    try {
+      global.fetch = jest.fn(
+        (url, opts) => new Promise((_res, rej) => opts.signal.addEventListener('abort', () => rej(opts.signal.reason))),
+      );
+      const p = fetchWithRetry('https://gt.test', {}, 3, 500);
+      p.catch(() => {}); // keep the rejection handled while timers advance
+      await jest.advanceTimersByTimeAsync(60_000);
+      await expect(p).rejects.toThrow(/timed out/);
+      expect(global.fetch).toHaveBeenCalledTimes(4); // maxRetries 3 => 4 attempts
+    } finally {
+      timerDelegate = (...args) => originalSetTimeout(...args);
+      clearTimerDelegate = (...args) => originalClearTimeout(...args);
+      jest.useRealTimers();
+    }
+  });
+
+  test('TTL aborts the in-flight request, not just the dedup entry', async () => {
+    jest.useFakeTimers();
+    timerDelegate = (...args) => setTimeout(...args);
+    clearTimerDelegate = (...args) => clearTimeout(...args);
+    try {
+      const signals = [];
+      // A fetch that ignores its abort signal — the backstop case the TTL
+      // exists for. The per-attempt abort fires but cannot end the operation,
+      // so the TTL must both evict the key AND signal cancellation downstream.
+      global.fetch = jest.fn((url, opts) => {
+        signals.push(opts.signal);
+        return new Promise(() => {});
+      });
+
+      const p = _gtFetchDedup('hung-key', 'ko', 'en');
+      p.catch(() => {});
       expect(_inflightGT.has(_gtKey('hung-key', 'ko', 'en'))).toBe(true);
 
-      // Advance past the TTL — the setTimeout fires and deletes.
-      jest.advanceTimersByTime(31_000);
+      await jest.advanceTimersByTimeAsync(31_000);
 
       expect(_inflightGT.has(_gtKey('hung-key', 'ko', 'en'))).toBe(false);
+      expect(signals[0].aborted).toBe(true);
     } finally {
       timerDelegate = (...args) => originalSetTimeout(...args);
       clearTimerDelegate = (...args) => originalClearTimeout(...args);
