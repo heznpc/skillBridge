@@ -164,9 +164,15 @@ const STUB_WRONG_FORMS = { Anthropic: ['앤스로픽'], Claude: ['클로드'] };
 // the page, so `page.on('request')` never sees them. Count here instead — this
 // handler is the one place every GT call must pass through.
 let gtRequestCount = 0;
+// The bodies too, not just the count: "how many requests" cannot tell you
+// WHICH block was re-sent, and a cache assertion that counts everything on the
+// page is hostage to unrelated content.
+let gtRequestBodies = [];
 const getGTRequestCount = () => gtRequestCount;
+const getGTRequests = () => [...gtRequestBodies];
 const resetGTRequestCount = () => {
   gtRequestCount = 0;
+  gtRequestBodies = [];
 };
 
 /** Replace protected terms with a neutral marker so masked and unmasked forms compare equal. */
@@ -256,6 +262,7 @@ async function registerStubs(context) {
     // doesn't have to match every whitespace permutation.
     gtRequestCount += 1;
     const normalized = decoded.replace(/\s+/g, ' ').trim();
+    gtRequestBodies.push(normalized);
     const translated = translateLikeGoogle(normalized);
     await route.fulfill({
       status: 200,
@@ -273,6 +280,7 @@ module.exports = {
   GT_KO,
   buildGTResponse,
   getGTRequestCount,
+  getGTRequests,
   resetGTRequestCount,
   translateLikeGoogle,
 };
