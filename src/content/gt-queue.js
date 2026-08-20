@@ -194,23 +194,35 @@
       // by node and never flattens inline structure.
     }
 
+    // Collect the per-node matches but DON'T write them yet — the route
+    // decision below depends on this loop's result, and `el` is what the GT
+    // path reads its request text from.
     let allNodesMatched = true;
-    let matchCount = 0;
+    const pendingWrites = [];
     const textNodes = getTextNodes(el);
     for (const node of textNodes) {
       const text = node.textContent.trim();
       if (text.length < 2) continue;
       const nodeMatch = translator.staticLookup(text);
       if (nodeMatch) {
-        node.textContent = nodeMatch;
-        matchCount++;
+        pendingWrites.push([node, nodeMatch]);
       } else if (text.length >= 4 && isLikelyEnglish(text)) {
         allNodesMatched = false;
       }
     }
 
+    // Bail BEFORE committing anything. queueForGoogleTranslate reads
+    // `el.textContent`, so writing first sent Google a half-Korean string —
+    // the static dictionary's own target-language output going back out as
+    // source text, and keying the IndexedDB cache on it. Same failure class as
+    // #299, which `_lastWritten` cannot catch: this one happens inside a single
+    // pass, before any mark exists. Nothing is lost by skipping the writes —
+    // the GT result overwrites the whole block anyway, so they were never
+    // visible to the user.
     if (!allNodesMatched && fullText.length >= 10) return 'gt';
-    if (matchCount > 0) {
+
+    if (pendingWrites.length > 0) {
+      for (const [node, nodeMatch] of pendingWrites) node.textContent = nodeMatch;
       markTranslated(el);
       return 'static';
     }
