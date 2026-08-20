@@ -9,6 +9,7 @@
 
 const { test, expect } = require('@playwright/test');
 const { launchExtension, closeExtension, evalInContentWorld } = require('./helpers/extension');
+const { SETTLE_MS } = require('./helpers/timeouts');
 const { registerStubs, startFixtureServer, stopFixtureServer } = require('./helpers/network-stubs');
 
 test.describe('SkillBridge — offline GT recovery', () => {
@@ -69,7 +70,7 @@ test.describe('SkillBridge — offline GT recovery', () => {
     const online = await evalInContentWorld(extCtx.context, 'dispatchOnline');
     expect(online?.isOffline).toBe(false);
 
-    const deadline = Date.now() + 10_000;
+    const deadline = Date.now() + SETTLE_MS;
     while (Date.now() < deadline) {
       pt = await evalInContentWorld(extCtx.context, 'pageText');
       if (pt.pProtected && pt.pProtected.includes('프런티어')) break;
