@@ -19,8 +19,13 @@ const _parseSseDelta = new Function(`${parserMatch[0]}\nreturn _parseSseDelta;`)
 
 const checkMatch = bgSrc.match(/async function _checkLocalEngine\(baseUrl\)\s*\{[\s\S]*?\n\}/);
 if (!checkMatch) throw new Error('Could not extract _checkLocalEngine from background.js');
+// The probe delegates URL validation, so that helper has to come along too.
+const baseMatch = bgSrc.match(/function _allowedLocalBase\(baseUrl\)\s*\{[\s\S]*?\n\}/);
+if (!baseMatch) throw new Error('Could not extract _allowedLocalBase from background.js');
+const allowedLocalBase = new Function(`${baseMatch[0]}\nreturn _allowedLocalBase;`)();
 // fetch is injected so the reachability probe can be exercised against fakes.
-const makeCheck = (fakeFetch) => new Function('fetch', `${checkMatch[0]}\nreturn _checkLocalEngine;`)(fakeFetch);
+const makeCheck = (fakeFetch) =>
+  new Function('fetch', `${baseMatch[0]}\n${checkMatch[0]}\nreturn _checkLocalEngine;`)(fakeFetch);
 
 describe('_parseSseDelta (local OpenAI-compatible SSE)', () => {
   test('token delta line → { delta }', () => {
@@ -443,5 +448,91 @@ describe('offline behavior', () => {
     const fn = queueSrc.slice(queueSrc.indexOf('function flushOfflinePending('), queueSrc.indexOf('sb._gt = {'));
     expect(fn).toContain('queueForGoogleTranslate(');
     expect(fn).toContain('pending.map((item) => item.el)');
+  });
+});
+
+// ============================================================
+// LOCAL ENGINE TRUST BOUNDARY
+// ============================================================
+//
+// The service worker is the one context that can fetch localhost cross-origin,
+// so whatever base URL reaches it is fetched as the extension. The value comes
+// from chrome.storage.local — writable by every extension context — and used to
+// be trusted after nothing but a trailing-slash trim. `optional_host_permissions`
+// already narrows the blast radius, but the prompt travels in the request BODY,
+// so a request that merely leaves is already a leak even when the response is
+// unreadable. These pin the check rather than leaving the boundary implicit in
+// one manifest key.
+describe('_allowedLocalBase', () => {
+  test('accepts the shapes a real local server uses', () => {
+    expect(allowedLocalBase('http://localhost:11434/v1')).toBe('http://localhost:11434/v1');
+    expect(allowedLocalBase('http://127.0.0.1:8080/v1')).toBe('http://127.0.0.1:8080/v1');
+    expect(allowedLocalBase('http://localhost:11434/v1///')).toBe('http://localhost:11434/v1');
+    // Unset config falls back to the documented Ollama default.
+    expect(allowedLocalBase('')).toBe('http://localhost:11434/v1');
+    expect(allowedLocalBase(undefined)).toBe('http://localhost:11434/v1');
+  });
+
+  test('refuses a remote host — the prompt would leave the machine', () => {
+    expect(allowedLocalBase('http://evil.test/v1')).toBeNull();
+    expect(allowedLocalBase('https://evil.test/v1')).toBeNull();
+    // Lookalikes that are NOT loopback.
+    expect(allowedLocalBase('http://localhost.evil.test/v1')).toBeNull();
+    expect(allowedLocalBase('http://127.0.0.1.evil.test/v1')).toBeNull();
+  });
+
+  test('refuses non-http schemes', () => {
+    expect(allowedLocalBase('file:///etc/passwd')).toBeNull();
+    expect(allowedLocalBase('ftp://localhost/v1')).toBeNull();
+    // https on loopback is not in optional_host_permissions either; accepting
+    // it here would promise a host Chrome never granted.
+    expect(allowedLocalBase('https://localhost:11434/v1')).toBeNull();
+  });
+
+  test('refuses embedded credentials', () => {
+    // Would be forwarded to the local server verbatim, and no legitimate
+    // Ollama/OpenAI-compatible base carries them.
+    expect(allowedLocalBase('http://user:pass@localhost:11434/v1')).toBeNull();
+  });
+
+  test('strips query and fragment so the appended path stays a path', () => {
+    // The caller appends `/chat/completions`; without this a trailing `?`
+    // would swallow that suffix into a query string.
+    expect(allowedLocalBase('http://localhost:11434/v1?x=1')).toBe('http://localhost:11434/v1');
+    expect(allowedLocalBase('http://localhost:11434/v1#frag')).toBe('http://localhost:11434/v1');
+  });
+
+  test('garbage input is rejected rather than thrown on', () => {
+    expect(allowedLocalBase('not a url')).toBeNull();
+    expect(allowedLocalBase('://')).toBeNull();
+  });
+});
+
+describe('local chat port gating (source contract)', () => {
+  test('the port is validated before any stream starts', () => {
+    // Ordering matters: validation has to run before `started` is latched or a
+    // rejected port could still kick off one stream.
+    const handler = bgSrc.slice(bgSrc.indexOf("if (port.name !== 'sb-local-chat') return;"));
+    const gateAt = handler.indexOf('_isLocalChatPort(port)');
+    const startedAt = handler.indexOf('let started = false;');
+    expect(gateAt).toBeGreaterThan(-1);
+    expect(gateAt).toBeLessThan(startedAt);
+    expect(handler.slice(gateAt, gateAt + 120)).toContain('port.disconnect()');
+  });
+
+  test('the gate checks sender identity, top frame, and tab', () => {
+    const fn = bgSrc.slice(
+      bgSrc.indexOf('function _isLocalChatPort'),
+      bgSrc.indexOf('async function _streamLocalChat'),
+    );
+    expect(fn).toContain('port?.sender?.id !== chrome.runtime.id');
+    expect(fn).toContain('port?.sender?.frameId !== 0');
+    expect(fn).toContain('Number.isInteger(port?.sender?.tab?.id)');
+  });
+
+  test('the invalid-URL reply goes through the guarded send, like every other reply', () => {
+    const fn = bgSrc.slice(bgSrc.indexOf('async function _streamLocalChat'), bgSrc.indexOf('chrome.runtime.onConnect'));
+    expect(fn.match(/\bport\.postMessage\(/g)).toHaveLength(1);
+    expect(fn).toContain("send({ type: 'error', error: 'Local AI server URL must be");
   });
 });
