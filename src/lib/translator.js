@@ -399,7 +399,7 @@ class SkilljarTranslator {
       });
       if (response?.ok && response.translated) {
         if (!masked?.tokens.length) return response.translated;
-        return pt.unmaskProtectedTerms(response.translated, masked.tokens);
+        return pt.unmaskProtectedTerms(response.translated, masked);
       }
       return null;
     } catch (err) {
@@ -435,7 +435,7 @@ class SkilljarTranslator {
           // Unmask failure → hand back the source. applyGoogleTranslations
           // skips entries equal to their source, so the block stays English
           // instead of rendering a placeholder or a mistranslated brand.
-          return pt.unmaskProtectedTerms(translated, masks[i].tokens) ?? texts[i];
+          return pt.unmaskProtectedTerms(translated, masks[i]) ?? texts[i];
         });
       }
       return texts; // return originals on failure

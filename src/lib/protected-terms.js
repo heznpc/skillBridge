@@ -145,9 +145,16 @@
    * @param {string|null|undefined} text
    * @returns {{ text: string, tokens: string[] }} masked text + ordered originals
    */
+  /** Count occurrences of a single character. */
+  function _countChar(text, ch) {
+    let n = 0;
+    for (let i = 0; i < text.length; i += 1) if (text[i] === ch) n += 1;
+    return n;
+  }
+
   function maskProtectedTerms(text) {
     if (typeof text !== 'string' || !text || _maskTermsSorted.length === 0) {
-      return { text: typeof text === 'string' ? text : '', tokens: [] };
+      return { text: typeof text === 'string' ? text : '', tokens: [], foreign: { open: 0, close: 0 } };
     }
     const tokens = [];
     let result = text;
@@ -158,7 +165,15 @@
         return maskToken(tokens.length - 1);
       });
     }
-    return { text: result, tokens };
+    // Delimiters the SOURCE already contained. Without this the integrity check
+    // below cannot tell "our placeholder leaked" from "the lesson legitimately
+    // uses ⟦ ⟧" (denotational-semantics notation shows up in ML material), and
+    // every such block failed closed forever — silently untranslatable.
+    return {
+      text: result,
+      tokens,
+      foreign: { open: _countChar(text, MASK_OPEN), close: _countChar(text, MASK_CLOSE) },
+    };
   }
 
   /**
@@ -171,15 +186,21 @@
    * corrupted brand.
    *
    * @param {string|null|undefined} text — translated text containing placeholders
-   * @param {string[]} tokens — originals returned by maskProtectedTerms
+   * @param {{tokens: string[], foreign?: {open: number, close: number}}} mask
+   *   — the object returned by maskProtectedTerms
    * @returns {string|null} restored text, or null if placeholder integrity broke
    */
-  function unmaskProtectedTerms(text, tokens) {
+  function unmaskProtectedTerms(text, mask) {
+    const tokens = mask?.tokens;
     if (!Array.isArray(tokens) || tokens.length === 0) {
       return typeof text === 'string' ? text : null;
     }
     if (typeof text !== 'string' || !text) return null;
-    const seen = new Set();
+    // Count occurrences per index, not just which indices appeared. Google
+    // Translate sometimes emits a placeholder twice (it glosses proper nouns
+    // that way), and a set-based check waves that through — silently printing
+    // the brand name more often than the source did.
+    const counts = new Map();
     let broken = false;
     const restored = text.replace(MASK_TOKEN_RE, (match, idx) => {
       const i = Number(idx);
@@ -187,12 +208,17 @@
         broken = true;
         return match;
       }
-      seen.add(i);
+      counts.set(i, (counts.get(i) || 0) + 1);
       return tokens[i];
     });
-    // Every masked term must come back, and no placeholder syntax may survive.
-    if (broken || seen.size !== tokens.length) return null;
-    if (restored.includes(MASK_OPEN) || restored.includes(MASK_CLOSE)) return null;
+    if (broken || counts.size !== tokens.length) return null;
+    for (const n of counts.values()) if (n !== 1) return null;
+    // Our own syntax must be fully consumed. Compare against the delimiters the
+    // source already had rather than requiring zero, so a lesson that uses ⟦ ⟧
+    // for its own notation stays translatable.
+    const foreign = mask.foreign || { open: 0, close: 0 };
+    if (_countChar(restored, MASK_OPEN) !== foreign.open) return null;
+    if (_countChar(restored, MASK_CLOSE) !== foreign.close) return null;
     return restored;
   }
 
