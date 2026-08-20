@@ -21,6 +21,7 @@
 
 const { test, expect } = require('@playwright/test');
 const { launchExtension, closeExtension, evalInContentWorld } = require('./helpers/extension');
+const { SETTLE_MS } = require('./helpers/timeouts');
 const { registerStubs, startFixtureServer, stopFixtureServer } = require('./helpers/network-stubs');
 
 test.describe('SkillBridge — code-comment translation', () => {
@@ -77,7 +78,7 @@ test.describe('SkillBridge — code-comment translation', () => {
     // The translate pass is awaited inside the op, so by the time we're
     // here the code block should already be in its translated state.
     // Brief poll just in case innerHTML rewrite is microtask-deferred.
-    const deadline = Date.now() + 5_000;
+    const deadline = Date.now() + SETTLE_MS;
     let after = before;
     while (Date.now() < deadline) {
       after = await evalInContentWorld(extCtx.context, 'readCodeFencePython');
