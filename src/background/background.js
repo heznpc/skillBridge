@@ -859,24 +859,44 @@ async function _streamLocalChat(port, req) {
     reader = resp.body.getReader();
     const decoder = new TextDecoder();
     let buf = '';
-    while (!aborted) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      buf += decoder.decode(value, { stream: true });
+    // Feed complete lines to the parser; whatever follows the last newline is
+    // an incomplete frame and waits for the next chunk.
+    const drain = (chunk) => {
+      buf += chunk;
       const lines = buf.split('\n');
       buf = lines.pop() || '';
       for (const line of lines) {
-        if (aborted) break;
+        if (aborted) return false;
         const parsed = _parseSseDelta(line);
         if (!parsed) continue;
-        if (parsed.done) {
-          send({ type: 'done' });
-          return;
-        }
+        if (parsed.done) return true;
         send({ type: 'chunk', delta: parsed.delta });
       }
+      return false;
+    };
+
+    let sawDone = false;
+    while (!aborted) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      if (drain(decoder.decode(value, { stream: true }))) {
+        sawDone = true;
+        break;
+      }
     }
-    if (!aborted) send({ type: 'done' });
+    if (aborted) return;
+    if (!sawDone) {
+      // A server that closes right after its final `data:` line, without a
+      // trailing newline, leaves that frame sitting in `buf` — the loop broke
+      // on `done` and nothing parsed the remainder, so the last token was
+      // dropped. Ollama terminates properly and never hit this, but the popup
+      // advertises "any OpenAI-compatible server". Flush the decoder first: a
+      // multi-byte character split across the final two chunks is only
+      // completed by the non-streaming call.
+      drain(decoder.decode());
+      if (buf.trim()) drain('\n');
+    }
+    send({ type: 'done' });
   } catch (err) {
     // An abort is our own cancellation, not a server failure.
     if (aborted || err?.name === 'AbortError') return;
