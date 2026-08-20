@@ -27,7 +27,10 @@ async function waitForSkillBridge(context, page) {
 }
 
 async function waitForBox(context, page, name) {
-  const deadline = Date.now() + 5_000;
+  // 5s was enough locally but not on a loaded CI runner, where the flashcard
+  // panel occasionally had not laid out yet and the probe reported the box as
+  // absent. Matches the 15s the other readiness waits in this suite use.
+  const deadline = Date.now() + 15_000;
   let layout = null;
   while (Date.now() < deadline) {
     layout = await evalInContentWorld(context, 'uiLayoutProbe');

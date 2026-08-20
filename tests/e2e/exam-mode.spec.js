@@ -69,8 +69,19 @@ test.describe('SkillBridge — exam-mode flow', () => {
   test('step A: detectExamPage trips on /quiz URL + .quiz-form DOM', async () => {
     await gotoAndWait('/quiz');
 
-    const { isExamPage } = await evalInContentWorld(extCtx.context, 'examStatus');
-    expect(isExamPage).toBe(true);
+    // `isExamPage` is assigned during init AND re-evaluated inside
+    // applyStaticTranslations, so a single read right after navigation can land
+    // between the two. This is the one spec where a flaky read is genuinely
+    // dangerous: "exam page not detected" is indistinguishable from the bug it
+    // exists to catch, so poll instead of sampling once.
+    const deadline = Date.now() + 10_000;
+    let status = null;
+    while (Date.now() < deadline) {
+      status = await evalInContentWorld(extCtx.context, 'examStatus');
+      if (status?.isExamPage) break;
+      await page.waitForTimeout(200);
+    }
+    expect(status?.isExamPage, `exam page never detected: ${JSON.stringify(status)}`).toBe(true);
   });
 
   test('step B: switchLanguage(ko) translates question but NOT answer options', async () => {
