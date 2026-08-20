@@ -26,7 +26,15 @@
 
 const { test, expect } = require('@playwright/test');
 const { launchExtension, closeExtension, evalInContentWorld } = require('./helpers/extension');
-const { registerStubs, startFixtureServer, stopFixtureServer } = require('./helpers/network-stubs');
+const { SETTLE_MS } = require('./helpers/timeouts');
+const {
+  registerStubs,
+  startFixtureServer,
+  stopFixtureServer,
+  getGTRequestCount,
+  getGTRequests,
+  resetGTRequestCount,
+} = require('./helpers/network-stubs');
 
 test.describe('SkillBridge — CWS direct-GT IDB cache', () => {
   /** @type {Awaited<ReturnType<typeof launchExtension>>} */
@@ -100,5 +108,44 @@ test.describe('SkillBridge — CWS direct-GT IDB cache', () => {
     // `source` field is what proves the cache lookup correctly missed).
     const crossLang = await evalInContentWorld(extCtx.context, 'translateOnce', { text: TEXT, lang: 'ja' });
     expect(crossLang.source, 'different lang must NOT use the ko cache entry').toBe('google');
+  });
+
+  // Structured blocks (inline tags / interactive labels) deliberately bypass
+  // the FLAT cache, because a flat string cannot safely fill markup. That left
+  // them with no cache at all: the same block was re-sent to Google Translate
+  // on every page load and every SPA return. They now have their own key
+  // namespace, and a cache hit still goes through the sanitizer and the
+  // tag-integrity gate.
+  test('a structured block is served from cache on the second pass, with no GT traffic', async () => {
+    // outerHTML must match the stub's canned key EXACTLY — the HTML path posts
+    // the whole block as \`q\`, so even a different id is a cache/stub miss.
+    const MARKUP = 'Read <a id="offline-doc-link" href="/docs">the documentation</a> carefully.';
+    await page.evaluate((html) => {
+      const p = document.createElement('p');
+      p.id = 'p-offline-structured';
+      p.innerHTML = html;
+      document.querySelector('#lesson-main').prepend(p);
+    }, MARKUP);
+
+    const block = page.locator('#p-offline-structured');
+
+    await evalInContentWorld(extCtx.context, 'switchLanguage', 'ko');
+    await expect(block).toContainText('주의 깊게 읽으세요', { timeout: SETTLE_MS });
+    // The link must survive the round trip — that is what the flat cache could
+    // not guarantee and why this path exists at all.
+    await expect(page.locator('#offline-doc-link')).toHaveAttribute('href', '/docs');
+
+    await evalInContentWorld(extCtx.context, 'switchLanguage', 'en');
+    await expect(block).toContainText('the documentation', { timeout: SETTLE_MS });
+
+    resetGTRequestCount();
+    await evalInContentWorld(extCtx.context, 'switchLanguage', 'ko');
+    await expect(block).toContainText('주의 깊게 읽으세요', { timeout: SETTLE_MS });
+
+    // Assert on WHAT was re-sent, not on a global count: other content on the
+    // page can legitimately miss the flat cache, and a bare count would make
+    // this test fail for reasons that have nothing to do with the block.
+    const resent = getGTRequests().filter((q) => q.includes('offline-doc-link'));
+    expect(resent, `structured block was re-sent to GT: ${JSON.stringify(resent)}`).toEqual([]);
   });
 });

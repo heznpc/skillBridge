@@ -297,7 +297,9 @@ class SkilljarTranslator {
             resolve(null);
             return;
           }
-          resolve(this._restoreProtectedTerms(entry.translation));
+          // Markup entries were stored without prose restoration, and the HTML
+          // path restores their text nodes after reconciliation instead.
+          resolve(entry.html ? entry.translation : this._restoreProtectedTerms(entry.translation));
         };
         req.onerror = () => resolve(null);
       } catch (e) {
@@ -316,10 +318,20 @@ class SkilljarTranslator {
    * Rejects nothing — cache failures are non-fatal; the caller has already
    * shown the translation to the user. We just silently skip the cache.
    */
-  _cacheTranslation(text, translation, targetLang) {
+  /**
+   * @param {string} text — cache key (source text, or a namespaced HTML key)
+   * @param {string} translation
+   * @param {string} targetLang
+   * @param {{html?: boolean}} [opts] — `html: true` for structure-preserving
+   *   blocks, whose value is markup rather than prose. See _isValidTranslation.
+   */
+  _cacheTranslation(text, translation, targetLang, opts = {}) {
     if (!this._db) return Promise.resolve();
-    const safeTranslation = this._restoreProtectedTerms(translation);
-    if (!this._isValidTranslation(safeTranslation, text, targetLang)) {
+    // Blunt string restoration is for prose. On markup it would also rewrite
+    // attribute values, and the HTML path already restores protected terms in
+    // TEXT NODES only, after reconciliation.
+    const safeTranslation = opts.html ? translation : this._restoreProtectedTerms(translation);
+    if (!this._isValidTranslation(safeTranslation, text, targetLang, opts)) {
       console.warn('[SkillBridge] Skipping cache: translation failed shape check');
       return Promise.resolve();
     }
@@ -332,6 +344,7 @@ class SkilljarTranslator {
           lang: targetLang,
           original: text.trim(),
           translation: safeTranslation,
+          html: !!opts.html,
           timestamp: Date.now(),
         });
         tx.oncomplete = () => resolve();
@@ -357,9 +370,17 @@ class SkilljarTranslator {
    * untranslated ASCII when a non-Latin target was requested, or a wildly
    * inflated string that's likely the model echoing the prompt.
    */
-  _isValidTranslation(translation, original, targetLang) {
+  _isValidTranslation(translation, original, targetLang, opts = {}) {
     if (!translation || typeof translation !== 'string') return false;
     if (translation.length > original.length * 10) return false;
+    // Both checks below assume the value is PROSE, and both are wrong for a
+    // structure-preserving block: its value is markup, so it always contains
+    // tags and is mostly ASCII no matter how well it translated. That is why
+    // structured blocks could never be cached — every write was rejected here.
+    // They are not being trusted blindly: callers only cache markup that has
+    // already passed the sanitizer, checkTagIntegrity and reconcileHtml, which
+    // is a stronger guarantee than either heuristic below.
+    if (opts.html) return true;
     // HTML tag at start = error page, not a translation
     if (/<\s*[a-z!][^>]*>/i.test(translation)) return false;
     // For non-Latin targets, mostly-ASCII output usually means the service

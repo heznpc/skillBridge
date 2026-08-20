@@ -477,6 +477,13 @@
 
   // ==================== HTML-GT (structure-preserving, no AI) ====================
 
+  // Key namespace for structured blocks. The U+0001 separator cannot occur in
+  // page text, so an HTML entry can never collide with a flat-text entry that
+  // happens to look like markup. Keyed on exact outerHTML rather than a
+  // normalized form: two blocks that normalize alike would otherwise swap
+  // translations, and the integrity gate would only sometimes catch it.
+  const _htmlCacheKey = (outerHTML) => `sb-html\u0001${outerHTML}`;
+
   // Restore protected/brand terms in the visible text of a reconciled block,
   // reusing the single protected-terms chokepoint. GT (HTML mode) translates
   // all inner text including brand terms, so this corrects them deterministically.
@@ -536,17 +543,45 @@
     const sources = [...bySource.keys()];
     if (sources.length === 0) return true;
 
-    const translations = await translator.googleTranslateBatch(sources, targetLang);
-    if (gtGeneration !== myGeneration) return false;
-
-    for (let i = 0; i < sources.length; i++) {
-      const translatedHtml = translations[i];
-      if (!translatedHtml || translatedHtml === sources[i]) continue;
-      for (const item of bySource.get(sources[i])) {
+    /** Render one translated block into every element that shared its markup. */
+    const applyToItems = (source, translatedHtml) => {
+      let applied = false;
+      for (const item of bySource.get(source)) {
         if (!item.el?.parentNode) continue;
         if (_applyHtmlTranslation(item.el, translatedHtml)) {
           trackTranslatedElement(item.text, item.el);
+          applied = true;
         }
+      }
+      return applied;
+    };
+
+    // Structured blocks skip the FLAT cache on purpose — a flat string cannot
+    // safely fill markup — but that left them with no cache at all, so the same
+    // block was re-sent to Google Translate on every page load and every SPA
+    // return. Give them their own key namespace instead. Cache hits still go
+    // through _applyHtmlTranslation, so the sanitizer and the tag-integrity
+    // gate run on cached markup exactly as they do on a fresh response.
+    const uncached = [];
+    for (const source of sources) {
+      const cached = await translator.cachedLookup(_htmlCacheKey(source), targetLang);
+      if (cached) applyToItems(source, cached);
+      else uncached.push(source);
+    }
+    if (gtGeneration !== myGeneration) return false;
+    if (uncached.length === 0) return true;
+
+    const translations = await translator.googleTranslateBatch(uncached, targetLang);
+    if (gtGeneration !== myGeneration) return false;
+
+    for (let i = 0; i < uncached.length; i++) {
+      const translatedHtml = translations[i];
+      if (!translatedHtml || translatedHtml === uncached[i]) continue;
+      // Only cache markup that actually survived the integrity gate. Storing a
+      // response the gate rejects would re-fail on every future hit while
+      // occupying a cache slot.
+      if (applyToItems(uncached[i], translatedHtml)) {
+        await translator._cacheTranslation(_htmlCacheKey(uncached[i]), translatedHtml, targetLang, { html: true });
       }
     }
     return true;
