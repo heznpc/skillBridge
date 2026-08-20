@@ -536,3 +536,116 @@ describe('local chat port gating (source contract)', () => {
     expect(fn).toContain("send({ type: 'error', error: 'Local AI server URL must be");
   });
 });
+
+// ============================================================
+// SSE STREAM LOOP
+// ============================================================
+//
+// _parseSseDelta is tested line by line above, but nothing exercised the loop
+// that feeds it. That loop owns the buffering, and the buffering is where the
+// last frame used to be lost.
+describe('_streamLocalChat — frame buffering', () => {
+  const streamMatch = bgSrc.match(/async function _streamLocalChat\(port, req\)\s*\{[\s\S]*?\n\}/);
+  if (!streamMatch) throw new Error('Could not extract _streamLocalChat from background.js');
+  const parseMatch = bgSrc.match(/function _parseSseDelta\(line\)\s*\{[\s\S]*?\n\}/);
+
+  /** Build the real function with its collaborators injected. */
+  const makeStream = (fakeFetch) =>
+    new Function(
+      'fetch',
+      'TextDecoder',
+      'AbortController',
+      `${baseMatch[0]}\n${parseMatch[0]}\n${streamMatch[0]}\nreturn _streamLocalChat;`,
+    )(fakeFetch, TextDecoder, AbortController);
+
+  /** A fetch whose body yields exactly the given string chunks. */
+  const fetchYielding = (chunks) => async () => ({
+    ok: true,
+    status: 200,
+    body: {
+      getReader: () => {
+        let i = 0;
+        return {
+          read: async () =>
+            i < chunks.length
+              ? { value: new TextEncoder().encode(chunks[i++]), done: false }
+              : { value: undefined, done: true },
+          cancel: async () => {},
+        };
+      },
+    },
+  });
+
+  const collect = async (chunks) => {
+    const msgs = [];
+    const port = {
+      postMessage: (m) => msgs.push(m),
+      onDisconnect: { addListener: () => {} },
+    };
+    await makeStream(fetchYielding(chunks))(port, { baseUrl: 'http://localhost:11434/v1' });
+    return msgs;
+  };
+
+  const deltas = (msgs) =>
+    msgs
+      .filter((m) => m.type === 'chunk')
+      .map((m) => m.delta)
+      .join('');
+
+  test('a well-behaved stream ending in [DONE] delivers every token once', async () => {
+    const msgs = await collect([
+      'data: {"choices":[{"delta":{"content":"안녕"}}]}\n',
+      'data: {"choices":[{"delta":{"content":"하세요"}}]}\n',
+      'data: [DONE]\n',
+    ]);
+    expect(deltas(msgs)).toBe('안녕하세요');
+    expect(msgs.filter((m) => m.type === 'done')).toHaveLength(1);
+  });
+
+  test('a final frame with NO trailing newline is not dropped', async () => {
+    // Regression: the loop broke on `done` and never parsed what was left in
+    // the buffer, so a server that closes right after its last `data:` line
+    // silently lost that token. Ollama terminates properly, which is why this
+    // went unnoticed — but the popup advertises any OpenAI-compatible server.
+    const msgs = await collect([
+      'data: {"choices":[{"delta":{"content":"first"}}]}\n',
+      'data: {"choices":[{"delta":{"content":"LAST"}}]}',
+    ]);
+    expect(deltas(msgs)).toBe('firstLAST');
+    expect(msgs.filter((m) => m.type === 'done')).toHaveLength(1);
+  });
+
+  test('a frame split across two reads is reassembled, not mangled', async () => {
+    const msgs = await collect(['data: {"choices":[{"delta":{"con', 'tent":"split"}}]}\n', 'data: [DONE]\n']);
+    expect(deltas(msgs)).toBe('split');
+  });
+
+  test('a multi-byte character split across the final two reads survives', async () => {
+    // "한" is three UTF-8 bytes; cutting between them is only resolved by the
+    // decoder's final non-streaming flush.
+    const payload = Buffer.from('data: {"choices":[{"delta":{"content":"한"}}]}', 'utf8');
+    const cut = payload.length - 2;
+    const msgs = [];
+    const port = { postMessage: (m) => msgs.push(m), onDisconnect: { addListener: () => {} } };
+    const parts = [payload.subarray(0, cut), payload.subarray(cut)];
+    let i = 0;
+    const fakeFetch = async () => ({
+      ok: true,
+      status: 200,
+      body: {
+        getReader: () => ({
+          read: async () => (i < parts.length ? { value: parts[i++], done: false } : { value: undefined, done: true }),
+          cancel: async () => {},
+        }),
+      },
+    });
+    await makeStream(fakeFetch)(port, { baseUrl: 'http://localhost:11434/v1' });
+    expect(deltas(msgs)).toBe('한');
+  });
+
+  test('exactly one done is sent even when [DONE] arrives without a newline', async () => {
+    const msgs = await collect(['data: {"choices":[{"delta":{"content":"x"}}]}\n', 'data: [DONE]']);
+    expect(deltas(msgs)).toBe('x');
+    expect(msgs.filter((m) => m.type === 'done')).toHaveLength(1);
+  });
+});
