@@ -13,6 +13,11 @@ function indexOf(script) {
 }
 
 describe('content module load order', () => {
+  test('loads the LMS provider after its selector/constants inputs and before content.js', () => {
+    expect(indexOf('src/lib/lms-provider.js')).toBeGreaterThan(indexOf('src/lib/constants.js'));
+    expect(indexOf('src/lib/lms-provider.js')).toBeLessThan(indexOf('src/content/content.js'));
+  });
+
   test('loads content-surface after its lifecycle inputs and before content.js', () => {
     expect(indexOf('src/content/content-term-preview.js')).toBeLessThan(indexOf('src/content/content-surface.js'));
     expect(indexOf('src/content/content-surface.js')).toBeLessThan(indexOf('src/content/content.js'));

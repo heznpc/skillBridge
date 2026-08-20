@@ -6,7 +6,7 @@
  * far you've read. This adds both, DOM-only (no storage, no network). Built
  * with DOM APIs (no innerHTML) since the content is dynamic heading text.
  *
- * Loaded after content.js: uses SKILLJAR_SELECTORS, TOC_LABELS, and the
+ * Loaded after content.js: uses provider page context, TOC_LABELS, and the
  * optional window._sb.t i18n resolver (falls back to English).
  */
 
@@ -24,11 +24,8 @@
   const _caps = (window._sb && window._sb.hostCaps) || null;
   if (_caps && _caps.readingAid === false) return;
 
-  // A Skilljar lesson page is a course slug + numeric lesson id (e.g.
-  // /claude-101/383389). On scoped hosts (claude.com tutorials) the lesson is
-  // identified by the presence of its content root instead.
-  const LESSON_PATH = /\/[^/]+\/\d+/;
-  const _scope = _caps && _caps.contentScope;
+  const _providerContext = window._sb?.providerContext || null;
+  const _scope = _providerContext?.translationScope || null;
 
   function label(map, fallback) {
     const sb = window._sb;
@@ -40,18 +37,12 @@
   // lesson headings only, never the surrounding page chrome.
   function lessonRoots() {
     if (_scope) return Array.from(document.querySelectorAll(_scope));
-    const r =
-      document.querySelector(SKILLJAR_SELECTORS.lessonMain) ||
-      document.querySelector(SKILLJAR_SELECTORS.lessonContent) ||
-      document.querySelector(SKILLJAR_SELECTORS.courseContent) ||
-      document.querySelector('main');
+    const r = document.querySelector(window._sb?.providerContext?.contentRootSelector || 'main');
     return r ? [r] : [];
   }
 
   function isLessonPage() {
-    // Scoped hosts: a lesson is present iff its content root is in the DOM.
-    if (_scope) return !!document.querySelector(_scope);
-    return LESSON_PATH.test(location.pathname);
+    return window._sb?.providerContext?.pageKind === 'lesson';
   }
 
   // ============================================================

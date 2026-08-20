@@ -15,7 +15,7 @@
   }
 
   function exportLessonPDF() {
-    const lessonContent = sb.$(SKILLJAR_SELECTORS.lessonContent) || sb.$('main');
+    const lessonContent = sb.$(sb.providerContext?.contentRootSelector) || sb.$('main');
     if (!lessonContent) return;
 
     const title = sb.$('h1')?.textContent?.trim() || 'SkillBridge Lesson';
