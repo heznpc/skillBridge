@@ -133,6 +133,17 @@ test.describe('SkillBridge — LIVE local engine (real Ollama)', () => {
     let [sw] = context.serviceWorkers();
     if (!sw) sw = await context.waitForEvent('serviceworker', { timeout: 20000 });
     extensionId = sw.url().split('/')[2];
+
+    // A Skilljar lesson is both what makes the popup show AI settings and the
+    // only kind of surface allowed to open the tutor's chat port. Registered
+    // here, not inside a test, so neither test depends on the other running.
+    await context.route('https://anthropic.skilljar.com/**', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'text/html',
+        body: '<!doctype html><html><body><main><h1>Course lesson</h1></main></body></html>',
+      }),
+    );
   });
 
   test.afterAll(async () => {
@@ -143,14 +154,6 @@ test.describe('SkillBridge — LIVE local engine (real Ollama)', () => {
   });
 
   test('popup selects local engine and the probe reaches the real Ollama server', async () => {
-    // Popup shows the AI settings only on a supported page — serve a Skilljar lesson.
-    await context.route('https://anthropic.skilljar.com/**', (route) =>
-      route.fulfill({
-        status: 200,
-        contentType: 'text/html',
-        body: '<!doctype html><html><body><main><h1>Course lesson</h1></main></body></html>',
-      }),
-    );
     // Create the popup page FIRST so the later-created lesson tab stays the
     // active tab; the popup then reads the Skilljar tab as the active page
     // (a background tab navigation does not steal focus).
@@ -185,37 +188,61 @@ test.describe('SkillBridge — LIVE local engine (real Ollama)', () => {
   });
 
   test('the tutor Port streams real tokens from Ollama end to end', async () => {
-    // Drive the exact SW Port path translator._localChatStream uses, from a
-    // real extension page context, against the real model.
-    const page = await context.newPage();
-    await page.goto(`chrome-extension://${extensionId}/src/popup/popup.html`, { waitUntil: 'domcontentloaded' });
+    // Drive the exact SW Port path translator._localChatStream uses, against
+    // the real model — and from the context that actually uses it. The port is
+    // gated to the surfaces `content_scripts` inject into (_isLocalChatPort in
+    // background.js), and translator.js — the sole caller of
+    // chrome.runtime.connect({name:'sb-local-chat'}) — is a content script on
+    // the course sites. An extension page cannot open this port at all, so
+    // this drives the lesson tab's ISOLATED world, where the tutor lives.
+    const lesson = await context.newPage();
+    await lesson.goto('https://anthropic.skilljar.com/live-stream', { waitUntil: 'domcontentloaded' });
 
-    const result = await page.evaluate(
-      ({ base, model }) =>
-        new Promise((resolve) => {
-          const port = chrome.runtime.connect({ name: 'sb-local-chat' });
-          let full = '';
-          let chunks = 0;
-          const timer = setTimeout(() => resolve({ error: 'timeout', full, chunks }), 60000);
-          port.onMessage.addListener((msg) => {
-            if (msg.type === 'chunk') {
-              chunks++;
-              full += msg.delta;
-            } else if (msg.type === 'done') {
-              clearTimeout(timer);
-              resolve({ full, chunks });
-            } else if (msg.type === 'error') {
-              clearTimeout(timer);
-              resolve({ error: msg.error, full, chunks });
-            }
-          });
-          port.postMessage({
-            type: 'start',
-            baseUrl: base,
-            model,
-            messages: [{ role: 'user', content: 'Reply with exactly the word: BRIDGE' }],
-          });
-        }),
+    const sw = context.serviceWorkers()[0];
+    const result = await sw.evaluate(
+      async ({ base, model }) => {
+        const [tab] = await chrome.tabs.query({ url: 'https://anthropic.skilljar.com/*' });
+        const [injected] = await chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          world: 'ISOLATED',
+          args: [base, model],
+          func: (baseUrl, modelName) =>
+            new Promise((resolve) => {
+              const port = chrome.runtime.connect({ name: 'sb-local-chat' });
+              let full = '';
+              let chunks = 0;
+              const timer = setTimeout(() => resolve({ error: 'timeout', full, chunks }), 60000);
+              // A port the gate refuses is disconnected immediately and never
+              // answers. Without this the refusal would look identical to a
+              // slow model: sixty seconds of silence reported as 'timeout'.
+              // A successful stream ends with a 'done' MESSAGE and leaves the
+              // port open, so this only ever fires on a real rejection.
+              port.onDisconnect.addListener(() => {
+                clearTimeout(timer);
+                resolve({ error: 'disconnected', full, chunks });
+              });
+              port.onMessage.addListener((msg) => {
+                if (msg.type === 'chunk') {
+                  chunks++;
+                  full += msg.delta;
+                } else if (msg.type === 'done') {
+                  clearTimeout(timer);
+                  resolve({ full, chunks });
+                } else if (msg.type === 'error') {
+                  clearTimeout(timer);
+                  resolve({ error: msg.error, full, chunks });
+                }
+              });
+              port.postMessage({
+                type: 'start',
+                baseUrl,
+                model: modelName,
+                messages: [{ role: 'user', content: 'Reply with exactly the word: BRIDGE' }],
+              });
+            }),
+        });
+        return injected.result;
+      },
       { base: OLLAMA, model: MODEL },
     );
 
@@ -225,6 +252,6 @@ test.describe('SkillBridge — LIVE local engine (real Ollama)', () => {
     // The model was asked to say BRIDGE — a loose check that real content flowed.
     expect(result.full.toUpperCase()).toContain('BRIDGE');
 
-    await page.close();
+    await lesson.close();
   });
 });
