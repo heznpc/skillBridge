@@ -7,6 +7,7 @@
  */
 
 const { test, expect } = require('@playwright/test');
+const { SETTLE_MS } = require('./helpers/timeouts');
 const { launchExtension, closeExtension, evalInContentWorld } = require('./helpers/extension');
 const { registerStubs, startFixtureServer, stopFixtureServer } = require('./helpers/network-stubs');
 
@@ -14,7 +15,7 @@ const VISIBLE_TRANSLATION_BUDGET_MS = Number(process.env.SB_E2E_VISIBLE_TRANSLAT
 const LAZY_SCROLL_TRANSLATION_BUDGET_MS = Number(process.env.SB_E2E_LAZY_SCROLL_TRANSLATION_BUDGET_MS || 5_000);
 
 async function waitForSkillBridge(context, page) {
-  const deadline = Date.now() + 15_000;
+  const deadline = Date.now() + SETTLE_MS;
   let snap = null;
   while (Date.now() < deadline) {
     snap = await evalInContentWorld(context, 'snapshot');

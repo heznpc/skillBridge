@@ -29,7 +29,7 @@ test.describe('SkillBridge — offline GT recovery', () => {
 
     await page.goto(`${fixture.baseUrl}/lesson`);
 
-    const deadline = Date.now() + 15_000;
+    const deadline = Date.now() + SETTLE_MS;
     while (Date.now() < deadline) {
       const snap = await evalInContentWorld(extCtx.context, 'snapshot');
       if (snap?.init && snap?.sb && snap?.methods?.gt) break;

@@ -31,7 +31,6 @@ const {
   registerStubs,
   startFixtureServer,
   stopFixtureServer,
-  getGTRequestCount,
   getGTRequests,
   resetGTRequestCount,
 } = require('./helpers/network-stubs');
@@ -55,7 +54,7 @@ test.describe('SkillBridge — CWS direct-GT IDB cache', () => {
 
     // The CWS artifact deliberately has no page bridge. Storage initialization
     // must still complete so GT results can be cached directly.
-    const deadline = Date.now() + 15_000;
+    const deadline = Date.now() + SETTLE_MS;
     let snap = null;
     while (Date.now() < deadline) {
       snap = await evalInContentWorld(extCtx.context, 'snapshot');
@@ -87,7 +86,7 @@ test.describe('SkillBridge — CWS direct-GT IDB cache', () => {
 
     // Poll translate() until the IndexedDB transaction commits and the cache
     // is observed.
-    const deadline = Date.now() + 6_000;
+    const deadline = Date.now() + SETTLE_MS;
     let warm = cold;
     while (Date.now() < deadline) {
       warm = await evalInContentWorld(extCtx.context, 'translateOnce', { text: TEXT, lang: 'ko' });
