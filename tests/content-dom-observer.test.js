@@ -17,8 +17,32 @@ const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'content', 'conten
 new Function('window', src)(window);
 const { createContentDomObserver } = window._sbContentDomObserver;
 
-/** Let the MutationObserver callback and the debounce timer both run. */
+/**
+ * A fixed grace period. Use ONLY after `settleUntil` has already confirmed the
+ * expected work happened, to give any WRONG extra work a chance to show up
+ * before an absence assertion — and in the one test whose whole claim is that
+ * nothing runs, where there is nothing to poll for.
+ */
 const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
+
+/**
+ * Poll until `predicate()` holds. For "wait for the expected outcome".
+ *
+ * The chain under test is a MutationObserver callback (a microtask) followed
+ * by a debounce timer, and on a loaded machine it intermittently takes longer
+ * than any single number you pick: a flat 20ms sleep left `processed` empty in
+ * roughly one full-suite run in five, while the same test passed every time in
+ * isolation. A ceiling costs nothing when the assertion passes — this exits as
+ * soon as the condition holds, so it only changes how long a real failure
+ * takes to report.
+ */
+async function settleUntil(predicate, ceilingMs = 2000) {
+  const deadline = Date.now() + ceilingMs;
+  while (Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    if (predicate()) return;
+  }
+}
 
 function setup({ max = 2, scope = null, debounce = 1 } = {}) {
   document.body.innerHTML = '<div id="root"></div>';
@@ -70,7 +94,7 @@ describe('content DOM observer — mutation burst handling', () => {
   test('a burst inside the cap translates every node', async () => {
     const { processed, root } = setup({ max: 10 });
     burst(root, 4);
-    await settle();
+    await settleUntil(() => processed.length >= 4);
     expect(processed.sort()).toEqual(['p0', 'p1', 'p2', 'p3']);
   });
 
@@ -81,7 +105,7 @@ describe('content DOM observer — mutation burst handling', () => {
     // its tail untranslated until some unrelated mutation happened to arrive.
     const { processed, root } = setup({ max: 2 });
     burst(root, 6);
-    await settle();
+    await settleUntil(() => processed.length >= 6);
     expect(processed.length).toBe(6);
     expect(processed.sort()).toEqual(['p0', 'p1', 'p2', 'p3', 'p4', 'p5']);
   });
@@ -95,6 +119,8 @@ describe('content DOM observer — mutation burst handling', () => {
     inner.id = 'excluded-child';
     skipped.appendChild(inner);
     root.appendChild(skipped);
+    await settleUntil(() => processed.length >= 5);
+    // The five are in; now leave room for a sixth to arrive wrongly.
     await settle();
     expect(processed).not.toContain('excluded-child');
     expect(processed.length).toBe(5);
@@ -108,6 +134,7 @@ describe('content DOM observer — mutation burst handling', () => {
     outside.innerHTML = '<p id="stranger">Elsewhere</p>';
     document.body.appendChild(outside);
     burst(root, 5);
+    await settleUntil(() => processed.length >= 5);
     await settle();
     expect(processed).not.toContain('stranger');
     expect(processed.length).toBe(5);
@@ -116,14 +143,15 @@ describe('content DOM observer — mutation burst handling', () => {
   test('the overflow flag is consumed, so a later small burst does not rescan', async () => {
     const { processed, root } = setup({ max: 2 });
     burst(root, 5);
-    await settle();
+    await settleUntil(() => processed.length >= 5);
     const afterFirst = processed.length;
     expect(afterFirst).toBe(5);
 
     processed.length = 0;
     burst(root, 1, 100);
-    await settle();
+    await settleUntil(() => processed.includes('p100'));
     // A rescan would re-visit p0..p4 as well; only the new node should appear.
+    await settle();
     expect(processed).toEqual(['p100']);
   });
 
