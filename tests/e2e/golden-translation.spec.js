@@ -40,6 +40,7 @@
  */
 
 const { test, expect } = require('@playwright/test');
+const { SETTLE_MS } = require('./helpers/timeouts');
 const { launchExtension, closeExtension, evalInContentWorld } = require('./helpers/extension');
 const { registerStubs, startFixtureServer, stopFixtureServer } = require('./helpers/network-stubs');
 
@@ -64,7 +65,7 @@ test.describe('SkillBridge — golden translation flow', () => {
     // The content script registers via `document_idle`. Poll the isolated
     // world for the assembled namespace; cleaner timeout than a bare
     // `waitForFunction` over the main-world `window` (which can't see _sb).
-    const deadline = Date.now() + 15_000;
+    const deadline = Date.now() + SETTLE_MS;
     let snap = null;
     while (Date.now() < deadline) {
       snap = await evalInContentWorld(extCtx.context, 'snapshot');
@@ -119,7 +120,7 @@ test.describe('SkillBridge — golden translation flow', () => {
     // Wait for the GT batch to land — switchLanguage's promise resolves
     // after applyStaticTranslations returns synchronously, but processGTQueue
     // is fire-and-forget. Poll until the H1 swaps.
-    const deadline = Date.now() + 10_000;
+    const deadline = Date.now() + SETTLE_MS;
     let after = before;
     while (Date.now() < deadline) {
       after = await evalInContentWorld(extCtx.context, 'pageText');
@@ -166,7 +167,7 @@ test.describe('SkillBridge — golden translation flow', () => {
 
     await evalInContentWorld(extCtx.context, 'switchLanguage', 'en');
 
-    const deadline = Date.now() + 10_000;
+    const deadline = Date.now() + SETTLE_MS;
     let pt = null;
     while (Date.now() < deadline) {
       pt = await evalInContentWorld(extCtx.context, 'pageText');

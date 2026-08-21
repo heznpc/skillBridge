@@ -25,6 +25,7 @@
  */
 
 const { test, expect } = require('@playwright/test');
+const { SETTLE_MS } = require('./helpers/timeouts');
 const { launchExtension, closeExtension, evalInContentWorld } = require('./helpers/extension');
 const { registerStubs, startFixtureServer, stopFixtureServer } = require('./helpers/network-stubs');
 
@@ -45,7 +46,7 @@ test.describe('SkillBridge — lazy translation horizon', () => {
 
     await page.goto(`${fixture.baseUrl}/lesson`);
 
-    const deadline = Date.now() + 15_000;
+    const deadline = Date.now() + SETTLE_MS;
     while (Date.now() < deadline) {
       const snap = await evalInContentWorld(extCtx.context, 'snapshot');
       if (snap?.init && snap?.sb && snap?.methods?.gt) break;
@@ -62,7 +63,7 @@ test.describe('SkillBridge — lazy translation horizon', () => {
     // === Switch to Korean and wait for visible/near-viewport content ===
     await evalInContentWorld(extCtx.context, 'switchLanguage', 'ko');
 
-    const viewportDeadline = Date.now() + 10_000;
+    const viewportDeadline = Date.now() + SETTLE_MS;
     while (Date.now() < viewportDeadline) {
       const pt = await evalInContentWorld(extCtx.context, 'pageText');
       if (pt.h1 === 'Claude 소개') break;
@@ -88,7 +89,7 @@ test.describe('SkillBridge — lazy translation horizon', () => {
     await evalInContentWorld(extCtx.context, 'scrollToBelowFold');
 
     // === Assertion B: lazy observer fired → translation lands ===
-    const scrollDeadline = Date.now() + 10_000;
+    const scrollDeadline = Date.now() + SETTLE_MS;
     while (Date.now() < scrollDeadline) {
       pt = await evalInContentWorld(extCtx.context, 'pageText');
       if (pt.pBelowFold && pt.pBelowFold.includes('지연 번역')) break;

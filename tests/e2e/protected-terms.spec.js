@@ -26,6 +26,7 @@
  */
 
 const { test, expect } = require('@playwright/test');
+const { SETTLE_MS } = require('./helpers/timeouts');
 const { launchExtension, closeExtension, evalInContentWorld } = require('./helpers/extension');
 const {
   registerStubs,
@@ -52,7 +53,7 @@ test.describe('SkillBridge — protected terms restoration', () => {
 
     await page.goto(`${fixture.baseUrl}/lesson`);
 
-    const deadline = Date.now() + 15_000;
+    const deadline = Date.now() + SETTLE_MS;
     while (Date.now() < deadline) {
       const snap = await evalInContentWorld(extCtx.context, 'snapshot');
       if (snap?.init && snap?.sb && snap?.methods?.gt) break;
@@ -74,7 +75,7 @@ test.describe('SkillBridge — protected terms restoration', () => {
 
     // Wait for GT batch to land — proxy via the H1 swap (other tests
     // already prove the GT pipeline runs to completion).
-    const deadline = Date.now() + 10_000;
+    const deadline = Date.now() + SETTLE_MS;
     let pt = before;
     while (Date.now() < deadline) {
       pt = await evalInContentWorld(extCtx.context, 'pageText');
@@ -111,7 +112,7 @@ test.describe('SkillBridge — protected terms restoration', () => {
     await evalInContentWorld(extCtx.context, 'switchLanguage', 'en');
 
     const original = 'Anthropic released Claude as a frontier model.';
-    const enDeadline = Date.now() + 10_000;
+    const enDeadline = Date.now() + SETTLE_MS;
     let before = await evalInContentWorld(extCtx.context, 'pageText');
     while (Date.now() < enDeadline) {
       before = await evalInContentWorld(extCtx.context, 'pageText');
@@ -126,7 +127,7 @@ test.describe('SkillBridge — protected terms restoration', () => {
     // ran against a half-open translator and the test failed with an error
     // object instead of the mistranslation it meant to plant. Wait for the same
     // readiness signal upgrade-from-legacy.spec.js uses.
-    const cacheDeadline = Date.now() + 15_000;
+    const cacheDeadline = Date.now() + SETTLE_MS;
     let cacheSnap = null;
     while (Date.now() < cacheDeadline) {
       cacheSnap = await evalInContentWorld(extCtx.context, 'snapshot');
@@ -140,7 +141,7 @@ test.describe('SkillBridge — protected terms restoration', () => {
 
     await evalInContentWorld(extCtx.context, 'switchLanguage', 'ko');
 
-    const deadline = Date.now() + 10_000;
+    const deadline = Date.now() + SETTLE_MS;
     let pt = before;
     while (Date.now() < deadline) {
       pt = await evalInContentWorld(extCtx.context, 'pageText');
@@ -176,13 +177,21 @@ test.describe('SkillBridge — protected terms restoration', () => {
   // but do not read a pass here as proof the re-send path is dead.
   test('a repeated static pass never re-sends text we already translated', async () => {
     await evalInContentWorld(extCtx.context, 'switchLanguage', 'ko');
-    await page.waitForTimeout(1500);
 
     // "Anthropic courses" is in the static dictionary, so the first pass
     // renders "Anthropic 과정" without touching the network. That output is
     // 82% Latin and 12 characters — over both thresholds processOneElement
     // uses — which is exactly what made the next pass treat it as English.
-    const before = await evalInContentWorld(extCtx.context, 'pageText');
+    // Poll for it rather than sleeping a fixed 1500ms: this waits for the
+    // first pass to LAND, and a fixed sleep just asserts the runner was fast
+    // enough. The short waits further down are different — those are part of
+    // the assertion and stay fixed.
+    const deadline = Date.now() + SETTLE_MS;
+    let before = await evalInContentWorld(extCtx.context, 'pageText');
+    while (Date.now() < deadline && before.brandHeading !== 'Anthropic 과정') {
+      await page.waitForTimeout(200);
+      before = await evalInContentWorld(extCtx.context, 'pageText');
+    }
     expect(before.brandHeading).toBe('Anthropic 과정');
 
     // Assert on the NETWORK, not the rendered text: a re-send is the defect
