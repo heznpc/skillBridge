@@ -243,6 +243,15 @@ async function registerStubs(context) {
   // Google Translate — return canned Korean for known strings; fall back
   // to a marker so unmapped strings show up clearly in assertions.
   await context.route('https://translate.googleapis.com/**', async (route) => {
+    // Opt-in latency, off unless SB_E2E_GT_DELAY_MS is set. The stub normally
+    // answers instantly, which hides every race between a DOM write (no
+    // network) and the GT round trip that follows it — those only surface on a
+    // loaded CI runner, where they look like ordinary flake. Setting a delay
+    // makes that ordering deterministic and reproducible on a quiet machine:
+    //   SB_E2E_GT_DELAY_MS=800 npx playwright test tests/e2e/protected-terms.spec.js
+    if (process.env.SB_E2E_GT_DELAY_MS) {
+      await new Promise((r) => setTimeout(r, Number(process.env.SB_E2E_GT_DELAY_MS)));
+    }
     const request = route.request();
     const url = new URL(request.url());
     // Since v4 the extension sends `q` in the POST body (lesson text must not
