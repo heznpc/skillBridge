@@ -182,17 +182,36 @@ test.describe('SkillBridge — protected terms restoration', () => {
     // renders "Anthropic 과정" without touching the network. That output is
     // 82% Latin and 12 characters — over both thresholds processOneElement
     // uses — which is exactly what made the next pass treat it as English.
-    // Poll for it rather than sleeping a fixed 1500ms: this waits for the
-    // first pass to LAND, and a fixed sleep just asserts the runner was fast
-    // enough. The short waits further down are different — those are part of
-    // the assertion and stay fixed.
+    // The precondition here is QUIESCENCE, not just "the static write landed".
+    // Three things have to be true before the counter is reset below, and only
+    // the first is visible in brandHeading:
+    //   1. the dictionary write rendered,
+    //   2. the first pass's GT round trip for the elements the dictionary does
+    //      NOT cover has come back — pProtected is one of those, so its Korean
+    //      arriving proves the response was applied and the element marked,
+    //   3. the LATE_CONTENT re-scan (SKILLBRIDGE_DELAYS.LATE_CONTENT, 1500ms
+    //      after the first pass) has come and gone without sending anything.
+    // Anything still in flight when resetGTRequestCount() runs lands afterwards
+    // and is indistinguishable from the re-send this test exists to catch —
+    // that is exactly how a text-only poll produced "expected 0, received 1".
+    // The quiet window is deliberately longer than LATE_CONTENT so passing it
+    // *is* the proof that the automatic re-scan stayed silent.
+    const QUIET_POLLS = 10; // × 200ms = 2s > LATE_CONTENT
     const deadline = Date.now() + SETTLE_MS;
     let before = await evalInContentWorld(extCtx.context, 'pageText');
-    while (Date.now() < deadline && before.brandHeading !== 'Anthropic 과정') {
+    let lastCount = getGTRequestCount();
+    let quietPolls = 0;
+    while (Date.now() < deadline) {
       await page.waitForTimeout(200);
       before = await evalInContentWorld(extCtx.context, 'pageText');
+      const count = getGTRequestCount();
+      quietPolls = count === lastCount ? quietPolls + 1 : 0;
+      lastCount = count;
+      const settled = before.brandHeading === 'Anthropic 과정' && before.pProtected?.includes('프런티어');
+      if (settled && quietPolls >= QUIET_POLLS) break;
     }
     expect(before.brandHeading).toBe('Anthropic 과정');
+    expect(before.pProtected, 'first-pass GT round trip must have landed').toContain('프런티어');
 
     // Assert on the NETWORK, not the rendered text: a re-send is the defect
     // itself, and whether its response happens to survive validation is
