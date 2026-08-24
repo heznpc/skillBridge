@@ -25,7 +25,7 @@
  *
  * Usage:
  *   node scripts/capture-skilljar-snapshot.js [--tenant https://anthropic.skilljar.com] \
- *     [--out snapshots/skilljar/<host>-<date>.json] [--fixture-course <slug>]
+ *     [--out snapshots/skilljar/<host>-<date>.json] [--sources <dir>]
  */
 
 'use strict';
@@ -33,6 +33,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { parseSlugs, NON_COURSE_SLUGS } = require('./check-academy-courses');
 
 const args = process.argv.slice(2);
 function argVal(name, dflt) {
@@ -44,7 +45,7 @@ const TENANT = argVal('--tenant', 'https://anthropic.skilljar.com').replace(/\/+
 const HOST = new URL(TENANT).host;
 const DATE = new Date().toISOString().slice(0, 10);
 const OUT = argVal('--out', path.join('snapshots', 'skilljar', `${HOST}-${DATE}.json`));
-const FIXTURE_COURSE = argVal('--fixture-course', null);
+const SOURCES_DIR = argVal('--sources', path.join('snapshots', 'skilljar', 'sources'));
 const UA = 'SkillBridge-SnapshotCapture/1.0 (+https://github.com/heznpc/skillbridge)';
 
 function sha256(s) {
@@ -57,21 +58,42 @@ async function fetchText(url) {
   return resp.text();
 }
 
-/** Course slugs from the catalog page. Same accept/reject rules as
- * scripts/check-academy-courses.js (platform routes stripped). */
-function parseCatalogSlugs(html) {
-  const slugs = new Set();
-  const re = /href\s*=\s*["'](?:(?:https?:)?\/\/[a-z0-9.-]*skilljar\.com)?\/([^"'\s#?]+)["']/gi;
+/**
+ * Course slugs from the catalog page.
+ *
+ * Delegates to check-academy-courses.js's parseSlugs so the two things that
+ * observe this same catalog cannot drift apart — v1 claimed "same accept/
+ * reject rules" in a comment while quietly using a different set, which is
+ * how `privacy` reached the snapshot as a course. Absolute links must also
+ * point at the tenant being captured; another *.skilljar.com host's slug is
+ * not ours to fetch.
+ *
+ * @param {string} html
+ * @param {string} [tenantHost]
+ * @returns {string[]}
+ */
+function parseCatalogSlugs(html, tenantHost) {
+  const slugs = parseSlugs(html).filter((slug) => !NON_COURSE_SLUGS.has(slug));
+  if (!tenantHost) return slugs;
+  const foreign = new Set();
+  const re = /href\s*=\s*["'](?:https?:)?\/\/([a-z0-9.-]*skilljar\.com)\/([^"'\s#?/]+)/gi;
   let m;
   while ((m = re.exec(html)) !== null) {
-    const slug = m[1].trim().replace(/\/+$/, '');
-    if (!slug || slug.includes('/')) continue;
-    if (/^(auth|static|checkout|page|theme|accounts?|search|profile)$/.test(slug)) continue;
-    if (!/^[a-z0-9][a-z0-9-]*$/.test(slug)) continue;
-    slugs.add(slug);
+    if (m[1].toLowerCase() !== tenantHost.toLowerCase()) foreign.add(m[2].replace(/\/+$/, ''));
   }
-  return [...slugs].sort();
+  return slugs.filter((slug) => !foreign.has(slug));
 }
+
+/**
+ * Catalog slugs that are first-party routes rather than courses. Anything
+ * OUTSIDE this set that fails to parse is a capture FAILURE, not a note in
+ * `errors` — see main().
+ */
+const EXPECTED_NON_COURSE = new Set([
+  'certification-faq',
+  'claude-certified-architect-foundations-certification',
+  'privacy',
+]);
 
 /**
  * Return the inner HTML of the first element matched by `openPattern`,
@@ -100,24 +122,38 @@ function extractBalanced(html, openPattern, tag) {
     depth += m[0].startsWith('</') ? -1 : 1;
     if (depth === 0) return html.slice(start, m.index);
   }
-  return html.slice(start);
+  // Opening tag found but never closed: truncated transfer, or the markup
+  // changed shape. Returning the tail would look like a valid (merely
+  // shorter) curriculum and could be written to the snapshot as one.
+  throw new Error(`unbalanced <${tag}>: opening tag at ${open.index} is never closed`);
 }
 
+const NAMED_ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
+
 /**
- * Decode the handful of entities Skilljar titles actually contain.
+ * Decode HTML entities in ONE pass.
  *
- * `&amp;` is decoded LAST on purpose: decoding it first turns `&amp;lt;`
- * into `&lt;` and then into `<`, i.e. one round of double-unescaping that
- * would let encoded markup back into a title string.
+ * Chained `.replace()` calls have two failure modes and v1 shipped both:
+ * decoding `&amp;` before the rest double-unescapes (`&amp;lt;` -> `&lt;` ->
+ * `<`), and any entity without its own `.replace()` survives into the data.
+ * Skilljar writes apostrophes as `&#x27;`, which the hand-listed set missed —
+ * eight committed titles kept the raw entity, which would have made
+ * normalized-title matching fail against Academy for no real reason.
+ *
+ * One regex pass cannot double-unescape (output is never rescanned) and
+ * covers decimal and hex numerics by construction.
+ *
+ * @param {string} str
+ * @returns {string}
  */
-const decodeEntities = (s) =>
-  s
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&#39;|&apos;/g, "'")
-    .replace(/&quot;/g, '"')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&');
+function decodeEntities(str) {
+  return str.replace(/&(?:#[xX]([0-9a-fA-F]+)|#(\d+)|([a-zA-Z]+));/g, (whole, hex, dec, name) => {
+    if (hex) return String.fromCodePoint(parseInt(hex, 16));
+    if (dec) return String.fromCodePoint(parseInt(dec, 10));
+    const named = NAMED_ENTITIES[name.toLowerCase()];
+    return named === undefined ? whole : named;
+  });
+}
 
 const textOf = (s) =>
   decodeEntities(s.replace(/<[^>]+>/g, ' '))
@@ -146,6 +182,39 @@ function reduceFixture(html) {
     list && curriculum !== null ? `${list[0]}${curriculum}</ul>` : '',
     '',
   ].join('\n');
+}
+
+/**
+ * The label of a curriculum <li>: its DIRECT text, excluding descendants.
+ *
+ * `textOf(inner)` on the whole element is wrong for sections. Skilljar
+ * renders a tooltip body as a CHILD of the section item, so v1 stored
+ * "Agents This module explores how to build AI agents using Claude's
+ * capabilities. You'll see real-world..." as a section title — ten sections
+ * across the snapshot were polluted this way. The visible label is the text
+ * that sits directly inside the element, before any child element opens.
+ *
+ * @param {string} inner — inner HTML of the <li>
+ * @returns {string}
+ */
+function directLabel(inner) {
+  const chunks = [];
+  let depth = 0;
+  let last = 0;
+  const tagRe = /<(\/?)([a-zA-Z][a-zA-Z0-9-]*)[^>]*?(\/?)>/g;
+  let m;
+  while ((m = tagRe.exec(inner)) !== null) {
+    if (depth === 0) chunks.push(inner.slice(last, m.index));
+    const selfClosing = m[3] === '/' || /^(br|img|input|hr|meta|link|source)$/i.test(m[2]);
+    if (!selfClosing) depth += m[1] === '/' ? -1 : 1;
+    if (depth < 0) depth = 0;
+    last = tagRe.lastIndex;
+  }
+  if (depth === 0) chunks.push(inner.slice(last));
+  const direct = decodeEntities(chunks.join(' ')).replace(/\s+/g, ' ').trim();
+  // Fall back to the full text only when there is no direct text at all —
+  // an all-markup label is better than an empty one.
+  return direct || textOf(inner);
 }
 
 /**
@@ -187,7 +256,7 @@ function parseCoursePage(html, slug) {
     if (inner === null) continue;
     if (/\bsection\b/.test(cls)) {
       if (current.units.length) sections.push(current);
-      current = { title: textOf(inner), units: [] };
+      current = { title: directLabel(inner), units: [] };
       continue;
     }
     const kindMatch = cls.match(/lesson-([a-z]+)/);
@@ -212,12 +281,13 @@ function parseCoursePage(html, slug) {
 async function main() {
   const catalogUrl = `${TENANT}/`;
   const catalogHtml = await fetchText(catalogUrl);
-  const slugs = parseCatalogSlugs(catalogHtml);
+  const slugs = parseCatalogSlugs(catalogHtml, HOST);
   if (!slugs.length) throw new Error('catalog parsed to zero course slugs — refusing to write an empty snapshot');
   console.log(`catalog: ${slugs.length} course slugs on ${HOST}`);
 
+  const failures = [];
   const snapshot = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     platform: 'skilljar',
     tenant: TENANT,
     fetchedAt: new Date().toISOString(),
@@ -234,6 +304,7 @@ async function main() {
       const unitCount = parsed.sections.reduce((n, s) => n + s.units.length, 0);
       snapshot.courses.push({
         slug,
+        sourcePath: path.join(SOURCES_DIR, `${slug}.html`),
         title: parsed.title,
         sourceUrl: url,
         fetchedAt: new Date().toISOString(),
@@ -242,21 +313,39 @@ async function main() {
         sections: parsed.sections,
       });
       console.log(`  ${slug}: ${parsed.sections.length} sections / ${unitCount} units`);
-      if (FIXTURE_COURSE && slug === FIXTURE_COURSE) {
-        const fixturePath = path.join(path.dirname(OUT), `fixture-${slug}.html`);
-        fs.writeFileSync(fixturePath, reduceFixture(html));
-        console.log(`  fixture written: ${fixturePath}`);
-      }
+      // Preserve the reduced curriculum markup for EVERY course, not just one.
+      // A sha256 cannot be re-parsed: if a parser bug is found after Skilljar
+      // is gone, the fingerprint proves what we fetched but cannot give it
+      // back. These files are the archive; the fingerprint is its checksum.
+      const sourcePath = path.join(SOURCES_DIR, `${slug}.html`);
+      fs.mkdirSync(SOURCES_DIR, { recursive: true });
+      fs.writeFileSync(sourcePath, reduceFixture(html));
     } catch (err) {
-      // A slug from the catalog that is not a course page (marketing tile,
-      // program page) parses to no curriculum — record it rather than fail
-      // the whole capture, but NEVER silently drop a real course.
-      snapshot.errors.push({ slug, url, error: String(err.message || err) });
-      console.warn(`  ${slug}: SKIPPED — ${err.message}`);
+      // Only slugs KNOWN to be non-course routes may be recorded and skipped.
+      // Anything else — a parser regression, a 500, a rate limit — means this
+      // capture does not contain what it claims to, and the whole point is to
+      // be the archival copy of a site that may not be here later. v1 pushed
+      // every failure into `errors` and still exited 0, so a real course
+      // could have gone missing from a "successful" snapshot.
+      const expected = EXPECTED_NON_COURSE.has(slug);
+      snapshot.errors.push({ slug, url, error: String(err.message || err), expected });
+      if (expected) {
+        console.warn(`  ${slug}: skipped (known non-course) — ${err.message}`);
+      } else {
+        console.error(`  ${slug}: FAILED — ${err.message}`);
+        failures.push(slug);
+      }
     }
     await new Promise((r) => setTimeout(r, 300));
   }
 
+  if (failures.length) {
+    throw new Error(
+      `${failures.length} course(s) failed to capture: ${failures.join(', ')}. ` +
+        'Refusing to write a snapshot that silently omits them. Add a genuinely ' +
+        'non-course slug to EXPECTED_NON_COURSE, or fix the parser.',
+    );
+  }
   if (!snapshot.courses.length) throw new Error('zero courses captured — refusing to write');
   fs.mkdirSync(path.dirname(OUT), { recursive: true });
   fs.writeFileSync(OUT, `${JSON.stringify(snapshot, null, 2)}\n`);
@@ -266,7 +355,14 @@ async function main() {
   );
 }
 
-module.exports = { parseCatalogSlugs, parseCoursePage };
+module.exports = {
+  parseCatalogSlugs,
+  parseCoursePage,
+  decodeEntities,
+  directLabel,
+  reduceFixture,
+  EXPECTED_NON_COURSE,
+};
 
 if (require.main === module) {
   main().catch((err) => {
