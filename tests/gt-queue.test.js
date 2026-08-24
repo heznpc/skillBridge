@@ -18,6 +18,82 @@ const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'content', 'gt-que
 const match = src.match(/function isLikelyEnglish\(text\)\s*\{[\s\S]*?\n {2}\}/);
 const isLikelyEnglish = new Function(`${match[0]}\nreturn isLikelyEnglish;`)();
 
+// ============================================================
+// RESIDUE CLASSIFICATION — protected-term-aware ratio
+// ============================================================
+//
+// The E2E (tests/e2e/mixed-localization.spec.js) owns the SEMANTIC contract:
+// already-target-language content is never re-translated, English residue is.
+// This block owns the IMPLEMENTATION: the ratio, its 50% boundary, and the
+// term discount. The 50% figure is an implementation detail — if the
+// classifier is ever replaced, these tests should be replaced with it while
+// the E2E contract survives untouched.
+describe('isLikelyEnglish — protected-term discount', () => {
+  /** Run `fn` with a stub protected-terms global installed. */
+  function withTerms(terms, fn) {
+    const had = 'window' in global;
+    const prev = global.window;
+    global.window = { _protectedTerms: { getProtectedTermList: () => terms } };
+    try {
+      return fn();
+    } finally {
+      if (had) global.window = prev;
+      else delete global.window;
+    }
+  }
+
+  // Longest-first is how protected-terms.js hands the list over.
+  const TERMS = ['Anthropic Academy', 'Computer Use', 'Claude Code', 'Anthropic', 'Claude', 'API', 'SDK'];
+
+  test('term-dense Korean is not English once the terms are discounted', () => {
+    withTerms(TERMS, () => {
+      expect(isLikelyEnglish('Claude API를 사용하세요')).toBe(false);
+      expect(isLikelyEnglish('Claude Code와 Computer Use를 사용한 Anthropic 앱')).toBe(false);
+      // #299's incident string: 82% Latin as written, 0% once discounted.
+      expect(isLikelyEnglish('Anthropic 과정')).toBe(false);
+    });
+  });
+
+  test('real English stays English after the discount', () => {
+    withTerms(TERMS, () => {
+      expect(isLikelyEnglish('Use the Claude API')).toBe(true);
+      expect(isLikelyEnglish('Making a request')).toBe(true);
+      expect(isLikelyEnglish('Tool use with Claude')).toBe(true);
+    });
+  });
+
+  test('a term followed directly by a particle is still discounted', () => {
+    // Masking anchors on letter boundaries and so misses "Computer Use를";
+    // measurement deliberately does not, which is the whole reason the two
+    // use different rules over the same inventory.
+    withTerms(['Computer Use'], () => {
+      expect(isLikelyEnglish('Computer Use를 켜세요')).toBe(false);
+    });
+  });
+
+  test('longest-first matters: a bare prefix must not leave a tail behind', () => {
+    // With 'Claude' applied before 'Claude Code', "Code" survives and counts
+    // as English. The list is longest-first for exactly this reason.
+    withTerms(TERMS, () => {
+      expect(isLikelyEnglish('Claude Code 소개')).toBe(false);
+    });
+  });
+
+  test('a block that is nothing but protected terms is not translatable text', () => {
+    withTerms(TERMS, () => {
+      expect(isLikelyEnglish('Claude Code')).toBe(false);
+    });
+  });
+
+  test('with no terms available it is exactly the old ratio', () => {
+    // Before buildProtectedTermsMap runs, and in every non-DOM caller.
+    withTerms([], () => {
+      expect(isLikelyEnglish('Anthropic 과정')).toBe(true);
+    });
+    expect(isLikelyEnglish('Anthropic 과정')).toBe(true);
+  });
+});
+
 describe('isLikelyEnglish', () => {
   test('classic English sentence → true', () => {
     expect(isLikelyEnglish('Hello world, how are you?')).toBe(true);

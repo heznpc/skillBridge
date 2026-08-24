@@ -48,6 +48,10 @@ const batches = [
     'tests/e2e/performance-budget.spec.js',
     'tests/e2e/pdf-export.spec.js',
     'tests/e2e/protected-terms.spec.js',
+    // Next to protected-terms on purpose: both police what may reach Google.
+    // That one asserts the response is corrected; this one asserts the
+    // request should never have been sent.
+    'tests/e2e/mixed-localization.spec.js',
   ],
   ['tests/e2e/rapid-switch.spec.js', 'tests/e2e/spa-navigation.spec.js'],
   [

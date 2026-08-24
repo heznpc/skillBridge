@@ -443,6 +443,27 @@ async function evalInContentWorld(context, op, arg) {
                   pBelowFold:
                     document.querySelector('#p-below-fold') && document.querySelector('#p-below-fold').textContent,
                 }),
+                // Read the officially-localized fixture (`/localized`). Keyed by
+                // element id so a test can name the exact contract case that
+                // moved. See tests/e2e/fixtures/localized-lesson.html.
+                localizedText: () => {
+                  const ids = [
+                    't-title-en',
+                    't-heading-ko',
+                    't-body-ko',
+                    't-mixed-1',
+                    't-mixed-2',
+                    't-mixed-3',
+                    't-body-en',
+                    't-item-ko',
+                  ];
+                  const out = {};
+                  for (const id of ids) {
+                    const el = document.getElementById(id);
+                    out[id] = el ? el.textContent.replace(/\s+/g, ' ').trim() : null;
+                  }
+                  return out;
+                },
                 // Read quiz fixture state. `answers` is the array of answer-option
                 // label texts AFTER translation — the test asserts these are
                 // still English (the v3.5.x "exam-mode" contract).
