@@ -256,18 +256,6 @@ Translating a course page on every navigation has to be fast and predictable. Th
 - **No telemetry or analytics** — nothing is collected, not even opt-in error reports; marketing convenience never outweighs the privacy promise.
 - **No A/B framework, no paid tier** — both imply infrastructure (traffic, segmentation, billing) that a free, server-less project shouldn't fake.
 
-**The standing "will not do" list.** These are commitments, not a backlog —
-each one is a boundary the project defends rather than something waiting for
-time to be found for it.
-
-- ❌ Multi-LMS / general course-platform support
-- ❌ Premium / paid tier
-- ❌ User-supplied API key
-- ❌ Server-side features that break client-side privacy
-- ❌ Full TypeScript migration — `tsconfig + checkJs` plus JSDoc captures the
-  80% benefit; the full migration costs more than the marginal compile-time
-  gain is worth for an MV3 extension with a direct unpacked-load workflow
-
 ## Supported Languages
 
 ### Premium — Curated Dictionary + Google Translate
