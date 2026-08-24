@@ -305,6 +305,11 @@ Measured facts (2026-08-22, laptop + live site — re-verify before relying):
 
 ### Now — concrete, not blocked on any decision
 
+The only hard dependency is D → E (writer before extractor). A, B, C run in
+parallel; G needs B + C; F needs C; H follows G. Labels are letters on
+purpose — the numeric P-labels collided with this file's release-priority
+P0/P1 vocabulary and with the earlier architecture-sequence P1..P4.
+
 - [x] **Skilljar curriculum snapshot, captured NOW.** _(v2, 2026-08-24 —
       `snapshots/skilljar/anthropic.skilljar.com-2026-08-24.json`: 21 courses,
       453 units, numericId on 453/453, plus `sources/` holding all 21 reduced
@@ -324,80 +329,94 @@ Measured facts (2026-08-22, laptop + live site — re-verify before relying):
       as the archival baseline. Remaining issues are capture-tool robustness,
       tracked below — none require another re-capture while the snapshot
       still re-derives from `sources/`._
-- [ ] **Snapshot capture: transactional publish.** _(P1 follow-up from the
-      #318 review.)_ "Unexpected failure writes nothing" is only true of the
-      JSON today: `sources/*.html` are overwritten mid-loop, per course, so a
-      failed re-run can leave `sources/` half-updated (capture B) next to a
-      kept JSON (capture A) in the working tree — breaking the "JSON is
-      re-derivable from the committed archive" invariant locally, before any
-      commit. Write JSON + sources into a temp dir, validate the whole set
-      (including the reparse-equality cross-check), then atomically swap into
-      place. Build this as a SHARED transactional-writer helper: the Academy
-      extractor must use the same failure semantics from day one instead of
-      copying #318's shape.
-- [ ] **`parseSlugs` host coupling vs `--tenant`.** _(P2 follow-up.)_ The
-      shared catalog parser hard-codes `anthropic.skilljar.com` for absolute
-      URLs, while the capture CLI advertises a generic `--tenant`. A tenant
-      that renders absolute links would silently lose its courses. Either
-      make `parseSlugs(html, expectedHost)` host-parametric (preferred —
-      anthropic-partners.skilljar.com is a plausible future capture) or drop
-      the `--tenant` flag and name the script Anthropic-only.
-- [ ] **Archive checksum vs fetch fingerprint.** _(P3 follow-up.)_
-      `sourceFingerprint` is the sha256 of the FULL fetched HTML, but the
-      committed archive is `reduceFixture(html)` — different bytes, so the
-      recorded hash is a fetch provenance, not the archive's checksum, and
-      the code comment currently implies otherwise. Add `archiveFingerprint`
-      (sha256 of the reduced file) beside it, keep both. Semantic integrity
-      is already covered by the reparse-equality test; this closes byte-level
-      provenance.
-- [ ] **Academy curriculum snapshot extractor.** Same JSON shape as above,
-      platform: claude-academy. Observation only — slugs/titles/sections/
-      unit kind/order as the site shows them; NO canonical ids inside the
-      snapshot (identity policy belongs to the mapper, not the extractor).
-      Unprefixed URL + `Accept-Language: en` + fail-closed English check
-      (html lang + a known sentinel string). Diff on structure changes
+- [ ] **A. Mixed-localization contract — semantic E2E, then the product fix
+      it will very likely demand.** The invariant: content already in the
+      target language is NEVER re-translated; complete English residue
+      (titles, paragraphs) IS translated; a target-language sentence dense
+      with English technical terms ("Claude API를 사용하세요") is NOT
+      misclassified as English residue. That last case likely FAILS today:
+      `isLikelyEnglish` is a >50% Latin-ratio gate, #299's own incident text
+      ("Anthropic 과정", 82% Latin) proves mixed target-language text trips
+      it, and `_lastWritten` only protects text SkillBridge itself wrote —
+      official page content has no such mark. So the DoD is: semantic E2E
+      (asserting on GT request BODIES, not rendered text) → expected red →
+      residue-classifier fix (contract first, implementation second — do
+      not hard-code "strip protected terms then re-ratio" as the answer
+      before the contract tests exist) → green. The current heuristic's
+      numeric boundary is pinned separately in unit tests; the 50% figure
+      is an implementation detail, never a product requirement.
+- [ ] **B. GT experiment protocol freeze** (before any GT call): A–F grade
+      anchors; ambiguous → C; D/F require recorded evidence + second
+      review; per-locale evaluator confidence recorded, low-confidence
+      locales cannot alone justify TM removal; protected-term / number /
+      product-name violations are deterministic flags, not grades. The
+      question is fixed: "is revision-bound lesson-title exact TM worth
+      keeping?" — not "make the best translation".
+- [ ] **C. Academy observation foundation**: a thin shared
+      AcademyObservationClient (fetch unprefixed + `Accept-Language`,
+      selector-verified locale resolution, fail-closed language check,
+      provenance capture) — built ONCE, reused by the coverage probe, the
+      curriculum extractor, and safety recon. Then the official-localization
+      coverage probe on top: per locale × {course/section/lesson/quiz title,
+      lesson body} → {official / English residue / mixed}, reproducible
+      script with observedAt — a dated measurement, never a permanent
+      contract (Anthropic is actively localizing; this is a moving target
+      and later a drift watcher).
+- [ ] **D. Shared transactional snapshot writer**: temp archive → parse →
+      validate → snapshot ↔ archive cross-check → atomic publish; on any
+      failure the previous JSON and sources stay byte-identical and no
+      partial artifact exists. Folds in the #318 follow-ups:
+      `archiveFingerprint` (checksum of the committed reduced source)
+      beside `sourceFingerprint` (full-HTML fetch provenance), and
+      host-parametric `parseSlugs(html, expectedHost)`. Skilljar capture
+      migrates onto it first as the proving ground. Distinct responsibility
+      from the observation client (what/how to fetch ≠ how to publish) —
+      do not merge them.
+- [ ] **E. Academy curriculum snapshot extractor** — on top of C + D.
+      Observation only: slugs/titles/sections/unit kind/order; NO canonical
+      ids (identity policy belongs to the mapper). Diff on structure
       (course/section/unit add/remove/rename/move/kind-change), never on
       displayed totals. Golden fixtures: the API course (76 units) and the
-      Vertex course (76 units, catalog card disagrees — good negative
-      fixture for the "no displayed counts" rule). Structure it as
-      fetch → temp archive → parse → full validation → snapshot → archive
-      cross-check → atomic publish on success only, on top of the shared
-      transactional writer above — do NOT copy #318's write-as-you-go loop.
-- [ ] **67-title GT quality experiment.** Decides whether lesson-title
-      translation memory survives at all. Send the API course's 67 titles
-      through the real GT path (masking applied, standalone strings — the
-      way the extension actually sends them) for the 12 premium locales;
-      grade A–F per title (A/B usable, C glossary candidate, D/F must be
-      curated). n=67 per locale means ~1.5% resolution — treat thresholds
-      as bands, not points, and expect context-free titles ("Temperature",
-      "Citations") to be the worst case, since GT gets no course context.
-      Outcome shapes the curated-phrase rebuild scope: worst case ~1,300
-      strings x 12 locales, best case only catalog/UI/sections + a small
-      exception list.
+      Vertex course (76 units in the DOM while its catalog card says
+      66/9 — the negative fixture for the no-displayed-counts rule).
+- [ ] **F. Academy safety reconnaissance** — sibling of E, same
+      infrastructure, separate observation. Two-stage DoD so a login wall
+      cannot silently produce a half-complete "done": anonymous stage
+      (question container, answer-choice markup, submit affordances,
+      quiz URL/DOM identification) may complete on its own and is then
+      recorded as "partial — pre-submit shape captured; post-submit state
+      requires authenticated observation"; the authenticated stage
+      (submitted/correct/incorrect/explanation DOM) needs the owner's
+      signed-in session. Purpose: know which selectors and chokepoints the
+      quiz-answer-exclusion / exam-safety contract maps to on Academy —
+      BEFORE the support decision, not after.
+- [ ] **G. 67-title GT quality experiment (Phase 1)** — after B and C.
+      The API course's 67 titles through the real send path (masking
+      applied, standalone strings) × 12 premium locales. Output rows:
+      locale / source / GT output / grade / failure reason / flags /
+      evaluator confidence — not a bare letter grid. n=67 per locale is
+      ~1.5% resolution: bands, not points; expect context-free titles
+      ("Temperature", "Citations") to be the worst case.
+- [ ] **H. Cross-course stratified Phase 2.** REQUIRED before any
+      destructive global TM reduction. A catastrophic Phase 1 may fail
+      closed early — preserve existing TM, reject a GT-only switch — but
+      does not by itself prove that broad course-wide TM is the right
+      final architecture. Phase 1's outcome shapes Phase 2's sample
+      (good → oversample ambiguous/education/business titles; mixed →
+      chase the failure types; bad → test whether it is a developer-course
+      artifact). Sample must span: ambiguous one-worders, product/brand,
+      technical concepts, generic headings, education phrasing,
+      business/nonprofit phrasing. Possible outcomes stay open: broad TM /
+      per-locale TM / exception-only / GT+glossary+protected.
 
-- [ ] **Mixed-localization baseline contract (P2), pinned by E2E.** On an
-      officially localized page (academy.claude.com serves Korean lesson
-      bodies with English lesson titles and section headers), SkillBridge
-      must leave already-target-language DOM untouched and translate ONLY
-      the English residue. Today this falls out of `isLikelyEnglish` by
-      accident; nothing pins it, so a heuristic tweak could silently start
-      re-translating official Korean. The behavior contract is testable NOW
-      with a synthetic mixed-language fixture on the existing fixture
-      server — it does not need the host-support decision, and having it
-      green first de-risks that decision.
-- [ ] **67-title GT experiment, Phase 2 (conditional).** Only if Phase 1
-      (API course) reads well: a stratified sample across the 22 Academy
-      courses — ambiguous one-worders ("Temperature", "Citations",
-      "Diligence"), product names, generic-noun headings, technical
-      phrases, education/business phrasing (AI Fluency, K-12, nonprofit
-      tracks have a very different register from developer courses). One
-      course cannot carry the external validity for "drop lesson-title
-      translation memory"; two good samples can.
 
 ### Blocked on an owner decision
 
 Strategy is decided by the owner directly, per this file's own policy —
-these are listed only so the dependency chain stays visible.
+these are listed only so the dependency chain stays visible. The queue runs
+IN PARALLEL with the evidence work above: preparing a decision is free and
+its lead time (CWS review, release batching) is long — only implementation
+waits for the answer.
 
 - Support `academy.claude.com` at all? (Adds a host permission → CWS
   re-review + "new permissions" prompt that disables the extension until
