@@ -39,7 +39,7 @@ Break the language barrier on these free AI courses. <!-- LANG_COUNT_START -->32
 
 <img src="assets/screenshots/skillbridge-demo.gif" alt="SkillBridge demo — translating an AI course page in real time" width="720" />
 
-*Install SkillBridge, visit a course page at anthropic.skilljar.com, and the entire page is translated instantly.*
+_Install SkillBridge, visit a course page at anthropic.skilljar.com, and the entire page is translated instantly._
 
 </div>
 
@@ -66,14 +66,14 @@ The free AI courses at [anthropic.skilljar.com](https://anthropic.skilljar.com/)
 
 Generic translators make it worse, not better:
 
-| | Google Translate (page) | SkillBridge |
-|---|---|---|
-| AI terminology | ❌ "Prompt" → "신속한" (wrong) | ✅ "Prompt" → "프롬프트" (correct) |
-| Technical accuracy | ❌ Generic machine translation | ✅ 1,100+ curated terms per Premium language |
-| Learning tools | ❌ None | ✅ Local flashcards, bookmarks, progress, outline, PDF |
-| Video subtitles | ❌ Separate manual toggle | ✅ Auto-translated subtitles |
-| UI preservation | ❌ Breaks checkboxes, progress bars | ✅ All interactive elements preserved |
-| Cost | Free | Free — no API keys needed |
+|                    | Google Translate (page)             | SkillBridge                                            |
+| ------------------ | ----------------------------------- | ------------------------------------------------------ |
+| AI terminology     | ❌ "Prompt" → "신속한" (wrong)      | ✅ "Prompt" → "프롬프트" (correct)                     |
+| Technical accuracy | ❌ Generic machine translation      | ✅ 1,100+ curated terms per Premium language           |
+| Learning tools     | ❌ None                             | ✅ Local flashcards, bookmarks, progress, outline, PDF |
+| Video subtitles    | ❌ Separate manual toggle           | ✅ Auto-translated subtitles                           |
+| UI preservation    | ❌ Breaks checkboxes, progress bars | ✅ All interactive elements preserved                  |
+| Cost               | Free                                | Free — no API keys needed                              |
 
 **SkillBridge exists to remove this barrier** — making AI education accessible worldwide.
 
@@ -141,11 +141,11 @@ Generic translation tools often **mistranslate brand names and technical terms**
 
 <div align="center">
 
-| Before (Google Translate) | After (SkillBridge) |
-|:---:|:---:|
-| ❌ 인류학적 과정 | ✅ Anthropic 과정 |
-| ❌ 클로드 | ✅ Claude |
-| ❌ 신속한 공학 | ✅ 프롬프트 엔지니어링 |
+| Before (Google Translate) |  After (SkillBridge)   |
+| :-----------------------: | :--------------------: |
+|     ❌ 인류학적 과정      |   ✅ Anthropic 과정    |
+|         ❌ 클로드         |       ✅ Claude        |
+|      ❌ 신속한 공학       | ✅ 프롬프트 엔지니어링 |
 
 </div>
 
@@ -244,36 +244,48 @@ The interesting part of SkillBridge is the constraints, not the feature count. A
 Translating a course page on every navigation has to be fast and predictable. The curated dictionary fixes terms generic MT gets wrong ("Prompt" → "프롬프트", never "신속한") at zero latency, the IndexedDB cache makes revisits instant, Google Translate covers the remaining visible text, and protected-term restoration runs after machine translation. Local results come first; the network is used only for text that still needs translation.
 
 **Reliability & safety are designed in, not bolted on.**
-- **Exam-safe by default** — on recognized proctored certification routes the extension *disables itself*, and on recognized quiz pages answer choices are skipped by translation. Detection is pattern-based (URLs + page selectors), so it is a safeguard rather than a guarantee: sitting a proctored exam, turn the extension off. A learning aid must not be mistakable for a cheating tool.
-- **Invariants over hope** — brand/product terms ("Claude", "Cowork", "Agent Skills") are protected by a dictionary and restored *after* machine translation, rather than trusting the translator to leave them alone. (Generic concept words like "subagent" are translated natively per locale — see [docs/TRANSLATION_RULES.md](docs/TRANSLATION_RULES.md).)
+
+- **Exam-safe by default** — on recognized proctored certification routes the extension _disables itself_, and on recognized quiz pages answer choices are skipped by translation. Detection is pattern-based (URLs + page selectors), so it is a safeguard rather than a guarantee: sitting a proctored exam, turn the extension off. A learning aid must not be mistakable for a cheating tool.
+- **Invariants over hope** — brand/product terms ("Claude", "Cowork", "Agent Skills") are protected by a dictionary and restored _after_ machine translation, rather than trusting the translator to leave them alone. (Generic concept words like "subagent" are translated natively per locale — see [docs/TRANSLATION_RULES.md](docs/TRANSLATION_RULES.md).)
 - **Guarding against external drift** — the target site is a third party we don't control, so CI watchers detect when the platform adds a course or changes its DOM selectors and open an issue automatically, instead of letting users hit silent breakage.
 - **Defensive content scripts** — idempotent injection guards and URL polling, because the host app navigates via SPA (content scripts can fire more than once — or not at all — per navigation).
 
-**What I deliberately did *not* build (and why).**
+**What I deliberately did _not_ build (and why).**
+
 - **No SkillBridge servers / no backend** — the CWS edition stores its learning state locally and sends translation text directly to Google Translate, at the deliberate cost of cross-device sync.
 - **No telemetry or analytics** — nothing is collected, not even opt-in error reports; marketing convenience never outweighs the privacy promise.
 - **No A/B framework, no paid tier** — both imply infrastructure (traffic, segmentation, billing) that a free, server-less project shouldn't fake.
 
-The full "things we will not do" list is kept public on purpose in [TODO.md](TODO.md).
+**The standing "will not do" list.** These are commitments, not a backlog —
+each one is a boundary the project defends rather than something waiting for
+time to be found for it.
+
+- ❌ Multi-LMS / general course-platform support
+- ❌ Premium / paid tier
+- ❌ User-supplied API key
+- ❌ Server-side features that break client-side privacy
+- ❌ Full TypeScript migration — `tsconfig + checkJs` plus JSDoc captures the
+  80% benefit; the full migration costs more than the marginal compile-time
+  gain is worth for an MV3 extension with a direct unpacked-load workflow
 
 ## Supported Languages
 
 ### Premium — Curated Dictionary + Google Translate
 
-| Language | Code | Dictionary |
-|----------|------|------------|
-| 🇰🇷 한국어 (Korean) | `ko` | 1,100+ entries |
-| 🇯🇵 日本語 (Japanese) | `ja` | 1,100+ entries |
-| 🇨🇳 中文简体 (Chinese Simplified) | `zh-CN` | 1,100+ entries |
-| 🇹🇼 中文繁體 (Chinese Traditional) | `zh-TW` | 1,100+ entries |
-| 🇪🇸 Español (Spanish) | `es` | 1,100+ entries |
-| 🇫🇷 Français (French) | `fr` | 1,100+ entries |
-| 🇮🇹 Italiano (Italian) | `it` | 1,100+ entries (re-translated from English; native review welcome) |
-| 🇩🇪 Deutsch (German) | `de` | 1,100+ entries |
-| 🇧🇷 Português (Brazilian) | `pt-BR` | 1,100+ entries |
-| 🇷🇺 Русский (Russian) | `ru` | 1,100+ entries |
-| 🇻🇳 Tiếng Việt (Vietnamese) | `vi` | 1,100+ entries |
-| 🇮🇩 Bahasa Indonesia | `id` | 1,100+ entries |
+| Language                          | Code    | Dictionary                                                         |
+| --------------------------------- | ------- | ------------------------------------------------------------------ |
+| 🇰🇷 한국어 (Korean)                | `ko`    | 1,100+ entries                                                     |
+| 🇯🇵 日本語 (Japanese)              | `ja`    | 1,100+ entries                                                     |
+| 🇨🇳 中文简体 (Chinese Simplified)  | `zh-CN` | 1,100+ entries                                                     |
+| 🇹🇼 中文繁體 (Chinese Traditional) | `zh-TW` | 1,100+ entries                                                     |
+| 🇪🇸 Español (Spanish)              | `es`    | 1,100+ entries                                                     |
+| 🇫🇷 Français (French)              | `fr`    | 1,100+ entries                                                     |
+| 🇮🇹 Italiano (Italian)             | `it`    | 1,100+ entries (re-translated from English; native review welcome) |
+| 🇩🇪 Deutsch (German)               | `de`    | 1,100+ entries                                                     |
+| 🇧🇷 Português (Brazilian)          | `pt-BR` | 1,100+ entries                                                     |
+| 🇷🇺 Русский (Russian)              | `ru`    | 1,100+ entries                                                     |
+| 🇻🇳 Tiếng Việt (Vietnamese)        | `vi`    | 1,100+ entries                                                     |
+| 🇮🇩 Bahasa Indonesia               | `id`    | 1,100+ entries                                                     |
 
 ### Standard — Google Translate
 
@@ -289,31 +301,33 @@ issue** the moment a course appears that the dictionaries don't cover; the
 course gets wired into all 12 premium dictionaries; structural CI gates
 (`check:i18n`, `check:dict-coverage`, `check:locales`) and a real-dictionary
 regression suite guard every merge after that. Proven turnaround: on
-**2026-06-10** the watcher flagged the brand-new *Claude Platform 101* course
+**2026-06-10** the watcher flagged the brand-new _Claude Platform 101_ course
 in the morning ([#196](https://github.com/heznpc/skillBridge/issues/196)) and
 all premium locales at the time were wired the same day
 ([#201](https://github.com/heznpc/skillBridge/pull/201)).
 
-Beyond structure, dictionary *content* goes through layered review — CI gates
+Beyond structure, dictionary _content_ goes through layered review — CI gates
 catch shape/contamination drift on every PR, a full per-locale LLM audit runs
 before every store release (see `docs/TRANSLATION_QA.md`), and native-speaker
 review is the final layer:
 
 <!-- LOCALE_QA_START -->
-| Language | Code | Entries | Last curated | Last LLM audit | Native review |
-|---|---|---:|---|---|---|
-| 한국어 | `ko` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| 日本語 | `ja` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| 中文(简体) | `zh-CN` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| 中文(繁體) | `zh-TW` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| Español | `es` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| Français | `fr` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| Italiano | `it` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| Deutsch | `de` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| Português (BR) | `pt-BR` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| Русский | `ru` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| Tiếng Việt | `vi` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| Bahasa Indonesia | `id` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+
+| Language         | Code    | Entries | Last curated | Last LLM audit | Native review                                                     |
+| ---------------- | ------- | ------: | ------------ | -------------- | ----------------------------------------------------------------- |
+| 한국어           | `ko`    |    1129 | 2026-07-28   | 2026-07-28     | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| 日本語           | `ja`    |    1129 | 2026-07-28   | 2026-07-28     | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| 中文(简体)       | `zh-CN` |    1129 | 2026-07-28   | 2026-07-28     | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| 中文(繁體)       | `zh-TW` |    1129 | 2026-07-28   | 2026-07-28     | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Español          | `es`    |    1129 | 2026-07-28   | 2026-07-28     | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Français         | `fr`    |    1129 | 2026-07-28   | 2026-07-28     | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Italiano         | `it`    |    1129 | 2026-07-28   | 2026-07-28     | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Deutsch          | `de`    |    1129 | 2026-07-28   | 2026-07-28     | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Português (BR)   | `pt-BR` |    1129 | 2026-07-28   | 2026-07-28     | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Русский          | `ru`    |    1129 | 2026-07-28   | 2026-07-28     | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Tiếng Việt       | `vi`    |    1129 | 2026-07-28   | 2026-07-28     | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Bahasa Indonesia | `id`    |    1129 | 2026-07-28   | 2026-07-28     | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+
 <!-- LOCALE_QA_END -->
 
 🙋 **Native speakers wanted** — a first native pass on your locale takes
@@ -338,15 +352,15 @@ See our full [Privacy Policy](PRIVACY_POLICY.md).
 
 ## Tech Stack
 
-| Component | Technology |
-|-----------|-----------|
-| Page Translation | Google Translate API |
-| Protected Terms | Auto-correction of GT brand/product term errors per language (Claude, Cowork, Computer Use, Agent Skills, etc.) |
-| Curated Dictionaries | Hand-tuned JSON (1,100+ × 12 languages) |
-| Translation Cache | IndexedDB |
-| Local Learning Tools | `chrome.storage.local` + IndexedDB |
-| AI Tutor | Claude Sonnet 4.6, with an automatic Sonnet 4.5 fallback, via isolated bundled Puter runtime (free Puter sign-in) |
-| CJK Font Rendering | Local system/Noto fallback stacks |
+| Component            | Technology                                                                                                        |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Page Translation     | Google Translate API                                                                                              |
+| Protected Terms      | Auto-correction of GT brand/product term errors per language (Claude, Cowork, Computer Use, Agent Skills, etc.)   |
+| Curated Dictionaries | Hand-tuned JSON (1,100+ × 12 languages)                                                                           |
+| Translation Cache    | IndexedDB                                                                                                         |
+| Local Learning Tools | `chrome.storage.local` + IndexedDB                                                                                |
+| AI Tutor             | Claude Sonnet 4.6, with an automatic Sonnet 4.5 fallback, via isolated bundled Puter runtime (free Puter sign-in) |
+| CJK Font Rendering   | Local system/Noto fallback stacks                                                                                 |
 
 > **Built with [Claude Code](https://docs.anthropic.com/en/docs/claude-code).**
 > This project — from architecture design and feature implementation to debugging and the demo GIF — was developed using Claude Code as an AI pair-programming partner.
@@ -403,7 +417,6 @@ No. SkillBridge is an unofficial community project. It is not affiliated with, e
 - Additional curated language dictionaries (community-driven)
 - Translation quality analytics and community review
 - Multi-LMS platform support beyond Skilljar
-
 
 ## Disclaimer
 

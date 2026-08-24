@@ -31,7 +31,7 @@ an alternate intake channel within 72 hours.
   `src/content/gt-queue.js` structural-integrity check before reconciliation.
 - **Exam-mode safety bypass** — anything that lets the extension
   translate proctored exam content or quiz answer choices in
-  violation of the standing "things we will not do" list (see TODO.md).
+  violation of the standing "will not do" list (see the README).
 - **Developer-source supply chain** — tampering with the optional raw-source
   `src/bridge/puter.js` (hash-checked by `.github/workflows/maintenance.yml`), an npm
   devDependency, or a GitHub Action used in this repo.
