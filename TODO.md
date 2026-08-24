@@ -1,6 +1,6 @@
 # SkillBridge TODO
 
-> Last refreshed: 2026-08-22 (next CWS release: v4.0.0)
+> Last refreshed: 2026-08-24 (next CWS release: v4.0.0)
 
 Items below are concrete engineering / ops work. Anything strategic — what
 markets we enter, what we charge, what features we accept — is an owner
@@ -320,6 +320,36 @@ Measured facts (2026-08-22, laptop + live site — re-verify before relying):
       disappear. Capture all course curricula (sections, unit titles,
       numeric ids, order) into a committed JSON snapshot while the site is
       up. This is insurance even if Academy support is declined.
+      _Review verdict (external, 2026-08-24, post-#318): the DATA is accepted
+      as the archival baseline. Remaining issues are capture-tool robustness,
+      tracked below — none require another re-capture while the snapshot
+      still re-derives from `sources/`._
+- [ ] **Snapshot capture: transactional publish.** _(P1 follow-up from the
+      #318 review.)_ "Unexpected failure writes nothing" is only true of the
+      JSON today: `sources/*.html` are overwritten mid-loop, per course, so a
+      failed re-run can leave `sources/` half-updated (capture B) next to a
+      kept JSON (capture A) in the working tree — breaking the "JSON is
+      re-derivable from the committed archive" invariant locally, before any
+      commit. Write JSON + sources into a temp dir, validate the whole set
+      (including the reparse-equality cross-check), then atomically swap into
+      place. Build this as a SHARED transactional-writer helper: the Academy
+      extractor must use the same failure semantics from day one instead of
+      copying #318's shape.
+- [ ] **`parseSlugs` host coupling vs `--tenant`.** _(P2 follow-up.)_ The
+      shared catalog parser hard-codes `anthropic.skilljar.com` for absolute
+      URLs, while the capture CLI advertises a generic `--tenant`. A tenant
+      that renders absolute links would silently lose its courses. Either
+      make `parseSlugs(html, expectedHost)` host-parametric (preferred —
+      anthropic-partners.skilljar.com is a plausible future capture) or drop
+      the `--tenant` flag and name the script Anthropic-only.
+- [ ] **Archive checksum vs fetch fingerprint.** _(P3 follow-up.)_
+      `sourceFingerprint` is the sha256 of the FULL fetched HTML, but the
+      committed archive is `reduceFixture(html)` — different bytes, so the
+      recorded hash is a fetch provenance, not the archive's checksum, and
+      the code comment currently implies otherwise. Add `archiveFingerprint`
+      (sha256 of the reduced file) beside it, keep both. Semantic integrity
+      is already covered by the reparse-equality test; this closes byte-level
+      provenance.
 - [ ] **Academy curriculum snapshot extractor.** Same JSON shape as above,
       platform: claude-academy. Observation only — slugs/titles/sections/
       unit kind/order as the site shows them; NO canonical ids inside the
@@ -329,7 +359,10 @@ Measured facts (2026-08-22, laptop + live site — re-verify before relying):
       (course/section/unit add/remove/rename/move/kind-change), never on
       displayed totals. Golden fixtures: the API course (76 units) and the
       Vertex course (76 units, catalog card disagrees — good negative
-      fixture for the "no displayed counts" rule).
+      fixture for the "no displayed counts" rule). Structure it as
+      fetch → temp archive → parse → full validation → snapshot → archive
+      cross-check → atomic publish on success only, on top of the shared
+      transactional writer above — do NOT copy #318's write-as-you-go loop.
 - [ ] **67-title GT quality experiment.** Decides whether lesson-title
       translation memory survives at all. Send the API course's 67 titles
       through the real GT path (masking applied, standalone strings — the
