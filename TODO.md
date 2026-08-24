@@ -1,6 +1,6 @@
 # SkillBridge TODO
 
-> Last refreshed: 2026-07-30 (next CWS release: v4.0.0)
+> Last refreshed: 2026-08-22 (next CWS release: v4.0.0)
 
 Items below are concrete engineering / ops work. Anything strategic — what
 markets we enter, what we charge, what features we accept — is an owner
@@ -260,6 +260,101 @@ narrowed.
       pass-rate impact vs Chrome built-in translate. Anchors the
       "certificate accessibility" framing with evidence. Blocked on telemetry
       for the pass-rate half.
+
+## Claude Academy investigation board (opened 2026-08-22)
+
+Anthropic opened `academy.claude.com` on 2026-08-20 (in the Claude-app
+profile menu). Verified 2026-08-22 against the live site and the official
+FAQ (`academy.claude.com/help/faq`): it is a separate system from Skilljar
+(FAQ's own words), signs in with the Claude account, does NOT auto-carry
+Skilljar progress (email-match import, gradual rollout), and partner /
+third-party learners stay on Skilljar "for now". Both platforms are live in
+parallel; the same courses exist on both. SkillBridge's manifest does not
+match `academy.claude.com`, so nothing injects there today.
+
+Measured facts (2026-08-22, laptop + live site — re-verify before relying):
+
+- Official localization: exactly 7 locales — en, es, fr, ja, ko, zh-CN,
+  zh-TW (GET probe on `/{locale}/all`; HEAD lies — returns 404 on locales
+  that GET serves. zh-TW was misreported as unsupported this way once).
+- Locale-prefixed pages are CSR shells (~16 KB); the UNPREFIXED paths are
+  SSR (~645 KB for `/all`) and negotiate on Accept-Language. Snapshot /
+  scraping work must use unprefixed + `Accept-Language: en`, then verify
+  the response really is English (fail closed — negotiation policy can
+  change).
+- Lesson bodies sampled on /ko are officially localized; lesson titles and
+  several course-page sections are still English (mixed pages).
+- Displayed totals are NOT stable contracts: same catalog shows
+  "289 resources" (SSR), "357 resources" (hydrated DOM), 22 courses
+  (filter). Vertex course card says "66 lessons · 9 quizzes" while its DOM
+  has 67 lesson units + 8 quiz units. Never assert on displayed counts;
+  diff course/section/unit structure instead.
+- `building-with-the-claude-api` vs Skilljar `claude-with-the-anthropic-api`:
+  core lessons are 1:1 down to kebab-cased slugs; Academy PRUNED the intro
+  section (3), all exercises (5), the satisfaction survey, "MCP review",
+  and the wrap-up. Nothing new added. Sibling courses diverge though —
+  Vertex has `the-batch-tool` / `tools-for-structured-data`, absent from
+  the API course.
+- ko dictionary (1,087 keys, all sections flattened by translator.js):
+  0% exact hit on 116 Academy body blocks (expected — it is a title/phrase
+  memory, not a body dictionary), but only 10% hit on the 67 CURRENT lesson
+  titles, which are the same strings Skilljar shows today. The curated
+  course sections were already stale against live Skilljar — this is
+  translation-memory drift, not an Academy migration problem. 28% of body
+  blocks contain protected terms; masking + pipeline is the durable asset.
+
+### Now — concrete, not blocked on any decision
+
+- [ ] **Skilljar curriculum snapshot, captured NOW.** Time-sensitive:
+      Skilljar lesson URLs are numeric (`/course-slug/287728` — the shape
+      `resume.js` LESSON_PATH matches). Any future migration of stored
+      notes/bookmarks/recent to canonical lesson identity needs the
+      numericId ↔ title/order mapping, and Skilljar is the side that can
+      disappear. Capture all course curricula (sections, unit titles,
+      numeric ids, order) into a committed JSON snapshot while the site is
+      up. This is insurance even if Academy support is declined.
+- [ ] **Academy curriculum snapshot extractor.** Same JSON shape as above,
+      platform: claude-academy. Observation only — slugs/titles/sections/
+      unit kind/order as the site shows them; NO canonical ids inside the
+      snapshot (identity policy belongs to the mapper, not the extractor).
+      Unprefixed URL + `Accept-Language: en` + fail-closed English check
+      (html lang + a known sentinel string). Diff on structure changes
+      (course/section/unit add/remove/rename/move/kind-change), never on
+      displayed totals. Golden fixtures: the API course (76 units) and the
+      Vertex course (76 units, catalog card disagrees — good negative
+      fixture for the "no displayed counts" rule).
+- [ ] **67-title GT quality experiment.** Decides whether lesson-title
+      translation memory survives at all. Send the API course's 67 titles
+      through the real GT path (masking applied, standalone strings — the
+      way the extension actually sends them) for the 12 premium locales;
+      grade A–F per title (A/B usable, C glossary candidate, D/F must be
+      curated). n=67 per locale means ~1.5% resolution — treat thresholds
+      as bands, not points, and expect context-free titles ("Temperature",
+      "Citations") to be the worst case, since GT gets no course context.
+      Outcome shapes the curated-phrase rebuild scope: worst case ~1,300
+      strings x 12 locales, best case only catalog/UI/sections + a small
+      exception list.
+
+### Blocked on an owner decision
+
+Strategy is decided by the owner directly, per this file's own policy —
+these are listed only so the dependency chain stays visible.
+
+- Support `academy.claude.com` at all? (Adds a host permission → CWS
+  re-review + "new permissions" prompt that disables the extension until
+  accepted. Batch with a meaningful release if yes.)
+- Canonical course/lesson identity + storage migration (P1): notes/
+  bookmarks/recent are keyed by exact `location.href` today, so the same
+  course re-taken on Academy has none of the user's Skilljar-era data.
+  Migration must be lossless (add canonical id, keep legacyUrls, never
+  delete old records).
+- Translation-asset split (P3): preserve-English masking and wrong-form
+  recovery exist; "preferred target terminology" (glossary) is a THIRD
+  mechanism that does not exist yet — policy data + QA validator first,
+  automatic enforcement only via a future refinement layer.
+- Optional AI refinement layer (P4) — deliberately last; building it on
+  top of stale phrase data and URL-keyed identity would gold-plate the
+  wrong foundation.
 
 ## Later (when we have a real signal)
 
