@@ -56,3 +56,10 @@ csv/
 # framing, and owner decisions that are nobody else's business. Untracked so
 # it can stay useful without being published.
 TODO.md
+
+# Third-party page archives — this repository is public.
+# The capture script keeps a reduced copy of each fetched curriculum page so a
+# parser bug found later can be traced to its source bytes. That is a local
+# forensic aid, not something to republish from someone else's site. The
+# structured snapshot JSON beside it carries everything the migration needs.
+snapshots/*/sources/

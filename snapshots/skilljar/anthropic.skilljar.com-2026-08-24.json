@@ -2,10 +2,9 @@
   "schemaVersion": 2,
   "platform": "skilljar",
   "tenant": "https://anthropic.skilljar.com",
-  "fetchedAt": "2026-08-24T08:42:27.020Z",
+  "fetchedAt": "2026-08-24T11:32:06.160Z",
   "catalog": {
     "sourceUrl": "https://anthropic.skilljar.com/",
-    "sourceFingerprint": "b44c1691e96a8472e4b6cc3bda7a7b93cee371d3b468c8fe2f7b269eac1c84df",
     "courseSlugs": [
       "ai-capabilities-and-limitations",
       "ai-fluency-for-builders",
@@ -35,11 +34,9 @@
   "courses": [
     {
       "slug": "ai-capabilities-and-limitations",
-      "sourcePath": "snapshots/skilljar/sources/ai-capabilities-and-limitations.html",
       "title": "AI Capabilities and Limitations",
       "sourceUrl": "https://anthropic.skilljar.com/ai-capabilities-and-limitations",
-      "fetchedAt": "2026-08-24T08:42:30.195Z",
-      "sourceFingerprint": "b21470b7337110767ec017dd7e9c784aee820290b44fb92baf2b9c8dbcacc49a",
+      "fetchedAt": "2026-08-24T11:32:07.216Z",
       "unitCount": 14,
       "sections": [
         {
@@ -174,11 +171,9 @@
     },
     {
       "slug": "ai-fluency-for-builders",
-      "sourcePath": "snapshots/skilljar/sources/ai-fluency-for-builders.html",
       "title": "AI Fluency for Builders",
       "sourceUrl": "https://anthropic.skilljar.com/ai-fluency-for-builders",
-      "fetchedAt": "2026-08-24T08:42:45.987Z",
-      "sourceFingerprint": "e22a57e55606814de80f5f0b1b55c7858a20c7c69c9a5119a1f028430c0aa614",
+      "fetchedAt": "2026-08-24T11:32:12.670Z",
       "unitCount": 10,
       "sections": [
         {
@@ -285,11 +280,9 @@
     },
     {
       "slug": "ai-fluency-for-creative-work",
-      "sourcePath": "snapshots/skilljar/sources/ai-fluency-for-creative-work.html",
       "title": "AI Fluency for Creative Work",
       "sourceUrl": "https://anthropic.skilljar.com/ai-fluency-for-creative-work",
-      "fetchedAt": "2026-08-24T08:43:03.409Z",
-      "sourceFingerprint": "6640c7bfdba55b7efeb21eccc5c13147b1a5788e8e62901271ce7d4b5ea899d8",
+      "fetchedAt": "2026-08-24T11:32:15.344Z",
       "unitCount": 9,
       "sections": [
         {
@@ -394,11 +387,9 @@
     },
     {
       "slug": "ai-fluency-for-educators",
-      "sourcePath": "snapshots/skilljar/sources/ai-fluency-for-educators.html",
       "title": "AI Fluency for educators",
       "sourceUrl": "https://anthropic.skilljar.com/ai-fluency-for-educators",
-      "fetchedAt": "2026-08-24T08:43:17.910Z",
-      "sourceFingerprint": "d830b7e020f8ca79b02bbb2e9de660a5bb67c6927b03229959e96468adf0ceba",
+      "fetchedAt": "2026-08-24T11:32:21.721Z",
       "unitCount": 5,
       "sections": [
         {
@@ -455,11 +446,9 @@
     },
     {
       "slug": "ai-fluency-for-nonprofits",
-      "sourcePath": "snapshots/skilljar/sources/ai-fluency-for-nonprofits.html",
       "title": "AI Fluency for nonprofits",
       "sourceUrl": "https://anthropic.skilljar.com/ai-fluency-for-nonprofits",
-      "fetchedAt": "2026-08-24T08:43:19.998Z",
-      "sourceFingerprint": "96c77e0db9017cedb501cb8a4e8756c42e3ed107c07f9c21f8ae7ed7fc565262",
+      "fetchedAt": "2026-08-24T11:32:35.425Z",
       "unitCount": 10,
       "sections": [
         {
@@ -561,11 +550,9 @@
     },
     {
       "slug": "ai-fluency-for-small-businesses",
-      "sourcePath": "snapshots/skilljar/sources/ai-fluency-for-small-businesses.html",
       "title": "AI Fluency for Small Businesses",
       "sourceUrl": "https://anthropic.skilljar.com/ai-fluency-for-small-businesses",
-      "fetchedAt": "2026-08-24T08:43:34.482Z",
-      "sourceFingerprint": "c2383312ad3428c69de022e38727a4d98b55693c308643d097b8c7a50b2be114",
+      "fetchedAt": "2026-08-24T11:32:48.558Z",
       "unitCount": 10,
       "sections": [
         {
@@ -672,11 +659,9 @@
     },
     {
       "slug": "ai-fluency-for-students",
-      "sourcePath": "snapshots/skilljar/sources/ai-fluency-for-students.html",
       "title": "AI Fluency for students",
       "sourceUrl": "https://anthropic.skilljar.com/ai-fluency-for-students",
-      "fetchedAt": "2026-08-24T08:43:36.857Z",
-      "sourceFingerprint": "6811b627739d35b9ef66a639f07f17630b57cd286c0bccc658b4250644cd255f",
+      "fetchedAt": "2026-08-24T11:32:51.522Z",
       "unitCount": 6,
       "sections": [
         {
@@ -740,11 +725,9 @@
     },
     {
       "slug": "ai-fluency-framework-foundations",
-      "sourcePath": "snapshots/skilljar/sources/ai-fluency-framework-foundations.html",
       "title": "AI Fluency: Framework & Foundations",
       "sourceUrl": "https://anthropic.skilljar.com/ai-fluency-framework-foundations",
-      "fetchedAt": "2026-08-24T08:43:51.525Z",
-      "sourceFingerprint": "433a678e0a30853b66146a98c68a25b682cc0cc68ed569928657a0fb36c6a088",
+      "fetchedAt": "2026-08-24T11:33:03.413Z",
       "unitCount": 15,
       "sections": [
         {
@@ -906,11 +889,9 @@
     },
     {
       "slug": "claude-101",
-      "sourcePath": "snapshots/skilljar/sources/claude-101.html",
       "title": "Claude 101",
       "sourceUrl": "https://anthropic.skilljar.com/claude-101",
-      "fetchedAt": "2026-08-24T08:43:54.212Z",
-      "sourceFingerprint": "6602d476bb503ad55e1b845f97a26499f6882c40049bb380b990ed9690a7dede",
+      "fetchedAt": "2026-08-24T11:33:06.409Z",
       "unitCount": 14,
       "sections": [
         {
@@ -1040,11 +1021,9 @@
     },
     {
       "slug": "claude-code-101",
-      "sourcePath": "snapshots/skilljar/sources/claude-code-101.html",
       "title": "Claude Code 101",
       "sourceUrl": "https://anthropic.skilljar.com/claude-code-101",
-      "fetchedAt": "2026-08-24T08:43:58.523Z",
-      "sourceFingerprint": "155381e2dde03c2904f95e2d8dad535d63cb312546db66342c2337f2a03adf78",
+      "fetchedAt": "2026-08-24T11:33:24.072Z",
       "unitCount": 13,
       "sections": [
         {
@@ -1167,11 +1146,9 @@
     },
     {
       "slug": "claude-code-in-action",
-      "sourcePath": "snapshots/skilljar/sources/claude-code-in-action.html",
       "title": "Claude Code in Action",
       "sourceUrl": "https://anthropic.skilljar.com/claude-code-in-action",
-      "fetchedAt": "2026-08-24T08:44:00.051Z",
-      "sourceFingerprint": "3468593e32d5b5a1bac1dc5be4dbd9de9f5c8ff0bd5520e21db2b6ee8e6289fb",
+      "fetchedAt": "2026-08-24T11:33:27.628Z",
       "unitCount": 10,
       "sections": [
         {
@@ -1273,11 +1250,9 @@
     },
     {
       "slug": "claude-in-amazon-bedrock",
-      "sourcePath": "snapshots/skilljar/sources/claude-in-amazon-bedrock.html",
       "title": "Claude with Amazon Bedrock",
       "sourceUrl": "https://anthropic.skilljar.com/claude-in-amazon-bedrock",
-      "fetchedAt": "2026-08-24T08:44:19.595Z",
-      "sourceFingerprint": "66017b350ef180f9e64f82deebd3007ee5cd2d0c12ee32d8b931924448f8a562",
+      "fetchedAt": "2026-08-24T11:33:42.929Z",
       "unitCount": 83,
       "sections": [
         {
@@ -1920,11 +1895,9 @@
     },
     {
       "slug": "claude-platform-101",
-      "sourcePath": "snapshots/skilljar/sources/claude-platform-101.html",
       "title": "Claude Platform 101",
       "sourceUrl": "https://anthropic.skilljar.com/claude-platform-101",
-      "fetchedAt": "2026-08-24T08:44:35.230Z",
-      "sourceFingerprint": "c7118802d8b6a15e0b400d53495feb3a282456606f9599ca7db616379d59f569",
+      "fetchedAt": "2026-08-24T11:33:56.887Z",
       "unitCount": 14,
       "sections": [
         {
@@ -2059,11 +2032,9 @@
     },
     {
       "slug": "claude-with-google-vertex",
-      "sourcePath": "snapshots/skilljar/sources/claude-with-google-vertex.html",
       "title": "Claude on Google Cloud",
       "sourceUrl": "https://anthropic.skilljar.com/claude-with-google-vertex",
-      "fetchedAt": "2026-08-24T08:44:38.002Z",
-      "sourceFingerprint": "ccabe9ee671252517660bf835956ef230f70e36719f1defc52d120c3daf1fe12",
+      "fetchedAt": "2026-08-24T11:33:59.185Z",
       "unitCount": 93,
       "sections": [
         {
@@ -2786,11 +2757,9 @@
     },
     {
       "slug": "claude-with-the-anthropic-api",
-      "sourcePath": "snapshots/skilljar/sources/claude-with-the-anthropic-api.html",
       "title": "Building with the Claude API",
       "sourceUrl": "https://anthropic.skilljar.com/claude-with-the-anthropic-api",
-      "fetchedAt": "2026-08-24T08:44:39.573Z",
-      "sourceFingerprint": "5dd8772e3d8fa543ebafe36bd24c20b00887407b87474087800f56a6437b46a6",
+      "fetchedAt": "2026-08-24T11:34:00.689Z",
       "unitCount": 85,
       "sections": [
         {
@@ -3457,11 +3426,9 @@
     },
     {
       "slug": "introduction-to-agent-skills",
-      "sourcePath": "snapshots/skilljar/sources/introduction-to-agent-skills.html",
       "title": "Introduction to agent skills",
       "sourceUrl": "https://anthropic.skilljar.com/introduction-to-agent-skills",
-      "fetchedAt": "2026-08-24T08:44:44.740Z",
-      "sourceFingerprint": "d6239afc6fe6cfa14076eddba2d7d6c3fb7d7d4821978306b83038d02f421450",
+      "fetchedAt": "2026-08-24T11:34:17.642Z",
       "unitCount": 6,
       "sections": [
         {
@@ -3515,11 +3482,9 @@
     },
     {
       "slug": "introduction-to-claude-cowork",
-      "sourcePath": "snapshots/skilljar/sources/introduction-to-claude-cowork.html",
       "title": "Introduction to Claude Cowork",
       "sourceUrl": "https://anthropic.skilljar.com/introduction-to-claude-cowork",
-      "fetchedAt": "2026-08-24T08:44:59.344Z",
-      "sourceFingerprint": "fce48876f165cf889286923f0225d04cc414ab955305302367ef573f3094ff89",
+      "fetchedAt": "2026-08-24T11:34:28.252Z",
       "unitCount": 15,
       "sections": [
         {
@@ -3656,11 +3621,9 @@
     },
     {
       "slug": "introduction-to-model-context-protocol",
-      "sourcePath": "snapshots/skilljar/sources/introduction-to-model-context-protocol.html",
       "title": "Introduction to Model Context Protocol",
       "sourceUrl": "https://anthropic.skilljar.com/introduction-to-model-context-protocol",
-      "fetchedAt": "2026-08-24T08:45:13.369Z",
-      "sourceFingerprint": "5cece637da06745283bbcfafdf2820377ffae9e7ec9740f99babdc0c23541894",
+      "fetchedAt": "2026-08-24T11:34:44.875Z",
       "unitCount": 14,
       "sections": [
         {
@@ -3785,11 +3748,9 @@
     },
     {
       "slug": "introduction-to-subagents",
-      "sourcePath": "snapshots/skilljar/sources/introduction-to-subagents.html",
       "title": "Introduction to subagents",
       "sourceUrl": "https://anthropic.skilljar.com/introduction-to-subagents",
-      "fetchedAt": "2026-08-24T08:45:25.353Z",
-      "sourceFingerprint": "fefe3f3190f656f3697f50237e2a248003a02bbbe0f78068f6cb4bb5026c67b2",
+      "fetchedAt": "2026-08-24T11:34:47.454Z",
       "unitCount": 4,
       "sections": [
         {
@@ -3829,11 +3790,9 @@
     },
     {
       "slug": "model-context-protocol-advanced-topics",
-      "sourcePath": "snapshots/skilljar/sources/model-context-protocol-advanced-topics.html",
       "title": "Model Context Protocol: Advanced Topics",
       "sourceUrl": "https://anthropic.skilljar.com/model-context-protocol-advanced-topics",
-      "fetchedAt": "2026-08-24T08:45:27.665Z",
-      "sourceFingerprint": "6e8e53a07b4f69575189da35debc5e6eea401a277fb8184f0c81494956380bf7",
+      "fetchedAt": "2026-08-24T11:34:50.527Z",
       "unitCount": 15,
       "sections": [
         {
@@ -3965,11 +3924,9 @@
     },
     {
       "slug": "teaching-ai-fluency",
-      "sourcePath": "snapshots/skilljar/sources/teaching-ai-fluency.html",
       "title": "Teaching AI Fluency",
       "sourceUrl": "https://anthropic.skilljar.com/teaching-ai-fluency",
-      "fetchedAt": "2026-08-24T08:45:30.168Z",
-      "sourceFingerprint": "f75d4858239bca0a97167370d3d24121d2b916caee99e85d02e36a591698f9aa",
+      "fetchedAt": "2026-08-24T11:35:04.459Z",
       "unitCount": 8,
       "sections": [
         {
