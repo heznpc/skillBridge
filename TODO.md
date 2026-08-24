@@ -138,7 +138,7 @@ but they are the honest boundary of what was verified.
       the CWS listing has served 1.0.1 since 2026-03-10 and 3.5.41 was never
       published (see the changelog header note), so 1.0.1 → 4.0.0 is the path
       every real install takes. Confirmed passing (`npx playwright test
-      tests/e2e/upgrade-from-legacy.spec.js`, 5/5): legacy settings survive
+    tests/e2e/upgrade-from-legacy.spec.js`, 5/5): legacy settings survive
       and the welcome banner stays suppressed (no re-onboarding into
       SkillBridge itself), the page-world `puter.*` localStorage keys v1.0.1
       left behind are scrubbed without touching unrelated host keys, the v1
@@ -305,7 +305,13 @@ Measured facts (2026-08-22, laptop + live site — re-verify before relying):
 
 ### Now — concrete, not blocked on any decision
 
-- [ ] **Skilljar curriculum snapshot, captured NOW.** Time-sensitive:
+- [x] **Skilljar curriculum snapshot, captured NOW.** _(done 2026-08-24 —
+      `snapshots/skilljar/anthropic.skilljar.com-2026-08-24.json`: 21 courses,
+      453 units, numericId on 453/453. `scripts/capture-skilljar-snapshot.js` + a committed HTML fixture and parser regression tests, so the parser
+      stays verifiable after the source is gone. Note for the migration
+      matcher: `ai-fluency-for-creative-work` exists on Skilljar but NOT in
+      Academy's 22, and unit counts differ a lot per course — Skilljar's API
+      course has 85 units vs Academy's 76.)_ Time-sensitive:
       Skilljar lesson URLs are numeric (`/course-slug/287728` — the shape
       `resume.js` LESSON_PATH matches). Any future migration of stored
       notes/bookmarks/recent to canonical lesson identity needs the
