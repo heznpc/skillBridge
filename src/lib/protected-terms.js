@@ -275,12 +275,30 @@
     return _protectedKeepEnglish;
   }
 
+  /**
+   * The protected-term inventory, longest-first — the same list masking uses.
+   *
+   * Exposed for MEASUREMENT (see isLikelyEnglish in gt-queue.js), which needs
+   * to discount terms that stay English in every locale before judging whether
+   * a block is English. Callers get the raw strings rather than the compiled
+   * matchers on purpose: masking must be conservative, because a wrong
+   * substitution corrupts text the user reads, while measurement can afford to
+   * be liberal — over-removing only biases the answer toward "leave this block
+   * alone", which is the safe direction on an already-localized page.
+   *
+   * @returns {string[]}
+   */
+  function getProtectedTermList() {
+    return _maskTermsSorted.map(({ term }) => term);
+  }
+
   // Expose as standalone global (loaded before content.js)
   window._protectedTerms = {
     buildProtectedTermsMap,
     restoreProtectedTerms,
     resetProtectedTerms,
     getKeepEnglishTerms,
+    getProtectedTermList,
     maskProtectedTerms,
     unmaskProtectedTerms,
   };

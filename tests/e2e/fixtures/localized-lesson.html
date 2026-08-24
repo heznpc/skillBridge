@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <title>Claude Academy — 부분 현지화 레슨</title>
+  </head>
+  <body>
+    <!--
+      Models an OFFICIALLY LOCALIZED lesson page, measured on
+      academy.claude.com 2026-08-22: lesson bodies are served in the target
+      language while lesson titles and several section headers stay English.
+
+      SkillBridge's contract on such a page has three parts, and each element
+      below is one test case for it:
+        1. content already in the target language is NEVER re-translated,
+        2. complete English residue IS translated,
+        3. a target-language sentence dense with English technical terms is
+           NOT mistaken for English residue.
+
+      (3) is the hard one. `isLikelyEnglish` is a >50% Latin-ratio gate, and
+      #299's own incident string "Anthropic 과정" measures 82% Latin — so
+      term-dense Korean trips it. The `_lastWritten` guard added there cannot
+      help: it only recognises text SkillBridge itself wrote, and none of
+      this page's Korean came from us.
+    -->
+    <main id="lesson-main">
+      <!-- (2) English residue: an untranslated lesson title on a localized page. -->
+      <h1 id="t-title-en">Making a request</h1>
+
+      <!-- (1) Already Korean: must be left exactly as-is. -->
+      <h2 id="t-heading-ko">환경 설정하기</h2>
+      <p id="t-body-ko">
+        먼저 노트북에 필요한 종속성을 설치하세요. 이 방식은 키를 코드 밖에 보관하여 버전 관리 시스템에 실수로 커밋되는
+        것을 방지합니다.
+      </p>
+
+      <!-- (3) Term-dense Korean. Latin-heavy, but it is Korean prose. -->
+      <p id="t-mixed-1">Claude API를 사용하세요</p>
+      <p id="t-mixed-2">Claude Code와 Computer Use를 사용한 Anthropic 앱</p>
+      <p id="t-mixed-3">MCP 서버와 Claude Agent SDK를 연결합니다</p>
+
+      <!-- (2) English residue: a full English paragraph in the body. -->
+      <p id="t-body-en">Tools allow Claude to access information from the outside world.</p>
+
+      <!-- (1) Already Korean, and short — the length floor must not matter. -->
+      <li id="t-item-ko">응답 추출하기</li>
+    </main>
+  </body>
+</html>
