@@ -49,3 +49,10 @@ store-assets/description.md
 # day after export, and they are listing business metrics rather than anything
 # the extension is built from. Re-export from the dashboard when needed.
 csv/
+
+# Internal planning — this repository is public.
+# TODO.md is a working board, not documentation: it carries legal posture
+# (trademark contact and rebrand contingencies), outreach timing, competitive
+# framing, and owner decisions that are nobody else's business. Untracked so
+# it can stay useful without being published.
+TODO.md

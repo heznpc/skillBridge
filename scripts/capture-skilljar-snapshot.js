@@ -7,13 +7,10 @@
  * course → sections → units, with each unit's numeric lesson id, kind,
  * title, order, and URL.
  *
- * WHY THIS EXISTS (2026-08-22): Anthropic opened academy.claude.com and the
- * official FAQ marks Skilljar as a separate, legacy-leaning system. Stored
- * user data (sb_notes / sb_bookmarks / sb_recent) is keyed by exact Skilljar
- * lesson URLs, whose shape is /course-slug/<numericId>. Any future migration
- * to canonical lesson identity needs the numericId ↔ title/section/order
- * mapping — and Skilljar is the side that can disappear. This snapshot is
- * that insurance, captured while the site is still up.
+ * WHY THIS EXISTS: stored user data (sb_notes / sb_bookmarks / sb_recent) is
+ * keyed by exact lesson URLs, whose shape here is /course-slug/<numericId>.
+ * Moving that data onto a stable lesson identity needs the numericId ↔
+ * title/section/order mapping, which only the live curriculum provides.
  *
  * The snapshot records OBSERVATIONS only — no canonical ids, no SkillBridge
  * policy. Identity mapping is a separate layer's job.
