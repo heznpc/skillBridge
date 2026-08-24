@@ -1,0 +1,4051 @@
+{
+  "schemaVersion": 1,
+  "platform": "skilljar",
+  "tenant": "https://anthropic.skilljar.com",
+  "fetchedAt": "2026-08-24T08:26:02.905Z",
+  "catalog": {
+    "sourceUrl": "https://anthropic.skilljar.com/",
+    "sourceFingerprint": "b44c1691e96a8472e4b6cc3bda7a7b93cee371d3b468c8fe2f7b269eac1c84df",
+    "courseSlugs": [
+      "ai-capabilities-and-limitations",
+      "ai-fluency-for-builders",
+      "ai-fluency-for-creative-work",
+      "ai-fluency-for-educators",
+      "ai-fluency-for-nonprofits",
+      "ai-fluency-for-small-businesses",
+      "ai-fluency-for-students",
+      "ai-fluency-framework-foundations",
+      "certification-faq",
+      "claude-101",
+      "claude-certified-architect-foundations-certification",
+      "claude-code-101",
+      "claude-code-in-action",
+      "claude-in-amazon-bedrock",
+      "claude-platform-101",
+      "claude-with-google-vertex",
+      "claude-with-the-anthropic-api",
+      "introduction-to-agent-skills",
+      "introduction-to-claude-cowork",
+      "introduction-to-model-context-protocol",
+      "introduction-to-subagents",
+      "model-context-protocol-advanced-topics",
+      "privacy",
+      "teaching-ai-fluency"
+    ]
+  },
+  "courses": [
+    {
+      "slug": "ai-capabilities-and-limitations",
+      "title": "AI Capabilities and Limitations",
+      "sourceUrl": "https://anthropic.skilljar.com/ai-capabilities-and-limitations",
+      "fetchedAt": "2026-08-24T08:26:15.675Z",
+      "sourceFingerprint": "b21470b7337110767ec017dd7e9c784aee820290b44fb92baf2b9c8dbcacc49a",
+      "unitCount": 14,
+      "sections": [
+        {
+          "title": "Getting started",
+          "units": [
+            {
+              "order": 1,
+              "kind": "modular",
+              "numericId": "456128",
+              "path": "/ai-capabilities-and-limitations/456128",
+              "title": "Intro to AI Capabilities and Limitations"
+            },
+            {
+              "order": 2,
+              "kind": "modular",
+              "numericId": "456427",
+              "path": "/ai-capabilities-and-limitations/456427",
+              "title": "What We Mean by AI"
+            },
+            {
+              "order": 3,
+              "kind": "modular",
+              "numericId": "456439",
+              "path": "/ai-capabilities-and-limitations/456439",
+              "title": "How AI Gets Its Character"
+            }
+          ]
+        },
+        {
+          "title": "Next Token Prediction",
+          "units": [
+            {
+              "order": 4,
+              "kind": "modular",
+              "numericId": "456447",
+              "path": "/ai-capabilities-and-limitations/456447",
+              "title": "Next Token Prediction"
+            },
+            {
+              "order": 5,
+              "kind": "modular",
+              "numericId": "456450",
+              "path": "/ai-capabilities-and-limitations/456450",
+              "title": "Try it out"
+            }
+          ]
+        },
+        {
+          "title": "Knowledge",
+          "units": [
+            {
+              "order": 6,
+              "kind": "modular",
+              "numericId": "456452",
+              "path": "/ai-capabilities-and-limitations/456452",
+              "title": "Knowledge"
+            },
+            {
+              "order": 7,
+              "kind": "modular",
+              "numericId": "456454",
+              "path": "/ai-capabilities-and-limitations/456454",
+              "title": "Try it out"
+            }
+          ]
+        },
+        {
+          "title": "Working Memory",
+          "units": [
+            {
+              "order": 8,
+              "kind": "modular",
+              "numericId": "456455",
+              "path": "/ai-capabilities-and-limitations/456455",
+              "title": "Working Memory"
+            },
+            {
+              "order": 9,
+              "kind": "modular",
+              "numericId": "457834",
+              "path": "/ai-capabilities-and-limitations/457834",
+              "title": "Try it out"
+            }
+          ]
+        },
+        {
+          "title": "Steerability",
+          "units": [
+            {
+              "order": 10,
+              "kind": "modular",
+              "numericId": "456457",
+              "path": "/ai-capabilities-and-limitations/456457",
+              "title": "Steerability"
+            },
+            {
+              "order": 11,
+              "kind": "modular",
+              "numericId": "456460",
+              "path": "/ai-capabilities-and-limitations/456460",
+              "title": "Try it out"
+            }
+          ]
+        },
+        {
+          "title": "Putting it all together and next steps",
+          "units": [
+            {
+              "order": 12,
+              "kind": "modular",
+              "numericId": "456459",
+              "path": "/ai-capabilities-and-limitations/456459",
+              "title": "When Properties Collide"
+            },
+            {
+              "order": 13,
+              "kind": "modular",
+              "numericId": "456461",
+              "path": "/ai-capabilities-and-limitations/456461",
+              "title": "Next Steps"
+            },
+            {
+              "order": 14,
+              "kind": "quiz",
+              "numericId": "456462",
+              "path": "/ai-capabilities-and-limitations/456462",
+              "title": "Course Quiz"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "ai-fluency-for-builders",
+      "title": "AI Fluency for Builders",
+      "sourceUrl": "https://anthropic.skilljar.com/ai-fluency-for-builders",
+      "fetchedAt": "2026-08-24T08:26:29.824Z",
+      "sourceFingerprint": "e22a57e55606814de80f5f0b1b55c7858a20c7c69c9a5119a1f028430c0aa614",
+      "unitCount": 10,
+      "sections": [
+        {
+          "title": "Introduction and AI Fluency framework",
+          "units": [
+            {
+              "order": 1,
+              "kind": "modular",
+              "numericId": "485881",
+              "path": "/ai-fluency-for-builders/485881",
+              "title": "Welcome to AI Fluency for builders"
+            },
+            {
+              "order": 2,
+              "kind": "modular",
+              "numericId": "485885",
+              "path": "/ai-fluency-for-builders/485885",
+              "title": "The 4D Framework"
+            }
+          ]
+        },
+        {
+          "title": "How AI works",
+          "units": [
+            {
+              "order": 3,
+              "kind": "modular",
+              "numericId": "485882",
+              "path": "/ai-fluency-for-builders/485882",
+              "title": "AI capabilities & limitations"
+            }
+          ]
+        },
+        {
+          "title": "The 4D framework for builders",
+          "units": [
+            {
+              "order": 4,
+              "kind": "modular",
+              "numericId": "486159",
+              "path": "/ai-fluency-for-builders/486159",
+              "title": "Delegation & the builder&#x27;s toolkit"
+            },
+            {
+              "order": 5,
+              "kind": "modular",
+              "numericId": "486160",
+              "path": "/ai-fluency-for-builders/486160",
+              "title": "Description & building great things"
+            }
+          ]
+        },
+        {
+          "title": "Discernment for builders",
+          "units": [
+            {
+              "order": 6,
+              "kind": "modular",
+              "numericId": "486161",
+              "path": "/ai-fluency-for-builders/486161",
+              "title": "Discernment for code"
+            },
+            {
+              "order": 7,
+              "kind": "modular",
+              "numericId": "486162",
+              "path": "/ai-fluency-for-builders/486162",
+              "title": "Discernment for user experience"
+            }
+          ]
+        },
+        {
+          "title": "Tying it all together",
+          "units": [
+            {
+              "order": 8,
+              "kind": "modular",
+              "numericId": "486163",
+              "path": "/ai-fluency-for-builders/486163",
+              "title": "Stand behind what you build"
+            }
+          ]
+        },
+        {
+          "title": "Wrapping up",
+          "units": [
+            {
+              "order": 9,
+              "kind": "modular",
+              "numericId": "486165",
+              "path": "/ai-fluency-for-builders/486165",
+              "title": "Closure & looking forward"
+            },
+            {
+              "order": 10,
+              "kind": "quiz",
+              "numericId": "486168",
+              "path": "/ai-fluency-for-builders/486168",
+              "title": "Course quiz"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "ai-fluency-for-creative-work",
+      "title": "AI Fluency for Creative Work",
+      "sourceUrl": "https://anthropic.skilljar.com/ai-fluency-for-creative-work",
+      "fetchedAt": "2026-08-24T08:26:32.396Z",
+      "sourceFingerprint": "6640c7bfdba55b7efeb21eccc5c13147b1a5788e8e62901271ce7d4b5ea899d8",
+      "unitCount": 9,
+      "sections": [
+        {
+          "title": "Introduction",
+          "units": [
+            {
+              "order": 1,
+              "kind": "modular",
+              "numericId": "486517",
+              "path": "/ai-fluency-for-creative-work/486517",
+              "title": "Welcome to AI Fluency for creative work"
+            }
+          ]
+        },
+        {
+          "title": "The Creative Lenses",
+          "units": [
+            {
+              "order": 2,
+              "kind": "modular",
+              "numericId": "486522",
+              "path": "/ai-fluency-for-creative-work/486522",
+              "title": "The creative value lens"
+            },
+            {
+              "order": 3,
+              "kind": "modular",
+              "numericId": "486523",
+              "path": "/ai-fluency-for-creative-work/486523",
+              "title": "The production lens"
+            }
+          ]
+        },
+        {
+          "title": "The AI Fluency Framework",
+          "units": [
+            {
+              "order": 4,
+              "kind": "modular",
+              "numericId": "486524",
+              "path": "/ai-fluency-for-creative-work/486524",
+              "title": "The 4D Framework"
+            }
+          ]
+        },
+        {
+          "title": "The Inner Loop",
+          "units": [
+            {
+              "order": 5,
+              "kind": "modular",
+              "numericId": "486526",
+              "path": "/ai-fluency-for-creative-work/486526",
+              "title": "Description and Discernment"
+            }
+          ]
+        },
+        {
+          "title": "The Outer Loop",
+          "units": [
+            {
+              "order": 6,
+              "kind": "modular",
+              "numericId": "486528",
+              "path": "/ai-fluency-for-creative-work/486528",
+              "title": "Delegation and Diligence"
+            }
+          ]
+        },
+        {
+          "title": "Putting it all together",
+          "units": [
+            {
+              "order": 7,
+              "kind": "modular",
+              "numericId": "486529",
+              "path": "/ai-fluency-for-creative-work/486529",
+              "title": "AI roles as Delegation outcomes"
+            },
+            {
+              "order": 8,
+              "kind": "modular",
+              "numericId": "486531",
+              "path": "/ai-fluency-for-creative-work/486531",
+              "title": "Putting it all together"
+            }
+          ]
+        },
+        {
+          "title": "Conclusion and certificate",
+          "units": [
+            {
+              "order": 9,
+              "kind": "quiz",
+              "numericId": "486535",
+              "path": "/ai-fluency-for-creative-work/486535",
+              "title": "Course quiz"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "ai-fluency-for-educators",
+      "title": "AI Fluency for educators",
+      "sourceUrl": "https://anthropic.skilljar.com/ai-fluency-for-educators",
+      "fetchedAt": "2026-08-24T08:26:35.342Z",
+      "sourceFingerprint": "d830b7e020f8ca79b02bbb2e9de660a5bb67c6927b03229959e96468adf0ceba",
+      "unitCount": 5,
+      "sections": [
+        {
+          "title": "Introduction and AI Fluency Framework",
+          "units": [
+            {
+              "order": 1,
+              "kind": "modular",
+              "numericId": "326777",
+              "path": "/ai-fluency-for-educators/326777",
+              "title": "Introduction to AI Fluency for Educators"
+            },
+            {
+              "order": 2,
+              "kind": "modular",
+              "numericId": "326779",
+              "path": "/ai-fluency-for-educators/326779",
+              "title": "AI Fluency Framework review"
+            }
+          ]
+        },
+        {
+          "title": "AI Fluency applications for educators",
+          "units": [
+            {
+              "order": 3,
+              "kind": "modular",
+              "numericId": "326781",
+              "path": "/ai-fluency-for-educators/326781",
+              "title": "Applying AI Fluency to course design and learning outcomes"
+            },
+            {
+              "order": 4,
+              "kind": "modular",
+              "numericId": "326782",
+              "path": "/ai-fluency-for-educators/326782",
+              "title": "Applying AI Fluency to learning materials and assignments"
+            }
+          ]
+        },
+        {
+          "title": "Conclusion & certificate",
+          "units": [
+            {
+              "order": 5,
+              "kind": "modular",
+              "numericId": "326786",
+              "path": "/ai-fluency-for-educators/326786",
+              "title": "Certificate of completion"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "ai-fluency-for-nonprofits",
+      "title": "AI Fluency for nonprofits",
+      "sourceUrl": "https://anthropic.skilljar.com/ai-fluency-for-nonprofits",
+      "fetchedAt": "2026-08-24T08:26:37.817Z",
+      "sourceFingerprint": "96c77e0db9017cedb501cb8a4e8756c42e3ed107c07f9c21f8ae7ed7fc565262",
+      "unitCount": 10,
+      "sections": [
+        {
+          "title": "Introduction and AI Fluency framework",
+          "units": [
+            {
+              "order": 1,
+              "kind": "modular",
+              "numericId": "376918",
+              "path": "/ai-fluency-for-nonprofits/376918",
+              "title": "Welcome to AI Fluency for nonprofits"
+            },
+            {
+              "order": 2,
+              "kind": "modular",
+              "numericId": "376879",
+              "path": "/ai-fluency-for-nonprofits/376879",
+              "title": "The 4D Framework"
+            }
+          ]
+        },
+        {
+          "title": "The Description-Discernment loop",
+          "units": [
+            {
+              "order": 3,
+              "kind": "modular",
+              "numericId": "376881",
+              "path": "/ai-fluency-for-nonprofits/376881",
+              "title": "Researching with AI"
+            },
+            {
+              "order": 4,
+              "kind": "modular",
+              "numericId": "376882",
+              "path": "/ai-fluency-for-nonprofits/376882",
+              "title": "Writing with AI"
+            }
+          ]
+        },
+        {
+          "title": "The Delegation-Diligence loop",
+          "units": [
+            {
+              "order": 5,
+              "kind": "modular",
+              "numericId": "376883",
+              "path": "/ai-fluency-for-nonprofits/376883",
+              "title": "Understanding privacy and data"
+            },
+            {
+              "order": 6,
+              "kind": "modular",
+              "numericId": "376885",
+              "path": "/ai-fluency-for-nonprofits/376885",
+              "title": "Data analysis with AI"
+            }
+          ]
+        },
+        {
+          "title": "Putting it all together",
+          "units": [
+            {
+              "order": 7,
+              "kind": "modular",
+              "numericId": "376886",
+              "path": "/ai-fluency-for-nonprofits/376886",
+              "title": "Workflow augmentation"
+            },
+            {
+              "order": 8,
+              "kind": "modular",
+              "numericId": "376887",
+              "path": "/ai-fluency-for-nonprofits/376887",
+              "title": "Integration"
+            }
+          ]
+        },
+        {
+          "title": "Conclusion and certificate",
+          "units": [
+            {
+              "order": 9,
+              "kind": "modular",
+              "numericId": "376888",
+              "path": "/ai-fluency-for-nonprofits/376888",
+              "title": "Next steps"
+            },
+            {
+              "order": 10,
+              "kind": "quiz",
+              "numericId": "376934",
+              "path": "/ai-fluency-for-nonprofits/376934",
+              "title": "Course Quiz"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "ai-fluency-for-small-businesses",
+      "title": "AI Fluency for Small Businesses",
+      "sourceUrl": "https://anthropic.skilljar.com/ai-fluency-for-small-businesses",
+      "fetchedAt": "2026-08-24T08:26:43.611Z",
+      "sourceFingerprint": "c2383312ad3428c69de022e38727a4d98b55693c308643d097b8c7a50b2be114",
+      "unitCount": 10,
+      "sections": [
+        {
+          "title": "Introduction and AI Fluency framework",
+          "units": [
+            {
+              "order": 1,
+              "kind": "modular",
+              "numericId": "483578",
+              "path": "/ai-fluency-for-small-businesses/483578",
+              "title": "AI Fluency for small businesses"
+            },
+            {
+              "order": 2,
+              "kind": "modular",
+              "numericId": "483583",
+              "path": "/ai-fluency-for-small-businesses/483583",
+              "title": "The 4D Framework"
+            }
+          ]
+        },
+        {
+          "title": "How AI works",
+          "units": [
+            {
+              "order": 3,
+              "kind": "modular",
+              "numericId": "483580",
+              "path": "/ai-fluency-for-small-businesses/483580",
+              "title": "AI capabilities and limitations"
+            },
+            {
+              "order": 4,
+              "kind": "modular",
+              "numericId": "485884",
+              "path": "/ai-fluency-for-small-businesses/485884",
+              "title": "Explore!"
+            }
+          ]
+        },
+        {
+          "title": "The Description-Discernment loop",
+          "units": [
+            {
+              "order": 5,
+              "kind": "modular",
+              "numericId": "483604",
+              "path": "/ai-fluency-for-small-businesses/483604",
+              "title": "Refining with AI"
+            }
+          ]
+        },
+        {
+          "title": "The Delegation-Diligence loop",
+          "units": [
+            {
+              "order": 6,
+              "kind": "modular",
+              "numericId": "483606",
+              "path": "/ai-fluency-for-small-businesses/483606",
+              "title": "Transparent AI use"
+            }
+          ]
+        },
+        {
+          "title": "Putting it all together",
+          "units": [
+            {
+              "order": 7,
+              "kind": "modular",
+              "numericId": "483608",
+              "path": "/ai-fluency-for-small-businesses/483608",
+              "title": "Tying it all together"
+            },
+            {
+              "order": 8,
+              "kind": "modular",
+              "numericId": "483609",
+              "path": "/ai-fluency-for-small-businesses/483609",
+              "title": "Human in the loop"
+            }
+          ]
+        },
+        {
+          "title": "Conclusion and certificate",
+          "units": [
+            {
+              "order": 9,
+              "kind": "modular",
+              "numericId": "483611",
+              "path": "/ai-fluency-for-small-businesses/483611",
+              "title": "Closure and looking forward"
+            },
+            {
+              "order": 10,
+              "kind": "modular",
+              "numericId": "485982",
+              "path": "/ai-fluency-for-small-businesses/485982",
+              "title": "Course quiz"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "ai-fluency-for-students",
+      "title": "AI Fluency for students",
+      "sourceUrl": "https://anthropic.skilljar.com/ai-fluency-for-students",
+      "fetchedAt": "2026-08-24T08:27:00.970Z",
+      "sourceFingerprint": "6811b627739d35b9ef66a639f07f17630b57cd286c0bccc658b4250644cd255f",
+      "unitCount": 6,
+      "sections": [
+        {
+          "title": "Introduction and AI Fluency Framework",
+          "units": [
+            {
+              "order": 1,
+              "kind": "modular",
+              "numericId": "326790",
+              "path": "/ai-fluency-for-students/326790",
+              "title": "Welcome to AI Fluency for students"
+            },
+            {
+              "order": 2,
+              "kind": "modular",
+              "numericId": "326791",
+              "path": "/ai-fluency-for-students/326791",
+              "title": "AI Fluency Framework"
+            }
+          ]
+        },
+        {
+          "title": "AI Fluency Framework applications for students",
+          "units": [
+            {
+              "order": 3,
+              "kind": "modular",
+              "numericId": "326792",
+              "path": "/ai-fluency-for-students/326792",
+              "title": "AI as a learning partner"
+            },
+            {
+              "order": 4,
+              "kind": "modular",
+              "numericId": "326793",
+              "path": "/ai-fluency-for-students/326793",
+              "title": "AI in career planning"
+            }
+          ]
+        },
+        {
+          "title": "Conclusion & certificate",
+          "units": [
+            {
+              "order": 5,
+              "kind": "modular",
+              "numericId": "327248",
+              "path": "/ai-fluency-for-students/327248",
+              "title": "Being the human in the loop"
+            },
+            {
+              "order": 6,
+              "kind": "modular",
+              "numericId": "327232",
+              "path": "/ai-fluency-for-students/327232",
+              "title": "Certificate of completion"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "ai-fluency-framework-foundations",
+      "title": "AI Fluency: Framework & Foundations",
+      "sourceUrl": "https://anthropic.skilljar.com/ai-fluency-framework-foundations",
+      "fetchedAt": "2026-08-24T08:27:15.534Z",
+      "sourceFingerprint": "433a678e0a30853b66146a98c68a25b682cc0cc68ed569928657a0fb36c6a088",
+      "unitCount": 15,
+      "sections": [
+        {
+          "title": "Introduction to AI Fluency",
+          "units": [
+            {
+              "order": 1,
+              "kind": "modular",
+              "numericId": "291863",
+              "path": "/ai-fluency-framework-foundations/291863",
+              "title": "Introduction to AI Fluency"
+            }
+          ]
+        },
+        {
+          "title": "The AI Fluency Framework",
+          "units": [
+            {
+              "order": 2,
+              "kind": "modular",
+              "numericId": "291870",
+              "path": "/ai-fluency-framework-foundations/291870",
+              "title": "Why do we need AI Fluency?"
+            },
+            {
+              "order": 3,
+              "kind": "modular",
+              "numericId": "291876",
+              "path": "/ai-fluency-framework-foundations/291876",
+              "title": "The 4D Framework"
+            }
+          ]
+        },
+        {
+          "title": "Deep Dive 1: What is Generative AI?",
+          "units": [
+            {
+              "order": 4,
+              "kind": "modular",
+              "numericId": "291879",
+              "path": "/ai-fluency-framework-foundations/291879",
+              "title": "Generative AI fundamentals"
+            },
+            {
+              "order": 5,
+              "kind": "modular",
+              "numericId": "291880",
+              "path": "/ai-fluency-framework-foundations/291880",
+              "title": "Capabilities & limitations"
+            }
+          ]
+        },
+        {
+          "title": "Delegation",
+          "units": [
+            {
+              "order": 6,
+              "kind": "modular",
+              "numericId": "291883",
+              "path": "/ai-fluency-framework-foundations/291883",
+              "title": "A closer look at Delegation"
+            },
+            {
+              "order": 7,
+              "kind": "modular",
+              "numericId": "291886",
+              "path": "/ai-fluency-framework-foundations/291886",
+              "title": "Project planning and Delegation"
+            }
+          ]
+        },
+        {
+          "title": "Description",
+          "units": [
+            {
+              "order": 8,
+              "kind": "modular",
+              "numericId": "291891",
+              "path": "/ai-fluency-framework-foundations/291891",
+              "title": "A closer look at Description"
+            }
+          ]
+        },
+        {
+          "title": "Deep Dive 2: Effective prompting techniques",
+          "units": [
+            {
+              "order": 9,
+              "kind": "modular",
+              "numericId": "291895",
+              "path": "/ai-fluency-framework-foundations/291895",
+              "title": "Effective prompting techniques"
+            }
+          ]
+        },
+        {
+          "title": "Discernment",
+          "units": [
+            {
+              "order": 10,
+              "kind": "modular",
+              "numericId": "291898",
+              "path": "/ai-fluency-framework-foundations/291898",
+              "title": "A closer look at Discernment"
+            }
+          ]
+        },
+        {
+          "title": "The Description-Discernment loop",
+          "units": [
+            {
+              "order": 11,
+              "kind": "modular",
+              "numericId": "291901",
+              "path": "/ai-fluency-framework-foundations/291901",
+              "title": "The Description-Discernment loop"
+            }
+          ]
+        },
+        {
+          "title": "Diligence",
+          "units": [
+            {
+              "order": 12,
+              "kind": "modular",
+              "numericId": "291904",
+              "path": "/ai-fluency-framework-foundations/291904",
+              "title": "A closer look at Diligence"
+            }
+          ]
+        },
+        {
+          "title": "Conclusion & certificate",
+          "units": [
+            {
+              "order": 13,
+              "kind": "modular",
+              "numericId": "291908",
+              "path": "/ai-fluency-framework-foundations/291908",
+              "title": "Conclusion"
+            },
+            {
+              "order": 14,
+              "kind": "modular",
+              "numericId": "309598",
+              "path": "/ai-fluency-framework-foundations/309598",
+              "title": "Certificate of completion"
+            },
+            {
+              "order": 15,
+              "kind": "modular",
+              "numericId": "314863",
+              "path": "/ai-fluency-framework-foundations/314863",
+              "title": "Additional activities"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "claude-101",
+      "title": "Claude 101",
+      "sourceUrl": "https://anthropic.skilljar.com/claude-101",
+      "fetchedAt": "2026-08-24T08:27:28.293Z",
+      "sourceFingerprint": "6602d476bb503ad55e1b845f97a26499f6882c40049bb380b990ed9690a7dede",
+      "unitCount": 14,
+      "sections": [
+        {
+          "title": "Meet Claude",
+          "units": [
+            {
+              "order": 1,
+              "kind": "modular",
+              "numericId": "383389",
+              "path": "/claude-101/383389",
+              "title": "What is Claude?"
+            },
+            {
+              "order": 2,
+              "kind": "modular",
+              "numericId": "383390",
+              "path": "/claude-101/383390",
+              "title": "Your first conversation with Claude"
+            },
+            {
+              "order": 3,
+              "kind": "modular",
+              "numericId": "383392",
+              "path": "/claude-101/383392",
+              "title": "Getting better results"
+            },
+            {
+              "order": 4,
+              "kind": "modular",
+              "numericId": "440908",
+              "path": "/claude-101/440908",
+              "title": "How you&#x27;ll work with Claude on your desktop"
+            }
+          ]
+        },
+        {
+          "title": "Organizing your work and knowledge",
+          "units": [
+            {
+              "order": 5,
+              "kind": "modular",
+              "numericId": "383393",
+              "path": "/claude-101/383393",
+              "title": "Introduction to projects"
+            },
+            {
+              "order": 6,
+              "kind": "modular",
+              "numericId": "383394",
+              "path": "/claude-101/383394",
+              "title": "Creating with artifacts"
+            },
+            {
+              "order": 7,
+              "kind": "modular",
+              "numericId": "383396",
+              "path": "/claude-101/383396",
+              "title": "Working with skills"
+            }
+          ]
+        },
+        {
+          "title": "Expanding Claude&#x27;s reach",
+          "units": [
+            {
+              "order": 8,
+              "kind": "modular",
+              "numericId": "383397",
+              "path": "/claude-101/383397",
+              "title": "Connecting your tools"
+            },
+            {
+              "order": 9,
+              "kind": "modular",
+              "numericId": "383398",
+              "path": "/claude-101/383398",
+              "title": "Enterprise search"
+            },
+            {
+              "order": 10,
+              "kind": "modular",
+              "numericId": "383399",
+              "path": "/claude-101/383399",
+              "title": "Research for deep dives"
+            }
+          ]
+        },
+        {
+          "title": "Putting it all together",
+          "units": [
+            {
+              "order": 11,
+              "kind": "modular",
+              "numericId": "383401",
+              "path": "/claude-101/383401",
+              "title": "Claude in action: use-cases by role"
+            },
+            {
+              "order": 12,
+              "kind": "modular",
+              "numericId": "383402",
+              "path": "/claude-101/383402",
+              "title": "Other ways to work with Claude"
+            }
+          ]
+        },
+        {
+          "title": "Conclusion & certificate",
+          "units": [
+            {
+              "order": 13,
+              "kind": "modular",
+              "numericId": "385338",
+              "path": "/claude-101/385338",
+              "title": "What&#x27;s next?"
+            },
+            {
+              "order": 14,
+              "kind": "modular",
+              "numericId": "385349",
+              "path": "/claude-101/385349",
+              "title": "Certificate of completion"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "claude-code-101",
+      "title": "Claude Code 101",
+      "sourceUrl": "https://anthropic.skilljar.com/claude-code-101",
+      "fetchedAt": "2026-08-24T08:27:35.401Z",
+      "sourceFingerprint": "155381e2dde03c2904f95e2d8dad535d63cb312546db66342c2337f2a03adf78",
+      "unitCount": 13,
+      "sections": [
+        {
+          "title": "What is Claude Code?",
+          "units": [
+            {
+              "order": 1,
+              "kind": "modular",
+              "numericId": "469788",
+              "path": "/claude-code-101/469788",
+              "title": "What is Claude Code?"
+            },
+            {
+              "order": 2,
+              "kind": "modular",
+              "numericId": "469789",
+              "path": "/claude-code-101/469789",
+              "title": "How Claude Code works"
+            }
+          ]
+        },
+        {
+          "title": "Your first prompt",
+          "units": [
+            {
+              "order": 3,
+              "kind": "modular",
+              "numericId": "469790",
+              "path": "/claude-code-101/469790",
+              "title": "Installing Claude Code"
+            },
+            {
+              "order": 4,
+              "kind": "modular",
+              "numericId": "469791",
+              "path": "/claude-code-101/469791",
+              "title": "Your first prompt"
+            }
+          ]
+        },
+        {
+          "title": "Daily workflows",
+          "units": [
+            {
+              "order": 5,
+              "kind": "modular",
+              "numericId": "469792",
+              "path": "/claude-code-101/469792",
+              "title": "The explore → plan → code → commit workflow"
+            },
+            {
+              "order": 6,
+              "kind": "modular",
+              "numericId": "469793",
+              "path": "/claude-code-101/469793",
+              "title": "Context management"
+            },
+            {
+              "order": 7,
+              "kind": "modular",
+              "numericId": "469794",
+              "path": "/claude-code-101/469794",
+              "title": "Code review"
+            }
+          ]
+        },
+        {
+          "title": "Customizing Claude Code",
+          "units": [
+            {
+              "order": 8,
+              "kind": "modular",
+              "numericId": "469795",
+              "path": "/claude-code-101/469795",
+              "title": "The CLAUDE.md file"
+            },
+            {
+              "order": 9,
+              "kind": "modular",
+              "numericId": "469796",
+              "path": "/claude-code-101/469796",
+              "title": "Subagents"
+            },
+            {
+              "order": 10,
+              "kind": "modular",
+              "numericId": "469848",
+              "path": "/claude-code-101/469848",
+              "title": "Skills"
+            },
+            {
+              "order": 11,
+              "kind": "modular",
+              "numericId": "469797",
+              "path": "/claude-code-101/469797",
+              "title": "MCP"
+            },
+            {
+              "order": 12,
+              "kind": "modular",
+              "numericId": "469798",
+              "path": "/claude-code-101/469798",
+              "title": "Hooks"
+            }
+          ]
+        },
+        {
+          "title": "Quiz",
+          "units": [
+            {
+              "order": 13,
+              "kind": "quiz",
+              "numericId": "469849",
+              "path": "/claude-code-101/469849",
+              "title": "Course quiz"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "claude-code-in-action",
+      "title": "Claude Code in Action",
+      "sourceUrl": "https://anthropic.skilljar.com/claude-code-in-action",
+      "fetchedAt": "2026-08-24T08:27:52.570Z",
+      "sourceFingerprint": "3468593e32d5b5a1bac1dc5be4dbd9de9f5c8ff0bd5520e21db2b6ee8e6289fb",
+      "unitCount": 10,
+      "sections": [
+        {
+          "title": "Steer the Work",
+          "units": [
+            {
+              "order": 1,
+              "kind": "modular",
+              "numericId": "486901",
+              "path": "/claude-code-in-action/486901",
+              "title": "Steering Long Sessions"
+            }
+          ]
+        },
+        {
+          "title": "Configure Claude",
+          "units": [
+            {
+              "order": 2,
+              "kind": "modular",
+              "numericId": "486929",
+              "path": "/claude-code-in-action/486929",
+              "title": "A CLAUDE.md That Follows"
+            },
+            {
+              "order": 3,
+              "kind": "modular",
+              "numericId": "486930",
+              "path": "/claude-code-in-action/486930",
+              "title": "Verification Skills"
+            },
+            {
+              "order": 4,
+              "kind": "modular",
+              "numericId": "486932",
+              "path": "/claude-code-in-action/486932",
+              "title": "Permission Modes"
+            },
+            {
+              "order": 5,
+              "kind": "modular",
+              "numericId": "486933",
+              "path": "/claude-code-in-action/486933",
+              "title": "Hooks"
+            }
+          ]
+        },
+        {
+          "title": "Automate Repeat Work",
+          "units": [
+            {
+              "order": 6,
+              "kind": "modular",
+              "numericId": "486935",
+              "path": "/claude-code-in-action/486935",
+              "title": "Routines and Headless"
+            },
+            {
+              "order": 7,
+              "kind": "modular",
+              "numericId": "486936",
+              "path": "/claude-code-in-action/486936",
+              "title": "GitHub Actions and Code Review"
+            }
+          ]
+        },
+        {
+          "title": "Verify and Share",
+          "units": [
+            {
+              "order": 8,
+              "kind": "modular",
+              "numericId": "486938",
+              "path": "/claude-code-in-action/486938",
+              "title": "Trust It: Verifying Unsupervised Runs"
+            },
+            {
+              "order": 9,
+              "kind": "modular",
+              "numericId": "486939",
+              "path": "/claude-code-in-action/486939",
+              "title": "Plugins"
+            }
+          ]
+        },
+        {
+          "title": "Quiz",
+          "units": [
+            {
+              "order": 10,
+              "kind": "modular",
+              "numericId": "487234",
+              "path": "/claude-code-in-action/487234",
+              "title": "Course Quiz"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "claude-in-amazon-bedrock",
+      "title": "Claude with Amazon Bedrock",
+      "sourceUrl": "https://anthropic.skilljar.com/claude-in-amazon-bedrock",
+      "fetchedAt": "2026-08-24T08:27:55.212Z",
+      "sourceFingerprint": "66017b350ef180f9e64f82deebd3007ee5cd2d0c12ee32d8b931924448f8a562",
+      "unitCount": 83,
+      "sections": [
+        {
+          "title": "Course introduction This course introduces essential concepts for working with Anthropic's models through Amazon Bedrock. You'll learn both the theoretical foundations of generative AI and practical implementation skills for building with Claude. This module introduces you to: Course Structure - The complete learning journey from AI fundamentals to advanced techniques like RAG and fine-tuning Prerequisites - Key skills in Python, AWS Bedrock, and API requests needed for success Learning Approach - Effective strategies for mastering content through hands-on practice and experimentation Technical Setup - Essential preparations to ensure you can follow along with practical examples",
+          "units": [
+            {
+              "order": 1,
+              "kind": "modular",
+              "numericId": "241929",
+              "path": "/claude-in-amazon-bedrock/241929",
+              "title": "Introduction to the course"
+            },
+            {
+              "order": 2,
+              "kind": "video",
+              "numericId": "303332",
+              "path": "/claude-in-amazon-bedrock/303332",
+              "title": "Overview of Claude Models"
+            }
+          ]
+        },
+        {
+          "title": "Working with the API This module explores how to access and interact with AI models through AWS Bedrock. You'll learn the fundamental patterns for connecting your applications to cloud-based models and controlling how those models generate text. This module introduces you to: Making API Requests - How to create properly structured requests to AWS Bedrock using the boto3 client and model IDs Multi-Turn Conversations - How to maintain context across multiple exchanges by properly managing message histories Response Control - How to influence model outputs using system prompts, temperature settings, and message pre-filling Streaming Responses - How to implement real-time text generation for improved user experience Structured Data Generation - How to extract clean, formatted data without explanatory text using stop sequences",
+          "units": [
+            {
+              "order": 3,
+              "kind": "video",
+              "numericId": "276716",
+              "path": "/claude-in-amazon-bedrock/276716",
+              "title": "Accessing the API"
+            },
+            {
+              "order": 4,
+              "kind": "video",
+              "numericId": "276719",
+              "path": "/claude-in-amazon-bedrock/276719",
+              "title": "Making a request"
+            },
+            {
+              "order": 5,
+              "kind": "video",
+              "numericId": "276722",
+              "path": "/claude-in-amazon-bedrock/276722",
+              "title": "Multi-Turn conversations"
+            },
+            {
+              "order": 6,
+              "kind": "video",
+              "numericId": "276725",
+              "path": "/claude-in-amazon-bedrock/276725",
+              "title": "Chat bot exercise"
+            },
+            {
+              "order": 7,
+              "kind": "video",
+              "numericId": "276726",
+              "path": "/claude-in-amazon-bedrock/276726",
+              "title": "System prompts"
+            },
+            {
+              "order": 8,
+              "kind": "video",
+              "numericId": "276717",
+              "path": "/claude-in-amazon-bedrock/276717",
+              "title": "System prompt exercise"
+            },
+            {
+              "order": 9,
+              "kind": "video",
+              "numericId": "276720",
+              "path": "/claude-in-amazon-bedrock/276720",
+              "title": "Temperature"
+            },
+            {
+              "order": 10,
+              "kind": "video",
+              "numericId": "276721",
+              "path": "/claude-in-amazon-bedrock/276721",
+              "title": "Streaming"
+            },
+            {
+              "order": 11,
+              "kind": "video",
+              "numericId": "276723",
+              "path": "/claude-in-amazon-bedrock/276723",
+              "title": "Controlling model output"
+            },
+            {
+              "order": 12,
+              "kind": "video",
+              "numericId": "276724",
+              "path": "/claude-in-amazon-bedrock/276724",
+              "title": "Structured data"
+            },
+            {
+              "order": 13,
+              "kind": "video",
+              "numericId": "276718",
+              "path": "/claude-in-amazon-bedrock/276718",
+              "title": "Structured data exercise"
+            },
+            {
+              "order": 14,
+              "kind": "quiz",
+              "numericId": "289293",
+              "path": "/claude-in-amazon-bedrock/289293",
+              "title": "Quiz on working with the API"
+            }
+          ]
+        },
+        {
+          "title": "Prompt evaluations Prompt engineering helps you get the best possible output from Claude, but how do you know if your prompts are actually effective? This module focuses on measuring prompt performance through objective metrics before making improvements. This module introduces you to: Evaluation Workflows - How to set up a systematic testing pipeline that measures prompt effectiveness with objective metrics Test Dataset Creation - Techniques for generating diverse test cases that cover your prompt's expected inputs Model-Based Grading - Using AI models as evaluators to assess response quality based on specified criteria Code-Based Validation - Implementing programmatic checks to verify response formatting and syntax accuracy Iterative Improvement - Methods for refining prompts based on evaluation results to achieve better performance",
+          "units": [
+            {
+              "order": 15,
+              "kind": "video",
+              "numericId": "276731",
+              "path": "/claude-in-amazon-bedrock/276731",
+              "title": "Prompt evaluation"
+            },
+            {
+              "order": 16,
+              "kind": "video",
+              "numericId": "276732",
+              "path": "/claude-in-amazon-bedrock/276732",
+              "title": "A typical eval workflow"
+            },
+            {
+              "order": 17,
+              "kind": "video",
+              "numericId": "276733",
+              "path": "/claude-in-amazon-bedrock/276733",
+              "title": "Generating test datasets"
+            },
+            {
+              "order": 18,
+              "kind": "video",
+              "numericId": "276736",
+              "path": "/claude-in-amazon-bedrock/276736",
+              "title": "Running the eval"
+            },
+            {
+              "order": 19,
+              "kind": "video",
+              "numericId": "276738",
+              "path": "/claude-in-amazon-bedrock/276738",
+              "title": "Model based grading"
+            },
+            {
+              "order": 20,
+              "kind": "video",
+              "numericId": "276735",
+              "path": "/claude-in-amazon-bedrock/276735",
+              "title": "Code based grading"
+            },
+            {
+              "order": 21,
+              "kind": "video",
+              "numericId": "276734",
+              "path": "/claude-in-amazon-bedrock/276734",
+              "title": "Exercise on prompt evals"
+            },
+            {
+              "order": 22,
+              "kind": "quiz",
+              "numericId": "289297",
+              "path": "/claude-in-amazon-bedrock/289297",
+              "title": "Quiz on prompt evaluations"
+            }
+          ]
+        },
+        {
+          "title": "Prompt engineering This module walks you through the process of improving prompts to get better results from language models. We'll start with a simple meal plan prompt and gradually enhance it through various techniques. This module introduces you to: Clear and Direct Instructions - How explicit action verbs and simple language in your first line dramatically improve model responses Specific Guidelines - How adding detailed requirements or step-by-step instructions guides the model toward better outputs XML Structure - How wrapping content in tags helps models distinguish between different types of information Example-Based Learning - How providing sample inputs and ideal outputs teaches models to handle complex formats and edge cases",
+          "units": [
+            {
+              "order": 23,
+              "kind": "video",
+              "numericId": "276749",
+              "path": "/claude-in-amazon-bedrock/276749",
+              "title": "Prompt engineering"
+            },
+            {
+              "order": 24,
+              "kind": "video",
+              "numericId": "276743",
+              "path": "/claude-in-amazon-bedrock/276743",
+              "title": "Being clear and direct"
+            },
+            {
+              "order": 25,
+              "kind": "video",
+              "numericId": "276745",
+              "path": "/claude-in-amazon-bedrock/276745",
+              "title": "Being specific"
+            },
+            {
+              "order": 26,
+              "kind": "video",
+              "numericId": "276744",
+              "path": "/claude-in-amazon-bedrock/276744",
+              "title": "Structure with XML tags"
+            },
+            {
+              "order": 27,
+              "kind": "video",
+              "numericId": "276747",
+              "path": "/claude-in-amazon-bedrock/276747",
+              "title": "Providing examples"
+            },
+            {
+              "order": 28,
+              "kind": "video",
+              "numericId": "276746",
+              "path": "/claude-in-amazon-bedrock/276746",
+              "title": "Exercise on prompting"
+            },
+            {
+              "order": 29,
+              "kind": "quiz",
+              "numericId": "289298",
+              "path": "/claude-in-amazon-bedrock/289298",
+              "title": "Quiz on prompt engineering"
+            }
+          ]
+        },
+        {
+          "title": "Tool use In this module, we'll examine how to extend Claude's abilities using tools - functions that let the AI access external information or take actions. Tools are essential when you need Claude to interact with data beyond its training cutoff or perform specialized tasks. This module introduces you to: Tool Fundamentals - The core architecture of tool integration and how tools enable Claude to access real-time information Tool Implementation - Step-by-step process of creating, describing, and connecting tools to Claude's capabilities Multi-Tool Management - Strategies for combining multiple tools efficiently, including parallelization with batch tools Structured Data Extraction - Techniques for reliably extracting precisely formatted data using tool-based approaches Text Editor Integration - How Claude can directly interact with files and code to provide development assistance",
+          "units": [
+            {
+              "order": 30,
+              "kind": "video",
+              "numericId": "276756",
+              "path": "/claude-in-amazon-bedrock/276756",
+              "title": "Introducing tool use"
+            },
+            {
+              "order": 31,
+              "kind": "video",
+              "numericId": "276757",
+              "path": "/claude-in-amazon-bedrock/276757",
+              "title": "Tool functions"
+            },
+            {
+              "order": 32,
+              "kind": "video",
+              "numericId": "276758",
+              "path": "/claude-in-amazon-bedrock/276758",
+              "title": "JSON Schema for tools"
+            },
+            {
+              "order": 33,
+              "kind": "video",
+              "numericId": "276764",
+              "path": "/claude-in-amazon-bedrock/276764",
+              "title": "Handling tool use responses"
+            },
+            {
+              "order": 34,
+              "kind": "video",
+              "numericId": "276762",
+              "path": "/claude-in-amazon-bedrock/276762",
+              "title": "Running tool functions"
+            },
+            {
+              "order": 35,
+              "kind": "video",
+              "numericId": "276760",
+              "path": "/claude-in-amazon-bedrock/276760",
+              "title": "Sending tool results"
+            },
+            {
+              "order": 36,
+              "kind": "video",
+              "numericId": "276759",
+              "path": "/claude-in-amazon-bedrock/276759",
+              "title": "Multi-Turn conversations with tools"
+            },
+            {
+              "order": 37,
+              "kind": "video",
+              "numericId": "276761",
+              "path": "/claude-in-amazon-bedrock/276761",
+              "title": "Adding multiple tools"
+            },
+            {
+              "order": 38,
+              "kind": "video",
+              "numericId": "276766",
+              "path": "/claude-in-amazon-bedrock/276766",
+              "title": "Batch tool use"
+            },
+            {
+              "order": 39,
+              "kind": "video",
+              "numericId": "276765",
+              "path": "/claude-in-amazon-bedrock/276765",
+              "title": "Structured data with tools"
+            },
+            {
+              "order": 40,
+              "kind": "video",
+              "numericId": "276763",
+              "path": "/claude-in-amazon-bedrock/276763",
+              "title": "Flexible tool extraction"
+            },
+            {
+              "order": 41,
+              "kind": "video",
+              "numericId": "276767",
+              "path": "/claude-in-amazon-bedrock/276767",
+              "title": "The text editor tool"
+            },
+            {
+              "order": 42,
+              "kind": "quiz",
+              "numericId": "289296",
+              "path": "/claude-in-amazon-bedrock/289296",
+              "title": "Quiz on tool use"
+            }
+          ]
+        },
+        {
+          "title": "Retrieval Augmented Generation RAG helps LLMs access and utilize external information that isn't part of their training data. This module explores how to implement effective RAG systems to enhance AI applications with relevant document retrieval. This module introduces you to: RAG Fundamentals - How retrieval augmented generation enhances LLMs by finding and incorporating relevant information from external documents Text Chunking Strategies - Different approaches to dividing documents into manageable pieces while preserving meaning and context Vector Embeddings - How semantic meaning is captured numerically to enable similarity-based document retrieval Hybrid Search Implementation - Combining semantic and lexical search techniques to improve retrieval accuracy Results Optimization - Advanced techniques like reranking and contextual retrieval for more relevant document selection",
+          "units": [
+            {
+              "order": 43,
+              "kind": "video",
+              "numericId": "276780",
+              "path": "/claude-in-amazon-bedrock/276780",
+              "title": "Introducing Retrieval Augmented Generation"
+            },
+            {
+              "order": 44,
+              "kind": "video",
+              "numericId": "276782",
+              "path": "/claude-in-amazon-bedrock/276782",
+              "title": "Text chunking strategies"
+            },
+            {
+              "order": 45,
+              "kind": "video",
+              "numericId": "276777",
+              "path": "/claude-in-amazon-bedrock/276777",
+              "title": "Text embeddings"
+            },
+            {
+              "order": 46,
+              "kind": "video",
+              "numericId": "276774",
+              "path": "/claude-in-amazon-bedrock/276774",
+              "title": "The full RAG flow"
+            },
+            {
+              "order": 47,
+              "kind": "video",
+              "numericId": "276781",
+              "path": "/claude-in-amazon-bedrock/276781",
+              "title": "Implementing the RAG flow"
+            },
+            {
+              "order": 48,
+              "kind": "video",
+              "numericId": "276776",
+              "path": "/claude-in-amazon-bedrock/276776",
+              "title": "BM25 lexical search"
+            },
+            {
+              "order": 49,
+              "kind": "video",
+              "numericId": "276779",
+              "path": "/claude-in-amazon-bedrock/276779",
+              "title": "A multi-search RAG pipeline"
+            },
+            {
+              "order": 50,
+              "kind": "video",
+              "numericId": "276775",
+              "path": "/claude-in-amazon-bedrock/276775",
+              "title": "Reranking results"
+            },
+            {
+              "order": 51,
+              "kind": "video",
+              "numericId": "276778",
+              "path": "/claude-in-amazon-bedrock/276778",
+              "title": "Contextual retrieval"
+            },
+            {
+              "order": 52,
+              "kind": "quiz",
+              "numericId": "289295",
+              "path": "/claude-in-amazon-bedrock/289295",
+              "title": "Quiz on Retrieval Augmented Generation"
+            }
+          ]
+        },
+        {
+          "title": "Features of Claude This module covers several powerful features that improve Claude's performance on complex tasks. You'll learn how to leverage these capabilities to get better results while balancing tradeoffs in cost and response time. This module introduces you to: Extended Thinking - How to enable Claude's reasoning phase for tackling complex problems with greater accuracy Image Support - Techniques for effectively using images with Claude and why detailed prompting remains essential Prompt Caching - How to speed up responses and reduce costs by reusing computational work across requests Implementation Strategies - Practical approaches to integrate these features in your applications through code examples",
+          "units": [
+            {
+              "order": 53,
+              "kind": "video",
+              "numericId": "276788",
+              "path": "/claude-in-amazon-bedrock/276788",
+              "title": "Extended thinking"
+            },
+            {
+              "order": 54,
+              "kind": "video",
+              "numericId": "276789",
+              "path": "/claude-in-amazon-bedrock/276789",
+              "title": "Image support"
+            },
+            {
+              "order": 55,
+              "kind": "video",
+              "numericId": "308839",
+              "path": "/claude-in-amazon-bedrock/308839",
+              "title": "PDF support"
+            },
+            {
+              "order": 56,
+              "kind": "video",
+              "numericId": "308840",
+              "path": "/claude-in-amazon-bedrock/308840",
+              "title": "Citations"
+            },
+            {
+              "order": 57,
+              "kind": "video",
+              "numericId": "276786",
+              "path": "/claude-in-amazon-bedrock/276786",
+              "title": "Prompt caching"
+            },
+            {
+              "order": 58,
+              "kind": "video",
+              "numericId": "276785",
+              "path": "/claude-in-amazon-bedrock/276785",
+              "title": "Rules of prompt caching"
+            },
+            {
+              "order": 59,
+              "kind": "video",
+              "numericId": "276787",
+              "path": "/claude-in-amazon-bedrock/276787",
+              "title": "Prompt caching in action"
+            },
+            {
+              "order": 60,
+              "kind": "quiz",
+              "numericId": "289300",
+              "path": "/claude-in-amazon-bedrock/289300",
+              "title": "Quiz on features of Claude"
+            }
+          ]
+        },
+        {
+          "title": "Model Context Protocol Model Context Protocol (MCP) is a communication layer that provides Claude with context and tools without requiring developers to write tedious integration code. This module explores how MCP connects applications with AI models through a specialized client-server architecture. This module introduces you to: MCP Servers and Clients - How these components work together to expose functionality and data from external services to AI models Tools Implementation - How to define model-controlled functions that extend Claude's capabilities with external services Resources - How to expose application-controlled data from your MCP server for UI elements and context Prompts - How to create user-triggered, optimized instructions for specific workflows",
+          "units": [
+            {
+              "order": 61,
+              "kind": "video",
+              "numericId": "276798",
+              "path": "/claude-in-amazon-bedrock/276798",
+              "title": "Introducing MCP"
+            },
+            {
+              "order": 62,
+              "kind": "video",
+              "numericId": "276793",
+              "path": "/claude-in-amazon-bedrock/276793",
+              "title": "MCP clients"
+            },
+            {
+              "order": 63,
+              "kind": "video",
+              "numericId": "276792",
+              "path": "/claude-in-amazon-bedrock/276792",
+              "title": "Project setup"
+            },
+            {
+              "order": 64,
+              "kind": "video",
+              "numericId": "276800",
+              "path": "/claude-in-amazon-bedrock/276800",
+              "title": "Defining tools with MCP"
+            },
+            {
+              "order": 65,
+              "kind": "video",
+              "numericId": "276796",
+              "path": "/claude-in-amazon-bedrock/276796",
+              "title": "The server inspector"
+            },
+            {
+              "order": 66,
+              "kind": "video",
+              "numericId": "276802",
+              "path": "/claude-in-amazon-bedrock/276802",
+              "title": "Implementing a client"
+            },
+            {
+              "order": 67,
+              "kind": "video",
+              "numericId": "276799",
+              "path": "/claude-in-amazon-bedrock/276799",
+              "title": "Defining resources"
+            },
+            {
+              "order": 68,
+              "kind": "video",
+              "numericId": "276797",
+              "path": "/claude-in-amazon-bedrock/276797",
+              "title": "Accessing resources"
+            },
+            {
+              "order": 69,
+              "kind": "video",
+              "numericId": "276801",
+              "path": "/claude-in-amazon-bedrock/276801",
+              "title": "Defining prompts"
+            },
+            {
+              "order": 70,
+              "kind": "video",
+              "numericId": "276795",
+              "path": "/claude-in-amazon-bedrock/276795",
+              "title": "Prompts in the client"
+            },
+            {
+              "order": 71,
+              "kind": "video",
+              "numericId": "276794",
+              "path": "/claude-in-amazon-bedrock/276794",
+              "title": "MCP review"
+            },
+            {
+              "order": 72,
+              "kind": "quiz",
+              "numericId": "289299",
+              "path": "/claude-in-amazon-bedrock/289299",
+              "title": "Quiz on Model Context Protocol"
+            }
+          ]
+        },
+        {
+          "title": "Agents This module explores how to build AI agents using Claude's capabilities. You'll see real-world applications of Claude acting as an autonomous assistant through tools like Cloud Code and Computer Use. This module introduces you to: Agent Fundamentals - How Claude can use tools to gather information and modify environments to accomplish complex tasks Cloud Code Implementation - How to set up, use, and extend this terminal-based coding assistant for software development Parallel Development - How to leverage multiple Claude Code instances to work on different features simultaneously Computer Use Feature - How Claude can interact with web interfaces to perform testing and automation tasks Effective Agent Design - Core principles behind successful AI agents and when they're most appropriately deployed",
+          "units": [
+            {
+              "order": 73,
+              "kind": "video",
+              "numericId": "276804",
+              "path": "/claude-in-amazon-bedrock/276804",
+              "title": "Agents overview"
+            },
+            {
+              "order": 74,
+              "kind": "video",
+              "numericId": "276809",
+              "path": "/claude-in-amazon-bedrock/276809",
+              "title": "Claude Code setup"
+            },
+            {
+              "order": 75,
+              "kind": "video",
+              "numericId": "276811",
+              "path": "/claude-in-amazon-bedrock/276811",
+              "title": "Claude Code in action"
+            },
+            {
+              "order": 76,
+              "kind": "video",
+              "numericId": "276806",
+              "path": "/claude-in-amazon-bedrock/276806",
+              "title": "Enhancements with MCP servers"
+            },
+            {
+              "order": 77,
+              "kind": "video",
+              "numericId": "276810",
+              "path": "/claude-in-amazon-bedrock/276810",
+              "title": "Parallelizing Claude Code"
+            },
+            {
+              "order": 78,
+              "kind": "video",
+              "numericId": "276812",
+              "path": "/claude-in-amazon-bedrock/276812",
+              "title": "Automated debugging"
+            },
+            {
+              "order": 79,
+              "kind": "video",
+              "numericId": "276807",
+              "path": "/claude-in-amazon-bedrock/276807",
+              "title": "Computer Use"
+            },
+            {
+              "order": 80,
+              "kind": "video",
+              "numericId": "276805",
+              "path": "/claude-in-amazon-bedrock/276805",
+              "title": "How Computer Use works"
+            },
+            {
+              "order": 81,
+              "kind": "video",
+              "numericId": "276808",
+              "path": "/claude-in-amazon-bedrock/276808",
+              "title": "Qualities of agents"
+            }
+          ]
+        },
+        {
+          "title": "Final assessment",
+          "units": [
+            {
+              "order": 82,
+              "kind": "quiz",
+              "numericId": "290881",
+              "path": "/claude-in-amazon-bedrock/290881",
+              "title": "Final assessment quiz"
+            }
+          ]
+        },
+        {
+          "title": "Wrap up This video wraps up our journey through generative AI fundamentals and Anthropic's Claude models. We've explored everything from basic concepts to practical applications with the API. Course Recap - Review of key topics including model families, API usage, parameters, and prompt engineering Critical Evaluations - Why thorough testing is essential before deploying any AI solution Future Directions - Emerging trends in LLM orchestration and agentic workflows for building powerful AI systems",
+          "units": [
+            {
+              "order": 83,
+              "kind": "modular",
+              "numericId": "276827",
+              "path": "/claude-in-amazon-bedrock/276827",
+              "title": "Course wrap up"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "claude-platform-101",
+      "title": "Claude Platform 101",
+      "sourceUrl": "https://anthropic.skilljar.com/claude-platform-101",
+      "fetchedAt": "2026-08-24T08:27:56.731Z",
+      "sourceFingerprint": "c7118802d8b6a15e0b400d53495feb3a282456606f9599ca7db616379d59f569",
+      "unitCount": 14,
+      "sections": [
+        {
+          "title": "What is the Claude Platform?",
+          "units": [
+            {
+              "order": 1,
+              "kind": "modular",
+              "numericId": "486250",
+              "path": "/claude-platform-101/486250",
+              "title": "What is the Claude Platform?"
+            },
+            {
+              "order": 2,
+              "kind": "modular",
+              "numericId": "486251",
+              "path": "/claude-platform-101/486251",
+              "title": "Your first API call"
+            },
+            {
+              "order": 3,
+              "kind": "modular",
+              "numericId": "486252",
+              "path": "/claude-platform-101/486252",
+              "title": "Choosing the right model"
+            }
+          ]
+        },
+        {
+          "title": "Teaching your Agent",
+          "units": [
+            {
+              "order": 4,
+              "kind": "modular",
+              "numericId": "486254",
+              "path": "/claude-platform-101/486254",
+              "title": "The agent loop explained"
+            },
+            {
+              "order": 5,
+              "kind": "modular",
+              "numericId": "486255",
+              "path": "/claude-platform-101/486255",
+              "title": "What is tool use?"
+            },
+            {
+              "order": 6,
+              "kind": "modular",
+              "numericId": "486256",
+              "path": "/claude-platform-101/486256",
+              "title": "What is thinking?"
+            }
+          ]
+        },
+        {
+          "title": "Extending your Agent",
+          "units": [
+            {
+              "order": 7,
+              "kind": "modular",
+              "numericId": "486258",
+              "path": "/claude-platform-101/486258",
+              "title": "Built-in tools"
+            },
+            {
+              "order": 8,
+              "kind": "modular",
+              "numericId": "486259",
+              "path": "/claude-platform-101/486259",
+              "title": "Skills"
+            },
+            {
+              "order": 9,
+              "kind": "modular",
+              "numericId": "486260",
+              "path": "/claude-platform-101/486260",
+              "title": "MCP"
+            },
+            {
+              "order": 10,
+              "kind": "modular",
+              "numericId": "486261",
+              "path": "/claude-platform-101/486261",
+              "title": "Context management"
+            }
+          ]
+        },
+        {
+          "title": "Managed Agents",
+          "units": [
+            {
+              "order": 11,
+              "kind": "modular",
+              "numericId": "486263",
+              "path": "/claude-platform-101/486263",
+              "title": "What are managed agents?"
+            },
+            {
+              "order": 12,
+              "kind": "modular",
+              "numericId": "486264",
+              "path": "/claude-platform-101/486264",
+              "title": "Building your first managed agent"
+            }
+          ]
+        },
+        {
+          "title": "Building with Claude Code",
+          "units": [
+            {
+              "order": 13,
+              "kind": "modular",
+              "numericId": "486266",
+              "path": "/claude-platform-101/486266",
+              "title": "Building with Claude Code"
+            }
+          ]
+        },
+        {
+          "title": "Quiz",
+          "units": [
+            {
+              "order": 14,
+              "kind": "quiz",
+              "numericId": "486268",
+              "path": "/claude-platform-101/486268",
+              "title": "Claude Platform 101 Quiz"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "claude-with-google-vertex",
+      "title": "Claude on Google Cloud",
+      "sourceUrl": "https://anthropic.skilljar.com/claude-with-google-vertex",
+      "fetchedAt": "2026-08-24T08:27:59.000Z",
+      "sourceFingerprint": "ccabe9ee671252517660bf835956ef230f70e36719f1defc52d120c3daf1fe12",
+      "unitCount": 93,
+      "sections": [
+        {
+          "title": "Introduction",
+          "units": [
+            {
+              "order": 1,
+              "kind": "video",
+              "numericId": "289145",
+              "path": "/claude-with-google-vertex/289145",
+              "title": "Welcome to the course"
+            }
+          ]
+        },
+        {
+          "title": "Anthropic overview",
+          "units": [
+            {
+              "order": 2,
+              "kind": "video",
+              "numericId": "289146",
+              "path": "/claude-with-google-vertex/289146",
+              "title": "Overview of Claude models"
+            }
+          ]
+        },
+        {
+          "title": "Accessing Claude with the API",
+          "units": [
+            {
+              "order": 3,
+              "kind": "video",
+              "numericId": "289151",
+              "path": "/claude-with-google-vertex/289151",
+              "title": "Accessing the API"
+            },
+            {
+              "order": 4,
+              "kind": "modular",
+              "numericId": "307525",
+              "path": "/claude-with-google-vertex/307525",
+              "title": "Vertex AI Setup"
+            },
+            {
+              "order": 5,
+              "kind": "video",
+              "numericId": "289155",
+              "path": "/claude-with-google-vertex/289155",
+              "title": "Making a request"
+            },
+            {
+              "order": 6,
+              "kind": "video",
+              "numericId": "289156",
+              "path": "/claude-with-google-vertex/289156",
+              "title": "Multi-turn conversations"
+            },
+            {
+              "order": 7,
+              "kind": "video",
+              "numericId": "289150",
+              "path": "/claude-with-google-vertex/289150",
+              "title": "Chat exercise"
+            },
+            {
+              "order": 8,
+              "kind": "video",
+              "numericId": "289153",
+              "path": "/claude-with-google-vertex/289153",
+              "title": "System prompts"
+            },
+            {
+              "order": 9,
+              "kind": "video",
+              "numericId": "289157",
+              "path": "/claude-with-google-vertex/289157",
+              "title": "System prompts exercise"
+            },
+            {
+              "order": 10,
+              "kind": "video",
+              "numericId": "289154",
+              "path": "/claude-with-google-vertex/289154",
+              "title": "Temperature"
+            },
+            {
+              "order": 11,
+              "kind": "quiz",
+              "numericId": "297285",
+              "path": "/claude-with-google-vertex/297285",
+              "title": "Course satisfaction survey"
+            },
+            {
+              "order": 12,
+              "kind": "video",
+              "numericId": "289162",
+              "path": "/claude-with-google-vertex/289162",
+              "title": "Response streaming"
+            },
+            {
+              "order": 13,
+              "kind": "video",
+              "numericId": "289160",
+              "path": "/claude-with-google-vertex/289160",
+              "title": "Controlling model output"
+            },
+            {
+              "order": 14,
+              "kind": "video",
+              "numericId": "289158",
+              "path": "/claude-with-google-vertex/289158",
+              "title": "Structured data"
+            },
+            {
+              "order": 15,
+              "kind": "video",
+              "numericId": "289152",
+              "path": "/claude-with-google-vertex/289152",
+              "title": "Structured data exercise"
+            },
+            {
+              "order": 16,
+              "kind": "quiz",
+              "numericId": "289281",
+              "path": "/claude-with-google-vertex/289281",
+              "title": "Quiz on accessing Claude with the API"
+            }
+          ]
+        },
+        {
+          "title": "Prompt evaluation",
+          "units": [
+            {
+              "order": 17,
+              "kind": "video",
+              "numericId": "289159",
+              "path": "/claude-with-google-vertex/289159",
+              "title": "Prompt evaluation"
+            },
+            {
+              "order": 18,
+              "kind": "video",
+              "numericId": "289161",
+              "path": "/claude-with-google-vertex/289161",
+              "title": "A typical eval workflow"
+            },
+            {
+              "order": 19,
+              "kind": "video",
+              "numericId": "289163",
+              "path": "/claude-with-google-vertex/289163",
+              "title": "Generating test datasets"
+            },
+            {
+              "order": 20,
+              "kind": "video",
+              "numericId": "289166",
+              "path": "/claude-with-google-vertex/289166",
+              "title": "Running the eval"
+            },
+            {
+              "order": 21,
+              "kind": "video",
+              "numericId": "289168",
+              "path": "/claude-with-google-vertex/289168",
+              "title": "Model based grading"
+            },
+            {
+              "order": 22,
+              "kind": "video",
+              "numericId": "289167",
+              "path": "/claude-with-google-vertex/289167",
+              "title": "Code based grading"
+            },
+            {
+              "order": 23,
+              "kind": "video",
+              "numericId": "289164",
+              "path": "/claude-with-google-vertex/289164",
+              "title": "Exercise on prompt evals"
+            },
+            {
+              "order": 24,
+              "kind": "quiz",
+              "numericId": "289279",
+              "path": "/claude-with-google-vertex/289279",
+              "title": "Quiz on prompt evaluation"
+            }
+          ]
+        },
+        {
+          "title": "Prompt engineering techniques",
+          "units": [
+            {
+              "order": 25,
+              "kind": "video",
+              "numericId": "289169",
+              "path": "/claude-with-google-vertex/289169",
+              "title": "Prompt engineering"
+            },
+            {
+              "order": 26,
+              "kind": "video",
+              "numericId": "289170",
+              "path": "/claude-with-google-vertex/289170",
+              "title": "Being clear and direct"
+            },
+            {
+              "order": 27,
+              "kind": "video",
+              "numericId": "289165",
+              "path": "/claude-with-google-vertex/289165",
+              "title": "Being specific"
+            },
+            {
+              "order": 28,
+              "kind": "video",
+              "numericId": "289171",
+              "path": "/claude-with-google-vertex/289171",
+              "title": "Structure with XML tags"
+            },
+            {
+              "order": 29,
+              "kind": "video",
+              "numericId": "289177",
+              "path": "/claude-with-google-vertex/289177",
+              "title": "Providing examples"
+            },
+            {
+              "order": 30,
+              "kind": "video",
+              "numericId": "289173",
+              "path": "/claude-with-google-vertex/289173",
+              "title": "Exercise on prompting"
+            },
+            {
+              "order": 31,
+              "kind": "quiz",
+              "numericId": "289278",
+              "path": "/claude-with-google-vertex/289278",
+              "title": "Quiz on prompt engineering techniques"
+            }
+          ]
+        },
+        {
+          "title": "Tool use with Claude",
+          "units": [
+            {
+              "order": 32,
+              "kind": "video",
+              "numericId": "289172",
+              "path": "/claude-with-google-vertex/289172",
+              "title": "Introducing tool use"
+            },
+            {
+              "order": 33,
+              "kind": "video",
+              "numericId": "289175",
+              "path": "/claude-with-google-vertex/289175",
+              "title": "Project overview"
+            },
+            {
+              "order": 34,
+              "kind": "video",
+              "numericId": "289176",
+              "path": "/claude-with-google-vertex/289176",
+              "title": "Tool functions"
+            },
+            {
+              "order": 35,
+              "kind": "video",
+              "numericId": "289174",
+              "path": "/claude-with-google-vertex/289174",
+              "title": "Tool schemas"
+            },
+            {
+              "order": 36,
+              "kind": "video",
+              "numericId": "289179",
+              "path": "/claude-with-google-vertex/289179",
+              "title": "Handling message blocks"
+            },
+            {
+              "order": 37,
+              "kind": "video",
+              "numericId": "289184",
+              "path": "/claude-with-google-vertex/289184",
+              "title": "Sending tool results"
+            },
+            {
+              "order": 38,
+              "kind": "video",
+              "numericId": "289178",
+              "path": "/claude-with-google-vertex/289178",
+              "title": "Multi-turn conversations with tools"
+            },
+            {
+              "order": 39,
+              "kind": "video",
+              "numericId": "289182",
+              "path": "/claude-with-google-vertex/289182",
+              "title": "Implementing multiple turns"
+            },
+            {
+              "order": 40,
+              "kind": "video",
+              "numericId": "289185",
+              "path": "/claude-with-google-vertex/289185",
+              "title": "Using multiple tools"
+            },
+            {
+              "order": 41,
+              "kind": "video",
+              "numericId": "289189",
+              "path": "/claude-with-google-vertex/289189",
+              "title": "The batch tool"
+            },
+            {
+              "order": 42,
+              "kind": "video",
+              "numericId": "289181",
+              "path": "/claude-with-google-vertex/289181",
+              "title": "Tools for structured data"
+            },
+            {
+              "order": 43,
+              "kind": "video",
+              "numericId": "289180",
+              "path": "/claude-with-google-vertex/289180",
+              "title": "The text edit tool"
+            },
+            {
+              "order": 44,
+              "kind": "video",
+              "numericId": "289183",
+              "path": "/claude-with-google-vertex/289183",
+              "title": "The web search tool"
+            },
+            {
+              "order": 45,
+              "kind": "quiz",
+              "numericId": "289280",
+              "path": "/claude-with-google-vertex/289280",
+              "title": "Quiz on tool use with Claude"
+            }
+          ]
+        },
+        {
+          "title": "Retrieval Augmented Generation",
+          "units": [
+            {
+              "order": 46,
+              "kind": "video",
+              "numericId": "289191",
+              "path": "/claude-with-google-vertex/289191",
+              "title": "Introducing Retrieval Augmented Generation"
+            },
+            {
+              "order": 47,
+              "kind": "video",
+              "numericId": "289208",
+              "path": "/claude-with-google-vertex/289208",
+              "title": "Text chunking strategies"
+            },
+            {
+              "order": 48,
+              "kind": "video",
+              "numericId": "289188",
+              "path": "/claude-with-google-vertex/289188",
+              "title": "Text embeddings"
+            },
+            {
+              "order": 49,
+              "kind": "video",
+              "numericId": "289190",
+              "path": "/claude-with-google-vertex/289190",
+              "title": "The full RAG flow"
+            },
+            {
+              "order": 50,
+              "kind": "video",
+              "numericId": "289186",
+              "path": "/claude-with-google-vertex/289186",
+              "title": "Implementing the RAG flow"
+            },
+            {
+              "order": 51,
+              "kind": "video",
+              "numericId": "289195",
+              "path": "/claude-with-google-vertex/289195",
+              "title": "BM25 lexical search"
+            },
+            {
+              "order": 52,
+              "kind": "video",
+              "numericId": "289193",
+              "path": "/claude-with-google-vertex/289193",
+              "title": "A Multi-index RAG pipeline"
+            },
+            {
+              "order": 53,
+              "kind": "video",
+              "numericId": "289192",
+              "path": "/claude-with-google-vertex/289192",
+              "title": "Reranking results"
+            },
+            {
+              "order": 54,
+              "kind": "video",
+              "numericId": "289187",
+              "path": "/claude-with-google-vertex/289187",
+              "title": "Contextual retrieval"
+            },
+            {
+              "order": 55,
+              "kind": "quiz",
+              "numericId": "289277",
+              "path": "/claude-with-google-vertex/289277",
+              "title": "Quiz on Retrieval Augmented Generation"
+            }
+          ]
+        },
+        {
+          "title": "Features of Claude",
+          "units": [
+            {
+              "order": 56,
+              "kind": "video",
+              "numericId": "289197",
+              "path": "/claude-with-google-vertex/289197",
+              "title": "Extended thinking"
+            },
+            {
+              "order": 57,
+              "kind": "video",
+              "numericId": "289203",
+              "path": "/claude-with-google-vertex/289203",
+              "title": "Image support"
+            },
+            {
+              "order": 58,
+              "kind": "video",
+              "numericId": "289198",
+              "path": "/claude-with-google-vertex/289198",
+              "title": "PDF support"
+            },
+            {
+              "order": 59,
+              "kind": "video",
+              "numericId": "289202",
+              "path": "/claude-with-google-vertex/289202",
+              "title": "Citations"
+            },
+            {
+              "order": 60,
+              "kind": "video",
+              "numericId": "289196",
+              "path": "/claude-with-google-vertex/289196",
+              "title": "Prompt caching"
+            },
+            {
+              "order": 61,
+              "kind": "video",
+              "numericId": "289194",
+              "path": "/claude-with-google-vertex/289194",
+              "title": "Rules of prompt caching"
+            },
+            {
+              "order": 62,
+              "kind": "video",
+              "numericId": "289200",
+              "path": "/claude-with-google-vertex/289200",
+              "title": "Prompt caching in action"
+            },
+            {
+              "order": 63,
+              "kind": "quiz",
+              "numericId": "289275",
+              "path": "/claude-with-google-vertex/289275",
+              "title": "Quiz on features of Claude"
+            }
+          ]
+        },
+        {
+          "title": "Model Context Protocol",
+          "units": [
+            {
+              "order": 64,
+              "kind": "video",
+              "numericId": "289201",
+              "path": "/claude-with-google-vertex/289201",
+              "title": "Introducing MCP"
+            },
+            {
+              "order": 65,
+              "kind": "video",
+              "numericId": "289204",
+              "path": "/claude-with-google-vertex/289204",
+              "title": "MCP clients"
+            },
+            {
+              "order": 66,
+              "kind": "video",
+              "numericId": "289199",
+              "path": "/claude-with-google-vertex/289199",
+              "title": "Project setup"
+            },
+            {
+              "order": 67,
+              "kind": "video",
+              "numericId": "289235",
+              "path": "/claude-with-google-vertex/289235",
+              "title": "Defining tools with MCP"
+            },
+            {
+              "order": 68,
+              "kind": "video",
+              "numericId": "289207",
+              "path": "/claude-with-google-vertex/289207",
+              "title": "The server inspector"
+            },
+            {
+              "order": 69,
+              "kind": "video",
+              "numericId": "289206",
+              "path": "/claude-with-google-vertex/289206",
+              "title": "Implementing a client"
+            },
+            {
+              "order": 70,
+              "kind": "video",
+              "numericId": "289248",
+              "path": "/claude-with-google-vertex/289248",
+              "title": "Defining resources"
+            },
+            {
+              "order": 71,
+              "kind": "video",
+              "numericId": "289247",
+              "path": "/claude-with-google-vertex/289247",
+              "title": "Accessing resources"
+            },
+            {
+              "order": 72,
+              "kind": "video",
+              "numericId": "289249",
+              "path": "/claude-with-google-vertex/289249",
+              "title": "Defining prompts"
+            },
+            {
+              "order": 73,
+              "kind": "video",
+              "numericId": "289209",
+              "path": "/claude-with-google-vertex/289209",
+              "title": "Prompts in the client"
+            },
+            {
+              "order": 74,
+              "kind": "video",
+              "numericId": "289205",
+              "path": "/claude-with-google-vertex/289205",
+              "title": "MCP review"
+            },
+            {
+              "order": 75,
+              "kind": "quiz",
+              "numericId": "289276",
+              "path": "/claude-with-google-vertex/289276",
+              "title": "Quiz on Model Context Protocol"
+            }
+          ]
+        },
+        {
+          "title": "Anthropic apps - Claude Code and computer use",
+          "units": [
+            {
+              "order": 76,
+              "kind": "video",
+              "numericId": "289230",
+              "path": "/claude-with-google-vertex/289230",
+              "title": "Anthropic apps"
+            },
+            {
+              "order": 77,
+              "kind": "video",
+              "numericId": "289232",
+              "path": "/claude-with-google-vertex/289232",
+              "title": "Claude Code setup"
+            },
+            {
+              "order": 78,
+              "kind": "video",
+              "numericId": "289246",
+              "path": "/claude-with-google-vertex/289246",
+              "title": "Claude Code in action"
+            },
+            {
+              "order": 79,
+              "kind": "video",
+              "numericId": "289231",
+              "path": "/claude-with-google-vertex/289231",
+              "title": "Enhancements with MCP servers"
+            },
+            {
+              "order": 80,
+              "kind": "video",
+              "numericId": "289241",
+              "path": "/claude-with-google-vertex/289241",
+              "title": "Parallelizing Claude Code"
+            },
+            {
+              "order": 81,
+              "kind": "video",
+              "numericId": "289238",
+              "path": "/claude-with-google-vertex/289238",
+              "title": "Automated debugging"
+            },
+            {
+              "order": 82,
+              "kind": "video",
+              "numericId": "289233",
+              "path": "/claude-with-google-vertex/289233",
+              "title": "Computer use"
+            },
+            {
+              "order": 83,
+              "kind": "video",
+              "numericId": "289234",
+              "path": "/claude-with-google-vertex/289234",
+              "title": "How computer use works"
+            }
+          ]
+        },
+        {
+          "title": "Agents and workflows",
+          "units": [
+            {
+              "order": 84,
+              "kind": "video",
+              "numericId": "289244",
+              "path": "/claude-with-google-vertex/289244",
+              "title": "Agents and workflows"
+            },
+            {
+              "order": 85,
+              "kind": "video",
+              "numericId": "289236",
+              "path": "/claude-with-google-vertex/289236",
+              "title": "Parallelization workflows"
+            },
+            {
+              "order": 86,
+              "kind": "video",
+              "numericId": "289239",
+              "path": "/claude-with-google-vertex/289239",
+              "title": "Chaining workflows"
+            },
+            {
+              "order": 87,
+              "kind": "video",
+              "numericId": "289242",
+              "path": "/claude-with-google-vertex/289242",
+              "title": "Routing workflows"
+            },
+            {
+              "order": 88,
+              "kind": "video",
+              "numericId": "289243",
+              "path": "/claude-with-google-vertex/289243",
+              "title": "Agents and tools"
+            },
+            {
+              "order": 89,
+              "kind": "video",
+              "numericId": "289237",
+              "path": "/claude-with-google-vertex/289237",
+              "title": "Environment inspection"
+            },
+            {
+              "order": 90,
+              "kind": "video",
+              "numericId": "289245",
+              "path": "/claude-with-google-vertex/289245",
+              "title": "Workflows vs agents"
+            },
+            {
+              "order": 91,
+              "kind": "quiz",
+              "numericId": "289274",
+              "path": "/claude-with-google-vertex/289274",
+              "title": "Quiz on agents and workflows"
+            }
+          ]
+        },
+        {
+          "title": "Final assessment",
+          "units": [
+            {
+              "order": 92,
+              "kind": "quiz",
+              "numericId": "290880",
+              "path": "/claude-with-google-vertex/290880",
+              "title": "Final assessment quiz"
+            }
+          ]
+        },
+        {
+          "title": "Wrapping up!",
+          "units": [
+            {
+              "order": 93,
+              "kind": "video",
+              "numericId": "289240",
+              "path": "/claude-with-google-vertex/289240",
+              "title": "Course Wrap Up"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "claude-with-the-anthropic-api",
+      "title": "Building with the Claude API",
+      "sourceUrl": "https://anthropic.skilljar.com/claude-with-the-anthropic-api",
+      "fetchedAt": "2026-08-24T08:28:01.628Z",
+      "sourceFingerprint": "5dd8772e3d8fa543ebafe36bd24c20b00887407b87474087800f56a6437b46a6",
+      "unitCount": 85,
+      "sections": [
+        {
+          "title": "Introduction",
+          "units": [
+            {
+              "order": 1,
+              "kind": "modular",
+              "numericId": "287818",
+              "path": "/claude-with-the-anthropic-api/287818",
+              "title": "Welcome to the course"
+            }
+          ]
+        },
+        {
+          "title": "Anthropic overview",
+          "units": [
+            {
+              "order": 2,
+              "kind": "video",
+              "numericId": "287722",
+              "path": "/claude-with-the-anthropic-api/287722",
+              "title": "Overview of Claude models"
+            }
+          ]
+        },
+        {
+          "title": "Accessing Claude with the API",
+          "units": [
+            {
+              "order": 3,
+              "kind": "video",
+              "numericId": "287726",
+              "path": "/claude-with-the-anthropic-api/287726",
+              "title": "Accessing the API"
+            },
+            {
+              "order": 4,
+              "kind": "modular",
+              "numericId": "296766",
+              "path": "/claude-with-the-anthropic-api/296766",
+              "title": "Getting an API key"
+            },
+            {
+              "order": 5,
+              "kind": "video",
+              "numericId": "287725",
+              "path": "/claude-with-the-anthropic-api/287725",
+              "title": "Making a request"
+            },
+            {
+              "order": 6,
+              "kind": "video",
+              "numericId": "287735",
+              "path": "/claude-with-the-anthropic-api/287735",
+              "title": "Multi-Turn conversations"
+            },
+            {
+              "order": 7,
+              "kind": "video",
+              "numericId": "287727",
+              "path": "/claude-with-the-anthropic-api/287727",
+              "title": "Chat exercise"
+            },
+            {
+              "order": 8,
+              "kind": "video",
+              "numericId": "287733",
+              "path": "/claude-with-the-anthropic-api/287733",
+              "title": "System prompts"
+            },
+            {
+              "order": 9,
+              "kind": "video",
+              "numericId": "287724",
+              "path": "/claude-with-the-anthropic-api/287724",
+              "title": "System prompts exercise"
+            },
+            {
+              "order": 10,
+              "kind": "video",
+              "numericId": "287728",
+              "path": "/claude-with-the-anthropic-api/287728",
+              "title": "Temperature"
+            },
+            {
+              "order": 11,
+              "kind": "quiz",
+              "numericId": "297284",
+              "path": "/claude-with-the-anthropic-api/297284",
+              "title": "Course satisfaction survey"
+            },
+            {
+              "order": 12,
+              "kind": "video",
+              "numericId": "287734",
+              "path": "/claude-with-the-anthropic-api/287734",
+              "title": "Response streaming"
+            },
+            {
+              "order": 13,
+              "kind": "video",
+              "numericId": "287732",
+              "path": "/claude-with-the-anthropic-api/287732",
+              "title": "Structured data"
+            },
+            {
+              "order": 14,
+              "kind": "video",
+              "numericId": "287729",
+              "path": "/claude-with-the-anthropic-api/287729",
+              "title": "Structured data exercise"
+            },
+            {
+              "order": 15,
+              "kind": "quiz",
+              "numericId": "289117",
+              "path": "/claude-with-the-anthropic-api/289117",
+              "title": "Quiz on accessing Claude with the API"
+            }
+          ]
+        },
+        {
+          "title": "Prompt evaluation",
+          "units": [
+            {
+              "order": 16,
+              "kind": "video",
+              "numericId": "287731",
+              "path": "/claude-with-the-anthropic-api/287731",
+              "title": "Prompt evaluation"
+            },
+            {
+              "order": 17,
+              "kind": "video",
+              "numericId": "287736",
+              "path": "/claude-with-the-anthropic-api/287736",
+              "title": "A typical eval workflow"
+            },
+            {
+              "order": 18,
+              "kind": "video",
+              "numericId": "287739",
+              "path": "/claude-with-the-anthropic-api/287739",
+              "title": "Generating test datasets"
+            },
+            {
+              "order": 19,
+              "kind": "video",
+              "numericId": "287743",
+              "path": "/claude-with-the-anthropic-api/287743",
+              "title": "Running the eval"
+            },
+            {
+              "order": 20,
+              "kind": "video",
+              "numericId": "287742",
+              "path": "/claude-with-the-anthropic-api/287742",
+              "title": "Model based grading"
+            },
+            {
+              "order": 21,
+              "kind": "video",
+              "numericId": "287737",
+              "path": "/claude-with-the-anthropic-api/287737",
+              "title": "Code based grading"
+            },
+            {
+              "order": 22,
+              "kind": "video",
+              "numericId": "287738",
+              "path": "/claude-with-the-anthropic-api/287738",
+              "title": "Exercise on prompt evals"
+            },
+            {
+              "order": 23,
+              "kind": "quiz",
+              "numericId": "289118",
+              "path": "/claude-with-the-anthropic-api/289118",
+              "title": "Quiz on prompt evaluation"
+            }
+          ]
+        },
+        {
+          "title": "Prompt engineering techniques",
+          "units": [
+            {
+              "order": 24,
+              "kind": "video",
+              "numericId": "287745",
+              "path": "/claude-with-the-anthropic-api/287745",
+              "title": "Prompt engineering"
+            },
+            {
+              "order": 25,
+              "kind": "video",
+              "numericId": "287744",
+              "path": "/claude-with-the-anthropic-api/287744",
+              "title": "Being clear and direct"
+            },
+            {
+              "order": 26,
+              "kind": "video",
+              "numericId": "287740",
+              "path": "/claude-with-the-anthropic-api/287740",
+              "title": "Being specific"
+            },
+            {
+              "order": 27,
+              "kind": "video",
+              "numericId": "287741",
+              "path": "/claude-with-the-anthropic-api/287741",
+              "title": "Structure with XML tags"
+            },
+            {
+              "order": 28,
+              "kind": "video",
+              "numericId": "287746",
+              "path": "/claude-with-the-anthropic-api/287746",
+              "title": "Providing examples"
+            },
+            {
+              "order": 29,
+              "kind": "video",
+              "numericId": "287748",
+              "path": "/claude-with-the-anthropic-api/287748",
+              "title": "Exercise on prompting"
+            },
+            {
+              "order": 30,
+              "kind": "quiz",
+              "numericId": "289121",
+              "path": "/claude-with-the-anthropic-api/289121",
+              "title": "Quiz on prompt engineering techniques"
+            }
+          ]
+        },
+        {
+          "title": "Tool use with Claude",
+          "units": [
+            {
+              "order": 31,
+              "kind": "video",
+              "numericId": "287747",
+              "path": "/claude-with-the-anthropic-api/287747",
+              "title": "Introducing tool use"
+            },
+            {
+              "order": 32,
+              "kind": "video",
+              "numericId": "287751",
+              "path": "/claude-with-the-anthropic-api/287751",
+              "title": "Project overview"
+            },
+            {
+              "order": 33,
+              "kind": "video",
+              "numericId": "287756",
+              "path": "/claude-with-the-anthropic-api/287756",
+              "title": "Tool functions"
+            },
+            {
+              "order": 34,
+              "kind": "video",
+              "numericId": "287753",
+              "path": "/claude-with-the-anthropic-api/287753",
+              "title": "Tool schemas"
+            },
+            {
+              "order": 35,
+              "kind": "video",
+              "numericId": "287757",
+              "path": "/claude-with-the-anthropic-api/287757",
+              "title": "Handling message blocks"
+            },
+            {
+              "order": 36,
+              "kind": "video",
+              "numericId": "287752",
+              "path": "/claude-with-the-anthropic-api/287752",
+              "title": "Sending tool results"
+            },
+            {
+              "order": 37,
+              "kind": "video",
+              "numericId": "287750",
+              "path": "/claude-with-the-anthropic-api/287750",
+              "title": "Multi-turn conversations with tools"
+            },
+            {
+              "order": 38,
+              "kind": "video",
+              "numericId": "287758",
+              "path": "/claude-with-the-anthropic-api/287758",
+              "title": "Implementing multiple turns"
+            },
+            {
+              "order": 39,
+              "kind": "video",
+              "numericId": "287749",
+              "path": "/claude-with-the-anthropic-api/287749",
+              "title": "Using multiple tools"
+            },
+            {
+              "order": 40,
+              "kind": "video",
+              "numericId": "313160",
+              "path": "/claude-with-the-anthropic-api/313160",
+              "title": "Fine grained tool calling"
+            },
+            {
+              "order": 41,
+              "kind": "video",
+              "numericId": "287760",
+              "path": "/claude-with-the-anthropic-api/287760",
+              "title": "The text edit tool"
+            },
+            {
+              "order": 42,
+              "kind": "video",
+              "numericId": "287755",
+              "path": "/claude-with-the-anthropic-api/287755",
+              "title": "The web search tool"
+            },
+            {
+              "order": 43,
+              "kind": "quiz",
+              "numericId": "289122",
+              "path": "/claude-with-the-anthropic-api/289122",
+              "title": "Quiz on tool use with Claude"
+            }
+          ]
+        },
+        {
+          "title": "RAG and Agentic Search",
+          "units": [
+            {
+              "order": 44,
+              "kind": "video",
+              "numericId": "287763",
+              "path": "/claude-with-the-anthropic-api/287763",
+              "title": "Introducing Retrieval Augmented Generation"
+            },
+            {
+              "order": 45,
+              "kind": "video",
+              "numericId": "287776",
+              "path": "/claude-with-the-anthropic-api/287776",
+              "title": "Text chunking strategies"
+            },
+            {
+              "order": 46,
+              "kind": "video",
+              "numericId": "287759",
+              "path": "/claude-with-the-anthropic-api/287759",
+              "title": "Text embeddings"
+            },
+            {
+              "order": 47,
+              "kind": "video",
+              "numericId": "287764",
+              "path": "/claude-with-the-anthropic-api/287764",
+              "title": "The full RAG flow"
+            },
+            {
+              "order": 48,
+              "kind": "video",
+              "numericId": "287761",
+              "path": "/claude-with-the-anthropic-api/287761",
+              "title": "Implementing the RAG flow"
+            },
+            {
+              "order": 49,
+              "kind": "video",
+              "numericId": "287767",
+              "path": "/claude-with-the-anthropic-api/287767",
+              "title": "BM25 lexical search"
+            },
+            {
+              "order": 50,
+              "kind": "video",
+              "numericId": "287766",
+              "path": "/claude-with-the-anthropic-api/287766",
+              "title": "A Multi-Index RAG pipeline"
+            }
+          ]
+        },
+        {
+          "title": "Features of Claude",
+          "units": [
+            {
+              "order": 51,
+              "kind": "video",
+              "numericId": "287773",
+              "path": "/claude-with-the-anthropic-api/287773",
+              "title": "Extended thinking"
+            },
+            {
+              "order": 52,
+              "kind": "video",
+              "numericId": "287778",
+              "path": "/claude-with-the-anthropic-api/287778",
+              "title": "Image support"
+            },
+            {
+              "order": 53,
+              "kind": "video",
+              "numericId": "287768",
+              "path": "/claude-with-the-anthropic-api/287768",
+              "title": "PDF support"
+            },
+            {
+              "order": 54,
+              "kind": "video",
+              "numericId": "287771",
+              "path": "/claude-with-the-anthropic-api/287771",
+              "title": "Citations"
+            },
+            {
+              "order": 55,
+              "kind": "video",
+              "numericId": "287772",
+              "path": "/claude-with-the-anthropic-api/287772",
+              "title": "Prompt caching"
+            },
+            {
+              "order": 56,
+              "kind": "video",
+              "numericId": "287770",
+              "path": "/claude-with-the-anthropic-api/287770",
+              "title": "Rules of prompt caching"
+            },
+            {
+              "order": 57,
+              "kind": "video",
+              "numericId": "287774",
+              "path": "/claude-with-the-anthropic-api/287774",
+              "title": "Prompt caching in action"
+            },
+            {
+              "order": 58,
+              "kind": "video",
+              "numericId": "287777",
+              "path": "/claude-with-the-anthropic-api/287777",
+              "title": "Code execution and the Files API"
+            },
+            {
+              "order": 59,
+              "kind": "quiz",
+              "numericId": "289124",
+              "path": "/claude-with-the-anthropic-api/289124",
+              "title": "Quiz on features of Claude"
+            }
+          ]
+        },
+        {
+          "title": "Model Context Protocol",
+          "units": [
+            {
+              "order": 60,
+              "kind": "video",
+              "numericId": "287780",
+              "path": "/claude-with-the-anthropic-api/287780",
+              "title": "Introducing MCP"
+            },
+            {
+              "order": 61,
+              "kind": "video",
+              "numericId": "287775",
+              "path": "/claude-with-the-anthropic-api/287775",
+              "title": "MCP clients"
+            },
+            {
+              "order": 62,
+              "kind": "video",
+              "numericId": "287785",
+              "path": "/claude-with-the-anthropic-api/287785",
+              "title": "Project setup"
+            },
+            {
+              "order": 63,
+              "kind": "video",
+              "numericId": "287797",
+              "path": "/claude-with-the-anthropic-api/287797",
+              "title": "Defining tools with MCP"
+            },
+            {
+              "order": 64,
+              "kind": "video",
+              "numericId": "287781",
+              "path": "/claude-with-the-anthropic-api/287781",
+              "title": "The server inspector"
+            },
+            {
+              "order": 65,
+              "kind": "video",
+              "numericId": "287793",
+              "path": "/claude-with-the-anthropic-api/287793",
+              "title": "Implementing a client"
+            },
+            {
+              "order": 66,
+              "kind": "video",
+              "numericId": "287782",
+              "path": "/claude-with-the-anthropic-api/287782",
+              "title": "Defining resources"
+            },
+            {
+              "order": 67,
+              "kind": "video",
+              "numericId": "287783",
+              "path": "/claude-with-the-anthropic-api/287783",
+              "title": "Accessing resources"
+            },
+            {
+              "order": 68,
+              "kind": "video",
+              "numericId": "287784",
+              "path": "/claude-with-the-anthropic-api/287784",
+              "title": "Defining prompts"
+            },
+            {
+              "order": 69,
+              "kind": "video",
+              "numericId": "287786",
+              "path": "/claude-with-the-anthropic-api/287786",
+              "title": "Prompts in the client"
+            },
+            {
+              "order": 70,
+              "kind": "video",
+              "numericId": "287790",
+              "path": "/claude-with-the-anthropic-api/287790",
+              "title": "MCP review"
+            },
+            {
+              "order": 71,
+              "kind": "quiz",
+              "numericId": "289126",
+              "path": "/claude-with-the-anthropic-api/289126",
+              "title": "Quiz on Model Context Protocol"
+            }
+          ]
+        },
+        {
+          "title": "Anthropic apps - Claude Code and computer use",
+          "units": [
+            {
+              "order": 72,
+              "kind": "video",
+              "numericId": "287787",
+              "path": "/claude-with-the-anthropic-api/287787",
+              "title": "Anthropic apps"
+            },
+            {
+              "order": 73,
+              "kind": "video",
+              "numericId": "287788",
+              "path": "/claude-with-the-anthropic-api/287788",
+              "title": "Claude Code setup"
+            },
+            {
+              "order": 74,
+              "kind": "video",
+              "numericId": "287805",
+              "path": "/claude-with-the-anthropic-api/287805",
+              "title": "Claude Code in action"
+            },
+            {
+              "order": 75,
+              "kind": "video",
+              "numericId": "287792",
+              "path": "/claude-with-the-anthropic-api/287792",
+              "title": "Enhancements with MCP servers"
+            }
+          ]
+        },
+        {
+          "title": "Agents and workflows",
+          "units": [
+            {
+              "order": 76,
+              "kind": "video",
+              "numericId": "287796",
+              "path": "/claude-with-the-anthropic-api/287796",
+              "title": "Agents and workflows"
+            },
+            {
+              "order": 77,
+              "kind": "video",
+              "numericId": "287804",
+              "path": "/claude-with-the-anthropic-api/287804",
+              "title": "Parallelization workflows"
+            },
+            {
+              "order": 78,
+              "kind": "video",
+              "numericId": "287800",
+              "path": "/claude-with-the-anthropic-api/287800",
+              "title": "Chaining workflows"
+            },
+            {
+              "order": 79,
+              "kind": "video",
+              "numericId": "287801",
+              "path": "/claude-with-the-anthropic-api/287801",
+              "title": "Routing workflows"
+            },
+            {
+              "order": 80,
+              "kind": "video",
+              "numericId": "287803",
+              "path": "/claude-with-the-anthropic-api/287803",
+              "title": "Agents and tools"
+            },
+            {
+              "order": 81,
+              "kind": "video",
+              "numericId": "287798",
+              "path": "/claude-with-the-anthropic-api/287798",
+              "title": "Environment inspection"
+            },
+            {
+              "order": 82,
+              "kind": "video",
+              "numericId": "287794",
+              "path": "/claude-with-the-anthropic-api/287794",
+              "title": "Workflows vs agents"
+            },
+            {
+              "order": 83,
+              "kind": "quiz",
+              "numericId": "289130",
+              "path": "/claude-with-the-anthropic-api/289130",
+              "title": "Quiz on Agents and Workflows"
+            }
+          ]
+        },
+        {
+          "title": "Final assessment",
+          "units": [
+            {
+              "order": 84,
+              "kind": "quiz",
+              "numericId": "290899",
+              "path": "/claude-with-the-anthropic-api/290899",
+              "title": "Final Assessment"
+            }
+          ]
+        },
+        {
+          "title": "Wrapping up!",
+          "units": [
+            {
+              "order": 85,
+              "kind": "video",
+              "numericId": "287802",
+              "path": "/claude-with-the-anthropic-api/287802",
+              "title": "Course Wrap Up"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "introduction-to-agent-skills",
+      "title": "Introduction to agent skills",
+      "sourceUrl": "https://anthropic.skilljar.com/introduction-to-agent-skills",
+      "fetchedAt": "2026-08-24T08:28:09.715Z",
+      "sourceFingerprint": "d6239afc6fe6cfa14076eddba2d7d6c3fb7d7d4821978306b83038d02f421450",
+      "unitCount": 6,
+      "sections": [
+        {
+          "title": "(no section)",
+          "units": [
+            {
+              "order": 1,
+              "kind": "modular",
+              "numericId": "434525",
+              "path": "/introduction-to-agent-skills/434525",
+              "title": "What are skills?"
+            },
+            {
+              "order": 2,
+              "kind": "modular",
+              "numericId": "434527",
+              "path": "/introduction-to-agent-skills/434527",
+              "title": "Creating your first skill"
+            },
+            {
+              "order": 3,
+              "kind": "modular",
+              "numericId": "434526",
+              "path": "/introduction-to-agent-skills/434526",
+              "title": "Configuration and multi-file skills"
+            },
+            {
+              "order": 4,
+              "kind": "modular",
+              "numericId": "434528",
+              "path": "/introduction-to-agent-skills/434528",
+              "title": "Skills vs. other Claude Code features"
+            },
+            {
+              "order": 5,
+              "kind": "modular",
+              "numericId": "434529",
+              "path": "/introduction-to-agent-skills/434529",
+              "title": "Sharing skills"
+            },
+            {
+              "order": 6,
+              "kind": "modular",
+              "numericId": "434530",
+              "path": "/introduction-to-agent-skills/434530",
+              "title": "Troubleshooting skills"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "introduction-to-claude-cowork",
+      "title": "Introduction to Claude Cowork",
+      "sourceUrl": "https://anthropic.skilljar.com/introduction-to-claude-cowork",
+      "fetchedAt": "2026-08-24T08:28:12.148Z",
+      "sourceFingerprint": "fce48876f165cf889286923f0225d04cc414ab955305302367ef573f3094ff89",
+      "unitCount": 15,
+      "sections": [
+        {
+          "title": "Meet Claude Cowork",
+          "units": [
+            {
+              "order": 1,
+              "kind": "modular",
+              "numericId": "444164",
+              "path": "/introduction-to-claude-cowork/444164",
+              "title": "What is Claude Cowork"
+            },
+            {
+              "order": 2,
+              "kind": "modular",
+              "numericId": "444165",
+              "path": "/introduction-to-claude-cowork/444165",
+              "title": "Setting up Claude Cowork"
+            },
+            {
+              "order": 3,
+              "kind": "modular",
+              "numericId": "444169",
+              "path": "/introduction-to-claude-cowork/444169",
+              "title": "What Claude Cowork can do for you"
+            },
+            {
+              "order": 4,
+              "kind": "modular",
+              "numericId": "444166",
+              "path": "/introduction-to-claude-cowork/444166",
+              "title": "Hand Claude Cowork your first task"
+            }
+          ]
+        },
+        {
+          "title": "Make Claude Cowork yours",
+          "units": [
+            {
+              "order": 5,
+              "kind": "modular",
+              "numericId": "444171",
+              "path": "/introduction-to-claude-cowork/444171",
+              "title": "Get better results faster"
+            },
+            {
+              "order": 6,
+              "kind": "modular",
+              "numericId": "444167",
+              "path": "/introduction-to-claude-cowork/444167",
+              "title": "Standing context: Global instructions and projects"
+            },
+            {
+              "order": 7,
+              "kind": "modular",
+              "numericId": "444170",
+              "path": "/introduction-to-claude-cowork/444170",
+              "title": "Skills: Teach Claude Cowork your way"
+            },
+            {
+              "order": 8,
+              "kind": "modular",
+              "numericId": "444168",
+              "path": "/introduction-to-claude-cowork/444168",
+              "title": "Plugins: Encode your team&#x27;s expertise"
+            }
+          ]
+        },
+        {
+          "title": "Use Claude wherever you work",
+          "units": [
+            {
+              "order": 9,
+              "kind": "modular",
+              "numericId": "485947",
+              "path": "/introduction-to-claude-cowork/485947",
+              "title": "Claude in Chrome"
+            },
+            {
+              "order": 10,
+              "kind": "modular",
+              "numericId": "485948",
+              "path": "/introduction-to-claude-cowork/485948",
+              "title": "Claude for Microsoft 365"
+            }
+          ]
+        },
+        {
+          "title": "Sharing and safety in Claude Cowork",
+          "units": [
+            {
+              "order": 11,
+              "kind": "modular",
+              "numericId": "444173",
+              "path": "/introduction-to-claude-cowork/444173",
+              "title": "Best practices for working safely"
+            },
+            {
+              "order": 12,
+              "kind": "modular",
+              "numericId": "485949",
+              "path": "/introduction-to-claude-cowork/485949",
+              "title": "Validating skills for plugins"
+            },
+            {
+              "order": 13,
+              "kind": "modular",
+              "numericId": "485950",
+              "path": "/introduction-to-claude-cowork/485950",
+              "title": "Share what you build with your team"
+            },
+            {
+              "order": 14,
+              "kind": "modular",
+              "numericId": "444174",
+              "path": "/introduction-to-claude-cowork/444174",
+              "title": "Wrap up and next steps"
+            }
+          ]
+        },
+        {
+          "title": "Check your understanding",
+          "units": [
+            {
+              "order": 15,
+              "kind": "quiz",
+              "numericId": "452288",
+              "path": "/introduction-to-claude-cowork/452288",
+              "title": "Quiz on Claude Cowork"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "introduction-to-model-context-protocol",
+      "title": "Introduction to Model Context Protocol",
+      "sourceUrl": "https://anthropic.skilljar.com/introduction-to-model-context-protocol",
+      "fetchedAt": "2026-08-24T08:28:14.765Z",
+      "sourceFingerprint": "5cece637da06745283bbcfafdf2820377ffae9e7ec9740f99babdc0c23541894",
+      "unitCount": 14,
+      "sections": [
+        {
+          "title": "Introduction",
+          "units": [
+            {
+              "order": 1,
+              "kind": "modular",
+              "numericId": "303756",
+              "path": "/introduction-to-model-context-protocol/303756",
+              "title": "Welcome to the course"
+            },
+            {
+              "order": 2,
+              "kind": "video",
+              "numericId": "296689",
+              "path": "/introduction-to-model-context-protocol/296689",
+              "title": "Introducing MCP"
+            },
+            {
+              "order": 3,
+              "kind": "video",
+              "numericId": "296690",
+              "path": "/introduction-to-model-context-protocol/296690",
+              "title": "MCP clients"
+            }
+          ]
+        },
+        {
+          "title": "Hands-on with MCP servers",
+          "units": [
+            {
+              "order": 4,
+              "kind": "video",
+              "numericId": "296694",
+              "path": "/introduction-to-model-context-protocol/296694",
+              "title": "Project setup"
+            },
+            {
+              "order": 5,
+              "kind": "video",
+              "numericId": "296697",
+              "path": "/introduction-to-model-context-protocol/296697",
+              "title": "Defining tools with MCP"
+            },
+            {
+              "order": 6,
+              "kind": "video",
+              "numericId": "296693",
+              "path": "/introduction-to-model-context-protocol/296693",
+              "title": "The server inspector"
+            },
+            {
+              "order": 7,
+              "kind": "quiz",
+              "numericId": "297281",
+              "path": "/introduction-to-model-context-protocol/297281",
+              "title": "Course satisfaction survey"
+            }
+          ]
+        },
+        {
+          "title": "Connecting with MCP clients",
+          "units": [
+            {
+              "order": 8,
+              "kind": "video",
+              "numericId": "296696",
+              "path": "/introduction-to-model-context-protocol/296696",
+              "title": "Implementing a client"
+            },
+            {
+              "order": 9,
+              "kind": "video",
+              "numericId": "296699",
+              "path": "/introduction-to-model-context-protocol/296699",
+              "title": "Defining resources"
+            },
+            {
+              "order": 10,
+              "kind": "video",
+              "numericId": "296695",
+              "path": "/introduction-to-model-context-protocol/296695",
+              "title": "Accessing resources"
+            },
+            {
+              "order": 11,
+              "kind": "video",
+              "numericId": "296698",
+              "path": "/introduction-to-model-context-protocol/296698",
+              "title": "Defining prompts"
+            },
+            {
+              "order": 12,
+              "kind": "video",
+              "numericId": "296692",
+              "path": "/introduction-to-model-context-protocol/296692",
+              "title": "Prompts in the client"
+            }
+          ]
+        },
+        {
+          "title": "Assessment and wrap Up",
+          "units": [
+            {
+              "order": 13,
+              "kind": "modular",
+              "numericId": "297196",
+              "path": "/introduction-to-model-context-protocol/297196",
+              "title": "Final assessment on MCP"
+            },
+            {
+              "order": 14,
+              "kind": "video",
+              "numericId": "296691",
+              "path": "/introduction-to-model-context-protocol/296691",
+              "title": "MCP review"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "introduction-to-subagents",
+      "title": "Introduction to subagents",
+      "sourceUrl": "https://anthropic.skilljar.com/introduction-to-subagents",
+      "fetchedAt": "2026-08-24T08:28:31.598Z",
+      "sourceFingerprint": "fefe3f3190f656f3697f50237e2a248003a02bbbe0f78068f6cb4bb5026c67b2",
+      "unitCount": 4,
+      "sections": [
+        {
+          "title": "(no section)",
+          "units": [
+            {
+              "order": 1,
+              "kind": "modular",
+              "numericId": "450698",
+              "path": "/introduction-to-subagents/450698",
+              "title": "What are subagents?"
+            },
+            {
+              "order": 2,
+              "kind": "modular",
+              "numericId": "450699",
+              "path": "/introduction-to-subagents/450699",
+              "title": "Creating a subagent"
+            },
+            {
+              "order": 3,
+              "kind": "modular",
+              "numericId": "450700",
+              "path": "/introduction-to-subagents/450700",
+              "title": "Designing effective subagents"
+            },
+            {
+              "order": 4,
+              "kind": "modular",
+              "numericId": "450701",
+              "path": "/introduction-to-subagents/450701",
+              "title": "Using subagents effectively"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "model-context-protocol-advanced-topics",
+      "title": "Model Context Protocol: Advanced Topics",
+      "sourceUrl": "https://anthropic.skilljar.com/model-context-protocol-advanced-topics",
+      "fetchedAt": "2026-08-24T08:28:36.750Z",
+      "sourceFingerprint": "6e8e53a07b4f69575189da35debc5e6eea401a277fb8184f0c81494956380bf7",
+      "unitCount": 15,
+      "sections": [
+        {
+          "title": "Introduction",
+          "units": [
+            {
+              "order": 1,
+              "kind": "modular",
+              "numericId": "296349",
+              "path": "/model-context-protocol-advanced-topics/296349",
+              "title": "Let&#x27;s get started!"
+            }
+          ]
+        },
+        {
+          "title": "Core MCP features",
+          "units": [
+            {
+              "order": 2,
+              "kind": "video",
+              "numericId": "296288",
+              "path": "/model-context-protocol-advanced-topics/296288",
+              "title": "Sampling"
+            },
+            {
+              "order": 3,
+              "kind": "modular",
+              "numericId": "295172",
+              "path": "/model-context-protocol-advanced-topics/295172",
+              "title": "Sampling walkthrough"
+            },
+            {
+              "order": 4,
+              "kind": "video",
+              "numericId": "296284",
+              "path": "/model-context-protocol-advanced-topics/296284",
+              "title": "Log and progress notifications"
+            },
+            {
+              "order": 5,
+              "kind": "modular",
+              "numericId": "291036",
+              "path": "/model-context-protocol-advanced-topics/291036",
+              "title": "Notifications walkthrough"
+            },
+            {
+              "order": 6,
+              "kind": "video",
+              "numericId": "296289",
+              "path": "/model-context-protocol-advanced-topics/296289",
+              "title": "Roots"
+            },
+            {
+              "order": 7,
+              "kind": "modular",
+              "numericId": "295839",
+              "path": "/model-context-protocol-advanced-topics/295839",
+              "title": "Roots walkthrough"
+            },
+            {
+              "order": 8,
+              "kind": "modular",
+              "numericId": "297276",
+              "path": "/model-context-protocol-advanced-topics/297276",
+              "title": "Survey"
+            }
+          ]
+        },
+        {
+          "title": "Transports and communication",
+          "units": [
+            {
+              "order": 9,
+              "kind": "video",
+              "numericId": "296290",
+              "path": "/model-context-protocol-advanced-topics/296290",
+              "title": "JSON message types"
+            },
+            {
+              "order": 10,
+              "kind": "video",
+              "numericId": "296291",
+              "path": "/model-context-protocol-advanced-topics/296291",
+              "title": "The STDIO transport"
+            },
+            {
+              "order": 11,
+              "kind": "video",
+              "numericId": "296287",
+              "path": "/model-context-protocol-advanced-topics/296287",
+              "title": "The StreamableHTTP transport"
+            },
+            {
+              "order": 12,
+              "kind": "video",
+              "numericId": "296286",
+              "path": "/model-context-protocol-advanced-topics/296286",
+              "title": "StreamableHTTP in depth"
+            },
+            {
+              "order": 13,
+              "kind": "video",
+              "numericId": "296285",
+              "path": "/model-context-protocol-advanced-topics/296285",
+              "title": "State and the StreamableHTTP transport"
+            }
+          ]
+        },
+        {
+          "title": "Assessment and next steps",
+          "units": [
+            {
+              "order": 14,
+              "kind": "quiz",
+              "numericId": "296301",
+              "path": "/model-context-protocol-advanced-topics/296301",
+              "title": "Assessment on MCP concepts"
+            },
+            {
+              "order": 15,
+              "kind": "modular",
+              "numericId": "296350",
+              "path": "/model-context-protocol-advanced-topics/296350",
+              "title": "Wrapping up"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "teaching-ai-fluency",
+      "title": "Teaching AI Fluency",
+      "sourceUrl": "https://anthropic.skilljar.com/teaching-ai-fluency",
+      "fetchedAt": "2026-08-24T08:28:40.022Z",
+      "sourceFingerprint": "f75d4858239bca0a97167370d3d24121d2b916caee99e85d02e36a591698f9aa",
+      "unitCount": 8,
+      "sections": [
+        {
+          "title": "Introduction and approaches to teaching AI Fluency",
+          "units": [
+            {
+              "order": 1,
+              "kind": "modular",
+              "numericId": "327277",
+              "path": "/teaching-ai-fluency/327277",
+              "title": "Welcome & approaches to teaching AI Fluency"
+            },
+            {
+              "order": 2,
+              "kind": "modular",
+              "numericId": "327278",
+              "path": "/teaching-ai-fluency/327278",
+              "title": "The Delegation-Diligence loop"
+            },
+            {
+              "order": 3,
+              "kind": "modular",
+              "numericId": "327279",
+              "path": "/teaching-ai-fluency/327279",
+              "title": "The Description-Discernment loop"
+            }
+          ]
+        },
+        {
+          "title": "Assessing AI Fluency",
+          "units": [
+            {
+              "order": 4,
+              "kind": "modular",
+              "numericId": "327280",
+              "path": "/teaching-ai-fluency/327280",
+              "title": "How do we assess the 4Ds?"
+            },
+            {
+              "order": 5,
+              "kind": "modular",
+              "numericId": "327281",
+              "path": "/teaching-ai-fluency/327281",
+              "title": "Designing assignments for AI Fluency"
+            }
+          ]
+        },
+        {
+          "title": "AI&#x27;s Impact on disciplinary content",
+          "units": [
+            {
+              "order": 6,
+              "kind": "modular",
+              "numericId": "327282",
+              "path": "/teaching-ai-fluency/327282",
+              "title": "AI&#x27;s impact and your discipline"
+            },
+            {
+              "order": 7,
+              "kind": "modular",
+              "numericId": "327284",
+              "path": "/teaching-ai-fluency/327284",
+              "title": "Applying discipline expertise to AI Fluency"
+            }
+          ]
+        },
+        {
+          "title": "Conclusion & certificate",
+          "units": [
+            {
+              "order": 8,
+              "kind": "modular",
+              "numericId": "327285",
+              "path": "/teaching-ai-fluency/327285",
+              "title": "Certificate of completion"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "slug": "certification-faq",
+      "url": "https://anthropic.skilljar.com/certification-faq",
+      "error": "HTTP 404 fetching https://anthropic.skilljar.com/certification-faq"
+    },
+    {
+      "slug": "claude-certified-architect-foundations-certification",
+      "url": "https://anthropic.skilljar.com/claude-certified-architect-foundations-certification",
+      "error": "no dp-curriculum list found for claude-certified-architect-foundations-certification"
+    },
+    {
+      "slug": "privacy",
+      "url": "https://anthropic.skilljar.com/privacy",
+      "error": "HTTP 404 fetching https://anthropic.skilljar.com/privacy"
+    }
+  ]
+}
