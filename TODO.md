@@ -375,6 +375,25 @@ Measured facts (2026-08-22, laptop + live site — re-verify before relying):
       strings x 12 locales, best case only catalog/UI/sections + a small
       exception list.
 
+- [ ] **Mixed-localization baseline contract (P2), pinned by E2E.** On an
+      officially localized page (academy.claude.com serves Korean lesson
+      bodies with English lesson titles and section headers), SkillBridge
+      must leave already-target-language DOM untouched and translate ONLY
+      the English residue. Today this falls out of `isLikelyEnglish` by
+      accident; nothing pins it, so a heuristic tweak could silently start
+      re-translating official Korean. The behavior contract is testable NOW
+      with a synthetic mixed-language fixture on the existing fixture
+      server — it does not need the host-support decision, and having it
+      green first de-risks that decision.
+- [ ] **67-title GT experiment, Phase 2 (conditional).** Only if Phase 1
+      (API course) reads well: a stratified sample across the 22 Academy
+      courses — ambiguous one-worders ("Temperature", "Citations",
+      "Diligence"), product names, generic-noun headings, technical
+      phrases, education/business phrasing (AI Fluency, K-12, nonprofit
+      tracks have a very different register from developer courses). One
+      course cannot carry the external validity for "drop lesson-title
+      translation memory"; two good samples can.
+
 ### Blocked on an owner decision
 
 Strategy is decided by the owner directly, per this file's own policy —
@@ -382,19 +401,62 @@ these are listed only so the dependency chain stays visible.
 
 - Support `academy.claude.com` at all? (Adds a host permission → CWS
   re-review + "new permissions" prompt that disables the extension until
-  accepted. Batch with a meaningful release if yes.)
+  accepted. Batch with a meaningful release if yes. Alternative worth
+  costing: `optional_host_permissions` + programmatic registration — no
+  update-time disable, but a user-gesture opt-in and injection rework.)
+  A yes carries two REQUIRED engineering gates, not nice-to-haves:
+  - Exam/quiz safety on Academy's DOM. The current answer-exclusion
+    chokepoints are written against Skilljar's quiz markup; Academy's
+    quiz pages need their own detection + EXAM_SKIP selectors, or the
+    "never translate/transmit/cache answer text" contract silently
+    lapses there.
+  - Puter broker trust boundary. The Tutor broker and `_isLocalChatPort`
+    are gated to exact Skilljar hosts by design. Admitting
+    academy.claude.com to ANY AI surface is a threat-model change
+    (trusted-host policy, frame/document lifecycle, broker exposure),
+    not a hostname append.
 - Canonical course/lesson identity + storage migration (P1): notes/
   bookmarks/recent are keyed by exact `location.href` today, so the same
   course re-taken on Academy has none of the user's Skilljar-era data.
   Migration must be lossless (add canonical id, keep legacyUrls, never
-  delete old records).
+  delete old records). P1 is not done at URL identity: bookmarks also
+  store an absolute `scrollY`, and Skilljar's Y=3100 is not Academy's
+  Y=3100 — without a portable anchor (heading identity + nearby-text
+  quote/hash, scroll-ratio fallback) a migrated bookmark opens the right
+  lesson at the wrong place.
 - Translation-asset split (P3): preserve-English masking and wrong-form
   recovery exist; "preferred target terminology" (glossary) is a THIRD
   mechanism that does not exist yet — policy data + QA validator first,
   automatic enforcement only via a future refinement layer.
 - Optional AI refinement layer (P4) — deliberately last; building it on
   top of stale phrase data and URL-keyed identity would gold-plate the
-  wrong foundation.
+  wrong foundation. Two invariants agreed 2026-08-22..24 must survive
+  into any implementation, whoever builds it:
+  - Tutor provider and translation-refinement provider are INDEPENDENT
+    axes (each Off/Local/Puter/…, plus a Conservative/Balanced/Quality
+    policy axis). Every combination is legal — Cloud Tutor + refinement
+    Off, Tutor Off + Local refinement, and so on. Collapsing them into
+    one "AI engine" setting re-creates the v3.5.x consent bug.
+  - Consent is per-axis: agreeing to send a typed question to the Tutor
+    is NOT agreeing to stream lesson bodies to background AI. Refinement
+    defaults Off, separate opt-in. And "AI Off" means ZERO model calls of
+    any kind — the mode the passive-broker E2E already pins for Puter
+    must extend to every future provider.
+- External Assistant / BYOA — unrepresented use case. A Claude-app user
+  reading Claude Academy may want SkillBridge purely as translation +
+  terminology + notes/bookmarks/progress, with tutoring done by their own
+  Claude/ChatGPT/Gemini subscription (BYOA: their consumer app, no
+  SkillBridge API calls — distinct from BYOK, which the not-doing list
+  already rejects). Cheapest real form: an "Ask externally" handoff on
+  the existing text-selection UI (context bundle + prompt, copy/open).
+  Never auto-drive another extension. This also reframes the bundled
+  Tutor as "the default for users WITHOUT an AI subscription", which is
+  a positioning call, hence owner-decision.
+- Partner Skilljar capability policy. `anthropic-partners.skilljar.com`
+  already gets translation-only treatment via the tenant fallback, and
+  the official FAQ keeps partner learners on Skilljar indefinitely — so
+  "partners keep translation-only forever?" is a standing product
+  decision, separate from the parser work tracked above.
 
 ## Later (when we have a real signal)
 
