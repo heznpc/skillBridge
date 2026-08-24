@@ -15,10 +15,15 @@
  * The snapshot records OBSERVATIONS only — no canonical ids, no SkillBridge
  * policy. Identity mapping is a separate layer's job.
  *
- * Provenance per course: the exact fetched URL, fetch timestamp, and a
- * sha256 fingerprint of the raw HTML, so a later parser-bug discovery can
- * be traced to its source bytes (pair with the committed HTML fixture for
- * parser regressions).
+ * TWO OUTPUTS, different audiences. The JSON is committed: it holds the
+ * structure a migration needs (course, section, unit title/order/kind, and
+ * the numeric lesson id the stored URLs are keyed by). The reduced page
+ * copies under `sources/` are NOT committed — this repository is public, and
+ * republishing another site's markup is not something a migration requires.
+ * They stay on disk as a local forensic aid, so a parser bug found later can
+ * still be checked against the bytes it came from. Parser regressions are
+ * pinned by synthetic fixtures instead (tests/skilljar-snapshot.test.js),
+ * which are also better tests: they name the failure they encode.
  *
  * Usage:
  *   node scripts/capture-skilljar-snapshot.js [--tenant https://anthropic.skilljar.com] \
@@ -29,7 +34,6 @@
 
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto');
 const { parseSlugs, NON_COURSE_SLUGS } = require('./check-academy-courses');
 
 const args = process.argv.slice(2);
@@ -44,10 +48,6 @@ const DATE = new Date().toISOString().slice(0, 10);
 const OUT = argVal('--out', path.join('snapshots', 'skilljar', `${HOST}-${DATE}.json`));
 const SOURCES_DIR = argVal('--sources', path.join('snapshots', 'skilljar', 'sources'));
 const UA = 'SkillBridge-SnapshotCapture/1.0 (+https://github.com/heznpc/skillbridge)';
-
-function sha256(s) {
-  return crypto.createHash('sha256').update(s).digest('hex');
-}
 
 async function fetchText(url) {
   const resp = await fetch(url, { headers: { 'User-Agent': UA, 'Accept-Language': 'en' }, redirect: 'follow' });
@@ -158,14 +158,13 @@ const textOf = (s) =>
     .trim();
 
 /**
- * Reduce a fetched page to the bytes the parser regression tests need.
+ * Reduce a fetched page to the curriculum markup, dropping the vendor
+ * <script>/<style> payload — ~95% of the page, and third-party code that
+ * static analysis would (fairly) scrutinise as if it were ours.
  *
- * The fixture exists so the parser stays verifiable after the source site is
- * gone — it does not need the vendor <script>/<style> payload, which is ~95%
- * of the page and is third-party code that static analysis would (fairly)
- * scrutinise as if it were ours. `sourceFingerprint` in the snapshot still
- * refers to the FULL fetched bytes; this file is the regression artifact,
- * not the archival copy.
+ * The result is written to the untracked `sources/` directory: a local aid
+ * for tracing a parser bug back to the bytes it came from, never a committed
+ * artifact.
  */
 function reduceFixture(html) {
   const head = html.match(/<h1[^>]*>[\s\S]*?<\/h1>/);
@@ -288,7 +287,7 @@ async function main() {
     platform: 'skilljar',
     tenant: TENANT,
     fetchedAt: new Date().toISOString(),
-    catalog: { sourceUrl: catalogUrl, sourceFingerprint: sha256(catalogHtml), courseSlugs: slugs },
+    catalog: { sourceUrl: catalogUrl, courseSlugs: slugs },
     courses: [],
     errors: [],
   };
@@ -301,19 +300,15 @@ async function main() {
       const unitCount = parsed.sections.reduce((n, s) => n + s.units.length, 0);
       snapshot.courses.push({
         slug,
-        sourcePath: path.join(SOURCES_DIR, `${slug}.html`),
         title: parsed.title,
         sourceUrl: url,
         fetchedAt: new Date().toISOString(),
-        sourceFingerprint: sha256(html),
         unitCount,
         sections: parsed.sections,
       });
       console.log(`  ${slug}: ${parsed.sections.length} sections / ${unitCount} units`);
-      // Preserve the reduced curriculum markup for EVERY course, not just one.
-      // A sha256 cannot be re-parsed: if a parser bug is found after Skilljar
-      // is gone, the fingerprint proves what we fetched but cannot give it
-      // back. These files are the archive; the fingerprint is its checksum.
+      // Local only (see .gitignore): keeps the bytes around for forensics
+      // without republishing another site's markup from a public repo.
       const sourcePath = path.join(SOURCES_DIR, `${slug}.html`);
       fs.mkdirSync(SOURCES_DIR, { recursive: true });
       fs.writeFileSync(sourcePath, reduceFixture(html));
