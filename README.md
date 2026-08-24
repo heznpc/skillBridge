@@ -300,22 +300,20 @@ before every store release (see `docs/TRANSLATION_QA.md`), and native-speaker
 review is the final layer:
 
 <!-- LOCALE_QA_START -->
-
-| Language         | Code    | Entries | Last curated | Last LLM audit | Native review                                                     |
-| ---------------- | ------- | ------: | ------------ | -------------- | ----------------------------------------------------------------- |
-| 한국어           | `ko`    |    1129 | 2026-07-28   | 2026-07-28     | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| 日本語           | `ja`    |    1129 | 2026-07-28   | 2026-07-28     | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| 中文(简体)       | `zh-CN` |    1129 | 2026-07-28   | 2026-07-28     | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| 中文(繁體)       | `zh-TW` |    1129 | 2026-07-28   | 2026-07-28     | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| Español          | `es`    |    1129 | 2026-07-28   | 2026-07-28     | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| Français         | `fr`    |    1129 | 2026-07-28   | 2026-07-28     | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| Italiano         | `it`    |    1129 | 2026-07-28   | 2026-07-28     | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| Deutsch          | `de`    |    1129 | 2026-07-28   | 2026-07-28     | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| Português (BR)   | `pt-BR` |    1129 | 2026-07-28   | 2026-07-28     | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| Русский          | `ru`    |    1129 | 2026-07-28   | 2026-07-28     | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| Tiếng Việt       | `vi`    |    1129 | 2026-07-28   | 2026-07-28     | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-| Bahasa Indonesia | `id`    |    1129 | 2026-07-28   | 2026-07-28     | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
-
+| Language | Code | Entries | Last curated | Last LLM audit | Native review |
+|---|---|---:|---|---|---|
+| 한국어 | `ko` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| 日本語 | `ja` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| 中文(简体) | `zh-CN` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| 中文(繁體) | `zh-TW` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Español | `es` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Français | `fr` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Italiano | `it` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Deutsch | `de` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Português (BR) | `pt-BR` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Русский | `ru` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Tiếng Việt | `vi` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Bahasa Indonesia | `id` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
 <!-- LOCALE_QA_END -->
 
 🙋 **Native speakers wanted** — a first native pass on your locale takes
