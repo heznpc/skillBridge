@@ -44,22 +44,9 @@ store-assets/description.md
 # playwright-mcp server session dumps (accidentally committed once via #217)
 .playwright-mcp/
 
-# CWS dashboard metric exports (installs/removals/WAU by region, language, OS).
-# Untracked on purpose: no build script or gate reads them, they are stale the
-# day after export, and they are listing business metrics rather than anything
-# the extension is built from. Re-export from the dashboard when needed.
+# Dashboard exports — nothing in the build reads them.
 csv/
 
-# Internal planning — this repository is public.
-# TODO.md is a working board, not documentation: it carries legal posture
-# (trademark contact and rebrand contingencies), outreach timing, competitive
-# framing, and owner decisions that are nobody else's business. Untracked so
-# it can stay useful without being published.
 TODO.md
-
-# Third-party page archives — this repository is public.
-# The capture script keeps a reduced copy of each fetched curriculum page so a
-# parser bug found later can be traced to its source bytes. That is a local
-# forensic aid, not something to republish from someone else's site. The
-# structured snapshot JSON beside it carries everything the migration needs.
 snapshots/*/sources/
+docs/TELEMETRY_DESIGN.md

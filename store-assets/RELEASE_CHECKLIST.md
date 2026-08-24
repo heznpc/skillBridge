@@ -360,16 +360,6 @@ the `cws-drift.yml` workflow via `workflow_dispatch` — it should report `OK`
   GitHub issue when drift exceeds 5 patches OR the published version is older
   than 60 days. Idempotent — only one issue at a time.
 
-## If trademark complaint comes back
-
-If a new complaint is filed against the next CWS release:
-1. Check whether it cites the icon (then return to step 1 option B/C) or the
-   listing copy (then re-sweep `store-assets/STORE_LISTING*.md` for any
-   residual brand-as-product-modifier phrasing).
-2. Consider deeper rename (`SkillBridge — Skilljar AI-Course Translator` with
-   `anthropic.skilljar.com` only in body, not title).
-3. Open `chore/trademark-deeper-rename` branch and iterate.
-
 ## SNS launch (separate session, after listing is live)
 
 SNS launch drafts are kept outside this repo (internal). Do not post until the
