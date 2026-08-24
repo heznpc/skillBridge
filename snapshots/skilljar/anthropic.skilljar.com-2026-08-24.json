@@ -1,8 +1,8 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "platform": "skilljar",
   "tenant": "https://anthropic.skilljar.com",
-  "fetchedAt": "2026-08-24T08:26:02.905Z",
+  "fetchedAt": "2026-08-24T08:42:27.020Z",
   "catalog": {
     "sourceUrl": "https://anthropic.skilljar.com/",
     "sourceFingerprint": "b44c1691e96a8472e4b6cc3bda7a7b93cee371d3b468c8fe2f7b269eac1c84df",
@@ -29,16 +29,16 @@
       "introduction-to-model-context-protocol",
       "introduction-to-subagents",
       "model-context-protocol-advanced-topics",
-      "privacy",
       "teaching-ai-fluency"
     ]
   },
   "courses": [
     {
       "slug": "ai-capabilities-and-limitations",
+      "sourcePath": "snapshots/skilljar/sources/ai-capabilities-and-limitations.html",
       "title": "AI Capabilities and Limitations",
       "sourceUrl": "https://anthropic.skilljar.com/ai-capabilities-and-limitations",
-      "fetchedAt": "2026-08-24T08:26:15.675Z",
+      "fetchedAt": "2026-08-24T08:42:30.195Z",
       "sourceFingerprint": "b21470b7337110767ec017dd7e9c784aee820290b44fb92baf2b9c8dbcacc49a",
       "unitCount": 14,
       "sections": [
@@ -174,9 +174,10 @@
     },
     {
       "slug": "ai-fluency-for-builders",
+      "sourcePath": "snapshots/skilljar/sources/ai-fluency-for-builders.html",
       "title": "AI Fluency for Builders",
       "sourceUrl": "https://anthropic.skilljar.com/ai-fluency-for-builders",
-      "fetchedAt": "2026-08-24T08:26:29.824Z",
+      "fetchedAt": "2026-08-24T08:42:45.987Z",
       "sourceFingerprint": "e22a57e55606814de80f5f0b1b55c7858a20c7c69c9a5119a1f028430c0aa614",
       "unitCount": 10,
       "sections": [
@@ -219,7 +220,7 @@
               "kind": "modular",
               "numericId": "486159",
               "path": "/ai-fluency-for-builders/486159",
-              "title": "Delegation & the builder&#x27;s toolkit"
+              "title": "Delegation & the builder's toolkit"
             },
             {
               "order": 5,
@@ -284,9 +285,10 @@
     },
     {
       "slug": "ai-fluency-for-creative-work",
+      "sourcePath": "snapshots/skilljar/sources/ai-fluency-for-creative-work.html",
       "title": "AI Fluency for Creative Work",
       "sourceUrl": "https://anthropic.skilljar.com/ai-fluency-for-creative-work",
-      "fetchedAt": "2026-08-24T08:26:32.396Z",
+      "fetchedAt": "2026-08-24T08:43:03.409Z",
       "sourceFingerprint": "6640c7bfdba55b7efeb21eccc5c13147b1a5788e8e62901271ce7d4b5ea899d8",
       "unitCount": 9,
       "sections": [
@@ -392,9 +394,10 @@
     },
     {
       "slug": "ai-fluency-for-educators",
+      "sourcePath": "snapshots/skilljar/sources/ai-fluency-for-educators.html",
       "title": "AI Fluency for educators",
       "sourceUrl": "https://anthropic.skilljar.com/ai-fluency-for-educators",
-      "fetchedAt": "2026-08-24T08:26:35.342Z",
+      "fetchedAt": "2026-08-24T08:43:17.910Z",
       "sourceFingerprint": "d830b7e020f8ca79b02bbb2e9de660a5bb67c6927b03229959e96468adf0ceba",
       "unitCount": 5,
       "sections": [
@@ -452,9 +455,10 @@
     },
     {
       "slug": "ai-fluency-for-nonprofits",
+      "sourcePath": "snapshots/skilljar/sources/ai-fluency-for-nonprofits.html",
       "title": "AI Fluency for nonprofits",
       "sourceUrl": "https://anthropic.skilljar.com/ai-fluency-for-nonprofits",
-      "fetchedAt": "2026-08-24T08:26:37.817Z",
+      "fetchedAt": "2026-08-24T08:43:19.998Z",
       "sourceFingerprint": "96c77e0db9017cedb501cb8a4e8756c42e3ed107c07f9c21f8ae7ed7fc565262",
       "unitCount": 10,
       "sections": [
@@ -557,9 +561,10 @@
     },
     {
       "slug": "ai-fluency-for-small-businesses",
+      "sourcePath": "snapshots/skilljar/sources/ai-fluency-for-small-businesses.html",
       "title": "AI Fluency for Small Businesses",
       "sourceUrl": "https://anthropic.skilljar.com/ai-fluency-for-small-businesses",
-      "fetchedAt": "2026-08-24T08:26:43.611Z",
+      "fetchedAt": "2026-08-24T08:43:34.482Z",
       "sourceFingerprint": "c2383312ad3428c69de022e38727a4d98b55693c308643d097b8c7a50b2be114",
       "unitCount": 10,
       "sections": [
@@ -667,9 +672,10 @@
     },
     {
       "slug": "ai-fluency-for-students",
+      "sourcePath": "snapshots/skilljar/sources/ai-fluency-for-students.html",
       "title": "AI Fluency for students",
       "sourceUrl": "https://anthropic.skilljar.com/ai-fluency-for-students",
-      "fetchedAt": "2026-08-24T08:27:00.970Z",
+      "fetchedAt": "2026-08-24T08:43:36.857Z",
       "sourceFingerprint": "6811b627739d35b9ef66a639f07f17630b57cd286c0bccc658b4250644cd255f",
       "unitCount": 6,
       "sections": [
@@ -734,9 +740,10 @@
     },
     {
       "slug": "ai-fluency-framework-foundations",
+      "sourcePath": "snapshots/skilljar/sources/ai-fluency-framework-foundations.html",
       "title": "AI Fluency: Framework & Foundations",
       "sourceUrl": "https://anthropic.skilljar.com/ai-fluency-framework-foundations",
-      "fetchedAt": "2026-08-24T08:27:15.534Z",
+      "fetchedAt": "2026-08-24T08:43:51.525Z",
       "sourceFingerprint": "433a678e0a30853b66146a98c68a25b682cc0cc68ed569928657a0fb36c6a088",
       "unitCount": 15,
       "sections": [
@@ -899,9 +906,10 @@
     },
     {
       "slug": "claude-101",
+      "sourcePath": "snapshots/skilljar/sources/claude-101.html",
       "title": "Claude 101",
       "sourceUrl": "https://anthropic.skilljar.com/claude-101",
-      "fetchedAt": "2026-08-24T08:27:28.293Z",
+      "fetchedAt": "2026-08-24T08:43:54.212Z",
       "sourceFingerprint": "6602d476bb503ad55e1b845f97a26499f6882c40049bb380b990ed9690a7dede",
       "unitCount": 14,
       "sections": [
@@ -934,7 +942,7 @@
               "kind": "modular",
               "numericId": "440908",
               "path": "/claude-101/440908",
-              "title": "How you&#x27;ll work with Claude on your desktop"
+              "title": "How you'll work with Claude on your desktop"
             }
           ]
         },
@@ -965,7 +973,7 @@
           ]
         },
         {
-          "title": "Expanding Claude&#x27;s reach",
+          "title": "Expanding Claude's reach",
           "units": [
             {
               "order": 8,
@@ -1017,7 +1025,7 @@
               "kind": "modular",
               "numericId": "385338",
               "path": "/claude-101/385338",
-              "title": "What&#x27;s next?"
+              "title": "What's next?"
             },
             {
               "order": 14,
@@ -1032,9 +1040,10 @@
     },
     {
       "slug": "claude-code-101",
+      "sourcePath": "snapshots/skilljar/sources/claude-code-101.html",
       "title": "Claude Code 101",
       "sourceUrl": "https://anthropic.skilljar.com/claude-code-101",
-      "fetchedAt": "2026-08-24T08:27:35.401Z",
+      "fetchedAt": "2026-08-24T08:43:58.523Z",
       "sourceFingerprint": "155381e2dde03c2904f95e2d8dad535d63cb312546db66342c2337f2a03adf78",
       "unitCount": 13,
       "sections": [
@@ -1158,9 +1167,10 @@
     },
     {
       "slug": "claude-code-in-action",
+      "sourcePath": "snapshots/skilljar/sources/claude-code-in-action.html",
       "title": "Claude Code in Action",
       "sourceUrl": "https://anthropic.skilljar.com/claude-code-in-action",
-      "fetchedAt": "2026-08-24T08:27:52.570Z",
+      "fetchedAt": "2026-08-24T08:44:00.051Z",
       "sourceFingerprint": "3468593e32d5b5a1bac1dc5be4dbd9de9f5c8ff0bd5520e21db2b6ee8e6289fb",
       "unitCount": 10,
       "sections": [
@@ -1263,14 +1273,15 @@
     },
     {
       "slug": "claude-in-amazon-bedrock",
+      "sourcePath": "snapshots/skilljar/sources/claude-in-amazon-bedrock.html",
       "title": "Claude with Amazon Bedrock",
       "sourceUrl": "https://anthropic.skilljar.com/claude-in-amazon-bedrock",
-      "fetchedAt": "2026-08-24T08:27:55.212Z",
+      "fetchedAt": "2026-08-24T08:44:19.595Z",
       "sourceFingerprint": "66017b350ef180f9e64f82deebd3007ee5cd2d0c12ee32d8b931924448f8a562",
       "unitCount": 83,
       "sections": [
         {
-          "title": "Course introduction This course introduces essential concepts for working with Anthropic's models through Amazon Bedrock. You'll learn both the theoretical foundations of generative AI and practical implementation skills for building with Claude. This module introduces you to: Course Structure - The complete learning journey from AI fundamentals to advanced techniques like RAG and fine-tuning Prerequisites - Key skills in Python, AWS Bedrock, and API requests needed for success Learning Approach - Effective strategies for mastering content through hands-on practice and experimentation Technical Setup - Essential preparations to ensure you can follow along with practical examples",
+          "title": "Course introduction",
           "units": [
             {
               "order": 1,
@@ -1289,7 +1300,7 @@
           ]
         },
         {
-          "title": "Working with the API This module explores how to access and interact with AI models through AWS Bedrock. You'll learn the fundamental patterns for connecting your applications to cloud-based models and controlling how those models generate text. This module introduces you to: Making API Requests - How to create properly structured requests to AWS Bedrock using the boto3 client and model IDs Multi-Turn Conversations - How to maintain context across multiple exchanges by properly managing message histories Response Control - How to influence model outputs using system prompts, temperature settings, and message pre-filling Streaming Responses - How to implement real-time text generation for improved user experience Structured Data Generation - How to extract clean, formatted data without explanatory text using stop sequences",
+          "title": "Working with the API",
           "units": [
             {
               "order": 3,
@@ -1378,7 +1389,7 @@
           ]
         },
         {
-          "title": "Prompt evaluations Prompt engineering helps you get the best possible output from Claude, but how do you know if your prompts are actually effective? This module focuses on measuring prompt performance through objective metrics before making improvements. This module introduces you to: Evaluation Workflows - How to set up a systematic testing pipeline that measures prompt effectiveness with objective metrics Test Dataset Creation - Techniques for generating diverse test cases that cover your prompt's expected inputs Model-Based Grading - Using AI models as evaluators to assess response quality based on specified criteria Code-Based Validation - Implementing programmatic checks to verify response formatting and syntax accuracy Iterative Improvement - Methods for refining prompts based on evaluation results to achieve better performance",
+          "title": "Prompt evaluations",
           "units": [
             {
               "order": 15,
@@ -1439,7 +1450,7 @@
           ]
         },
         {
-          "title": "Prompt engineering This module walks you through the process of improving prompts to get better results from language models. We'll start with a simple meal plan prompt and gradually enhance it through various techniques. This module introduces you to: Clear and Direct Instructions - How explicit action verbs and simple language in your first line dramatically improve model responses Specific Guidelines - How adding detailed requirements or step-by-step instructions guides the model toward better outputs XML Structure - How wrapping content in tags helps models distinguish between different types of information Example-Based Learning - How providing sample inputs and ideal outputs teaches models to handle complex formats and edge cases",
+          "title": "Prompt engineering",
           "units": [
             {
               "order": 23,
@@ -1493,7 +1504,7 @@
           ]
         },
         {
-          "title": "Tool use In this module, we'll examine how to extend Claude's abilities using tools - functions that let the AI access external information or take actions. Tools are essential when you need Claude to interact with data beyond its training cutoff or perform specialized tasks. This module introduces you to: Tool Fundamentals - The core architecture of tool integration and how tools enable Claude to access real-time information Tool Implementation - Step-by-step process of creating, describing, and connecting tools to Claude's capabilities Multi-Tool Management - Strategies for combining multiple tools efficiently, including parallelization with batch tools Structured Data Extraction - Techniques for reliably extracting precisely formatted data using tool-based approaches Text Editor Integration - How Claude can directly interact with files and code to provide development assistance",
+          "title": "Tool use",
           "units": [
             {
               "order": 30,
@@ -1589,7 +1600,7 @@
           ]
         },
         {
-          "title": "Retrieval Augmented Generation RAG helps LLMs access and utilize external information that isn't part of their training data. This module explores how to implement effective RAG systems to enhance AI applications with relevant document retrieval. This module introduces you to: RAG Fundamentals - How retrieval augmented generation enhances LLMs by finding and incorporating relevant information from external documents Text Chunking Strategies - Different approaches to dividing documents into manageable pieces while preserving meaning and context Vector Embeddings - How semantic meaning is captured numerically to enable similarity-based document retrieval Hybrid Search Implementation - Combining semantic and lexical search techniques to improve retrieval accuracy Results Optimization - Advanced techniques like reranking and contextual retrieval for more relevant document selection",
+          "title": "Retrieval Augmented Generation",
           "units": [
             {
               "order": 43,
@@ -1664,7 +1675,7 @@
           ]
         },
         {
-          "title": "Features of Claude This module covers several powerful features that improve Claude's performance on complex tasks. You'll learn how to leverage these capabilities to get better results while balancing tradeoffs in cost and response time. This module introduces you to: Extended Thinking - How to enable Claude's reasoning phase for tackling complex problems with greater accuracy Image Support - Techniques for effectively using images with Claude and why detailed prompting remains essential Prompt Caching - How to speed up responses and reduce costs by reusing computational work across requests Implementation Strategies - Practical approaches to integrate these features in your applications through code examples",
+          "title": "Features of Claude",
           "units": [
             {
               "order": 53,
@@ -1725,7 +1736,7 @@
           ]
         },
         {
-          "title": "Model Context Protocol Model Context Protocol (MCP) is a communication layer that provides Claude with context and tools without requiring developers to write tedious integration code. This module explores how MCP connects applications with AI models through a specialized client-server architecture. This module introduces you to: MCP Servers and Clients - How these components work together to expose functionality and data from external services to AI models Tools Implementation - How to define model-controlled functions that extend Claude's capabilities with external services Resources - How to expose application-controlled data from your MCP server for UI elements and context Prompts - How to create user-triggered, optimized instructions for specific workflows",
+          "title": "Model Context Protocol",
           "units": [
             {
               "order": 61,
@@ -1814,7 +1825,7 @@
           ]
         },
         {
-          "title": "Agents This module explores how to build AI agents using Claude's capabilities. You'll see real-world applications of Claude acting as an autonomous assistant through tools like Cloud Code and Computer Use. This module introduces you to: Agent Fundamentals - How Claude can use tools to gather information and modify environments to accomplish complex tasks Cloud Code Implementation - How to set up, use, and extend this terminal-based coding assistant for software development Parallel Development - How to leverage multiple Claude Code instances to work on different features simultaneously Computer Use Feature - How Claude can interact with web interfaces to perform testing and automation tasks Effective Agent Design - Core principles behind successful AI agents and when they're most appropriately deployed",
+          "title": "Agents",
           "units": [
             {
               "order": 73,
@@ -1894,7 +1905,7 @@
           ]
         },
         {
-          "title": "Wrap up This video wraps up our journey through generative AI fundamentals and Anthropic's Claude models. We've explored everything from basic concepts to practical applications with the API. Course Recap - Review of key topics including model families, API usage, parameters, and prompt engineering Critical Evaluations - Why thorough testing is essential before deploying any AI solution Future Directions - Emerging trends in LLM orchestration and agentic workflows for building powerful AI systems",
+          "title": "Wrap up",
           "units": [
             {
               "order": 83,
@@ -1909,9 +1920,10 @@
     },
     {
       "slug": "claude-platform-101",
+      "sourcePath": "snapshots/skilljar/sources/claude-platform-101.html",
       "title": "Claude Platform 101",
       "sourceUrl": "https://anthropic.skilljar.com/claude-platform-101",
-      "fetchedAt": "2026-08-24T08:27:56.731Z",
+      "fetchedAt": "2026-08-24T08:44:35.230Z",
       "sourceFingerprint": "c7118802d8b6a15e0b400d53495feb3a282456606f9599ca7db616379d59f569",
       "unitCount": 14,
       "sections": [
@@ -2047,9 +2059,10 @@
     },
     {
       "slug": "claude-with-google-vertex",
+      "sourcePath": "snapshots/skilljar/sources/claude-with-google-vertex.html",
       "title": "Claude on Google Cloud",
       "sourceUrl": "https://anthropic.skilljar.com/claude-with-google-vertex",
-      "fetchedAt": "2026-08-24T08:27:59.000Z",
+      "fetchedAt": "2026-08-24T08:44:38.002Z",
       "sourceFingerprint": "ccabe9ee671252517660bf835956ef230f70e36719f1defc52d120c3daf1fe12",
       "unitCount": 93,
       "sections": [
@@ -2773,9 +2786,10 @@
     },
     {
       "slug": "claude-with-the-anthropic-api",
+      "sourcePath": "snapshots/skilljar/sources/claude-with-the-anthropic-api.html",
       "title": "Building with the Claude API",
       "sourceUrl": "https://anthropic.skilljar.com/claude-with-the-anthropic-api",
-      "fetchedAt": "2026-08-24T08:28:01.628Z",
+      "fetchedAt": "2026-08-24T08:44:39.573Z",
       "sourceFingerprint": "5dd8772e3d8fa543ebafe36bd24c20b00887407b87474087800f56a6437b46a6",
       "unitCount": 85,
       "sections": [
@@ -3443,9 +3457,10 @@
     },
     {
       "slug": "introduction-to-agent-skills",
+      "sourcePath": "snapshots/skilljar/sources/introduction-to-agent-skills.html",
       "title": "Introduction to agent skills",
       "sourceUrl": "https://anthropic.skilljar.com/introduction-to-agent-skills",
-      "fetchedAt": "2026-08-24T08:28:09.715Z",
+      "fetchedAt": "2026-08-24T08:44:44.740Z",
       "sourceFingerprint": "d6239afc6fe6cfa14076eddba2d7d6c3fb7d7d4821978306b83038d02f421450",
       "unitCount": 6,
       "sections": [
@@ -3500,9 +3515,10 @@
     },
     {
       "slug": "introduction-to-claude-cowork",
+      "sourcePath": "snapshots/skilljar/sources/introduction-to-claude-cowork.html",
       "title": "Introduction to Claude Cowork",
       "sourceUrl": "https://anthropic.skilljar.com/introduction-to-claude-cowork",
-      "fetchedAt": "2026-08-24T08:28:12.148Z",
+      "fetchedAt": "2026-08-24T08:44:59.344Z",
       "sourceFingerprint": "fce48876f165cf889286923f0225d04cc414ab955305302367ef573f3094ff89",
       "unitCount": 15,
       "sections": [
@@ -3568,7 +3584,7 @@
               "kind": "modular",
               "numericId": "444168",
               "path": "/introduction-to-claude-cowork/444168",
-              "title": "Plugins: Encode your team&#x27;s expertise"
+              "title": "Plugins: Encode your team's expertise"
             }
           ]
         },
@@ -3640,9 +3656,10 @@
     },
     {
       "slug": "introduction-to-model-context-protocol",
+      "sourcePath": "snapshots/skilljar/sources/introduction-to-model-context-protocol.html",
       "title": "Introduction to Model Context Protocol",
       "sourceUrl": "https://anthropic.skilljar.com/introduction-to-model-context-protocol",
-      "fetchedAt": "2026-08-24T08:28:14.765Z",
+      "fetchedAt": "2026-08-24T08:45:13.369Z",
       "sourceFingerprint": "5cece637da06745283bbcfafdf2820377ffae9e7ec9740f99babdc0c23541894",
       "unitCount": 14,
       "sections": [
@@ -3768,9 +3785,10 @@
     },
     {
       "slug": "introduction-to-subagents",
+      "sourcePath": "snapshots/skilljar/sources/introduction-to-subagents.html",
       "title": "Introduction to subagents",
       "sourceUrl": "https://anthropic.skilljar.com/introduction-to-subagents",
-      "fetchedAt": "2026-08-24T08:28:31.598Z",
+      "fetchedAt": "2026-08-24T08:45:25.353Z",
       "sourceFingerprint": "fefe3f3190f656f3697f50237e2a248003a02bbbe0f78068f6cb4bb5026c67b2",
       "unitCount": 4,
       "sections": [
@@ -3811,9 +3829,10 @@
     },
     {
       "slug": "model-context-protocol-advanced-topics",
+      "sourcePath": "snapshots/skilljar/sources/model-context-protocol-advanced-topics.html",
       "title": "Model Context Protocol: Advanced Topics",
       "sourceUrl": "https://anthropic.skilljar.com/model-context-protocol-advanced-topics",
-      "fetchedAt": "2026-08-24T08:28:36.750Z",
+      "fetchedAt": "2026-08-24T08:45:27.665Z",
       "sourceFingerprint": "6e8e53a07b4f69575189da35debc5e6eea401a277fb8184f0c81494956380bf7",
       "unitCount": 15,
       "sections": [
@@ -3825,7 +3844,7 @@
               "kind": "modular",
               "numericId": "296349",
               "path": "/model-context-protocol-advanced-topics/296349",
-              "title": "Let&#x27;s get started!"
+              "title": "Let's get started!"
             }
           ]
         },
@@ -3946,9 +3965,10 @@
     },
     {
       "slug": "teaching-ai-fluency",
+      "sourcePath": "snapshots/skilljar/sources/teaching-ai-fluency.html",
       "title": "Teaching AI Fluency",
       "sourceUrl": "https://anthropic.skilljar.com/teaching-ai-fluency",
-      "fetchedAt": "2026-08-24T08:28:40.022Z",
+      "fetchedAt": "2026-08-24T08:45:30.168Z",
       "sourceFingerprint": "f75d4858239bca0a97167370d3d24121d2b916caee99e85d02e36a591698f9aa",
       "unitCount": 8,
       "sections": [
@@ -3998,14 +4018,14 @@
           ]
         },
         {
-          "title": "AI&#x27;s Impact on disciplinary content",
+          "title": "AI's Impact on disciplinary content",
           "units": [
             {
               "order": 6,
               "kind": "modular",
               "numericId": "327282",
               "path": "/teaching-ai-fluency/327282",
-              "title": "AI&#x27;s impact and your discipline"
+              "title": "AI's impact and your discipline"
             },
             {
               "order": 7,
@@ -4035,17 +4055,14 @@
     {
       "slug": "certification-faq",
       "url": "https://anthropic.skilljar.com/certification-faq",
-      "error": "HTTP 404 fetching https://anthropic.skilljar.com/certification-faq"
+      "error": "HTTP 404 fetching https://anthropic.skilljar.com/certification-faq",
+      "expected": true
     },
     {
       "slug": "claude-certified-architect-foundations-certification",
       "url": "https://anthropic.skilljar.com/claude-certified-architect-foundations-certification",
-      "error": "no dp-curriculum list found for claude-certified-architect-foundations-certification"
-    },
-    {
-      "slug": "privacy",
-      "url": "https://anthropic.skilljar.com/privacy",
-      "error": "HTTP 404 fetching https://anthropic.skilljar.com/privacy"
+      "error": "no dp-curriculum list found for claude-certified-architect-foundations-certification",
+      "expected": true
     }
   ]
 }
