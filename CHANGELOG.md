@@ -148,12 +148,12 @@ repository but never shipped to users.
 
 ## [3.5.33] - 2026-05-15
 
-### Added — Academy course catalog drift watcher (POSITIONING pillar #1)
+### Added — Academy course catalog drift watcher
 - `scripts/check-academy-courses.js` — fetches the public Anthropic Academy catalog (`anthropic.skilljar.com`), extracts every course slug it links to, and cross-references against `FLASHCARD_COURSE_MAP` in `src/lib/constants.js`. Exits 1 if any live slug is unknown to the extension, and writes `academy-courses-report.txt` in CI mode for the workflow to attach to an issue.
 - `.github/workflows/academy-courses-drift.yml` — 12-hour cron + idempotent issue (mirrors `selectors-drift.yml`). Auto-opens `🆕 New Anthropic Academy course detected — terminology update needed` with the per-language follow-up checklist; skips re-open if an open issue with the same title already exists.
 - `tests/academy-courses-checker.test.js` — 12 unit tests covering the slug parser (absolute + relative href forms, multi-segment rejection, template-literal sanitization, sort stability) and the CLI (fixture-driven exit codes + CI report file).
 - `npm run check:academy` wired into `package.json`.
-- **Why this matters**: closes the last gap in the POSITIONING.md pillar #1 SLA ("new Academy course → terminology update within 48h"). Before this, the 48h window was honor-system; a new course could ship on Monday and we'd learn from a user issue days later. The previously-shipped `check-dict-coverage` enforces per-course parity ONCE a slug is added to `FLASHCARD_COURSE_MAP` — but until now, nothing notified us that a new slug existed on the live catalog.
+- **Why this matters**: closes the last gap in the 48-hour terminology SLA (new Academy course → terminology update within 48h). Before this, the 48h window was honor-system; a new course could ship on Monday and we'd learn from a user issue days later. The previously-shipped `check-dict-coverage` enforces per-course parity ONCE a slug is added to `FLASHCARD_COURSE_MAP` — but until now, nothing notified us that a new slug existed on the live catalog.
 - **First-run catch (2026-05-14)**: the new script run against the live catalog detected `ai-fluency-for-small-businesses` (the 18th course, launched after the prior dict update). That slug is now the first follow-up issue the workflow will open.
 
 ### Tests (totals)
@@ -180,22 +180,6 @@ repository but never shipped to users.
 - E2E (Playwright): **17/17** (was 16/16) — adds lazy translation horizon.
 
 ## [3.5.31] - 2026-05-14
-
-### Docs — TODO.md + POSITIONING.md freshness pass
-- After 18 PRs in 4 days, the strategy doc and the engineering backlog had drifted from reality. This release reconciles both.
-- **TODO.md** rewritten:
-  - The previous `Next` list claimed 4 in-flight items — 3 of them are now shipped (`scripts/check-dict-coverage.js`, gt-queue extraction, Playwright E2E). The lone remaining item (`_BG_YT_CLIENT_VERSION` auto-bump GH Action) stays in `Next`.
-  - The previous `Later` list claimed `chat-flashcards.js` extraction was pending — shipped in v3.5.27, moved to `Done`.
-  - The `Done` section had two entries (v3.5.13 + .14). Now lists the full v3.5.13 → v3.5.30 shipped work, grouped by refactor / tests / CI / strategy / production-fix.
-  - New `Now` reflects actual current state (CWS listing refresh + real-browser smoke).
-  - Added a fourth bullet under "Production bottlenecks": MV3 content-script CSP forbids `eval` / `new Function` — the E2E harness uses a hard-coded diagnostic-op menu, not arbitrary function passing. Documenting so the next person extending the harness doesn't relive the v3.5.16 CSP debug session.
-- **POSITIONING.md** "Quality investments that compound" section:
-  - Item 1 (48-hour course-launch SOP): still open, expanded note on what's now in place (dict-coverage enforces parity ONCE a course is in `FLASHCARD_COURSE_MAP`; what's missing is the new-course detection signal).
-  - Item 2 (dict coverage check): marked shipped, references v3.5.18 with the five-check shape.
-  - Item 3 (Playwright E2E): marked shipped, references v3.5.16 → v3.5.30 (16 scenarios, way past the original 6), notes that the first run caught the v3.5.15 hoist regression.
-  - New item 4: selectors drift watcher (v3.5.29) — closes the "Skilljar redeploys mid-week and we don't notice for days" gap.
-
-No production code changes in this release; docs only.
 
 ## [3.5.30] - 2026-05-14
 
@@ -350,8 +334,8 @@ With this spec, **every documented README feature has an E2E lock-in** except fo
 
 ## [3.5.20] - 2026-05-13
 
-### Tests (E2E — tutor chat lock-in, 3rd POSITIONING pillar)
-- `tests/e2e/tutor-chat.spec.js` (new) — locks in the third POSITIONING.md pillar ("contextual AI tutor with zero friction"), the one the README + CWS listing lead with. v3.5.9 fixed a stream-cancel bug here and v3.5.11 fixed a sanitizer XSS along the same path; v3.5.13's chat-render / sidebar-chat / chat-history split refactored every component the chat traverses. Until now: zero automated coverage of:
+### Tests (E2E — tutor chat lock-in)
+- `tests/e2e/tutor-chat.spec.js` (new) — locks in the contextual AI tutor path that the README and CWS listing lead with. v3.5.9 fixed a stream-cancel bug here and v3.5.11 fixed a sanitizer XSS along the same path; v3.5.13's chat-render / sidebar-chat / chat-history split refactored every component the chat traverses. Until now: zero automated coverage of:
   - `sidebar-chat.sendChatMessage` → `translator.chatStream` → `postMessage({type:'CHAT_REQUEST',stream:true})` → page-bridge (main world) → `puter.ai.chat(prompt, {stream:true})` → `for await` async iterable → `CHAT_STREAM_CHUNK` × N → `onChunk` callback → `chat-render.formatResponse(fullText)` → `bubble.innerHTML` → `CHAT_STREAM_END`.
 - The spec asserts: user bubble has the typed text, bot bubble accumulates all 3 streamed chunks verbatim, the final HTML is wrapped in `<p>…</p>` (proving formatResponse ran), and **no `role="alert"` error bubble exists** (a CHAT_ERROR_LABELS render would mean the stream threw silently).
 - Three test-harness pieces unlock this:
@@ -381,9 +365,9 @@ With this spec, **every documented README feature has an E2E lock-in** except fo
 
 ## [3.5.18] - 2026-05-13
 
-### Added — `scripts/check-dict-coverage.js` (POSITIONING.md "48h SLA" enforcement)
+### Added — `scripts/check-dict-coverage.js` (48h SLA enforcement)
 
-Mechanical defense for the first product pillar from POSITIONING.md — "AI terminology fidelity, new Academy course → 11 languages within 48 hours." Until now that commitment was honor-system; the script now fails CI when any of five integrity invariants drift:
+Mechanical defense for the terminology SLA — a new Academy course reaches 11 languages within 48 hours. Until now that commitment was honor-system; the script now fails CI when any of five integrity invariants drift:
 
 1. **Section parity** — every `src/data/<lang>.json` has the same top-level section set. A new course landing in one language but missing from the others is the most common failure mode.
 2. **English-key parity within each section** — for every section (excluding `_meta` and `_protected`), the set of English source keys must be identical across all 10 dictionaries. Catches a translator updating one language with a new term but forgetting the others. `_protected` is excluded by design — each language has its own mistranslation patterns (e.g. ko's `클로드` → `Claude` has no equivalent in de).
@@ -409,7 +393,7 @@ Self-test for the script itself — without coverage of the checker, a silent re
 ## [3.5.17] - 2026-05-13
 
 ### Tests (E2E — exam-mode lock-in)
-- `tests/e2e/exam-mode.spec.js` (new, 2 steps) — locks in the "exam awareness" pillar from POSITIONING.md. If this contract silently breaks (translated answer-option labels reach students), SkillBridge gets flagged as a cheating tool — existential brand risk. The spec asserts:
+- `tests/e2e/exam-mode.spec.js` (new, 2 steps) — locks in the exam-safety contract: translated answer-option labels must never reach students. The spec asserts:
   - `detectExamPage()` flips `_sb.isExamPage = true` on the `/quiz` fixture (URL pattern hits `EXAM_URL_PATTERNS`, DOM also has the `.quiz-form` + `.answer-option` shape as a redundancy).
   - After `switchLanguage('ko')`, the quiz title and question text translate to Korean BUT every `.answer-option` label stays in English. Verified both by absence-of-Hangul on each label AND verbatim presence of the original English phrases ("Claude Opus", "Claude Haiku", "Claude Sonnet", "None of the above") — defends against partial translation (e.g. only the descriptive tail being translated).
 - `tests/e2e/fixtures/skilljar-quiz.html` (new) — minimal Skilljar-shaped quiz DOM with 4 answer options.
@@ -458,8 +442,6 @@ Self-test for the script itself — without coverage of the checker, a silent re
   - `manifest.json` `content_scripts.js` order updated to load `gt-queue.js` right after `content.js` (and before the rest of the content modules) so `_sb._gt` is ready by the time `init()` runs.
 
 ### Strategy
-- POSITIONING.md "90-day growth moves" section replaced with "Quality investments that compound" — keeps the three load-bearing engineering items (course-launch SOP, dictionary coverage check, Playwright E2E) and drops the marketing speculation (Ambassador program — the program is community-organizer-focused and didn't match SkillBridge's profile; Code with Claude Tokyo timing; Class Central outreach; Twitter outreach). Strategy doc is now strictly about what the product defends, not how it grows.
-- TODO.md `Now` section trimmed accordingly: dropped Ambassador application (mismatch) and CWS listing refresh (marketing, not engineering).
 
 ### Tests
 - `tests/gt-queue.test.js` (new, 13 cases) — pins `isLikelyEnglish`'s majority-Latin threshold behaviour: Hangul / Kana / Hanzi / Cyrillic correctly classified as not English; code-mixed strings classified by whose characters dominate; whitespace excluded from the denominator (so tab-and-newline noise doesn't flip results); empty / numeric-only / exactly-50% inputs all return false. Extracted via regex from gt-queue.js source so production code stays the source of truth.
@@ -470,8 +452,6 @@ Self-test for the script itself — without coverage of the checker, a silent re
 ## [3.5.14] - 2026-05-13
 
 ### Strategy
-- `POSITIONING.md` committed — locks SkillBridge as "the canonical translation + AI tutor extension for Anthropic Academy". Records the three pillars (AI terminology fidelity, exam awareness, contextual tutor) the product defends, the explicit not-doings (multi-LMS, paid tier, user API key, server-side features), and the sunset triggers that would re-open the decision. Written off a 2026-05-13 market sweep (Academy launched 2026-03-02, no announced localization, Anthropic Ambassador program just opened, no direct competitors — generic translators target Netflix/YouTube/Coursera).
-- `TODO.md` rewritten from scratch — purged stale items (v3.4.0-era multi-LMS exploration, paid-tutor monetization) that conflict with the locked positioning, separated strategy (now in POSITIONING.md) from concrete eng / ops work, and seeded a fresh Now / Next / Later split.
 
 ### Tests
 - `tests/gemini-block.test.js` (new, 25 tests) — locks in the Gemini-translated-HTML sanitizer's security invariants under `jest-environment-jsdom`. Covers: placeholder restoration (`<xN>`, `<cN/>`) and unmatched-placeholder cleanup; SAFE_TAGS allowlist (strips `<script>` / `<iframe>` / `<img>` / `<object>` / `<embed>` while preserving safe inline tags + child text nodes); per-tag attribute allowlist (`formaction`, `srcdoc`, `is=` strip on `<a>`; `on*` strip everywhere); `javascript:` / `data:` URL rejection on `<a href>` including case-insensitive + control-char-prefixed variants; fragment + `https:` href preservation; reverse-tabnabbing defense (`target="_blank"` forces `rel="noopener noreferrer"`, `target="_self"` doesn't add `rel`); `hasInlineTags` mixed-content detection; `escapeHtml` idempotence under double-encoding and `undefined` coercion. Adds `_xmlToHtml` to `window._geminiBlock` as a test-only handle (clearly commented; no production callers).
