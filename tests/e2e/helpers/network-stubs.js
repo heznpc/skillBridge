@@ -25,6 +25,9 @@ const path = require('path');
 const FIXTURE_DIR = path.join(__dirname, '..', 'fixtures');
 const LESSON_HTML = fs.readFileSync(path.join(FIXTURE_DIR, 'skilljar-lesson.html'), 'utf8');
 const QUIZ_HTML = fs.readFileSync(path.join(FIXTURE_DIR, 'skilljar-quiz.html'), 'utf8');
+// An officially localized page (Korean bodies, English titles) — see the
+// fixture's own header for what each element tests.
+const LOCALIZED_HTML = fs.readFileSync(path.join(FIXTURE_DIR, 'localized-lesson.html'), 'utf8');
 
 // Kept exported for back-compat with anything that imported it; new tests
 // should use the path-aware server directly.
@@ -37,6 +40,7 @@ const FIXTURE_HTML = LESSON_HTML;
  */
 function fixtureForPath(reqPath) {
   if (/^\/(quiz|exam|assessment)(\/|$|\?)/.test(reqPath)) return QUIZ_HTML;
+  if (/^\/localized(\/|$|\?)/.test(reqPath)) return LOCALIZED_HTML;
   return LESSON_HTML;
 }
 
@@ -80,6 +84,11 @@ function stopFixtureServer(server) {
  * The real GT response shape is `[[ ['translated', 'original', ...], ... ], ...]`.
  */
 const GT_KO = {
+  // Localized fixture (/localized): the English residue that SHOULD translate.
+  'Tools allow Claude to access information from the outside world.':
+    '도구를 사용하면 Claude가 외부 세계의 정보에 접근할 수 있습니다.',
+  // Localized fixture (/localized): the English residue that SHOULD translate.
+  'Making a request': '요청 만들기',
   // Lesson fixture
   'Introduction to Claude': 'Claude 소개',
   'Course overview': '코스 개요',

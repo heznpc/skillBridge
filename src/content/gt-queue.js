@@ -75,11 +75,62 @@
     return rect.bottom > 0 && rect.top < window.innerHeight;
   }
 
+  /**
+   * Is this block English text we should translate, or content that is
+   * already in the target language?
+   *
+   * The measure is a Latin-character ratio, but protected terms are removed
+   * BEFORE measuring. Those terms (Claude, Anthropic, API, SDK, MCP, Claude
+   * Code, …) stay in English in every locale by design, so counting them as
+   * evidence of Englishness makes term-dense target-language prose look
+   * English. That is not hypothetical: #299's incident string "Anthropic
+   * 과정" measures 82% Latin, which is how our own Korean output was sent
+   * back to Google and returned as "인류학적 과정".
+   *
+   * #299 fixed that case with `_lastWritten`, but that guard only recognises
+   * text SkillBridge itself wrote. An officially localized page (Claude
+   * Academy serves Korean lesson bodies with English lesson titles) is full
+   * of target-language prose we never wrote, and re-translating it is both a
+   * visible regression and a pointless GT round trip.
+   *
+   * The term inventory comes from protected-terms.js so this gate and the
+   * pre-send chokepoint can never disagree about what a protected term is.
+   * Removal here is deliberately looser than masking's: masking anchors on
+   * letter boundaries (a wrong substitution would corrupt text the user
+   * reads), but that anchor does not fire in agglutinative languages, where a
+   * particle follows the term directly — "Computer Use를" left the term
+   * unmasked and the block measured 78% Latin. Measurement can afford the
+   * looser rule: over-removing only biases toward "leave this block alone".
+   * Before `buildProtectedTermsMap` has run the list is empty and this
+   * degrades to the original ratio — the same answer it always gave.
+   *
+   * KNOWN LIMIT: this distinguishes scripts, not languages. For a
+   * Latin-script target (es/fr/de/…) stripping the terms still leaves Latin
+   * text, so official Spanish prose can still read as English here. Covering
+   * that needs real language detection; `_lastWritten` remains the only
+   * guard there, exactly as before this change.
+   *
+   * @param {string} text
+   * @returns {boolean}
+   */
   function isLikelyEnglish(text) {
+    let measured = text;
+    const protectedTerms = typeof window === 'undefined' ? null : window._protectedTerms;
+    const termList =
+      protectedTerms && typeof protectedTerms.getProtectedTermList === 'function'
+        ? protectedTerms.getProtectedTermList()
+        : null;
+    if (termList) {
+      // Longest-first, so "Claude Code" is removed before a bare "Claude" can
+      // claim its first word and leave "Code" counting as English.
+      for (const term of termList) {
+        if (measured.includes(term)) measured = measured.split(term).join(' ');
+      }
+    }
     let latin = 0;
     let total = 0;
-    for (let i = 0; i < text.length; i++) {
-      const c = text.charCodeAt(i);
+    for (let i = 0; i < measured.length; i++) {
+      const c = measured.charCodeAt(i);
       if (c === 32 || c === 9 || c === 10 || c === 13) continue; // whitespace
       total++;
       if ((c >= 65 && c <= 90) || (c >= 97 && c <= 122)) latin++;
