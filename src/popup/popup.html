@@ -223,6 +223,28 @@
         </select>
       </div>
 
+      <!--
+        Translation refinement. Its own field and its own consent checkbox,
+        deliberately not folded into the AI Tutor selector above: the Tutor
+        sends what the user typed, this sends paragraphs they are reading, and
+        agreeing to one is not agreeing to the other.
+      -->
+      <div class="field" id="refine-field" style="display: none">
+        <label id="refine-label" for="refine-select"></label>
+        <select id="refine-select">
+          <option value="off" id="refine-opt-off"></option>
+          <option value="cloud" id="refine-opt-cloud"></option>
+          <option value="local" id="refine-opt-local"></option>
+          <option value="follow" id="refine-opt-follow"></option>
+        </select>
+        <label class="toggle-row" id="refine-consent-row" style="display: none">
+          <input type="checkbox" id="refine-consent" />
+          <span id="refine-consent-label"></span>
+        </label>
+        <p class="field-hint" id="refine-consent-hint"></p>
+        <p class="field-hint" id="refine-hint"></p>
+      </div>
+
       <div id="local-config" style="display: none">
         <div class="field">
           <label id="local-base-label" for="local-base-input"></label>

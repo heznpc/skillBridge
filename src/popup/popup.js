@@ -170,6 +170,34 @@ document.addEventListener('DOMContentLoaded', async () => {
   const localBaseInput = document.getElementById('local-base-input');
   const localModelInput = document.getElementById('local-model-input');
 
+  const refineField = document.getElementById('refine-field');
+  const refineSelect = document.getElementById('refine-select');
+  const refineConsentRow = document.getElementById('refine-consent-row');
+  const refineConsent = document.getElementById('refine-consent');
+
+  function renderRefineLabels() {
+    document.getElementById('refine-label').textContent = t(REFINE_LABELS.refineLabel);
+    document.getElementById('refine-opt-off').textContent = t(REFINE_LABELS.refineOff);
+    document.getElementById('refine-opt-cloud').textContent = t(REFINE_LABELS.refineCloud);
+    document.getElementById('refine-opt-local').textContent = t(REFINE_LABELS.refineLocal);
+    document.getElementById('refine-opt-follow').textContent = t(REFINE_LABELS.refineFollow);
+    document.getElementById('refine-consent-label').textContent = t(REFINE_LABELS.refineConsent);
+    document.getElementById('refine-consent-hint').textContent = t(REFINE_LABELS.refineConsentHint);
+    document.getElementById('refine-hint').textContent = t(REFINE_LABELS.refineHint);
+  }
+
+  /**
+   * The consent checkbox is only shown once a non-off mode is selected.
+   *
+   * Asking for consent to a thing the user has just declined would be a nag,
+   * and a checkbox visible while the mode is off invites the belief that
+   * ticking it turns something on. It does not — both are required, and the
+   * runtime checks the mode first.
+   */
+  function syncRefineConsentVisibility() {
+    refineConsentRow.style.display = refineSelect.value === 'off' ? 'none' : 'flex';
+  }
+
   function renderEngineLabels() {
     document.getElementById('engine-label').textContent = t(ENGINE_LABELS.engineLabel);
     document.getElementById('engine-opt-cloud').textContent = t(ENGINE_LABELS.cloudOption);
@@ -273,6 +301,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     localModelInput.addEventListener('change', () => {
       chrome.storage.local.set({ sb_local_model: localModelInput.value.trim() });
+    });
+
+    refineField.style.display = 'block';
+    renderRefineLabels();
+    const refinePrefs = await chrome.storage.local.get(['sb_refine_mode', 'sb_refine_consent']);
+    // Default off, and `=== true` for the consent: an absent value is not
+    // consent, and treating it as one is how an opt-in becomes an opt-out.
+    refineSelect.value = refinePrefs.sb_refine_mode || 'off';
+    refineConsent.checked = refinePrefs.sb_refine_consent === true;
+    syncRefineConsentVisibility();
+
+    refineSelect.addEventListener('change', () => {
+      chrome.storage.local.set({ sb_refine_mode: refineSelect.value });
+      syncRefineConsentVisibility();
+    });
+    refineConsent.addEventListener('change', () => {
+      chrome.storage.local.set({ sb_refine_consent: refineConsent.checked === true });
     });
   }
 

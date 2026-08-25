@@ -131,6 +131,7 @@
       <td>Generate an AI Tutor response (cloud engine only; not used when the Tutor is set to local or off)</td>
       <td><a href="https://puter.com/privacy">Puter Privacy Policy</a></td>
     </tr>
+    <tr><td>Puter-backed Claude, or the local server you configure</td><td>Translated course paragraphs plus their English source, when the optional <strong>translation refinement</strong> setting is on and separately consented to. Off by default; nothing is sent otherwise. The correction is discarded unless every protected term, number, URL, code span and link survives it unchanged</td><td>Post-edit a Google Translate result</td><td><a href="https://puter.com/privacy">Puter Privacy Policy</a></td></tr>
     <tr>
       <td>Puter authentication</td>
       <td>Sign-in and session data handled by the bundled client in an ISOLATED content-script world. Puter returns the sign-in result to the HTTPS opener through browser window messaging, which the course page may be able to observe during sign-in. SkillBridge validates the result and stores the accepted token and application identifier in <code>chrome.storage.local</code>, not course-site storage. The CWS build disables automatic User/profile lookups, so it does not retrieve a username, user UUID, email status, or other User-object fields. SkillBridge's operator does not receive the token or application identifier</td>
@@ -166,6 +167,16 @@
     <tr><td><code>translate.googleapis.com</code></td><td>Send page text to Google Translate when translation is requested</td></tr>
     <tr><td><code>http://localhost/*</code>, <code>http://127.0.0.1/*</code> (<strong>optional</strong>)</td><td>Requested only if the user selects the local (on-device) AI Tutor engine, so the extension can reach an OpenAI-compatible server the user runs on their own machine. Not granted at install time; declining leaves the Tutor on its previous engine.</td></tr>
   </table>
+
+  <h3>Translation Refinement (Optional, Off by Default)</h3>
+  <p>Separate from the AI Tutor, and separately consented to. The AI Tutor sends what the user types; refinement would send paragraphs the user is reading, so agreeing to one is not agreeing to the other and the extension does not treat it as such. Both a mode (<code>Off</code> / <code>Cloud</code> / <code>Local</code> / <code>Same as AI Tutor</code>) and an explicit consent checkbox must be set before any request is made; <strong><code>Same as AI Tutor</code> resolves to nothing when the Tutor is off.</strong></p>
+  <p>When it is on:</p>
+  <ul>
+    <li>Google Translate still renders the page first. Refinement never delays or replaces that; it edits a paragraph already on screen.</li>
+    <li>The translated paragraph and its English source are sent to the selected engine — Puter-backed Claude for <code>Cloud</code>, or the user's own server for <code>Local</code>, where nothing leaves the device.</li>
+    <li>The result is discarded unless every protected term, number, URL, code span, link target and HTML tag survives it unchanged. A discarded result leaves the Google Translate text exactly as it was.</li>
+    <li>Accepted results are cached under a <strong>separate</strong> storage key. The translation cache and the curated dictionaries are never written to by this feature.</li>
+  </ul>
 
   <h3>Local AI Engine (Optional, On-Device)</h3>
   <p>The candidate lets the user run the AI Tutor against a local OpenAI-compatible server (for example Ollama) instead of the cloud. When that engine is selected:</p>

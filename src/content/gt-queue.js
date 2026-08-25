@@ -531,6 +531,11 @@
         if (!item.el?.parentNode) continue;
         if (sb.safeReplaceText(item.el, translated) === false) continue;
         trackTranslatedElement(item.text, item.el);
+        // The baseline is on the page BEFORE anything optional is considered.
+        // The post-editor (refine-queue.js) is handed a block that is already
+        // rendered and readable; it never gates first paint, and with the
+        // feature off — the default — this is a no-op call.
+        sb._refine?.enqueue({ el: item.el, source: item.text, baseline: translated, targetLang });
       }
     }
   }
@@ -851,6 +856,10 @@
     reset,
     bumpGeneration,
     flushOfflinePending,
+    // Used by the optional post-editor (refine-queue.js) to re-mark a block it
+    // rewrote, so the translation walk does not read the refined text as fresh
+    // English and send it back to Google.
+    markTranslated,
     get gtGeneration() {
       return gtGeneration;
     },

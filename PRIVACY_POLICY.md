@@ -84,6 +84,7 @@ SkillBridge does not send this locally stored state to its operator or to a thir
 |---|---|---|---|
 | Google Translate API | Course-page text selected for translation and the requested language. For paragraphs that mix text with links, inline code, or emphasis, the block's **markup** is sent so the structure survives translation — that markup includes the link targets (`href`) and image addresses (`src`) inside the block | Translate text not already covered by the packaged dictionary or local cache | [Google Privacy Policy](https://policies.google.com/privacy) |
 | Puter-backed Claude | The user's Tutor question, any text the user explicitly quotes into it, the requested response language, the course title, up to 8 section headings from the page, and up to 2,000 characters of lesson text — a short opening plus the text near your current position in the lesson | Generate an AI Tutor response (cloud engine only; not used when the Tutor is set to local or off) | [Puter Privacy Policy](https://puter.com/privacy) |
+| Puter-backed Claude, or the local server you configure | Translated course paragraphs plus their English source, when the optional **translation refinement** setting is on and separately consented to. Off by default; nothing is sent otherwise. The correction is discarded unless every protected term, number, URL, code span and link survives it unchanged | Post-edit a Google Translate result | [Puter Privacy Policy](https://puter.com/privacy) |
 | Puter authentication | Sign-in and session data handled by the bundled client in an ISOLATED content-script world. Puter returns the sign-in result to the HTTPS opener through browser window messaging, which the course page may be able to observe during sign-in. SkillBridge validates the result and stores the accepted token and application identifier in `chrome.storage.local`, not course-site storage. The CWS build disables automatic User/profile lookups, so it does not retrieve a username, user UUID, email status, or other User-object fields. SkillBridge's operator does not receive the token or application identifier | Authenticate and resume the cloud Tutor session | [Puter Privacy Policy](https://puter.com/privacy) |
 | A local server the user runs (**optional**) | Same Tutor content as the Claude row, sent only to the user's configured address | Generate an AI Tutor response on-device; see "Local AI Engine" below | Controlled by the user |
 
@@ -108,6 +109,28 @@ The candidate does not transmit course text to YouTube. Auto-subtitles configure
 | `academy.claude.com` (content-script match) | Translate lesson pages on Anthropic's Claude Academy. On assessment pages the answer choices are excluded from translation, so their text is never sent anywhere; where the page is already published in one of Academy's own locales, nothing is sent at all |
 | `translate.googleapis.com` | Send page text to Google Translate when translation is requested |
 | `http://localhost/*`, `http://127.0.0.1/*` (**optional**) | Requested only if the user selects the local (on-device) AI Tutor engine, so the extension can reach an OpenAI-compatible server the user runs on their own machine. Not granted at install time; declining leaves the Tutor on its previous engine. |
+
+### Translation Refinement (Optional, Off by Default)
+
+Separate from the AI Tutor, and separately consented to. The AI Tutor sends what
+the user types; refinement would send paragraphs the user is reading, so
+agreeing to one is not agreeing to the other and the extension does not treat it
+as such. Both a mode (`Off` / `Cloud` / `Local` / `Same as AI Tutor`) and an
+explicit consent checkbox must be set before any request is made; **`Same as AI
+Tutor` resolves to nothing when the Tutor is off.**
+
+When it is on:
+
+- Google Translate still renders the page first. Refinement never delays or
+  replaces that; it edits a paragraph already on screen.
+- The translated paragraph and its English source are sent to the selected
+  engine — Puter-backed Claude for `Cloud`, or the user's own server for
+  `Local`, where nothing leaves the device.
+- The result is discarded unless every protected term, number, URL, code span,
+  link target and HTML tag survives it unchanged. A discarded result leaves the
+  Google Translate text exactly as it was.
+- Accepted results are cached under a **separate** storage key. The translation
+  cache and the curated dictionaries are never written to by this feature.
 
 ### Local AI Engine (Optional, On-Device)
 

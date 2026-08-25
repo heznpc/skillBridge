@@ -2371,6 +2371,138 @@ const FLASHCARD_COURSE_MAP = {
 // Pre-sorted longest-first so consumers iterate once per URL without re-sorting.
 const FLASHCARD_COURSE_SLUGS_SORTED = Object.entries(FLASHCARD_COURSE_MAP).sort((a, b) => b[0].length - a[0].length);
 
+// ==================== TRANSLATION REFINEMENT (OPTIONAL) ====================
+//
+// The optional LLM post-editor. Its own setting and its own consent, separate
+// from the AI Tutor's — see src/lib/refinement-policy.js for why the two are
+// not one choice.
+const REFINE_LABELS = {
+  refineLabel: {
+    en: 'Translation refinement (optional)',
+    ko: '번역 다듬기 (선택)',
+    id: 'Penyempurnaan terjemahan (opsional)',
+    it: 'Rifinitura della traduzione (facoltativa)',
+    ja: '翻訳の推敲（任意）',
+    'zh-CN': '翻译润色（可选）',
+    'zh-TW': '翻譯潤飾（選填）',
+    es: 'Refinamiento de la traducción (opcional)',
+    fr: 'Amélioration de la traduction (facultatif)',
+    de: 'Übersetzungsfeinschliff (optional)',
+    'pt-BR': 'Refinamento da tradução (opcional)',
+    ru: 'Доработка перевода (по желанию)',
+    vi: 'Tinh chỉnh bản dịch (tuỳ chọn)',
+  },
+  refineOff: {
+    en: 'Off',
+    ko: '끄기',
+    id: 'Mati',
+    it: 'Disattivata',
+    ja: 'オフ',
+    'zh-CN': '关闭',
+    'zh-TW': '關閉',
+    es: 'Desactivado',
+    fr: 'Désactivé',
+    de: 'Aus',
+    'pt-BR': 'Desligado',
+    ru: 'Выкл.',
+    vi: 'Tắt',
+  },
+  refineCloud: {
+    en: 'Cloud (Claude)',
+    ko: '클라우드 (Claude)',
+    id: 'Cloud (Claude)',
+    it: 'Cloud (Claude)',
+    ja: 'クラウド (Claude)',
+    'zh-CN': '云端 (Claude)',
+    'zh-TW': '雲端 (Claude)',
+    es: 'Nube (Claude)',
+    fr: 'Cloud (Claude)',
+    de: 'Cloud (Claude)',
+    'pt-BR': 'Nuvem (Claude)',
+    ru: 'Облако (Claude)',
+    vi: 'Đám mây (Claude)',
+  },
+  refineLocal: {
+    en: 'Local (on-device)',
+    ko: '로컬 (기기 내)',
+    id: 'Lokal (di perangkat)',
+    it: 'Locale (sul dispositivo)',
+    ja: 'ローカル（端末内）',
+    'zh-CN': '本地（设备端）',
+    'zh-TW': '本機（裝置端）',
+    es: 'Local (en el dispositivo)',
+    fr: "Local (sur l'appareil)",
+    de: 'Lokal (auf dem Gerät)',
+    'pt-BR': 'Local (no dispositivo)',
+    ru: 'Локально (на устройстве)',
+    vi: 'Cục bộ (trên thiết bị)',
+  },
+  refineFollow: {
+    en: 'Same as AI Tutor',
+    ko: 'AI 튜터와 동일',
+    id: 'Sama seperti Tutor AI',
+    it: 'Come il tutor IA',
+    ja: 'AI チューターと同じ',
+    'zh-CN': '与 AI 导师相同',
+    'zh-TW': '與 AI 導師相同',
+    es: 'Igual que el tutor de IA',
+    fr: 'Comme le tuteur IA',
+    de: 'Wie der KI-Tutor',
+    'pt-BR': 'Igual ao tutor de IA',
+    ru: 'Как у AI-репетитора',
+    vi: 'Giống Trợ giảng AI',
+  },
+  refineHint: {
+    en: 'Google Translate still renders the page first. When this is on, translated paragraphs are additionally sent to an AI model to be corrected — and a correction is discarded unless every term, number, URL, code span and link survives it unchanged.',
+    ko: 'Google 번역이 먼저 페이지를 표시합니다. 이 기능을 켜면 번역된 문단이 추가로 AI 모델에 보내져 교정됩니다. 용어·숫자·URL·코드·링크가 그대로 유지되지 않으면 교정 결과는 버려집니다.',
+    id: 'Google Terjemahan tetap menampilkan halaman lebih dulu. Jika aktif, paragraf terjemahan juga dikirim ke model AI untuk dikoreksi — dan koreksi dibuang jika ada istilah, angka, URL, kode, atau tautan yang berubah.',
+    it: 'Google Traduttore compone comunque la pagina per primo. Se attiva, i paragrafi tradotti vengono inviati anche a un modello IA per essere corretti, e la correzione viene scartata se termini, numeri, URL, codice o link non restano identici.',
+    ja: 'まず Google 翻訳がページを表示します。オンにすると、翻訳済みの段落が追加で AI モデルに送られて推敲されます。用語・数値・URL・コード・リンクがそのまま残らない場合、その結果は破棄されます。',
+    'zh-CN':
+      'Google 翻译仍会先渲染页面。开启后，翻译段落还会发送给 AI 模型进行校正；若术语、数字、URL、代码或链接发生变化，校正结果会被丢弃。',
+    'zh-TW':
+      'Google 翻譯仍會先算繪頁面。開啟後，翻譯段落還會傳送給 AI 模型進行校正；若術語、數字、URL、程式碼或連結有變動，校正結果會被捨棄。',
+    es: 'El Traductor de Google sigue mostrando la página primero. Con esto activado, los párrafos traducidos se envían además a un modelo de IA para corregirlos, y la corrección se descarta si algún término, número, URL, fragmento de código o enlace cambia.',
+    fr: 'Google Traduction affiche toujours la page en premier. Une fois activé, les paragraphes traduits sont en plus envoyés à un modèle IA pour correction, et la correction est rejetée si un terme, un nombre, une URL, du code ou un lien change.',
+    de: 'Google Übersetzer stellt die Seite weiterhin zuerst dar. Ist dies aktiv, werden übersetzte Absätze zusätzlich an ein KI-Modell zur Korrektur gesendet — und eine Korrektur wird verworfen, sobald ein Begriff, eine Zahl, eine URL, Code oder ein Link nicht unverändert bleibt.',
+    'pt-BR':
+      'O Google Tradutor continua exibindo a página primeiro. Com isso ativado, os parágrafos traduzidos também são enviados a um modelo de IA para correção — e a correção é descartada se algum termo, número, URL, trecho de código ou link mudar.',
+    ru: 'Google Переводчик по-прежнему отображает страницу первым. Если включено, переведённые абзацы дополнительно отправляются в ИИ-модель для правки, и правка отбрасывается, если хотя бы один термин, число, URL, код или ссылка изменились.',
+    vi: 'Google Dịch vẫn hiển thị trang trước. Khi bật, các đoạn đã dịch còn được gửi tới mô hình AI để hiệu đính — và kết quả bị loại bỏ nếu bất kỳ thuật ngữ, con số, URL, đoạn mã hay liên kết nào thay đổi.',
+  },
+  refineConsent: {
+    en: 'Send translated course text to an AI model for correction',
+    ko: '번역된 강의 텍스트를 교정을 위해 AI 모델에 전송',
+    id: 'Kirim teks kursus terjemahan ke model AI untuk dikoreksi',
+    it: 'Invia il testo tradotto del corso a un modello IA per la correzione',
+    ja: '翻訳された講座テキストを推敲のため AI モデルに送信する',
+    'zh-CN': '将翻译后的课程文本发送给 AI 模型进行校正',
+    'zh-TW': '將翻譯後的課程文字傳送給 AI 模型進行校正',
+    es: 'Enviar el texto traducido del curso a un modelo de IA para corregirlo',
+    fr: 'Envoyer le texte de cours traduit à un modèle IA pour correction',
+    de: 'Übersetzten Kurstext zur Korrektur an ein KI-Modell senden',
+    'pt-BR': 'Enviar o texto traduzido do curso a um modelo de IA para correção',
+    ru: 'Отправлять переведённый текст курса в ИИ-модель для правки',
+    vi: 'Gửi văn bản khoá học đã dịch tới mô hình AI để hiệu đính',
+  },
+  refineConsentHint: {
+    en: 'This is a separate choice from the AI Tutor. The Tutor sends what you type; this sends paragraphs you are reading. Off unless you turn it on.',
+    ko: 'AI 튜터와는 별개의 선택입니다. 튜터는 입력한 내용을 보내고, 이 기능은 읽고 있는 문단을 보냅니다. 직접 켜기 전까지는 꺼져 있습니다.',
+    id: 'Ini pilihan terpisah dari Tutor AI. Tutor mengirim yang Anda ketik; ini mengirim paragraf yang Anda baca. Mati kecuali Anda menyalakannya.',
+    it: 'È una scelta separata dal tutor IA. Il tutor invia ciò che scrivi; questa funzione invia i paragrafi che stai leggendo. Disattivata finché non la attivi.',
+    ja: 'AI チューターとは別の選択です。チューターは入力内容を送信し、この機能は読んでいる段落を送信します。自分でオンにするまではオフです。',
+    'zh-CN': '这是独立于 AI 导师的选择。导师发送你输入的内容；此功能发送你正在阅读的段落。除非你开启，否则保持关闭。',
+    'zh-TW': '這是獨立於 AI 導師的選擇。導師傳送你輸入的內容；此功能傳送你正在閱讀的段落。除非你開啟，否則維持關閉。',
+    es: 'Es una decisión aparte del tutor de IA. El tutor envía lo que escribes; esto envía los párrafos que lees. Desactivado salvo que lo actives.',
+    fr: "C'est un choix distinct du tuteur IA. Le tuteur envoie ce que vous tapez ; ceci envoie les paragraphes que vous lisez. Désactivé tant que vous ne l'activez pas.",
+    de: 'Das ist eine von der KI-Tutor-Einstellung getrennte Entscheidung. Der Tutor sendet, was Sie tippen; dies sendet Absätze, die Sie lesen. Aus, bis Sie es einschalten.',
+    'pt-BR':
+      'É uma escolha separada do tutor de IA. O tutor envia o que você digita; isto envia parágrafos que você está lendo. Desligado até você ligar.',
+    ru: 'Это отдельный выбор от AI-репетитора. Репетитор отправляет то, что вы печатаете; здесь отправляются абзацы, которые вы читаете. Выключено, пока вы не включите.',
+    vi: 'Đây là lựa chọn riêng, tách khỏi Trợ giảng AI. Trợ giảng gửi những gì bạn gõ; tính năng này gửi các đoạn bạn đang đọc. Tắt cho tới khi bạn bật.',
+  },
+};
+
 // ==================== BRING YOUR OWN ASSISTANT ====================
 //
 // UI copy for the panel that hands the lesson context to whichever assistant

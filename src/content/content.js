@@ -227,6 +227,7 @@
   const moduleRegistry = new Map();
   const REQUIRED_CONTENT_MODULES = [
     'gt-queue',
+    'refine-queue',
     'banners',
     'code-comments',
     'header-controls',

@@ -65,6 +65,7 @@ export default [
         EXAM_BANNER_LABELS: 'readonly',
         LOCALIZED_PAGE_LABELS: 'readonly',
         BYOA_LABELS: 'readonly',
+        REFINE_LABELS: 'readonly',
         BYOA_PROMPT_LABELS: 'readonly',
         TUTOR_EXAM_LABELS: 'readonly',
         TUTOR_GREETINGS: 'readonly',
