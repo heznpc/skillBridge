@@ -77,8 +77,14 @@ describe('detectPlatform', () => {
 });
 
 describe('isPlatformSupported', () => {
-  test('only Skilljar is supported today', () => {
+  test('supported ids are the ones with a selector map', () => {
+    // The title used to say "only Skilljar"; that stopped being true when
+    // claude.com tutorials landed, and again with academy.claude.com. What
+    // the test actually pins is that registered-but-unimplemented ids stay
+    // unsupported, which is the part worth guarding.
     expect(isPlatformSupported(PLATFORM_IDS.SKILLJAR)).toBe(true);
+    expect(isPlatformSupported(PLATFORM_IDS.CLAUDE_TUTORIALS)).toBe(true);
+    expect(isPlatformSupported(PLATFORM_IDS.CLAUDE_ACADEMY)).toBe(true);
     expect(isPlatformSupported(PLATFORM_IDS.ANTHROPIC_DOCS)).toBe(false);
     expect(isPlatformSupported(PLATFORM_IDS.COURSERA)).toBe(false);
     expect(isPlatformSupported(PLATFORM_IDS.UNKNOWN)).toBe(false);

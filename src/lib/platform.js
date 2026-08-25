@@ -23,6 +23,12 @@ const PLATFORM_IDS = Object.freeze({
   // pages. A translation-only host: scoped lesson translation + reading aid,
   // but no AI-tutor bridge/sidebar (see getHostCapabilities below).
   CLAUDE_TUTORIALS: 'claude-tutorials',
+  // academy.claude.com — Anthropic's own course platform, and the successor
+  // surface to the Skilljar tenant. A different application, not a reskin:
+  // no <form> around a quiz, no input[type=radio], ARIA roles where Skilljar
+  // has class names. Its assessment safety lives in src/lib/academy-adapter.js
+  // because none of the Skilljar exam signals survive the move.
+  CLAUDE_ACADEMY: 'claude-academy',
   // Future ids — registered here so call sites can branch on them today
   // even though the selector maps are not yet provided.
   ANTHROPIC_DOCS: 'anthropic-docs',
@@ -36,6 +42,9 @@ const PLATFORM_PATTERNS = [
   // Exact apex host only — platform.claude.com (docs) and code.claude.com are
   // different surfaces and must NOT match.
   { id: PLATFORM_IDS.CLAUDE_TUTORIALS, hostPattern: /^claude\.com$/ },
+  // Exact host. academy.claude.com is a distinct application from the apex
+  // claude.com tutorials, and must not fall into that profile.
+  { id: PLATFORM_IDS.CLAUDE_ACADEMY, hostPattern: /^academy\.claude\.com$/ },
   // Anthropic docs / academy may eventually self-host the courses; the
   // selector layer for this id is intentionally not implemented yet.
   { id: PLATFORM_IDS.ANTHROPIC_DOCS, hostPattern: /(^|\.)anthropic\.com$/ },
@@ -64,7 +73,7 @@ function detectPlatform(host) {
  * false instead of running against an unknown DOM and creating noise.
  */
 function isPlatformSupported(id) {
-  return id === PLATFORM_IDS.SKILLJAR || id === PLATFORM_IDS.CLAUDE_TUTORIALS;
+  return id === PLATFORM_IDS.SKILLJAR || id === PLATFORM_IDS.CLAUDE_TUTORIALS || id === PLATFORM_IDS.CLAUDE_ACADEMY;
 }
 
 // ────────────────────────────────────────────────────────────────────
@@ -91,6 +100,11 @@ function isPlatformSupported(id) {
 // shell; translation + reading aid scope to these two roots so the ~230-element
 // shell (global nav, footer, related-tutorial cards) is never touched.
 const CLAUDE_TUTORIAL_CONTENT_SCOPE = '.hero_tutorial_post_content, #tutorial_content';
+
+// Kept in sync with academy-adapter.js, which owns this host. Duplicated as a
+// literal rather than imported because platform.js loads as a bare content
+// script with no module system available.
+const ACADEMY_HOST = 'academy.claude.com';
 
 const _CAPS_NONE = Object.freeze({
   platform: PLATFORM_IDS.UNKNOWN,
@@ -180,6 +194,25 @@ const _CAPS_CLAUDE_TUTORIALS = Object.freeze({
   youtubeSubtitles: false,
 });
 
+// academy.claude.com: translation + reading aid, and exam detection ON — but
+// served by the Academy adapter's ARIA signals, not the Skilljar selectors,
+// which match nothing here. `bridge` stays false until the tutor's exam-safe
+// switching is verified against this DOM; shipping the tutor before that
+// would put it on assessment pages with no working guard.
+const _CAPS_CLAUDE_ACADEMY = Object.freeze({
+  platform: PLATFORM_IDS.CLAUDE_ACADEMY,
+  trusted: false,
+  contentScope: null,
+  sidebar: true,
+  fab: true,
+  bridge: false,
+  headerControls: false,
+  keyboardShortcuts: false,
+  readingAid: true,
+  examDetection: true,
+  youtubeSubtitles: false,
+});
+
 /**
  * Returns the frozen capability profile for a host — the single source of
  * truth for which features may run where. `host` defaults to location.hostname.
@@ -198,6 +231,7 @@ function getHostCapabilities(host) {
   // so a local page can never claim the trusted profile even if some future
   // change lets a content script run there.
   if (_TEST_HOSTS_GRANTED && (h === 'localhost' || h === '127.0.0.1')) return _CAPS_FULL;
+  if (h === ACADEMY_HOST) return _CAPS_CLAUDE_ACADEMY;
   if (h === 'claude.com') return _CAPS_CLAUDE_TUTORIALS;
   // Delegate Skilljar-host classification to detectPlatform so the host regex
   // lives in exactly one place (PLATFORM_PATTERNS).
@@ -388,6 +422,7 @@ if (typeof globalThis !== 'undefined' && typeof globalThis.module !== 'undefined
     detectAITrainingContent,
     getHostCapabilities,
     CLAUDE_TUTORIAL_CONTENT_SCOPE,
+    ACADEMY_HOST,
     PLATFORM_IDS,
     _AI_KEYWORDS,
     _SHORT_KEYWORDS,
