@@ -719,6 +719,63 @@ async function evalInContentWorld(context, op, arg) {
                   await chrome.storage.local.set({ sb_ai_engine: engine });
                   return { engine };
                 },
+                // ── Ask another assistant (BYOA) ──────────────────────
+                toggleByoaPanel: () => {
+                  window._sb._chat.toggleByoaPanel();
+                  return { ok: true };
+                },
+                readByoaPanel: () => {
+                  const $ = (id) => window._sb.$id(id);
+                  const notes = $('si18n-byoa-notes');
+                  const root = $('si18n-byoa-preview')?.parentElement;
+                  return {
+                    present: !!$('si18n-byoa-preview'),
+                    prompt: $('si18n-byoa-preview')?.value || '',
+                    readOnly: !!$('si18n-byoa-preview')?.readOnly,
+                    copyLabel: $('si18n-byoa-copy')?.textContent?.trim() || '',
+                    notes: Array.from(notes?.querySelectorAll('.si18n-byoa-note') || []).map((n) =>
+                      n.textContent.trim(),
+                    ),
+                    assistants: Array.from(root?.querySelectorAll('.si18n-byoa-open') || []).map((b) => ({
+                      id: b.dataset.assistant,
+                      label: b.textContent.trim(),
+                    })),
+                  };
+                },
+                typeByoaQuestion: (text) => {
+                  const input = window._sb.$id('si18n-byoa-question');
+                  if (!input) return { error: 'byoa question input missing' };
+                  input.value = text;
+                  input.dispatchEvent(new window.Event('input', { bubbles: true }));
+                  return { ok: true };
+                },
+                clickByoaCopy: async () => {
+                  window._sb.$id('si18n-byoa-copy')?.click();
+                  await new Promise((r) => setTimeout(r, 150));
+                  let clipboard;
+                  try {
+                    clipboard = await navigator.clipboard.readText();
+                  } catch (e) {
+                    clipboard = `__unreadable__:${e && e.message}`;
+                  }
+                  return { clipboard, label: window._sb.$id('si18n-byoa-copy')?.textContent?.trim() || '' };
+                },
+                // Select the text of one element, so the panel sees a real
+                // Selection rather than an injected string.
+                selectElementText: (selector) => {
+                  const el = document.querySelector(selector);
+                  if (!el) return { error: `no element for ${selector}` };
+                  const range = document.createRange();
+                  range.selectNodeContents(el);
+                  const sel = window.getSelection();
+                  sel.removeAllRanges();
+                  sel.addRange(range);
+                  return { selected: sel.toString().trim() };
+                },
+                clearSelection: () => {
+                  window.getSelection()?.removeAllRanges();
+                  return { ok: true };
+                },
                 // What the tutor would be sent for the current page.
                 tutorContext: () => ({ context: window._sb?.getPageContext?.() || '' }),
                 // Simulate a Skilljar SPA-style navigation: atomically swap the

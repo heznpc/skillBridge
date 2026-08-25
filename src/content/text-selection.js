@@ -18,36 +18,23 @@
   /**
    * True when a selection touches answer-choice text on an assessment page.
    *
-   * This is the one Tutor-transmission path that the exam guards elsewhere do
-   * not cover. `getPageContext()` strips the lesson body on an exam page, and
-   * the GT chokepoint keeps choices out of the translation queue and the
-   * cache — but a learner can still highlight an answer choice and press Ask
-   * Tutor, and the quote is prepended to the prompt verbatim. On Academy the
-   * choices carry ARIA roles rather than class names, which is why the shared
-   * EXAM_SKIP_SELECTORS list (not a Skilljar-specific one) is what is checked.
+   * This is one of the two Tutor-transmission paths the exam guards elsewhere
+   * do not cover. `getPageContext()` strips the lesson body on an assessment
+   * page, and the GT chokepoint keeps choices out of the translation queue and
+   * the cache — but a learner can still highlight an answer choice and press
+   * Ask Tutor, and the quote is prepended to the prompt verbatim.
    *
-   * Three positions are tested, not one. The endpoints catch a selection that
-   * starts or ends inside a choice; the containment sweep catches the drag
-   * that swallows a whole radiogroup, where both endpoints sit outside it and
-   * every choice still comes along in the text.
+   * The rule itself lives in src/lib/exam-selection.js because the BYOA panel
+   * needs the identical verdict for the clipboard, and a guard that exists in
+   * one of the two is a guard the other silently lacks. EXAM_SKIP_SELECTORS is
+   * what gets passed in — the same list the translation chokepoint reads, so a
+   * choice that stops being excluded stops being excluded everywhere at once.
    */
   function selectionHitsExamChoice(range) {
-    if (!sb.isExamPage || !range) return false;
-    const selector = EXAM_SKIP_SELECTORS.join(', ');
-    const asElement = (node) => (node && node.nodeType === 3 ? node.parentElement : node);
-
-    for (const node of [range.startContainer, range.endContainer, range.commonAncestorContainer]) {
-      const el = asElement(node);
-      if (el && typeof el.closest === 'function' && el.closest(selector)) return true;
-    }
-
-    const scope = asElement(range.commonAncestorContainer);
-    if (scope && typeof scope.querySelectorAll === 'function' && typeof range.intersectsNode === 'function') {
-      for (const el of scope.querySelectorAll(selector)) {
-        if (range.intersectsNode(el)) return true;
-      }
-    }
-    return false;
+    return !!window._sbExamSelection?.selectionHitsExamChoice(range, {
+      isExamPage: sb.isExamPage,
+      selectors: EXAM_SKIP_SELECTORS,
+    });
   }
 
   function initAskTutorButton() {

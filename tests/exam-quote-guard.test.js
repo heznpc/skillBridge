@@ -32,27 +32,33 @@ const { EXAM_SKIP_SELECTORS } = new Function(
    return { EXAM_SKIP_SELECTORS };`,
 )();
 
-const SELECTION_SRC = read('src', 'content', 'text-selection.js');
+/** The real guard, over the real selector list. */
+const { selectionHitsExamChoice } = (() => {
+  const fake = { module: { exports: {} } };
+  new Function('globalThis', read('src', 'lib', 'exam-selection.js'))(fake);
+  return fake.module.exports;
+})();
 
-/** Pull one `  function name(...) { ... }` block out of an IIFE source file. */
-function extractFunction(source, name) {
-  const start = source.indexOf(`  function ${name}(`);
-  if (start === -1) throw new Error(`Could not find ${name} — did the source shape change?`);
-  const end = source.indexOf('\n  }\n', start);
-  if (end === -1) throw new Error(`Could not find the end of ${name}`);
-  return source.slice(start, end + 4);
-}
-
-/** The real guard, bound to a fake namespace and the real selector list. */
 function buildGuard({ isExamPage }) {
-  const sb = { isExamPage };
-  return new Function(
-    'sb',
-    'EXAM_SKIP_SELECTORS',
-    `${extractFunction(SELECTION_SRC, 'selectionHitsExamChoice')}
-     return selectionHitsExamChoice;`,
-  )(sb, EXAM_SKIP_SELECTORS);
+  return (range) => selectionHitsExamChoice(range, { isExamPage, selectors: EXAM_SKIP_SELECTORS });
 }
+
+/**
+ * Both consumers must reach the shared guard rather than keeping a copy.
+ *
+ * This is a source check on purpose. The behaviour below is exercised against
+ * the library; what it cannot see is a call site that quietly stops asking, and
+ * a guard nobody calls passes every behavioural test there is.
+ */
+describe('the guard has one implementation', () => {
+  for (const file of ['text-selection.js', 'byoa.js']) {
+    test(`${file} delegates to _sbExamSelection`, () => {
+      const src = read('src', 'content', file);
+      expect(src).toContain('_sbExamSelection');
+      expect(src).toContain('EXAM_SKIP_SELECTORS');
+    });
+  }
+});
 
 /** A quiz as Academy renders it: ARIA roles, no <form>, no labelled inputs. */
 function renderAcademyQuiz() {

@@ -66,6 +66,7 @@ function buildSidebarHTML({ bridge }) {
     BOOKMARK_LABELS: { openBookmarks: named('openBookmarks') },
     NOTE_LABELS: { openNotes: named('openNotes') },
     REPORT_LABELS: { openReports: named('openReports') },
+    BYOA_LABELS: { openByoa: named('openByoa') },
     RESUME_LABELS: { openRecent: named('openRecent') },
     CHAT_PLACEHOLDERS: named('chatPlaceholder'),
     SEND_LABELS: named('send'),
@@ -132,6 +133,11 @@ describe('sidebar surface when the host has no AI bridge', () => {
     // Flashcards, bookmarks, notes, reports, recent and the dashboard are all
     // local; only the AI transport is missing, so removing them too would be
     // a regression.
+    //
+    // "Ask another assistant" belongs on this list for a stronger reason: a
+    // host with no Tutor transport is exactly where a learner most needs the
+    // hand-off to the assistant they already use. It sends nothing itself, so
+    // there is no transport for its absence to protect.
     for (const id of [
       'si18n-fc-btn',
       'si18n-bm-btn',
@@ -139,6 +145,7 @@ describe('sidebar surface when the host has no AI bridge', () => {
       'si18n-report-btn',
       'si18n-recent-btn',
       'si18n-dash-btn',
+      'si18n-byoa-btn',
     ]) {
       expect(html).toContain(id);
     }

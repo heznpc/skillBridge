@@ -54,6 +54,30 @@ describe('bundled artifact shape', () => {
     expect(manifest.host_permissions).not.toContain('https://*.youtube.com/*');
   });
 
+  // The lesson-identity table shipped absent exactly once: it was declared
+  // web-accessible, the runtime fetched it, the fetch 404'd, and the failure
+  // path was a warning plus a graceful fallback — so the bundled build lost
+  // cross-platform continuity silently while every test against src/ passed.
+  // A declared resource that is not in the artifact is now a build failure;
+  // this is the test that says so.
+  test('every declared web-accessible resource is actually in the artifact', () => {
+    const manifest = JSON.parse(fs.readFileSync(path.join(DIST_DIR, 'manifest.json'), 'utf8'));
+    const missing = [];
+    for (const entry of manifest.web_accessible_resources || []) {
+      for (const resource of entry.resources || []) {
+        if (resource.includes('*')) continue;
+        if (!fs.existsSync(path.join(DIST_DIR, resource))) missing.push(resource);
+      }
+    }
+    expect(missing).toEqual([]);
+  });
+
+  test('the lesson-identity table ships, and is the one the runtime expects', () => {
+    const table = JSON.parse(fs.readFileSync(path.join(DIST_DIR, 'src/shared/canonical-lessons.json'), 'utf8'));
+    expect(Object.keys(table.lessons || {}).length).toBeGreaterThan(100);
+    expect(table).toEqual(JSON.parse(fs.readFileSync(path.join(ROOT, 'src/shared/canonical-lessons.json'), 'utf8')));
+  });
+
   test('keeps shadow CSS resources fetchable in the bundled manifest', () => {
     const manifest = JSON.parse(fs.readFileSync(path.join(DIST_DIR, 'manifest.json'), 'utf8'));
     for (const entry of manifest.web_accessible_resources) {

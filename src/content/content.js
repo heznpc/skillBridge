@@ -240,6 +240,7 @@
     'chat-subpanels',
     'chat-history',
     'chat-flashcards',
+    'byoa',
     'lesson-store',
     'bookmarks',
     'resume',

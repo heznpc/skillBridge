@@ -166,6 +166,10 @@
           <span>${sb.t(A11Y_LABELS.chatHistory)}</span>
         </button>`
         }
+        <button class="si18n-tools-item" id="si18n-byoa-btn" role="menuitem" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <span>${sb.t(BYOA_LABELS.openByoa)}</span>
+        </button>
         <button class="si18n-tools-item" id="si18n-pdf-btn" role="menuitem" type="button">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
           <span>${sb.t(PDF_EXPORT_LABELS.title)}</span>
@@ -236,6 +240,7 @@
     sb.$id('si18n-bm-btn')?.addEventListener('click', () => sb._chat.toggleBookmarksPanel?.());
     sb.$id('si18n-note-btn')?.addEventListener('click', () => sb._chat.toggleNotesPanel?.());
     sb.$id('si18n-report-btn')?.addEventListener('click', () => sb._chat.toggleReportsPanel?.());
+    sb.$id('si18n-byoa-btn')?.addEventListener('click', () => sb._chat.toggleByoaPanel?.());
     sb.$id('si18n-recent-btn')?.addEventListener('click', () => sb._chat.toggleRecentPanel?.());
     sb.$id('si18n-dash-btn')?.addEventListener('click', () => sb._chat.toggleDashboardPanel?.());
     if (sb.hostCaps?.bridge === false) {

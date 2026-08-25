@@ -102,6 +102,31 @@ async function build() {
   if (fs.existsSync(path.join(ROOT, 'src/shared/constants.json'))) {
     fs.copyFileSync(path.join(ROOT, 'src/shared/constants.json'), path.join(DIST, 'src/shared/constants.json'));
   }
+  // Everything else the manifest declares web-accessible, driven by the
+  // manifest rather than by another hand-maintained list.
+  //
+  // The hand-maintained list is how the lesson-identity table shipped absent:
+  // it was added to `web_accessible_resources`, the runtime fetched it, the
+  // fetch 404'd, and the failure path was a warning plus a graceful fallback
+  // to URL identity — so the bundled build silently lost cross-platform
+  // continuity and every test that ran against `src/` still passed. Declaring
+  // a resource and then not shipping it is now a build failure.
+  const declaredResources = (manifest.web_accessible_resources || []).flatMap((entry) => entry.resources || []);
+  for (const resource of new Set(declaredResources)) {
+    // Globs and the generated bundle outputs are handled by the copies above.
+    if (resource.includes('*') || !resource.startsWith('src/')) continue;
+    const from = path.join(ROOT, resource);
+    const to = path.join(DIST, resource);
+    if (fs.existsSync(to)) continue;
+    if (!fs.existsSync(from)) {
+      throw new Error(
+        `manifest declares web-accessible resource "${resource}" but it does not exist — ` +
+          'a resource the runtime can fetch must be in the artifact, or the fetch 404s at runtime',
+      );
+    }
+    fs.mkdirSync(path.dirname(to), { recursive: true });
+    fs.copyFileSync(from, to);
+  }
   // Copy the popup and every local asset it references. Keeping this driven by
   // action.default_popup prevents a new classic-script dependency from being
   // added to the HTML without also landing in the CWS artifact.
