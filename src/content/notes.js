@@ -36,11 +36,27 @@
   // PERSISTENCE (chrome.storage.local)
   // ============================================================
 
+  // Identity is resolved by lesson-store.js, not by comparing URLs here — the
+  // same lesson has different URLs on Skilljar and Academy, and three modules
+  // each inventing their own comparison is how one of them ends up hiding a
+  // learner's notes on a page that looks right. `ready()` waits for the lookup
+  // table; it resolves either way, so a missing table just means URL identity.
   function loadNotes(cb) {
-    chrome.storage.local.get([STORAGE_KEY], (res) => {
-      notes = Array.isArray(res[STORAGE_KEY]) ? res[STORAGE_KEY] : [];
-      if (cb) cb();
-    });
+    const finish = () => {
+      chrome.storage.local.get([STORAGE_KEY], (res) => {
+        const stored = Array.isArray(res[STORAGE_KEY]) ? res[STORAGE_KEY] : [];
+        if (sb.identity) {
+          const migrated = sb.identity.migrate(stored);
+          notes = migrated.records;
+          if (migrated.changed) saveNotes();
+        } else {
+          notes = stored;
+        }
+        if (cb) cb();
+      });
+    };
+    if (sb.identity) sb.identity.ready().then(finish, finish);
+    else finish();
   }
 
   // Serialize writes so rapid save/remove can't interleave (last-write-wins).
@@ -58,20 +74,32 @@
   // ============================================================
 
   function currentNoteText() {
-    const existing = notes.find((n) => n.url === location.href);
+    const existing = sb.identity ? sb.identity.find(notes, location) : notes.find((n) => n.url === location.href);
     return existing?.text || '';
   }
 
-  // De-dupe by URL (one note per lesson; saving again overwrites and bumps
-  // it to the top). An empty/whitespace-only save deletes the note instead
-  // of storing a blank entry.
+  /** True when `n` is a note about the page we are on, on either platform. */
+  function isCurrent(n) {
+    if (!sb.identity) return n.url === location.href;
+    return sb.identity.recordIdentity(n) === sb.identity.identityOf(location);
+  }
+
+  // One note per lesson; saving again overwrites and bumps it to the top. An
+  // empty/whitespace-only save deletes the note instead of storing a blank
+  // entry.
   function upsertCurrent(text) {
     const trimmed = (text || '').trim();
     const url = location.href;
-    notes = notes.filter((n) => n.url !== url);
+    // Removes EVERY record for this lesson, which on a canonical match can be
+    // more than one — a note taken on Skilljar and another on Academy before
+    // identity existed both answer here. Replacing both is the learner's own
+    // explicit save, which is the only place this codebase collapses two
+    // records into one; migration never does it behind their back.
+    notes = notes.filter((n) => !isCurrent(n));
     if (trimmed) {
       const title = (document.title || '').trim() || sb.$('h1')?.textContent?.trim() || url;
-      notes.unshift({ url, title, text: trimmed, ts: Date.now() });
+      const note = { url, title, text: trimmed, ts: Date.now() };
+      notes.unshift(sb.identity ? sb.identity.stamp(note, location) : note);
       if (notes.length > MAX_NOTES) notes.length = MAX_NOTES;
     }
     saveNotes();
@@ -87,11 +115,16 @@
 
   function openNote(i) {
     const n = notes[i];
-    if (!n || n.url === location.href) return;
+    if (!n || isCurrent(n)) return;
+    // Prefer the same lesson on the platform the learner is browsing now. A
+    // Skilljar-era note opened from Academy should land on the Academy
+    // rendering; sending them back to the platform they left is not
+    // continuity. Falls back to the note's own URL for anything unmatched.
+    const target = (sb.identity ? sb.identity.openUrlFor(n, location) : n.url) || n.url;
     // Same https-only gate as bookmarks.js's openBookmark — a dangerous-scheme
     // URL can never reach location.href even if a future write path (import)
     // ever populates sb_notes from elsewhere.
-    if (/^https?:/i.test(n.url)) location.href = n.url;
+    if (/^https?:/i.test(target)) location.href = target;
   }
 
   // ============================================================

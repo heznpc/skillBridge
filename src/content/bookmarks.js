@@ -54,11 +54,32 @@
   // PERSISTENCE (chrome.storage.local)
   // ============================================================
 
+  // Identity comes from lesson-store.js, not from a local URL compare — see
+  // notes.js for why the rule lives in one place. `ready()` waits for the
+  // lookup table and resolves either way; without it every record simply stays
+  // URL-keyed, which is what it was before.
   function loadBookmarks(cb) {
-    chrome.storage.local.get([STORAGE_KEY], (res) => {
-      bookmarks = Array.isArray(res[STORAGE_KEY]) ? res[STORAGE_KEY] : [];
-      if (cb) cb();
-    });
+    const finish = () => {
+      chrome.storage.local.get([STORAGE_KEY], (res) => {
+        const stored = Array.isArray(res[STORAGE_KEY]) ? res[STORAGE_KEY] : [];
+        if (sb.identity) {
+          const migrated = sb.identity.migrate(stored);
+          bookmarks = migrated.records;
+          if (migrated.changed) saveBookmarks();
+        } else {
+          bookmarks = stored;
+        }
+        if (cb) cb();
+      });
+    };
+    if (sb.identity) sb.identity.ready().then(finish, finish);
+    else finish();
+  }
+
+  /** True when `b` bookmarks the page we are on, on either platform. */
+  function isCurrent(b) {
+    if (!sb.identity) return b.url === location.href;
+    return sb.identity.recordIdentity(b) === sb.identity.identityOf(location);
   }
 
   // Serialize writes so rapid add/remove can't interleave (last-write-wins).
@@ -78,10 +99,12 @@
   function addCurrent() {
     const url = location.href;
     const title = (document.title || '').trim() || sb.$('h1')?.textContent?.trim() || url;
-    // De-dupe by URL (re-bookmarking a lesson updates its position + bumps it
-    // to the top).
-    bookmarks = bookmarks.filter((b) => b.url !== url);
-    bookmarks.unshift({ url, title, scrollY: Math.round(window.scrollY), ts: Date.now() });
+    // De-dupe by lesson, not by URL: re-bookmarking a lesson updates its
+    // position and bumps it to the top, and the same lesson bookmarked once on
+    // each platform is one bookmark, not two.
+    bookmarks = bookmarks.filter((b) => !isCurrent(b));
+    const entry = { url, title, scrollY: Math.round(window.scrollY), ts: Date.now() };
+    bookmarks.unshift(sb.identity ? sb.identity.stamp(entry, location) : entry);
     if (bookmarks.length > MAX_BOOKMARKS) bookmarks.length = MAX_BOOKMARKS;
     saveBookmarks();
     renderList();
@@ -97,18 +120,23 @@
   function openBookmark(i) {
     const b = bookmarks[i];
     if (!b) return;
+    // The same lesson on the platform the learner is browsing now, when the
+    // identity table knows it; the bookmark's own URL otherwise.
+    const target = (sb.identity ? sb.identity.openUrlFor(b, location) : b.url) || b.url;
     try {
-      window.sessionStorage.setItem(RESTORE_KEY, JSON.stringify({ url: b.url, scrollY: b.scrollY }));
+      // Keyed to the URL we are actually navigating to, so the scroll restore
+      // on arrival still recognises the page.
+      window.sessionStorage.setItem(RESTORE_KEY, JSON.stringify({ url: target, scrollY: b.scrollY }));
     } catch (_e) {
       /* ignore — navigation still works, just without scroll restore */
     }
-    if (b.url === location.href) {
+    if (isCurrent(b)) {
       window.scrollTo({ top: b.scrollY, behavior: 'smooth' });
-    } else if (/^https?:/i.test(b.url)) {
+    } else if (/^https?:/i.test(target)) {
       // Match the https-only gate the dashboard open handler already applies, so
       // a dangerous-scheme URL can never reach location.href even if a future
       // write path (import/sync) ever populates sb_bookmarks from elsewhere.
-      location.href = b.url;
+      location.href = target;
     }
   }
 

@@ -1,0 +1,1254 @@
+{
+  "schemaVersion": 1,
+  "note": "High-confidence cross-platform lesson pairs only. Built by scripts/build-canonical-lookup.js from the identity report; anything below high confidence is absent on purpose and keeps URL identity.",
+  "source": {
+    "academy": {
+      "path": "snapshots/academy/curriculum-2026-08-25.json",
+      "observedAt": "2026-08-25T09:09:37.119Z"
+    },
+    "skilljar": {
+      "path": "snapshots/skilljar/anthropic.skilljar.com-2026-08-24.json",
+      "fetchedAt": "2026-08-24T11:32:06.160Z"
+    }
+  },
+  "lessons": {
+    "ai-capabilities-and-limitations/intro-to-ai-capabilities-and-limitations": {
+      "skilljar": "ai-capabilities-and-limitations/456128",
+      "academy": "ai-capabilities-and-limitations/intro-to-ai-capabilities-and-limitations"
+    },
+    "ai-capabilities-and-limitations/what-we-mean-by-ai": {
+      "skilljar": "ai-capabilities-and-limitations/456427",
+      "academy": "ai-capabilities-and-limitations/what-we-mean-by-ai"
+    },
+    "ai-capabilities-and-limitations/how-ai-gets-its-character": {
+      "skilljar": "ai-capabilities-and-limitations/456439",
+      "academy": "ai-capabilities-and-limitations/how-ai-gets-its-character"
+    },
+    "ai-capabilities-and-limitations/next-token-prediction": {
+      "skilljar": "ai-capabilities-and-limitations/456447",
+      "academy": "ai-capabilities-and-limitations/next-token-prediction"
+    },
+    "ai-capabilities-and-limitations/knowledge": {
+      "skilljar": "ai-capabilities-and-limitations/456452",
+      "academy": "ai-capabilities-and-limitations/knowledge"
+    },
+    "ai-capabilities-and-limitations/working-memory": {
+      "skilljar": "ai-capabilities-and-limitations/456455",
+      "academy": "ai-capabilities-and-limitations/working-memory"
+    },
+    "ai-capabilities-and-limitations/steerability": {
+      "skilljar": "ai-capabilities-and-limitations/456457",
+      "academy": "ai-capabilities-and-limitations/steerability"
+    },
+    "ai-capabilities-and-limitations/when-properties-collide": {
+      "skilljar": "ai-capabilities-and-limitations/456459",
+      "academy": "ai-capabilities-and-limitations/when-properties-collide"
+    },
+    "ai-capabilities-and-limitations/next-steps": {
+      "skilljar": "ai-capabilities-and-limitations/456461",
+      "academy": "ai-capabilities-and-limitations/next-steps"
+    },
+    "ai-capabilities-and-limitations/course-quiz": {
+      "skilljar": "ai-capabilities-and-limitations/456462",
+      "academy": "ai-capabilities-and-limitations/course-quiz"
+    },
+    "ai-fluency-for-builders/ai-fluency-for-builders": {
+      "skilljar": "ai-fluency-for-builders/485881",
+      "academy": "ai-fluency-for-builders/ai-fluency-for-builders"
+    },
+    "ai-fluency-for-builders/the-4d-framework": {
+      "skilljar": "ai-fluency-for-builders/485885",
+      "academy": "ai-fluency-for-builders/the-4d-framework"
+    },
+    "ai-fluency-for-builders/ai-capabilities-and-limitations": {
+      "skilljar": "ai-fluency-for-builders/485882",
+      "academy": "ai-fluency-for-builders/ai-capabilities-and-limitations"
+    },
+    "ai-fluency-for-builders/delegation-the-builder-s-toolkit": {
+      "skilljar": "ai-fluency-for-builders/486159",
+      "academy": "ai-fluency-for-builders/delegation-the-builder-s-toolkit"
+    },
+    "ai-fluency-for-builders/description-building-great-things": {
+      "skilljar": "ai-fluency-for-builders/486160",
+      "academy": "ai-fluency-for-builders/description-building-great-things"
+    },
+    "ai-fluency-for-builders/discernment-for-code": {
+      "skilljar": "ai-fluency-for-builders/486161",
+      "academy": "ai-fluency-for-builders/discernment-for-code"
+    },
+    "ai-fluency-for-builders/discernment-for-user-experience": {
+      "skilljar": "ai-fluency-for-builders/486162",
+      "academy": "ai-fluency-for-builders/discernment-for-user-experience"
+    },
+    "ai-fluency-for-builders/stand-behind-what-you-build": {
+      "skilljar": "ai-fluency-for-builders/486163",
+      "academy": "ai-fluency-for-builders/stand-behind-what-you-build"
+    },
+    "ai-fluency-for-builders/closure-looking-forward": {
+      "skilljar": "ai-fluency-for-builders/486165",
+      "academy": "ai-fluency-for-builders/closure-looking-forward"
+    },
+    "ai-fluency-for-builders/course-quiz": {
+      "skilljar": "ai-fluency-for-builders/486168",
+      "academy": "ai-fluency-for-builders/course-quiz"
+    },
+    "ai-fluency-for-educators/introduction-to-ai-fluency-for-educators": {
+      "skilljar": "ai-fluency-for-educators/326777",
+      "academy": "ai-fluency-for-educators/introduction-to-ai-fluency-for-educators"
+    },
+    "ai-fluency-for-educators/ai-fluency-framework-review": {
+      "skilljar": "ai-fluency-for-educators/326779",
+      "academy": "ai-fluency-for-educators/ai-fluency-framework-review"
+    },
+    "ai-fluency-for-educators/applying-ai-fluency-to-course-design-and-learning-outcomes": {
+      "skilljar": "ai-fluency-for-educators/326781",
+      "academy": "ai-fluency-for-educators/applying-ai-fluency-to-course-design-and-learning-outcomes"
+    },
+    "ai-fluency-for-educators/applying-ai-fluency-to-learning-materials-and-assignments": {
+      "skilljar": "ai-fluency-for-educators/326782",
+      "academy": "ai-fluency-for-educators/applying-ai-fluency-to-learning-materials-and-assignments"
+    },
+    "ai-fluency-for-nonprofits/welcome-to-ai-fluency-for-nonprofits": {
+      "skilljar": "ai-fluency-for-nonprofits/376918",
+      "academy": "ai-fluency-for-nonprofits/welcome-to-ai-fluency-for-nonprofits"
+    },
+    "ai-fluency-for-nonprofits/the-4d-framework": {
+      "skilljar": "ai-fluency-for-nonprofits/376879",
+      "academy": "ai-fluency-for-nonprofits/the-4d-framework"
+    },
+    "ai-fluency-for-nonprofits/researching-with-ai": {
+      "skilljar": "ai-fluency-for-nonprofits/376881",
+      "academy": "ai-fluency-for-nonprofits/researching-with-ai"
+    },
+    "ai-fluency-for-nonprofits/writing-with-ai": {
+      "skilljar": "ai-fluency-for-nonprofits/376882",
+      "academy": "ai-fluency-for-nonprofits/writing-with-ai"
+    },
+    "ai-fluency-for-nonprofits/understanding-privacy-and-data": {
+      "skilljar": "ai-fluency-for-nonprofits/376883",
+      "academy": "ai-fluency-for-nonprofits/understanding-privacy-and-data"
+    },
+    "ai-fluency-for-nonprofits/data-analysis-with-ai": {
+      "skilljar": "ai-fluency-for-nonprofits/376885",
+      "academy": "ai-fluency-for-nonprofits/data-analysis-with-ai"
+    },
+    "ai-fluency-for-nonprofits/workflow-augmentation": {
+      "skilljar": "ai-fluency-for-nonprofits/376886",
+      "academy": "ai-fluency-for-nonprofits/workflow-augmentation"
+    },
+    "ai-fluency-for-nonprofits/integration": {
+      "skilljar": "ai-fluency-for-nonprofits/376887",
+      "academy": "ai-fluency-for-nonprofits/integration"
+    },
+    "ai-fluency-for-nonprofits/next-steps": {
+      "skilljar": "ai-fluency-for-nonprofits/376888",
+      "academy": "ai-fluency-for-nonprofits/next-steps"
+    },
+    "ai-fluency-for-nonprofits/course-quiz": {
+      "skilljar": "ai-fluency-for-nonprofits/376934",
+      "academy": "ai-fluency-for-nonprofits/course-quiz"
+    },
+    "ai-fluency-for-small-businesses/ai-fluency-for-small-businesses": {
+      "skilljar": "ai-fluency-for-small-businesses/483578",
+      "academy": "ai-fluency-for-small-businesses/ai-fluency-for-small-businesses"
+    },
+    "ai-fluency-for-small-businesses/the-4d-framework": {
+      "skilljar": "ai-fluency-for-small-businesses/483583",
+      "academy": "ai-fluency-for-small-businesses/the-4d-framework"
+    },
+    "ai-fluency-for-small-businesses/ai-capabilities-and-limits": {
+      "skilljar": "ai-fluency-for-small-businesses/483580",
+      "academy": "ai-fluency-for-small-businesses/ai-capabilities-and-limits"
+    },
+    "ai-fluency-for-small-businesses/explore": {
+      "skilljar": "ai-fluency-for-small-businesses/485884",
+      "academy": "ai-fluency-for-small-businesses/explore"
+    },
+    "ai-fluency-for-small-businesses/researching-with-ai": {
+      "skilljar": "ai-fluency-for-small-businesses/483604",
+      "academy": "ai-fluency-for-small-businesses/researching-with-ai"
+    },
+    "ai-fluency-for-small-businesses/using-data-with-ai": {
+      "skilljar": "ai-fluency-for-small-businesses/483606",
+      "academy": "ai-fluency-for-small-businesses/using-data-with-ai"
+    },
+    "ai-fluency-for-small-businesses/tying-it-all-together": {
+      "skilljar": "ai-fluency-for-small-businesses/483608",
+      "academy": "ai-fluency-for-small-businesses/tying-it-all-together"
+    },
+    "ai-fluency-for-small-businesses/human-in-the-loop": {
+      "skilljar": "ai-fluency-for-small-businesses/483609",
+      "academy": "ai-fluency-for-small-businesses/human-in-the-loop"
+    },
+    "ai-fluency-for-small-businesses/closure-and-looking-forward": {
+      "skilljar": "ai-fluency-for-small-businesses/483611",
+      "academy": "ai-fluency-for-small-businesses/closure-and-looking-forward"
+    },
+    "ai-fluency-for-small-businesses/course-quiz": {
+      "skilljar": "ai-fluency-for-small-businesses/485982",
+      "academy": "ai-fluency-for-small-businesses/course-quiz"
+    },
+    "ai-fluency-for-students/welcome-to-ai-fluency-for-students": {
+      "skilljar": "ai-fluency-for-students/326790",
+      "academy": "ai-fluency-for-students/welcome-to-ai-fluency-for-students"
+    },
+    "ai-fluency-for-students/ai-fluency-framework": {
+      "skilljar": "ai-fluency-for-students/326791",
+      "academy": "ai-fluency-for-students/ai-fluency-framework"
+    },
+    "ai-fluency-for-students/ai-as-a-learning-partner": {
+      "skilljar": "ai-fluency-for-students/326792",
+      "academy": "ai-fluency-for-students/ai-as-a-learning-partner"
+    },
+    "ai-fluency-for-students/ai-in-career-planning": {
+      "skilljar": "ai-fluency-for-students/326793",
+      "academy": "ai-fluency-for-students/ai-in-career-planning"
+    },
+    "ai-fluency-for-students/being-the-human-in-the-loop": {
+      "skilljar": "ai-fluency-for-students/327248",
+      "academy": "ai-fluency-for-students/being-the-human-in-the-loop"
+    },
+    "ai-fluency-framework-foundations/introduction-to-ai-fluency": {
+      "skilljar": "ai-fluency-framework-foundations/291863",
+      "academy": "ai-fluency-framework-foundations/introduction-to-ai-fluency"
+    },
+    "ai-fluency-framework-foundations/why-do-we-need-ai-fluency": {
+      "skilljar": "ai-fluency-framework-foundations/291870",
+      "academy": "ai-fluency-framework-foundations/why-do-we-need-ai-fluency"
+    },
+    "ai-fluency-framework-foundations/the-4d-framework": {
+      "skilljar": "ai-fluency-framework-foundations/291876",
+      "academy": "ai-fluency-framework-foundations/the-4d-framework"
+    },
+    "ai-fluency-framework-foundations/generative-ai-fundamentals": {
+      "skilljar": "ai-fluency-framework-foundations/291879",
+      "academy": "ai-fluency-framework-foundations/generative-ai-fundamentals"
+    },
+    "ai-fluency-framework-foundations/capabilities-limitations": {
+      "skilljar": "ai-fluency-framework-foundations/291880",
+      "academy": "ai-fluency-framework-foundations/capabilities-limitations"
+    },
+    "ai-fluency-framework-foundations/a-closer-look-at-delegation": {
+      "skilljar": "ai-fluency-framework-foundations/291883",
+      "academy": "ai-fluency-framework-foundations/a-closer-look-at-delegation"
+    },
+    "ai-fluency-framework-foundations/project-planning-and-delegation": {
+      "skilljar": "ai-fluency-framework-foundations/291886",
+      "academy": "ai-fluency-framework-foundations/project-planning-and-delegation"
+    },
+    "ai-fluency-framework-foundations/a-closer-look-at-description": {
+      "skilljar": "ai-fluency-framework-foundations/291891",
+      "academy": "ai-fluency-framework-foundations/a-closer-look-at-description"
+    },
+    "ai-fluency-framework-foundations/effective-prompting-techniques": {
+      "skilljar": "ai-fluency-framework-foundations/291895",
+      "academy": "ai-fluency-framework-foundations/effective-prompting-techniques"
+    },
+    "ai-fluency-framework-foundations/a-closer-look-at-discernment": {
+      "skilljar": "ai-fluency-framework-foundations/291898",
+      "academy": "ai-fluency-framework-foundations/a-closer-look-at-discernment"
+    },
+    "ai-fluency-framework-foundations/the-description-discernment-loop": {
+      "skilljar": "ai-fluency-framework-foundations/291901",
+      "academy": "ai-fluency-framework-foundations/the-description-discernment-loop"
+    },
+    "ai-fluency-framework-foundations/a-closer-look-at-diligence": {
+      "skilljar": "ai-fluency-framework-foundations/291904",
+      "academy": "ai-fluency-framework-foundations/a-closer-look-at-diligence"
+    },
+    "ai-fluency-framework-foundations/conclusion": {
+      "skilljar": "ai-fluency-framework-foundations/291908",
+      "academy": "ai-fluency-framework-foundations/conclusion"
+    },
+    "ai-fluency-framework-foundations/additional-activities": {
+      "skilljar": "ai-fluency-framework-foundations/314863",
+      "academy": "ai-fluency-framework-foundations/additional-activities"
+    },
+    "building-with-the-claude-api/accessing-the-api": {
+      "skilljar": "claude-with-the-anthropic-api/287726",
+      "academy": "building-with-the-claude-api/accessing-the-api"
+    },
+    "building-with-the-claude-api/getting-an-api-key": {
+      "skilljar": "claude-with-the-anthropic-api/296766",
+      "academy": "building-with-the-claude-api/getting-an-api-key"
+    },
+    "building-with-the-claude-api/making-a-request": {
+      "skilljar": "claude-with-the-anthropic-api/287725",
+      "academy": "building-with-the-claude-api/making-a-request"
+    },
+    "building-with-the-claude-api/multi-turn-conversations": {
+      "skilljar": "claude-with-the-anthropic-api/287735",
+      "academy": "building-with-the-claude-api/multi-turn-conversations"
+    },
+    "building-with-the-claude-api/system-prompts": {
+      "skilljar": "claude-with-the-anthropic-api/287733",
+      "academy": "building-with-the-claude-api/system-prompts"
+    },
+    "building-with-the-claude-api/temperature": {
+      "skilljar": "claude-with-the-anthropic-api/287728",
+      "academy": "building-with-the-claude-api/temperature"
+    },
+    "building-with-the-claude-api/response-streaming": {
+      "skilljar": "claude-with-the-anthropic-api/287734",
+      "academy": "building-with-the-claude-api/response-streaming"
+    },
+    "building-with-the-claude-api/structured-data": {
+      "skilljar": "claude-with-the-anthropic-api/287732",
+      "academy": "building-with-the-claude-api/structured-data"
+    },
+    "building-with-the-claude-api/quiz-on-accessing-claude-with-the-api": {
+      "skilljar": "claude-with-the-anthropic-api/289117",
+      "academy": "building-with-the-claude-api/quiz-on-accessing-claude-with-the-api"
+    },
+    "building-with-the-claude-api/prompt-evaluation": {
+      "skilljar": "claude-with-the-anthropic-api/287731",
+      "academy": "building-with-the-claude-api/prompt-evaluation"
+    },
+    "building-with-the-claude-api/a-typical-eval-workflow": {
+      "skilljar": "claude-with-the-anthropic-api/287736",
+      "academy": "building-with-the-claude-api/a-typical-eval-workflow"
+    },
+    "building-with-the-claude-api/generating-test-datasets": {
+      "skilljar": "claude-with-the-anthropic-api/287739",
+      "academy": "building-with-the-claude-api/generating-test-datasets"
+    },
+    "building-with-the-claude-api/running-the-eval": {
+      "skilljar": "claude-with-the-anthropic-api/287743",
+      "academy": "building-with-the-claude-api/running-the-eval"
+    },
+    "building-with-the-claude-api/model-based-grading": {
+      "skilljar": "claude-with-the-anthropic-api/287742",
+      "academy": "building-with-the-claude-api/model-based-grading"
+    },
+    "building-with-the-claude-api/code-based-grading": {
+      "skilljar": "claude-with-the-anthropic-api/287737",
+      "academy": "building-with-the-claude-api/code-based-grading"
+    },
+    "building-with-the-claude-api/quiz-on-prompt-evaluation": {
+      "skilljar": "claude-with-the-anthropic-api/289118",
+      "academy": "building-with-the-claude-api/quiz-on-prompt-evaluation"
+    },
+    "building-with-the-claude-api/prompt-engineering": {
+      "skilljar": "claude-with-the-anthropic-api/287745",
+      "academy": "building-with-the-claude-api/prompt-engineering"
+    },
+    "building-with-the-claude-api/being-clear-and-direct": {
+      "skilljar": "claude-with-the-anthropic-api/287744",
+      "academy": "building-with-the-claude-api/being-clear-and-direct"
+    },
+    "building-with-the-claude-api/being-specific": {
+      "skilljar": "claude-with-the-anthropic-api/287740",
+      "academy": "building-with-the-claude-api/being-specific"
+    },
+    "building-with-the-claude-api/structure-with-xml-tags": {
+      "skilljar": "claude-with-the-anthropic-api/287741",
+      "academy": "building-with-the-claude-api/structure-with-xml-tags"
+    },
+    "building-with-the-claude-api/providing-examples": {
+      "skilljar": "claude-with-the-anthropic-api/287746",
+      "academy": "building-with-the-claude-api/providing-examples"
+    },
+    "building-with-the-claude-api/quiz-on-prompt-engineering-techniques": {
+      "skilljar": "claude-with-the-anthropic-api/289121",
+      "academy": "building-with-the-claude-api/quiz-on-prompt-engineering-techniques"
+    },
+    "building-with-the-claude-api/introducing-tool-use": {
+      "skilljar": "claude-with-the-anthropic-api/287747",
+      "academy": "building-with-the-claude-api/introducing-tool-use"
+    },
+    "building-with-the-claude-api/project-overview": {
+      "skilljar": "claude-with-the-anthropic-api/287751",
+      "academy": "building-with-the-claude-api/project-overview"
+    },
+    "building-with-the-claude-api/tool-functions": {
+      "skilljar": "claude-with-the-anthropic-api/287756",
+      "academy": "building-with-the-claude-api/tool-functions"
+    },
+    "building-with-the-claude-api/tool-schemas": {
+      "skilljar": "claude-with-the-anthropic-api/287753",
+      "academy": "building-with-the-claude-api/tool-schemas"
+    },
+    "building-with-the-claude-api/handling-message-blocks": {
+      "skilljar": "claude-with-the-anthropic-api/287757",
+      "academy": "building-with-the-claude-api/handling-message-blocks"
+    },
+    "building-with-the-claude-api/sending-tool-results": {
+      "skilljar": "claude-with-the-anthropic-api/287752",
+      "academy": "building-with-the-claude-api/sending-tool-results"
+    },
+    "building-with-the-claude-api/multi-turn-conversations-with-tools": {
+      "skilljar": "claude-with-the-anthropic-api/287750",
+      "academy": "building-with-the-claude-api/multi-turn-conversations-with-tools"
+    },
+    "building-with-the-claude-api/implementing-multiple-turns": {
+      "skilljar": "claude-with-the-anthropic-api/287758",
+      "academy": "building-with-the-claude-api/implementing-multiple-turns"
+    },
+    "building-with-the-claude-api/using-multiple-tools": {
+      "skilljar": "claude-with-the-anthropic-api/287749",
+      "academy": "building-with-the-claude-api/using-multiple-tools"
+    },
+    "building-with-the-claude-api/fine-grained-tool-calling": {
+      "skilljar": "claude-with-the-anthropic-api/313160",
+      "academy": "building-with-the-claude-api/fine-grained-tool-calling"
+    },
+    "building-with-the-claude-api/the-text-edit-tool": {
+      "skilljar": "claude-with-the-anthropic-api/287760",
+      "academy": "building-with-the-claude-api/the-text-edit-tool"
+    },
+    "building-with-the-claude-api/the-web-search-tool": {
+      "skilljar": "claude-with-the-anthropic-api/287755",
+      "academy": "building-with-the-claude-api/the-web-search-tool"
+    },
+    "building-with-the-claude-api/quiz-on-tool-use-with-claude": {
+      "skilljar": "claude-with-the-anthropic-api/289122",
+      "academy": "building-with-the-claude-api/quiz-on-tool-use-with-claude"
+    },
+    "building-with-the-claude-api/introducing-retrieval-augmented-generation": {
+      "skilljar": "claude-with-the-anthropic-api/287763",
+      "academy": "building-with-the-claude-api/introducing-retrieval-augmented-generation"
+    },
+    "building-with-the-claude-api/text-chunking-strategies": {
+      "skilljar": "claude-with-the-anthropic-api/287776",
+      "academy": "building-with-the-claude-api/text-chunking-strategies"
+    },
+    "building-with-the-claude-api/text-embeddings": {
+      "skilljar": "claude-with-the-anthropic-api/287759",
+      "academy": "building-with-the-claude-api/text-embeddings"
+    },
+    "building-with-the-claude-api/the-full-rag-flow": {
+      "skilljar": "claude-with-the-anthropic-api/287764",
+      "academy": "building-with-the-claude-api/the-full-rag-flow"
+    },
+    "building-with-the-claude-api/implementing-the-rag-flow": {
+      "skilljar": "claude-with-the-anthropic-api/287761",
+      "academy": "building-with-the-claude-api/implementing-the-rag-flow"
+    },
+    "building-with-the-claude-api/bm25-lexical-search": {
+      "skilljar": "claude-with-the-anthropic-api/287767",
+      "academy": "building-with-the-claude-api/bm25-lexical-search"
+    },
+    "building-with-the-claude-api/a-multi-index-rag-pipeline": {
+      "skilljar": "claude-with-the-anthropic-api/287766",
+      "academy": "building-with-the-claude-api/a-multi-index-rag-pipeline"
+    },
+    "building-with-the-claude-api/extended-thinking": {
+      "skilljar": "claude-with-the-anthropic-api/287773",
+      "academy": "building-with-the-claude-api/extended-thinking"
+    },
+    "building-with-the-claude-api/image-support": {
+      "skilljar": "claude-with-the-anthropic-api/287778",
+      "academy": "building-with-the-claude-api/image-support"
+    },
+    "building-with-the-claude-api/pdf-support": {
+      "skilljar": "claude-with-the-anthropic-api/287768",
+      "academy": "building-with-the-claude-api/pdf-support"
+    },
+    "building-with-the-claude-api/citations": {
+      "skilljar": "claude-with-the-anthropic-api/287771",
+      "academy": "building-with-the-claude-api/citations"
+    },
+    "building-with-the-claude-api/prompt-caching": {
+      "skilljar": "claude-with-the-anthropic-api/287772",
+      "academy": "building-with-the-claude-api/prompt-caching"
+    },
+    "building-with-the-claude-api/rules-of-prompt-caching": {
+      "skilljar": "claude-with-the-anthropic-api/287770",
+      "academy": "building-with-the-claude-api/rules-of-prompt-caching"
+    },
+    "building-with-the-claude-api/prompt-caching-in-action": {
+      "skilljar": "claude-with-the-anthropic-api/287774",
+      "academy": "building-with-the-claude-api/prompt-caching-in-action"
+    },
+    "building-with-the-claude-api/code-execution-and-the-files-api": {
+      "skilljar": "claude-with-the-anthropic-api/287777",
+      "academy": "building-with-the-claude-api/code-execution-and-the-files-api"
+    },
+    "building-with-the-claude-api/quiz-on-features-of-claude": {
+      "skilljar": "claude-with-the-anthropic-api/289124",
+      "academy": "building-with-the-claude-api/quiz-on-features-of-claude"
+    },
+    "building-with-the-claude-api/introducing-mcp": {
+      "skilljar": "claude-with-the-anthropic-api/287780",
+      "academy": "building-with-the-claude-api/introducing-mcp"
+    },
+    "building-with-the-claude-api/mcp-clients": {
+      "skilljar": "claude-with-the-anthropic-api/287775",
+      "academy": "building-with-the-claude-api/mcp-clients"
+    },
+    "building-with-the-claude-api/project-setup": {
+      "skilljar": "claude-with-the-anthropic-api/287785",
+      "academy": "building-with-the-claude-api/project-setup"
+    },
+    "building-with-the-claude-api/defining-tools-with-mcp": {
+      "skilljar": "claude-with-the-anthropic-api/287797",
+      "academy": "building-with-the-claude-api/defining-tools-with-mcp"
+    },
+    "building-with-the-claude-api/the-server-inspector": {
+      "skilljar": "claude-with-the-anthropic-api/287781",
+      "academy": "building-with-the-claude-api/the-server-inspector"
+    },
+    "building-with-the-claude-api/implementing-a-client": {
+      "skilljar": "claude-with-the-anthropic-api/287793",
+      "academy": "building-with-the-claude-api/implementing-a-client"
+    },
+    "building-with-the-claude-api/defining-resources": {
+      "skilljar": "claude-with-the-anthropic-api/287782",
+      "academy": "building-with-the-claude-api/defining-resources"
+    },
+    "building-with-the-claude-api/accessing-resources": {
+      "skilljar": "claude-with-the-anthropic-api/287783",
+      "academy": "building-with-the-claude-api/accessing-resources"
+    },
+    "building-with-the-claude-api/defining-prompts": {
+      "skilljar": "claude-with-the-anthropic-api/287784",
+      "academy": "building-with-the-claude-api/defining-prompts"
+    },
+    "building-with-the-claude-api/prompts-in-the-client": {
+      "skilljar": "claude-with-the-anthropic-api/287786",
+      "academy": "building-with-the-claude-api/prompts-in-the-client"
+    },
+    "building-with-the-claude-api/quiz-on-model-context-protocol": {
+      "skilljar": "claude-with-the-anthropic-api/289126",
+      "academy": "building-with-the-claude-api/quiz-on-model-context-protocol"
+    },
+    "building-with-the-claude-api/anthropic-apps": {
+      "skilljar": "claude-with-the-anthropic-api/287787",
+      "academy": "building-with-the-claude-api/anthropic-apps"
+    },
+    "building-with-the-claude-api/claude-code-setup": {
+      "skilljar": "claude-with-the-anthropic-api/287788",
+      "academy": "building-with-the-claude-api/claude-code-setup"
+    },
+    "building-with-the-claude-api/claude-code-in-action": {
+      "skilljar": "claude-with-the-anthropic-api/287805",
+      "academy": "building-with-the-claude-api/claude-code-in-action"
+    },
+    "building-with-the-claude-api/enhancements-with-mcp-servers": {
+      "skilljar": "claude-with-the-anthropic-api/287792",
+      "academy": "building-with-the-claude-api/enhancements-with-mcp-servers"
+    },
+    "building-with-the-claude-api/agents-and-workflows": {
+      "skilljar": "claude-with-the-anthropic-api/287796",
+      "academy": "building-with-the-claude-api/agents-and-workflows"
+    },
+    "building-with-the-claude-api/parallelization-workflows": {
+      "skilljar": "claude-with-the-anthropic-api/287804",
+      "academy": "building-with-the-claude-api/parallelization-workflows"
+    },
+    "building-with-the-claude-api/chaining-workflows": {
+      "skilljar": "claude-with-the-anthropic-api/287800",
+      "academy": "building-with-the-claude-api/chaining-workflows"
+    },
+    "building-with-the-claude-api/routing-workflows": {
+      "skilljar": "claude-with-the-anthropic-api/287801",
+      "academy": "building-with-the-claude-api/routing-workflows"
+    },
+    "building-with-the-claude-api/agents-and-tools": {
+      "skilljar": "claude-with-the-anthropic-api/287803",
+      "academy": "building-with-the-claude-api/agents-and-tools"
+    },
+    "building-with-the-claude-api/environment-inspection": {
+      "skilljar": "claude-with-the-anthropic-api/287798",
+      "academy": "building-with-the-claude-api/environment-inspection"
+    },
+    "building-with-the-claude-api/workflows-vs-agents": {
+      "skilljar": "claude-with-the-anthropic-api/287794",
+      "academy": "building-with-the-claude-api/workflows-vs-agents"
+    },
+    "building-with-the-claude-api/quiz-on-agents-and-workflows": {
+      "skilljar": "claude-with-the-anthropic-api/289130",
+      "academy": "building-with-the-claude-api/quiz-on-agents-and-workflows"
+    },
+    "building-with-the-claude-api/final-assessment": {
+      "skilljar": "claude-with-the-anthropic-api/290899",
+      "academy": "building-with-the-claude-api/final-assessment"
+    },
+    "claude-101/what-is-claude": {
+      "skilljar": "claude-101/383389",
+      "academy": "claude-101/what-is-claude"
+    },
+    "claude-101/your-first-conversation-with-claude": {
+      "skilljar": "claude-101/383390",
+      "academy": "claude-101/your-first-conversation-with-claude"
+    },
+    "claude-101/getting-better-results": {
+      "skilljar": "claude-101/383392",
+      "academy": "claude-101/getting-better-results"
+    },
+    "claude-101/claude-desktop-app-chat-cowork-code": {
+      "skilljar": "claude-101/440908",
+      "academy": "claude-101/claude-desktop-app-chat-cowork-code"
+    },
+    "claude-101/introduction-to-projects": {
+      "skilljar": "claude-101/383393",
+      "academy": "claude-101/introduction-to-projects"
+    },
+    "claude-101/creating-with-artifacts": {
+      "skilljar": "claude-101/383394",
+      "academy": "claude-101/creating-with-artifacts"
+    },
+    "claude-101/working-with-skills": {
+      "skilljar": "claude-101/383396",
+      "academy": "claude-101/working-with-skills"
+    },
+    "claude-101/connecting-your-tools": {
+      "skilljar": "claude-101/383397",
+      "academy": "claude-101/connecting-your-tools"
+    },
+    "claude-101/enterprise-search": {
+      "skilljar": "claude-101/383398",
+      "academy": "claude-101/enterprise-search"
+    },
+    "claude-101/research-mode-for-deep-dives": {
+      "skilljar": "claude-101/383399",
+      "academy": "claude-101/research-mode-for-deep-dives"
+    },
+    "claude-101/claude-in-action-use-cases-by-role": {
+      "skilljar": "claude-101/383401",
+      "academy": "claude-101/claude-in-action-use-cases-by-role"
+    },
+    "claude-101/other-ways-to-work-with-claude": {
+      "skilljar": "claude-101/383402",
+      "academy": "claude-101/other-ways-to-work-with-claude"
+    },
+    "claude-101/what-s-next": {
+      "skilljar": "claude-101/385338",
+      "academy": "claude-101/what-s-next"
+    },
+    "claude-code-101/what-is-claude-code": {
+      "skilljar": "claude-code-101/469788",
+      "academy": "claude-code-101/what-is-claude-code"
+    },
+    "claude-code-101/how-claude-code-works": {
+      "skilljar": "claude-code-101/469789",
+      "academy": "claude-code-101/how-claude-code-works"
+    },
+    "claude-code-101/installing-claude-code": {
+      "skilljar": "claude-code-101/469790",
+      "academy": "claude-code-101/installing-claude-code"
+    },
+    "claude-code-101/your-first-prompt": {
+      "skilljar": "claude-code-101/469791",
+      "academy": "claude-code-101/your-first-prompt"
+    },
+    "claude-code-101/the-explore-plan-code-commit-workflow": {
+      "skilljar": "claude-code-101/469792",
+      "academy": "claude-code-101/the-explore-plan-code-commit-workflow"
+    },
+    "claude-code-101/context-management": {
+      "skilljar": "claude-code-101/469793",
+      "academy": "claude-code-101/context-management"
+    },
+    "claude-code-101/code-review": {
+      "skilljar": "claude-code-101/469794",
+      "academy": "claude-code-101/code-review"
+    },
+    "claude-code-101/the-claude-md-file": {
+      "skilljar": "claude-code-101/469795",
+      "academy": "claude-code-101/the-claude-md-file"
+    },
+    "claude-code-101/subagents": {
+      "skilljar": "claude-code-101/469796",
+      "academy": "claude-code-101/subagents"
+    },
+    "claude-code-101/skills": {
+      "skilljar": "claude-code-101/469848",
+      "academy": "claude-code-101/skills"
+    },
+    "claude-code-101/mcp": {
+      "skilljar": "claude-code-101/469797",
+      "academy": "claude-code-101/mcp"
+    },
+    "claude-code-101/hooks": {
+      "skilljar": "claude-code-101/469798",
+      "academy": "claude-code-101/hooks"
+    },
+    "claude-code-101/course-quiz": {
+      "skilljar": "claude-code-101/469849",
+      "academy": "claude-code-101/course-quiz"
+    },
+    "claude-code-in-action/hooks": {
+      "skilljar": "claude-code-in-action/486933",
+      "academy": "claude-code-in-action/hooks"
+    },
+    "claude-code-in-action/github-actions-and-code-review": {
+      "skilljar": "claude-code-in-action/486936",
+      "academy": "claude-code-in-action/github-actions-and-code-review"
+    },
+    "claude-code-in-action/plugins": {
+      "skilljar": "claude-code-in-action/486939",
+      "academy": "claude-code-in-action/plugins"
+    },
+    "claude-platform-101/what-is-the-claude-platform": {
+      "skilljar": "claude-platform-101/486250",
+      "academy": "claude-platform-101/what-is-the-claude-platform"
+    },
+    "claude-platform-101/your-first-api-call": {
+      "skilljar": "claude-platform-101/486251",
+      "academy": "claude-platform-101/your-first-api-call"
+    },
+    "claude-platform-101/choosing-the-right-model": {
+      "skilljar": "claude-platform-101/486252",
+      "academy": "claude-platform-101/choosing-the-right-model"
+    },
+    "claude-platform-101/the-agent-loop-explained": {
+      "skilljar": "claude-platform-101/486254",
+      "academy": "claude-platform-101/the-agent-loop-explained"
+    },
+    "claude-platform-101/what-is-tool-use": {
+      "skilljar": "claude-platform-101/486255",
+      "academy": "claude-platform-101/what-is-tool-use"
+    },
+    "claude-platform-101/what-is-thinking": {
+      "skilljar": "claude-platform-101/486256",
+      "academy": "claude-platform-101/what-is-thinking"
+    },
+    "claude-platform-101/built-in-tools": {
+      "skilljar": "claude-platform-101/486258",
+      "academy": "claude-platform-101/built-in-tools"
+    },
+    "claude-platform-101/skills": {
+      "skilljar": "claude-platform-101/486259",
+      "academy": "claude-platform-101/skills"
+    },
+    "claude-platform-101/mcp": {
+      "skilljar": "claude-platform-101/486260",
+      "academy": "claude-platform-101/mcp"
+    },
+    "claude-platform-101/context-management": {
+      "skilljar": "claude-platform-101/486261",
+      "academy": "claude-platform-101/context-management"
+    },
+    "claude-platform-101/what-are-managed-agents": {
+      "skilljar": "claude-platform-101/486263",
+      "academy": "claude-platform-101/what-are-managed-agents"
+    },
+    "claude-platform-101/building-your-first-managed-agent": {
+      "skilljar": "claude-platform-101/486264",
+      "academy": "claude-platform-101/building-your-first-managed-agent"
+    },
+    "claude-platform-101/building-with-claude-code": {
+      "skilljar": "claude-platform-101/486266",
+      "academy": "claude-platform-101/building-with-claude-code"
+    },
+    "claude-with-amazon-bedrock/overview-of-claude-models": {
+      "skilljar": "claude-in-amazon-bedrock/303332",
+      "academy": "claude-with-amazon-bedrock/overview-of-claude-models"
+    },
+    "claude-with-amazon-bedrock/accessing-the-api": {
+      "skilljar": "claude-in-amazon-bedrock/276716",
+      "academy": "claude-with-amazon-bedrock/accessing-the-api"
+    },
+    "claude-with-amazon-bedrock/making-a-request": {
+      "skilljar": "claude-in-amazon-bedrock/276719",
+      "academy": "claude-with-amazon-bedrock/making-a-request"
+    },
+    "claude-with-amazon-bedrock/multi-turn-conversations": {
+      "skilljar": "claude-in-amazon-bedrock/276722",
+      "academy": "claude-with-amazon-bedrock/multi-turn-conversations"
+    },
+    "claude-with-amazon-bedrock/system-prompts": {
+      "skilljar": "claude-in-amazon-bedrock/276726",
+      "academy": "claude-with-amazon-bedrock/system-prompts"
+    },
+    "claude-with-amazon-bedrock/temperature": {
+      "skilljar": "claude-in-amazon-bedrock/276720",
+      "academy": "claude-with-amazon-bedrock/temperature"
+    },
+    "claude-with-amazon-bedrock/streaming": {
+      "skilljar": "claude-in-amazon-bedrock/276721",
+      "academy": "claude-with-amazon-bedrock/streaming"
+    },
+    "claude-with-amazon-bedrock/controlling-model-output": {
+      "skilljar": "claude-in-amazon-bedrock/276723",
+      "academy": "claude-with-amazon-bedrock/controlling-model-output"
+    },
+    "claude-with-amazon-bedrock/structured-data": {
+      "skilljar": "claude-in-amazon-bedrock/276724",
+      "academy": "claude-with-amazon-bedrock/structured-data"
+    },
+    "claude-with-amazon-bedrock/quiz-on-working-with-the-api": {
+      "skilljar": "claude-in-amazon-bedrock/289293",
+      "academy": "claude-with-amazon-bedrock/quiz-on-working-with-the-api"
+    },
+    "claude-with-amazon-bedrock/prompt-evaluation": {
+      "skilljar": "claude-in-amazon-bedrock/276731",
+      "academy": "claude-with-amazon-bedrock/prompt-evaluation"
+    },
+    "claude-with-amazon-bedrock/a-typical-eval-workflow": {
+      "skilljar": "claude-in-amazon-bedrock/276732",
+      "academy": "claude-with-amazon-bedrock/a-typical-eval-workflow"
+    },
+    "claude-with-amazon-bedrock/generating-test-datasets": {
+      "skilljar": "claude-in-amazon-bedrock/276733",
+      "academy": "claude-with-amazon-bedrock/generating-test-datasets"
+    },
+    "claude-with-amazon-bedrock/running-the-eval": {
+      "skilljar": "claude-in-amazon-bedrock/276736",
+      "academy": "claude-with-amazon-bedrock/running-the-eval"
+    },
+    "claude-with-amazon-bedrock/model-based-grading": {
+      "skilljar": "claude-in-amazon-bedrock/276738",
+      "academy": "claude-with-amazon-bedrock/model-based-grading"
+    },
+    "claude-with-amazon-bedrock/code-based-grading": {
+      "skilljar": "claude-in-amazon-bedrock/276735",
+      "academy": "claude-with-amazon-bedrock/code-based-grading"
+    },
+    "claude-with-amazon-bedrock/quiz-on-prompt-evaluations": {
+      "skilljar": "claude-in-amazon-bedrock/289297",
+      "academy": "claude-with-amazon-bedrock/quiz-on-prompt-evaluations"
+    },
+    "claude-with-amazon-bedrock/prompt-engineering": {
+      "skilljar": "claude-in-amazon-bedrock/276749",
+      "academy": "claude-with-amazon-bedrock/prompt-engineering"
+    },
+    "claude-with-amazon-bedrock/being-clear-and-direct": {
+      "skilljar": "claude-in-amazon-bedrock/276743",
+      "academy": "claude-with-amazon-bedrock/being-clear-and-direct"
+    },
+    "claude-with-amazon-bedrock/being-specific": {
+      "skilljar": "claude-in-amazon-bedrock/276745",
+      "academy": "claude-with-amazon-bedrock/being-specific"
+    },
+    "claude-with-amazon-bedrock/structure-with-xml-tags": {
+      "skilljar": "claude-in-amazon-bedrock/276744",
+      "academy": "claude-with-amazon-bedrock/structure-with-xml-tags"
+    },
+    "claude-with-amazon-bedrock/providing-examples": {
+      "skilljar": "claude-in-amazon-bedrock/276747",
+      "academy": "claude-with-amazon-bedrock/providing-examples"
+    },
+    "claude-with-amazon-bedrock/quiz-on-prompt-engineering": {
+      "skilljar": "claude-in-amazon-bedrock/289298",
+      "academy": "claude-with-amazon-bedrock/quiz-on-prompt-engineering"
+    },
+    "claude-with-amazon-bedrock/introducing-tool-use": {
+      "skilljar": "claude-in-amazon-bedrock/276756",
+      "academy": "claude-with-amazon-bedrock/introducing-tool-use"
+    },
+    "claude-with-amazon-bedrock/tool-functions": {
+      "skilljar": "claude-in-amazon-bedrock/276757",
+      "academy": "claude-with-amazon-bedrock/tool-functions"
+    },
+    "claude-with-amazon-bedrock/json-schema-for-tools": {
+      "skilljar": "claude-in-amazon-bedrock/276758",
+      "academy": "claude-with-amazon-bedrock/json-schema-for-tools"
+    },
+    "claude-with-amazon-bedrock/handling-tool-use-responses": {
+      "skilljar": "claude-in-amazon-bedrock/276764",
+      "academy": "claude-with-amazon-bedrock/handling-tool-use-responses"
+    },
+    "claude-with-amazon-bedrock/running-tool-functions": {
+      "skilljar": "claude-in-amazon-bedrock/276762",
+      "academy": "claude-with-amazon-bedrock/running-tool-functions"
+    },
+    "claude-with-amazon-bedrock/sending-tool-results": {
+      "skilljar": "claude-in-amazon-bedrock/276760",
+      "academy": "claude-with-amazon-bedrock/sending-tool-results"
+    },
+    "claude-with-amazon-bedrock/multi-turn-conversations-with-tools": {
+      "skilljar": "claude-in-amazon-bedrock/276759",
+      "academy": "claude-with-amazon-bedrock/multi-turn-conversations-with-tools"
+    },
+    "claude-with-amazon-bedrock/adding-multiple-tools": {
+      "skilljar": "claude-in-amazon-bedrock/276761",
+      "academy": "claude-with-amazon-bedrock/adding-multiple-tools"
+    },
+    "claude-with-amazon-bedrock/batch-tool-use": {
+      "skilljar": "claude-in-amazon-bedrock/276766",
+      "academy": "claude-with-amazon-bedrock/batch-tool-use"
+    },
+    "claude-with-amazon-bedrock/structured-data-with-tools": {
+      "skilljar": "claude-in-amazon-bedrock/276765",
+      "academy": "claude-with-amazon-bedrock/structured-data-with-tools"
+    },
+    "claude-with-amazon-bedrock/flexible-tool-extraction": {
+      "skilljar": "claude-in-amazon-bedrock/276763",
+      "academy": "claude-with-amazon-bedrock/flexible-tool-extraction"
+    },
+    "claude-with-amazon-bedrock/the-text-editor-tool": {
+      "skilljar": "claude-in-amazon-bedrock/276767",
+      "academy": "claude-with-amazon-bedrock/the-text-editor-tool"
+    },
+    "claude-with-amazon-bedrock/quiz-on-tool-use": {
+      "skilljar": "claude-in-amazon-bedrock/289296",
+      "academy": "claude-with-amazon-bedrock/quiz-on-tool-use"
+    },
+    "claude-with-amazon-bedrock/introducing-retrieval-augmented-generation": {
+      "skilljar": "claude-in-amazon-bedrock/276780",
+      "academy": "claude-with-amazon-bedrock/introducing-retrieval-augmented-generation"
+    },
+    "claude-with-amazon-bedrock/text-chunking-strategies": {
+      "skilljar": "claude-in-amazon-bedrock/276782",
+      "academy": "claude-with-amazon-bedrock/text-chunking-strategies"
+    },
+    "claude-with-amazon-bedrock/text-embeddings": {
+      "skilljar": "claude-in-amazon-bedrock/276777",
+      "academy": "claude-with-amazon-bedrock/text-embeddings"
+    },
+    "claude-with-amazon-bedrock/the-full-rag-flow": {
+      "skilljar": "claude-in-amazon-bedrock/276774",
+      "academy": "claude-with-amazon-bedrock/the-full-rag-flow"
+    },
+    "claude-with-amazon-bedrock/implementing-the-rag-flow": {
+      "skilljar": "claude-in-amazon-bedrock/276781",
+      "academy": "claude-with-amazon-bedrock/implementing-the-rag-flow"
+    },
+    "claude-with-amazon-bedrock/bm25-lexical-search": {
+      "skilljar": "claude-in-amazon-bedrock/276776",
+      "academy": "claude-with-amazon-bedrock/bm25-lexical-search"
+    },
+    "claude-with-amazon-bedrock/a-multi-search-rag-pipeline": {
+      "skilljar": "claude-in-amazon-bedrock/276779",
+      "academy": "claude-with-amazon-bedrock/a-multi-search-rag-pipeline"
+    },
+    "claude-with-amazon-bedrock/reranking-results": {
+      "skilljar": "claude-in-amazon-bedrock/276775",
+      "academy": "claude-with-amazon-bedrock/reranking-results"
+    },
+    "claude-with-amazon-bedrock/contextual-retrieval": {
+      "skilljar": "claude-in-amazon-bedrock/276778",
+      "academy": "claude-with-amazon-bedrock/contextual-retrieval"
+    },
+    "claude-with-amazon-bedrock/quiz-on-retrieval-augmented-generation": {
+      "skilljar": "claude-in-amazon-bedrock/289295",
+      "academy": "claude-with-amazon-bedrock/quiz-on-retrieval-augmented-generation"
+    },
+    "claude-with-amazon-bedrock/extended-thinking": {
+      "skilljar": "claude-in-amazon-bedrock/276788",
+      "academy": "claude-with-amazon-bedrock/extended-thinking"
+    },
+    "claude-with-amazon-bedrock/image-support": {
+      "skilljar": "claude-in-amazon-bedrock/276789",
+      "academy": "claude-with-amazon-bedrock/image-support"
+    },
+    "claude-with-amazon-bedrock/pdf-support": {
+      "skilljar": "claude-in-amazon-bedrock/308839",
+      "academy": "claude-with-amazon-bedrock/pdf-support"
+    },
+    "claude-with-amazon-bedrock/citations": {
+      "skilljar": "claude-in-amazon-bedrock/308840",
+      "academy": "claude-with-amazon-bedrock/citations"
+    },
+    "claude-with-amazon-bedrock/prompt-caching": {
+      "skilljar": "claude-in-amazon-bedrock/276786",
+      "academy": "claude-with-amazon-bedrock/prompt-caching"
+    },
+    "claude-with-amazon-bedrock/rules-of-prompt-caching": {
+      "skilljar": "claude-in-amazon-bedrock/276785",
+      "academy": "claude-with-amazon-bedrock/rules-of-prompt-caching"
+    },
+    "claude-with-amazon-bedrock/quiz-on-features-of-claude": {
+      "skilljar": "claude-in-amazon-bedrock/289300",
+      "academy": "claude-with-amazon-bedrock/quiz-on-features-of-claude"
+    },
+    "claude-with-amazon-bedrock/introducing-mcp": {
+      "skilljar": "claude-in-amazon-bedrock/276798",
+      "academy": "claude-with-amazon-bedrock/introducing-mcp"
+    },
+    "claude-with-amazon-bedrock/mcp-clients": {
+      "skilljar": "claude-in-amazon-bedrock/276793",
+      "academy": "claude-with-amazon-bedrock/mcp-clients"
+    },
+    "claude-with-amazon-bedrock/project-setup": {
+      "skilljar": "claude-in-amazon-bedrock/276792",
+      "academy": "claude-with-amazon-bedrock/project-setup"
+    },
+    "claude-with-amazon-bedrock/defining-tools-with-mcp": {
+      "skilljar": "claude-in-amazon-bedrock/276800",
+      "academy": "claude-with-amazon-bedrock/defining-tools-with-mcp"
+    },
+    "claude-with-amazon-bedrock/the-server-inspector": {
+      "skilljar": "claude-in-amazon-bedrock/276796",
+      "academy": "claude-with-amazon-bedrock/the-server-inspector"
+    },
+    "claude-with-amazon-bedrock/implementing-a-client": {
+      "skilljar": "claude-in-amazon-bedrock/276802",
+      "academy": "claude-with-amazon-bedrock/implementing-a-client"
+    },
+    "claude-with-amazon-bedrock/defining-resources": {
+      "skilljar": "claude-in-amazon-bedrock/276799",
+      "academy": "claude-with-amazon-bedrock/defining-resources"
+    },
+    "claude-with-amazon-bedrock/accessing-resources": {
+      "skilljar": "claude-in-amazon-bedrock/276797",
+      "academy": "claude-with-amazon-bedrock/accessing-resources"
+    },
+    "claude-with-amazon-bedrock/defining-prompts": {
+      "skilljar": "claude-in-amazon-bedrock/276801",
+      "academy": "claude-with-amazon-bedrock/defining-prompts"
+    },
+    "claude-with-amazon-bedrock/prompts-in-the-client": {
+      "skilljar": "claude-in-amazon-bedrock/276795",
+      "academy": "claude-with-amazon-bedrock/prompts-in-the-client"
+    },
+    "claude-with-amazon-bedrock/mcp-review": {
+      "skilljar": "claude-in-amazon-bedrock/276794",
+      "academy": "claude-with-amazon-bedrock/mcp-review"
+    },
+    "claude-with-amazon-bedrock/quiz-on-model-context-protocol": {
+      "skilljar": "claude-in-amazon-bedrock/289299",
+      "academy": "claude-with-amazon-bedrock/quiz-on-model-context-protocol"
+    },
+    "claude-with-amazon-bedrock/claude-code-in-action": {
+      "skilljar": "claude-in-amazon-bedrock/276811",
+      "academy": "claude-with-amazon-bedrock/claude-code-in-action"
+    },
+    "claude-with-amazon-bedrock/enhancements-with-mcp-servers": {
+      "skilljar": "claude-in-amazon-bedrock/276806",
+      "academy": "claude-with-amazon-bedrock/enhancements-with-mcp-servers"
+    },
+    "claude-with-amazon-bedrock/parallelizing-claude-code": {
+      "skilljar": "claude-in-amazon-bedrock/276810",
+      "academy": "claude-with-amazon-bedrock/parallelizing-claude-code"
+    },
+    "claude-with-amazon-bedrock/automated-debugging": {
+      "skilljar": "claude-in-amazon-bedrock/276812",
+      "academy": "claude-with-amazon-bedrock/automated-debugging"
+    },
+    "claude-with-amazon-bedrock/computer-use": {
+      "skilljar": "claude-in-amazon-bedrock/276807",
+      "academy": "claude-with-amazon-bedrock/computer-use"
+    },
+    "claude-with-amazon-bedrock/how-computer-use-works": {
+      "skilljar": "claude-in-amazon-bedrock/276805",
+      "academy": "claude-with-amazon-bedrock/how-computer-use-works"
+    },
+    "claude-with-amazon-bedrock/qualities-of-agents": {
+      "skilljar": "claude-in-amazon-bedrock/276808",
+      "academy": "claude-with-amazon-bedrock/qualities-of-agents"
+    },
+    "claude-with-amazon-bedrock/final-assessment-quiz": {
+      "skilljar": "claude-in-amazon-bedrock/290881",
+      "academy": "claude-with-amazon-bedrock/final-assessment-quiz"
+    },
+    "introduction-to-agent-skills/what-are-skills": {
+      "skilljar": "introduction-to-agent-skills/434525",
+      "academy": "introduction-to-agent-skills/what-are-skills"
+    },
+    "introduction-to-agent-skills/creating-your-first-skill": {
+      "skilljar": "introduction-to-agent-skills/434527",
+      "academy": "introduction-to-agent-skills/creating-your-first-skill"
+    },
+    "introduction-to-agent-skills/configuration-and-multi-file-skills": {
+      "skilljar": "introduction-to-agent-skills/434526",
+      "academy": "introduction-to-agent-skills/configuration-and-multi-file-skills"
+    },
+    "introduction-to-agent-skills/skills-vs-other-claude-code-features": {
+      "skilljar": "introduction-to-agent-skills/434528",
+      "academy": "introduction-to-agent-skills/skills-vs-other-claude-code-features"
+    },
+    "introduction-to-agent-skills/sharing-skills": {
+      "skilljar": "introduction-to-agent-skills/434529",
+      "academy": "introduction-to-agent-skills/sharing-skills"
+    },
+    "introduction-to-agent-skills/troubleshooting-skills": {
+      "skilljar": "introduction-to-agent-skills/434530",
+      "academy": "introduction-to-agent-skills/troubleshooting-skills"
+    },
+    "introduction-to-claude-cowork/what-is-cowork": {
+      "skilljar": "introduction-to-claude-cowork/444164",
+      "academy": "introduction-to-claude-cowork/what-is-cowork"
+    },
+    "introduction-to-claude-cowork/getting-set-up": {
+      "skilljar": "introduction-to-claude-cowork/444165",
+      "academy": "introduction-to-claude-cowork/getting-set-up"
+    },
+    "introduction-to-claude-cowork/scheduled-tasks": {
+      "skilljar": "introduction-to-claude-cowork/444169",
+      "academy": "introduction-to-claude-cowork/scheduled-tasks"
+    },
+    "introduction-to-claude-cowork/the-task-loop": {
+      "skilljar": "introduction-to-claude-cowork/444166",
+      "academy": "introduction-to-claude-cowork/the-task-loop"
+    },
+    "introduction-to-claude-cowork/research-analysis-at-scale": {
+      "skilljar": "introduction-to-claude-cowork/444171",
+      "academy": "introduction-to-claude-cowork/research-analysis-at-scale"
+    },
+    "introduction-to-claude-cowork/giving-cowork-context": {
+      "skilljar": "introduction-to-claude-cowork/444167",
+      "academy": "introduction-to-claude-cowork/giving-cowork-context"
+    },
+    "introduction-to-claude-cowork/file-document-tasks": {
+      "skilljar": "introduction-to-claude-cowork/444170",
+      "academy": "introduction-to-claude-cowork/file-document-tasks"
+    },
+    "introduction-to-claude-cowork/plugins-cowork-as-a-specialist": {
+      "skilljar": "introduction-to-claude-cowork/444168",
+      "academy": "introduction-to-claude-cowork/plugins-cowork-as-a-specialist"
+    },
+    "introduction-to-claude-cowork/claude-in-chrome": {
+      "skilljar": "introduction-to-claude-cowork/485947",
+      "academy": "introduction-to-claude-cowork/claude-in-chrome"
+    },
+    "introduction-to-claude-cowork/claude-for-microsoft-365": {
+      "skilljar": "introduction-to-claude-cowork/485948",
+      "academy": "introduction-to-claude-cowork/claude-for-microsoft-365"
+    },
+    "introduction-to-claude-cowork/permissions-usage-choosing-your-model": {
+      "skilljar": "introduction-to-claude-cowork/444173",
+      "academy": "introduction-to-claude-cowork/permissions-usage-choosing-your-model"
+    },
+    "introduction-to-claude-cowork/validating-skills-for-plugins": {
+      "skilljar": "introduction-to-claude-cowork/485949",
+      "academy": "introduction-to-claude-cowork/validating-skills-for-plugins"
+    },
+    "introduction-to-claude-cowork/share-what-you-build-with-your-team": {
+      "skilljar": "introduction-to-claude-cowork/485950",
+      "academy": "introduction-to-claude-cowork/share-what-you-build-with-your-team"
+    },
+    "introduction-to-claude-cowork/troubleshooting-next-steps": {
+      "skilljar": "introduction-to-claude-cowork/444174",
+      "academy": "introduction-to-claude-cowork/troubleshooting-next-steps"
+    },
+    "introduction-to-claude-cowork/quiz-on-claude-cowork": {
+      "skilljar": "introduction-to-claude-cowork/452288",
+      "academy": "introduction-to-claude-cowork/quiz-on-claude-cowork"
+    },
+    "introduction-to-model-context-protocol/introducing-mcp": {
+      "skilljar": "introduction-to-model-context-protocol/296689",
+      "academy": "introduction-to-model-context-protocol/introducing-mcp"
+    },
+    "introduction-to-model-context-protocol/mcp-clients": {
+      "skilljar": "introduction-to-model-context-protocol/296690",
+      "academy": "introduction-to-model-context-protocol/mcp-clients"
+    },
+    "introduction-to-model-context-protocol/defining-tools-with-mcp": {
+      "skilljar": "introduction-to-model-context-protocol/296697",
+      "academy": "introduction-to-model-context-protocol/defining-tools-with-mcp"
+    },
+    "introduction-to-model-context-protocol/the-server-inspector": {
+      "skilljar": "introduction-to-model-context-protocol/296693",
+      "academy": "introduction-to-model-context-protocol/the-server-inspector"
+    },
+    "introduction-to-model-context-protocol/implementing-a-client": {
+      "skilljar": "introduction-to-model-context-protocol/296696",
+      "academy": "introduction-to-model-context-protocol/implementing-a-client"
+    },
+    "introduction-to-model-context-protocol/defining-resources": {
+      "skilljar": "introduction-to-model-context-protocol/296699",
+      "academy": "introduction-to-model-context-protocol/defining-resources"
+    },
+    "introduction-to-model-context-protocol/accessing-resources": {
+      "skilljar": "introduction-to-model-context-protocol/296695",
+      "academy": "introduction-to-model-context-protocol/accessing-resources"
+    },
+    "introduction-to-model-context-protocol/defining-prompts": {
+      "skilljar": "introduction-to-model-context-protocol/296698",
+      "academy": "introduction-to-model-context-protocol/defining-prompts"
+    },
+    "introduction-to-model-context-protocol/prompts-in-the-client": {
+      "skilljar": "introduction-to-model-context-protocol/296692",
+      "academy": "introduction-to-model-context-protocol/prompts-in-the-client"
+    },
+    "introduction-to-model-context-protocol/final-assessment-on-mcp": {
+      "skilljar": "introduction-to-model-context-protocol/297196",
+      "academy": "introduction-to-model-context-protocol/final-assessment-on-mcp"
+    },
+    "introduction-to-model-context-protocol/mcp-review": {
+      "skilljar": "introduction-to-model-context-protocol/296691",
+      "academy": "introduction-to-model-context-protocol/mcp-review"
+    },
+    "introduction-to-subagents/what-are-subagents": {
+      "skilljar": "introduction-to-subagents/450698",
+      "academy": "introduction-to-subagents/what-are-subagents"
+    },
+    "introduction-to-subagents/creating-a-subagent": {
+      "skilljar": "introduction-to-subagents/450699",
+      "academy": "introduction-to-subagents/creating-a-subagent"
+    },
+    "introduction-to-subagents/designing-effective-subagents": {
+      "skilljar": "introduction-to-subagents/450700",
+      "academy": "introduction-to-subagents/designing-effective-subagents"
+    },
+    "introduction-to-subagents/using-subagents-effectively": {
+      "skilljar": "introduction-to-subagents/450701",
+      "academy": "introduction-to-subagents/using-subagents-effectively"
+    },
+    "model-context-protocol-advanced-topics/sampling": {
+      "skilljar": "model-context-protocol-advanced-topics/296288",
+      "academy": "model-context-protocol-advanced-topics/sampling"
+    },
+    "model-context-protocol-advanced-topics/sampling-walkthrough": {
+      "skilljar": "model-context-protocol-advanced-topics/295172",
+      "academy": "model-context-protocol-advanced-topics/sampling-walkthrough"
+    },
+    "model-context-protocol-advanced-topics/log-and-progress-notifications": {
+      "skilljar": "model-context-protocol-advanced-topics/296284",
+      "academy": "model-context-protocol-advanced-topics/log-and-progress-notifications"
+    },
+    "model-context-protocol-advanced-topics/notifications-walkthrough": {
+      "skilljar": "model-context-protocol-advanced-topics/291036",
+      "academy": "model-context-protocol-advanced-topics/notifications-walkthrough"
+    },
+    "model-context-protocol-advanced-topics/roots": {
+      "skilljar": "model-context-protocol-advanced-topics/296289",
+      "academy": "model-context-protocol-advanced-topics/roots"
+    },
+    "model-context-protocol-advanced-topics/roots-walkthrough": {
+      "skilljar": "model-context-protocol-advanced-topics/295839",
+      "academy": "model-context-protocol-advanced-topics/roots-walkthrough"
+    },
+    "model-context-protocol-advanced-topics/json-message-types": {
+      "skilljar": "model-context-protocol-advanced-topics/296290",
+      "academy": "model-context-protocol-advanced-topics/json-message-types"
+    },
+    "model-context-protocol-advanced-topics/the-stdio-transport": {
+      "skilljar": "model-context-protocol-advanced-topics/296291",
+      "academy": "model-context-protocol-advanced-topics/the-stdio-transport"
+    },
+    "model-context-protocol-advanced-topics/the-streamablehttp-transport": {
+      "skilljar": "model-context-protocol-advanced-topics/296287",
+      "academy": "model-context-protocol-advanced-topics/the-streamablehttp-transport"
+    },
+    "model-context-protocol-advanced-topics/streamablehttp-in-depth": {
+      "skilljar": "model-context-protocol-advanced-topics/296286",
+      "academy": "model-context-protocol-advanced-topics/streamablehttp-in-depth"
+    },
+    "model-context-protocol-advanced-topics/state-and-the-streamablehttp-transport": {
+      "skilljar": "model-context-protocol-advanced-topics/296285",
+      "academy": "model-context-protocol-advanced-topics/state-and-the-streamablehttp-transport"
+    },
+    "model-context-protocol-advanced-topics/assessment-on-mcp-concepts": {
+      "skilljar": "model-context-protocol-advanced-topics/296301",
+      "academy": "model-context-protocol-advanced-topics/assessment-on-mcp-concepts"
+    },
+    "teaching-ai-fluency/welcome-approaches-to-teaching-ai-fluency": {
+      "skilljar": "teaching-ai-fluency/327277",
+      "academy": "teaching-ai-fluency/welcome-approaches-to-teaching-ai-fluency"
+    },
+    "teaching-ai-fluency/the-delegation-diligence-loop": {
+      "skilljar": "teaching-ai-fluency/327278",
+      "academy": "teaching-ai-fluency/the-delegation-diligence-loop"
+    },
+    "teaching-ai-fluency/the-description-discernment-loop": {
+      "skilljar": "teaching-ai-fluency/327279",
+      "academy": "teaching-ai-fluency/the-description-discernment-loop"
+    },
+    "teaching-ai-fluency/how-do-we-assess-the-4ds": {
+      "skilljar": "teaching-ai-fluency/327280",
+      "academy": "teaching-ai-fluency/how-do-we-assess-the-4ds"
+    },
+    "teaching-ai-fluency/designing-assignments-for-ai-fluency": {
+      "skilljar": "teaching-ai-fluency/327281",
+      "academy": "teaching-ai-fluency/designing-assignments-for-ai-fluency"
+    },
+    "teaching-ai-fluency/ai-s-impact-and-your-discipline": {
+      "skilljar": "teaching-ai-fluency/327282",
+      "academy": "teaching-ai-fluency/ai-s-impact-and-your-discipline"
+    },
+    "teaching-ai-fluency/applying-discipline-expertise-to-ai-fluency": {
+      "skilljar": "teaching-ai-fluency/327284",
+      "academy": "teaching-ai-fluency/applying-discipline-expertise-to-ai-fluency"
+    }
+  },
+  "stats": {
+    "considered": 569,
+    "included": 308,
+    "droppedUnparseablePath": 0,
+    "collisions": 0
+  }
+}

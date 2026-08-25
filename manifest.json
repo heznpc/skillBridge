@@ -33,6 +33,7 @@
         "src/lib/academy-adapter.js",
         "src/lib/assessment-lifecycle.js",
         "src/lib/academy-localization.js",
+        "src/lib/lesson-identity.js",
         "src/lib/selectors.js",
         "src/shared/runtime-constants.js",
         "src/lib/constants.js",
@@ -62,6 +63,7 @@
         "src/content/chat-subpanels.js",
         "src/content/chat-history.js",
         "src/content/chat-flashcards.js",
+        "src/content/lesson-store.js",
         "src/content/bookmarks.js",
         "src/content/notes.js",
         "src/content/term-reports.js",
@@ -106,13 +108,19 @@
         "src/data/*",
         "assets/icons/*",
         "src/shared/constants.json",
+        "src/shared/canonical-lessons.json",
         "src/shared/runtime-constants.js",
         "src/content/styles/*.css"
       ],
       "matches": ["https://*.skilljar.com/*"]
     },
     {
-      "resources": ["src/data/*", "src/shared/runtime-constants.js", "src/content/styles/*.css"],
+      "resources": [
+        "src/data/*",
+        "src/shared/canonical-lessons.json",
+        "src/shared/runtime-constants.js",
+        "src/content/styles/*.css"
+      ],
       "matches": ["https://claude.com/*", "https://academy.claude.com/*"]
     }
   ]

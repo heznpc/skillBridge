@@ -321,6 +321,7 @@ function localQualityGates() {
   runNpm('Background/content sync check', 'check:sync');
   runNpm('Dictionary freshness check', 'check:dicts');
   runNpm('Generated plugin check', 'check:plugin');
+  runNpm('Canonical lesson lookup check', 'check:canonical');
   runNpm('Live selector check', 'check:selectors');
   runNpm('Live course-map check', 'check:academy');
 }

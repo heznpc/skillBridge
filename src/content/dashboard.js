@@ -72,9 +72,14 @@
       </div>
       ${stats.recent.length ? `<div class="si18n-dash-recent-title">${sb.escapeHtml(L(RESUME_LABELS.title))}</div>${recentRows}` : `<div class="si18n-history-empty">${sb.escapeHtml(L(DASHBOARD_LABELS.empty))}</div>`}
     `;
-    list.querySelectorAll('.si18n-dash-open').forEach((btn) => {
+    list.querySelectorAll('.si18n-dash-open').forEach((btn, i) => {
       btn.addEventListener('click', () => {
-        const url = btn.dataset.url;
+        // Prefer the same lesson on the platform the learner is browsing now,
+        // the way the Recent and Bookmarks panels do. The stored URL still
+        // works, but it points at whichever platform the visit was recorded
+        // on, and sending someone back to the one they left is not continuity.
+        const record = stats.recent[i];
+        const url = (sb.identity ? sb.identity.openUrlFor(record, location) : null) || btn.dataset.url;
         if (url && /^https?:/i.test(url)) window.location.href = url;
       });
     });

@@ -226,9 +226,17 @@ function matchCourseUnits(academyUnits, skilljarUnits) {
 function toCanonicalRecord(courseSlug, academyUnit, skilljarUnit) {
   const id = academyUnit?.slug || normalizeTitle(skilljarUnit?.title).replace(/ /g, '-');
   const aliases = {};
+  // Each alias is labelled with the course slug ITS OWN platform uses, not the
+  // canonical one. They differ for the two courses that were re-slugged in the
+  // move — claude-with-the-anthropic-api → building-with-the-claude-api, and
+  // claude-in-amazon-bedrock → claude-with-amazon-bedrock — which is 148 of
+  // the 308 high-confidence lessons. Stamping the canonical slug on both made
+  // the Skilljar alias describe a URL that has never existed, and anything
+  // reconstructing a link from `course` + `numericId` would have produced a
+  // 404 for exactly the courses the rename was recorded to survive.
   if (skilljarUnit) {
     aliases.skilljar = {
-      course: courseSlug,
+      course: skilljarUnit.courseSlug || courseSlug,
       numericId: skilljarUnit.numericId,
       path: skilljarUnit.path,
       order: skilljarUnit.order,
@@ -236,7 +244,7 @@ function toCanonicalRecord(courseSlug, academyUnit, skilljarUnit) {
   }
   if (academyUnit) {
     aliases.academy = {
-      course: courseSlug,
+      course: academyUnit.courseSlug || courseSlug,
       slug: academyUnit.slug,
       path: academyUnit.path,
       order: academyUnit.order,
