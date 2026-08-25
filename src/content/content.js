@@ -182,6 +182,27 @@
     return EXAM_URL_PATTERNS.some((p) => p.test(loc.href || ''));
   }
 
+  /**
+   * The DOM for the current route has settled or mutated.
+   *
+   * Authoritative in BOTH directions, and deliberately reachable without a
+   * target language: safety state must not depend on whether the page is
+   * being translated.
+   *
+   * Declared here rather than inline in the content-lifecycle options,
+   * because the mutation observer reaches it through `sb` — defining it only
+   * in those options left `sb.onExamDomSettled` undefined and the observer's
+   * re-detect threw instead of running.
+   */
+  function onExamDomSettled() {
+    if (!sb.hostCaps.examDetection) {
+      isExamPage = assessmentLifecycle.override(false);
+      return isExamPage;
+    }
+    isExamPage = assessmentLifecycle.onDomSettled(document, location);
+    return isExamPage;
+  }
+
   // Owns exam-safe state across client-side navigation. Before this existed
   // the value was recomputed inline at three call sites, and the combination
   // let it stick ON after leaving a quiz — see assessment-lifecycle.js.
@@ -324,6 +345,7 @@
     safeReplaceText: null, // filled below after function definition
     updateLangClass: null,
     detectExamPage,
+    onExamDomSettled,
     showTermPreview: null, // filled below
     // Filled by modules:
     injectDarkModeToggle: null,
@@ -427,7 +449,7 @@
     getExcludeSelector: () => EXCLUDE_SELECTOR,
     getTranslationScope: () => sb.translationScope,
     getHostCaps: () => sb.hostCaps,
-    onExamDomSettled: () => sb.onExamDomSettled(),
+    onExamDomSettled: () => onExamDomSettled(),
     processOneElement: (el, lang) => sb._gt.processOneElement(el, lang),
     queueForGoogleTranslate: (elements, lang) => sb._gt.queueForGoogleTranslate(elements, lang),
     delays: SKILLBRIDGE_DELAYS,
@@ -875,17 +897,7 @@
       }
       isExamPage = assessmentLifecycle.onRouteChange(location);
     },
-    // The DOM for the current route has settled or mutated. Authoritative in
-    // BOTH directions, and deliberately reachable without a target language:
-    // safety state must not depend on whether the page is being translated.
-    onExamDomSettled: () => {
-      if (!sb.hostCaps.examDetection) {
-        isExamPage = assessmentLifecycle.override(false);
-        return isExamPage;
-      }
-      isExamPage = assessmentLifecycle.onDomSettled(document, location);
-      return isExamPage;
-    },
+    onExamDomSettled,
     reapplyTranslations: () => {
       if (currentLang !== 'en' && translator && isReady) {
         setTimeout(() => sb._gt.applyStaticTranslations(currentLang), SKILLBRIDGE_DELAYS.LATE_CONTENT);
