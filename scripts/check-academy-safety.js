@@ -8,9 +8,20 @@
  * Academy could be supported, someone has to know whether the same contract
  * is implementable on its DOM — this measures that, and nothing else.
  *
- * Run manually:
+ * Run manually. Two stages, because the anonymous one cannot finish the job:
+ *
  *   node scripts/check-academy-safety.js
- *   node scripts/check-academy-safety.js --out recon.json
+ *   node scripts/check-academy-safety.js --session ~/.academy-session.json
+ *
+ * The second needs a signed-in Playwright storageState. Capture one with
+ * `--login`, which opens a headed browser, waits for you to sign in, and
+ * writes the session where you point it:
+ *
+ *   node scripts/check-academy-safety.js --login --session ~/.academy-session.json
+ *
+ * Keep that file OUT of the repository — it is a live credential. Nothing
+ * here writes it inside the working tree by default, and the recon output
+ * never contains cookies, tokens, or storage.
  *
  * Never a CI gate: the site is someone else's and its availability is not a
  * condition on this repository.
@@ -24,7 +35,7 @@
 const fs = require('fs');
 const path = require('path');
 const { chromium } = require('@playwright/test');
-const { STATUS, buildSafetyRecord, evaluateSafetyContract } = require('./lib/academy-safety');
+const { STATUS, buildSafetyRecord, withPostSubmit, evaluateSafetyContract } = require('./lib/academy-safety');
 
 const ORIGIN = 'https://academy.claude.com';
 const COURSE = '/courses/building-with-the-claude-api';
@@ -41,6 +52,46 @@ const READY_TIMEOUT_MS = 20_000;
 function argVal(flag, fallback) {
   const i = process.argv.indexOf(flag);
   return i > -1 && process.argv[i + 1] ? process.argv[i + 1] : fallback;
+}
+
+/**
+ * Read the post-submit SHAPE. Runs in the page; returns presence flags and
+ * attribute names, never result text, correctness, or explanations.
+ */
+/* istanbul ignore next — executes in the browser, not under jest */
+function readPostSubmitShape() {
+  const main = document.querySelector('main') || document.body;
+  const signals = [];
+  if (main.querySelector('[aria-live]')) signals.push('aria-live');
+  if (main.querySelector('[data-status], [data-state], [data-correct]')) signals.push('data-status');
+  if (main.querySelector('[role="status"], [role="alert"]')) signals.push('aria-role');
+  if (main.querySelector('[aria-invalid], [aria-checked]')) signals.push('aria-state');
+  return {
+    resultStatePresent: signals.length > 0,
+    correctnessSignals: signals,
+    explanationPresent: !!main.querySelector('details, [data-explanation], [aria-describedby]'),
+    retryPresent: /try again|retake|retry|다시/i.test(main.innerText || ''),
+  };
+}
+
+/**
+ * Capture a signed-in session interactively.
+ *
+ * Writes wherever it is told and never defaults inside the working tree: the
+ * file is a live credential, and the recon output deliberately contains no
+ * cookies, tokens, or storage.
+ */
+async function captureSession(sessionPath) {
+  if (!sessionPath) throw new Error('--login needs --session <path outside the repository>');
+  const browser = await chromium.launch({ headless: false });
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await page.goto(`${ORIGIN}/courses`, { waitUntil: 'domcontentloaded' });
+  console.log('Sign in in the browser window, then return here and press Enter.');
+  await new Promise((resolve) => process.stdin.once('data', resolve));
+  await context.storageState({ path: sessionPath });
+  await browser.close();
+  console.log(`session written to ${sessionPath} — keep it out of the repository`);
 }
 
 /**
@@ -104,10 +155,18 @@ async function main() {
     '--out',
     path.join('snapshots', 'academy', `safety-recon-${new Date().toISOString().slice(0, 10)}.json`),
   );
+  const sessionPath = argVal('--session', null);
+  if (process.argv.includes('--login')) {
+    await captureSession(sessionPath);
+    return;
+  }
+  const authenticated = !!sessionPath && fs.existsSync(sessionPath);
+  console.log(authenticated ? 'stage: authenticated' : 'stage: anonymous');
+
   const browser = await chromium.launch();
   const records = [];
   try {
-    const context = await browser.newContext();
+    const context = await browser.newContext(authenticated ? { storageState: sessionPath } : {});
     const page = await context.newPage();
     for (const p of SAMPLE_PATHS) {
       await page.goto(`${ORIGIN}${p}`, { waitUntil: 'domcontentloaded' });
@@ -140,7 +199,20 @@ async function main() {
         .catch(() => {});
 
       const shape = await page.evaluate(readSafetyShape);
-      const record = buildSafetyRecord({ ...shape, observedAt: new Date().toISOString() });
+      let record = buildSafetyRecord({ ...shape, observedAt: new Date().toISOString() });
+
+      // Post-submit state only exists after answering as a signed-in user.
+      // Submitting is a deliberate act against someone else's assessment, so
+      // it happens only when a session was supplied AND the choices are
+      // actually on screen.
+      if (authenticated && record.choices.count > 0 && record.controls.submitPresent) {
+        const choice = page.locator('input[type="radio"], [role="radio"]').first();
+        await choice.click({ timeout: 5_000 }).catch(() => {});
+        const submit = page.getByRole('button', { name: /submit|check|answer|제출|확인/i }).first();
+        await submit.click({ timeout: 5_000 }).catch(() => {});
+        await page.waitForTimeout(2_000);
+        record = withPostSubmit(record, await page.evaluate(readPostSubmitShape));
+      }
       records.push(record);
       console.log(
         `  ${p}\n    kind=${record.pageKind} (${record.pageKindSignals.join('+') || 'none'}) ` +

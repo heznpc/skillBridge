@@ -50,3 +50,4 @@ csv/
 TODO.md
 snapshots/*/sources/
 docs/TELEMETRY_DESIGN.md
+*session*.json
