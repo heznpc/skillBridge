@@ -185,10 +185,23 @@
   // Owns exam-safe state across client-side navigation. Before this existed
   // the value was recomputed inline at three call sites, and the combination
   // let it stick ON after leaving a quiz — see assessment-lifecycle.js.
-  const assessmentLifecycle = window._sbAssessmentLifecycle.createAssessmentLifecycle({
-    routeIsAssessment: (loc) => routeIsExamPage(loc),
-    domIsAssessment: () => detectExamPage(),
-  });
+  // Falls back to a direct-detect shim if the lifecycle script is somehow
+  // absent. A missing dependency here used to take the whole content script
+  // down at load — every feature, not just exam safety — so this degrades to
+  // the old inline behaviour instead of throwing.
+  const assessmentLifecycle = window._sbAssessmentLifecycle?.createAssessmentLifecycle
+    ? window._sbAssessmentLifecycle.createAssessmentLifecycle({
+        routeIsAssessment: (loc) => routeIsExamPage(loc),
+        domIsAssessment: () => detectExamPage(),
+      })
+    : {
+        isAssessment: () => isExamPage,
+        lastTrigger: () => 'init',
+        init: () => detectExamPage(),
+        onRouteChange: (loc) => isExamPage || routeIsExamPage(loc),
+        onDomSettled: () => detectExamPage(),
+        override: (v) => !!v,
+      };
 
   const moduleRegistry = new Map();
   const REQUIRED_CONTENT_MODULES = [

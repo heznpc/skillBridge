@@ -101,11 +101,6 @@ function isPlatformSupported(id) {
 // shell (global nav, footer, related-tutorial cards) is never touched.
 const CLAUDE_TUTORIAL_CONTENT_SCOPE = '.hero_tutorial_post_content, #tutorial_content';
 
-// Kept in sync with academy-adapter.js, which owns this host. Duplicated as a
-// literal rather than imported because platform.js loads as a bare content
-// script with no module system available.
-const ACADEMY_HOST = 'academy.claude.com';
-
 const _CAPS_NONE = Object.freeze({
   platform: PLATFORM_IDS.UNKNOWN,
   trusted: false,
@@ -231,7 +226,10 @@ function getHostCapabilities(host) {
   // so a local page can never claim the trusted profile even if some future
   // change lets a content script run there.
   if (_TEST_HOSTS_GRANTED && (h === 'localhost' || h === '127.0.0.1')) return _CAPS_FULL;
-  if (h === ACADEMY_HOST) return _CAPS_CLAUDE_ACADEMY;
+  // Literal rather than a shared const: the bundled build concatenates every
+  // content script into one scope, so a second top-level `ACADEMY_HOST`
+  // declaration here collides with the one academy-adapter.js owns.
+  if (h === 'academy.claude.com') return _CAPS_CLAUDE_ACADEMY;
   if (h === 'claude.com') return _CAPS_CLAUDE_TUTORIALS;
   // Delegate Skilljar-host classification to detectPlatform so the host regex
   // lives in exactly one place (PLATFORM_PATTERNS).
@@ -422,7 +420,6 @@ if (typeof globalThis !== 'undefined' && typeof globalThis.module !== 'undefined
     detectAITrainingContent,
     getHostCapabilities,
     CLAUDE_TUTORIAL_CONTENT_SCOPE,
-    ACADEMY_HOST,
     PLATFORM_IDS,
     _AI_KEYWORDS,
     _SHORT_KEYWORDS,
