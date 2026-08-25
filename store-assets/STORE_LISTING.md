@@ -61,7 +61,7 @@ Dark mode, right-to-left layout, keyboard shortcuts, responsive panels, language
 
 SUPPORTED COURSES
 
-All 22 currently-published courses/catalog entries on anthropic.skilljar.com are covered by the current compatibility map. Public learning and certification-information pages can translate; recognized proctored exam routes remain disabled.
+All 23 currently-published courses/catalog entries on anthropic.skilljar.com are covered by the current compatibility map. Public learning and certification-information pages can translate; recognized proctored exam routes remain disabled.
 
 ━━━━━━━━━━━━━━━━━━━
 

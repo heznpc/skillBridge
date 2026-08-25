@@ -766,7 +766,12 @@
     // gt-queue keeps such blocks on the structure-preserving AI path; this
     // guard is the last line of defense if one slips through (cache replay,
     // future routing regressions).
-    const INTERACTIVE = 'a, button, summary, [role="button"], [role="link"]';
+    // The selector is src/lib/interactive.js's — the same one gt-queue routes
+    // on and html-gt's integrity gate protects. It used to be a second literal
+    // written here, agreeing with gt-queue's only because someone typed the
+    // same string twice, and disagreeing with html-gt's outright.
+    const INTERACTIVE =
+      window._sbInteractive?.INTERACTIVE_SELECTOR || 'a, button, summary, [role="button"], [role="link"]';
     if (toBlank.some((node) => node.parentElement?.closest(INTERACTIVE))) return false;
     if (toBlank.length > 0 && target.parentElement?.closest(INTERACTIVE)) return false;
 

@@ -427,8 +427,13 @@
   // so misses wrapper shapes like <p><span>text <a>link</a></span></p>). Any
   // block carrying a link/button label must never take the flattening
   // safeReplaceText path — see partitionAfterCacheLookup.
+  // One definition of "interactive", shared with safeReplaceText's last-line
+  // guard and with html-gt's integrity gate — see src/lib/interactive.js for
+  // what the three used to disagree about, and why the disagreement routed
+  // ARIA controls onto the path that could not protect them.
   function _hasInteractiveEls(el) {
-    return !!el.querySelector('a, button, summary, [role="button"], [role="link"]');
+    const selector = window._sbInteractive?.INTERACTIVE_SELECTOR;
+    return selector ? !!el.querySelector(selector) : !!el.querySelector('a, button, summary, [role="button"]');
   }
 
   function queueForGoogleTranslate(elements, targetLang, alreadyVisible) {
@@ -753,15 +758,39 @@
     markTranslated(el);
   }
 
+  /**
+   * Reclaim map space. Runs on any mutation that removed nodes.
+   *
+   * DETACHED IS NOT DEAD, and treating it as dead is issue #300. Skilljar's
+   * course-overview block is a collapsible: closing it removes its nodes and
+   * opening it puts the SAME nodes back, still holding translated text. This
+   * function used to delete an element's `originalTexts` entry the instant it
+   * had no parent — and the observer schedules it on exactly the mutation a
+   * collapse produces. A node that came back had no record of its English, so
+   * every later `restoreOriginal` skipped it and left it translated, which is
+   * the `<h2>` that stayed Korean after fifteen language switches.
+   *
+   * So the detached sweep is deferred rather than removed. Below the cap
+   * nothing is dropped: an entry costs one Map slot, and the map is cleared
+   * wholesale on every restore, so there is no leak to race. At the cap the
+   * sweep runs first and detached entries go before live ones — because
+   * dropping a live element's original is the bug, and a genuinely dead node
+   * is what we wanted to reclaim in the first place.
+   */
   function pruneDetachedEntries() {
     const originalTexts = sb.originalTexts;
     const translatedTexts = sb.translatedTexts;
     const originalComments = sb.originalComments;
     const cap = sb.mapSizeCap;
 
-    for (const [el] of originalTexts) {
-      if (!el.parentNode) originalTexts.delete(el);
+    if (originalTexts.size > cap) {
+      for (const [el] of originalTexts) {
+        if (!el.parentNode) originalTexts.delete(el);
+      }
     }
+    // `translatedTexts` is write-only bookkeeping — nothing reads it back — so
+    // its sweep can stay eager. It also keys on TEXT rather than on a node, so
+    // a re-attached element re-registers itself on its next pass anyway.
     for (const [text, entries] of translatedTexts) {
       const live = entries.filter((e) => e.el?.parentNode);
       if (live.length === 0) translatedTexts.delete(text);

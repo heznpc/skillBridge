@@ -63,6 +63,10 @@
      * Safety must not depend on whether the page is being translated. So this
      * runs on any structural mutation, in any language, and is the only thing
      * the observer routes through unconditionally.
+     *
+     * When a translation drain is also pending, THAT drain settles the state
+     * first and cancels this timer — because processOneElement reads the state
+     * at the moment it decides, so the two cannot be left to race.
      */
     function scheduleExamRedetect() {
       if (getHostCaps?.()?.examDetection === false) return;
@@ -85,7 +89,20 @@
         const nodes = pendingNodes.splice(0);
         const didOverflow = overflowed;
         overflowed = false;
-        // Exam-safe state is NOT decided here — see scheduleExamRedetect.
+        // Safety state is settled BEFORE anything in this batch is translated,
+        // and the standalone pass is cancelled because this is it.
+        //
+        // The two are separate timers so that safety still runs when
+        // translation does not (see scheduleExamRedetect). But when both would
+        // run they are not independent: processOneElement reads `isExamPage`
+        // at the moment it decides, so a translation drain that fired first
+        // would send a late-rendering quiz answer to Google Translate using
+        // last page's answer. Ordering them here costs one redundant detect
+        // and removes the race.
+        if (getHostCaps?.()?.examDetection !== false) {
+          clearTimeout(examTimeout);
+          onExamDomSettled?.();
+        }
         const currentLang = getCurrentLang?.();
         const translator = getTranslator?.();
         if (currentLang === 'en' || !translator) return;

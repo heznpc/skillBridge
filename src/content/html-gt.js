@@ -43,21 +43,44 @@
     'SUB',
     'MARK',
   ]);
-  const INTERACTIVE_TAGS = new Set(['A', 'BUTTON']);
+  // What counts as a control, and what identifies an element, both come from
+  // src/lib/interactive.js — the one definition the routing check in gt-queue
+  // and the last-line guard in safeReplaceText also read. This file used to
+  // keep its own `new Set(['A','BUTTON'])`, which meant a `<div role="button">`
+  // was invisible to the integrity gate below: Google Translate could drop it
+  // and the gate would pass. Academy builds its controls exactly that way.
+  //
+  // The fallback keeps this file working if the lib somehow did not load —
+  // degrading to the old tag-only behaviour rather than throwing at load and
+  // taking the whole content script down.
+  const _interactive = (typeof window !== 'undefined' && window._sbInteractive) || null;
+  const _isInteractive = _interactive
+    ? _interactive.isInteractiveElement
+    : (el) => !!el && (el.tagName === 'A' || el.tagName === 'BUTTON');
 
   // A stable key for matching a translated element back to its original.
-  // GT preserves tagName + href/src, so those identify the element. Repeats
-  // that share a key (e.g. two <a href="/x">, or every plain <strong>) are NOT
-  // disambiguated by the key itself — buildOriginalPool consumes same-key
-  // originals FIFO in document order, so a GT reorder can pair original #1
-  // with translated position #2. That is harmless for same-key elements with
-  // identical attributes (the visible text comes from the translation either
-  // way); it only matters when same-key elements carry distinct attributes,
-  // which is why the pool prefers an attribute-exact candidate below.
-  function elementKey(el) {
-    const tag = el.tagName;
-    const href = el.getAttribute && (el.getAttribute('href') || el.getAttribute('src') || '');
-    return `${tag}|${href}`;
+  // GT preserves tagName + role + href/src, so those identify the element.
+  // Repeats that share a key (e.g. two <a href="/x">, or every plain <strong>)
+  // are NOT disambiguated by the key itself — buildOriginalPool consumes
+  // same-key originals FIFO in document order, so a GT reorder can pair
+  // original #1 with translated position #2. That is harmless for same-key
+  // elements with identical attributes (the visible text comes from the
+  // translation either way); it only matters when same-key elements carry
+  // distinct attributes, which is why the pool prefers an attribute-exact
+  // candidate below.
+  const elementKey = _interactive
+    ? _interactive.elementIdentity
+    : (el) => `${el.tagName}||${(el.getAttribute && (el.getAttribute('href') || el.getAttribute('src'))) || ''}`;
+
+  /**
+   * True when this element's presence and identity are protected.
+   *
+   * Tag-tracked for formatting and images, plus anything interactive by role —
+   * so a control that is a plain element with an ARIA role is inside the gate
+   * rather than outside it.
+   */
+  function isTracked(el) {
+    return TRACKED_TAGS.has(el.tagName) || _isInteractive(el);
   }
 
   // Collect tracked descendant elements into a key→count multiset.
@@ -65,7 +88,7 @@
     const counts = new Map();
     const walk = (node) => {
       for (const child of node.children || []) {
-        if (TRACKED_TAGS.has(child.tagName)) {
+        if (isTracked(child)) {
           const k = elementKey(child);
           counts.set(k, (counts.get(k) || 0) + 1);
         }
@@ -96,13 +119,21 @@
     const orig = tagMultiset(originalEl);
     const trans = tagMultiset(translatedRoot);
     // Interactive elements must match exactly (the load-bearing invariant).
+    // Read off the KEY rather than off a node, since the multisets are keys —
+    // and the key carries the role, which is how an ARIA control is recognised
+    // here at all.
+    const keyIsInteractive = (k) => {
+      const [tag, role] = k.split('|');
+      return (
+        (_interactive ? _interactive.INTERACTIVE_TAGS.has(tag) : tag === 'A' || tag === 'BUTTON') ||
+        (_interactive ? _interactive.INTERACTIVE_ROLES.has(role) : false)
+      );
+    };
     for (const [k, v] of orig) {
-      const tag = k.split('|', 1)[0];
-      if (INTERACTIVE_TAGS.has(tag) && trans.get(k) !== v) return false;
+      if (keyIsInteractive(k) && trans.get(k) !== v) return false;
     }
     for (const [k, v] of trans) {
-      const tag = k.split('|', 1)[0];
-      if (INTERACTIVE_TAGS.has(tag) && orig.get(k) !== v) return false;
+      if (keyIsInteractive(k) && orig.get(k) !== v) return false;
     }
     // Full multiset equality for everything tracked keeps reconciliation total;
     // a formatting-only drift (e.g. GT drops a <strong>) also fails so we never
@@ -116,7 +147,7 @@
     const pool = new Map(); // key -> Element[]
     const walk = (node) => {
       for (const child of node.children || []) {
-        if (TRACKED_TAGS.has(child.tagName)) {
+        if (isTracked(child)) {
           const k = elementKey(child);
           if (!pool.has(k)) pool.set(k, []);
           pool.get(k).push(child);
@@ -170,8 +201,7 @@
         if (srcNode.nodeType === 3 /* TEXT_NODE */) {
           destParent.appendChild(doc.createTextNode(srcNode.textContent));
         } else if (srcNode.nodeType === 1 /* ELEMENT_NODE */) {
-          const tag = srcNode.tagName;
-          if (TRACKED_TAGS.has(tag)) {
+          if (isTracked(srcNode)) {
             const k = elementKey(srcNode);
             const bucket = pool.get(k);
             const origEl = bucket && takeBestMatch(bucket, srcNode);
@@ -199,7 +229,7 @@
     return true;
   }
 
-  const api = { checkTagIntegrity, reconcileHtml, elementKey, TRACKED_TAGS, INTERACTIVE_TAGS };
+  const api = { checkTagIntegrity, reconcileHtml, elementKey, isTracked, TRACKED_TAGS };
   if (typeof window !== 'undefined') window._sbHtmlGt = api;
   if (typeof globalThis !== 'undefined' && typeof globalThis.module !== 'undefined') {
     globalThis.module.exports = api;

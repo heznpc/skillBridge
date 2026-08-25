@@ -45,6 +45,7 @@
         "src/lib/youtube-subtitles.js",
         "src/lib/protected-terms.js",
         "src/lib/gemini-block.js",
+        "src/lib/interactive.js",
         "src/lib/dom-safe.js",
         "src/content/content-lifecycle.js",
         "src/content/content-messages.js",

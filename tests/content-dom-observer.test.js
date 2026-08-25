@@ -231,3 +231,62 @@ describe('content DOM observer — exam re-detect independent of translation', (
     expect(examSettled).toEqual([]);
   });
 });
+
+// ────────────────────────────────────────────────────────────────────
+// …but it must still run BEFORE the translation it guards.
+//
+// Splitting safety onto its own timer fixed the English-target case and
+// introduced a race: `processOneElement` reads `isExamPage` at the moment it
+// decides, so a translation drain that fired first sent a late-rendering quiz
+// answer to Google Translate using the previous page's verdict. Two timers,
+// same delay, order undefined.
+// ────────────────────────────────────────────────────────────────────
+describe('content DOM observer — safety settles before translation', () => {
+  beforeEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  /** Record the interleaving of the two passes rather than just their counts. */
+  function setupOrdered({ lang = 'ko', debounce = 1 } = {}) {
+    document.body.innerHTML = '<div id="root"></div>';
+    const order = [];
+    const observer = createContentDomObserver({
+      getCurrentLang: () => lang,
+      getTranslator: () => ({}),
+      getIsReady: () => true,
+      getOriginalTextCount: () => 0,
+      getTranslatedTextCount: () => 0,
+      pruneDetachedEntries: () => {},
+      getTranslatableSelector: () => 'p',
+      getExcludeSelector: () => '.excluded',
+      getTranslationScope: () => null,
+      getHostCaps: () => ({ examDetection: true }),
+      onExamDomSettled: () => order.push('exam'),
+      processOneElement: (el) => {
+        order.push(`translate:${el.id}`);
+        return 'gt';
+      },
+      queueForGoogleTranslate: () => {},
+      delays: { DOM_DEBOUNCE: debounce },
+      thresholds: { PENDING_NODES_MAX: 10 },
+    });
+    observer.observe(document.getElementById('root'));
+    return { order, root: document.getElementById('root') };
+  }
+
+  test('the exam re-detect runs before the first element is processed', async () => {
+    const { order, root } = setupOrdered();
+    burst(root, 2);
+    await settleUntil(() => order.includes('translate:p1'));
+    expect(order[0]).toBe('exam');
+    expect(order).toEqual(['exam', 'translate:p0', 'translate:p1']);
+  });
+
+  test('and it runs exactly once for a batch, not once per element', async () => {
+    const { order, root } = setupOrdered();
+    burst(root, 3);
+    await settleUntil(() => order.filter((e) => e.startsWith('translate:')).length === 3);
+    await settle();
+    expect(order.filter((e) => e === 'exam')).toHaveLength(1);
+  });
+});

@@ -181,8 +181,15 @@ describe('inline routing invariants', () => {
     // hasInlineTags only inspects direct children, so wrapper shapes like
     // <p><span>text <a>link</a></span></p> slip past it. The routing guard
     // must therefore use a descendant query.
-    expect(src).toContain('el.querySelector(\'a, button, summary, [role="button"], [role="link"]\')');
+    expect(src).toContain('el.querySelector(selector)');
     expect(src).toContain('hasInteractive: _hasInteractiveEls(el)');
+  });
+
+  test('and it asks the shared definition rather than keeping its own list', () => {
+    // The three consumers used to hold three lists; the one in html-gt was
+    // narrower, so an ARIA control was routed HERE onto the structured path
+    // and then went unprotected by the gate that path relies on.
+    expect(src).toContain('window._sbInteractive?.INTERACTIVE_SELECTOR');
   });
 });
 

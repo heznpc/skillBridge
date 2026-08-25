@@ -2362,6 +2362,10 @@ const FLASHCARD_COURSE_MAP = {
   'ai-fluency-for-nonprofits': ['aiFluencyNonprofit'],
   'ai-fluency-for-builders': ['aiFluency'],
   'ai-fluency-for-small-businesses': ['aiFluency'],
+  // Published after the 4.0.0 course sweep. Mapped to the generic AI-fluency
+  // deck like its sibling variants; a dedicated deck can replace this once the
+  // course has terminology of its own worth carding.
+  'ai-fluency-for-creative-work': ['aiFluency'],
   'teaching-ai-fluency': ['teachingAI'],
   // Other
   'ai-capabilities': ['aiCapabilities'],
