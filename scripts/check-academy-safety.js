@@ -160,13 +160,20 @@ async function main() {
     await captureSession(sessionPath);
     return;
   }
-  const authenticated = !!sessionPath && fs.existsSync(sessionPath);
-  console.log(authenticated ? 'stage: authenticated' : 'stage: anonymous');
+  // Attaching to a browser the operator already signed in beats replaying a
+  // stored session: it never touches the login flow, so it cannot be stopped
+  // by a bot check, and no credential is copied anywhere.
+  const cdpEndpoint = argVal('--cdp', null);
+  const authenticated = !!cdpEndpoint || (!!sessionPath && fs.existsSync(sessionPath));
+  console.log(`stage: ${authenticated ? 'authenticated' : 'anonymous'}${cdpEndpoint ? ' (attached)' : ''}`);
 
-  const browser = await chromium.launch();
+  const browser = cdpEndpoint ? await chromium.connectOverCDP(cdpEndpoint) : await chromium.launch();
   const records = [];
   try {
-    const context = await browser.newContext(authenticated ? { storageState: sessionPath } : {});
+    // An attached browser brings its own context, with the real session in it.
+    const context = cdpEndpoint
+      ? browser.contexts()[0] || (await browser.newContext())
+      : await browser.newContext(authenticated ? { storageState: sessionPath } : {});
     const page = await context.newPage();
     for (const p of SAMPLE_PATHS) {
       await page.goto(`${ORIGIN}${p}`, { waitUntil: 'domcontentloaded' });
@@ -220,9 +227,11 @@ async function main() {
           `status=${record.status}${record.blocker ? ` blocker=${record.blocker}` : ''}`,
       );
     }
-    await context.close();
+    if (!cdpEndpoint) await context.close();
   } finally {
-    await browser.close();
+    // Closing an ATTACHED browser would shut the operator's window; detach.
+    if (cdpEndpoint) await browser.close().catch(() => {});
+    else await browser.close();
   }
 
   const contract = evaluateSafetyContract(records);
