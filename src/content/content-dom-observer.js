@@ -19,9 +19,10 @@
     getExcludeSelector,
     getTranslationScope,
     getHostCaps,
-    getIsExamPage,
-    setIsExamPage,
-    detectExamPage,
+    // The observer no longer reads or writes exam state directly — it reports
+    // that the DOM settled and the lifecycle decides. Passing a setter back in
+    // is what let two call sites disagree about the value.
+    onExamDomSettled,
     processOneElement,
     queueForGoogleTranslate,
     delays,
@@ -62,6 +63,13 @@
         const nodes = pendingNodes.splice(0);
         const didOverflow = overflowed;
         overflowed = false;
+        // Exam-safe state is decided BEFORE the translation early-return
+        // below, and independently of it. It used to sit further down, so an
+        // English-target page never re-evaluated safety at all and a stale
+        // exam state survived every mutation. The tutor reads this state
+        // whether or not anything is being translated.
+        if (getHostCaps?.()?.examDetection !== false) onExamDomSettled?.();
+
         const currentLang = getCurrentLang?.();
         const translator = getTranslator?.();
         if (currentLang === 'en' || !translator) return;
@@ -88,12 +96,6 @@
 
         const scope = getTranslationScope?.();
         const scoped = scope ? elements.filter((el) => el.closest(scope)) : elements;
-
-        // Freshly inserted nodes may be a late-rendered quiz on a route whose URL
-        // did not match an exam pattern at init.
-        if (getHostCaps?.()?.examDetection !== false && !getIsExamPage?.()) {
-          setIsExamPage?.(!!detectExamPage?.());
-        }
 
         const gtCandidates = [];
         for (const el of scoped) {

@@ -144,7 +144,21 @@
   // EXAM PAGE DETECTION
   // ============================================================
 
+  // Read from the platform registry rather than hard-coded, so the id lives in
+  // exactly one place. platform.js loads before this file.
+  const PLATFORM_IDS_ACADEMY = window._sbPlatform?.PLATFORM_IDS?.CLAUDE_ACADEMY;
+
+  // academy.claude.com shares none of the signals below: its assessment routes
+  // are named after their subject (/quiz-on-…, /final-assessment) so the
+  // segment-anchored EXAM_URL_PATTERNS miss them, and it renders choices with
+  // ARIA roles instead of a <form> of labelled inputs. Running the Skilljar
+  // checks there does not degrade — it detects nothing at all. So that host
+  // delegates to its own adapter.
   function detectExamPage() {
+    const academy = window._sbAcademy;
+    if (sb.hostCaps?.platform === PLATFORM_IDS_ACADEMY && academy) {
+      return academy.detectAcademyAssessment(document, location).isAssessment;
+    }
     const url = location.href;
     if (EXAM_URL_PATTERNS.some((p) => p.test(url))) return true;
     // DOM-based detection: check for quiz forms or answer option containers
@@ -152,6 +166,63 @@
     if (document.querySelector(SKILLJAR_SELECTORS.answerOption)) return true;
     return false;
   }
+
+  /**
+   * Decide from the URL alone, with no DOM read.
+   *
+   * Used at route-change time, when the address has already changed but the
+   * previous page is still rendered. Anything that queried the document here
+   * would be describing the page we just left.
+   */
+  function routeIsExamPage(loc) {
+    const academy = window._sbAcademy;
+    if (sb.hostCaps?.platform === PLATFORM_IDS_ACADEMY && academy) {
+      return academy.ACADEMY_ASSESSMENT_PATH_PATTERNS.some((p) => p.test(`${loc.pathname}${loc.search || ''}`));
+    }
+    return EXAM_URL_PATTERNS.some((p) => p.test(loc.href || ''));
+  }
+
+  /**
+   * The DOM for the current route has settled or mutated.
+   *
+   * Authoritative in BOTH directions, and deliberately reachable without a
+   * target language: safety state must not depend on whether the page is
+   * being translated.
+   *
+   * Declared here rather than inline in the content-lifecycle options,
+   * because the mutation observer reaches it through `sb` — defining it only
+   * in those options left `sb.onExamDomSettled` undefined and the observer's
+   * re-detect threw instead of running.
+   */
+  function onExamDomSettled() {
+    if (!sb.hostCaps.examDetection) {
+      isExamPage = assessmentLifecycle.override(false);
+      return isExamPage;
+    }
+    isExamPage = assessmentLifecycle.onDomSettled(document, location);
+    return isExamPage;
+  }
+
+  // Owns exam-safe state across client-side navigation. Before this existed
+  // the value was recomputed inline at three call sites, and the combination
+  // let it stick ON after leaving a quiz — see assessment-lifecycle.js.
+  // Falls back to a direct-detect shim if the lifecycle script is somehow
+  // absent. A missing dependency here used to take the whole content script
+  // down at load — every feature, not just exam safety — so this degrades to
+  // the old inline behaviour instead of throwing.
+  const assessmentLifecycle = window._sbAssessmentLifecycle?.createAssessmentLifecycle
+    ? window._sbAssessmentLifecycle.createAssessmentLifecycle({
+        routeIsAssessment: (loc) => routeIsExamPage(loc),
+        domIsAssessment: () => detectExamPage(),
+      })
+    : {
+        isAssessment: () => isExamPage,
+        lastTrigger: () => 'init',
+        init: () => detectExamPage(),
+        onRouteChange: (loc) => isExamPage || routeIsExamPage(loc),
+        onDomSettled: () => detectExamPage(),
+        override: (v) => !!v,
+      };
 
   const moduleRegistry = new Map();
   const REQUIRED_CONTENT_MODULES = [
@@ -274,6 +345,7 @@
     safeReplaceText: null, // filled below after function definition
     updateLangClass: null,
     detectExamPage,
+    onExamDomSettled,
     showTermPreview: null, // filled below
     // Filled by modules:
     injectDarkModeToggle: null,
@@ -377,11 +449,7 @@
     getExcludeSelector: () => EXCLUDE_SELECTOR,
     getTranslationScope: () => sb.translationScope,
     getHostCaps: () => sb.hostCaps,
-    getIsExamPage: () => sb.isExamPage,
-    setIsExamPage: (value) => {
-      sb.isExamPage = value;
-    },
-    detectExamPage: () => sb.detectExamPage(),
+    onExamDomSettled: () => onExamDomSettled(),
     processOneElement: (el, lang) => sb._gt.processOneElement(el, lang),
     queueForGoogleTranslate: (elements, lang) => sb._gt.queueForGoogleTranslate(elements, lang),
     delays: SKILLBRIDGE_DELAYS,
@@ -409,7 +477,9 @@
       if (stored.darkMode) document.documentElement.classList.add('si18n-dark');
       commentTranslateEnabled = !!stored.commentTranslate;
       currentLang = stored.targetLanguage || 'en';
-      isExamPage = sb.hostCaps.examDetection ? detectExamPage() : false;
+      isExamPage = sb.hostCaps.examDetection
+        ? assessmentLifecycle.init(document, location)
+        : assessmentLifecycle.override(false);
 
       translator = new SkilljarTranslator({ aiEnabled: sb.hostCaps.bridge !== false });
       if (!translator.aiEnabled) {
@@ -818,9 +888,16 @@
     reenableAfterCertificationSurface,
     ensureObserver: () => domTranslationObserver.observe(),
     ensureSubtitleManager,
+    // Route changed; the DOM has not caught up. An assessment URL protects
+    // immediately, a lesson URL releases nothing yet — see onExamDomSettled.
     redetectExamPage: () => {
-      isExamPage = sb.hostCaps.examDetection ? detectExamPage() : false;
+      if (!sb.hostCaps.examDetection) {
+        isExamPage = assessmentLifecycle.override(false);
+        return;
+      }
+      isExamPage = assessmentLifecycle.onRouteChange(location);
     },
+    onExamDomSettled,
     reapplyTranslations: () => {
       if (currentLang !== 'en' && translator && isReady) {
         setTimeout(() => sb._gt.applyStaticTranslations(currentLang), SKILLBRIDGE_DELAYS.LATE_CONTENT);

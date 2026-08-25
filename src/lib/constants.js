@@ -67,6 +67,19 @@ const EXAM_URL_PATTERNS = [
 
 // Elements whose text should NOT be translated on exam pages
 // (answer choices, form inputs — translating these could alter meaning)
+//
+// Read at the two chokepoints that matter: the static scan in
+// getTranslatableElements() and processOneElement(), which the mutation and
+// lazy-viewport paths both funnel through. A selector missing here is not a
+// degraded translation — it is choice text entering the GT queue and the
+// IndexedDB cache.
+//
+// The ARIA entries are not Skilljar's; academy.claude.com renders choices as
+// role="radio" inside a role="radiogroup", with no <form>, no input, and no
+// label[for]. They are listed unconditionally rather than behind a host check
+// because they describe what an answer choice IS, and a host check that
+// silently mismatched would fail in the one direction that leaks. They cost
+// nothing on Skilljar, which does not use these roles.
 const EXAM_SKIP_SELECTORS = [
   'input[type="radio"] + label',
   'input[type="checkbox"] + label',
@@ -75,6 +88,12 @@ const EXAM_SKIP_SELECTORS = [
   `${SKILLJAR_SELECTORS.quizForm} label`,
   `${SKILLJAR_SELECTORS.quizForm} .option`,
   `${SKILLJAR_SELECTORS.quizForm} li`,
+  '[role="radiogroup"]',
+  '[role="radio"]',
+  '[role="checkbox"]',
+  '[role="option"]',
+  '[role="listbox"]',
+  '[aria-checked]',
 ];
 
 const EXAM_BANNER_LABELS = {
