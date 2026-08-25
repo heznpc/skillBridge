@@ -13,6 +13,14 @@ repository but never shipped to users.
 
 ## [Unreleased]
 
+### Added
+- SkillBridge now runs on **academy.claude.com**, Anthropic's own course platform and the successor to the Skilljar tenant. Lesson pages translate as before. Assessment pages are recognised from the live page — route, heading, and the ARIA radiogroup — because none of the Skilljar exam signals exist there, and their answer choices are excluded from translation, from the translation cache, and from anything sent to the AI Tutor. The Tutor transport itself stays off for this host until its trust checks pass.
+- A translation policy for a site that publishes its own locales. Academy ships seven, and every non-English one is partial, so "translate the page" is no longer a safe default: where the English residue can be told apart from the official copy by script (ko/ja/zh) only the residue is sent, and where it cannot (es/fr) nothing is sent at all rather than re-translating Anthropic's own published text. A banner says so, so the choice does not read as a broken extension.
+
+### Fixed
+- Exam-safe state could stay off on a page nobody was translating. The DOM observer skipped mutations entirely when the target language was English, and the exam re-detection lived inside the pass it skipped — so a quiz that rendered after page load left the Tutor unguarded for anyone reading in English. Safety re-detection is now independent of translation and runs on any structural change, in any language.
+- Highlighting an answer choice and pressing **Ask Tutor** sent that text to the Tutor. The quote path had no exam guard; it now refuses any selection that touches an answer choice, including a drag that spans the whole choice group.
+
 ## [4.0.0] - 2026-07-29
 
 ### Added

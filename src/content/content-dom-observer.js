@@ -30,6 +30,7 @@
   } = {}) {
     let observer = null;
     let translateTimeout = null;
+    let examTimeout = null;
     let pendingNodes = [];
     let pruneScheduled = false;
     // Set when a mutation burst exceeds PENDING_NODES_MAX. The nodes past the
@@ -48,6 +49,27 @@
       });
     }
 
+    /**
+     * Re-decide exam-safe state after the DOM settles.
+     *
+     * Deliberately its own debounce rather than a step inside
+     * debounceTranslateNew. That function is only reachable when a translation
+     * is actually wanted — the observer skips it outright when the target
+     * language is English, and when there is no translator yet — so hanging
+     * safety off it made exam detection a side effect of translating. On an
+     * English-target page a quiz that rendered late never tripped exam mode at
+     * all, and the tutor stayed unguarded.
+     *
+     * Safety must not depend on whether the page is being translated. So this
+     * runs on any structural mutation, in any language, and is the only thing
+     * the observer routes through unconditionally.
+     */
+    function scheduleExamRedetect() {
+      if (getHostCaps?.()?.examDetection === false) return;
+      clearTimeout(examTimeout);
+      examTimeout = setTimeout(() => onExamDomSettled?.(), delays.DOM_DEBOUNCE);
+    }
+
     function debounceTranslateNew(node) {
       if (pendingNodes.length >= thresholds.PENDING_NODES_MAX) {
         // Deliberately does NOT extend the debounce: a long mutation stream
@@ -63,13 +85,7 @@
         const nodes = pendingNodes.splice(0);
         const didOverflow = overflowed;
         overflowed = false;
-        // Exam-safe state is decided BEFORE the translation early-return
-        // below, and independently of it. It used to sit further down, so an
-        // English-target page never re-evaluated safety at all and a stale
-        // exam state survived every mutation. The tutor reads this state
-        // whether or not anything is being translated.
-        if (getHostCaps?.()?.examDetection !== false) onExamDomSettled?.();
-
+        // Exam-safe state is NOT decided here — see scheduleExamRedetect.
         const currentLang = getCurrentLang?.();
         const translator = getTranslator?.();
         if (currentLang === 'en' || !translator) return;
@@ -115,20 +131,32 @@
       if (!observer) {
         observer = new MutationObserver((mutations) => {
           let hasRemovals = false;
+          // Any structural change to the page the learner is looking at. A
+          // quiz can arrive as an insertion (SPA renders the choices) or leave
+          // as a removal (the lesson replaces them), and both have to re-open
+          // the safety question.
+          let structuralChange = false;
           for (const mutation of mutations) {
-            if (mutation.removedNodes.length > 0) hasRemovals = true;
-
-            if (getCurrentLang?.() === 'en' || !getTranslator?.() || !getIsReady?.()) continue;
+            if (mutation.removedNodes.length > 0) {
+              hasRemovals = true;
+              structuralChange = true;
+            }
+            if (!getIsReady?.()) continue;
             for (const node of mutation.addedNodes) {
               if (
-                node.nodeType === Node.ELEMENT_NODE &&
-                !node.closest('.skillbridge-sidebar') &&
-                !node.closest('#skillbridge-bridge')
+                node.nodeType !== Node.ELEMENT_NODE ||
+                node.closest('.skillbridge-sidebar') ||
+                node.closest('#skillbridge-bridge')
               ) {
-                debounceTranslateNew(node);
+                continue;
               }
+              structuralChange = true;
+              // Queueing for TRANSLATION still needs a target language and a
+              // translator; that is a separate question from safety.
+              if (getCurrentLang?.() !== 'en' && getTranslator?.()) debounceTranslateNew(node);
             }
           }
+          if (structuralChange && getIsReady?.()) scheduleExamRedetect();
           if (hasRemovals && ((getOriginalTextCount?.() || 0) > 0 || (getTranslatedTextCount?.() || 0) > 0)) {
             schedulePrune();
           }
@@ -143,6 +171,7 @@
 
     function resetPending() {
       clearTimeout(translateTimeout);
+      clearTimeout(examTimeout);
       pendingNodes = [];
       overflowed = false;
     }

@@ -84,6 +84,21 @@
     });
   });
 
+  // The policy flipped to a blocking state — see academy-localization.js. This
+  // is the only user-visible signal that the extension chose not to act, so it
+  // must not be silent; auto-dismissed because it explains a steady state
+  // rather than reporting a failure the learner has to recover from.
+  document.addEventListener('skillbridge:localizationblocked', () => {
+    showSimpleBanner({
+      id: 'si18n-localized-banner',
+      className: 'si18n-offline-banner si18n-storage-warn',
+      role: 'status',
+      ariaLive: 'polite',
+      labels: LOCALIZED_PAGE_LABELS,
+      autoDismissMs: 8000,
+    });
+  });
+
   function showExamBanner() {
     showSimpleBanner({
       id: 'si18n-exam-banner',

@@ -44,13 +44,14 @@ async function settleUntil(predicate, ceilingMs = 2000) {
   }
 }
 
-function setup({ max = 2, scope = null, debounce = 1 } = {}) {
+function setup({ max = 2, scope = null, debounce = 1, lang = 'ko', examDetection = false, translator = {} } = {}) {
   document.body.innerHTML = '<div id="root"></div>';
   const processed = [];
   const queued = [];
+  const examSettled = [];
   const observer = createContentDomObserver({
-    getCurrentLang: () => 'ko',
-    getTranslator: () => ({}),
+    getCurrentLang: () => lang,
+    getTranslator: () => translator,
     getIsReady: () => true,
     getOriginalTextCount: () => 0,
     getTranslatedTextCount: () => 0,
@@ -58,10 +59,8 @@ function setup({ max = 2, scope = null, debounce = 1 } = {}) {
     getTranslatableSelector: () => 'p',
     getExcludeSelector: () => '.excluded',
     getTranslationScope: () => scope,
-    getHostCaps: () => ({ examDetection: false }),
-    getIsExamPage: () => false,
-    setIsExamPage: () => {},
-    detectExamPage: () => false,
+    getHostCaps: () => ({ examDetection }),
+    onExamDomSettled: () => examSettled.push(Date.now()),
     processOneElement: (el) => {
       processed.push(el.id);
       return 'gt';
@@ -71,7 +70,7 @@ function setup({ max = 2, scope = null, debounce = 1 } = {}) {
     thresholds: { PENDING_NODES_MAX: max },
   });
   observer.observe(document.getElementById('root'));
-  return { observer, processed, queued, root: document.getElementById('root') };
+  return { observer, processed, queued, examSettled, root: document.getElementById('root') };
 }
 
 /** Append `count` <p> elements in one burst, as a framework render would. */
@@ -166,5 +165,69 @@ describe('content DOM observer — mutation burst handling', () => {
     observer.resetPending();
     await new Promise((resolve) => setTimeout(resolve, 300)); // past the debounce
     expect(processed).toEqual([]);
+  });
+});
+
+// ────────────────────────────────────────────────────────────────────
+// Exam-safe re-detection is NOT a side effect of translating.
+//
+// The observer used to skip a mutation outright when the target language was
+// English, and the exam re-detect lived inside the drain it skipped. So a
+// learner reading in English got a quiz rendered late with the tutor still
+// unguarded — the one case where nothing else would ever correct it, because
+// no translation pass was going to run and re-detect on the way past.
+// ────────────────────────────────────────────────────────────────────
+describe('content DOM observer — exam re-detect independent of translation', () => {
+  beforeEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  test('an inserted element re-opens the safety question even with the target at English', async () => {
+    const { examSettled, processed, root } = setup({ lang: 'en', examDetection: true });
+    burst(root, 1);
+    await settleUntil(() => examSettled.length > 0);
+    expect(examSettled.length).toBeGreaterThan(0);
+    // …and nothing was translated, because the target is English.
+    expect(processed).toEqual([]);
+  });
+
+  test('it also fires with no translator yet, which is where init races used to hide', async () => {
+    const { examSettled, root } = setup({ lang: 'ko', examDetection: true, translator: null });
+    burst(root, 1);
+    await settleUntil(() => examSettled.length > 0);
+    expect(examSettled.length).toBeGreaterThan(0);
+  });
+
+  test('a removal re-opens it too — a quiz can leave as well as arrive', async () => {
+    const { examSettled, root } = setup({ lang: 'en', examDetection: true });
+    burst(root, 1);
+    await settleUntil(() => examSettled.length > 0);
+    const afterInsert = examSettled.length;
+    root.innerHTML = '';
+    await settleUntil(() => examSettled.length > afterInsert);
+    expect(examSettled.length).toBeGreaterThan(afterInsert);
+  });
+
+  test('translating still works, and still re-opens the question', async () => {
+    const { examSettled, processed, root } = setup({ lang: 'ko', examDetection: true });
+    burst(root, 1);
+    await settleUntil(() => processed.length > 0 && examSettled.length > 0);
+    expect(processed).toEqual(['p0']);
+    expect(examSettled.length).toBeGreaterThan(0);
+  });
+
+  test('a host with detection off is never asked', async () => {
+    const { examSettled, root } = setup({ lang: 'ko', examDetection: false });
+    burst(root, 1);
+    await settle();
+    expect(examSettled).toEqual([]);
+  });
+
+  test('resetPending cancels a re-detect that has not fired yet', async () => {
+    const { observer, examSettled, root } = setup({ lang: 'en', examDetection: true, debounce: 50 });
+    burst(root, 1);
+    observer.resetPending();
+    await settle();
+    expect(examSettled).toEqual([]);
   });
 });

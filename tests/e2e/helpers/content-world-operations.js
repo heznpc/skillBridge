@@ -644,6 +644,69 @@ async function evalInContentWorld(context, op, arg) {
                   el.scrollIntoView({ behavior: 'instant', block: 'center' });
                   return { ok: true };
                 },
+                // ────────────────────────────────────────────────────────
+                // Claude Academy probes.
+                //
+                // E2E runs on localhost, and getHostCapabilities() gives
+                // localhost the Skilljar profile — deliberately, since a
+                // released build must never hand a local page a real host's
+                // capabilities. So a spec that wants the Academy code path has
+                // to say so, and `sb.hostCaps` is the seam production code
+                // actually reads: detectExamPage() and routeIsExamPage() both
+                // branch on `hostCaps.platform` at call time, so swapping the
+                // profile swaps which detector decides.
+                //
+                // Nothing here reimplements detection. The spec drives the
+                // real lifecycle through the real observer and route hooks.
+                // ────────────────────────────────────────────────────────
+                useAcademyProfile: () => {
+                  const sb = window._sb;
+                  if (!sb) return { error: '_sb missing' };
+                  if (!sb.__sbE2eOriginalHostCaps) sb.__sbE2eOriginalHostCaps = sb.hostCaps;
+                  sb.hostCaps = Object.freeze({
+                    ...sb.__sbE2eOriginalHostCaps,
+                    platform: 'claude-academy',
+                    examDetection: true,
+                    localizedHost: true,
+                  });
+                  return { platform: sb.hostCaps.platform };
+                },
+                restoreHostProfile: () => {
+                  const sb = window._sb;
+                  if (!sb || !sb.__sbE2eOriginalHostCaps) return { error: 'no saved profile' };
+                  sb.hostCaps = sb.__sbE2eOriginalHostCaps;
+                  return { platform: sb.hostCaps.platform };
+                },
+                // Exam-safe state as the lifecycle owns it, plus what the DOM
+                // and route each say on their own — so a failure names which
+                // of the three disagreed rather than just "it was false".
+                examState: () => {
+                  const sb = window._sb;
+                  return {
+                    isExamPage: !!sb.isExamPage,
+                    detectSaysExam: !!sb.detectExamPage?.(),
+                    url: location.href,
+                    choiceCount: document.querySelectorAll('[role="radio"], [role="checkbox"]').length,
+                  };
+                },
+                // Force the settled-DOM re-decision. The observer's own
+                // debounce also fires this; calling it directly removes a
+                // timing dependency from assertions that are about the
+                // lifecycle, not about the debounce.
+                settleExamState: () => ({ isExamPage: !!window._sb?.onExamDomSettled?.() }),
+                // Every text run currently on the page that a translation
+                // request could carry, split into what may leave and what may
+                // not. The spec asserts on the second list being absent from
+                // GT bodies and from the tutor context.
+                academyChoiceText: () => ({
+                  choices: Array.from(document.querySelectorAll('[role="radio"], [role="checkbox"]')).map((el) =>
+                    el.textContent.replace(/\s+/g, ' ').trim(),
+                  ),
+                  question: document.getElementById('academy-quiz-question')?.textContent?.trim() || null,
+                  title: document.querySelector('h1')?.textContent?.trim() || null,
+                }),
+                // What the tutor would be sent for the current page.
+                tutorContext: () => ({ context: window._sb?.getPageContext?.() || '' }),
                 // Simulate a Skilljar SPA-style navigation: atomically swap the
                 // body HTML and push a new history entry. Triggers the wrapped
                 // `history.pushState` which content.js intercepts to fire

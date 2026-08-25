@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Claude Academy — Quiz on accessing Claude with the API</title>
+  </head>
+  <body>
+    <!--
+      A Claude Academy QUIZ, shaped after the live signed-in DOM.
+
+      Every Skilljar exam signal is deliberately missing, because that is the
+      finding this fixture exists to lock in:
+
+        Skilljar                        Academy (here)
+        ────────────────────────────    ────────────────────────────────
+        <form class="quiz-form">        no <form> element at all
+        input[type=radio] + <label>     [role="radio"], no input, no label[for]
+        .answer-option / .quiz-option   framework-generated class names
+        /quiz path ENDS the segment     /quiz-on-<subject>
+
+      So a run against this page proves the Academy adapter is doing the work.
+      If the Skilljar path were still the one deciding, exam mode would stay
+      off and every choice below would be translated and quotable.
+
+      Choice text is distinctive on purpose: each string is unique enough that
+      finding it in a Google Translate request body, in the IndexedDB cache, or
+      in a tutor prompt is unambiguous evidence of a leak.
+    -->
+    <!--
+      The global shell, kept because the AI-content gate reads it. Academy
+      pages are saturated with Anthropic/Claude/MCP copy in their nav and
+      breadcrumb, and a fixture with a bare breadcrumb would score below the
+      keyword threshold and pause the extension — a fixture artefact, not a
+      property of the real site. `academy.claude.com` skips the gate outright
+      (see _FIRST_PARTY_COURSE_HOSTS); localhost does not, so the fixture has
+      to look like the page it stands in for.
+    -->
+    <div class="ds-app-shell">
+      <nav aria-label="Global"><span class="nav-text">Anthropic Academy</span></nav>
+      <nav aria-label="Breadcrumb"><span>Building with the Claude API</span></nav>
+    </div>
+
+    <main>
+      <h1 id="academy-quiz-title">Quiz on accessing Claude with the API</h1>
+
+      <p id="academy-quiz-question">Which header carries the credential on a Claude API request?</p>
+
+      <div role="radiogroup" aria-labelledby="academy-quiz-question" id="academy-choices">
+        <div class="ds-c-1x9" role="radio" aria-checked="false" tabindex="0" id="academy-choice-a">
+          <span class="ds-c-2x0">Zebra-cipher-alpha carries the credential</span>
+        </div>
+        <div class="ds-c-1x9" role="radio" aria-checked="false" tabindex="-1" id="academy-choice-b">
+          <span class="ds-c-2x0">Marmalade-vector-bravo carries the credential</span>
+        </div>
+        <div class="ds-c-1x9" role="radio" aria-checked="false" tabindex="-1" id="academy-choice-c">
+          <span class="ds-c-2x0">Quartzite-harbor-charlie carries the credential</span>
+        </div>
+        <div class="ds-c-1x9" role="radio" aria-checked="false" tabindex="-1" id="academy-choice-d">
+          <span class="ds-c-2x0">Pelican-lantern-delta carries the credential</span>
+        </div>
+      </div>
+
+      <p id="academy-quiz-footer">Submit when you are ready.</p>
+    </main>
+  </body>
+</html>

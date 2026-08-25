@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Claude Academy — Accessing Claude with the API</title>
+  </head>
+  <body>
+    <!--
+      A Claude Academy LESSON, shaped after the live signed-in DOM.
+
+      What matters here is what is ABSENT. Academy has no <form> around its
+      content, no input[type=radio], and no Skilljar class names — so nothing
+      in this page can trip the Skilljar exam path even by accident. A spec
+      that walks lesson → quiz → lesson and sees exam mode release is only
+      meaningful if the lesson genuinely carries no assessment signal, and
+      that is what this fixture is for.
+
+      The route it is served at (/academy/courses/<c>/<slug>) likewise carries
+      no assessment segment.
+    -->
+    <!--
+      The global shell, kept because the AI-content gate reads it. Academy
+      pages are saturated with Anthropic/Claude/MCP copy in their nav and
+      breadcrumb, and a fixture with a bare breadcrumb would score below the
+      keyword threshold and pause the extension — a fixture artefact, not a
+      property of the real site. `academy.claude.com` skips the gate outright
+      (see _FIRST_PARTY_COURSE_HOSTS); localhost does not, so the fixture has
+      to look like the page it stands in for.
+    -->
+    <div class="ds-app-shell">
+      <nav aria-label="Global"><span class="nav-text">Anthropic Academy</span></nav>
+      <nav aria-label="Breadcrumb"><span>Building with the Claude API</span></nav>
+    </div>
+
+    <main>
+      <h1 id="academy-lesson-title">Accessing Claude with the API</h1>
+
+      <p id="academy-lesson-intro">
+        This lesson covers prompt engineering fundamentals and how Claude processes user requests.
+      </p>
+
+      <h2 id="academy-lesson-section">Key concepts</h2>
+      <p id="academy-lesson-body">
+        A prompt is the input you give to Claude. Better prompts produce better responses.
+      </p>
+
+      <ul>
+        <li id="academy-lesson-item-1">Understand the Claude model family</li>
+        <li id="academy-lesson-item-2">Write effective prompts</li>
+      </ul>
+    </main>
+  </body>
+</html>

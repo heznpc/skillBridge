@@ -53,7 +53,14 @@ const batches = [
     // request should never have been sent.
     'tests/e2e/mixed-localization.spec.js',
   ],
-  ['tests/e2e/rapid-switch.spec.js', 'tests/e2e/spa-navigation.spec.js'],
+  [
+    'tests/e2e/rapid-switch.spec.js',
+    'tests/e2e/spa-navigation.spec.js',
+    // With the SPA specs on purpose: this one is the same route-change
+    // machinery, driven on the host where getting it wrong leaves a tutor
+    // unguarded on a live quiz rather than showing stale text.
+    'tests/e2e/academy-lifecycle.spec.js',
+  ],
   [
     'tests/e2e/chat-history.spec.js',
     'tests/e2e/stream-cancel.spec.js',

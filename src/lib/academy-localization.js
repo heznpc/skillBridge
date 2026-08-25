@@ -141,8 +141,89 @@ function readObservedLocale(doc, loc) {
   return lang ? lang.trim() : '';
 }
 
+/**
+ * Hold the page's own locale as state, and re-resolve the policy when either
+ * half of the pair changes.
+ *
+ * The baseline has to be captured at construction, before anything of ours
+ * runs: `updateLangClass()` rewrites <html lang> to the SkillBridge target, so
+ * a later read of that attribute returns our own value and every page would
+ * classify as "already in the target language". Academy puts the locale in the
+ * first path segment for every non-English locale (`/es/courses/...`), so a
+ * client-side navigation can be re-read from the URL alone; English carries no
+ * prefix, and there the captured baseline is what survives.
+ *
+ * `localizedHost` is the host-capability flag. Off — Skilljar, claude.com
+ * tutorials — the page is English by construction and the policy is FULL, so
+ * this adds no behaviour to hosts that never had a locale to respect.
+ *
+ * @param {object} opts
+ * @param {boolean} opts.localizedHost  True only for hosts that ship official locales.
+ * @param {Document} [opts.doc]
+ * @param {Location} [opts.loc]
+ * @param {(state: {policy: string, reason: string, observedLocale: string, targetLang: string}) => void} [opts.onChange]
+ */
+function createLocalizationPolicy({ localizedHost, doc, loc, onChange } = {}) {
+  // 'en' rather than a read on non-localized hosts: Skilljar's <html lang> is
+  // English anyway, but pinning it means a future host that mislabels itself
+  // cannot accidentally block translation everywhere.
+  let observed = localizedHost ? readObservedLocale(doc, loc) : 'en';
+  let target = 'en';
+  let resolved = resolveTranslationPolicy({ observedLocale: observed, targetLang: target });
+
+  function reresolve() {
+    const next = resolveTranslationPolicy({ observedLocale: observed, targetLang: target });
+    const changed = next.policy !== resolved.policy;
+    resolved = next;
+    if (changed && typeof onChange === 'function') {
+      onChange({ ...resolved, observedLocale: observed, targetLang: target });
+    }
+    return resolved;
+  }
+
+  return {
+    /** The locale the page itself is published in — never the SkillBridge target. */
+    observedLocale: () => observed,
+    /** The resolved policy object, for logging and tests. */
+    resolved: () => resolved,
+    /** True when anything at all may be sent for translation. */
+    mayTranslate: () => resolved.mayTranslate,
+    /**
+     * True when one text run may be sent.
+     *
+     * Under RESIDUE_ONLY this is the guard that makes the policy real: only
+     * text that still reads as English may go, and `looksEnglish` is the
+     * caller's own script check — trustworthy in this branch precisely because
+     * the policy only reaches it for non-Latin targets.
+     */
+    mayTranslateText: (looksEnglish) => mayTranslateText(resolved, looksEnglish),
+
+    /** The learner picked a language. */
+    setTarget(nextTarget) {
+      target = String(nextTarget || '').trim();
+      return reresolve();
+    },
+
+    /**
+     * A client-side navigation happened.
+     *
+     * Only a locale the URL states outright may move the baseline. An absent
+     * prefix means English on Academy, but it also means "no evidence" on any
+     * host that does not encode locale in the path — so the captured value is
+     * kept rather than being reset to a guess.
+     */
+    onRouteChange(nextLoc) {
+      if (!localizedHost) return resolved;
+      const fromUrl = readObservedLocale({ documentElement: { getAttribute: () => null } }, nextLoc);
+      if (fromUrl) observed = fromUrl;
+      return reresolve();
+    },
+  };
+}
+
 if (typeof window !== 'undefined') {
   window._sbAcademyLocalization = {
+    createLocalizationPolicy,
     TRANSLATION_POLICY,
     resolveTranslationPolicy,
     mayTranslateText,
@@ -154,6 +235,7 @@ if (typeof globalThis !== 'undefined' && typeof globalThis.module !== 'undefined
   globalThis.module.exports = {
     TRANSLATION_POLICY,
     NON_LATIN_TARGETS,
+    createLocalizationPolicy,
     resolveTranslationPolicy,
     mayTranslateText,
     readObservedLocale,

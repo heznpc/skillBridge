@@ -20,7 +20,11 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://*.skilljar.com/*", "https://claude.com/resources/tutorials/*"],
+      "matches": [
+        "https://*.skilljar.com/*",
+        "https://claude.com/resources/tutorials/*",
+        "https://academy.claude.com/*"
+      ],
       "js": [
         "src/shared/build-config.js",
         "src/lib/browser-polyfill.js",
@@ -109,7 +113,7 @@
     },
     {
       "resources": ["src/data/*", "src/shared/runtime-constants.js", "src/content/styles/*.css"],
-      "matches": ["https://claude.com/*"]
+      "matches": ["https://claude.com/*", "https://academy.claude.com/*"]
     }
   ]
 }

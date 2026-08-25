@@ -477,6 +477,7 @@
       if (stored.darkMode) document.documentElement.classList.add('si18n-dark');
       commentTranslateEnabled = !!stored.commentTranslate;
       currentLang = stored.targetLanguage || 'en';
+      sb.localization.setTarget(currentLang);
       isExamPage = sb.hostCaps.examDetection
         ? assessmentLifecycle.init(document, location)
         : assessmentLifecycle.override(false);
@@ -657,6 +658,9 @@
 
     if (!opts.skipRestore) restoreOriginal();
     currentLang = newLang;
+    // Re-resolve before any dictionary or GT work: on a localized site the
+    // answer to "may we translate at all" changes with the target.
+    sb.localization.setTarget(newLang);
 
     try {
       if (newLang === 'en') {
@@ -867,9 +871,48 @@
     keyboardShortcuts: true,
     readingAid: true,
     examDetection: true,
+    localizedHost: false,
     youtubeSubtitles: true,
   };
   sb.translationScope = sb.hostCaps.contentScope;
+
+  // ============================================================
+  // TRANSLATION POLICY FOR AN ALREADY-LOCALIZED SITE
+  // ============================================================
+  //
+  // Constructed HERE, at module scope, and deliberately before init(): it
+  // captures the page's own locale, and updateLangClass() later rewrites
+  // <html lang> to the SkillBridge target. Read after that point, every page
+  // would look like it was already in the target language.
+  //
+  // On hosts that do not ship their own locales the policy resolves to FULL
+  // and nothing downstream changes — see academy-localization.js.
+  sb.localization = window._sbAcademyLocalization?.createLocalizationPolicy
+    ? window._sbAcademyLocalization.createLocalizationPolicy({
+        localizedHost: sb.hostCaps.localizedHost === true,
+        doc: document,
+        loc: location,
+        onChange: (state) => {
+          if (state.mayTranslate) return;
+          // Picking a language and watching nothing happen is the failure this
+          // announces. The banner names the reason; the alternative is silent
+          // inaction the learner reads as a broken extension.
+          document.dispatchEvent(
+            new CustomEvent('skillbridge:localizationblocked', { detail: { reason: state.reason } }),
+          );
+        },
+      })
+    : {
+        // Degraded shim, matching the assessmentLifecycle fallback: a missing
+        // lib file must not take translation down on hosts that never needed
+        // a policy in the first place.
+        observedLocale: () => 'en',
+        resolved: () => ({ policy: 'full', reason: 'policy-module-missing', mayTranslate: true }),
+        mayTranslate: () => true,
+        mayTranslateText: (looksEnglish) => !!looksEnglish,
+        setTarget: () => {},
+        onRouteChange: () => {},
+      };
 
   const routeController = window._sbContentLifecycle.createRouteController({
     getHref: () => location.href,
@@ -898,6 +941,7 @@
       isExamPage = assessmentLifecycle.onRouteChange(location);
     },
     onExamDomSettled,
+    redetectPageLocale: () => sb.localization.onRouteChange(location),
     reapplyTranslations: () => {
       if (currentLang !== 'en' && translator && isReady) {
         setTimeout(() => sb._gt.applyStaticTranslations(currentLang), SKILLBRIDGE_DELAYS.LATE_CONTENT);

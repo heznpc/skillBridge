@@ -105,6 +105,7 @@ The candidate does not transmit course text to YouTube. Auto-subtitles configure
 | `alarms` | Run periodic translation-cache cleanup |
 | `*.skilljar.com` | Translate supported AI-course pages hosted on Skilljar |
 | `claude.com/resources/tutorials` (content-script match) | Translate Claude tutorial pages |
+| `academy.claude.com` (content-script match) | Translate lesson pages on Anthropic's Claude Academy. On assessment pages the answer choices are excluded from translation, so their text is never sent anywhere; where the page is already published in one of Academy's own locales, nothing is sent at all |
 | `translate.googleapis.com` | Send page text to Google Translate when translation is requested |
 | `http://localhost/*`, `http://127.0.0.1/*` (**optional**) | Requested only if the user selects the local (on-device) AI Tutor engine, so the extension can reach an OpenAI-compatible server the user runs on their own machine. Not granted at install time; declining leaves the Tutor on its previous engine. |
 

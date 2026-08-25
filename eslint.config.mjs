@@ -63,6 +63,7 @@ export default [
         EXAM_URL_PATTERNS: 'readonly',
         EXAM_SKIP_SELECTORS: 'readonly',
         EXAM_BANNER_LABELS: 'readonly',
+        LOCALIZED_PAGE_LABELS: 'readonly',
         TUTOR_EXAM_LABELS: 'readonly',
         TUTOR_GREETINGS: 'readonly',
         SEND_LABELS: 'readonly',

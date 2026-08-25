@@ -150,6 +150,9 @@
    */
   async function translateCodeComments(targetLang) {
     if (!sb.translator || targetLang === 'en') return;
+    // Same policy chokepoint as the page walk: on a site that publishes its own
+    // locales, code comments are part of the official copy too.
+    if (sb.localization && !sb.localization.mayTranslate()) return;
     window._protectedTerms.buildProtectedTermsMap(targetLang, sb.translator);
     // Honour the per-host content scope (e.g. claude.com tutorials) so code
     // comments in the surrounding marketing shell are never translated.

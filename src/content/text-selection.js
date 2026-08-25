@@ -15,6 +15,41 @@
   let askTutorBtn = null;
   let pendingQuote = null;
 
+  /**
+   * True when a selection touches answer-choice text on an assessment page.
+   *
+   * This is the one Tutor-transmission path that the exam guards elsewhere do
+   * not cover. `getPageContext()` strips the lesson body on an exam page, and
+   * the GT chokepoint keeps choices out of the translation queue and the
+   * cache — but a learner can still highlight an answer choice and press Ask
+   * Tutor, and the quote is prepended to the prompt verbatim. On Academy the
+   * choices carry ARIA roles rather than class names, which is why the shared
+   * EXAM_SKIP_SELECTORS list (not a Skilljar-specific one) is what is checked.
+   *
+   * Three positions are tested, not one. The endpoints catch a selection that
+   * starts or ends inside a choice; the containment sweep catches the drag
+   * that swallows a whole radiogroup, where both endpoints sit outside it and
+   * every choice still comes along in the text.
+   */
+  function selectionHitsExamChoice(range) {
+    if (!sb.isExamPage || !range) return false;
+    const selector = EXAM_SKIP_SELECTORS.join(', ');
+    const asElement = (node) => (node && node.nodeType === 3 ? node.parentElement : node);
+
+    for (const node of [range.startContainer, range.endContainer, range.commonAncestorContainer]) {
+      const el = asElement(node);
+      if (el && typeof el.closest === 'function' && el.closest(selector)) return true;
+    }
+
+    const scope = asElement(range.commonAncestorContainer);
+    if (scope && typeof scope.querySelectorAll === 'function' && typeof range.intersectsNode === 'function') {
+      for (const el of scope.querySelectorAll(selector)) {
+        if (range.intersectsNode(el)) return true;
+      }
+    }
+    return false;
+  }
+
   function initAskTutorButton() {
     askTutorBtn = document.createElement('button');
     askTutorBtn.className = 'si18n-ask-tutor-btn';
@@ -55,6 +90,10 @@
       }
 
       const range = sel.getRangeAt(0);
+      if (selectionHitsExamChoice(range)) {
+        hideAskButton();
+        return;
+      }
       const rect = range.getBoundingClientRect();
       const scrollX = window.scrollX;
       const scrollY = window.scrollY;
@@ -80,6 +119,14 @@
 
   function handleAskTutor() {
     if (!pendingQuote) return;
+    // Re-checked at press time, not only at selection time: exam state is owned
+    // by the SPA lifecycle and can flip between the two while the button is
+    // still on screen and the selection is still live.
+    const liveSel = window.getSelection();
+    if (liveSel?.rangeCount && selectionHitsExamChoice(liveSel.getRangeAt(0))) {
+      hideAskButton();
+      return;
+    }
     const quote = pendingQuote;
     hideAskButton();
     window.getSelection()?.removeAllRanges();

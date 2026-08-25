@@ -22,7 +22,7 @@ function load(file) {
   return fake.module.exports;
 }
 
-const { TRANSLATION_POLICY, resolveTranslationPolicy, mayTranslateText, readObservedLocale } =
+const { TRANSLATION_POLICY, resolveTranslationPolicy, mayTranslateText, readObservedLocale, createLocalizationPolicy } =
   load('academy-localization.js');
 
 describe('resolveTranslationPolicy', () => {
@@ -121,5 +121,100 @@ describe('readObservedLocale', () => {
     document.documentElement.removeAttribute('lang');
     const observed = readObservedLocale(document, { search: '', pathname: '/courses/c' });
     expect(resolveTranslationPolicy({ observedLocale: observed, targetLang: 'ko' }).mayTranslate).toBe(false);
+  });
+});
+
+describe('createLocalizationPolicy', () => {
+  function loc(pathname, search = '') {
+    return { pathname, search, href: `https://academy.claude.com${pathname}${search}` };
+  }
+
+  test('a non-localized host is FULL regardless of what the document claims', () => {
+    // Skilljar's <html lang> is English anyway; pinning the value means a host
+    // that mislabels itself cannot switch translation off everywhere.
+    document.documentElement.setAttribute('lang', 'es');
+    const policy = createLocalizationPolicy({ localizedHost: false, doc: document, loc: loc('/es/courses/c') });
+    policy.setTarget('ko');
+    expect(policy.resolved().policy).toBe(TRANSLATION_POLICY.FULL);
+    expect(policy.mayTranslate()).toBe(true);
+    document.documentElement.removeAttribute('lang');
+  });
+
+  test('captures the page locale at construction, before <html lang> is rewritten', () => {
+    document.documentElement.setAttribute('lang', 'es');
+    const policy = createLocalizationPolicy({ localizedHost: true, doc: document, loc: loc('/es/courses/c') });
+    // updateLangClass() does exactly this once translation starts.
+    document.documentElement.setAttribute('lang', 'ko');
+    policy.setTarget('ko');
+    // Still Spanish as far as the policy is concerned — not "already Korean".
+    expect(policy.observedLocale()).toBe('es');
+    expect(policy.resolved().policy).toBe(TRANSLATION_POLICY.FAIL_CLOSED);
+    document.documentElement.removeAttribute('lang');
+  });
+
+  test('an English Academy page for a Korean reader translates in full', () => {
+    document.documentElement.setAttribute('lang', 'en');
+    const policy = createLocalizationPolicy({ localizedHost: true, doc: document, loc: loc('/courses/c') });
+    policy.setTarget('ko');
+    expect(policy.mayTranslate()).toBe(true);
+    expect(policy.mayTranslateText(true)).toBe(true);
+    document.documentElement.removeAttribute('lang');
+  });
+
+  test('under residue-only, only text that still reads as English may be sent', () => {
+    document.documentElement.setAttribute('lang', 'ko');
+    const policy = createLocalizationPolicy({ localizedHost: true, doc: document, loc: loc('/ko/courses/c') });
+    policy.setTarget('ko');
+    expect(policy.resolved().policy).toBe(TRANSLATION_POLICY.RESIDUE_ONLY);
+    expect(policy.mayTranslateText(true)).toBe(true);
+    expect(policy.mayTranslateText(false)).toBe(false);
+    document.documentElement.removeAttribute('lang');
+  });
+
+  test('a route change re-reads the locale from the URL', () => {
+    document.documentElement.setAttribute('lang', 'en');
+    const policy = createLocalizationPolicy({ localizedHost: true, doc: document, loc: loc('/courses/c') });
+    policy.setTarget('ko');
+    expect(policy.mayTranslate()).toBe(true);
+
+    // The learner switched Academy itself into Spanish; the locale rides in the path.
+    policy.onRouteChange(loc('/es/courses/c/making-a-request'));
+    expect(policy.observedLocale()).toBe('es');
+    expect(policy.mayTranslate()).toBe(false);
+    document.documentElement.removeAttribute('lang');
+  });
+
+  test('a route change never falls back to <html lang>, which is ours by then', () => {
+    document.documentElement.setAttribute('lang', 'ko');
+    const policy = createLocalizationPolicy({ localizedHost: true, doc: document, loc: loc('/ko/courses/c') });
+    policy.setTarget('ko');
+    // Our own value, written by updateLangClass().
+    document.documentElement.setAttribute('lang', 'vi');
+    // A path with no locale prefix carries no evidence; the baseline must hold.
+    policy.onRouteChange(loc('/ko/courses/c/lesson-two'));
+    expect(policy.observedLocale()).toBe('ko');
+    document.documentElement.removeAttribute('lang');
+  });
+
+  test('announces exactly once per transition into a blocking state', () => {
+    document.documentElement.setAttribute('lang', 'es');
+    const seen = [];
+    const policy = createLocalizationPolicy({
+      localizedHost: true,
+      doc: document,
+      loc: loc('/es/courses/c'),
+      onChange: (state) => seen.push(state.policy),
+    });
+    policy.setTarget('es');
+    policy.setTarget('es');
+    expect(seen).toEqual([TRANSLATION_POLICY.BLOCKED]);
+    document.documentElement.removeAttribute('lang');
+  });
+
+  test('a missing target fails closed rather than assuming English', () => {
+    document.documentElement.setAttribute('lang', 'fr');
+    const policy = createLocalizationPolicy({ localizedHost: true, doc: document, loc: loc('/fr/courses/c') });
+    expect(policy.mayTranslate()).toBe(false);
+    document.documentElement.removeAttribute('lang');
   });
 });

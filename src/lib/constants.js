@@ -96,6 +96,26 @@ const EXAM_SKIP_SELECTORS = [
   '[aria-checked]',
 ];
 
+// Shown when a page is already published in its own official locale and the
+// residue cannot be told apart from it, so nothing may be sent. Without this
+// the learner picks a language, nothing changes, and the extension reads as
+// broken — see src/lib/academy-localization.js for why the block is right.
+const LOCALIZED_PAGE_LABELS = {
+  en: 'This page is already published in its own language — SkillBridge left it untouched.',
+  ko: '이 페이지는 이미 자체 언어로 제공됩니다 — SkillBridge는 원문을 그대로 두었습니다.',
+  id: 'Halaman ini sudah tersedia dalam bahasanya sendiri — SkillBridge membiarkannya apa adanya.',
+  it: "Questa pagina è già pubblicata nella sua lingua — SkillBridge l'ha lasciata invariata.",
+  ja: 'このページはすでに独自の言語で公開されています — SkillBridge は原文のままにしました。',
+  'zh-CN': '本页面已以其自身语言发布 — SkillBridge 未作改动。',
+  'zh-TW': '本頁面已以其自身語言發布 — SkillBridge 未作變更。',
+  es: 'Esta página ya está publicada en su propio idioma; SkillBridge no la ha modificado.',
+  fr: "Cette page est déjà publiée dans sa propre langue — SkillBridge ne l'a pas modifiée.",
+  de: 'Diese Seite ist bereits in ihrer eigenen Sprache veröffentlicht — SkillBridge hat sie unverändert gelassen.',
+  'pt-BR': 'Esta página já é publicada no próprio idioma — o SkillBridge não a alterou.',
+  ru: 'Эта страница уже опубликована на своём языке — SkillBridge оставил её без изменений.',
+  vi: 'Trang này đã được xuất bản bằng ngôn ngữ riêng — SkillBridge giữ nguyên nội dung.',
+};
+
 const EXAM_BANNER_LABELS = {
   en: 'Exam mode — answer choices are not translated to preserve accuracy.',
   ko: '시험 모드 — 정확성을 위해 답안 선택지는 번역되지 않습니다.',

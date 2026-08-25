@@ -156,6 +156,10 @@
   // may not be loaded until later). content.js exposes the prebuilt strings
   // via `sb.translatableSelector` / `sb.excludeSelector` (added in v3.5.15).
   function getTranslatableElements() {
+    // A site that publishes its own locales can forbid the whole walk — see
+    // academy-localization.js. Bailing here keeps the policy off the hot path
+    // for the hosts that resolve to FULL, which is all of them but Academy.
+    if (sb.localization && !sb.localization.mayTranslate()) return [];
     const examSkip = sb.isExamPage ? EXAM_SKIP_SELECTORS.join(', ') : null;
     const TRANSLATABLE_SELECTOR = sb.translatableSelector;
     const EXCLUDE_SELECTOR = sb.excludeSelector;
@@ -213,6 +217,12 @@
     // produced. Every entry path (initial scan, LATE_CONTENT re-scan, lazy
     // observer, DOM-mutation path) lands here, so one guard covers them all.
     if (alreadyTranslated(el, fullText)) return null;
+    // Localization CHOKEPOINT, and it sits above the English check on purpose.
+    // Every entry path — static scan, late re-scan, mutation, lazy viewport —
+    // lands here, so one guard covers them all. `mayTranslateText` is what
+    // makes RESIDUE_ONLY real: under it, only text that still reads as English
+    // may be sent, which is exactly the residue on an official translation.
+    if (sb.localization && !sb.localization.mayTranslateText(isLikelyEnglish(fullText))) return null;
     if (!isLikelyEnglish(fullText)) return null;
 
     // Exam/quiz safety CHOKEPOINT: never translate answer-choice elements, no
@@ -286,6 +296,10 @@
 
   function applyStaticTranslations(targetLang) {
     const translator = sb.translator;
+    // Bail BEFORE updateLangClass. Relabelling <html lang> on a page we are
+    // forbidden to translate would tell a screen reader the content is Korean
+    // while it is still Spanish — worse than doing nothing.
+    if (sb.localization && !sb.localization.mayTranslate()) return;
     window._protectedTerms.buildProtectedTermsMap(targetLang, translator);
     sb.updateLangClass(targetLang);
     // Re-detect exam page (DOM may have loaded since init).
