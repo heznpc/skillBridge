@@ -21,6 +21,7 @@ const {
   classifyPageKind,
   assessChoiceExcludability,
   buildSafetyRecord,
+  withPostSubmit,
   evaluateSafetyContract,
 } = require('../scripts/lib/academy-safety');
 
@@ -174,6 +175,56 @@ describe('auth-wall detection', () => {
   });
 });
 
+describe('withPostSubmit', () => {
+  const observedQuiz = () =>
+    buildSafetyRecord({
+      path: '/courses/c/quiz-on-x',
+      heading: 'Quiz on X',
+      question: { count: 1 },
+      choices: { count: 4, inputType: 'radio', labelAssociated: true },
+      controls: { submitPresent: true, submitRole: 'button' },
+    });
+
+  test('promotes to complete only with real post-submit evidence', () => {
+    const out = withPostSubmit(observedQuiz(), {
+      resultStatePresent: true,
+      correctnessSignals: ['aria-live', 'data-status'],
+      explanationPresent: true,
+      retryPresent: true,
+    });
+    expect(out.status).toBe(STATUS.COMPLETE);
+    expect(out.state).toBe('post-submit');
+    expect(out).not.toHaveProperty('blocker');
+  });
+
+  test('a submitted quiz with no result signal stays partial', () => {
+    const out = withPostSubmit(observedQuiz(), { resultStatePresent: false, correctnessSignals: [] });
+    expect(out.status).toBe(STATUS.PARTIAL);
+  });
+
+  test('post-submit evidence cannot rescue unidentifiable choices', () => {
+    // Seeing a result screen says nothing about whether the choices could
+    // have been excluded in the first place.
+    const walled = buildSafetyRecord({ path: '/courses/c/quiz-on-x', heading: 'Quiz on X', choices: { count: 0 } });
+    const out = withPostSubmit(walled, { resultStatePresent: true, correctnessSignals: ['aria-live'] });
+    expect(out.status).toBe(STATUS.PARTIAL);
+  });
+
+  test('no post-submit observation leaves the record untouched', () => {
+    expect(withPostSubmit(observedQuiz(), null).postSubmit).toBeNull();
+  });
+
+  test('post-submit records shape, never content', () => {
+    const out = withPostSubmit(observedQuiz(), {
+      resultStatePresent: true,
+      correctnessSignals: ['aria-live'],
+      explanationPresent: true,
+      explanationText: 'Because max_tokens is a ceiling, not a target.',
+    });
+    expect(JSON.stringify(out)).not.toContain('max_tokens');
+  });
+});
+
 describe('evaluateSafetyContract', () => {
   test('answers each question separately, and never claims more than partial', () => {
     const records = [
@@ -193,6 +244,8 @@ describe('evaluateSafetyContract', () => {
       verdict: STATUS.PARTIAL,
     });
     // Neither of these is observable without signing in and navigating.
+    // Identifying the page is not the same as proving the tutor switch holds
+    // once the assessment is actually on screen.
     expect(out.tutorExamSignalAvailable).toBe(STATUS.UNKNOWN);
     expect(out.survivesSpaNavigation).toBe(STATUS.UNKNOWN);
   });

@@ -150,6 +150,47 @@ function buildSafetyRecord(snapshot) {
 }
 
 /**
+ * Fold an authenticated post-submit observation into a record.
+ *
+ * Promotion to `complete` is the ONLY path, and it requires the things that
+ * only exist after submitting as a signed-in user. Everything else stays
+ * `partial`, because signing off the exam contract against evidence nobody
+ * collected is the failure this whole module is shaped to prevent.
+ *
+ * @param {object} record — a pre-submit record from buildSafetyRecord
+ * @param {object|null} postSubmit — observed shape, never content
+ * @returns {object}
+ */
+function withPostSubmit(record, postSubmit) {
+  const r = record || {};
+  if (!postSubmit || typeof postSubmit !== 'object') return { ...r, postSubmit: null };
+
+  const ps = {
+    resultStatePresent: !!postSubmit.resultStatePresent,
+    correctnessSignals: Array.isArray(postSubmit.correctnessSignals) ? postSubmit.correctnessSignals : [],
+    explanationPresent: !!postSubmit.explanationPresent,
+    retryPresent: !!postSubmit.retryPresent,
+  };
+
+  // A submitted quiz whose choices were never identifiable tells us nothing
+  // about whether they can be excluded, so it cannot complete either.
+  const preSubmitUsable = r.choices && r.choices.count > 0 && r.choices.excludable;
+  const postSubmitUsable = ps.resultStatePresent && ps.correctnessSignals.length > 0;
+
+  if (preSubmitUsable && postSubmitUsable) {
+    const promoted = { ...r, postSubmit: ps, state: 'post-submit', status: STATUS.COMPLETE };
+    delete promoted.blocker;
+    return promoted;
+  }
+  return {
+    ...r,
+    postSubmit: ps,
+    status: STATUS.PARTIAL,
+    blocker: preSubmitUsable ? BLOCKER.NO_QUIZ_CONTENT : r.blocker || BLOCKER.AUTH_REQUIRED,
+  };
+}
+
+/**
  * Can the existing safety contract be implemented on what was observed?
  *
  * Returns the five questions as explicit verdicts instead of a single
@@ -168,10 +209,23 @@ function evaluateSafetyContract(records) {
     quizDistinguishableFromLesson: quizzes.length > 0 && lessons.length > 0,
     choicesIdentifiable: quizzes.length > 0 && quizzes.every((r) => r.choices.count > 0),
     choicesExcludable: quizzes.length > 0 && quizzes.every((r) => r.choices.excludable),
-    // Nothing observed anonymously can answer these two.
-    tutorExamSignalAvailable: STATUS.UNKNOWN,
-    survivesSpaNavigation: STATUS.UNKNOWN,
-    verdict: STATUS.PARTIAL,
+    // A stable exam signal needs a quiz that was identified by more than one
+    // signal; a single hook is not something to switch the tutor on.
+    // Identifying a quiz page is necessary but not sufficient: the tutor
+    // switch also has to hold once the assessment is on screen, which is only
+    // observable with a submitted, signed-in quiz. Anonymous evidence never
+    // answers this — claiming `true` from a URL and a heading is exactly the
+    // overclaim this module exists to prevent.
+    tutorExamSignalAvailable:
+      quizzes.length > 0 && quizzes.every((r) => r.status === STATUS.COMPLETE && (r.pageKindSignals || []).length >= 2)
+        ? true
+        : STATUS.UNKNOWN,
+    // Only an observation that actually navigated can speak to this.
+    survivesSpaNavigation: list.some((r) => r && r.spaNavigationChecked)
+      ? list.every((r) => !r || r.spaNavigationHeld !== false)
+      : STATUS.UNKNOWN,
+    verdict:
+      quizzes.length > 0 && quizzes.every((r) => r.status === STATUS.COMPLETE) ? STATUS.COMPLETE : STATUS.PARTIAL,
   };
 }
 
@@ -182,5 +236,6 @@ module.exports = {
   classifyPageKind,
   assessChoiceExcludability,
   buildSafetyRecord,
+  withPostSubmit,
   evaluateSafetyContract,
 };
