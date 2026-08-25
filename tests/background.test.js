@@ -716,6 +716,54 @@ describe('isolated cloud broker replacement', () => {
     expect(_isPuterBrokerPort(missingDocument)).toBe(false);
   });
 
+  // ────────────────────────────────────────────────────────────────
+  // The trust boundary is ONE list, and both halves read it.
+  //
+  // It used to be written out twice — once for the broker port, once for the
+  // client port — with the host literal inline in both. Two copies of a
+  // security boundary is one copy that gets updated, and the failure is silent
+  // either way: the tutor refuses to connect on a host somebody forgot, or a
+  // host somebody added lands in only the permissive half.
+  // ────────────────────────────────────────────────────────────────
+  test('academy.claude.com is trusted by BOTH halves, or by neither', () => {
+    const url = 'https://academy.claude.com/courses/building-with-the-claude-api/accessing-the-api';
+    const broker = brokerPort({ name: 'sb-puter-content', url, documentId: 'academy-document' });
+    const client = brokerPort({ name: 'sb-cloud-chat-client', url, documentId: 'academy-document' });
+    expect(_isPuterBrokerPort(broker)).toBe(true);
+    expect(_isAllowedCloudClient(client)).toBe(true);
+  });
+
+  test('a lookalike host is trusted by neither', () => {
+    // Exact hostname, not a suffix match. claude.com serves the marketing site
+    // and the tutorials; platform.claude.com and code.claude.com are different
+    // products; and an attacker-controlled academy.claude.com.evil.test must
+    // never satisfy a sloppy endsWith.
+    for (const host of [
+      'claude.com',
+      'platform.claude.com',
+      'academy.claude.com.evil.test',
+      'evil-academy.claude.com',
+    ]) {
+      const url = `https://${host}/courses/a/b`;
+      expect(_isPuterBrokerPort(brokerPort({ name: 'sb-puter-content', url }))).toBe(false);
+      expect(_isAllowedCloudClient(brokerPort({ name: 'sb-cloud-chat-client', url }))).toBe(false);
+    }
+  });
+
+  test('an Academy broker still has to satisfy every structural check', () => {
+    // Being on a trusted host is necessary, not sufficient. The frame, the
+    // extension id, the document lifecycle and the protocol all still apply.
+    const url = 'https://academy.claude.com/courses/a/b';
+    expect(_isPuterBrokerPort(brokerPort({ name: 'sb-puter-content', url, frameId: 2 }))).toBe(false);
+    expect(_isPuterBrokerPort(brokerPort({ name: 'sb-puter-content', url, id: 'attacker-extension' }))).toBe(false);
+    expect(_isPuterBrokerPort(brokerPort({ name: 'sb-puter-content', url, documentLifecycle: 'prerender' }))).toBe(
+      false,
+    );
+    expect(
+      _isPuterBrokerPort(brokerPort({ name: 'sb-puter-content', url: 'http://academy.claude.com/courses/a/b' })),
+    ).toBe(false);
+  });
+
   test('accepts only exact active top-frame clients and pairs the same document', () => {
     const broker = brokerPort({
       name: 'sb-puter-content',

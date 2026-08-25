@@ -65,6 +65,10 @@ const batches = [
     'tests/e2e/chat-history.spec.js',
     'tests/e2e/stream-cancel.spec.js',
     'tests/e2e/tutor-chat.spec.js',
+    // With the tutor specs, not the Academy ones: this is a transport claim.
+    // It asserts on the prompt the model actually received, which is the only
+    // place a guard that is built and then dropped becomes visible.
+    'tests/e2e/academy-tutor.spec.js',
     'tests/e2e/tutor-offline.spec.js',
   ],
   ['tests/e2e/puter-frame-boot.spec.js'],

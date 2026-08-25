@@ -523,11 +523,21 @@ class SkilljarTranslator {
     // two are ever refactored together. `tests/local-engine.test.js` locks the
     // asymmetry.
     const read = chrome.storage.local.get('sb_ai_engine');
-    const timeout = new Promise((_resolve, reject) =>
-      setTimeout(() => reject(new Error('Tutor engine preference read timed out')), 1500),
-    );
-    const result = await Promise.race([read, timeout]);
-    return result?.sb_ai_engine || 'cloud';
+    // The timer is cleared in `finally`, which matters twice: an uncleared
+    // 1.5s timeout is left armed by every single chat message, and when it
+    // fires after the read already won, its rejection has no handler — one
+    // unhandled promise rejection per tutor question. Clearing it means the
+    // losing promise never settles at all.
+    let timer;
+    const timeout = new Promise((_resolve, reject) => {
+      timer = setTimeout(() => reject(new Error('Tutor engine preference read timed out')), 1500);
+    });
+    try {
+      const result = await Promise.race([read, timeout]);
+      return result?.sb_ai_engine || 'cloud';
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
   // Stream a tutor reply from a local OpenAI-compatible server (Ollama, …).
@@ -596,13 +606,29 @@ class SkilljarTranslator {
     });
   }
 
-  async chatStream(userMessage, targetLang, courseContext = '', onChunk, opts = {}) {
-    try {
-      const langName = this.supportedLanguages[targetLang] || 'English';
-      const examGuard = opts.isExamPage
-        ? '\nCRITICAL: The user is on a certification exam page. You MUST NOT provide answers, solutions, or hints to exam questions under any circumstances. Only explain general concepts. If the user asks for specific exam answers, politely decline.'
-        : '';
-      const prompt = `You are SkillBridge Tutor, a bilingual AI learning assistant for free AI courses hosted at anthropic.skilljar.com. Respond in ${langName}.
+  /**
+   * Build the Tutor prompt.
+   *
+   * Extracted so every engine provably gets the SAME text. The exam guard used
+   * to be assembled inline in the one function that also chose the transport,
+   * which made "cloud and local carry the same protection" a property of where
+   * the lines happened to sit rather than something a test could hold. It is
+   * the single prompt builder now, and `chatStream` calls it before it knows
+   * which engine will run.
+   *
+   * The guard is the second layer, not the first. Answer-choice text never
+   * reaches here at all: `getPageContext()` drops the lesson body on an
+   * assessment page, the translation chokepoint keeps choices out of the queue
+   * and the cache, and the selection quote refuses a highlight that touches
+   * one. This is what remains if the learner types a question about an answer
+   * themselves.
+   */
+  _buildTutorPrompt({ userMessage, targetLang, courseContext = '', isExamPage = false } = {}) {
+    const langName = this.supportedLanguages[targetLang] || 'English';
+    const examGuard = isExamPage
+      ? '\nCRITICAL: The user is on a certification exam page. You MUST NOT provide answers, solutions, or hints to exam questions under any circumstances. Only explain general concepts. If the user asks for specific exam answers, politely decline.'
+      : '';
+    return `You are SkillBridge Tutor, a bilingual AI learning assistant for Anthropic's free AI courses. Respond in ${langName}.
 
 Your strengths:
 - You understand both the original English content and the learner's language.
@@ -617,6 +643,16 @@ Guidelines:
 ${courseContext ? `Current course context: ${courseContext}` : ''}
 
 User: ${userMessage}`;
+  }
+
+  async chatStream(userMessage, targetLang, courseContext = '', onChunk, opts = {}) {
+    try {
+      const prompt = this._buildTutorPrompt({
+        userMessage,
+        targetLang,
+        courseContext,
+        isExamPage: opts.isExamPage,
+      });
 
       // Route to the selected AI engine (settings, chrome.storage.local):
       // 'cloud' (default) = Claude via the Puter bridge; 'local' = an

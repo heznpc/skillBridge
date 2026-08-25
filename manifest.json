@@ -88,7 +88,7 @@
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://anthropic.skilljar.com/*"],
+      "matches": ["https://anthropic.skilljar.com/*", "https://academy.claude.com/*"],
       "js": ["src/bridge/puter-content-init.js", "src/bridge/puter.js", "src/bridge/puter-content-broker.js"],
       "run_at": "document_end",
       "world": "ISOLATED"

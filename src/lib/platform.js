@@ -197,18 +197,29 @@ const _CAPS_CLAUDE_TUTORIALS = Object.freeze({
   youtubeSubtitles: false,
 });
 
-// academy.claude.com: translation + reading aid, and exam detection ON — but
-// served by the Academy adapter's ARIA signals, not the Skilljar selectors,
-// which match nothing here. `bridge` stays false until the tutor's exam-safe
-// switching is verified against this DOM; shipping the tutor before that
-// would put it on assessment pages with no working guard.
+// academy.claude.com: translation + reading aid, exam detection ON — served by
+// the Academy adapter's ARIA signals, not the Skilljar selectors, which match
+// nothing here — and the AI Tutor.
+//
+// `bridge` was held at false until the exam-safe switch was verified against
+// this DOM, because shipping the tutor onto assessment pages with no working
+// guard is the one failure this whole host must not have. It is on now:
+// tests/e2e/academy-lifecycle.spec.js walks lesson → quiz → lesson → quiz
+// through the real route controller and observer, tests/e2e/academy-tutor.spec.js
+// proves the guard reaches the model prompt and the answer choices do not, and
+// the background's transport boundary names this host in one place that both
+// port checks read.
+//
+// `trusted` stays FALSE, and that is not an oversight. It is the Skilljar
+// full-feature profile flag — header injection, the global keyboard listener,
+// the Skilljar selector set — none of which apply to a different application.
 const _CAPS_CLAUDE_ACADEMY = Object.freeze({
   platform: PLATFORM_IDS.CLAUDE_ACADEMY,
   trusted: false,
   contentScope: null,
   sidebar: true,
   fab: true,
-  bridge: false,
+  bridge: globalThis.__SKILLBRIDGE_AI_GATEWAY_ENABLED__ === true,
   headerControls: false,
   keyboardShortcuts: false,
   readingAid: true,

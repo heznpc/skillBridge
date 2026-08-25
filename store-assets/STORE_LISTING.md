@@ -136,7 +136,7 @@ Allows translation to run only on Claude tutorial paths, rather than across all 
 
 ### Content-script match: academy.claude.com
 
-Allows translation to run on Anthropic's Claude Academy, the successor course platform to the Skilljar tenant. Academy assessment pages are detected from the live page — route, heading, and the ARIA radiogroup — and their answer choices are excluded from translation, so answer text is never sent to Google Translate, never cached, and never reaches the AI Tutor. Academy also publishes its own official locales; where a page is already in the reader's language, SkillBridge sends nothing rather than re-translating Anthropic's own copy.
+Allows translation and the AI Tutor to run on Anthropic's Claude Academy, the successor course platform to the Skilljar tenant. Academy assessment pages are detected from the live page — route, heading, and the ARIA radiogroup — and their answer choices are excluded from translation, so answer text is never sent to Google Translate, never cached, and never reaches the AI Tutor. Academy also publishes its own official locales; where a page is already in the reader's language, SkillBridge sends nothing rather than re-translating Anthropic's own copy. The Tutor transport is admitted on this host and on `anthropic.skilljar.com` only, by exact hostname.
 
 ### Host permission: translate.googleapis.com
 

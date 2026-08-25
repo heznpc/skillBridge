@@ -705,6 +705,20 @@ async function evalInContentWorld(context, op, arg) {
                   question: document.getElementById('academy-quiz-question')?.textContent?.trim() || null,
                   title: document.querySelector('h1')?.textContent?.trim() || null,
                 }),
+                // The prompt the model was actually handed, recorded by the
+                // Puter stub, plus how many times it has been asked at all.
+                lastTutorPrompt: async () => {
+                  const r = await chrome.storage.local.get(['sb_e2e_last_prompt']);
+                  return { prompt: r.sb_e2e_last_prompt || null };
+                },
+                clearTutorPrompt: async () => {
+                  await chrome.storage.local.remove(['sb_e2e_last_prompt']);
+                  return { ok: true };
+                },
+                setTutorEngine: async (engine) => {
+                  await chrome.storage.local.set({ sb_ai_engine: engine });
+                  return { engine };
+                },
                 // What the tutor would be sent for the current page.
                 tutorContext: () => ({ context: window._sb?.getPageContext?.() || '' }),
                 // Simulate a Skilljar SPA-style navigation: atomically swap the

@@ -46,6 +46,11 @@ const PUTER_STREAM_STUB = `
     },
     ai: {
       chat: async function (prompt, opts) {
+        // Record what the model was ACTUALLY asked. Assertions about exam
+        // safety have to be about the prompt that reached the model, not about
+        // the page or the rendered reply: a guard that is built and then
+        // dropped on the way to the transport looks identical from both ends.
+        await chrome.storage.local.set({ sb_e2e_last_prompt: String(prompt ?? '') });
         const state = await chrome.storage.local.get(['sb_e2e_fail_chat_count', 'sb_e2e_chunk_delay']);
         const failCount = Number(state.sb_e2e_fail_chat_count || 0);
         if (opts && opts.stream && failCount > 0) {

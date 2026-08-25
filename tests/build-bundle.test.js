@@ -39,9 +39,13 @@ describe('bundled artifact shape', () => {
     const manifest = JSON.parse(fs.readFileSync(path.join(DIST_DIR, 'manifest.json'), 'utf8'));
     expect(manifest.content_scripts[0].js).toEqual(['content.bundle.js']);
     expect(manifest.content_scripts[0].css).toEqual(['content.bundle.css']);
+    // Exact hosts, never a wildcard. The Tutor broker is the extension's only
+    // outbound AI transport, and the background's port checks admit exactly
+    // these origins — a pattern here that outgrew that list would mean a page
+    // running the broker on a host the service worker will not talk to.
     expect(manifest.content_scripts[1]).toEqual(
       expect.objectContaining({
-        matches: ['https://anthropic.skilljar.com/*'],
+        matches: ['https://anthropic.skilljar.com/*', 'https://academy.claude.com/*'],
         world: 'ISOLATED',
         js: ['src/bridge/puter-content-init.js', 'src/bridge/puter.js', 'src/bridge/puter-content-broker.js'],
       }),
