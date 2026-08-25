@@ -1,0 +1,4065 @@
+{
+  "schemaVersion": 1,
+  "platform": "claude-academy",
+  "origin": "https://academy.claude.com",
+  "observedAt": "2026-08-25T09:09:37.119Z",
+  "courses": [
+    {
+      "slug": "ai-capabilities-and-limitations",
+      "path": "/courses/ai-capabilities-and-limitations",
+      "title": "AI Capabilities and Limitations",
+      "sections": [
+        {
+          "title": null,
+          "order": 1,
+          "units": [
+            {
+              "order": 1,
+              "kind": "lesson",
+              "slug": "intro-to-ai-capabilities-and-limitations",
+              "path": "/courses/ai-capabilities-and-limitations/intro-to-ai-capabilities-and-limitations",
+              "title": "Intro to AI Capabilities and Limitations"
+            },
+            {
+              "order": 2,
+              "kind": "lesson",
+              "slug": "what-we-mean-by-ai",
+              "path": "/courses/ai-capabilities-and-limitations/what-we-mean-by-ai",
+              "title": "What We Mean by AI"
+            },
+            {
+              "order": 3,
+              "kind": "lesson",
+              "slug": "how-ai-gets-its-character",
+              "path": "/courses/ai-capabilities-and-limitations/how-ai-gets-its-character",
+              "title": "How AI Gets Its Character"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 2,
+          "units": [
+            {
+              "order": 4,
+              "kind": "lesson",
+              "slug": "next-token-prediction",
+              "path": "/courses/ai-capabilities-and-limitations/next-token-prediction",
+              "title": "Next Token Prediction"
+            },
+            {
+              "order": 5,
+              "kind": "lesson",
+              "slug": "try-it-out",
+              "path": "/courses/ai-capabilities-and-limitations/try-it-out",
+              "title": "Try It Out: Next Token Prediction"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 3,
+          "units": [
+            {
+              "order": 6,
+              "kind": "lesson",
+              "slug": "knowledge",
+              "path": "/courses/ai-capabilities-and-limitations/knowledge",
+              "title": "Knowledge"
+            },
+            {
+              "order": 7,
+              "kind": "lesson",
+              "slug": "try-it-out-31vzkl2dgi907",
+              "path": "/courses/ai-capabilities-and-limitations/try-it-out-31vzkl2dgi907",
+              "title": "Try It Out: Knowledge"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 4,
+          "units": [
+            {
+              "order": 8,
+              "kind": "lesson",
+              "slug": "working-memory",
+              "path": "/courses/ai-capabilities-and-limitations/working-memory",
+              "title": "Working Memory"
+            },
+            {
+              "order": 9,
+              "kind": "lesson",
+              "slug": "try-it-out-q7hdjm9twcbt",
+              "path": "/courses/ai-capabilities-and-limitations/try-it-out-q7hdjm9twcbt",
+              "title": "Try It Out: Working Memory"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 5,
+          "units": [
+            {
+              "order": 10,
+              "kind": "lesson",
+              "slug": "steerability",
+              "path": "/courses/ai-capabilities-and-limitations/steerability",
+              "title": "Steerability"
+            },
+            {
+              "order": 11,
+              "kind": "lesson",
+              "slug": "try-it-out-y02xgkpa6wa7",
+              "path": "/courses/ai-capabilities-and-limitations/try-it-out-y02xgkpa6wa7",
+              "title": "Try It Out: Steerability"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 6,
+          "units": [
+            {
+              "order": 12,
+              "kind": "lesson",
+              "slug": "when-properties-collide",
+              "path": "/courses/ai-capabilities-and-limitations/when-properties-collide",
+              "title": "When Properties Collide"
+            },
+            {
+              "order": 13,
+              "kind": "lesson",
+              "slug": "next-steps",
+              "path": "/courses/ai-capabilities-and-limitations/next-steps",
+              "title": "Next Steps"
+            },
+            {
+              "order": 14,
+              "kind": "quiz",
+              "slug": "course-quiz",
+              "path": "/courses/ai-capabilities-and-limitations/course-quiz",
+              "title": "Course Quiz"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 7,
+          "units": [
+            {
+              "order": 15,
+              "kind": "unknown",
+              "slug": "badge",
+              "path": "/courses/ai-capabilities-and-limitations/badge",
+              "title": "Completion badge"
+            }
+          ]
+        }
+      ],
+      "unitCount": 15
+    },
+    {
+      "slug": "ai-fluency-for-builders",
+      "path": "/courses/ai-fluency-for-builders",
+      "title": "AI Fluency for Builders",
+      "sections": [
+        {
+          "title": null,
+          "order": 1,
+          "units": [
+            {
+              "order": 1,
+              "kind": "lesson",
+              "slug": "ai-fluency-for-builders",
+              "path": "/courses/ai-fluency-for-builders/ai-fluency-for-builders",
+              "title": "Welcome to AI Fluency for builders"
+            },
+            {
+              "order": 2,
+              "kind": "lesson",
+              "slug": "the-4d-framework",
+              "path": "/courses/ai-fluency-for-builders/the-4d-framework",
+              "title": "The 4D Framework"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 2,
+          "units": [
+            {
+              "order": 3,
+              "kind": "lesson",
+              "slug": "ai-capabilities-and-limitations",
+              "path": "/courses/ai-fluency-for-builders/ai-capabilities-and-limitations",
+              "title": "AI capabilities & limitations"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 3,
+          "units": [
+            {
+              "order": 4,
+              "kind": "lesson",
+              "slug": "delegation-the-builder-s-toolkit",
+              "path": "/courses/ai-fluency-for-builders/delegation-the-builder-s-toolkit",
+              "title": "Delegation & the builder's toolkit"
+            },
+            {
+              "order": 5,
+              "kind": "lesson",
+              "slug": "description-building-great-things",
+              "path": "/courses/ai-fluency-for-builders/description-building-great-things",
+              "title": "Description & building great things"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 4,
+          "units": [
+            {
+              "order": 6,
+              "kind": "lesson",
+              "slug": "discernment-for-code",
+              "path": "/courses/ai-fluency-for-builders/discernment-for-code",
+              "title": "Discernment for code"
+            },
+            {
+              "order": 7,
+              "kind": "lesson",
+              "slug": "discernment-for-user-experience",
+              "path": "/courses/ai-fluency-for-builders/discernment-for-user-experience",
+              "title": "Discernment for user experience"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 5,
+          "units": [
+            {
+              "order": 8,
+              "kind": "lesson",
+              "slug": "stand-behind-what-you-build",
+              "path": "/courses/ai-fluency-for-builders/stand-behind-what-you-build",
+              "title": "Stand behind what you build"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 6,
+          "units": [
+            {
+              "order": 9,
+              "kind": "lesson",
+              "slug": "closure-looking-forward",
+              "path": "/courses/ai-fluency-for-builders/closure-looking-forward",
+              "title": "Closure & looking forward"
+            },
+            {
+              "order": 10,
+              "kind": "quiz",
+              "slug": "course-quiz",
+              "path": "/courses/ai-fluency-for-builders/course-quiz",
+              "title": "Course quiz"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 7,
+          "units": [
+            {
+              "order": 11,
+              "kind": "unknown",
+              "slug": "badge",
+              "path": "/courses/ai-fluency-for-builders/badge",
+              "title": "Completion badge"
+            }
+          ]
+        }
+      ],
+      "unitCount": 11
+    },
+    {
+      "slug": "ai-fluency-for-educators",
+      "path": "/courses/ai-fluency-for-educators",
+      "title": "AI Fluency for educators",
+      "sections": [
+        {
+          "title": null,
+          "order": 1,
+          "units": [
+            {
+              "order": 1,
+              "kind": "lesson",
+              "slug": "introduction-to-ai-fluency-for-educators",
+              "path": "/courses/ai-fluency-for-educators/introduction-to-ai-fluency-for-educators",
+              "title": "Introduction to AI Fluency for Educators"
+            },
+            {
+              "order": 2,
+              "kind": "lesson",
+              "slug": "ai-fluency-framework-review",
+              "path": "/courses/ai-fluency-for-educators/ai-fluency-framework-review",
+              "title": "AI Fluency Framework review"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 2,
+          "units": [
+            {
+              "order": 3,
+              "kind": "lesson",
+              "slug": "applying-ai-fluency-to-course-design-and-learning-outcomes",
+              "path": "/courses/ai-fluency-for-educators/applying-ai-fluency-to-course-design-and-learning-outcomes",
+              "title": "Applying AI Fluency to course design and learning outcomes"
+            },
+            {
+              "order": 4,
+              "kind": "lesson",
+              "slug": "applying-ai-fluency-to-learning-materials-and-assignments",
+              "path": "/courses/ai-fluency-for-educators/applying-ai-fluency-to-learning-materials-and-assignments",
+              "title": "Applying AI Fluency to learning materials and assignments"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 3,
+          "units": [
+            {
+              "order": 5,
+              "kind": "lesson",
+              "slug": "certificate-of-completion",
+              "path": "/courses/ai-fluency-for-educators/certificate-of-completion",
+              "title": "Course quiz"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 4,
+          "units": [
+            {
+              "order": 6,
+              "kind": "unknown",
+              "slug": "badge",
+              "path": "/courses/ai-fluency-for-educators/badge",
+              "title": "Completion badge"
+            }
+          ]
+        }
+      ],
+      "unitCount": 6
+    },
+    {
+      "slug": "ai-fluency-for-k-12-educators",
+      "path": "/courses/ai-fluency-for-k-12-educators",
+      "title": "AI Fluency for pK–12 Educators",
+      "sections": [
+        {
+          "title": null,
+          "order": 1,
+          "units": [
+            {
+              "order": 1,
+              "kind": "lesson",
+              "slug": "how-this-course-was-made",
+              "path": "/courses/ai-fluency-for-k-12-educators/how-this-course-was-made",
+              "title": "How this course was made"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 2,
+          "units": [
+            {
+              "order": 2,
+              "kind": "lesson",
+              "slug": "welcome-to-ai-fluency-for-k-12-educators",
+              "path": "/courses/ai-fluency-for-k-12-educators/welcome-to-ai-fluency-for-k-12-educators",
+              "title": "Welcome to AI Fluency for educators"
+            },
+            {
+              "order": 3,
+              "kind": "lesson",
+              "slug": "the-4d-framework",
+              "path": "/courses/ai-fluency-for-k-12-educators/the-4d-framework",
+              "title": "The 4D Framework"
+            },
+            {
+              "order": 4,
+              "kind": "lesson",
+              "slug": "explore",
+              "path": "/courses/ai-fluency-for-k-12-educators/explore",
+              "title": "Explore!"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 3,
+          "units": [
+            {
+              "order": 5,
+              "kind": "lesson",
+              "slug": "ai-capabilities-and-limitations",
+              "path": "/courses/ai-fluency-for-k-12-educators/ai-capabilities-and-limitations",
+              "title": "AI capabilities and limitations"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 4,
+          "units": [
+            {
+              "order": 6,
+              "kind": "lesson",
+              "slug": "creating-high-quality-ai-outputs-in-your-teaching-practice",
+              "path": "/courses/ai-fluency-for-k-12-educators/creating-high-quality-ai-outputs-in-your-teaching-practice",
+              "title": "Creating high quality AI outputs"
+            },
+            {
+              "order": 7,
+              "kind": "lesson",
+              "slug": "ethics-responsible-use",
+              "path": "/courses/ai-fluency-for-k-12-educators/ethics-responsible-use",
+              "title": "Ethics & responsible AI use"
+            },
+            {
+              "order": 8,
+              "kind": "lesson",
+              "slug": "ai-s-constitution-pedagogy-and-you",
+              "path": "/courses/ai-fluency-for-k-12-educators/ai-s-constitution-pedagogy-and-you",
+              "title": "AI's constitution, pedagogy, and you"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 5,
+          "units": [
+            {
+              "order": 9,
+              "kind": "lesson",
+              "slug": "tying-it-all-together",
+              "path": "/courses/ai-fluency-for-k-12-educators/tying-it-all-together",
+              "title": "Tying it all together"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 6,
+          "units": [
+            {
+              "order": 10,
+              "kind": "lesson",
+              "slug": "closure-and-enrichment",
+              "path": "/courses/ai-fluency-for-k-12-educators/closure-and-enrichment",
+              "title": "Closure and enrichment"
+            },
+            {
+              "order": 11,
+              "kind": "quiz",
+              "slug": "course-quiz",
+              "path": "/courses/ai-fluency-for-k-12-educators/course-quiz",
+              "title": "Course Quiz"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 7,
+          "units": [
+            {
+              "order": 12,
+              "kind": "unknown",
+              "slug": "badge",
+              "path": "/courses/ai-fluency-for-k-12-educators/badge",
+              "title": "Completion badge"
+            }
+          ]
+        }
+      ],
+      "unitCount": 12
+    },
+    {
+      "slug": "ai-fluency-for-nonprofits",
+      "path": "/courses/ai-fluency-for-nonprofits",
+      "title": "AI Fluency for nonprofits",
+      "sections": [
+        {
+          "title": null,
+          "order": 1,
+          "units": [
+            {
+              "order": 1,
+              "kind": "lesson",
+              "slug": "welcome-to-ai-fluency-for-nonprofits",
+              "path": "/courses/ai-fluency-for-nonprofits/welcome-to-ai-fluency-for-nonprofits",
+              "title": "Welcome to AI Fluency for nonprofits"
+            },
+            {
+              "order": 2,
+              "kind": "lesson",
+              "slug": "the-4d-framework",
+              "path": "/courses/ai-fluency-for-nonprofits/the-4d-framework",
+              "title": "The 4D Framework"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 2,
+          "units": [
+            {
+              "order": 3,
+              "kind": "lesson",
+              "slug": "researching-with-ai",
+              "path": "/courses/ai-fluency-for-nonprofits/researching-with-ai",
+              "title": "Researching with AI"
+            },
+            {
+              "order": 4,
+              "kind": "lesson",
+              "slug": "writing-with-ai",
+              "path": "/courses/ai-fluency-for-nonprofits/writing-with-ai",
+              "title": "Writing with AI"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 3,
+          "units": [
+            {
+              "order": 5,
+              "kind": "lesson",
+              "slug": "understanding-privacy-and-data",
+              "path": "/courses/ai-fluency-for-nonprofits/understanding-privacy-and-data",
+              "title": "Understanding privacy and data"
+            },
+            {
+              "order": 6,
+              "kind": "lesson",
+              "slug": "data-analysis-with-ai",
+              "path": "/courses/ai-fluency-for-nonprofits/data-analysis-with-ai",
+              "title": "Data analysis with AI"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 4,
+          "units": [
+            {
+              "order": 7,
+              "kind": "lesson",
+              "slug": "workflow-augmentation",
+              "path": "/courses/ai-fluency-for-nonprofits/workflow-augmentation",
+              "title": "Workflow augmentation"
+            },
+            {
+              "order": 8,
+              "kind": "lesson",
+              "slug": "integration",
+              "path": "/courses/ai-fluency-for-nonprofits/integration",
+              "title": "Integration"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 5,
+          "units": [
+            {
+              "order": 9,
+              "kind": "lesson",
+              "slug": "next-steps",
+              "path": "/courses/ai-fluency-for-nonprofits/next-steps",
+              "title": "Next steps"
+            },
+            {
+              "order": 10,
+              "kind": "quiz",
+              "slug": "course-quiz",
+              "path": "/courses/ai-fluency-for-nonprofits/course-quiz",
+              "title": "Course Quiz"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 6,
+          "units": [
+            {
+              "order": 11,
+              "kind": "unknown",
+              "slug": "badge",
+              "path": "/courses/ai-fluency-for-nonprofits/badge",
+              "title": "Completion badge"
+            }
+          ]
+        }
+      ],
+      "unitCount": 11
+    },
+    {
+      "slug": "ai-fluency-for-pk-12-train-the-trainer",
+      "path": "/courses/ai-fluency-for-pk-12-train-the-trainer",
+      "title": "AI Fluency for pK-12 Train the Trainer",
+      "sections": [
+        {
+          "title": null,
+          "order": 1,
+          "units": [
+            {
+              "order": 1,
+              "kind": "lesson",
+              "slug": "introduction-from-learner-to-trainer",
+              "path": "/courses/ai-fluency-for-pk-12-train-the-trainer/introduction-from-learner-to-trainer",
+              "title": "Introduction: From learner to trainer"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 2,
+          "units": [
+            {
+              "order": 2,
+              "kind": "lesson",
+              "slug": "how-to-use-the-kit",
+              "path": "/courses/ai-fluency-for-pk-12-train-the-trainer/how-to-use-the-kit",
+              "title": "How to use the kit"
+            },
+            {
+              "order": 3,
+              "kind": "lesson",
+              "slug": "deck-and-facilitator-guide",
+              "path": "/courses/ai-fluency-for-pk-12-train-the-trainer/deck-and-facilitator-guide",
+              "title": "Deck and facilitator guide"
+            },
+            {
+              "order": 4,
+              "kind": "lesson",
+              "slug": "learner-workbook",
+              "path": "/courses/ai-fluency-for-pk-12-train-the-trainer/learner-workbook",
+              "title": "Learner workbook"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 3,
+          "units": [
+            {
+              "order": 5,
+              "kind": "lesson",
+              "slug": "complete",
+              "path": "/courses/ai-fluency-for-pk-12-train-the-trainer/complete",
+              "title": "Course complete"
+            }
+          ]
+        }
+      ],
+      "unitCount": 5
+    },
+    {
+      "slug": "ai-fluency-for-small-businesses",
+      "path": "/courses/ai-fluency-for-small-businesses",
+      "title": "AI Fluency for Small Businesses",
+      "sections": [
+        {
+          "title": null,
+          "order": 1,
+          "units": [
+            {
+              "order": 1,
+              "kind": "lesson",
+              "slug": "ai-fluency-for-small-businesses",
+              "path": "/courses/ai-fluency-for-small-businesses/ai-fluency-for-small-businesses",
+              "title": "AI Fluency for small businesses"
+            },
+            {
+              "order": 2,
+              "kind": "lesson",
+              "slug": "the-4d-framework",
+              "path": "/courses/ai-fluency-for-small-businesses/the-4d-framework",
+              "title": "The 4D Framework"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 2,
+          "units": [
+            {
+              "order": 3,
+              "kind": "lesson",
+              "slug": "ai-capabilities-and-limits",
+              "path": "/courses/ai-fluency-for-small-businesses/ai-capabilities-and-limits",
+              "title": "AI capabilities and limitations"
+            },
+            {
+              "order": 4,
+              "kind": "lesson",
+              "slug": "explore",
+              "path": "/courses/ai-fluency-for-small-businesses/explore",
+              "title": "Explore!"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 3,
+          "units": [
+            {
+              "order": 5,
+              "kind": "lesson",
+              "slug": "researching-with-ai",
+              "path": "/courses/ai-fluency-for-small-businesses/researching-with-ai",
+              "title": "Refining with AI"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 4,
+          "units": [
+            {
+              "order": 6,
+              "kind": "lesson",
+              "slug": "using-data-with-ai",
+              "path": "/courses/ai-fluency-for-small-businesses/using-data-with-ai",
+              "title": "Transparent AI use"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 5,
+          "units": [
+            {
+              "order": 7,
+              "kind": "lesson",
+              "slug": "tying-it-all-together",
+              "path": "/courses/ai-fluency-for-small-businesses/tying-it-all-together",
+              "title": "Tying it all together"
+            },
+            {
+              "order": 8,
+              "kind": "lesson",
+              "slug": "human-in-the-loop",
+              "path": "/courses/ai-fluency-for-small-businesses/human-in-the-loop",
+              "title": "Human in the loop"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 6,
+          "units": [
+            {
+              "order": 9,
+              "kind": "lesson",
+              "slug": "closure-and-looking-forward",
+              "path": "/courses/ai-fluency-for-small-businesses/closure-and-looking-forward",
+              "title": "Closure and looking forward"
+            },
+            {
+              "order": 10,
+              "kind": "quiz",
+              "slug": "course-quiz",
+              "path": "/courses/ai-fluency-for-small-businesses/course-quiz",
+              "title": "Course quiz"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 7,
+          "units": [
+            {
+              "order": 11,
+              "kind": "unknown",
+              "slug": "badge",
+              "path": "/courses/ai-fluency-for-small-businesses/badge",
+              "title": "Completion badge"
+            }
+          ]
+        }
+      ],
+      "unitCount": 11
+    },
+    {
+      "slug": "ai-fluency-for-students",
+      "path": "/courses/ai-fluency-for-students",
+      "title": "AI Fluency for students",
+      "sections": [
+        {
+          "title": null,
+          "order": 1,
+          "units": [
+            {
+              "order": 1,
+              "kind": "lesson",
+              "slug": "welcome-to-ai-fluency-for-students",
+              "path": "/courses/ai-fluency-for-students/welcome-to-ai-fluency-for-students",
+              "title": "Welcome to AI Fluency for students"
+            },
+            {
+              "order": 2,
+              "kind": "lesson",
+              "slug": "ai-fluency-framework",
+              "path": "/courses/ai-fluency-for-students/ai-fluency-framework",
+              "title": "AI Fluency Framework"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 2,
+          "units": [
+            {
+              "order": 3,
+              "kind": "lesson",
+              "slug": "ai-as-a-learning-partner",
+              "path": "/courses/ai-fluency-for-students/ai-as-a-learning-partner",
+              "title": "AI as a learning partner"
+            },
+            {
+              "order": 4,
+              "kind": "lesson",
+              "slug": "ai-in-career-planning",
+              "path": "/courses/ai-fluency-for-students/ai-in-career-planning",
+              "title": "AI in career planning"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 3,
+          "units": [
+            {
+              "order": 5,
+              "kind": "lesson",
+              "slug": "being-the-human-in-the-loop",
+              "path": "/courses/ai-fluency-for-students/being-the-human-in-the-loop",
+              "title": "Being the human in the loop"
+            },
+            {
+              "order": 6,
+              "kind": "lesson",
+              "slug": "certificate-of-completion",
+              "path": "/courses/ai-fluency-for-students/certificate-of-completion",
+              "title": "Course quiz"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 4,
+          "units": [
+            {
+              "order": 7,
+              "kind": "unknown",
+              "slug": "badge",
+              "path": "/courses/ai-fluency-for-students/badge",
+              "title": "Completion badge"
+            }
+          ]
+        }
+      ],
+      "unitCount": 7
+    },
+    {
+      "slug": "ai-fluency-framework-foundations",
+      "path": "/courses/ai-fluency-framework-foundations",
+      "title": "AI Fluency: Framework & Foundations",
+      "sections": [
+        {
+          "title": null,
+          "order": 1,
+          "units": [
+            {
+              "order": 1,
+              "kind": "lesson",
+              "slug": "introduction-to-ai-fluency",
+              "path": "/courses/ai-fluency-framework-foundations/introduction-to-ai-fluency",
+              "title": "Introduction to AI Fluency"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 2,
+          "units": [
+            {
+              "order": 2,
+              "kind": "lesson",
+              "slug": "why-do-we-need-ai-fluency",
+              "path": "/courses/ai-fluency-framework-foundations/why-do-we-need-ai-fluency",
+              "title": "Why do we need AI Fluency?"
+            },
+            {
+              "order": 3,
+              "kind": "lesson",
+              "slug": "the-4d-framework",
+              "path": "/courses/ai-fluency-framework-foundations/the-4d-framework",
+              "title": "The 4D Framework"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 3,
+          "units": [
+            {
+              "order": 4,
+              "kind": "lesson",
+              "slug": "generative-ai-fundamentals",
+              "path": "/courses/ai-fluency-framework-foundations/generative-ai-fundamentals",
+              "title": "Generative AI fundamentals"
+            },
+            {
+              "order": 5,
+              "kind": "lesson",
+              "slug": "capabilities-limitations",
+              "path": "/courses/ai-fluency-framework-foundations/capabilities-limitations",
+              "title": "Capabilities & limitations"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 4,
+          "units": [
+            {
+              "order": 6,
+              "kind": "lesson",
+              "slug": "a-closer-look-at-delegation",
+              "path": "/courses/ai-fluency-framework-foundations/a-closer-look-at-delegation",
+              "title": "A closer look at Delegation"
+            },
+            {
+              "order": 7,
+              "kind": "lesson",
+              "slug": "project-planning-and-delegation",
+              "path": "/courses/ai-fluency-framework-foundations/project-planning-and-delegation",
+              "title": "Project planning and Delegation"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 5,
+          "units": [
+            {
+              "order": 8,
+              "kind": "lesson",
+              "slug": "a-closer-look-at-description",
+              "path": "/courses/ai-fluency-framework-foundations/a-closer-look-at-description",
+              "title": "A closer look at Description"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 6,
+          "units": [
+            {
+              "order": 9,
+              "kind": "lesson",
+              "slug": "effective-prompting-techniques",
+              "path": "/courses/ai-fluency-framework-foundations/effective-prompting-techniques",
+              "title": "Effective prompting techniques"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 7,
+          "units": [
+            {
+              "order": 10,
+              "kind": "lesson",
+              "slug": "a-closer-look-at-discernment",
+              "path": "/courses/ai-fluency-framework-foundations/a-closer-look-at-discernment",
+              "title": "A closer look at Discernment"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 8,
+          "units": [
+            {
+              "order": 11,
+              "kind": "lesson",
+              "slug": "the-description-discernment-loop",
+              "path": "/courses/ai-fluency-framework-foundations/the-description-discernment-loop",
+              "title": "The Description-Discernment loop"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 9,
+          "units": [
+            {
+              "order": 12,
+              "kind": "lesson",
+              "slug": "a-closer-look-at-diligence",
+              "path": "/courses/ai-fluency-framework-foundations/a-closer-look-at-diligence",
+              "title": "A closer look at Diligence"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 10,
+          "units": [
+            {
+              "order": 13,
+              "kind": "lesson",
+              "slug": "conclusion",
+              "path": "/courses/ai-fluency-framework-foundations/conclusion",
+              "title": "Conclusion"
+            },
+            {
+              "order": 14,
+              "kind": "lesson",
+              "slug": "certificate-of-completion",
+              "path": "/courses/ai-fluency-framework-foundations/certificate-of-completion",
+              "title": "Course quiz"
+            },
+            {
+              "order": 15,
+              "kind": "lesson",
+              "slug": "additional-activities",
+              "path": "/courses/ai-fluency-framework-foundations/additional-activities",
+              "title": "Additional activities"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 11,
+          "units": [
+            {
+              "order": 16,
+              "kind": "unknown",
+              "slug": "badge",
+              "path": "/courses/ai-fluency-framework-foundations/badge",
+              "title": "Completion badge"
+            }
+          ]
+        }
+      ],
+      "unitCount": 16
+    },
+    {
+      "slug": "building-with-the-claude-api",
+      "path": "/courses/building-with-the-claude-api",
+      "title": "Building with the Claude API",
+      "sections": [
+        {
+          "title": null,
+          "order": 1,
+          "units": [
+            {
+              "order": 1,
+              "kind": "lesson",
+              "slug": "accessing-the-api",
+              "path": "/courses/building-with-the-claude-api/accessing-the-api",
+              "title": "Accessing the API"
+            },
+            {
+              "order": 2,
+              "kind": "lesson",
+              "slug": "getting-an-api-key",
+              "path": "/courses/building-with-the-claude-api/getting-an-api-key",
+              "title": "Getting an API key"
+            },
+            {
+              "order": 3,
+              "kind": "lesson",
+              "slug": "making-a-request",
+              "path": "/courses/building-with-the-claude-api/making-a-request",
+              "title": "Making a request"
+            },
+            {
+              "order": 4,
+              "kind": "lesson",
+              "slug": "multi-turn-conversations",
+              "path": "/courses/building-with-the-claude-api/multi-turn-conversations",
+              "title": "Multi-Turn conversations"
+            },
+            {
+              "order": 5,
+              "kind": "lesson",
+              "slug": "system-prompts",
+              "path": "/courses/building-with-the-claude-api/system-prompts",
+              "title": "System prompts"
+            },
+            {
+              "order": 6,
+              "kind": "lesson",
+              "slug": "temperature",
+              "path": "/courses/building-with-the-claude-api/temperature",
+              "title": "Temperature"
+            },
+            {
+              "order": 7,
+              "kind": "lesson",
+              "slug": "response-streaming",
+              "path": "/courses/building-with-the-claude-api/response-streaming",
+              "title": "Response streaming"
+            },
+            {
+              "order": 8,
+              "kind": "lesson",
+              "slug": "structured-data",
+              "path": "/courses/building-with-the-claude-api/structured-data",
+              "title": "Structured data"
+            },
+            {
+              "order": 9,
+              "kind": "quiz",
+              "slug": "quiz-on-accessing-claude-with-the-api",
+              "path": "/courses/building-with-the-claude-api/quiz-on-accessing-claude-with-the-api",
+              "title": "Quiz on accessing Claude with the API"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 2,
+          "units": [
+            {
+              "order": 10,
+              "kind": "lesson",
+              "slug": "prompt-evaluation",
+              "path": "/courses/building-with-the-claude-api/prompt-evaluation",
+              "title": "Prompt evaluation"
+            },
+            {
+              "order": 11,
+              "kind": "lesson",
+              "slug": "a-typical-eval-workflow",
+              "path": "/courses/building-with-the-claude-api/a-typical-eval-workflow",
+              "title": "A typical eval workflow"
+            },
+            {
+              "order": 12,
+              "kind": "lesson",
+              "slug": "generating-test-datasets",
+              "path": "/courses/building-with-the-claude-api/generating-test-datasets",
+              "title": "Generating test datasets"
+            },
+            {
+              "order": 13,
+              "kind": "lesson",
+              "slug": "running-the-eval",
+              "path": "/courses/building-with-the-claude-api/running-the-eval",
+              "title": "Running the eval"
+            },
+            {
+              "order": 14,
+              "kind": "lesson",
+              "slug": "model-based-grading",
+              "path": "/courses/building-with-the-claude-api/model-based-grading",
+              "title": "Model based grading"
+            },
+            {
+              "order": 15,
+              "kind": "lesson",
+              "slug": "code-based-grading",
+              "path": "/courses/building-with-the-claude-api/code-based-grading",
+              "title": "Code based grading"
+            },
+            {
+              "order": 16,
+              "kind": "quiz",
+              "slug": "quiz-on-prompt-evaluation",
+              "path": "/courses/building-with-the-claude-api/quiz-on-prompt-evaluation",
+              "title": "Quiz on prompt evaluation"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 3,
+          "units": [
+            {
+              "order": 17,
+              "kind": "lesson",
+              "slug": "prompt-engineering",
+              "path": "/courses/building-with-the-claude-api/prompt-engineering",
+              "title": "Prompt engineering"
+            },
+            {
+              "order": 18,
+              "kind": "lesson",
+              "slug": "being-clear-and-direct",
+              "path": "/courses/building-with-the-claude-api/being-clear-and-direct",
+              "title": "Being clear and direct"
+            },
+            {
+              "order": 19,
+              "kind": "lesson",
+              "slug": "being-specific",
+              "path": "/courses/building-with-the-claude-api/being-specific",
+              "title": "Being specific"
+            },
+            {
+              "order": 20,
+              "kind": "lesson",
+              "slug": "structure-with-xml-tags",
+              "path": "/courses/building-with-the-claude-api/structure-with-xml-tags",
+              "title": "Structure with XML tags"
+            },
+            {
+              "order": 21,
+              "kind": "lesson",
+              "slug": "providing-examples",
+              "path": "/courses/building-with-the-claude-api/providing-examples",
+              "title": "Providing examples"
+            },
+            {
+              "order": 22,
+              "kind": "quiz",
+              "slug": "quiz-on-prompt-engineering-techniques",
+              "path": "/courses/building-with-the-claude-api/quiz-on-prompt-engineering-techniques",
+              "title": "Quiz on prompt engineering techniques"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 4,
+          "units": [
+            {
+              "order": 23,
+              "kind": "lesson",
+              "slug": "introducing-tool-use",
+              "path": "/courses/building-with-the-claude-api/introducing-tool-use",
+              "title": "Introducing tool use"
+            },
+            {
+              "order": 24,
+              "kind": "lesson",
+              "slug": "project-overview",
+              "path": "/courses/building-with-the-claude-api/project-overview",
+              "title": "Project overview"
+            },
+            {
+              "order": 25,
+              "kind": "lesson",
+              "slug": "tool-functions",
+              "path": "/courses/building-with-the-claude-api/tool-functions",
+              "title": "Tool functions"
+            },
+            {
+              "order": 26,
+              "kind": "lesson",
+              "slug": "tool-schemas",
+              "path": "/courses/building-with-the-claude-api/tool-schemas",
+              "title": "Tool schemas"
+            },
+            {
+              "order": 27,
+              "kind": "lesson",
+              "slug": "handling-message-blocks",
+              "path": "/courses/building-with-the-claude-api/handling-message-blocks",
+              "title": "Handling message blocks"
+            },
+            {
+              "order": 28,
+              "kind": "lesson",
+              "slug": "sending-tool-results",
+              "path": "/courses/building-with-the-claude-api/sending-tool-results",
+              "title": "Sending tool results"
+            },
+            {
+              "order": 29,
+              "kind": "lesson",
+              "slug": "multi-turn-conversations-with-tools",
+              "path": "/courses/building-with-the-claude-api/multi-turn-conversations-with-tools",
+              "title": "Multi-turn conversations with tools"
+            },
+            {
+              "order": 30,
+              "kind": "lesson",
+              "slug": "implementing-multiple-turns",
+              "path": "/courses/building-with-the-claude-api/implementing-multiple-turns",
+              "title": "Implementing multiple turns"
+            },
+            {
+              "order": 31,
+              "kind": "lesson",
+              "slug": "using-multiple-tools",
+              "path": "/courses/building-with-the-claude-api/using-multiple-tools",
+              "title": "Using multiple tools"
+            },
+            {
+              "order": 32,
+              "kind": "lesson",
+              "slug": "fine-grained-tool-calling",
+              "path": "/courses/building-with-the-claude-api/fine-grained-tool-calling",
+              "title": "Fine grained tool calling"
+            },
+            {
+              "order": 33,
+              "kind": "lesson",
+              "slug": "the-text-edit-tool",
+              "path": "/courses/building-with-the-claude-api/the-text-edit-tool",
+              "title": "The text edit tool"
+            },
+            {
+              "order": 34,
+              "kind": "lesson",
+              "slug": "the-web-search-tool",
+              "path": "/courses/building-with-the-claude-api/the-web-search-tool",
+              "title": "The web search tool"
+            },
+            {
+              "order": 35,
+              "kind": "quiz",
+              "slug": "quiz-on-tool-use-with-claude",
+              "path": "/courses/building-with-the-claude-api/quiz-on-tool-use-with-claude",
+              "title": "Quiz on tool use with Claude"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 5,
+          "units": [
+            {
+              "order": 36,
+              "kind": "lesson",
+              "slug": "introducing-retrieval-augmented-generation",
+              "path": "/courses/building-with-the-claude-api/introducing-retrieval-augmented-generation",
+              "title": "Introducing Retrieval Augmented Generation"
+            },
+            {
+              "order": 37,
+              "kind": "lesson",
+              "slug": "text-chunking-strategies",
+              "path": "/courses/building-with-the-claude-api/text-chunking-strategies",
+              "title": "Text chunking strategies"
+            },
+            {
+              "order": 38,
+              "kind": "lesson",
+              "slug": "text-embeddings",
+              "path": "/courses/building-with-the-claude-api/text-embeddings",
+              "title": "Text embeddings"
+            },
+            {
+              "order": 39,
+              "kind": "lesson",
+              "slug": "the-full-rag-flow",
+              "path": "/courses/building-with-the-claude-api/the-full-rag-flow",
+              "title": "The full RAG flow"
+            },
+            {
+              "order": 40,
+              "kind": "lesson",
+              "slug": "implementing-the-rag-flow",
+              "path": "/courses/building-with-the-claude-api/implementing-the-rag-flow",
+              "title": "Implementing the RAG flow"
+            },
+            {
+              "order": 41,
+              "kind": "lesson",
+              "slug": "bm25-lexical-search",
+              "path": "/courses/building-with-the-claude-api/bm25-lexical-search",
+              "title": "BM25 lexical search"
+            },
+            {
+              "order": 42,
+              "kind": "lesson",
+              "slug": "a-multi-index-rag-pipeline",
+              "path": "/courses/building-with-the-claude-api/a-multi-index-rag-pipeline",
+              "title": "A Multi-Index RAG pipeline"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 6,
+          "units": [
+            {
+              "order": 43,
+              "kind": "lesson",
+              "slug": "extended-thinking",
+              "path": "/courses/building-with-the-claude-api/extended-thinking",
+              "title": "Extended thinking"
+            },
+            {
+              "order": 44,
+              "kind": "lesson",
+              "slug": "image-support",
+              "path": "/courses/building-with-the-claude-api/image-support",
+              "title": "Image support"
+            },
+            {
+              "order": 45,
+              "kind": "lesson",
+              "slug": "pdf-support",
+              "path": "/courses/building-with-the-claude-api/pdf-support",
+              "title": "PDF support"
+            },
+            {
+              "order": 46,
+              "kind": "lesson",
+              "slug": "citations",
+              "path": "/courses/building-with-the-claude-api/citations",
+              "title": "Citations"
+            },
+            {
+              "order": 47,
+              "kind": "lesson",
+              "slug": "prompt-caching",
+              "path": "/courses/building-with-the-claude-api/prompt-caching",
+              "title": "Prompt caching"
+            },
+            {
+              "order": 48,
+              "kind": "lesson",
+              "slug": "rules-of-prompt-caching",
+              "path": "/courses/building-with-the-claude-api/rules-of-prompt-caching",
+              "title": "Rules of prompt caching"
+            },
+            {
+              "order": 49,
+              "kind": "lesson",
+              "slug": "prompt-caching-in-action",
+              "path": "/courses/building-with-the-claude-api/prompt-caching-in-action",
+              "title": "Prompt caching in action"
+            },
+            {
+              "order": 50,
+              "kind": "lesson",
+              "slug": "code-execution-and-the-files-api",
+              "path": "/courses/building-with-the-claude-api/code-execution-and-the-files-api",
+              "title": "Code execution and the Files API"
+            },
+            {
+              "order": 51,
+              "kind": "quiz",
+              "slug": "quiz-on-features-of-claude",
+              "path": "/courses/building-with-the-claude-api/quiz-on-features-of-claude",
+              "title": "Quiz on features of Claude"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 7,
+          "units": [
+            {
+              "order": 52,
+              "kind": "lesson",
+              "slug": "introducing-mcp",
+              "path": "/courses/building-with-the-claude-api/introducing-mcp",
+              "title": "Introducing MCP"
+            },
+            {
+              "order": 53,
+              "kind": "lesson",
+              "slug": "mcp-clients",
+              "path": "/courses/building-with-the-claude-api/mcp-clients",
+              "title": "MCP clients"
+            },
+            {
+              "order": 54,
+              "kind": "lesson",
+              "slug": "project-setup",
+              "path": "/courses/building-with-the-claude-api/project-setup",
+              "title": "Project setup"
+            },
+            {
+              "order": 55,
+              "kind": "lesson",
+              "slug": "defining-tools-with-mcp",
+              "path": "/courses/building-with-the-claude-api/defining-tools-with-mcp",
+              "title": "Defining tools with MCP"
+            },
+            {
+              "order": 56,
+              "kind": "lesson",
+              "slug": "the-server-inspector",
+              "path": "/courses/building-with-the-claude-api/the-server-inspector",
+              "title": "The server inspector"
+            },
+            {
+              "order": 57,
+              "kind": "lesson",
+              "slug": "implementing-a-client",
+              "path": "/courses/building-with-the-claude-api/implementing-a-client",
+              "title": "Implementing a client"
+            },
+            {
+              "order": 58,
+              "kind": "lesson",
+              "slug": "defining-resources",
+              "path": "/courses/building-with-the-claude-api/defining-resources",
+              "title": "Defining resources"
+            },
+            {
+              "order": 59,
+              "kind": "lesson",
+              "slug": "accessing-resources",
+              "path": "/courses/building-with-the-claude-api/accessing-resources",
+              "title": "Accessing resources"
+            },
+            {
+              "order": 60,
+              "kind": "lesson",
+              "slug": "defining-prompts",
+              "path": "/courses/building-with-the-claude-api/defining-prompts",
+              "title": "Defining prompts"
+            },
+            {
+              "order": 61,
+              "kind": "lesson",
+              "slug": "prompts-in-the-client",
+              "path": "/courses/building-with-the-claude-api/prompts-in-the-client",
+              "title": "Prompts in the client"
+            },
+            {
+              "order": 62,
+              "kind": "quiz",
+              "slug": "quiz-on-model-context-protocol",
+              "path": "/courses/building-with-the-claude-api/quiz-on-model-context-protocol",
+              "title": "Quiz on Model Context Protocol"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 8,
+          "units": [
+            {
+              "order": 63,
+              "kind": "lesson",
+              "slug": "anthropic-apps",
+              "path": "/courses/building-with-the-claude-api/anthropic-apps",
+              "title": "Anthropic apps"
+            },
+            {
+              "order": 64,
+              "kind": "lesson",
+              "slug": "claude-code-setup",
+              "path": "/courses/building-with-the-claude-api/claude-code-setup",
+              "title": "Claude Code setup"
+            },
+            {
+              "order": 65,
+              "kind": "lesson",
+              "slug": "claude-code-in-action",
+              "path": "/courses/building-with-the-claude-api/claude-code-in-action",
+              "title": "Claude Code in action"
+            },
+            {
+              "order": 66,
+              "kind": "lesson",
+              "slug": "enhancements-with-mcp-servers",
+              "path": "/courses/building-with-the-claude-api/enhancements-with-mcp-servers",
+              "title": "Enhancements with MCP servers"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 9,
+          "units": [
+            {
+              "order": 67,
+              "kind": "lesson",
+              "slug": "agents-and-workflows",
+              "path": "/courses/building-with-the-claude-api/agents-and-workflows",
+              "title": "Agents and workflows"
+            },
+            {
+              "order": 68,
+              "kind": "lesson",
+              "slug": "parallelization-workflows",
+              "path": "/courses/building-with-the-claude-api/parallelization-workflows",
+              "title": "Parallelization workflows"
+            },
+            {
+              "order": 69,
+              "kind": "lesson",
+              "slug": "chaining-workflows",
+              "path": "/courses/building-with-the-claude-api/chaining-workflows",
+              "title": "Chaining workflows"
+            },
+            {
+              "order": 70,
+              "kind": "lesson",
+              "slug": "routing-workflows",
+              "path": "/courses/building-with-the-claude-api/routing-workflows",
+              "title": "Routing workflows"
+            },
+            {
+              "order": 71,
+              "kind": "lesson",
+              "slug": "agents-and-tools",
+              "path": "/courses/building-with-the-claude-api/agents-and-tools",
+              "title": "Agents and tools"
+            },
+            {
+              "order": 72,
+              "kind": "lesson",
+              "slug": "environment-inspection",
+              "path": "/courses/building-with-the-claude-api/environment-inspection",
+              "title": "Environment inspection"
+            },
+            {
+              "order": 73,
+              "kind": "lesson",
+              "slug": "workflows-vs-agents",
+              "path": "/courses/building-with-the-claude-api/workflows-vs-agents",
+              "title": "Workflows vs agents"
+            },
+            {
+              "order": 74,
+              "kind": "quiz",
+              "slug": "quiz-on-agents-and-workflows",
+              "path": "/courses/building-with-the-claude-api/quiz-on-agents-and-workflows",
+              "title": "Quiz on Agents and Workflows"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 10,
+          "units": [
+            {
+              "order": 75,
+              "kind": "assessment",
+              "slug": "final-assessment",
+              "path": "/courses/building-with-the-claude-api/final-assessment",
+              "title": "Final Assessment"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 11,
+          "units": [
+            {
+              "order": 76,
+              "kind": "unknown",
+              "slug": "badge",
+              "path": "/courses/building-with-the-claude-api/badge",
+              "title": "Completion badge"
+            }
+          ]
+        }
+      ],
+      "unitCount": 76
+    },
+    {
+      "slug": "claude-101",
+      "path": "/courses/claude-101",
+      "title": "Claude 101",
+      "sections": [
+        {
+          "title": null,
+          "order": 1,
+          "units": [
+            {
+              "order": 1,
+              "kind": "lesson",
+              "slug": "what-is-claude",
+              "path": "/courses/claude-101/what-is-claude",
+              "title": "What is Claude?"
+            },
+            {
+              "order": 2,
+              "kind": "lesson",
+              "slug": "your-first-conversation-with-claude",
+              "path": "/courses/claude-101/your-first-conversation-with-claude",
+              "title": "Your first conversation with Claude"
+            },
+            {
+              "order": 3,
+              "kind": "lesson",
+              "slug": "getting-better-results",
+              "path": "/courses/claude-101/getting-better-results",
+              "title": "Getting better results"
+            },
+            {
+              "order": 4,
+              "kind": "lesson",
+              "slug": "claude-desktop-app-chat-cowork-code",
+              "path": "/courses/claude-101/claude-desktop-app-chat-cowork-code",
+              "title": "How you'll work with Claude on your desktop"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 2,
+          "units": [
+            {
+              "order": 5,
+              "kind": "lesson",
+              "slug": "introduction-to-projects",
+              "path": "/courses/claude-101/introduction-to-projects",
+              "title": "Introduction to projects"
+            },
+            {
+              "order": 6,
+              "kind": "lesson",
+              "slug": "creating-with-artifacts",
+              "path": "/courses/claude-101/creating-with-artifacts",
+              "title": "Creating with artifacts"
+            },
+            {
+              "order": 7,
+              "kind": "lesson",
+              "slug": "working-with-skills",
+              "path": "/courses/claude-101/working-with-skills",
+              "title": "Working with skills"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 3,
+          "units": [
+            {
+              "order": 8,
+              "kind": "lesson",
+              "slug": "connecting-your-tools",
+              "path": "/courses/claude-101/connecting-your-tools",
+              "title": "Connecting your tools"
+            },
+            {
+              "order": 9,
+              "kind": "lesson",
+              "slug": "enterprise-search",
+              "path": "/courses/claude-101/enterprise-search",
+              "title": "Enterprise search"
+            },
+            {
+              "order": 10,
+              "kind": "lesson",
+              "slug": "research-mode-for-deep-dives",
+              "path": "/courses/claude-101/research-mode-for-deep-dives",
+              "title": "Research for deep dives"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 4,
+          "units": [
+            {
+              "order": 11,
+              "kind": "lesson",
+              "slug": "claude-in-action-use-cases-by-role",
+              "path": "/courses/claude-101/claude-in-action-use-cases-by-role",
+              "title": "Claude in action: use-cases by role"
+            },
+            {
+              "order": 12,
+              "kind": "lesson",
+              "slug": "other-ways-to-work-with-claude",
+              "path": "/courses/claude-101/other-ways-to-work-with-claude",
+              "title": "Other ways to work with Claude"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 5,
+          "units": [
+            {
+              "order": 13,
+              "kind": "lesson",
+              "slug": "what-s-next",
+              "path": "/courses/claude-101/what-s-next",
+              "title": "What's next?"
+            },
+            {
+              "order": 14,
+              "kind": "lesson",
+              "slug": "certificate-of-completion",
+              "path": "/courses/claude-101/certificate-of-completion",
+              "title": "Course quiz"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 6,
+          "units": [
+            {
+              "order": 15,
+              "kind": "unknown",
+              "slug": "badge",
+              "path": "/courses/claude-101/badge",
+              "title": "Completion badge"
+            }
+          ]
+        }
+      ],
+      "unitCount": 15
+    },
+    {
+      "slug": "claude-code-101",
+      "path": "/courses/claude-code-101",
+      "title": "Claude Code 101",
+      "sections": [
+        {
+          "title": null,
+          "order": 1,
+          "units": [
+            {
+              "order": 1,
+              "kind": "lesson",
+              "slug": "what-is-claude-code",
+              "path": "/courses/claude-code-101/what-is-claude-code",
+              "title": "What is Claude Code?"
+            },
+            {
+              "order": 2,
+              "kind": "lesson",
+              "slug": "how-claude-code-works",
+              "path": "/courses/claude-code-101/how-claude-code-works",
+              "title": "How Claude Code works"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 2,
+          "units": [
+            {
+              "order": 3,
+              "kind": "lesson",
+              "slug": "installing-claude-code",
+              "path": "/courses/claude-code-101/installing-claude-code",
+              "title": "Installing Claude Code"
+            },
+            {
+              "order": 4,
+              "kind": "lesson",
+              "slug": "your-first-prompt",
+              "path": "/courses/claude-code-101/your-first-prompt",
+              "title": "Your first prompt"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 3,
+          "units": [
+            {
+              "order": 5,
+              "kind": "lesson",
+              "slug": "the-explore-plan-code-commit-workflow",
+              "path": "/courses/claude-code-101/the-explore-plan-code-commit-workflow",
+              "title": "The explore → plan → code → commit workflow"
+            },
+            {
+              "order": 6,
+              "kind": "lesson",
+              "slug": "context-management",
+              "path": "/courses/claude-code-101/context-management",
+              "title": "Context management"
+            },
+            {
+              "order": 7,
+              "kind": "lesson",
+              "slug": "code-review",
+              "path": "/courses/claude-code-101/code-review",
+              "title": "Code review"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 4,
+          "units": [
+            {
+              "order": 8,
+              "kind": "lesson",
+              "slug": "the-claude-md-file",
+              "path": "/courses/claude-code-101/the-claude-md-file",
+              "title": "The CLAUDE.md file"
+            },
+            {
+              "order": 9,
+              "kind": "lesson",
+              "slug": "subagents",
+              "path": "/courses/claude-code-101/subagents",
+              "title": "Subagents"
+            },
+            {
+              "order": 10,
+              "kind": "lesson",
+              "slug": "skills",
+              "path": "/courses/claude-code-101/skills",
+              "title": "Skills"
+            },
+            {
+              "order": 11,
+              "kind": "lesson",
+              "slug": "mcp",
+              "path": "/courses/claude-code-101/mcp",
+              "title": "MCP"
+            },
+            {
+              "order": 12,
+              "kind": "lesson",
+              "slug": "hooks",
+              "path": "/courses/claude-code-101/hooks",
+              "title": "Hooks"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 5,
+          "units": [
+            {
+              "order": 13,
+              "kind": "quiz",
+              "slug": "course-quiz",
+              "path": "/courses/claude-code-101/course-quiz",
+              "title": "Course quiz"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 6,
+          "units": [
+            {
+              "order": 14,
+              "kind": "unknown",
+              "slug": "badge",
+              "path": "/courses/claude-code-101/badge",
+              "title": "Completion badge"
+            }
+          ]
+        }
+      ],
+      "unitCount": 14
+    },
+    {
+      "slug": "claude-code-in-action",
+      "path": "/courses/claude-code-in-action",
+      "title": "Claude Code in Action",
+      "sections": [
+        {
+          "title": null,
+          "order": 1,
+          "units": [
+            {
+              "order": 1,
+              "kind": "lesson",
+              "slug": "steering-long-sessions",
+              "path": "/courses/claude-code-in-action/steering-long-sessions",
+              "title": "Steering long sessions"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 2,
+          "units": [
+            {
+              "order": 2,
+              "kind": "lesson",
+              "slug": "a-claude-md-that-follows",
+              "path": "/courses/claude-code-in-action/a-claude-md-that-follows",
+              "title": "A CLAUDE.md that follows"
+            },
+            {
+              "order": 3,
+              "kind": "lesson",
+              "slug": "verification-skills",
+              "path": "/courses/claude-code-in-action/verification-skills",
+              "title": "Verification skills"
+            },
+            {
+              "order": 4,
+              "kind": "lesson",
+              "slug": "permission-modes",
+              "path": "/courses/claude-code-in-action/permission-modes",
+              "title": "Permission modes"
+            },
+            {
+              "order": 5,
+              "kind": "lesson",
+              "slug": "hooks",
+              "path": "/courses/claude-code-in-action/hooks",
+              "title": "Hooks"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 3,
+          "units": [
+            {
+              "order": 6,
+              "kind": "lesson",
+              "slug": "routines-and-headless",
+              "path": "/courses/claude-code-in-action/routines-and-headless",
+              "title": "Routines and headless"
+            },
+            {
+              "order": 7,
+              "kind": "lesson",
+              "slug": "github-actions-and-code-review",
+              "path": "/courses/claude-code-in-action/github-actions-and-code-review",
+              "title": "GitHub Actions and Code Review"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 4,
+          "units": [
+            {
+              "order": 8,
+              "kind": "lesson",
+              "slug": "trust-it-verifying-unsupervised-runs",
+              "path": "/courses/claude-code-in-action/trust-it-verifying-unsupervised-runs",
+              "title": "Trust it: Verifying unsupervised runs"
+            },
+            {
+              "order": 9,
+              "kind": "lesson",
+              "slug": "plugins",
+              "path": "/courses/claude-code-in-action/plugins",
+              "title": "Plugins"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 5,
+          "units": [
+            {
+              "order": 10,
+              "kind": "quiz",
+              "slug": "course-quiz",
+              "path": "/courses/claude-code-in-action/course-quiz",
+              "title": "Course quiz"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 6,
+          "units": [
+            {
+              "order": 11,
+              "kind": "unknown",
+              "slug": "badge",
+              "path": "/courses/claude-code-in-action/badge",
+              "title": "Completion badge"
+            }
+          ]
+        }
+      ],
+      "unitCount": 11
+    },
+    {
+      "slug": "claude-platform-101",
+      "path": "/courses/claude-platform-101",
+      "title": "Claude Platform 101",
+      "sections": [
+        {
+          "title": null,
+          "order": 1,
+          "units": [
+            {
+              "order": 1,
+              "kind": "lesson",
+              "slug": "what-is-the-claude-platform",
+              "path": "/courses/claude-platform-101/what-is-the-claude-platform",
+              "title": "What is the Claude Platform?"
+            },
+            {
+              "order": 2,
+              "kind": "lesson",
+              "slug": "your-first-api-call",
+              "path": "/courses/claude-platform-101/your-first-api-call",
+              "title": "Your first API call"
+            },
+            {
+              "order": 3,
+              "kind": "lesson",
+              "slug": "choosing-the-right-model",
+              "path": "/courses/claude-platform-101/choosing-the-right-model",
+              "title": "Choosing the right model"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 2,
+          "units": [
+            {
+              "order": 4,
+              "kind": "lesson",
+              "slug": "the-agent-loop-explained",
+              "path": "/courses/claude-platform-101/the-agent-loop-explained",
+              "title": "The agent loop explained"
+            },
+            {
+              "order": 5,
+              "kind": "lesson",
+              "slug": "what-is-tool-use",
+              "path": "/courses/claude-platform-101/what-is-tool-use",
+              "title": "What is tool use?"
+            },
+            {
+              "order": 6,
+              "kind": "lesson",
+              "slug": "what-is-thinking",
+              "path": "/courses/claude-platform-101/what-is-thinking",
+              "title": "What is thinking?"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 3,
+          "units": [
+            {
+              "order": 7,
+              "kind": "lesson",
+              "slug": "built-in-tools",
+              "path": "/courses/claude-platform-101/built-in-tools",
+              "title": "Built-in tools"
+            },
+            {
+              "order": 8,
+              "kind": "lesson",
+              "slug": "skills",
+              "path": "/courses/claude-platform-101/skills",
+              "title": "Skills"
+            },
+            {
+              "order": 9,
+              "kind": "lesson",
+              "slug": "mcp",
+              "path": "/courses/claude-platform-101/mcp",
+              "title": "MCP"
+            },
+            {
+              "order": 10,
+              "kind": "lesson",
+              "slug": "context-management",
+              "path": "/courses/claude-platform-101/context-management",
+              "title": "Context management"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 4,
+          "units": [
+            {
+              "order": 11,
+              "kind": "lesson",
+              "slug": "what-are-managed-agents",
+              "path": "/courses/claude-platform-101/what-are-managed-agents",
+              "title": "What are managed agents?"
+            },
+            {
+              "order": 12,
+              "kind": "lesson",
+              "slug": "building-your-first-managed-agent",
+              "path": "/courses/claude-platform-101/building-your-first-managed-agent",
+              "title": "Building your first managed agent"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 5,
+          "units": [
+            {
+              "order": 13,
+              "kind": "lesson",
+              "slug": "building-with-claude-code",
+              "path": "/courses/claude-platform-101/building-with-claude-code",
+              "title": "Building with Claude Code"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 6,
+          "units": [
+            {
+              "order": 14,
+              "kind": "quiz",
+              "slug": "claude-platform-101-quiz",
+              "path": "/courses/claude-platform-101/claude-platform-101-quiz",
+              "title": "Claude Platform 101 quiz"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 7,
+          "units": [
+            {
+              "order": 15,
+              "kind": "unknown",
+              "slug": "badge",
+              "path": "/courses/claude-platform-101/badge",
+              "title": "Completion badge"
+            }
+          ]
+        }
+      ],
+      "unitCount": 15
+    },
+    {
+      "slug": "claude-with-amazon-bedrock",
+      "path": "/courses/claude-with-amazon-bedrock",
+      "title": "Claude with Amazon Bedrock",
+      "sections": [
+        {
+          "title": null,
+          "order": 1,
+          "units": [
+            {
+              "order": 1,
+              "kind": "lesson",
+              "slug": "overview-of-claude-models",
+              "path": "/courses/claude-with-amazon-bedrock/overview-of-claude-models",
+              "title": "Overview of Claude Models"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 2,
+          "units": [
+            {
+              "order": 2,
+              "kind": "lesson",
+              "slug": "accessing-the-api",
+              "path": "/courses/claude-with-amazon-bedrock/accessing-the-api",
+              "title": "Accessing the API"
+            },
+            {
+              "order": 3,
+              "kind": "lesson",
+              "slug": "making-a-request",
+              "path": "/courses/claude-with-amazon-bedrock/making-a-request",
+              "title": "Making a request"
+            },
+            {
+              "order": 4,
+              "kind": "lesson",
+              "slug": "multi-turn-conversations",
+              "path": "/courses/claude-with-amazon-bedrock/multi-turn-conversations",
+              "title": "Multi-Turn conversations"
+            },
+            {
+              "order": 5,
+              "kind": "lesson",
+              "slug": "system-prompts",
+              "path": "/courses/claude-with-amazon-bedrock/system-prompts",
+              "title": "System prompts"
+            },
+            {
+              "order": 6,
+              "kind": "lesson",
+              "slug": "temperature",
+              "path": "/courses/claude-with-amazon-bedrock/temperature",
+              "title": "Temperature"
+            },
+            {
+              "order": 7,
+              "kind": "lesson",
+              "slug": "streaming",
+              "path": "/courses/claude-with-amazon-bedrock/streaming",
+              "title": "Streaming"
+            },
+            {
+              "order": 8,
+              "kind": "lesson",
+              "slug": "controlling-model-output",
+              "path": "/courses/claude-with-amazon-bedrock/controlling-model-output",
+              "title": "Controlling model output"
+            },
+            {
+              "order": 9,
+              "kind": "lesson",
+              "slug": "structured-data",
+              "path": "/courses/claude-with-amazon-bedrock/structured-data",
+              "title": "Structured data"
+            },
+            {
+              "order": 10,
+              "kind": "quiz",
+              "slug": "quiz-on-working-with-the-api",
+              "path": "/courses/claude-with-amazon-bedrock/quiz-on-working-with-the-api",
+              "title": "Quiz on working with the API"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 3,
+          "units": [
+            {
+              "order": 11,
+              "kind": "lesson",
+              "slug": "prompt-evaluation",
+              "path": "/courses/claude-with-amazon-bedrock/prompt-evaluation",
+              "title": "Prompt evaluation"
+            },
+            {
+              "order": 12,
+              "kind": "lesson",
+              "slug": "a-typical-eval-workflow",
+              "path": "/courses/claude-with-amazon-bedrock/a-typical-eval-workflow",
+              "title": "A typical eval workflow"
+            },
+            {
+              "order": 13,
+              "kind": "lesson",
+              "slug": "generating-test-datasets",
+              "path": "/courses/claude-with-amazon-bedrock/generating-test-datasets",
+              "title": "Generating test datasets"
+            },
+            {
+              "order": 14,
+              "kind": "lesson",
+              "slug": "running-the-eval",
+              "path": "/courses/claude-with-amazon-bedrock/running-the-eval",
+              "title": "Running the eval"
+            },
+            {
+              "order": 15,
+              "kind": "lesson",
+              "slug": "model-based-grading",
+              "path": "/courses/claude-with-amazon-bedrock/model-based-grading",
+              "title": "Model based grading"
+            },
+            {
+              "order": 16,
+              "kind": "lesson",
+              "slug": "code-based-grading",
+              "path": "/courses/claude-with-amazon-bedrock/code-based-grading",
+              "title": "Code based grading"
+            },
+            {
+              "order": 17,
+              "kind": "quiz",
+              "slug": "quiz-on-prompt-evaluations",
+              "path": "/courses/claude-with-amazon-bedrock/quiz-on-prompt-evaluations",
+              "title": "Quiz on prompt evaluations"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 4,
+          "units": [
+            {
+              "order": 18,
+              "kind": "lesson",
+              "slug": "prompt-engineering",
+              "path": "/courses/claude-with-amazon-bedrock/prompt-engineering",
+              "title": "Prompt engineering"
+            },
+            {
+              "order": 19,
+              "kind": "lesson",
+              "slug": "being-clear-and-direct",
+              "path": "/courses/claude-with-amazon-bedrock/being-clear-and-direct",
+              "title": "Being clear and direct"
+            },
+            {
+              "order": 20,
+              "kind": "lesson",
+              "slug": "being-specific",
+              "path": "/courses/claude-with-amazon-bedrock/being-specific",
+              "title": "Being specific"
+            },
+            {
+              "order": 21,
+              "kind": "lesson",
+              "slug": "structure-with-xml-tags",
+              "path": "/courses/claude-with-amazon-bedrock/structure-with-xml-tags",
+              "title": "Structure with XML tags"
+            },
+            {
+              "order": 22,
+              "kind": "lesson",
+              "slug": "providing-examples",
+              "path": "/courses/claude-with-amazon-bedrock/providing-examples",
+              "title": "Providing examples"
+            },
+            {
+              "order": 23,
+              "kind": "quiz",
+              "slug": "quiz-on-prompt-engineering",
+              "path": "/courses/claude-with-amazon-bedrock/quiz-on-prompt-engineering",
+              "title": "Quiz on prompt engineering"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 5,
+          "units": [
+            {
+              "order": 24,
+              "kind": "lesson",
+              "slug": "introducing-tool-use",
+              "path": "/courses/claude-with-amazon-bedrock/introducing-tool-use",
+              "title": "Introducing tool use"
+            },
+            {
+              "order": 25,
+              "kind": "lesson",
+              "slug": "tool-functions",
+              "path": "/courses/claude-with-amazon-bedrock/tool-functions",
+              "title": "Tool functions"
+            },
+            {
+              "order": 26,
+              "kind": "lesson",
+              "slug": "json-schema-for-tools",
+              "path": "/courses/claude-with-amazon-bedrock/json-schema-for-tools",
+              "title": "JSON Schema for tools"
+            },
+            {
+              "order": 27,
+              "kind": "lesson",
+              "slug": "handling-tool-use-responses",
+              "path": "/courses/claude-with-amazon-bedrock/handling-tool-use-responses",
+              "title": "Handling tool use responses"
+            },
+            {
+              "order": 28,
+              "kind": "lesson",
+              "slug": "running-tool-functions",
+              "path": "/courses/claude-with-amazon-bedrock/running-tool-functions",
+              "title": "Running tool functions"
+            },
+            {
+              "order": 29,
+              "kind": "lesson",
+              "slug": "sending-tool-results",
+              "path": "/courses/claude-with-amazon-bedrock/sending-tool-results",
+              "title": "Sending tool results"
+            },
+            {
+              "order": 30,
+              "kind": "lesson",
+              "slug": "multi-turn-conversations-with-tools",
+              "path": "/courses/claude-with-amazon-bedrock/multi-turn-conversations-with-tools",
+              "title": "Multi-Turn conversations with tools"
+            },
+            {
+              "order": 31,
+              "kind": "lesson",
+              "slug": "adding-multiple-tools",
+              "path": "/courses/claude-with-amazon-bedrock/adding-multiple-tools",
+              "title": "Adding multiple tools"
+            },
+            {
+              "order": 32,
+              "kind": "lesson",
+              "slug": "batch-tool-use",
+              "path": "/courses/claude-with-amazon-bedrock/batch-tool-use",
+              "title": "Batch tool use"
+            },
+            {
+              "order": 33,
+              "kind": "lesson",
+              "slug": "structured-data-with-tools",
+              "path": "/courses/claude-with-amazon-bedrock/structured-data-with-tools",
+              "title": "Structured data with tools"
+            },
+            {
+              "order": 34,
+              "kind": "lesson",
+              "slug": "flexible-tool-extraction",
+              "path": "/courses/claude-with-amazon-bedrock/flexible-tool-extraction",
+              "title": "Flexible tool extraction"
+            },
+            {
+              "order": 35,
+              "kind": "lesson",
+              "slug": "the-text-editor-tool",
+              "path": "/courses/claude-with-amazon-bedrock/the-text-editor-tool",
+              "title": "The text editor tool"
+            },
+            {
+              "order": 36,
+              "kind": "quiz",
+              "slug": "quiz-on-tool-use",
+              "path": "/courses/claude-with-amazon-bedrock/quiz-on-tool-use",
+              "title": "Quiz on tool use"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 6,
+          "units": [
+            {
+              "order": 37,
+              "kind": "lesson",
+              "slug": "introducing-retrieval-augmented-generation",
+              "path": "/courses/claude-with-amazon-bedrock/introducing-retrieval-augmented-generation",
+              "title": "Introducing Retrieval Augmented Generation"
+            },
+            {
+              "order": 38,
+              "kind": "lesson",
+              "slug": "text-chunking-strategies",
+              "path": "/courses/claude-with-amazon-bedrock/text-chunking-strategies",
+              "title": "Text chunking strategies"
+            },
+            {
+              "order": 39,
+              "kind": "lesson",
+              "slug": "text-embeddings",
+              "path": "/courses/claude-with-amazon-bedrock/text-embeddings",
+              "title": "Text embeddings"
+            },
+            {
+              "order": 40,
+              "kind": "lesson",
+              "slug": "the-full-rag-flow",
+              "path": "/courses/claude-with-amazon-bedrock/the-full-rag-flow",
+              "title": "The full RAG flow"
+            },
+            {
+              "order": 41,
+              "kind": "lesson",
+              "slug": "implementing-the-rag-flow",
+              "path": "/courses/claude-with-amazon-bedrock/implementing-the-rag-flow",
+              "title": "Implementing the RAG flow"
+            },
+            {
+              "order": 42,
+              "kind": "lesson",
+              "slug": "bm25-lexical-search",
+              "path": "/courses/claude-with-amazon-bedrock/bm25-lexical-search",
+              "title": "BM25 lexical search"
+            },
+            {
+              "order": 43,
+              "kind": "lesson",
+              "slug": "a-multi-search-rag-pipeline",
+              "path": "/courses/claude-with-amazon-bedrock/a-multi-search-rag-pipeline",
+              "title": "A multi-search RAG pipeline"
+            },
+            {
+              "order": 44,
+              "kind": "lesson",
+              "slug": "reranking-results",
+              "path": "/courses/claude-with-amazon-bedrock/reranking-results",
+              "title": "Reranking results"
+            },
+            {
+              "order": 45,
+              "kind": "lesson",
+              "slug": "contextual-retrieval",
+              "path": "/courses/claude-with-amazon-bedrock/contextual-retrieval",
+              "title": "Contextual retrieval"
+            },
+            {
+              "order": 46,
+              "kind": "quiz",
+              "slug": "quiz-on-retrieval-augmented-generation",
+              "path": "/courses/claude-with-amazon-bedrock/quiz-on-retrieval-augmented-generation",
+              "title": "Quiz on Retrieval Augmented Generation"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 7,
+          "units": [
+            {
+              "order": 47,
+              "kind": "lesson",
+              "slug": "extended-thinking",
+              "path": "/courses/claude-with-amazon-bedrock/extended-thinking",
+              "title": "Extended thinking"
+            },
+            {
+              "order": 48,
+              "kind": "lesson",
+              "slug": "image-support",
+              "path": "/courses/claude-with-amazon-bedrock/image-support",
+              "title": "Image support"
+            },
+            {
+              "order": 49,
+              "kind": "lesson",
+              "slug": "pdf-support",
+              "path": "/courses/claude-with-amazon-bedrock/pdf-support",
+              "title": "PDF support"
+            },
+            {
+              "order": 50,
+              "kind": "lesson",
+              "slug": "citations",
+              "path": "/courses/claude-with-amazon-bedrock/citations",
+              "title": "Citations"
+            },
+            {
+              "order": 51,
+              "kind": "lesson",
+              "slug": "prompt-caching",
+              "path": "/courses/claude-with-amazon-bedrock/prompt-caching",
+              "title": "Prompt caching"
+            },
+            {
+              "order": 52,
+              "kind": "lesson",
+              "slug": "rules-of-prompt-caching",
+              "path": "/courses/claude-with-amazon-bedrock/rules-of-prompt-caching",
+              "title": "Rules of prompt caching"
+            },
+            {
+              "order": 53,
+              "kind": "quiz",
+              "slug": "quiz-on-features-of-claude",
+              "path": "/courses/claude-with-amazon-bedrock/quiz-on-features-of-claude",
+              "title": "Quiz on features of Claude"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 8,
+          "units": [
+            {
+              "order": 54,
+              "kind": "lesson",
+              "slug": "introducing-mcp",
+              "path": "/courses/claude-with-amazon-bedrock/introducing-mcp",
+              "title": "Introducing MCP"
+            },
+            {
+              "order": 55,
+              "kind": "lesson",
+              "slug": "mcp-clients",
+              "path": "/courses/claude-with-amazon-bedrock/mcp-clients",
+              "title": "MCP clients"
+            },
+            {
+              "order": 56,
+              "kind": "lesson",
+              "slug": "project-setup",
+              "path": "/courses/claude-with-amazon-bedrock/project-setup",
+              "title": "Project setup"
+            },
+            {
+              "order": 57,
+              "kind": "lesson",
+              "slug": "defining-tools-with-mcp",
+              "path": "/courses/claude-with-amazon-bedrock/defining-tools-with-mcp",
+              "title": "Defining tools with MCP"
+            },
+            {
+              "order": 58,
+              "kind": "lesson",
+              "slug": "the-server-inspector",
+              "path": "/courses/claude-with-amazon-bedrock/the-server-inspector",
+              "title": "The server inspector"
+            },
+            {
+              "order": 59,
+              "kind": "lesson",
+              "slug": "implementing-a-client",
+              "path": "/courses/claude-with-amazon-bedrock/implementing-a-client",
+              "title": "Implementing a client"
+            },
+            {
+              "order": 60,
+              "kind": "lesson",
+              "slug": "defining-resources",
+              "path": "/courses/claude-with-amazon-bedrock/defining-resources",
+              "title": "Defining resources"
+            },
+            {
+              "order": 61,
+              "kind": "lesson",
+              "slug": "accessing-resources",
+              "path": "/courses/claude-with-amazon-bedrock/accessing-resources",
+              "title": "Accessing resources"
+            },
+            {
+              "order": 62,
+              "kind": "lesson",
+              "slug": "defining-prompts",
+              "path": "/courses/claude-with-amazon-bedrock/defining-prompts",
+              "title": "Defining prompts"
+            },
+            {
+              "order": 63,
+              "kind": "lesson",
+              "slug": "prompts-in-the-client",
+              "path": "/courses/claude-with-amazon-bedrock/prompts-in-the-client",
+              "title": "Prompts in the client"
+            },
+            {
+              "order": 64,
+              "kind": "lesson",
+              "slug": "mcp-review",
+              "path": "/courses/claude-with-amazon-bedrock/mcp-review",
+              "title": "MCP review"
+            },
+            {
+              "order": 65,
+              "kind": "quiz",
+              "slug": "quiz-on-model-context-protocol",
+              "path": "/courses/claude-with-amazon-bedrock/quiz-on-model-context-protocol",
+              "title": "Quiz on Model Context Protocol"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 9,
+          "units": [
+            {
+              "order": 66,
+              "kind": "lesson",
+              "slug": "claude-code-in-action",
+              "path": "/courses/claude-with-amazon-bedrock/claude-code-in-action",
+              "title": "Claude Code in action"
+            },
+            {
+              "order": 67,
+              "kind": "lesson",
+              "slug": "enhancements-with-mcp-servers",
+              "path": "/courses/claude-with-amazon-bedrock/enhancements-with-mcp-servers",
+              "title": "Enhancements with MCP servers"
+            },
+            {
+              "order": 68,
+              "kind": "lesson",
+              "slug": "parallelizing-claude-code",
+              "path": "/courses/claude-with-amazon-bedrock/parallelizing-claude-code",
+              "title": "Parallelizing Claude Code"
+            },
+            {
+              "order": 69,
+              "kind": "lesson",
+              "slug": "automated-debugging",
+              "path": "/courses/claude-with-amazon-bedrock/automated-debugging",
+              "title": "Automated debugging"
+            },
+            {
+              "order": 70,
+              "kind": "lesson",
+              "slug": "computer-use",
+              "path": "/courses/claude-with-amazon-bedrock/computer-use",
+              "title": "Computer Use"
+            },
+            {
+              "order": 71,
+              "kind": "lesson",
+              "slug": "how-computer-use-works",
+              "path": "/courses/claude-with-amazon-bedrock/how-computer-use-works",
+              "title": "How Computer Use works"
+            },
+            {
+              "order": 72,
+              "kind": "lesson",
+              "slug": "qualities-of-agents",
+              "path": "/courses/claude-with-amazon-bedrock/qualities-of-agents",
+              "title": "Qualities of agents"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 10,
+          "units": [
+            {
+              "order": 73,
+              "kind": "assessment",
+              "slug": "final-assessment-quiz",
+              "path": "/courses/claude-with-amazon-bedrock/final-assessment-quiz",
+              "title": "Final assessment quiz"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 11,
+          "units": [
+            {
+              "order": 74,
+              "kind": "unknown",
+              "slug": "badge",
+              "path": "/courses/claude-with-amazon-bedrock/badge",
+              "title": "Completion badge"
+            }
+          ]
+        }
+      ],
+      "unitCount": 74
+    },
+    {
+      "slug": "claude-with-google-cloud-s-vertex-ai",
+      "path": "/courses/claude-with-google-cloud-s-vertex-ai",
+      "title": "Claude with Google Cloud's Vertex AI",
+      "sections": [
+        {
+          "title": null,
+          "order": 1,
+          "units": [
+            {
+              "order": 1,
+              "kind": "lesson",
+              "slug": "accessing-the-api",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/accessing-the-api",
+              "title": "Accessing the API"
+            },
+            {
+              "order": 2,
+              "kind": "lesson",
+              "slug": "vertex-ai-setup",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/vertex-ai-setup",
+              "title": "Vertex AI Setup"
+            },
+            {
+              "order": 3,
+              "kind": "lesson",
+              "slug": "making-a-request",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/making-a-request",
+              "title": "Making a request"
+            },
+            {
+              "order": 4,
+              "kind": "lesson",
+              "slug": "multi-turn-conversations",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/multi-turn-conversations",
+              "title": "Multi-turn conversations"
+            },
+            {
+              "order": 5,
+              "kind": "lesson",
+              "slug": "system-prompts",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/system-prompts",
+              "title": "System prompts"
+            },
+            {
+              "order": 6,
+              "kind": "lesson",
+              "slug": "temperature",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/temperature",
+              "title": "Temperature"
+            },
+            {
+              "order": 7,
+              "kind": "lesson",
+              "slug": "response-streaming",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/response-streaming",
+              "title": "Response streaming"
+            },
+            {
+              "order": 8,
+              "kind": "lesson",
+              "slug": "controlling-model-output",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/controlling-model-output",
+              "title": "Controlling model output"
+            },
+            {
+              "order": 9,
+              "kind": "lesson",
+              "slug": "structured-data",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/structured-data",
+              "title": "Structured data"
+            },
+            {
+              "order": 10,
+              "kind": "quiz",
+              "slug": "quiz-on-accessing-claude-with-the-api",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/quiz-on-accessing-claude-with-the-api",
+              "title": "Quiz on accessing Claude with the API"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 2,
+          "units": [
+            {
+              "order": 11,
+              "kind": "lesson",
+              "slug": "prompt-evaluation",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/prompt-evaluation",
+              "title": "Prompt evaluation"
+            },
+            {
+              "order": 12,
+              "kind": "lesson",
+              "slug": "a-typical-eval-workflow",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/a-typical-eval-workflow",
+              "title": "A typical eval workflow"
+            },
+            {
+              "order": 13,
+              "kind": "lesson",
+              "slug": "generating-test-datasets",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/generating-test-datasets",
+              "title": "Generating test datasets"
+            },
+            {
+              "order": 14,
+              "kind": "lesson",
+              "slug": "running-the-eval",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/running-the-eval",
+              "title": "Running the eval"
+            },
+            {
+              "order": 15,
+              "kind": "lesson",
+              "slug": "model-based-grading",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/model-based-grading",
+              "title": "Model based grading"
+            },
+            {
+              "order": 16,
+              "kind": "lesson",
+              "slug": "code-based-grading",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/code-based-grading",
+              "title": "Code based grading"
+            },
+            {
+              "order": 17,
+              "kind": "quiz",
+              "slug": "quiz-on-prompt-evaluation",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/quiz-on-prompt-evaluation",
+              "title": "Quiz on prompt evaluation"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 3,
+          "units": [
+            {
+              "order": 18,
+              "kind": "lesson",
+              "slug": "prompt-engineering",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/prompt-engineering",
+              "title": "Prompt engineering"
+            },
+            {
+              "order": 19,
+              "kind": "lesson",
+              "slug": "being-clear-and-direct",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/being-clear-and-direct",
+              "title": "Being clear and direct"
+            },
+            {
+              "order": 20,
+              "kind": "lesson",
+              "slug": "being-specific",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/being-specific",
+              "title": "Being specific"
+            },
+            {
+              "order": 21,
+              "kind": "lesson",
+              "slug": "structure-with-xml-tags",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/structure-with-xml-tags",
+              "title": "Structure with XML tags"
+            },
+            {
+              "order": 22,
+              "kind": "lesson",
+              "slug": "providing-examples",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/providing-examples",
+              "title": "Providing examples"
+            },
+            {
+              "order": 23,
+              "kind": "quiz",
+              "slug": "quiz-on-prompt-engineering-techniques",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/quiz-on-prompt-engineering-techniques",
+              "title": "Quiz on prompt engineering techniques"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 4,
+          "units": [
+            {
+              "order": 24,
+              "kind": "lesson",
+              "slug": "introducing-tool-use",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/introducing-tool-use",
+              "title": "Introducing tool use"
+            },
+            {
+              "order": 25,
+              "kind": "lesson",
+              "slug": "project-overview",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/project-overview",
+              "title": "Project overview"
+            },
+            {
+              "order": 26,
+              "kind": "lesson",
+              "slug": "tool-functions",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/tool-functions",
+              "title": "Tool functions"
+            },
+            {
+              "order": 27,
+              "kind": "lesson",
+              "slug": "tool-schemas",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/tool-schemas",
+              "title": "Tool schemas"
+            },
+            {
+              "order": 28,
+              "kind": "lesson",
+              "slug": "handling-message-blocks",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/handling-message-blocks",
+              "title": "Handling message blocks"
+            },
+            {
+              "order": 29,
+              "kind": "lesson",
+              "slug": "sending-tool-results",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/sending-tool-results",
+              "title": "Sending tool results"
+            },
+            {
+              "order": 30,
+              "kind": "lesson",
+              "slug": "multi-turn-conversations-with-tools",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/multi-turn-conversations-with-tools",
+              "title": "Multi-turn conversations with tools"
+            },
+            {
+              "order": 31,
+              "kind": "lesson",
+              "slug": "implementing-multiple-turns",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/implementing-multiple-turns",
+              "title": "Implementing multiple turns"
+            },
+            {
+              "order": 32,
+              "kind": "lesson",
+              "slug": "using-multiple-tools",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/using-multiple-tools",
+              "title": "Using multiple tools"
+            },
+            {
+              "order": 33,
+              "kind": "lesson",
+              "slug": "the-batch-tool",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/the-batch-tool",
+              "title": "The batch tool"
+            },
+            {
+              "order": 34,
+              "kind": "lesson",
+              "slug": "tools-for-structured-data",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/tools-for-structured-data",
+              "title": "Tools for structured data"
+            },
+            {
+              "order": 35,
+              "kind": "lesson",
+              "slug": "the-text-edit-tool",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/the-text-edit-tool",
+              "title": "The text edit tool"
+            },
+            {
+              "order": 36,
+              "kind": "lesson",
+              "slug": "the-web-search-tool",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/the-web-search-tool",
+              "title": "The web search tool"
+            },
+            {
+              "order": 37,
+              "kind": "quiz",
+              "slug": "quiz-on-tool-use-with-claude",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/quiz-on-tool-use-with-claude",
+              "title": "Quiz on tool use with Claude"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 5,
+          "units": [
+            {
+              "order": 38,
+              "kind": "lesson",
+              "slug": "introducing-retrieval-augmented-generation",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/introducing-retrieval-augmented-generation",
+              "title": "Introducing Retrieval Augmented Generation"
+            },
+            {
+              "order": 39,
+              "kind": "lesson",
+              "slug": "text-chunking-strategies",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/text-chunking-strategies",
+              "title": "Text chunking strategies"
+            },
+            {
+              "order": 40,
+              "kind": "lesson",
+              "slug": "text-embeddings",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/text-embeddings",
+              "title": "Text embeddings"
+            },
+            {
+              "order": 41,
+              "kind": "lesson",
+              "slug": "the-full-rag-flow",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/the-full-rag-flow",
+              "title": "The full RAG flow"
+            },
+            {
+              "order": 42,
+              "kind": "lesson",
+              "slug": "implementing-the-rag-flow",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/implementing-the-rag-flow",
+              "title": "Implementing the RAG flow"
+            },
+            {
+              "order": 43,
+              "kind": "lesson",
+              "slug": "bm25-lexical-search",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/bm25-lexical-search",
+              "title": "BM25 lexical search"
+            },
+            {
+              "order": 44,
+              "kind": "lesson",
+              "slug": "a-multi-index-rag-pipeline",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/a-multi-index-rag-pipeline",
+              "title": "A Multi-index RAG pipeline"
+            },
+            {
+              "order": 45,
+              "kind": "lesson",
+              "slug": "reranking-results",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/reranking-results",
+              "title": "Reranking results"
+            },
+            {
+              "order": 46,
+              "kind": "lesson",
+              "slug": "contextual-retrieval",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/contextual-retrieval",
+              "title": "Contextual retrieval"
+            },
+            {
+              "order": 47,
+              "kind": "quiz",
+              "slug": "quiz-on-retrieval-augmented-generation",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/quiz-on-retrieval-augmented-generation",
+              "title": "Quiz on Retrieval Augmented Generation"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 6,
+          "units": [
+            {
+              "order": 48,
+              "kind": "lesson",
+              "slug": "extended-thinking",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/extended-thinking",
+              "title": "Extended thinking"
+            },
+            {
+              "order": 49,
+              "kind": "lesson",
+              "slug": "image-support",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/image-support",
+              "title": "Image support"
+            },
+            {
+              "order": 50,
+              "kind": "lesson",
+              "slug": "citations",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/citations",
+              "title": "Citations"
+            },
+            {
+              "order": 51,
+              "kind": "lesson",
+              "slug": "prompt-caching",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/prompt-caching",
+              "title": "Prompt caching"
+            },
+            {
+              "order": 52,
+              "kind": "lesson",
+              "slug": "rules-of-prompt-caching",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/rules-of-prompt-caching",
+              "title": "Rules of prompt caching"
+            },
+            {
+              "order": 53,
+              "kind": "lesson",
+              "slug": "prompt-caching-in-action",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/prompt-caching-in-action",
+              "title": "Prompt caching in action"
+            },
+            {
+              "order": 54,
+              "kind": "quiz",
+              "slug": "quiz-on-features-of-claude",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/quiz-on-features-of-claude",
+              "title": "Quiz on features of Claude"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 7,
+          "units": [
+            {
+              "order": 55,
+              "kind": "lesson",
+              "slug": "introducing-mcp",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/introducing-mcp",
+              "title": "Introducing MCP"
+            },
+            {
+              "order": 56,
+              "kind": "lesson",
+              "slug": "mcp-clients",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/mcp-clients",
+              "title": "MCP clients"
+            },
+            {
+              "order": 57,
+              "kind": "lesson",
+              "slug": "project-setup",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/project-setup",
+              "title": "Project setup"
+            },
+            {
+              "order": 58,
+              "kind": "lesson",
+              "slug": "defining-tools-with-mcp",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/defining-tools-with-mcp",
+              "title": "Defining tools with MCP"
+            },
+            {
+              "order": 59,
+              "kind": "lesson",
+              "slug": "the-server-inspector",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/the-server-inspector",
+              "title": "The server inspector"
+            },
+            {
+              "order": 60,
+              "kind": "lesson",
+              "slug": "implementing-a-client",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/implementing-a-client",
+              "title": "Implementing a client"
+            },
+            {
+              "order": 61,
+              "kind": "lesson",
+              "slug": "defining-resources",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/defining-resources",
+              "title": "Defining resources"
+            },
+            {
+              "order": 62,
+              "kind": "lesson",
+              "slug": "accessing-resources",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/accessing-resources",
+              "title": "Accessing resources"
+            },
+            {
+              "order": 63,
+              "kind": "lesson",
+              "slug": "defining-prompts",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/defining-prompts",
+              "title": "Defining prompts"
+            },
+            {
+              "order": 64,
+              "kind": "lesson",
+              "slug": "prompts-in-the-client",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/prompts-in-the-client",
+              "title": "Prompts in the client"
+            },
+            {
+              "order": 65,
+              "kind": "lesson",
+              "slug": "mcp-review",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/mcp-review",
+              "title": "MCP review"
+            },
+            {
+              "order": 66,
+              "kind": "quiz",
+              "slug": "quiz-on-model-context-protocol",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/quiz-on-model-context-protocol",
+              "title": "Quiz on Model Context Protocol"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 8,
+          "units": [
+            {
+              "order": 67,
+              "kind": "lesson",
+              "slug": "agents-and-workflows",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/agents-and-workflows",
+              "title": "Agents and workflows"
+            },
+            {
+              "order": 68,
+              "kind": "lesson",
+              "slug": "parallelization-workflows",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/parallelization-workflows",
+              "title": "Parallelization workflows"
+            },
+            {
+              "order": 69,
+              "kind": "lesson",
+              "slug": "chaining-workflows",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/chaining-workflows",
+              "title": "Chaining workflows"
+            },
+            {
+              "order": 70,
+              "kind": "lesson",
+              "slug": "routing-workflows",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/routing-workflows",
+              "title": "Routing workflows"
+            },
+            {
+              "order": 71,
+              "kind": "lesson",
+              "slug": "agents-and-tools",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/agents-and-tools",
+              "title": "Agents and tools"
+            },
+            {
+              "order": 72,
+              "kind": "lesson",
+              "slug": "environment-inspection",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/environment-inspection",
+              "title": "Environment inspection"
+            },
+            {
+              "order": 73,
+              "kind": "lesson",
+              "slug": "workflows-vs-agents",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/workflows-vs-agents",
+              "title": "Workflows vs agents"
+            },
+            {
+              "order": 74,
+              "kind": "quiz",
+              "slug": "quiz-on-agents-and-workflows",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/quiz-on-agents-and-workflows",
+              "title": "Quiz on agents and workflows"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 9,
+          "units": [
+            {
+              "order": 75,
+              "kind": "assessment",
+              "slug": "final-assessment-quiz",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/final-assessment-quiz",
+              "title": "Final assessment quiz"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 10,
+          "units": [
+            {
+              "order": 76,
+              "kind": "unknown",
+              "slug": "badge",
+              "path": "/courses/claude-with-google-cloud-s-vertex-ai/badge",
+              "title": "Completion badge"
+            }
+          ]
+        }
+      ],
+      "unitCount": 76
+    },
+    {
+      "slug": "introduction-to-agent-skills",
+      "path": "/courses/introduction-to-agent-skills",
+      "title": "Introduction to agent skills",
+      "sections": [
+        {
+          "title": null,
+          "order": 1,
+          "units": [
+            {
+              "order": 1,
+              "kind": "lesson",
+              "slug": "what-are-skills",
+              "path": "/courses/introduction-to-agent-skills/what-are-skills",
+              "title": "What are skills?"
+            },
+            {
+              "order": 2,
+              "kind": "lesson",
+              "slug": "creating-your-first-skill",
+              "path": "/courses/introduction-to-agent-skills/creating-your-first-skill",
+              "title": "Creating your first skill"
+            },
+            {
+              "order": 3,
+              "kind": "lesson",
+              "slug": "configuration-and-multi-file-skills",
+              "path": "/courses/introduction-to-agent-skills/configuration-and-multi-file-skills",
+              "title": "Configuration and multi-file skills"
+            },
+            {
+              "order": 4,
+              "kind": "lesson",
+              "slug": "skills-vs-other-claude-code-features",
+              "path": "/courses/introduction-to-agent-skills/skills-vs-other-claude-code-features",
+              "title": "Skills vs. other Claude Code features"
+            },
+            {
+              "order": 5,
+              "kind": "lesson",
+              "slug": "sharing-skills",
+              "path": "/courses/introduction-to-agent-skills/sharing-skills",
+              "title": "Sharing skills"
+            },
+            {
+              "order": 6,
+              "kind": "lesson",
+              "slug": "troubleshooting-skills",
+              "path": "/courses/introduction-to-agent-skills/troubleshooting-skills",
+              "title": "Troubleshooting skills"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 2,
+          "units": [
+            {
+              "order": 7,
+              "kind": "lesson",
+              "slug": "complete",
+              "path": "/courses/introduction-to-agent-skills/complete",
+              "title": "Course complete"
+            }
+          ]
+        }
+      ],
+      "unitCount": 7
+    },
+    {
+      "slug": "introduction-to-claude-cowork",
+      "path": "/courses/introduction-to-claude-cowork",
+      "title": "Introduction to Claude Cowork",
+      "sections": [
+        {
+          "title": null,
+          "order": 1,
+          "units": [
+            {
+              "order": 1,
+              "kind": "lesson",
+              "slug": "what-is-cowork",
+              "path": "/courses/introduction-to-claude-cowork/what-is-cowork",
+              "title": "What is Claude Cowork"
+            },
+            {
+              "order": 2,
+              "kind": "lesson",
+              "slug": "getting-set-up",
+              "path": "/courses/introduction-to-claude-cowork/getting-set-up",
+              "title": "Setting up Claude Cowork"
+            },
+            {
+              "order": 3,
+              "kind": "lesson",
+              "slug": "scheduled-tasks",
+              "path": "/courses/introduction-to-claude-cowork/scheduled-tasks",
+              "title": "What Claude Cowork can do for you"
+            },
+            {
+              "order": 4,
+              "kind": "lesson",
+              "slug": "the-task-loop",
+              "path": "/courses/introduction-to-claude-cowork/the-task-loop",
+              "title": "Hand Claude Cowork your first task"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 2,
+          "units": [
+            {
+              "order": 5,
+              "kind": "lesson",
+              "slug": "research-analysis-at-scale",
+              "path": "/courses/introduction-to-claude-cowork/research-analysis-at-scale",
+              "title": "Get better results faster"
+            },
+            {
+              "order": 6,
+              "kind": "lesson",
+              "slug": "giving-cowork-context",
+              "path": "/courses/introduction-to-claude-cowork/giving-cowork-context",
+              "title": "Standing context: Global instructions and projects"
+            },
+            {
+              "order": 7,
+              "kind": "lesson",
+              "slug": "file-document-tasks",
+              "path": "/courses/introduction-to-claude-cowork/file-document-tasks",
+              "title": "Skills: Teach Claude Cowork your way"
+            },
+            {
+              "order": 8,
+              "kind": "lesson",
+              "slug": "plugins-cowork-as-a-specialist",
+              "path": "/courses/introduction-to-claude-cowork/plugins-cowork-as-a-specialist",
+              "title": "Plugins: Encode your team's expertise"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 3,
+          "units": [
+            {
+              "order": 9,
+              "kind": "lesson",
+              "slug": "claude-in-chrome",
+              "path": "/courses/introduction-to-claude-cowork/claude-in-chrome",
+              "title": "Claude in Chrome"
+            },
+            {
+              "order": 10,
+              "kind": "lesson",
+              "slug": "claude-for-microsoft-365",
+              "path": "/courses/introduction-to-claude-cowork/claude-for-microsoft-365",
+              "title": "Claude for Microsoft 365"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 4,
+          "units": [
+            {
+              "order": 11,
+              "kind": "lesson",
+              "slug": "permissions-usage-choosing-your-model",
+              "path": "/courses/introduction-to-claude-cowork/permissions-usage-choosing-your-model",
+              "title": "Best practices for working safely"
+            },
+            {
+              "order": 12,
+              "kind": "lesson",
+              "slug": "validating-skills-for-plugins",
+              "path": "/courses/introduction-to-claude-cowork/validating-skills-for-plugins",
+              "title": "Validating skills for plugins"
+            },
+            {
+              "order": 13,
+              "kind": "lesson",
+              "slug": "share-what-you-build-with-your-team",
+              "path": "/courses/introduction-to-claude-cowork/share-what-you-build-with-your-team",
+              "title": "Share what you build with your team"
+            },
+            {
+              "order": 14,
+              "kind": "lesson",
+              "slug": "troubleshooting-next-steps",
+              "path": "/courses/introduction-to-claude-cowork/troubleshooting-next-steps",
+              "title": "Wrap up and next steps"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 5,
+          "units": [
+            {
+              "order": 15,
+              "kind": "quiz",
+              "slug": "quiz-on-claude-cowork",
+              "path": "/courses/introduction-to-claude-cowork/quiz-on-claude-cowork",
+              "title": "Quiz on Claude Cowork"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 6,
+          "units": [
+            {
+              "order": 16,
+              "kind": "unknown",
+              "slug": "badge",
+              "path": "/courses/introduction-to-claude-cowork/badge",
+              "title": "Completion badge"
+            }
+          ]
+        }
+      ],
+      "unitCount": 16
+    },
+    {
+      "slug": "introduction-to-model-context-protocol",
+      "path": "/courses/introduction-to-model-context-protocol",
+      "title": "Introduction to Model Context Protocol",
+      "sections": [
+        {
+          "title": null,
+          "order": 1,
+          "units": [
+            {
+              "order": 1,
+              "kind": "lesson",
+              "slug": "introducing-mcp",
+              "path": "/courses/introduction-to-model-context-protocol/introducing-mcp",
+              "title": "Introducing MCP"
+            },
+            {
+              "order": 2,
+              "kind": "lesson",
+              "slug": "mcp-clients",
+              "path": "/courses/introduction-to-model-context-protocol/mcp-clients",
+              "title": "MCP clients"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 2,
+          "units": [
+            {
+              "order": 3,
+              "kind": "lesson",
+              "slug": "defining-tools-with-mcp",
+              "path": "/courses/introduction-to-model-context-protocol/defining-tools-with-mcp",
+              "title": "Defining tools with MCP"
+            },
+            {
+              "order": 4,
+              "kind": "lesson",
+              "slug": "the-server-inspector",
+              "path": "/courses/introduction-to-model-context-protocol/the-server-inspector",
+              "title": "The server inspector"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 3,
+          "units": [
+            {
+              "order": 5,
+              "kind": "lesson",
+              "slug": "implementing-a-client",
+              "path": "/courses/introduction-to-model-context-protocol/implementing-a-client",
+              "title": "Implementing a client"
+            },
+            {
+              "order": 6,
+              "kind": "lesson",
+              "slug": "defining-resources",
+              "path": "/courses/introduction-to-model-context-protocol/defining-resources",
+              "title": "Defining resources"
+            },
+            {
+              "order": 7,
+              "kind": "lesson",
+              "slug": "accessing-resources",
+              "path": "/courses/introduction-to-model-context-protocol/accessing-resources",
+              "title": "Accessing resources"
+            },
+            {
+              "order": 8,
+              "kind": "lesson",
+              "slug": "defining-prompts",
+              "path": "/courses/introduction-to-model-context-protocol/defining-prompts",
+              "title": "Defining prompts"
+            },
+            {
+              "order": 9,
+              "kind": "lesson",
+              "slug": "prompts-in-the-client",
+              "path": "/courses/introduction-to-model-context-protocol/prompts-in-the-client",
+              "title": "Prompts in the client"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 4,
+          "units": [
+            {
+              "order": 10,
+              "kind": "assessment",
+              "slug": "final-assessment-on-mcp",
+              "path": "/courses/introduction-to-model-context-protocol/final-assessment-on-mcp",
+              "title": "Final assessment on MCP"
+            },
+            {
+              "order": 11,
+              "kind": "lesson",
+              "slug": "mcp-review",
+              "path": "/courses/introduction-to-model-context-protocol/mcp-review",
+              "title": "MCP review"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 5,
+          "units": [
+            {
+              "order": 12,
+              "kind": "unknown",
+              "slug": "badge",
+              "path": "/courses/introduction-to-model-context-protocol/badge",
+              "title": "Completion badge"
+            }
+          ]
+        }
+      ],
+      "unitCount": 12
+    },
+    {
+      "slug": "introduction-to-subagents",
+      "path": "/courses/introduction-to-subagents",
+      "title": "Introduction to subagents",
+      "sections": [
+        {
+          "title": null,
+          "order": 1,
+          "units": [
+            {
+              "order": 1,
+              "kind": "lesson",
+              "slug": "what-are-subagents",
+              "path": "/courses/introduction-to-subagents/what-are-subagents",
+              "title": "What are subagents?"
+            },
+            {
+              "order": 2,
+              "kind": "lesson",
+              "slug": "creating-a-subagent",
+              "path": "/courses/introduction-to-subagents/creating-a-subagent",
+              "title": "Creating a subagent"
+            },
+            {
+              "order": 3,
+              "kind": "lesson",
+              "slug": "designing-effective-subagents",
+              "path": "/courses/introduction-to-subagents/designing-effective-subagents",
+              "title": "Designing effective subagents"
+            },
+            {
+              "order": 4,
+              "kind": "lesson",
+              "slug": "using-subagents-effectively",
+              "path": "/courses/introduction-to-subagents/using-subagents-effectively",
+              "title": "Using subagents effectively"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 2,
+          "units": [
+            {
+              "order": 5,
+              "kind": "lesson",
+              "slug": "complete",
+              "path": "/courses/introduction-to-subagents/complete",
+              "title": "Course complete"
+            }
+          ]
+        }
+      ],
+      "unitCount": 5
+    },
+    {
+      "slug": "model-context-protocol-advanced-topics",
+      "path": "/courses/model-context-protocol-advanced-topics",
+      "title": "Model Context Protocol: Advanced Topics",
+      "sections": [
+        {
+          "title": null,
+          "order": 1,
+          "units": [
+            {
+              "order": 1,
+              "kind": "lesson",
+              "slug": "sampling",
+              "path": "/courses/model-context-protocol-advanced-topics/sampling",
+              "title": "Sampling"
+            },
+            {
+              "order": 2,
+              "kind": "lesson",
+              "slug": "sampling-walkthrough",
+              "path": "/courses/model-context-protocol-advanced-topics/sampling-walkthrough",
+              "title": "Sampling walkthrough"
+            },
+            {
+              "order": 3,
+              "kind": "lesson",
+              "slug": "log-and-progress-notifications",
+              "path": "/courses/model-context-protocol-advanced-topics/log-and-progress-notifications",
+              "title": "Log and progress notifications"
+            },
+            {
+              "order": 4,
+              "kind": "lesson",
+              "slug": "notifications-walkthrough",
+              "path": "/courses/model-context-protocol-advanced-topics/notifications-walkthrough",
+              "title": "Notifications walkthrough"
+            },
+            {
+              "order": 5,
+              "kind": "lesson",
+              "slug": "roots",
+              "path": "/courses/model-context-protocol-advanced-topics/roots",
+              "title": "Roots"
+            },
+            {
+              "order": 6,
+              "kind": "lesson",
+              "slug": "roots-walkthrough",
+              "path": "/courses/model-context-protocol-advanced-topics/roots-walkthrough",
+              "title": "Roots walkthrough"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 2,
+          "units": [
+            {
+              "order": 7,
+              "kind": "lesson",
+              "slug": "json-message-types",
+              "path": "/courses/model-context-protocol-advanced-topics/json-message-types",
+              "title": "JSON message types"
+            },
+            {
+              "order": 8,
+              "kind": "lesson",
+              "slug": "the-stdio-transport",
+              "path": "/courses/model-context-protocol-advanced-topics/the-stdio-transport",
+              "title": "The STDIO transport"
+            },
+            {
+              "order": 9,
+              "kind": "lesson",
+              "slug": "the-streamablehttp-transport",
+              "path": "/courses/model-context-protocol-advanced-topics/the-streamablehttp-transport",
+              "title": "The StreamableHTTP transport"
+            },
+            {
+              "order": 10,
+              "kind": "lesson",
+              "slug": "streamablehttp-in-depth",
+              "path": "/courses/model-context-protocol-advanced-topics/streamablehttp-in-depth",
+              "title": "StreamableHTTP in depth"
+            },
+            {
+              "order": 11,
+              "kind": "lesson",
+              "slug": "state-and-the-streamablehttp-transport",
+              "path": "/courses/model-context-protocol-advanced-topics/state-and-the-streamablehttp-transport",
+              "title": "State and the StreamableHTTP transport"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 3,
+          "units": [
+            {
+              "order": 12,
+              "kind": "assessment",
+              "slug": "assessment-on-mcp-concepts",
+              "path": "/courses/model-context-protocol-advanced-topics/assessment-on-mcp-concepts",
+              "title": "Assessment on MCP concepts"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 4,
+          "units": [
+            {
+              "order": 13,
+              "kind": "unknown",
+              "slug": "badge",
+              "path": "/courses/model-context-protocol-advanced-topics/badge",
+              "title": "Completion badge"
+            }
+          ]
+        }
+      ],
+      "unitCount": 13
+    },
+    {
+      "slug": "teaching-ai-fluency",
+      "path": "/courses/teaching-ai-fluency",
+      "title": "Teaching AI Fluency",
+      "sections": [
+        {
+          "title": null,
+          "order": 1,
+          "units": [
+            {
+              "order": 1,
+              "kind": "lesson",
+              "slug": "welcome-approaches-to-teaching-ai-fluency",
+              "path": "/courses/teaching-ai-fluency/welcome-approaches-to-teaching-ai-fluency",
+              "title": "Welcome & approaches to teaching AI Fluency"
+            },
+            {
+              "order": 2,
+              "kind": "lesson",
+              "slug": "the-delegation-diligence-loop",
+              "path": "/courses/teaching-ai-fluency/the-delegation-diligence-loop",
+              "title": "The Delegation-Diligence loop"
+            },
+            {
+              "order": 3,
+              "kind": "lesson",
+              "slug": "the-description-discernment-loop",
+              "path": "/courses/teaching-ai-fluency/the-description-discernment-loop",
+              "title": "The Description-Discernment loop"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 2,
+          "units": [
+            {
+              "order": 4,
+              "kind": "lesson",
+              "slug": "how-do-we-assess-the-4ds",
+              "path": "/courses/teaching-ai-fluency/how-do-we-assess-the-4ds",
+              "title": "How do we assess the 4Ds?"
+            },
+            {
+              "order": 5,
+              "kind": "lesson",
+              "slug": "designing-assignments-for-ai-fluency",
+              "path": "/courses/teaching-ai-fluency/designing-assignments-for-ai-fluency",
+              "title": "Designing assignments for AI Fluency"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 3,
+          "units": [
+            {
+              "order": 6,
+              "kind": "lesson",
+              "slug": "ai-s-impact-and-your-discipline",
+              "path": "/courses/teaching-ai-fluency/ai-s-impact-and-your-discipline",
+              "title": "AI's impact and your discipline"
+            },
+            {
+              "order": 7,
+              "kind": "lesson",
+              "slug": "applying-discipline-expertise-to-ai-fluency",
+              "path": "/courses/teaching-ai-fluency/applying-discipline-expertise-to-ai-fluency",
+              "title": "Applying discipline expertise to AI Fluency"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 4,
+          "units": [
+            {
+              "order": 8,
+              "kind": "lesson",
+              "slug": "certificate-of-completion",
+              "path": "/courses/teaching-ai-fluency/certificate-of-completion",
+              "title": "Course quiz"
+            }
+          ]
+        },
+        {
+          "title": null,
+          "order": 5,
+          "units": [
+            {
+              "order": 9,
+              "kind": "unknown",
+              "slug": "badge",
+              "path": "/courses/teaching-ai-fluency/badge",
+              "title": "Completion badge"
+            }
+          ]
+        }
+      ],
+      "unitCount": 9
+    }
+  ]
+}
