@@ -1,0 +1,315 @@
+{
+  "schemaVersion": 1,
+  "origin": "https://academy.claude.com",
+  "generatedAt": "2026-08-25T05:56:05.160Z",
+  "records": [
+    {
+      "requestedLocale": "en",
+      "observedLocale": "en",
+      "confidence": "high",
+      "observedAt": "2026-08-25T05:55:37.754Z",
+      "requestedPath": "/courses/building-with-the-claude-api",
+      "finalUrl": "https://academy.claude.com/courses/building-with-the-claude-api",
+      "evidence": {
+        "htmlLang": "en",
+        "selectedLocale": "en",
+        "selectorLabel": "English",
+        "contentReady": true
+      },
+      "ok": true,
+      "coverage": {
+        "courseTitle": "unknown",
+        "sectionTitles": "unknown",
+        "lessonTitles": "unknown",
+        "body": "unknown",
+        "quizTitles": "unknown"
+      }
+    },
+    {
+      "requestedLocale": "en",
+      "observedLocale": "en",
+      "confidence": "high",
+      "observedAt": "2026-08-25T05:55:39.632Z",
+      "requestedPath": "/courses/building-with-the-claude-api/making-a-request",
+      "finalUrl": "https://academy.claude.com/courses/building-with-the-claude-api/making-a-request",
+      "evidence": {
+        "htmlLang": "en",
+        "selectedLocale": "en",
+        "selectorLabel": "English",
+        "contentReady": true
+      },
+      "ok": true,
+      "coverage": {
+        "courseTitle": "unknown",
+        "sectionTitles": "unknown",
+        "lessonTitles": "unknown",
+        "body": "unknown",
+        "quizTitles": "unknown"
+      }
+    },
+    {
+      "requestedLocale": "es",
+      "observedLocale": "es",
+      "confidence": "high",
+      "observedAt": "2026-08-25T05:55:40.639Z",
+      "requestedPath": "/courses/building-with-the-claude-api",
+      "finalUrl": "https://academy.claude.com/es/courses/building-with-the-claude-api",
+      "evidence": {
+        "htmlLang": "es",
+        "selectedLocale": "es",
+        "selectorLabel": "Español",
+        "contentReady": true
+      },
+      "ok": true,
+      "coverage": {
+        "courseTitle": "unknown",
+        "sectionTitles": "unknown",
+        "lessonTitles": "unknown",
+        "body": "unknown",
+        "quizTitles": "unknown"
+      }
+    },
+    {
+      "requestedLocale": "es",
+      "observedLocale": "es",
+      "confidence": "high",
+      "observedAt": "2026-08-25T05:55:42.806Z",
+      "requestedPath": "/courses/building-with-the-claude-api/making-a-request",
+      "finalUrl": "https://academy.claude.com/es/courses/building-with-the-claude-api/making-a-request",
+      "evidence": {
+        "htmlLang": "es",
+        "selectedLocale": "es",
+        "selectorLabel": "Español",
+        "contentReady": true
+      },
+      "ok": true,
+      "coverage": {
+        "courseTitle": "unknown",
+        "sectionTitles": "unknown",
+        "lessonTitles": "unknown",
+        "body": "unknown",
+        "quizTitles": "unknown"
+      }
+    },
+    {
+      "requestedLocale": "fr",
+      "observedLocale": "fr",
+      "confidence": "high",
+      "observedAt": "2026-08-25T05:55:44.318Z",
+      "requestedPath": "/courses/building-with-the-claude-api",
+      "finalUrl": "https://academy.claude.com/fr/courses/building-with-the-claude-api",
+      "evidence": {
+        "htmlLang": "fr",
+        "selectedLocale": "fr",
+        "selectorLabel": "Français",
+        "contentReady": true
+      },
+      "ok": true,
+      "coverage": {
+        "courseTitle": "unknown",
+        "sectionTitles": "unknown",
+        "lessonTitles": "unknown",
+        "body": "unknown",
+        "quizTitles": "unknown"
+      }
+    },
+    {
+      "requestedLocale": "fr",
+      "observedLocale": "fr",
+      "confidence": "high",
+      "observedAt": "2026-08-25T05:55:46.924Z",
+      "requestedPath": "/courses/building-with-the-claude-api/making-a-request",
+      "finalUrl": "https://academy.claude.com/fr/courses/building-with-the-claude-api/making-a-request",
+      "evidence": {
+        "htmlLang": "fr",
+        "selectedLocale": "fr",
+        "selectorLabel": "Français",
+        "contentReady": true
+      },
+      "ok": true,
+      "coverage": {
+        "courseTitle": "unknown",
+        "sectionTitles": "unknown",
+        "lessonTitles": "unknown",
+        "body": "unknown",
+        "quizTitles": "unknown"
+      }
+    },
+    {
+      "requestedLocale": "ja",
+      "observedLocale": "ja",
+      "confidence": "high",
+      "observedAt": "2026-08-25T05:55:48.437Z",
+      "requestedPath": "/courses/building-with-the-claude-api",
+      "finalUrl": "https://academy.claude.com/ja/courses/building-with-the-claude-api",
+      "evidence": {
+        "htmlLang": "ja",
+        "selectedLocale": "ja",
+        "selectorLabel": "日本語",
+        "contentReady": true
+      },
+      "ok": true,
+      "coverage": {
+        "courseTitle": "translated",
+        "sectionTitles": "mixed",
+        "lessonTitles": "mixed",
+        "body": "mixed",
+        "quizTitles": "translated"
+      }
+    },
+    {
+      "requestedLocale": "ja",
+      "observedLocale": "ja",
+      "confidence": "high",
+      "observedAt": "2026-08-25T05:55:51.207Z",
+      "requestedPath": "/courses/building-with-the-claude-api/making-a-request",
+      "finalUrl": "https://academy.claude.com/ja/courses/building-with-the-claude-api/making-a-request",
+      "evidence": {
+        "htmlLang": "ja",
+        "selectedLocale": "ja",
+        "selectorLabel": "日本語",
+        "contentReady": true
+      },
+      "ok": true,
+      "coverage": {
+        "courseTitle": "translated",
+        "sectionTitles": "translated",
+        "lessonTitles": "mixed",
+        "body": "mixed",
+        "quizTitles": "translated"
+      }
+    },
+    {
+      "requestedLocale": "ko",
+      "observedLocale": "ko",
+      "confidence": "high",
+      "observedAt": "2026-08-25T05:55:52.395Z",
+      "requestedPath": "/courses/building-with-the-claude-api",
+      "finalUrl": "https://academy.claude.com/ko/courses/building-with-the-claude-api",
+      "evidence": {
+        "htmlLang": "ko",
+        "selectedLocale": "ko",
+        "selectorLabel": "한국어",
+        "contentReady": true
+      },
+      "ok": true,
+      "coverage": {
+        "courseTitle": "translated",
+        "sectionTitles": "mixed",
+        "lessonTitles": "mixed",
+        "body": "mixed",
+        "quizTitles": "translated"
+      }
+    },
+    {
+      "requestedLocale": "ko",
+      "observedLocale": "ko",
+      "confidence": "high",
+      "observedAt": "2026-08-25T05:55:55.222Z",
+      "requestedPath": "/courses/building-with-the-claude-api/making-a-request",
+      "finalUrl": "https://academy.claude.com/ko/courses/building-with-the-claude-api/making-a-request",
+      "evidence": {
+        "htmlLang": "ko",
+        "selectedLocale": "ko",
+        "selectorLabel": "한국어",
+        "contentReady": true
+      },
+      "ok": true,
+      "coverage": {
+        "courseTitle": "english-residue",
+        "sectionTitles": "translated",
+        "lessonTitles": "mixed",
+        "body": "mixed",
+        "quizTitles": "translated"
+      }
+    },
+    {
+      "requestedLocale": "zh-CN",
+      "observedLocale": "zh-CN",
+      "confidence": "high",
+      "observedAt": "2026-08-25T05:55:56.404Z",
+      "requestedPath": "/courses/building-with-the-claude-api",
+      "finalUrl": "https://academy.claude.com/zh-CN/courses/building-with-the-claude-api",
+      "evidence": {
+        "htmlLang": "zh-CN",
+        "selectedLocale": "zh-CN",
+        "selectorLabel": "简体中文",
+        "contentReady": true
+      },
+      "ok": true,
+      "coverage": {
+        "courseTitle": "translated",
+        "sectionTitles": "mixed",
+        "lessonTitles": "mixed",
+        "body": "mixed",
+        "quizTitles": "translated"
+      }
+    },
+    {
+      "requestedLocale": "zh-CN",
+      "observedLocale": "zh-CN",
+      "confidence": "high",
+      "observedAt": "2026-08-25T05:55:59.756Z",
+      "requestedPath": "/courses/building-with-the-claude-api/making-a-request",
+      "finalUrl": "https://academy.claude.com/zh-CN/courses/building-with-the-claude-api/making-a-request",
+      "evidence": {
+        "htmlLang": "zh-CN",
+        "selectedLocale": "zh-CN",
+        "selectorLabel": "简体中文",
+        "contentReady": true
+      },
+      "ok": true,
+      "coverage": {
+        "courseTitle": "translated",
+        "sectionTitles": "translated",
+        "lessonTitles": "mixed",
+        "body": "mixed",
+        "quizTitles": "translated"
+      }
+    },
+    {
+      "requestedLocale": "zh-TW",
+      "observedLocale": "zh-TW",
+      "confidence": "high",
+      "observedAt": "2026-08-25T05:56:00.953Z",
+      "requestedPath": "/courses/building-with-the-claude-api",
+      "finalUrl": "https://academy.claude.com/zh-TW/courses/building-with-the-claude-api",
+      "evidence": {
+        "htmlLang": "zh-TW",
+        "selectedLocale": "zh-TW",
+        "selectorLabel": "繁體中文",
+        "contentReady": true
+      },
+      "ok": true,
+      "coverage": {
+        "courseTitle": "translated",
+        "sectionTitles": "mixed",
+        "lessonTitles": "mixed",
+        "body": "mixed",
+        "quizTitles": "translated"
+      }
+    },
+    {
+      "requestedLocale": "zh-TW",
+      "observedLocale": "zh-TW",
+      "confidence": "high",
+      "observedAt": "2026-08-25T05:56:03.942Z",
+      "requestedPath": "/courses/building-with-the-claude-api/making-a-request",
+      "finalUrl": "https://academy.claude.com/zh-TW/courses/building-with-the-claude-api/making-a-request",
+      "evidence": {
+        "htmlLang": "zh-TW",
+        "selectedLocale": "zh-TW",
+        "selectorLabel": "繁體中文",
+        "contentReady": true
+      },
+      "ok": true,
+      "coverage": {
+        "courseTitle": "translated",
+        "sectionTitles": "translated",
+        "lessonTitles": "mixed",
+        "body": "mixed",
+        "quizTitles": "translated"
+      }
+    }
+  ]
+}
