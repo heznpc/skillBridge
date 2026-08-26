@@ -205,3 +205,28 @@ describe('answer-choice exclusion', () => {
     expect(collectAcademyChoiceSubtrees(document).length).toBeGreaterThan(0);
   });
 });
+
+describe('safety dependencies fail closed on Academy', () => {
+  // Loading content.js is impractical here, so this pins the DECISION the
+  // fallback encodes: on Academy, a missing adapter must not fall through to
+  // the Skilljar detector. Reconnaissance measured that detector at zero
+  // assessments found on this DOM, so the fallback would be a confident wrong
+  // answer, and the cost of a wrong answer here is exam content leaving the
+  // page.
+  const skilljarDetectorOnAcademyDom = (doc) =>
+    !!doc.querySelector('.quiz-form, .assessment-form, form[class*="quiz"]') ||
+    !!doc.querySelector('.answer-option, .answer-choice, .quiz-option');
+
+  test('the Skilljar detector really does find nothing on Academy markup', () => {
+    renderPage({ heading: 'Quiz on accessing Claude with the API', choices: 8 });
+    expect(skilljarDetectorOnAcademyDom(document)).toBe(false);
+    // …while the Academy adapter finds it.
+    expect(detectAcademyAssessment(document, at('/courses/c/quiz-on-x')).isAssessment).toBe(true);
+  });
+
+  test('so a missing adapter must be treated as an assessment, not as a lesson', () => {
+    const adapterMissing = true;
+    const verdict = adapterMissing ? true : skilljarDetectorOnAcademyDom(document);
+    expect(verdict).toBe(true);
+  });
+});

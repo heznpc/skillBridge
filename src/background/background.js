@@ -477,6 +477,24 @@ function _sameCloudDocument(first, second) {
 // ────────────────────────────────────────────────────────────────────
 const _TUTOR_TRUSTED_HOSTS = new Set(['anthropic.skilljar.com', 'academy.claude.com']);
 
+// Host is not enough for Academy.
+//
+// The origin also serves the learner's account: /profile, /settings, the
+// catalog, the sign-in return. None of those is a lesson, none of them needs a
+// tutor, and all of them are places where a page-level compromise would be
+// most valuable to an attacker. The transport is therefore scoped to course
+// unit routes, which are the only pages the tutor has anything to say about.
+//
+// Skilljar keeps host-only matching: its tenant root is the course catalog and
+// its lesson paths are `/{course}/{numericId}` with no shared prefix to anchor
+// to, so narrowing it here would be a guess rather than a boundary.
+const _ACADEMY_TUTOR_PATH = /^\/(?:[a-z]{2}(?:-[A-Za-z]{2,4})?\/)?courses\/[^/]+\/[^/]+\/?$/;
+
+/** True when an Academy URL names a course unit rather than an account page. */
+function _isAcademyTutorPath(pathname) {
+  return _ACADEMY_TUTOR_PATH.test(String(pathname || ''));
+}
+
 /**
  * True when `rawUrl` names a page allowed to carry the Tutor transport.
  *
@@ -489,7 +507,10 @@ const _TUTOR_TRUSTED_HOSTS = new Set(['anthropic.skilljar.com', 'academy.claude.
 function _isTrustedTutorOrigin(rawUrl) {
   try {
     const url = new URL(rawUrl || '');
-    if (url.protocol === 'https:' && _TUTOR_TRUSTED_HOSTS.has(url.hostname)) return true;
+    if (url.protocol === 'https:' && _TUTOR_TRUSTED_HOSTS.has(url.hostname)) {
+      if (url.hostname === 'academy.claude.com') return _isAcademyTutorPath(url.pathname);
+      return true;
+    }
     const testHosts = chrome.runtime.getManifest().host_permissions || [];
     return (
       url.protocol === 'http:' &&

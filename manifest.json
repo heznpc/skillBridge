@@ -23,7 +23,8 @@
       "matches": [
         "https://*.skilljar.com/*",
         "https://claude.com/resources/tutorials/*",
-        "https://academy.claude.com/*"
+        "https://academy.claude.com/courses/*",
+        "https://academy.claude.com/*/courses/*"
       ],
       "js": [
         "src/shared/build-config.js",
@@ -95,7 +96,11 @@
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://anthropic.skilljar.com/*", "https://academy.claude.com/*"],
+      "matches": [
+        "https://anthropic.skilljar.com/*",
+        "https://academy.claude.com/courses/*",
+        "https://academy.claude.com/*/courses/*"
+      ],
       "js": ["src/bridge/puter-content-init.js", "src/bridge/puter.js", "src/bridge/puter-content-broker.js"],
       "run_at": "document_end",
       "world": "ISOLATED"

@@ -10,7 +10,7 @@
  * surface, and es/fr could be classified on none.
  */
 
-/* global describe, test, expect */
+/* global describe, test, expect, beforeEach */
 
 const fs = require('fs');
 const path = require('path');
@@ -125,6 +125,13 @@ describe('readObservedLocale', () => {
 });
 
 describe('createLocalizationPolicy', () => {
+  // The language control is read from the live document, so a button left
+  // behind by one test would be evidence in the next.
+  beforeEach(() => {
+    document.body.innerHTML = '';
+    document.documentElement.removeAttribute('lang');
+  });
+
   function loc(pathname, search = '') {
     return { pathname, search, href: `https://academy.claude.com${pathname}${search}` };
   }
@@ -171,28 +178,77 @@ describe('createLocalizationPolicy', () => {
     document.documentElement.removeAttribute('lang');
   });
 
-  test('a route change re-reads the locale from the URL', () => {
+  /** Render Academy's language control, which is what the policy reads. */
+  const renderSelector = (label) => {
+    document.body.innerHTML = '';
+    const button = document.createElement('button');
+    button.textContent = label;
+    document.body.appendChild(button);
+  };
+
+  test('a route change leaves the locale unresolved until the DOM answers', () => {
     document.documentElement.setAttribute('lang', 'en');
+    renderSelector('English');
     const policy = createLocalizationPolicy({ localizedHost: true, doc: document, loc: loc('/courses/c') });
     policy.setTarget('ko');
     expect(policy.mayTranslate()).toBe(true);
 
-    // The learner switched Academy itself into Spanish; the locale rides in the path.
+    // The address changed; the page has not. Nothing may be sent yet, because
+    // the previous page's evidence does not describe the next one.
     policy.onRouteChange(loc('/es/courses/c/making-a-request'));
+    expect(policy.observedLocale()).toBe('');
+    expect(policy.mayTranslate()).toBe(false);
+
+    // The Spanish page renders; the control is authoritative.
+    document.documentElement.setAttribute('lang', 'es');
+    renderSelector('Español');
+    policy.onDomSettled(document, loc('/es/courses/c/making-a-request'));
     expect(policy.observedLocale()).toBe('es');
     expect(policy.mayTranslate()).toBe(false);
     document.documentElement.removeAttribute('lang');
   });
 
-  test('a route change never falls back to <html lang>, which is ours by then', () => {
+  test('leaving a locale-prefixed route for an English one releases the block', () => {
+    // The bug this replaces: the old code only moved the baseline when the new
+    // URL carried a prefix, so switching Academy to English — which drops the
+    // prefix — kept the stale `ko` and blocked translation on an English page.
     document.documentElement.setAttribute('lang', 'ko');
+    renderSelector('한국어');
     const policy = createLocalizationPolicy({ localizedHost: true, doc: document, loc: loc('/ko/courses/c') });
     policy.setTarget('ko');
-    // Our own value, written by updateLangClass().
-    document.documentElement.setAttribute('lang', 'vi');
-    // A path with no locale prefix carries no evidence; the baseline must hold.
-    policy.onRouteChange(loc('/ko/courses/c/lesson-two'));
     expect(policy.observedLocale()).toBe('ko');
+
+    policy.onRouteChange(loc('/courses/c/lesson-two'));
+    document.documentElement.setAttribute('lang', 'en');
+    renderSelector('English');
+    policy.onDomSettled(document, loc('/courses/c/lesson-two'));
+
+    expect(policy.observedLocale()).toBe('en');
+    expect(policy.mayTranslate()).toBe(true);
+    document.documentElement.removeAttribute('lang');
+  });
+
+  test('an unprefixed URL rendering Korean is read as Korean, not as English', () => {
+    // The other direction, and the reason the URL cannot be the signal: an
+    // account set to Korean renders Korean with no prefix in the path.
+    document.documentElement.setAttribute('lang', 'ko');
+    renderSelector('한국어');
+    const policy = createLocalizationPolicy({ localizedHost: true, doc: document, loc: loc('/courses/c/lesson') });
+    policy.setTarget('ko');
+    expect(policy.observedLocale()).toBe('ko');
+    expect(policy.resolved().policy).toBe(TRANSLATION_POLICY.RESIDUE_ONLY);
+    document.documentElement.removeAttribute('lang');
+  });
+
+  test('a half-hydrated page reports nothing rather than guessing', () => {
+    // The control has rendered but <html lang> has not caught up. The
+    // observation runs required the two to agree; so does this.
+    document.documentElement.setAttribute('lang', 'en');
+    renderSelector('한국어');
+    const policy = createLocalizationPolicy({ localizedHost: true, doc: document, loc: loc('/courses/c/lesson') });
+    policy.setTarget('ko');
+    expect(policy.observedLocale()).toBe('');
+    expect(policy.mayTranslate()).toBe(false);
     document.documentElement.removeAttribute('lang');
   });
 

@@ -43,6 +43,7 @@ const fns = new Function(
     registerAlarms, _gtFetchDedup, _inflightGT, _gtKey,
     _isPuterBrokerPort, _isAllowedCloudClient, _registerCloudBroker, _registerCloudClient,
     _cloudBrokers, _cloudClients, _cloudActive,
+    _isTrustedTutorOrigin,
   };
 `,
 )(
@@ -51,6 +52,7 @@ const fns = new Function(
 );
 
 const {
+  _isTrustedTutorOrigin,
   gtLangCode,
   parseGTResponse,
   _rateLimiter,
@@ -831,5 +833,43 @@ describe('isolated cloud broker replacement', () => {
       error: 'Puter broker is not ready',
     });
     expect(broker.posted).not.toContainEqual(expect.objectContaining({ id: 'stale' }));
+  });
+});
+
+describe('Tutor transport origin scope', () => {
+  test('an Academy course unit is trusted', () => {
+    expect(_isTrustedTutorOrigin('https://academy.claude.com/courses/a-course/a-lesson')).toBe(true);
+  });
+
+  test('a locale-prefixed course unit is trusted', () => {
+    expect(_isTrustedTutorOrigin('https://academy.claude.com/ko/courses/a-course/a-lesson')).toBe(true);
+  });
+
+  test("the learner's account pages are not", () => {
+    // Host alone used to be enough, which put the transport on every page the
+    // origin serves — including the ones where a page-level compromise would
+    // be worth the most.
+    for (const path of ['/profile', '/settings', '/', '/account/billing']) {
+      expect(_isTrustedTutorOrigin(`https://academy.claude.com${path}`)).toBe(false);
+    }
+  });
+
+  test('the course catalog is not a unit page', () => {
+    expect(_isTrustedTutorOrigin('https://academy.claude.com/courses/a-course')).toBe(false);
+  });
+
+  test('Skilljar keeps host-only matching', () => {
+    // Its tenant root IS the catalog and its lesson paths share no prefix to
+    // anchor on, so narrowing there would be a guess rather than a boundary.
+    expect(_isTrustedTutorOrigin('https://anthropic.skilljar.com/a-course/287726')).toBe(true);
+  });
+
+  test('another Claude host is not trusted', () => {
+    expect(_isTrustedTutorOrigin('https://claude.com/courses/a/b')).toBe(false);
+    expect(_isTrustedTutorOrigin('https://evil.example/courses/a/b')).toBe(false);
+  });
+
+  test('http is refused even on a course path', () => {
+    expect(_isTrustedTutorOrigin('http://academy.claude.com/courses/a/b')).toBe(false);
   });
 });

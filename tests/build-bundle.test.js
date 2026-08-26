@@ -45,7 +45,14 @@ describe('bundled artifact shape', () => {
     // running the broker on a host the service worker will not talk to.
     expect(manifest.content_scripts[1]).toEqual(
       expect.objectContaining({
-        matches: ['https://anthropic.skilljar.com/*', 'https://academy.claude.com/*'],
+        // Academy is scoped to course routes: the origin also serves the
+        // learner's account pages, and the Tutor transport has no business
+        // being injected there.
+        matches: [
+          'https://anthropic.skilljar.com/*',
+          'https://academy.claude.com/courses/*',
+          'https://academy.claude.com/*/courses/*',
+        ],
         world: 'ISOLATED',
         js: ['src/bridge/puter-content-init.js', 'src/bridge/puter.js', 'src/bridge/puter-content-broker.js'],
       }),

@@ -163,11 +163,87 @@ function readObservedLocale(doc, loc) {
  * @param {Location} [opts.loc]
  * @param {(state: {policy: string, reason: string, observedLocale: string, targetLang: string}) => void} [opts.onChange]
  */
+/**
+ * The locale labels Academy's own language selector shows.
+ *
+ * Each label is written in its own language, which is what makes reading the
+ * control possible without knowing the site's internals.
+ */
+const ACADEMY_LOCALE_LABELS = Object.freeze({
+  English: 'en',
+  Español: 'es',
+  Français: 'fr',
+  日本語: 'ja',
+  한국어: 'ko',
+  简体中文: 'zh-CN',
+  繁體中文: 'zh-TW',
+});
+
+/**
+ * Read the locale from the site's own language control.
+ *
+ * This is the authoritative signal, and it is the one the observation runs
+ * used: <html lang> alone is not enough, because an unprefixed URL can still
+ * render Korean for a learner whose account is set that way. Requiring the
+ * selector to AGREE with <html lang> is what makes a half-hydrated page report
+ * nothing instead of reporting English.
+ *
+ * Three outcomes, and they are not interchangeable:
+ *
+ *   agreed   the control and <html lang> name the same language — authoritative
+ *   conflict the control has rendered and they DISAGREE — the page is
+ *            mid-hydration, which is positive evidence that no other signal is
+ *            trustworthy either, so the caller must not fall back to one
+ *   absent   no control yet — genuinely no evidence, fall back
+ *
+ * @returns {{state: string, locale: string}}
+ */
+function readSelectorState(doc) {
+  const d = doc || (typeof document !== 'undefined' ? document : null);
+  if (!d) return { state: 'absent', locale: '' };
+  const clean = (el) =>
+    String((el && el.textContent) || '')
+      .replace(/[\uE000-\uF8FF]/gu, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  const labels = Object.keys(ACADEMY_LOCALE_LABELS);
+  const control = Array.from(d.querySelectorAll('button, [role="button"]')).find((el) => labels.includes(clean(el)));
+  const selected = control ? ACADEMY_LOCALE_LABELS[clean(control)] : '';
+  if (!selected) return { state: 'absent', locale: '' };
+  const htmlLang = String(d.documentElement?.getAttribute('lang') || '').trim();
+  // Compare on the base subtag: the selector says zh-CN where <html lang> may
+  // say zh-Hans, and disagreeing on region is not disagreeing on language.
+  const base = (v) => v.split('-')[0].toLowerCase();
+  if (!htmlLang || base(htmlLang) !== base(selected)) return { state: 'conflict', locale: '' };
+  return { state: 'agreed', locale: selected };
+}
+
+/** The confirmed locale, or '' when the control is absent or mid-hydration. */
+function readSelectorLocale(doc) {
+  return readSelectorState(doc).locale;
+}
+
+/**
+ * Combine the control with the fallbacks, in evidence order.
+ *
+ * A conflict short-circuits: falling back to <html lang> there would read the
+ * half of the page that has not caught up and report it as settled.
+ */
+function resolveObserved(doc, loc) {
+  const selector = readSelectorState(doc);
+  if (selector.state === 'agreed') return selector.locale;
+  if (selector.state === 'conflict') return '';
+  return readObservedLocale(doc, loc) || '';
+}
+
 function createLocalizationPolicy({ localizedHost, doc, loc, onChange } = {}) {
   // 'en' rather than a read on non-localized hosts: Skilljar's <html lang> is
   // English anyway, but pinning it means a future host that mislabels itself
   // cannot accidentally block translation everywhere.
-  let observed = localizedHost ? readObservedLocale(doc, loc) : 'en';
+  let pendingLoc = null;
+  // The selector is authoritative where it has rendered; the URL and <html
+  // lang> are the fallback for first paint.
+  let observed = localizedHost ? resolveObserved(doc, loc) : 'en';
   let target = 'en';
   let resolved = resolveTranslationPolicy({ observedLocale: observed, targetLang: target });
 
@@ -205,17 +281,39 @@ function createLocalizationPolicy({ localizedHost, doc, loc, onChange } = {}) {
     },
 
     /**
-     * A client-side navigation happened.
+     * A client-side navigation happened. The new DOM is not here yet.
      *
-     * Only a locale the URL states outright may move the baseline. An absent
-     * prefix means English on Academy, but it also means "no evidence" on any
-     * host that does not encode locale in the path — so the captured value is
-     * kept rather than being reset to a guess.
+     * The locale goes UNRESOLVED rather than being carried over or guessed at
+     * from the URL. Carrying it over is a real bug: leaving /ko/courses/… for
+     * /courses/… by switching the site to English kept the stale `ko` and
+     * blocked translation on an English page. Guessing from the absent prefix
+     * is equally wrong in the other direction, because an unprefixed URL still
+     * renders Korean for an account set that way.
+     *
+     * Unresolved means fail-closed until the DOM can answer — the same shape
+     * as the assessment lifecycle, and for the same reason: the previous
+     * page's evidence does not describe the next page.
      */
     onRouteChange(nextLoc) {
       if (!localizedHost) return resolved;
-      const fromUrl = readObservedLocale({ documentElement: { getAttribute: () => null } }, nextLoc);
-      if (fromUrl) observed = fromUrl;
+      pendingLoc = nextLoc || null;
+      observed = '';
+      return reresolve();
+    },
+
+    /**
+     * The DOM for the current route has settled. Authoritative.
+     *
+     * Prefers the site's own language control, which is the signal the
+     * observation runs treated as evidence. Falls back to the URL only when
+     * the control has not rendered, and stays unresolved when neither speaks.
+     */
+    onDomSettled(nextDoc, nextLoc) {
+      if (!localizedHost) return resolved;
+      const d = nextDoc || doc;
+      const l = nextLoc || pendingLoc || loc;
+      observed = resolveObserved(d, l);
+      pendingLoc = null;
       return reresolve();
     },
   };
@@ -224,6 +322,9 @@ function createLocalizationPolicy({ localizedHost, doc, loc, onChange } = {}) {
 if (typeof window !== 'undefined') {
   window._sbAcademyLocalization = {
     createLocalizationPolicy,
+    ACADEMY_LOCALE_LABELS,
+    readSelectorLocale,
+    readSelectorState,
     TRANSLATION_POLICY,
     resolveTranslationPolicy,
     mayTranslateText,
