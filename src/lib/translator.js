@@ -658,6 +658,7 @@ User: ${userMessage}`;
    * broker cannot resolve for itself.
    */
   async _cloudChatStream(prompt, targetLang, onChunk, opts = {}) {
+    const model = opts.model || SKILLBRIDGE_MODELS.CLAUDE;
     if (!this.isReady || !this._cloudPort) await this._ensureCloudBroker();
     if (!this.isReady || !this._cloudPort) throw new Error('Bridge not ready');
 
@@ -728,7 +729,7 @@ User: ${userMessage}`;
         type: 'start',
         id,
         prompt,
-        model: SKILLBRIDGE_MODELS.CLAUDE,
+        model,
         labels: {
           title: t(ENGINE_LABELS.signInTitle),
           body: t(ENGINE_LABELS.signInBody),
@@ -791,7 +792,8 @@ User: ${userMessage}`;
       throw new Error(`refineText: refusing an unrecognised engine "${engine}"`);
     }
     if (engine === 'local') return this._localChatStream(prompt, null, { signal });
-    return this._cloudChatStream(prompt, targetLang, null, { signal });
+    // Refinement is a copy-edit, not a conversation — see SKILLBRIDGE_MODELS.
+    return this._cloudChatStream(prompt, targetLang, null, { signal, model: SKILLBRIDGE_MODELS.REFINEMENT });
   }
 
   async chatStream(userMessage, targetLang, courseContext = '', onChunk, opts = {}) {

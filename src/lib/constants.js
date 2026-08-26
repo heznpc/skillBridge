@@ -9,7 +9,15 @@
 // ==================== AI MODELS ====================
 
 const SKILLBRIDGE_MODELS = {
+  // The Tutor: a conversation about the material, where reasoning quality is
+  // the product.
   CLAUDE: 'claude-sonnet-4-6',
+  // Translation refinement: post-editing one already-translated paragraph
+  // against its English source. A different job with a different economics —
+  // it runs unattended, up to a per-page budget of calls, on text the learner
+  // never asked a question about. Sending that to the Tutor's model spends
+  // frontier-tier calls on a copy-edit. Already on the broker allowlist.
+  REFINEMENT: 'claude-haiku-4-5',
 };
 
 // ==================== DEFAULTS ====================

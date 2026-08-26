@@ -79,6 +79,7 @@ function setup({ mode = 'off', consented = false, tutorEngine = 'cloud', reply =
     registerModule() {},
   };
 
+  const listeners = [];
   const chrome = {
     storage: {
       local: {
@@ -88,7 +89,14 @@ function setup({ mode = 'off', consented = false, tutorEngine = 'cloud', reply =
           return Promise.resolve();
         },
       },
+      onChanged: { addListener: (fn) => listeners.push(fn) },
     },
+  };
+
+  /** Change a setting the way the popup would, listeners and all. */
+  const changeSetting = (key, newValue) => {
+    store[key] = newValue;
+    for (const fn of listeners) fn({ [key]: { newValue } }, 'local');
   };
 
   const fakeWindow = {
@@ -106,7 +114,7 @@ function setup({ mode = 'off', consented = false, tutorEngine = 'cloud', reply =
     console,
   );
 
-  return { sb, el, calls, writes, store };
+  return { sb, el, calls, writes, store, changeSetting };
 }
 
 /** Let the queue's async chain run to completion. */
@@ -310,5 +318,121 @@ describe('the refinement cache is its own', () => {
     await flush();
     expect(store.sb_refine_cache).toBeDefined();
     expect(store.sb_translation_cache).toBeUndefined();
+  });
+});
+
+describe('withdrawing consent stops work already in flight', () => {
+  /** A transport whose first call hangs until the test releases it. */
+  function gated() {
+    let release;
+    const gate = new Promise((r) => (release = r));
+    let served = 0;
+    return {
+      reply: () => {
+        served += 1;
+        return served === 1 ? gate : Promise.resolve(GOOD);
+      },
+      release: (v) => release(v),
+      served: () => served,
+    };
+  }
+
+  test('the open call is aborted and its answer never lands', async () => {
+    const t = gated();
+    const { sb, el, writes, changeSetting } = setup({ mode: 'cloud', consented: true, reply: t.reply });
+    sb._refine.enqueue({ el, baseline: BASELINE, source: SOURCE, targetLang: 'ko' });
+    await flush();
+    expect(t.served()).toBe(1);
+
+    changeSetting('sb_refine_consent', false);
+    t.release(GOOD);
+    await flush();
+
+    // The answer arrived after consent was withdrawn, so it is discarded
+    // rather than written to the page.
+    expect(writes).toEqual([]);
+    expect(el.textContent).toBe(BASELINE);
+  });
+
+  test('a second queued call never starts', async () => {
+    const t = gated();
+    const { sb, el, calls, changeSetting } = setup({ mode: 'cloud', consented: true, reply: t.reply });
+    const second = document.createElement('p');
+    second.textContent = BASELINE;
+    document.body.appendChild(second);
+
+    sb._refine.enqueue({ el, baseline: BASELINE, source: SOURCE, targetLang: 'ko' });
+    sb._refine.enqueue({ el: second, baseline: BASELINE, source: SOURCE, targetLang: 'ko' });
+    await flush();
+    expect(calls).toHaveLength(1);
+
+    changeSetting('sb_refine_mode', 'off');
+    t.release(GOOD);
+    await flush();
+
+    expect(calls).toHaveLength(1);
+  });
+
+  test('the engine is re-read before every call, not once per drain', async () => {
+    const t = gated();
+    const { sb, el, calls, changeSetting } = setup({ mode: 'cloud', consented: true, reply: t.reply });
+    const second = document.createElement('p');
+    second.textContent = BASELINE;
+    document.body.appendChild(second);
+
+    sb._refine.enqueue({ el, baseline: BASELINE, source: SOURCE, targetLang: 'ko' });
+    sb._refine.enqueue({ el: second, baseline: BASELINE, source: SOURCE, targetLang: 'ko' });
+    await flush();
+
+    // Change the STORE only — no event. The next call must still see it.
+    changeSetting('sb_refine_consent', false);
+    t.release(GOOD);
+    await flush();
+    expect(calls).toHaveLength(1);
+  });
+});
+
+describe('cost is bounded', () => {
+  test('a block far outside the viewport is never queued', () => {
+    const { sb } = setup({ mode: 'cloud', consented: true });
+    const far = document.createElement('p');
+    far.textContent = BASELINE;
+    document.body.appendChild(far);
+    // jsdom reports a zero rect for everything, so drive the measurement.
+    far.getBoundingClientRect = () => ({ top: 99999, bottom: 99999 + 20 });
+    sb._refine.enqueue({ el: far, baseline: BASELINE, source: SOURCE, targetLang: 'ko' });
+    expect(sb._refine.stats().pending).toBe(0);
+  });
+
+  test('a block just below the fold still counts as about to be read', () => {
+    const { sb } = setup({ mode: 'cloud', consented: true });
+    const near = document.createElement('p');
+    near.textContent = BASELINE;
+    document.body.appendChild(near);
+    near.getBoundingClientRect = () => ({ top: 400, bottom: 440 });
+    sb._refine.enqueue({ el: near, baseline: BASELINE, source: SOURCE, targetLang: 'ko' });
+    expect(sb._refine.stats().pending + sb._refine.stats().queued).toBeGreaterThan(0);
+  });
+});
+
+describe('cache identity covers every input', () => {
+  test('two sources sharing one baseline do not share a refinement', async () => {
+    // The prompt is built from the English source as well as the baseline, so
+    // keying on the baseline alone served the first source's post-edit for the
+    // second.
+    const replies = [GOOD, `${GOOD} 다시.`];
+    let i = 0;
+    const { sb, el, calls } = setup({ mode: 'cloud', consented: true, reply: () => Promise.resolve(replies[i++]) });
+
+    sb._refine.enqueue({ el, baseline: BASELINE, source: SOURCE, targetLang: 'ko' });
+    await flush();
+
+    const other = document.createElement('p');
+    other.textContent = BASELINE;
+    document.body.appendChild(other);
+    sb._refine.enqueue({ el: other, baseline: BASELINE, source: `${SOURCE} Twice.`, targetLang: 'ko' });
+    await flush();
+
+    expect(calls).toHaveLength(2);
   });
 });

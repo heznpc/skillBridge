@@ -36,6 +36,8 @@ const REFINE_VIOLATION = Object.freeze({
   CODE: 'code',
   /** The HTML tag structure or a link target changed. */
   HTML: 'html',
+  /** The candidate is not written in the target language. */
+  WRONG_LANGUAGE: 'wrong-language',
   /** The candidate is implausibly longer or shorter than the baseline. */
   LENGTH: 'length',
   /** The candidate is the untranslated source — a refusal, or a passthrough. */
@@ -125,7 +127,27 @@ function _normalize(text) {
  * @param {string[]} [args.protectedTerms] Terms that must survive verbatim.
  * @returns {{ ok: boolean, violations: string[], detail: object }}
  */
-function validateRefinement({ baseline, candidate, source = '', protectedTerms = [] } = {}) {
+/**
+ * Scripts whose presence can be checked without language identification.
+ *
+ * Only these targets get the check. Telling Spanish from English needs real
+ * language ID, which this codebase does not have — the same limit that makes
+ * the Academy localization policy fail closed on Latin locales. Claiming a
+ * check we cannot perform would be worse than admitting the gap.
+ */
+const TARGET_SCRIPTS = Object.freeze({
+  ko: /[\uAC00-\uD7AF\u1100-\u11FF]/,
+  ja: /[\u3040-\u30FF\u4E00-\u9FFF]/,
+  'zh-CN': /[\u4E00-\u9FFF]/,
+  'zh-TW': /[\u4E00-\u9FFF]/,
+  zh: /[\u4E00-\u9FFF]/,
+  ru: /[\u0400-\u04FF]/,
+  ar: /[\u0600-\u06FF]/,
+  hi: /[\u0900-\u097F]/,
+  th: /[\u0E00-\u0E7F]/,
+});
+
+function validateRefinement({ baseline, candidate, source = '', targetLang = '', protectedTerms = [] } = {}) {
   const violations = [];
   const detail = {};
   const base = String(baseline || '');
@@ -140,6 +162,17 @@ function validateRefinement({ baseline, candidate, source = '', protectedTerms =
   // learner would read as the extension breaking.
   if (source && _normalize(cand) === _normalize(source) && _normalize(base) !== _normalize(source)) {
     violations.push(REFINE_VIOLATION.REVERTED_TO_SOURCE);
+  }
+
+  // An exact echo of the source is caught above, but a PARAPHRASE of it is
+  // not: "Use the Claude API for this request" keeps every term, number, URL
+  // and length bound while being English. Where the target uses a script Latin
+  // does not, requiring that script is a cheap, deterministic check that the
+  // answer is in the language the learner asked for.
+  const script = TARGET_SCRIPTS[targetLang];
+  if (script && !script.test(cand)) {
+    violations.push(REFINE_VIOLATION.WRONG_LANGUAGE);
+    detail.targetLang = targetLang;
   }
 
   const baseLen = _normalize(base).length;
