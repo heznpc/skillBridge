@@ -144,11 +144,22 @@ function matchCourseUnits(academyUnits, skilljarUnits) {
     if (candidates.length === 1 && !selfDuplicated) {
       const peer = candidates[0];
       usedSkilljar.add(peer);
+      // Case-folding equality counts as exact.
+      //
+      // Academy recased whole courses into sentence case in the move — "A
+      // CLAUDE.md That Follows" became "A CLAUDE.md that follows". Same words,
+      // same order, same punctuation; the only difference is a house style
+      // applied uniformly. All eight of the medium matches in the report are
+      // this and nothing else.
+      //
+      // Deliberately narrower than normalizeTitle(), which also folds
+      // punctuation, spacing and diacritics. Those can carry meaning, so a
+      // difference there stays MEDIUM and waits for corroboration.
+      const caseOnly = unit.title.toLowerCase() === peer.title.toLowerCase();
       matches.push({
         academy: unit,
         skilljar: peer,
-        // Exact string equality means normalization never had to intervene.
-        confidence: unit.title === peer.title ? CONFIDENCE.HIGH : CONFIDENCE.MEDIUM,
+        confidence: caseOnly ? CONFIDENCE.HIGH : CONFIDENCE.MEDIUM,
         ambiguity: null,
         candidates: null,
       });
@@ -292,6 +303,64 @@ function pairCourses(academyCourses, skilljarCourses) {
       continue;
     }
     pairs.push({ academy: a, skilljar: null, joinedOn: null });
+  }
+
+  // Third pass: the units themselves.
+  //
+  // A course can lose BOTH its slug and its title — "Claude on Google Cloud"
+  // became "Claude with Google Cloud's Vertex AI" under a new slug — and 93
+  // lessons go unresolved with it, which is most of what is left unmatched.
+  // Its unit titles survived, and those are observable on both platforms
+  // without trusting section, kind, or any name that changed.
+  //
+  // The thresholds are set by what the data actually looks like rather than by
+  // taste. That pair shares 75 titles at a Jaccard of 0.80; every other
+  // combination of unpaired courses shares at most 2 at 0.11. The gap is two
+  // orders of magnitude, so a rule that demands substantial overlap AND clear
+  // separation from the runner-up cannot reach the near misses:
+  //
+  //   - MIN_SHARED guards against a tiny course scoring 1.0 on two lessons.
+  //   - MIN_JACCARD guards against a large course incidentally containing a
+  //     small one's titles.
+  //   - DOMINANCE guards against two plausible candidates, where picking the
+  //     larger number would be a guess wearing a threshold's clothes.
+  const MIN_SHARED = 5;
+  const MIN_JACCARD = 0.5;
+  const DOMINANCE = 3;
+
+  const titleSet = (course) =>
+    new Set(
+      flattenUnits(course)
+        .map((u) => u.normalized)
+        .filter(Boolean),
+    );
+
+  for (const pair of pairs) {
+    if (!pair.academy || pair.skilljar) continue;
+    const mine = titleSet(pair.academy);
+    if (mine.size === 0) continue;
+
+    const scored = [];
+    for (const candidate of skilljarCourses) {
+      if (claimedSkilljar.has(candidate)) continue;
+      const theirs = titleSet(candidate);
+      if (theirs.size === 0) continue;
+      let shared = 0;
+      for (const t of mine) if (theirs.has(t)) shared += 1;
+      if (shared === 0) continue;
+      scored.push({ candidate, shared, jaccard: shared / (mine.size + theirs.size - shared) });
+    }
+    if (scored.length === 0) continue;
+    scored.sort((x, y) => y.shared - x.shared);
+
+    const best = scored[0];
+    const runnerUp = scored[1];
+    if (best.shared < MIN_SHARED || best.jaccard < MIN_JACCARD) continue;
+    if (runnerUp && best.shared < runnerUp.shared * DOMINANCE) continue;
+
+    claimedSkilljar.add(best.candidate);
+    pair.skilljar = best.candidate;
+    pair.joinedOn = 'units';
   }
 
   for (const s of skilljarCourses) {

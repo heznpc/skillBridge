@@ -108,9 +108,12 @@ describe('matchCourseUnits', () => {
   });
 
   test('a match that needed normalization is only medium confidence', () => {
+    // Punctuation, not case: case is a house style applied uniformly and is
+    // promoted to high on its own (see the case-only suite below), while a
+    // hyphen coming or going can be a genuine retitle.
     const { matches } = match(
-      [{ slug: 'course-quiz', title: 'Course Quiz' }],
-      [{ numericId: '1', title: 'Course quiz' }],
+      [{ slug: 'multi-turn', title: 'Multi-Turn conversations' }],
+      [{ numericId: '1', title: 'Multi turn conversations' }],
     );
     expect(matches[0].confidence).toBe(CONFIDENCE.MEDIUM);
   });
@@ -221,5 +224,140 @@ describe('buildIdentityReport', () => {
     const lesson = report().courses.find((c) => c.slug === 'shared').lessons[0];
     expect(lesson.aliases.academy).not.toHaveProperty('section');
     expect(lesson.confidence).toBe(CONFIDENCE.HIGH);
+  });
+});
+
+describe('course pairing by shared unit titles', () => {
+  // Written before the rule existed. What matters is not how many courses it
+  // pairs but that it refuses every pairing the evidence does not force.
+  const course = (slug, title, unitTitles, platform) =>
+    platform === 'academy'
+      ? academyCourse(
+          slug,
+          title,
+          unitTitles.map((t, i) => ({ slug: `u${i}`, title: t })),
+        )
+      : skilljarCourse(
+          slug,
+          title,
+          unitTitles.map((t, i) => ({ numericId: String(100 + i), title: t })),
+        );
+
+  const SHARED = [
+    'Getting started',
+    'Setting up access',
+    'Making a request',
+    'Handling errors',
+    'Streaming',
+    'Wrapping up',
+  ];
+
+  test('a re-slugged AND renamed course is paired when its units say so', () => {
+    // The real case: "Claude on Google Cloud" became "Claude with Google
+    // Cloud's Vertex AI" under a different slug. Neither the slug nor the
+    // title survives, but 75 unit titles do.
+    const pairs = pairCourses(
+      [course('claude-with-google-cloud-s-vertex-ai', "Claude with Google Cloud's Vertex AI", SHARED, 'academy')],
+      [course('claude-with-google-vertex', 'Claude on Google Cloud', SHARED, 'skilljar')],
+    );
+    expect(pairs).toHaveLength(1);
+    expect(pairs[0].joinedOn).toBe('units');
+  });
+
+  test('two unrelated courses sharing a couple of generic titles are NOT paired', () => {
+    // "The 4D Framework" and "Explore!" appear across several AI-fluency
+    // courses. A handful of shared generic titles is not evidence of identity.
+    const pairs = pairCourses(
+      [
+        course(
+          'ai-fluency-for-k-12-educators',
+          'AI Fluency for pK–12 Educators',
+          ['The 4D Framework', 'Explore!', 'Teaching with AI', 'Classroom policy'],
+          'academy',
+        ),
+      ],
+      [
+        course(
+          'ai-fluency-for-creative-work',
+          'AI Fluency for Creative Work',
+          ['The 4D Framework', 'Explore!', 'The production lens', 'The creative value lens'],
+          'skilljar',
+        ),
+      ],
+    );
+    expect(pairs).toHaveLength(2);
+    expect(pairs.every((p) => p.joinedOn === null)).toBe(true);
+  });
+
+  test('a course is not pulled away from an exact slug match', () => {
+    const pairs = pairCourses(
+      [course('shared', 'Shared', SHARED, 'academy')],
+      [course('shared', 'Shared', SHARED, 'skilljar'), course('decoy', 'Decoy', SHARED, 'skilljar')],
+    );
+    const matched = pairs.find((p) => p.academy && p.skilljar);
+    expect(matched.joinedOn).toBe('slug');
+    expect(matched.skilljar.slug).toBe('shared');
+  });
+
+  test('two candidates with comparable overlap leave the course unpaired', () => {
+    // Ambiguity is not resolved by picking the larger number.
+    const pairs = pairCourses(
+      [course('a', 'A', SHARED, 'academy')],
+      [course('b', 'B', SHARED, 'skilljar'), course('c', 'C', SHARED, 'skilljar')],
+    );
+    expect(pairs.every((p) => p.joinedOn !== 'units')).toBe(true);
+  });
+
+  test('a tiny course cannot be paired on overlap alone', () => {
+    // Two units in common out of two is a perfect ratio and no evidence.
+    const pairs = pairCourses(
+      [course('a', 'A', ['Welcome', 'Wrapping up'], 'academy')],
+      [course('b', 'B', ['Welcome', 'Wrapping up'], 'skilljar')],
+    );
+    expect(pairs.every((p) => p.joinedOn !== 'units')).toBe(true);
+  });
+});
+
+describe('case-only title differences', () => {
+  const match = (academyUnits, skilljarUnits) =>
+    matchCourseUnits(
+      flattenUnits(academyCourse('c', 'C', academyUnits)),
+      flattenUnits(skilljarCourse('c', 'C', skilljarUnits)),
+    );
+
+  test('a house-style recasing is high confidence, not medium', () => {
+    // Academy recased a whole course to sentence case: "A CLAUDE.md That
+    // Follows" became "A CLAUDE.md that follows". Same words, same order, same
+    // punctuation — the only difference is a systematic convention.
+    const { matches } = match(
+      [{ slug: 'a', title: 'A CLAUDE.md that follows' }],
+      [{ numericId: '1', title: 'A CLAUDE.md That Follows' }],
+    );
+    expect(matches[0].confidence).toBe(CONFIDENCE.HIGH);
+  });
+
+  test('a difference beyond case stays medium', () => {
+    // Punctuation or spacing changes are a rename until something corroborates
+    // them; only case-folding equality is promoted.
+    const { matches } = match(
+      [{ slug: 'a', title: 'Multi-Turn conversations' }],
+      [{ numericId: '1', title: 'Multi turn conversations' }],
+    );
+    expect(matches[0].confidence).toBe(CONFIDENCE.MEDIUM);
+  });
+
+  test('a recased title that is duplicated is still ambiguous', () => {
+    const { matches } = match(
+      [
+        { slug: 'a', title: 'Try it out' },
+        { slug: 'b', title: 'Try It Out' },
+      ],
+      [
+        { numericId: '1', title: 'Try It Out' },
+        { numericId: '2', title: 'Try it out' },
+      ],
+    );
+    expect(matches.every((m) => m.confidence === CONFIDENCE.LOW)).toBe(true);
+    expect(matches.every((m) => m.skilljar === null)).toBe(true);
   });
 });
