@@ -88,13 +88,19 @@
   // is the only user-visible signal that the extension chose not to act, so it
   // must not be silent; auto-dismissed because it explains a steady state
   // rather than reporting a failure the learner has to recover from.
-  document.addEventListener('skillbridge:localizationblocked', () => {
+  document.addEventListener('skillbridge:localizationblocked', (event) => {
+    // Two different situations, and telling them apart is the whole point of
+    // the message. "Already in your language" is a steady state that needs no
+    // action. A page in a THIRD language is a dead end the learner can only
+    // leave through the site's own language control — saying "left it
+    // untouched" there would explain nothing and read as a silent failure.
+    const mismatch = event?.detail?.reason === 'no-english-baseline';
     showSimpleBanner({
       id: 'si18n-localized-banner',
       className: 'si18n-offline-banner si18n-storage-warn',
       role: 'status',
       ariaLive: 'polite',
-      labels: LOCALIZED_PAGE_LABELS,
+      labels: mismatch ? LOCALIZED_MISMATCH_LABELS : LOCALIZED_PAGE_LABELS,
       autoDismissMs: 8000,
     });
   });

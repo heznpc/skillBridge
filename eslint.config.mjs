@@ -64,6 +64,7 @@ export default [
         EXAM_SKIP_SELECTORS: 'readonly',
         EXAM_BANNER_LABELS: 'readonly',
         LOCALIZED_PAGE_LABELS: 'readonly',
+        LOCALIZED_MISMATCH_LABELS: 'readonly',
         BYOA_LABELS: 'readonly',
         REFINE_LABELS: 'readonly',
         BYOA_PROMPT_LABELS: 'readonly',

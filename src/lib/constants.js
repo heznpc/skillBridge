@@ -124,6 +124,28 @@ const LOCALIZED_PAGE_LABELS = {
   vi: 'Trang này đã được xuất bản bằng ngôn ngữ riêng — SkillBridge giữ nguyên nội dung.',
 };
 
+// Shown when the page's own language is neither English nor the language the
+// learner asked for. SkillBridge will not back-translate official copy — that
+// is a new translation, not a restoration — so the only route to English is
+// the site's own language control. The banner has to say that, or the learner
+// reads a silent no-op as a broken extension.
+const LOCALIZED_MISMATCH_LABELS = {
+  en: "This page is published in another language. SkillBridge won't re-translate official text — use the site's own language switcher to change it.",
+  ko: '이 페이지는 다른 언어로 제공됩니다. SkillBridge는 공식 번역문을 다시 번역하지 않습니다 — 사이트 자체 언어 전환 기능을 사용해 주세요.',
+  id: 'Halaman ini terbit dalam bahasa lain. SkillBridge tidak menerjemahkan ulang teks resmi — gunakan pengalih bahasa situs ini.',
+  it: 'Questa pagina è pubblicata in un’altra lingua. SkillBridge non ritraduce il testo ufficiale: usa il selettore di lingua del sito.',
+  ja: 'このページは別の言語で公開されています。SkillBridge は公式訳を再翻訳しません — サイト自体の言語切り替えをご利用ください。',
+  'zh-CN': '本页面以另一种语言发布。SkillBridge 不会重新翻译官方文本 — 请使用网站自带的语言切换。',
+  'zh-TW': '本頁面以另一種語言發布。SkillBridge 不會重新翻譯官方文本 — 請使用網站自身的語言切換。',
+  es: 'Esta página está publicada en otro idioma. SkillBridge no retraduce el texto oficial: usa el selector de idioma del sitio.',
+  fr: 'Cette page est publiée dans une autre langue. SkillBridge ne retraduit pas le texte officiel — utilisez le sélecteur de langue du site.',
+  de: 'Diese Seite ist in einer anderen Sprache veröffentlicht. SkillBridge übersetzt offiziellen Text nicht erneut — nutzen Sie die Sprachumschaltung der Website.',
+  'pt-BR':
+    'Esta página está publicada em outro idioma. O SkillBridge não retraduz o texto oficial — use o seletor de idioma do próprio site.',
+  ru: 'Эта страница опубликована на другом языке. SkillBridge не переводит официальный текст повторно — воспользуйтесь переключателем языка на сайте.',
+  vi: 'Trang này được xuất bản bằng ngôn ngữ khác. SkillBridge không dịch lại nội dung chính thức — hãy dùng bộ chuyển ngôn ngữ của trang.',
+};
+
 const EXAM_BANNER_LABELS = {
   en: 'Exam mode — answer choices are not translated to preserve accuracy.',
   ko: '시험 모드 — 정확성을 위해 답안 선택지는 번역되지 않습니다.',

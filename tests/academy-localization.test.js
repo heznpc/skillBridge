@@ -274,3 +274,53 @@ describe('createLocalizationPolicy', () => {
     document.documentElement.removeAttribute('lang');
   });
 });
+
+describe('a page in a third language is a deliberate dead end', () => {
+  const loc = (pathname) => ({ pathname, search: '', href: `https://academy.claude.com${pathname}` });
+  const renderSelector = (label) => {
+    document.body.innerHTML = '';
+    const b = document.createElement('button');
+    b.textContent = label;
+    document.body.appendChild(b);
+  };
+
+  test('Korean Academy with an English target sends nothing', () => {
+    // Confirmed against the live site: Academy renders Korean for a Korean
+    // account on a URL with no locale prefix. SkillBridge did not produce that
+    // Korean, so it has no English original to restore, and back-translating
+    // official copy would be a new translation rather than a restoration.
+    document.documentElement.setAttribute('lang', 'ko');
+    renderSelector('한국어');
+    const policy = createLocalizationPolicy({ localizedHost: true, doc: document, loc: loc('/courses/c/lesson') });
+    policy.setTarget('en');
+    expect(policy.resolved().policy).toBe(TRANSLATION_POLICY.FAIL_CLOSED);
+    expect(policy.resolved().reason).toBe('no-english-baseline');
+    expect(policy.mayTranslate()).toBe(false);
+    document.documentElement.removeAttribute('lang');
+  });
+
+  test('the same page for a Korean reader translates residue instead', () => {
+    document.documentElement.setAttribute('lang', 'ko');
+    renderSelector('한국어');
+    const policy = createLocalizationPolicy({ localizedHost: true, doc: document, loc: loc('/courses/c/lesson') });
+    policy.setTarget('ko');
+    expect(policy.resolved().policy).toBe(TRANSLATION_POLICY.RESIDUE_ONLY);
+    document.documentElement.removeAttribute('lang');
+  });
+
+  test('the two blocking states are distinguishable, because the advice differs', () => {
+    // "Already in your language" needs no action; a third language can only be
+    // left through the site's own control. The banner branches on this.
+    document.documentElement.setAttribute('lang', 'es');
+    renderSelector('Español');
+    const sameLang = createLocalizationPolicy({ localizedHost: true, doc: document, loc: loc('/es/courses/c') });
+    sameLang.setTarget('es');
+    expect(sameLang.resolved().reason).toBe('residue-indistinguishable-from-latin');
+
+    const thirdLang = createLocalizationPolicy({ localizedHost: true, doc: document, loc: loc('/es/courses/c') });
+    thirdLang.setTarget('ko');
+    expect(thirdLang.resolved().reason).toBe('no-english-baseline');
+    expect(sameLang.resolved().reason).not.toBe(thirdLang.resolved().reason);
+    document.documentElement.removeAttribute('lang');
+  });
+});

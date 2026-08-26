@@ -87,9 +87,22 @@ function resolveTranslationPolicy({ observedLocale, targetLang } = {}) {
     return { policy: TRANSLATION_POLICY.BLOCKED, reason: 'residue-indistinguishable-from-latin', mayTranslate: false };
   }
 
-  // The page is in some third language. Translating it would mean going
-  // language-to-language through a pivot we never verified, so this waits for
-  // a mechanism that can request the English baseline instead.
+  // The page is in some third language — most commonly Academy rendering
+  // Korean for a Korean account while the learner has asked SkillBridge for
+  // English. Doing nothing is the intended contract, not a gap.
+  //
+  // SkillBridge's model is restoration: English source in, translation out,
+  // English back on demand. A page Academy published in Korean was never
+  // translated BY us, so there is no original to restore. The three ways to
+  // reach English from here are switching Academy's own locale, fetching an
+  // English baseline from Academy, or back-translating the Korean. The last
+  // is the tempting one and the wrong one: running official copy through
+  // Google Translate produces a new translation of a translation, and it
+  // would be worse than the text already on the page while looking like the
+  // feature working.
+  //
+  // So the source of truth stays with the site, and the banner points the
+  // learner at the site's own language control.
   return { policy: TRANSLATION_POLICY.FAIL_CLOSED, reason: 'no-english-baseline', mayTranslate: false };
 }
 
