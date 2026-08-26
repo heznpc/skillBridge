@@ -33,6 +33,49 @@
     throw new Error('SkillBridge: refusing Puter bootstrap parameters on a lesson URL');
   }
 
+  // A content script's isolated world has NO custom-element registry:
+  // `customElements` is null there while `HTMLElement` is still a function.
+  // The Puter SDK registers a `puter-dialog` element guarded only on the
+  // prototype —
+  //
+  //     cn.__proto__ === globalThis.HTMLElement && customElements.define(…)
+  //
+  // — so the guard passes, the call throws "Cannot read properties of null
+  // (reading 'define')", and the remainder of the SDK's init IIFE never runs.
+  // Its auth-state wiring is in that tail, which is why the Tutor answered
+  // "Sorry, an error occurred" with nothing on the wire. This happened on
+  // every supported host, not just Academy; the E2E suite stubs the transport
+  // and so never evaluates the real SDK.
+  //
+  // A no-op registry is the honest shim rather than a workaround: custom
+  // elements genuinely cannot upgrade in this world, so `define` has nothing
+  // to do and `get` has nothing to return. The SDK's sign-in runs through
+  // window.open, not through the dialog element.
+  if (globalThis.customElements === null || globalThis.customElements === undefined) {
+    const defined = new Map();
+    Object.defineProperty(globalThis, 'customElements', {
+      value: Object.freeze({
+        define(name, constructor) {
+          defined.set(String(name), constructor);
+        },
+        get(name) {
+          return defined.get(String(name));
+        },
+        getName(constructor) {
+          for (const [name, ctor] of defined) if (ctor === constructor) return name;
+          return null;
+        },
+        upgrade() {},
+        whenDefined(name) {
+          return Promise.resolve(defined.get(String(name)));
+        },
+      }),
+      writable: false,
+      configurable: false,
+      enumerable: false,
+    });
+  }
+
   // The Puter SDK expects the synchronous Web Storage interface. Content
   // scripts otherwise inherit the host origin's localStorage, which would put
   // the Tutor token in a store that page scripts can read. Give the isolated

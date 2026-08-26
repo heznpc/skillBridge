@@ -239,6 +239,13 @@ function registerAlarms() {
  * Cache cleanup — purge expired IndexedDB entries.
  * Sends a message to any active Skilljar tabs; if none are open,
  * the cleanup will happen naturally on next page load.
+ *
+ * Skilljar only, and deliberately. chrome.tabs.query can read a tab's URL
+ * only for hosts the manifest grants, and academy.claude.com is a
+ * content-script match rather than a host permission — widening it for a
+ * daily cleanup would widen the reviewed permission surface for no
+ * user-visible gain. An Academy-only learner gets the same purge from the
+ * on-load path instead, one page load later.
  */
 async function handleCacheCleanup() {
   try {
