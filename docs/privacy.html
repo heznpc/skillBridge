@@ -430,14 +430,19 @@
         <td>Translate Claude tutorial pages</td>
       </tr>
       <tr>
-        <td><code>academy.claude.com</code> (content-script match)</td>
+        <td><code>academy.claude.com/courses</code> (content-script match)</td>
         <td>
-          Translate lesson pages on Anthropic's Claude Academy. On assessment pages the answer choices are excluded from
-          translation, so their text is never sent anywhere; where the page is already published in one of Academy's own
-          locales, SkillBridge preserves the official copy: for locales whose script makes English residue identifiable
-          (Korean, Japanese, Chinese) only that residue is sent, and where residue cannot be told apart from official
-          copy (Spanish, French) nothing is sent at all
+          Translate lesson pages on Anthropic's Claude Academy. Scoped to course routes, so the learner's account,
+          settings and catalog pages are outside the extension's reach. On assessment pages the answer choices are
+          excluded from translation, so their text is never sent anywhere; where the page is already published in one of
+          Academy's own locales, SkillBridge preserves the official copy: for locales whose script makes English residue
+          identifiable (Korean, Japanese, Chinese) only that residue is sent, and where residue cannot be told apart
+          from official copy (Spanish, French) nothing is sent at all
         </td>
+      </tr>
+      <tr>
+        <td><code>academy.claude.com/*/courses</code> (content-script match)</td>
+        <td>The same course routes under a locale prefix, which is how Academy serves its non-English locales</td>
       </tr>
       <tr>
         <td><code>translate.googleapis.com</code></td>

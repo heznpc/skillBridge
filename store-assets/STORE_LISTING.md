@@ -134,9 +134,9 @@ Allows SkillBridge to run on supported AI-course pages hosted on Skilljar and tr
 
 Allows translation to run only on Claude tutorial paths, rather than across all of `claude.com`.
 
-### Content-script match: academy.claude.com
+### Content-script match: academy.claude.com/courses, academy.claude.com/*/courses
 
-Allows translation and the AI Tutor to run on Anthropic's Claude Academy, the successor course platform to the Skilljar tenant. Academy assessment pages are detected from the live page — route, heading, and the ARIA radiogroup — and their answer choices are excluded from translation, so answer text is never sent to Google Translate, never cached, and never reaches the AI Tutor. Academy also publishes its own official locales; where a page is already in the reader's language, SkillBridge sends nothing rather than re-translating Anthropic's own copy. The Tutor transport is admitted on this host and on `anthropic.skilljar.com` only, by exact hostname.
+Allows translation and the AI Tutor to run on Anthropic's Claude Academy, the successor course platform to the Skilljar tenant. Scoped to course routes — the second pattern is the same routes under a locale prefix, which is how Academy serves its non-English locales — so the learner's account, settings and catalog pages are outside the extension's reach entirely. Academy assessment pages are detected from the live page — route, heading, and the ARIA radiogroup — and their answer choices are excluded from translation, so answer text is never sent to Google Translate, never cached, and never reaches the AI Tutor. Academy also publishes its own official locales; where a page is already in one of them SkillBridge preserves the official copy, sending only identifiable English residue for Korean, Japanese and Chinese, and nothing at all for Spanish and French where residue cannot be told apart. The Tutor transport is admitted on this host and on `anthropic.skilljar.com` only, and on Academy it additionally requires a course unit path.
 
 ### Host permission: translate.googleapis.com
 
