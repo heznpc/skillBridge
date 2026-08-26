@@ -373,7 +373,12 @@ describe('recent lessons across platforms', () => {
     expect(stored[0].id).toBe(PAIR.id);
   });
 
-  test('the scroll position from the other platform is carried over', async () => {
+  test("the record is carried over, but the other platform's scroll offset is not", async () => {
+    // Identity is shared across platforms; a pixel offset is not. The two
+    // sites lay the same lesson out differently, so restoring 640px from
+    // Skilljar would drop the learner at an arbitrary point on Academy and
+    // read as a bug in resume. The lesson is recognised; the position starts
+    // fresh for this platform.
     const chromeStub = makeChrome({
       sb_recent: [{ url: PAIR.skilljar, title: 'Accessing the API', scrollY: 640, ts: 1 }],
     });
@@ -384,8 +389,11 @@ describe('recent lessons across platforms', () => {
 
     const stored = chromeStub._store.sb_recent;
     expect(stored).toHaveLength(1);
-    expect(stored[0].scrollY).toBe(640);
     expect(stored[0].url).toBe(PAIR.academy);
+    expect(stored[0].scrollY).toBe(0);
+    // The Skilljar position is preserved under its own platform, so returning
+    // there still lands where the learner left off.
+    expect(stored[0].positions.skilljar).toBe(640);
   });
 
   test('a catalog page records nothing on either platform', async () => {

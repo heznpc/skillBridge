@@ -91,7 +91,14 @@ function parseLessonRef(urlOrLoc) {
     return { platform: 'academy', course: m[1], key: m[2], ref: `${m[1]}/${m[2]}` };
   }
 
-  if (/(^|\.)skilljar\.com$/.test(host)) {
+  // The Anthropic tenant only. Every other *.skilljar.com tenant is a
+  // different organisation's catalogue that happens to share the LMS, and the
+  // resolver key is `courseSlug/numericId` with no host in it — so admitting
+  // them would let a partner course collide with an Anthropic lesson on a
+  // numeric id neither party chose. Those tenants get translation, which is
+  // all they ever had; they do not get cross-platform identity, because there
+  // is no second platform for them to be carried to.
+  if (host === 'anthropic.skilljar.com') {
     const m = /^\/([^/]+)\/(\d+)\/?$/.exec(pathname);
     if (!m) return null;
     return { platform: 'skilljar', course: m[1], key: m[2], ref: `${m[1]}/${m[2]}` };
@@ -134,7 +141,40 @@ function refToUrl(platform, ref) {
 function createIdentityResolver(table) {
   const bySkilljar = new Map();
   const byAcademy = new Map();
-  const lessons = (table && table.lessons) || {};
+  // Validated, not merely parsed. A table is only useful if every alias points
+  // at exactly one lesson: a duplicate means two learning objects would share
+  // an identity, and the notes written on them would be merged into one and
+  // then partly deleted on the next save. That is unrecoverable from the
+  // user's side, so a table that fails these checks is rejected WHOLE and the
+  // resolver answers "no canonical id" for everything — which is the
+  // pre-existing URL-keyed behaviour and loses nothing.
+  //
+  // A schema bump means the shape changed; refusing an unknown version is what
+  // stops an older build from reading a newer table by guessing.
+  let lessons = {};
+  const rejected = [];
+  if (table && table.schemaVersion !== IDENTITY_SCHEMA_VERSION) {
+    rejected.push(`schemaVersion ${table.schemaVersion} != ${IDENTITY_SCHEMA_VERSION}`);
+  } else if (table && table.lessons && typeof table.lessons === 'object') {
+    const seenSkilljar = new Map();
+    const seenAcademy = new Map();
+    for (const [canonical, refs] of Object.entries(table.lessons)) {
+      if (!refs || typeof refs !== 'object') {
+        rejected.push(`${canonical}: not an object`);
+        continue;
+      }
+      if (refs.skilljar && seenSkilljar.has(refs.skilljar)) {
+        rejected.push(`skilljar ref ${refs.skilljar} claimed by ${seenSkilljar.get(refs.skilljar)} and ${canonical}`);
+      }
+      if (refs.academy && seenAcademy.has(refs.academy)) {
+        rejected.push(`academy ref ${refs.academy} claimed by ${seenAcademy.get(refs.academy)} and ${canonical}`);
+      }
+      if (refs.skilljar) seenSkilljar.set(refs.skilljar, canonical);
+      if (refs.academy) seenAcademy.set(refs.academy, canonical);
+    }
+    if (rejected.length === 0) lessons = table.lessons;
+  }
+
   for (const [canonical, refs] of Object.entries(lessons)) {
     if (refs?.skilljar) bySkilljar.set(refs.skilljar, canonical);
     if (refs?.academy) byAcademy.set(refs.academy, canonical);
@@ -164,6 +204,11 @@ function createIdentityResolver(table) {
    * record still names the URL it was written at, and that URL still works,
    * but sending a learner back to the platform they left is not continuity.
    */
+  /** Why the table was refused, if it was. Empty when the table is in use. */
+  function validationErrors() {
+    return rejected.slice();
+  }
+
   function urlFor(canonicalId, platform) {
     const refs = lessons[canonicalId];
     return refs ? refToUrl(platform, refs[platform]) : null;
@@ -184,6 +229,7 @@ function createIdentityResolver(table) {
 
   return {
     resolve,
+    validationErrors,
     urlFor,
     preferredUrl,
     /** How many pairs the table carries. Surfaced for diagnostics, not logic. */
@@ -271,21 +317,18 @@ function migrateRecords(records, resolver, opts = {}) {
     if (!parsed) stats.notALesson += 1;
 
     if (!resolved || !resolved.id) {
-      // No high-confidence pair. Stamp the provenance anyway so the next run
-      // recognises this record as already considered — without that, an
-      // unresolvable record is re-examined on every load forever — but leave
-      // `id` absent, which is what keeps it on URL identity.
+      // Left exactly as it was, with no completion stamp.
+      //
+      // Stamping here would be recording a permanent verdict from a table that
+      // is explicitly provisional: 261 lessons are unresolved today and the
+      // matcher is expected to improve. A record marked "already considered at
+      // schema v1" is never re-examined, so a lesson that becomes matchable
+      // next month would stay on URL identity forever — and if the lookup
+      // table failed to load, EVERY record would be stamped that way in one
+      // pass. Re-checking a few dozen records against an in-memory map on each
+      // load costs nothing next to that.
       stats.unresolved += 1;
-      changed = true;
-      return {
-        ...record,
-        provenance: {
-          schemaVersion: IDENTITY_SCHEMA_VERSION,
-          matchedBy: IDENTITY_SOURCE.URL,
-          platform: parsed ? parsed.platform : null,
-          migratedAt: now,
-        },
-      };
+      return record;
     }
 
     stats.linked += 1;

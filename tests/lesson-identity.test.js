@@ -245,7 +245,10 @@ describe('migrateRecords', () => {
     expect(stats.unresolved).toBe(2);
     expect(records[1].id).toBeUndefined();
     expect(records[1].text).toBe('another note');
-    expect(records[1].provenance.matchedBy).toBe(IDENTITY_SOURCE.URL);
+    // No provenance at all: an unresolved record carries no completion stamp,
+    // so a later, better lookup table can still claim it. Stamping here would
+    // freeze today's provisional table into a permanent verdict.
+    expect(records[1].provenance).toBeUndefined();
   });
 
   test('a record that is not a lesson at all is kept, and counted', () => {
@@ -273,7 +276,12 @@ describe('migrateRecords', () => {
     const second = migrateRecords(first.records, resolver, { now: 2 });
     expect(second.changed).toBe(false);
     expect(second.records).toBe(first.records);
-    expect(second.stats.alreadyMigrated).toBe(legacy.length);
+    // Only the records that actually linked carry a completion stamp. The
+    // unresolved ones are re-examined on every load ON PURPOSE, so a better
+    // table later can still claim them — that re-check is a map lookup per
+    // record and asks for no write.
+    expect(second.stats.alreadyMigrated).toBe(1);
+    expect(second.stats.unresolved).toBe(legacy.length - 1);
     // And the timestamps are the FIRST run's — a re-run must not restamp.
     expect(second.records[0].provenance.migratedAt).toBe(1);
   });
@@ -292,11 +300,31 @@ describe('migrateRecords', () => {
     const first = migrateRecords(legacy, resolver, { now: 1 });
     const halfWritten = [first.records[0], legacy[1], legacy[2]];
     const { records, changed, stats } = migrateRecords(halfWritten, resolver, { now: 2 });
-    expect(changed).toBe(true);
+    // Nothing new links on this pass — record 0 is already stamped and the
+    // other two remain unresolved — so there is nothing to write.
+    expect(changed).toBe(false);
     expect(stats.alreadyMigrated).toBe(1);
     expect(records).toHaveLength(3);
     expect(records[0].provenance.migratedAt).toBe(1);
-    expect(records[1].provenance.migratedAt).toBe(2);
+    // The unresolved ones stay bare, ready for a later table to claim them.
+    expect(records[1].provenance).toBeUndefined();
+    expect(records[2].provenance).toBeUndefined();
+  });
+
+  test('a record unresolved today is claimed once the table improves', () => {
+    // The whole reason unresolved records go unstamped. The first pass cannot
+    // place this lesson; a later table can, and the record must still be
+    // eligible rather than marked "already considered".
+    const { records: pass1 } = migrateRecords(legacy, resolver, { now: 1 });
+    expect(pass1[1].id).toBeUndefined();
+
+    const betterResolver = {
+      resolve: (url) => (url === legacy[1].url ? { id: 'later/match' } : resolver.resolve(url)),
+    };
+    const { records: pass2, changed } = migrateRecords(pass1, betterResolver, { now: 2 });
+    expect(changed).toBe(true);
+    expect(pass2[1].id).toBe('later/match');
+    expect(pass2[1].legacyUrls).toContain(legacy[1].url);
   });
 
   test('an empty or absent list is not an error', () => {
@@ -366,5 +394,58 @@ describe('rollbackRecords', () => {
     expect(rolled[0].legacyUrls).toEqual([ACADEMY_URL]);
     expect(rolled[0].id).toBeUndefined();
     expect(rolled[0].provenance).toBeUndefined();
+  });
+});
+
+describe('table validation', () => {
+  const good = { schemaVersion: 1, lessons: { 'a/b': { skilljar: 'c/1', academy: 'x/y' } } };
+
+  test('a valid table resolves and reports no errors', () => {
+    const r = createIdentityResolver(good);
+    expect(r.validationErrors()).toEqual([]);
+    expect(r.resolve('https://anthropic.skilljar.com/c/1').id).toBe('a/b');
+  });
+
+  test('a duplicate alias rejects the WHOLE table, not just the clash', () => {
+    // Two lessons claiming one ref would merge their notes and then lose part
+    // of them on the next save. Nothing in the table is trusted after that.
+    const dup = {
+      schemaVersion: 1,
+      lessons: { 'a/b': { skilljar: 'c/1' }, 'a/c': { skilljar: 'c/1' }, 'd/e': { academy: 'x/y' } },
+    };
+    const r = createIdentityResolver(dup);
+    expect(r.validationErrors().length).toBeGreaterThan(0);
+    expect(r.resolve('https://academy.claude.com/courses/x/y').id).toBeNull();
+  });
+
+  test('an unknown schema version is refused rather than guessed at', () => {
+    const r = createIdentityResolver({ ...good, schemaVersion: 99 });
+    expect(r.validationErrors().length).toBeGreaterThan(0);
+    expect(r.resolve('https://anthropic.skilljar.com/c/1').id).toBeNull();
+  });
+
+  test('a rejected table writes nothing during migration', () => {
+    const r = createIdentityResolver({ ...good, schemaVersion: 99 });
+    const records = [{ url: 'https://anthropic.skilljar.com/c/1', text: 'note' }];
+    const { changed, records: out } = migrateRecords(records, r);
+    expect(changed).toBe(false);
+    expect(out[0].provenance).toBeUndefined();
+  });
+});
+
+describe('partner Skilljar tenants', () => {
+  const table = { schemaVersion: 1, lessons: { 'a/b': { skilljar: 'course/123' } } };
+
+  test('the Anthropic tenant canonicalizes', () => {
+    const r = createIdentityResolver(table);
+    expect(r.resolve('https://anthropic.skilljar.com/course/123').id).toBe('a/b');
+  });
+
+  test('another tenant with the same path never borrows that identity', () => {
+    // The resolver key is courseSlug/numericId with no host in it, so a
+    // partner course could otherwise collide on ids neither party chose.
+    const r = createIdentityResolver(table);
+    expect(r.resolve('https://partner.skilljar.com/course/123').id).toBeNull();
+    expect(parseLessonRef('https://partner.skilljar.com/course/123')).toBeNull();
   });
 });

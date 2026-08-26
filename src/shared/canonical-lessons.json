@@ -1249,6 +1249,9 @@
     "considered": 569,
     "included": 308,
     "droppedUnparseablePath": 0,
-    "collisions": 0
+    "collisions": 0,
+    "reusedId": 308,
+    "mintedId": 0,
+    "retired": 0
   }
 }

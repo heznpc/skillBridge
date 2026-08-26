@@ -57,7 +57,16 @@
         const res = await fetch(url);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const table = await res.json();
-        resolver = identity.createIdentityResolver(table);
+        const candidate = identity.createIdentityResolver(table);
+        const errors = candidate.validationErrors();
+        if (errors.length > 0) {
+          // A table that would merge two lessons under one identity is worse
+          // than no table: it silently joins unrelated notes and then deletes
+          // part of them on the next save. Keep the empty resolver.
+          console.warn('[SkillBridge] lesson identity table rejected — records stay URL-keyed:', errors.slice(0, 3));
+        } else {
+          resolver = candidate;
+        }
       } catch (err) {
         // Warn rather than fail: cross-platform continuity stops working, and
         // that is worth saying out loud, but every record still resolves.

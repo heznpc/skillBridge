@@ -47,7 +47,11 @@ describe('the shipped table', () => {
   test('is exactly what the builder produces from the current report', () => {
     // The same comparison `npm run check:canonical` makes, so a stale table
     // fails in the unit suite rather than only at release time.
-    const rebuilt = buildLookup(latestReport());
+    //
+    // The shipped table is passed back in as `previous` because it IS the
+    // identity registry: rebuilding without it would mint fresh ids, which is
+    // the exact behaviour the registry exists to prevent.
+    const rebuilt = buildLookup(latestReport(), table);
     expect(JSON.parse(JSON.stringify(table))).toEqual(rebuilt);
   });
 
@@ -150,5 +154,70 @@ describe('every shipped pair round-trips through the runtime resolver', () => {
       expect(refs.skilljar.split('/')[0]).toMatch(/^[a-z0-9-]+$/);
       expect(refs.academy.split('/')[0]).toMatch(/^[a-z0-9-]+$/);
     }
+  });
+});
+
+describe('canonical ids are issued once and never reissued', () => {
+  const report = (academyPath) => ({
+    courses: [
+      {
+        slug: 'a-course',
+        lessons: [
+          {
+            id: 'accessing-the-api',
+            confidence: 'high',
+            aliases: {
+              skilljar: { path: '/a-course/287726' },
+              academy: { path: academyPath },
+            },
+          },
+        ],
+      },
+    ],
+  });
+
+  test('a re-slugged Academy lesson keeps the id it was first issued', () => {
+    // The failure this prevents: Academy renames the route, the generator
+    // mints a new id, and every note already stored under the old one points
+    // at a lesson the table no longer contains.
+    const first = buildLookup(report('/courses/a-course/accessing-the-api'), null);
+    const originalId = Object.keys(first.lessons)[0];
+    expect(first.stats.mintedId).toBe(1);
+
+    const second = buildLookup(report('/courses/a-course/api-access'), first);
+    expect(Object.keys(second.lessons)).toEqual([originalId]);
+    expect(second.stats.reusedId).toBe(1);
+    expect(second.stats.mintedId).toBe(0);
+    // The alias moved to the new route; the identity did not.
+    expect(second.lessons[originalId].academy).toBe('a-course/api-access');
+  });
+
+  test('a genuinely new lesson still mints a new id', () => {
+    const first = buildLookup(report('/courses/a-course/accessing-the-api'), null);
+    const withExtra = report('/courses/a-course/accessing-the-api');
+    withExtra.courses[0].lessons.push({
+      id: 'brand-new',
+      confidence: 'high',
+      aliases: { skilljar: { path: '/a-course/999999' }, academy: { path: '/courses/a-course/brand-new' } },
+    });
+    const second = buildLookup(withExtra, first);
+    expect(second.stats.mintedId).toBe(1);
+    expect(second.stats.reusedId).toBe(1);
+  });
+
+  test('an id the new report no longer covers is kept, not orphaned', () => {
+    // A learner may already have notes under it, and its aliases are still the
+    // URLs those notes were written at.
+    const first = buildLookup(report('/courses/a-course/accessing-the-api'), null);
+    const originalId = Object.keys(first.lessons)[0];
+    const second = buildLookup({ courses: [] }, first);
+    expect(second.lessons[originalId]).toEqual(first.lessons[originalId]);
+    expect(second.stats.retired).toBe(1);
+  });
+
+  test('rebuilding from the same report is a fixed point', () => {
+    const first = buildLookup(report('/courses/a-course/accessing-the-api'), null);
+    const second = buildLookup(report('/courses/a-course/accessing-the-api'), first);
+    expect(second.lessons).toEqual(first.lessons);
   });
 });

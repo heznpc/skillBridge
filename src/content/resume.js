@@ -167,13 +167,26 @@
     if (!isLessonPage()) return;
     const url = location.href;
     const title = (document.title || '').trim() || document.querySelector('h1')?.textContent?.trim() || url;
-    // Preserve last-left scroll position when revisiting a lesson — including
-    // when the previous visit was to the SAME lesson on the other platform,
-    // which is the whole point of resolving identity rather than comparing URLs.
+    // Identity is shared across platforms; a scroll offset is not.
+    //
+    // The two sites render the same lesson with different layouts, so 2380px
+    // into the Skilljar page is not 2380px into the Academy one — restoring it
+    // drops the learner at an arbitrary point and looks like a bug in resume.
+    // Positions are therefore kept per platform under one identity, and a
+    // lesson opened for the first time on a platform simply starts at the top.
+    //
+    // `scrollY` stays on the record as the value for the platform it was
+    // written on, so records saved before this still restore correctly there.
     const prev = sb.identity ? sb.identity.find(recent, location) : recent.find((r) => r.url === url);
-    const scrollY = prev ? prev.scrollY : 0;
+    const platform = sb.identity?.resolve(location)?.platform || null;
+    const positions = { ...(prev?.positions || {}) };
+    if (prev && !prev.positions && typeof prev.scrollY === 'number') {
+      const prevPlatform = sb.identity?.resolve(prev.url)?.platform;
+      if (prevPlatform) positions[prevPlatform] = prev.scrollY;
+    }
+    const scrollY = platform ? positions[platform] || 0 : prev?.scrollY || 0;
     recent = recent.filter((r) => !isCurrent(r));
-    const entry = { url, title, scrollY, ts: Date.now() };
+    const entry = { url, title, scrollY, positions, ts: Date.now() };
     recent.unshift(sb.identity ? sb.identity.stamp(entry, location) : entry);
     if (recent.length > MAX_RECENT) recent.length = MAX_RECENT;
     saveRecent();
@@ -192,7 +205,10 @@
       if (!isLessonPage()) return;
       const entry = sb.identity ? sb.identity.find(recent, location) : recent.find((r) => r.url === location.href);
       if (!entry) return;
-      entry.scrollY = Math.round(window.scrollY);
+      const y = Math.round(window.scrollY);
+      entry.scrollY = y;
+      const platform = sb.identity?.resolve(location)?.platform;
+      if (platform) entry.positions = { ...(entry.positions || {}), [platform]: y };
       entry.ts = Date.now();
       clearTimeout(saveTimer);
       saveTimer = setTimeout(saveRecent, 800);
@@ -239,7 +255,11 @@
     try {
       // Keyed to where we are actually going, so the scroll restore on arrival
       // recognises the page it lands on.
-      window.sessionStorage.setItem(RESTORE_KEY, JSON.stringify({ url: target, scrollY: r.scrollY }));
+      // The position for the platform we are actually going to — not the one
+      // the record happened to be written on.
+      const targetPlatform = sb.identity?.resolve(target)?.platform;
+      const targetY = targetPlatform ? r.positions?.[targetPlatform] || 0 : r.scrollY || 0;
+      window.sessionStorage.setItem(RESTORE_KEY, JSON.stringify({ url: target, scrollY: targetY }));
     } catch (_e) {
       /* ignore — navigation still works, just without scroll restore */
     }

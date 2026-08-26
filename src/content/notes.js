@@ -73,8 +73,13 @@
   // ACTIONS
   // ============================================================
 
+  // The record the editor is currently showing. A save replaces THIS note and
+  // nothing else — see upsertCurrent for why that matters.
+  let editingNote = null;
+
   function currentNoteText() {
     const existing = sb.identity ? sb.identity.find(notes, location) : notes.find((n) => n.url === location.href);
+    editingNote = existing || null;
     return existing?.text || '';
   }
 
@@ -90,17 +95,28 @@
   function upsertCurrent(text) {
     const trimmed = (text || '').trim();
     const url = location.href;
-    // Removes EVERY record for this lesson, which on a canonical match can be
-    // more than one — a note taken on Skilljar and another on Academy before
-    // identity existed both answer here. Replacing both is the learner's own
-    // explicit save, which is the only place this codebase collapses two
-    // records into one; migration never does it behind their back.
-    notes = notes.filter((n) => !isCurrent(n));
+    // Replaces ONLY the note the editor was showing.
+    //
+    // A canonical match can answer with more than one record — a note taken on
+    // Skilljar and another taken on Academy before identity existed both
+    // belong to this lesson now. The editor only ever showed the newest of
+    // them, so removing every match would delete text the learner never saw
+    // and never chose to overwrite. Editing one note is not consent to discard
+    // another.
+    //
+    // The older record stays. It surfaces the next time this note is cleared,
+    // which is a recoverable outcome; silent deletion is not.
+    const replacing = editingNote;
+    notes = notes.filter((n) => n !== replacing && (replacing || !isCurrent(n)));
     if (trimmed) {
       const title = (document.title || '').trim() || sb.$('h1')?.textContent?.trim() || url;
       const note = { url, title, text: trimmed, ts: Date.now() };
-      notes.unshift(sb.identity ? sb.identity.stamp(note, location) : note);
+      const stamped = sb.identity ? sb.identity.stamp(note, location) : note;
+      notes.unshift(stamped);
+      editingNote = stamped;
       if (notes.length > MAX_NOTES) notes.length = MAX_NOTES;
+    } else {
+      editingNote = null;
     }
     saveNotes();
     renderList();

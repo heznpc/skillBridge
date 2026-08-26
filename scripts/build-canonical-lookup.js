@@ -73,9 +73,35 @@ function parseAcademyPath(p) {
  * Anything whose path does not parse is dropped and counted, so a shape change
  * on either platform shows up as a number rather than as silence.
  */
-function buildLookup(report) {
+function buildLookup(report, previous) {
   const lessons = {};
-  const stats = { considered: 0, included: 0, droppedUnparseablePath: 0, collisions: 0 };
+  const stats = {
+    considered: 0,
+    included: 0,
+    droppedUnparseablePath: 0,
+    collisions: 0,
+    reusedId: 0,
+    mintedId: 0,
+    retired: 0,
+  };
+
+  // A canonical id, once issued, is never reissued.
+  //
+  // The ids LOOK like Academy slugs because that is where the first batch came
+  // from, but they are opaque from here on. If Academy re-slugs a lesson,
+  // regenerating would mint a NEW id — and every note a learner has already
+  // stored under the old one would point at a lesson that no longer exists in
+  // the table. That is precisely the failure this whole subsystem exists to
+  // prevent, so it must not be reintroduced by the generator.
+  //
+  // Matching is by alias: a lesson keeps its id as long as EITHER platform
+  // reference still points at it, which is what carries an id across a re-slug
+  // on one side.
+  const claimedBy = new Map();
+  for (const [canonical, refs] of Object.entries((previous && previous.lessons) || {})) {
+    if (refs?.skilljar) claimedBy.set(`skilljar:${refs.skilljar}`, canonical);
+    if (refs?.academy) claimedBy.set(`academy:${refs.academy}`, canonical);
+  }
 
   for (const course of report.courses || []) {
     for (const lesson of course.lessons || []) {
@@ -92,7 +118,12 @@ function buildLookup(report) {
         continue;
       }
 
-      const canonical = `${course.slug}/${lesson.id}`;
+      const skilljarRef = `${sRef.course}/${sRef.key}`;
+      const academyRef = `${aRef.course}/${aRef.key}`;
+      const existing = claimedBy.get(`skilljar:${skilljarRef}`) || claimedBy.get(`academy:${academyRef}`);
+      const canonical = existing || `${course.slug}/${lesson.id}`;
+      if (existing) stats.reusedId += 1;
+      else stats.mintedId += 1;
       if (lessons[canonical]) {
         // Two report rows claiming one canonical id. The matcher reports
         // duplicate titles as ambiguous rather than resolving them, so this
@@ -100,12 +131,25 @@ function buildLookup(report) {
         stats.collisions += 1;
         continue;
       }
-      lessons[canonical] = {
-        skilljar: `${sRef.course}/${sRef.key}`,
-        academy: `${aRef.course}/${aRef.key}`,
-      };
+      lessons[canonical] = { skilljar: skilljarRef, academy: academyRef };
       stats.included += 1;
     }
+  }
+
+  // An id the new report no longer covers is KEPT, not dropped. A learner may
+  // already have notes under it, and the aliases it carries are still the URLs
+  // those notes were written at. A report can lose a lesson because a course
+  // was reorganised or because a capture was partial; neither is a reason to
+  // orphan stored records. Counted so the growth is visible.
+  for (const [canonical, refs] of Object.entries((previous && previous.lessons) || {})) {
+    if (lessons[canonical]) continue;
+    // Only if its aliases were not re-issued to some other lesson.
+    const takenByOther = Object.values(lessons).some(
+      (r) => (refs.skilljar && r.skilljar === refs.skilljar) || (refs.academy && r.academy === refs.academy),
+    );
+    if (takenByOther) continue;
+    lessons[canonical] = refs;
+    stats.retired += 1;
   }
 
   return {
@@ -122,7 +166,10 @@ function buildLookup(report) {
 function main() {
   const reportPath = latestSnapshot(path.join(ROOT, 'snapshots/identity'), 'canonical-');
   const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
-  const table = buildLookup(report);
+  // The shipped table is the identity registry, not just a build artifact —
+  // it is read back in so previously issued ids survive this rebuild.
+  const previous = fs.existsSync(OUT_PATH) ? JSON.parse(fs.readFileSync(OUT_PATH, 'utf8')) : null;
+  const table = buildLookup(report, previous);
   const serialized = `${JSON.stringify(table, null, 2)}\n`;
 
   const check = process.argv.includes('--check');
