@@ -156,6 +156,10 @@
   // may not be loaded until later). content.js exposes the prebuilt strings
   // via `sb.translatableSelector` / `sb.excludeSelector` (added in v3.5.15).
   function getTranslatableElements() {
+    // A site that publishes its own locales can forbid the whole walk — see
+    // academy-localization.js. Bailing here keeps the policy off the hot path
+    // for the hosts that resolve to FULL, which is all of them but Academy.
+    if (sb.localization && !sb.localization.mayTranslate()) return [];
     const examSkip = sb.isExamPage ? EXAM_SKIP_SELECTORS.join(', ') : null;
     const TRANSLATABLE_SELECTOR = sb.translatableSelector;
     const EXCLUDE_SELECTOR = sb.excludeSelector;
@@ -213,6 +217,12 @@
     // produced. Every entry path (initial scan, LATE_CONTENT re-scan, lazy
     // observer, DOM-mutation path) lands here, so one guard covers them all.
     if (alreadyTranslated(el, fullText)) return null;
+    // Localization CHOKEPOINT, and it sits above the English check on purpose.
+    // Every entry path — static scan, late re-scan, mutation, lazy viewport —
+    // lands here, so one guard covers them all. `mayTranslateText` is what
+    // makes RESIDUE_ONLY real: under it, only text that still reads as English
+    // may be sent, which is exactly the residue on an official translation.
+    if (sb.localization && !sb.localization.mayTranslateText(isLikelyEnglish(fullText))) return null;
     if (!isLikelyEnglish(fullText)) return null;
 
     // Exam/quiz safety CHOKEPOINT: never translate answer-choice elements, no
@@ -286,6 +296,10 @@
 
   function applyStaticTranslations(targetLang) {
     const translator = sb.translator;
+    // Bail BEFORE updateLangClass. Relabelling <html lang> on a page we are
+    // forbidden to translate would tell a screen reader the content is Korean
+    // while it is still Spanish — worse than doing nothing.
+    if (sb.localization && !sb.localization.mayTranslate()) return;
     window._protectedTerms.buildProtectedTermsMap(targetLang, translator);
     sb.updateLangClass(targetLang);
     // Re-detect exam page (DOM may have loaded since init).
@@ -413,8 +427,13 @@
   // so misses wrapper shapes like <p><span>text <a>link</a></span></p>). Any
   // block carrying a link/button label must never take the flattening
   // safeReplaceText path — see partitionAfterCacheLookup.
+  // One definition of "interactive", shared with safeReplaceText's last-line
+  // guard and with html-gt's integrity gate — see src/lib/interactive.js for
+  // what the three used to disagree about, and why the disagreement routed
+  // ARIA controls onto the path that could not protect them.
   function _hasInteractiveEls(el) {
-    return !!el.querySelector('a, button, summary, [role="button"], [role="link"]');
+    const selector = window._sbInteractive?.INTERACTIVE_SELECTOR;
+    return selector ? !!el.querySelector(selector) : !!el.querySelector('a, button, summary, [role="button"]');
   }
 
   function queueForGoogleTranslate(elements, targetLang, alreadyVisible) {
@@ -517,6 +536,11 @@
         if (!item.el?.parentNode) continue;
         if (sb.safeReplaceText(item.el, translated) === false) continue;
         trackTranslatedElement(item.text, item.el);
+        // The baseline is on the page BEFORE anything optional is considered.
+        // The post-editor (refine-queue.js) is handed a block that is already
+        // rendered and readable; it never gates first paint, and with the
+        // feature off — the default — this is a no-op call.
+        sb._refine?.enqueue({ el: item.el, source: item.text, baseline: translated, targetLang });
       }
     }
   }
@@ -734,27 +758,62 @@
     markTranslated(el);
   }
 
+  /**
+   * Reclaim map space. Runs on any mutation that removed nodes.
+   *
+   * DETACHED IS NOT DEAD, and treating it as dead is issue #300. Skilljar's
+   * course-overview block is a collapsible: closing it removes its nodes and
+   * opening it puts the SAME nodes back, still holding translated text. This
+   * function used to delete an element's `originalTexts` entry the instant it
+   * had no parent — and the observer schedules it on exactly the mutation a
+   * collapse produces. A node that came back had no record of its English, so
+   * every later `restoreOriginal` skipped it and left it translated, which is
+   * the `<h2>` that stayed Korean after fifteen language switches.
+   *
+   * So the detached sweep is deferred rather than removed. Below the cap
+   * nothing is dropped: an entry costs one Map slot, and the map is cleared
+   * wholesale on every restore, so there is no leak to race. At the cap the
+   * sweep runs first and detached entries go before live ones — because
+   * dropping a live element's original is the bug, and a genuinely dead node
+   * is what we wanted to reclaim in the first place.
+   */
   function pruneDetachedEntries() {
     const originalTexts = sb.originalTexts;
     const translatedTexts = sb.translatedTexts;
     const originalComments = sb.originalComments;
     const cap = sb.mapSizeCap;
 
-    for (const [el] of originalTexts) {
-      if (!el.parentNode) originalTexts.delete(el);
+    if (originalTexts.size > cap) {
+      for (const [el] of originalTexts) {
+        if (!el.parentNode) originalTexts.delete(el);
+      }
     }
+    // `translatedTexts` is write-only bookkeeping — nothing reads it back — so
+    // its sweep can stay eager. It also keys on TEXT rather than on a node, so
+    // a re-attached element re-registers itself on its next pass anyway.
     for (const [text, entries] of translatedTexts) {
       const live = entries.filter((e) => e.el?.parentNode);
       if (live.length === 0) translatedTexts.delete(text);
       else if (live.length < entries.length) translatedTexts.set(text, live);
     }
-    if (originalTexts.size > cap) {
-      const excess = originalTexts.size - cap;
-      const iter = originalTexts.keys();
-      for (let i = 0; i < excess; i++) {
-        const key = iter.next().value;
-        originalTexts.delete(key);
-      }
+    // Deliberately NOT trimmed to the cap by evicting live entries.
+    //
+    // The detached sweep above is the reclaim. If the page is large enough
+    // that live originals alone exceed the cap, evicting them would recreate
+    // the exact defect #300 fixed: an element still on screen, still
+    // translated, with no record of its English, which every later
+    // restoreOriginal then skips.
+    //
+    // The invariant is "a live element never loses its original", and a
+    // memory ceiling is not a reason to break it. The overshoot is bounded by
+    // the page: one Map entry per translated element, cleared wholesale on the
+    // next restore. Surfaced once so an unexpectedly huge page is visible
+    // rather than silently costing memory.
+    if (originalTexts.size > cap && !sb._originalTextsOverCapWarned) {
+      sb._originalTextsOverCapWarned = true;
+      console.warn(
+        `[SkillBridge] ${originalTexts.size} live originals exceed the ${cap} cap; keeping them so restore stays complete.`,
+      );
     }
     if (translatedTexts.size > cap) {
       const excess = translatedTexts.size - cap;
@@ -837,6 +896,10 @@
     reset,
     bumpGeneration,
     flushOfflinePending,
+    // Used by the optional post-editor (refine-queue.js) to re-mark a block it
+    // rewrote, so the translation walk does not read the refined text as fresh
+    // English and send it back to Google.
+    markTranslated,
     get gtGeneration() {
       return gtGeneration;
     },

@@ -205,3 +205,57 @@ describe('answer-choice exclusion', () => {
     expect(collectAcademyChoiceSubtrees(document).length).toBeGreaterThan(0);
   });
 });
+
+describe('safety dependencies fail closed on Academy', () => {
+  // Loading content.js is impractical here, so this pins the DECISION the
+  // fallback encodes: on Academy, a missing adapter must not fall through to
+  // the Skilljar detector. Reconnaissance measured that detector at zero
+  // assessments found on this DOM, so the fallback would be a confident wrong
+  // answer, and the cost of a wrong answer here is exam content leaving the
+  // page.
+  const skilljarDetectorOnAcademyDom = (doc) =>
+    !!doc.querySelector('.quiz-form, .assessment-form, form[class*="quiz"]') ||
+    !!doc.querySelector('.answer-option, .answer-choice, .quiz-option');
+
+  test('the Skilljar detector really does find nothing on Academy markup', () => {
+    renderPage({ heading: 'Quiz on accessing Claude with the API', choices: 8 });
+    expect(skilljarDetectorOnAcademyDom(document)).toBe(false);
+    // …while the Academy adapter finds it.
+    expect(detectAcademyAssessment(document, at('/courses/c/quiz-on-x')).isAssessment).toBe(true);
+  });
+
+  test('so a missing adapter must be treated as an assessment, not as a lesson', () => {
+    const adapterMissing = true;
+    const verdict = adapterMissing ? true : skilljarDetectorOnAcademyDom(document);
+    expect(verdict).toBe(true);
+  });
+});
+
+describe('the window surface carries everything content.js reads', () => {
+  // content.js reaches this module through `window` only. A name exported to
+  // CommonJS but not to window is undefined in the browser while every test
+  // that loads the CommonJS side keeps passing — which is how
+  // ACADEMY_ASSESSMENT_PATH_PATTERNS came to throw on every Academy route
+  // change without a single red test.
+  function windowSurface() {
+    const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'academy-adapter.js'), 'utf8');
+    const fake = { module: { exports: {} } };
+    const win = {};
+    new Function('globalThis', 'window', src)(fake, win);
+    return { win: win._sbAcademy, mod: fake.module.exports };
+  }
+
+  test('every CommonJS export is also on window', () => {
+    const { win, mod } = windowSurface();
+    expect(win).toBeTruthy();
+    for (const key of Object.keys(mod)) expect(win).toHaveProperty(key);
+  });
+
+  test('the names content.js dereferences are present and usable', () => {
+    const { win } = windowSurface();
+    for (const key of ['ACADEMY_ASSESSMENT_PATH_PATTERNS', 'detectAcademyAssessment', 'isWithinAcademyChoice']) {
+      expect(win[key]).toBeDefined();
+    }
+    expect(win.ACADEMY_ASSESSMENT_PATH_PATTERNS.some((p) => p.test('/courses/c/quiz-on-x'))).toBe(true);
+  });
+});

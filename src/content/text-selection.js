@@ -15,6 +15,28 @@
   let askTutorBtn = null;
   let pendingQuote = null;
 
+  /**
+   * True when a selection touches answer-choice text on an assessment page.
+   *
+   * This is one of the two Tutor-transmission paths the exam guards elsewhere
+   * do not cover. `getPageContext()` strips the lesson body on an assessment
+   * page, and the GT chokepoint keeps choices out of the translation queue and
+   * the cache — but a learner can still highlight an answer choice and press
+   * Ask Tutor, and the quote is prepended to the prompt verbatim.
+   *
+   * The rule itself lives in src/lib/exam-selection.js because the BYOA panel
+   * needs the identical verdict for the clipboard, and a guard that exists in
+   * one of the two is a guard the other silently lacks. EXAM_SKIP_SELECTORS is
+   * what gets passed in — the same list the translation chokepoint reads, so a
+   * choice that stops being excluded stops being excluded everywhere at once.
+   */
+  function selectionHitsExamChoice(range) {
+    return !!window._sbExamSelection?.selectionHitsExamChoice(range, {
+      isExamPage: sb.isExamPage,
+      selectors: EXAM_SKIP_SELECTORS,
+    });
+  }
+
   function initAskTutorButton() {
     askTutorBtn = document.createElement('button');
     askTutorBtn.className = 'si18n-ask-tutor-btn';
@@ -55,6 +77,10 @@
       }
 
       const range = sel.getRangeAt(0);
+      if (selectionHitsExamChoice(range)) {
+        hideAskButton();
+        return;
+      }
       const rect = range.getBoundingClientRect();
       const scrollX = window.scrollX;
       const scrollY = window.scrollY;
@@ -80,6 +106,14 @@
 
   function handleAskTutor() {
     if (!pendingQuote) return;
+    // Re-checked at press time, not only at selection time: exam state is owned
+    // by the SPA lifecycle and can flip between the two while the button is
+    // still on screen and the selection is still live.
+    const liveSel = window.getSelection();
+    if (liveSel?.rangeCount && selectionHitsExamChoice(liveSel.getRangeAt(0))) {
+      hideAskButton();
+      return;
+    }
     const quote = pendingQuote;
     hideAskButton();
     window.getSelection()?.removeAllRanges();

@@ -34,11 +34,13 @@
   const STORAGE_KEY = 'sb_recent';
   const RESTORE_KEY = 'sb_resume_restore';
   const MAX_RECENT = 20;
-  // A lesson page is a course slug followed by a numeric lesson id, e.g.
-  // /claude-101/383389. Course pages (/claude-101) and the catalog (/) are
-  // intentionally skipped so the recent list stays lesson-only. On scoped
-  // hosts (claude.com tutorials) a lesson is identified by its content root —
-  // kept in lock-step with reading-aid.js's isLessonPage().
+  // Fallback shape only: a Skilljar lesson page is a course slug followed by a
+  // numeric lesson id, e.g. /claude-101/383389. Course pages (/claude-101) and
+  // the catalog (/) are intentionally skipped so the recent list stays
+  // lesson-only. Academy and Skilljar are both recognised properly by
+  // lesson-identity.js — see isLessonPage below. On scoped hosts (claude.com
+  // tutorials) a lesson is identified by its content root — kept in lock-step
+  // with reading-aid.js's isLessonPage().
   const LESSON_PATH = /\/[^/]+\/\d+/;
   const _scope = sb.hostCaps && sb.hostCaps.contentScope;
 
@@ -79,23 +81,43 @@
     }
   }
 
+  // Identity comes from lesson-store.js — see notes.js for why the rule lives
+  // in one place. `ready()` resolves whether or not the lookup table loaded, so
+  // this cannot stall tracking; without a table every record stays URL-keyed.
   function loadRecent(cb) {
     if (!extensionAlive()) {
       if (cb) cb();
       return;
     }
-    try {
-      chrome.storage.local.get([STORAGE_KEY], (res) => {
-        if (chrome.runtime.lastError) {
+    const finish = () => {
+      try {
+        chrome.storage.local.get([STORAGE_KEY], (res) => {
+          if (chrome.runtime.lastError) {
+            if (cb) cb();
+            return;
+          }
+          const stored = Array.isArray(res[STORAGE_KEY]) ? res[STORAGE_KEY] : [];
+          if (sb.identity) {
+            const migrated = sb.identity.migrate(stored);
+            recent = migrated.records;
+            if (migrated.changed) saveRecent();
+          } else {
+            recent = stored;
+          }
           if (cb) cb();
-          return;
-        }
-        recent = Array.isArray(res[STORAGE_KEY]) ? res[STORAGE_KEY] : [];
+        });
+      } catch {
         if (cb) cb();
-      });
-    } catch {
-      if (cb) cb();
-    }
+      }
+    };
+    if (sb.identity) sb.identity.ready().then(finish, finish);
+    else finish();
+  }
+
+  /** True when `r` is the lesson we are on, on either platform. */
+  function isCurrent(r) {
+    if (!sb.identity) return r.url === location.href;
+    return sb.identity.recordIdentity(r) === sb.identity.identityOf(location);
   }
 
   let _saveQueue = Promise.resolve();
@@ -130,6 +152,14 @@
   function isLessonPage() {
     // Scoped hosts: a lesson is present iff its content root is in the DOM.
     if (_scope) return !!document.querySelector(_scope);
+    // Academy lessons carry no numeric id — `/courses/<course>/<slug>` — so the
+    // Skilljar shape above matches none of them. parseLessonRef knows both
+    // shapes (and strips Academy's locale prefix), and is the same function
+    // that decides record identity, so "is this a lesson" and "which lesson is
+    // it" cannot disagree. The regex stays as the fallback for the case where
+    // the lib script failed to load.
+    const identity = window._sbLessonIdentity;
+    if (identity) return !!identity.parseLessonRef(location);
     return LESSON_PATH.test(location.pathname);
   }
 
@@ -137,11 +167,27 @@
     if (!isLessonPage()) return;
     const url = location.href;
     const title = (document.title || '').trim() || document.querySelector('h1')?.textContent?.trim() || url;
-    // Preserve last-left scroll position when revisiting a lesson.
-    const prev = recent.find((r) => r.url === url);
-    const scrollY = prev ? prev.scrollY : 0;
-    recent = recent.filter((r) => r.url !== url);
-    recent.unshift({ url, title, scrollY, ts: Date.now() });
+    // Identity is shared across platforms; a scroll offset is not.
+    //
+    // The two sites render the same lesson with different layouts, so 2380px
+    // into the Skilljar page is not 2380px into the Academy one — restoring it
+    // drops the learner at an arbitrary point and looks like a bug in resume.
+    // Positions are therefore kept per platform under one identity, and a
+    // lesson opened for the first time on a platform simply starts at the top.
+    //
+    // `scrollY` stays on the record as the value for the platform it was
+    // written on, so records saved before this still restore correctly there.
+    const prev = sb.identity ? sb.identity.find(recent, location) : recent.find((r) => r.url === url);
+    const platform = sb.identity?.resolve(location)?.platform || null;
+    const positions = { ...(prev?.positions || {}) };
+    if (prev && !prev.positions && typeof prev.scrollY === 'number') {
+      const prevPlatform = sb.identity?.resolve(prev.url)?.platform;
+      if (prevPlatform) positions[prevPlatform] = prev.scrollY;
+    }
+    const scrollY = platform ? positions[platform] || 0 : prev?.scrollY || 0;
+    recent = recent.filter((r) => !isCurrent(r));
+    const entry = { url, title, scrollY, positions, ts: Date.now() };
+    recent.unshift(sb.identity ? sb.identity.stamp(entry, location) : entry);
     if (recent.length > MAX_RECENT) recent.length = MAX_RECENT;
     saveRecent();
   }
@@ -157,9 +203,12 @@
     requestAnimationFrame(() => {
       rafPending = false;
       if (!isLessonPage()) return;
-      const entry = recent.find((r) => r.url === location.href);
+      const entry = sb.identity ? sb.identity.find(recent, location) : recent.find((r) => r.url === location.href);
       if (!entry) return;
-      entry.scrollY = Math.round(window.scrollY);
+      const y = Math.round(window.scrollY);
+      entry.scrollY = y;
+      const platform = sb.identity?.resolve(location)?.platform;
+      if (platform) entry.positions = { ...(entry.positions || {}), [platform]: y };
       entry.ts = Date.now();
       clearTimeout(saveTimer);
       saveTimer = setTimeout(saveRecent, 800);
@@ -200,18 +249,27 @@
   function openRecent(i) {
     const r = recent[i];
     if (!r) return;
+    // The same lesson on the platform the learner is browsing now, when the
+    // identity table knows it; the record's own URL otherwise.
+    const target = (sb.identity ? sb.identity.openUrlFor(r, location) : r.url) || r.url;
     try {
-      window.sessionStorage.setItem(RESTORE_KEY, JSON.stringify({ url: r.url, scrollY: r.scrollY }));
+      // Keyed to where we are actually going, so the scroll restore on arrival
+      // recognises the page it lands on.
+      // The position for the platform we are actually going to — not the one
+      // the record happened to be written on.
+      const targetPlatform = sb.identity?.resolve(target)?.platform;
+      const targetY = targetPlatform ? r.positions?.[targetPlatform] || 0 : r.scrollY || 0;
+      window.sessionStorage.setItem(RESTORE_KEY, JSON.stringify({ url: target, scrollY: targetY }));
     } catch (_e) {
       /* ignore — navigation still works, just without scroll restore */
     }
-    if (r.url === location.href) {
+    if (isCurrent(r)) {
       window.scrollTo({ top: r.scrollY, behavior: 'smooth' });
-    } else if (/^https?:/i.test(r.url)) {
+    } else if (/^https?:/i.test(target)) {
       // Match the https-only gate the dashboard open handler already applies, so
       // a dangerous-scheme URL can never reach location.href even if a future
       // write path (import/sync) ever populates sb_recent from elsewhere.
-      location.href = r.url;
+      location.href = target;
     }
   }
 

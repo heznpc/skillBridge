@@ -23,6 +23,8 @@
     "check:locales": "node scripts/check-locale-contamination.js",
     "check:dict-coverage": "node scripts/check-dict-coverage.js",
     "check:academy": "node scripts/check-academy-courses.js",
+    "check:canonical": "node scripts/build-canonical-lookup.js --check",
+    "build:canonical": "node scripts/build-canonical-lookup.js",
     "check:permission-docs": "node scripts/check-permission-docs.js",
     "check:plugin": "node scripts/build-plugin.js --check",
     "check:cws-drift": "node scripts/check-cws-drift.js",
@@ -44,7 +46,8 @@
     "release:verify": "node scripts/release-pipeline.js --full",
     "capture:store": "shotkit",
     "promo:build": "npm run capture:store && node scripts/build-promo-media.js",
-    "capture:install": "playwright install chromium"
+    "capture:install": "playwright install chromium",
+    "check:window": "node scripts/check-window-surface.js"
   },
   "jest": {
     "testPathIgnorePatterns": [

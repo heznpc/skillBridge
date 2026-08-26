@@ -38,6 +38,7 @@ const batches = [
     'tests/e2e/dashboard.spec.js',
     'tests/e2e/exam-mode.spec.js',
     'tests/e2e/notes.spec.js',
+    'tests/e2e/byoa.spec.js',
     'tests/e2e/term-reports.spec.js',
   ],
   [
@@ -53,11 +54,22 @@ const batches = [
     // request should never have been sent.
     'tests/e2e/mixed-localization.spec.js',
   ],
-  ['tests/e2e/rapid-switch.spec.js', 'tests/e2e/spa-navigation.spec.js'],
+  [
+    'tests/e2e/rapid-switch.spec.js',
+    'tests/e2e/spa-navigation.spec.js',
+    // With the SPA specs on purpose: this one is the same route-change
+    // machinery, driven on the host where getting it wrong leaves a tutor
+    // unguarded on a live quiz rather than showing stale text.
+    'tests/e2e/academy-lifecycle.spec.js',
+  ],
   [
     'tests/e2e/chat-history.spec.js',
     'tests/e2e/stream-cancel.spec.js',
     'tests/e2e/tutor-chat.spec.js',
+    // With the tutor specs, not the Academy ones: this is a transport claim.
+    // It asserts on the prompt the model actually received, which is the only
+    // place a guard that is built and then dropped becomes visible.
+    'tests/e2e/academy-tutor.spec.js',
     'tests/e2e/tutor-offline.spec.js',
   ],
   ['tests/e2e/puter-frame-boot.spec.js'],

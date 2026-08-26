@@ -36,11 +36,27 @@
   // PERSISTENCE (chrome.storage.local)
   // ============================================================
 
+  // Identity is resolved by lesson-store.js, not by comparing URLs here — the
+  // same lesson has different URLs on Skilljar and Academy, and three modules
+  // each inventing their own comparison is how one of them ends up hiding a
+  // learner's notes on a page that looks right. `ready()` waits for the lookup
+  // table; it resolves either way, so a missing table just means URL identity.
   function loadNotes(cb) {
-    chrome.storage.local.get([STORAGE_KEY], (res) => {
-      notes = Array.isArray(res[STORAGE_KEY]) ? res[STORAGE_KEY] : [];
-      if (cb) cb();
-    });
+    const finish = () => {
+      chrome.storage.local.get([STORAGE_KEY], (res) => {
+        const stored = Array.isArray(res[STORAGE_KEY]) ? res[STORAGE_KEY] : [];
+        if (sb.identity) {
+          const migrated = sb.identity.migrate(stored);
+          notes = migrated.records;
+          if (migrated.changed) saveNotes();
+        } else {
+          notes = stored;
+        }
+        if (cb) cb();
+      });
+    };
+    if (sb.identity) sb.identity.ready().then(finish, finish);
+    else finish();
   }
 
   // Serialize writes so rapid save/remove can't interleave (last-write-wins).
@@ -57,22 +73,50 @@
   // ACTIONS
   // ============================================================
 
+  // The record the editor is currently showing. A save replaces THIS note and
+  // nothing else — see upsertCurrent for why that matters.
+  let editingNote = null;
+
   function currentNoteText() {
-    const existing = notes.find((n) => n.url === location.href);
+    const existing = sb.identity ? sb.identity.find(notes, location) : notes.find((n) => n.url === location.href);
+    editingNote = existing || null;
     return existing?.text || '';
   }
 
-  // De-dupe by URL (one note per lesson; saving again overwrites and bumps
-  // it to the top). An empty/whitespace-only save deletes the note instead
-  // of storing a blank entry.
+  /** True when `n` is a note about the page we are on, on either platform. */
+  function isCurrent(n) {
+    if (!sb.identity) return n.url === location.href;
+    return sb.identity.recordIdentity(n) === sb.identity.identityOf(location);
+  }
+
+  // One note per lesson; saving again overwrites and bumps it to the top. An
+  // empty/whitespace-only save deletes the note instead of storing a blank
+  // entry.
   function upsertCurrent(text) {
     const trimmed = (text || '').trim();
     const url = location.href;
-    notes = notes.filter((n) => n.url !== url);
+    // Replaces ONLY the note the editor was showing.
+    //
+    // A canonical match can answer with more than one record — a note taken on
+    // Skilljar and another taken on Academy before identity existed both
+    // belong to this lesson now. The editor only ever showed the newest of
+    // them, so removing every match would delete text the learner never saw
+    // and never chose to overwrite. Editing one note is not consent to discard
+    // another.
+    //
+    // The older record stays. It surfaces the next time this note is cleared,
+    // which is a recoverable outcome; silent deletion is not.
+    const replacing = editingNote;
+    notes = notes.filter((n) => n !== replacing && (replacing || !isCurrent(n)));
     if (trimmed) {
       const title = (document.title || '').trim() || sb.$('h1')?.textContent?.trim() || url;
-      notes.unshift({ url, title, text: trimmed, ts: Date.now() });
+      const note = { url, title, text: trimmed, ts: Date.now() };
+      const stamped = sb.identity ? sb.identity.stamp(note, location) : note;
+      notes.unshift(stamped);
+      editingNote = stamped;
       if (notes.length > MAX_NOTES) notes.length = MAX_NOTES;
+    } else {
+      editingNote = null;
     }
     saveNotes();
     renderList();
@@ -87,11 +131,16 @@
 
   function openNote(i) {
     const n = notes[i];
-    if (!n || n.url === location.href) return;
+    if (!n || isCurrent(n)) return;
+    // Prefer the same lesson on the platform the learner is browsing now. A
+    // Skilljar-era note opened from Academy should land on the Academy
+    // rendering; sending them back to the platform they left is not
+    // continuity. Falls back to the note's own URL for anything unmatched.
+    const target = (sb.identity ? sb.identity.openUrlFor(n, location) : n.url) || n.url;
     // Same https-only gate as bookmarks.js's openBookmark — a dangerous-scheme
     // URL can never reach location.href even if a future write path (import)
     // ever populates sb_notes from elsewhere.
-    if (/^https?:/i.test(n.url)) location.href = n.url;
+    if (/^https?:/i.test(target)) location.href = target;
   }
 
   // ============================================================

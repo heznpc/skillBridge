@@ -20,7 +20,12 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://*.skilljar.com/*", "https://claude.com/resources/tutorials/*"],
+      "matches": [
+        "https://*.skilljar.com/*",
+        "https://claude.com/resources/tutorials/*",
+        "https://academy.claude.com/courses/*",
+        "https://academy.claude.com/*/courses/*"
+      ],
       "js": [
         "src/shared/build-config.js",
         "src/lib/browser-polyfill.js",
@@ -29,6 +34,11 @@
         "src/lib/academy-adapter.js",
         "src/lib/assessment-lifecycle.js",
         "src/lib/academy-localization.js",
+        "src/lib/exam-selection.js",
+        "src/lib/byoa-bundle.js",
+        "src/lib/refinement-policy.js",
+        "src/lib/refinement-validator.js",
+        "src/lib/lesson-identity.js",
         "src/lib/selectors.js",
         "src/shared/runtime-constants.js",
         "src/lib/constants.js",
@@ -36,6 +46,7 @@
         "src/lib/youtube-subtitles.js",
         "src/lib/protected-terms.js",
         "src/lib/gemini-block.js",
+        "src/lib/interactive.js",
         "src/lib/dom-safe.js",
         "src/content/content-lifecycle.js",
         "src/content/content-messages.js",
@@ -45,6 +56,7 @@
         "src/content/content.js",
         "src/content/html-gt.js",
         "src/content/gt-queue.js",
+        "src/content/refine-queue.js",
         "src/content/banners.js",
         "src/content/code-comments.js",
         "src/content/header-controls.js",
@@ -58,9 +70,11 @@
         "src/content/chat-subpanels.js",
         "src/content/chat-history.js",
         "src/content/chat-flashcards.js",
+        "src/content/lesson-store.js",
         "src/content/bookmarks.js",
         "src/content/notes.js",
         "src/content/term-reports.js",
+        "src/content/byoa.js",
         "src/content/resume.js",
         "src/content/dashboard.js",
         "src/content/reading-aid.js",
@@ -82,7 +96,11 @@
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://anthropic.skilljar.com/*"],
+      "matches": [
+        "https://anthropic.skilljar.com/*",
+        "https://academy.claude.com/courses/*",
+        "https://academy.claude.com/*/courses/*"
+      ],
       "js": ["src/bridge/puter-content-init.js", "src/bridge/puter.js", "src/bridge/puter-content-broker.js"],
       "run_at": "document_end",
       "world": "ISOLATED"
@@ -102,14 +120,20 @@
         "src/data/*",
         "assets/icons/*",
         "src/shared/constants.json",
+        "src/shared/canonical-lessons.json",
         "src/shared/runtime-constants.js",
         "src/content/styles/*.css"
       ],
       "matches": ["https://*.skilljar.com/*"]
     },
     {
-      "resources": ["src/data/*", "src/shared/runtime-constants.js", "src/content/styles/*.css"],
-      "matches": ["https://claude.com/*"]
+      "resources": [
+        "src/data/*",
+        "src/shared/canonical-lessons.json",
+        "src/shared/runtime-constants.js",
+        "src/content/styles/*.css"
+      ],
+      "matches": ["https://claude.com/*", "https://academy.claude.com/*"]
     }
   ]
 }

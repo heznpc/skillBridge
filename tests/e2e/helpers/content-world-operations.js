@@ -644,6 +644,140 @@ async function evalInContentWorld(context, op, arg) {
                   el.scrollIntoView({ behavior: 'instant', block: 'center' });
                   return { ok: true };
                 },
+                // ────────────────────────────────────────────────────────
+                // Claude Academy probes.
+                //
+                // E2E runs on localhost, and getHostCapabilities() gives
+                // localhost the Skilljar profile — deliberately, since a
+                // released build must never hand a local page a real host's
+                // capabilities. So a spec that wants the Academy code path has
+                // to say so, and `sb.hostCaps` is the seam production code
+                // actually reads: detectExamPage() and routeIsExamPage() both
+                // branch on `hostCaps.platform` at call time, so swapping the
+                // profile swaps which detector decides.
+                //
+                // Nothing here reimplements detection. The spec drives the
+                // real lifecycle through the real observer and route hooks.
+                // ────────────────────────────────────────────────────────
+                useAcademyProfile: () => {
+                  const sb = window._sb;
+                  if (!sb) return { error: '_sb missing' };
+                  if (!sb.__sbE2eOriginalHostCaps) sb.__sbE2eOriginalHostCaps = sb.hostCaps;
+                  sb.hostCaps = Object.freeze({
+                    ...sb.__sbE2eOriginalHostCaps,
+                    platform: 'claude-academy',
+                    examDetection: true,
+                    localizedHost: true,
+                  });
+                  return { platform: sb.hostCaps.platform };
+                },
+                restoreHostProfile: () => {
+                  const sb = window._sb;
+                  if (!sb || !sb.__sbE2eOriginalHostCaps) return { error: 'no saved profile' };
+                  sb.hostCaps = sb.__sbE2eOriginalHostCaps;
+                  return { platform: sb.hostCaps.platform };
+                },
+                // Exam-safe state as the lifecycle owns it, plus what the DOM
+                // and route each say on their own — so a failure names which
+                // of the three disagreed rather than just "it was false".
+                examState: () => {
+                  const sb = window._sb;
+                  return {
+                    isExamPage: !!sb.isExamPage,
+                    detectSaysExam: !!sb.detectExamPage?.(),
+                    url: location.href,
+                    choiceCount: document.querySelectorAll('[role="radio"], [role="checkbox"]').length,
+                  };
+                },
+                // Force the settled-DOM re-decision. The observer's own
+                // debounce also fires this; calling it directly removes a
+                // timing dependency from assertions that are about the
+                // lifecycle, not about the debounce.
+                settleExamState: () => ({ isExamPage: !!window._sb?.onExamDomSettled?.() }),
+                // Every text run currently on the page that a translation
+                // request could carry, split into what may leave and what may
+                // not. The spec asserts on the second list being absent from
+                // GT bodies and from the tutor context.
+                academyChoiceText: () => ({
+                  choices: Array.from(document.querySelectorAll('[role="radio"], [role="checkbox"]')).map((el) =>
+                    el.textContent.replace(/\s+/g, ' ').trim(),
+                  ),
+                  question: document.getElementById('academy-quiz-question')?.textContent?.trim() || null,
+                  title: document.querySelector('h1')?.textContent?.trim() || null,
+                }),
+                // The prompt the model was actually handed, recorded by the
+                // Puter stub, plus how many times it has been asked at all.
+                lastTutorPrompt: async () => {
+                  const r = await chrome.storage.local.get(['sb_e2e_last_prompt']);
+                  return { prompt: r.sb_e2e_last_prompt || null };
+                },
+                clearTutorPrompt: async () => {
+                  await chrome.storage.local.remove(['sb_e2e_last_prompt']);
+                  return { ok: true };
+                },
+                setTutorEngine: async (engine) => {
+                  await chrome.storage.local.set({ sb_ai_engine: engine });
+                  return { engine };
+                },
+                // ── Ask another assistant (BYOA) ──────────────────────
+                toggleByoaPanel: () => {
+                  window._sb._chat.toggleByoaPanel();
+                  return { ok: true };
+                },
+                readByoaPanel: () => {
+                  const $ = (id) => window._sb.$id(id);
+                  const notes = $('si18n-byoa-notes');
+                  const root = $('si18n-byoa-preview')?.parentElement;
+                  return {
+                    present: !!$('si18n-byoa-preview'),
+                    prompt: $('si18n-byoa-preview')?.value || '',
+                    readOnly: !!$('si18n-byoa-preview')?.readOnly,
+                    copyLabel: $('si18n-byoa-copy')?.textContent?.trim() || '',
+                    notes: Array.from(notes?.querySelectorAll('.si18n-byoa-note') || []).map((n) =>
+                      n.textContent.trim(),
+                    ),
+                    assistants: Array.from(root?.querySelectorAll('.si18n-byoa-open') || []).map((b) => ({
+                      id: b.dataset.assistant,
+                      label: b.textContent.trim(),
+                    })),
+                  };
+                },
+                typeByoaQuestion: (text) => {
+                  const input = window._sb.$id('si18n-byoa-question');
+                  if (!input) return { error: 'byoa question input missing' };
+                  input.value = text;
+                  input.dispatchEvent(new window.Event('input', { bubbles: true }));
+                  return { ok: true };
+                },
+                clickByoaCopy: async () => {
+                  window._sb.$id('si18n-byoa-copy')?.click();
+                  await new Promise((r) => setTimeout(r, 150));
+                  let clipboard;
+                  try {
+                    clipboard = await navigator.clipboard.readText();
+                  } catch (e) {
+                    clipboard = `__unreadable__:${e && e.message}`;
+                  }
+                  return { clipboard, label: window._sb.$id('si18n-byoa-copy')?.textContent?.trim() || '' };
+                },
+                // Select the text of one element, so the panel sees a real
+                // Selection rather than an injected string.
+                selectElementText: (selector) => {
+                  const el = document.querySelector(selector);
+                  if (!el) return { error: `no element for ${selector}` };
+                  const range = document.createRange();
+                  range.selectNodeContents(el);
+                  const sel = window.getSelection();
+                  sel.removeAllRanges();
+                  sel.addRange(range);
+                  return { selected: sel.toString().trim() };
+                },
+                clearSelection: () => {
+                  window.getSelection()?.removeAllRanges();
+                  return { ok: true };
+                },
+                // What the tutor would be sent for the current page.
+                tutorContext: () => ({ context: window._sb?.getPageContext?.() || '' }),
                 // Simulate a Skilljar SPA-style navigation: atomically swap the
                 // body HTML and push a new history entry. Triggers the wrapped
                 // `history.pushState` which content.js intercepts to fire

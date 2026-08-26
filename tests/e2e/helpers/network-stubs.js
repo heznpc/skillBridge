@@ -28,6 +28,11 @@ const QUIZ_HTML = fs.readFileSync(path.join(FIXTURE_DIR, 'skilljar-quiz.html'), 
 // An officially localized page (Korean bodies, English titles) — see the
 // fixture's own header for what each element tests.
 const LOCALIZED_HTML = fs.readFileSync(path.join(FIXTURE_DIR, 'localized-lesson.html'), 'utf8');
+// Claude Academy pages. Shaped after the live signed-in DOM: ARIA roles where
+// Skilljar has class names, and no <form> anywhere. Both fixtures explain in
+// their own headers which Skilljar signal they deliberately lack.
+const ACADEMY_LESSON_HTML = fs.readFileSync(path.join(FIXTURE_DIR, 'academy-lesson.html'), 'utf8');
+const ACADEMY_QUIZ_HTML = fs.readFileSync(path.join(FIXTURE_DIR, 'academy-quiz.html'), 'utf8');
 
 // Kept exported for back-compat with anything that imported it; new tests
 // should use the path-aware server directly.
@@ -39,6 +44,15 @@ const FIXTURE_HTML = LESSON_HTML;
  *   anything else               → lesson fixture
  */
 function fixtureForPath(reqPath) {
+  // Academy routes come first: they are namespaced under /academy so the
+  // Skilljar `/quiz` prefix rule below cannot claim them, and their assessment
+  // segment is named after its subject (`quiz-on-…`) exactly as the live site
+  // names it — which is the shape the Skilljar URL patterns miss.
+  if (/^\/academy\//.test(reqPath)) {
+    return /\/quiz(-[a-z0-9-]*)?(\/|$|\?)|\/[a-z0-9-]*assessment(\/|$|\?)/.test(reqPath)
+      ? ACADEMY_QUIZ_HTML
+      : ACADEMY_LESSON_HTML;
+  }
   if (/^\/(quiz|exam|assessment)(\/|$|\?)/.test(reqPath)) return QUIZ_HTML;
   if (/^\/localized(\/|$|\?)/.test(reqPath)) return LOCALIZED_HTML;
   return LESSON_HTML;

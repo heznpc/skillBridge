@@ -113,6 +113,91 @@
   opacity: 1;
 }
 
+/* Ask another assistant: the prompt is always on screen before it is copied.
+   `readonly` rather than disabled on the preview, so it stays selectable and a
+   learner whose browser refuses clipboard access can still copy by hand. */
+.si18n-byoa {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.si18n-byoa-explain {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  opacity: 0.75;
+}
+
+.si18n-byoa-notes:empty {
+  display: none;
+}
+
+.si18n-byoa-note {
+  font-size: 12px;
+  line-height: 1.45;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(214, 122, 60, 0.12);
+  border: 1px solid rgba(214, 122, 60, 0.25);
+}
+
+.si18n-byoa-question,
+.si18n-byoa-preview {
+  border-radius: 10px;
+  max-height: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.si18n-byoa-preview {
+  font-size: 12px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.si18n-byoa-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.si18n-byoa-assistants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.si18n-byoa-open {
+  flex: 1 1 auto;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: none;
+  color: inherit;
+}
+
+.si18n-byoa-open:hover {
+  border-color: rgba(0, 0, 0, 0.28);
+}
+
+html.si18n-dark .si18n-byoa-note {
+  background: rgba(214, 122, 60, 0.18) !important;
+  border-color: rgba(214, 122, 60, 0.35) !important;
+}
+
+html.si18n-dark .si18n-byoa-open {
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: #ccc !important;
+}
+
+html.si18n-dark .si18n-byoa-open:hover {
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
 /* In-lesson reading aid: top progress bar + table of contents.
    The reading bar has its OWN id — it used to reuse #si18n-progress-bar and
    collided with the translation-progress bar (banners.js): this later rule's

@@ -103,6 +103,7 @@
     ensureObserver,
     ensureSubtitleManager,
     redetectExamPage,
+    redetectPageLocale,
     reapplyTranslations,
     onPageHide,
     logInfo = console.info,
@@ -143,6 +144,11 @@
       ensureObserver?.();
       ensureSubtitleManager?.();
       redetectExamPage?.();
+      // The locale can move with the route on a site that ships official
+      // locales (Academy encodes it as the first path segment), and the
+      // translation policy depends on it. Re-read before anything decides
+      // what to send.
+      redetectPageLocale?.();
       reapplyTranslations?.();
     }
 

@@ -25,6 +25,7 @@
     reportsPanelOpen: false,
     recentPanelOpen: false,
     dashboardPanelOpen: false,
+    byoaPanelOpen: false,
   };
   const _state = sb._chat.state;
   const SUB_PANEL_FLAGS = {
@@ -35,6 +36,7 @@
     reports: 'reportsPanelOpen',
     recent: 'recentPanelOpen',
     dashboard: 'dashboardPanelOpen',
+    byoa: 'byoaPanelOpen',
   };
 
   function resetSubPanelFlags() {

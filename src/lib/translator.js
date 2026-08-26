@@ -523,11 +523,21 @@ class SkilljarTranslator {
     // two are ever refactored together. `tests/local-engine.test.js` locks the
     // asymmetry.
     const read = chrome.storage.local.get('sb_ai_engine');
-    const timeout = new Promise((_resolve, reject) =>
-      setTimeout(() => reject(new Error('Tutor engine preference read timed out')), 1500),
-    );
-    const result = await Promise.race([read, timeout]);
-    return result?.sb_ai_engine || 'cloud';
+    // The timer is cleared in `finally`, which matters twice: an uncleared
+    // 1.5s timeout is left armed by every single chat message, and when it
+    // fires after the read already won, its rejection has no handler — one
+    // unhandled promise rejection per tutor question. Clearing it means the
+    // losing promise never settles at all.
+    let timer;
+    const timeout = new Promise((_resolve, reject) => {
+      timer = setTimeout(() => reject(new Error('Tutor engine preference read timed out')), 1500);
+    });
+    try {
+      const result = await Promise.race([read, timeout]);
+      return result?.sb_ai_engine || 'cloud';
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
   // Stream a tutor reply from a local OpenAI-compatible server (Ollama, …).
@@ -596,13 +606,29 @@ class SkilljarTranslator {
     });
   }
 
-  async chatStream(userMessage, targetLang, courseContext = '', onChunk, opts = {}) {
-    try {
-      const langName = this.supportedLanguages[targetLang] || 'English';
-      const examGuard = opts.isExamPage
-        ? '\nCRITICAL: The user is on a certification exam page. You MUST NOT provide answers, solutions, or hints to exam questions under any circumstances. Only explain general concepts. If the user asks for specific exam answers, politely decline.'
-        : '';
-      const prompt = `You are SkillBridge Tutor, a bilingual AI learning assistant for free AI courses hosted at anthropic.skilljar.com. Respond in ${langName}.
+  /**
+   * Build the Tutor prompt.
+   *
+   * Extracted so every engine provably gets the SAME text. The exam guard used
+   * to be assembled inline in the one function that also chose the transport,
+   * which made "cloud and local carry the same protection" a property of where
+   * the lines happened to sit rather than something a test could hold. It is
+   * the single prompt builder now, and `chatStream` calls it before it knows
+   * which engine will run.
+   *
+   * The guard is the second layer, not the first. Answer-choice text never
+   * reaches here at all: `getPageContext()` drops the lesson body on an
+   * assessment page, the translation chokepoint keeps choices out of the queue
+   * and the cache, and the selection quote refuses a highlight that touches
+   * one. This is what remains if the learner types a question about an answer
+   * themselves.
+   */
+  _buildTutorPrompt({ userMessage, targetLang, courseContext = '', isExamPage = false } = {}) {
+    const langName = this.supportedLanguages[targetLang] || 'English';
+    const examGuard = isExamPage
+      ? '\nCRITICAL: The user is on a certification exam page. You MUST NOT provide answers, solutions, or hints to exam questions under any circumstances. Only explain general concepts. If the user asks for specific exam answers, politely decline.'
+      : '';
+    return `You are SkillBridge Tutor, a bilingual AI learning assistant for Anthropic's free AI courses. Respond in ${langName}.
 
 Your strengths:
 - You understand both the original English content and the learner's language.
@@ -617,6 +643,167 @@ Guidelines:
 ${courseContext ? `Current course context: ${courseContext}` : ''}
 
 User: ${userMessage}`;
+  }
+
+  /**
+   * Stream from the cloud transport.
+   *
+   * Extracted from `chatStream` so a second caller can use the SAME transport
+   * without inheriting the Tutor's prompt. The post-editor
+   * (src/content/refine-queue.js) is not a tutor: handing it the tutor persona,
+   * the exam guard and the course context would send text nobody asked to send
+   * and bias an edit task with an unrelated instruction.
+   *
+   * `targetLang` is used only for the sign-in card's labels, which the isolated
+   * broker cannot resolve for itself.
+   */
+  async _cloudChatStream(prompt, targetLang, onChunk, opts = {}) {
+    const model = opts.model || SKILLBRIDGE_MODELS.CLAUDE;
+    if (!this.isReady || !this._cloudPort) await this._ensureCloudBroker();
+    if (!this.isReady || !this._cloudPort) throw new Error('Bridge not ready');
+
+    return new Promise((resolve, reject) => {
+      const id = crypto.randomUUID();
+      let fullText = '';
+      let settled = false;
+
+      // Honor an AbortSignal so callers can cancel the stream when the
+      // user navigates away / closes the sidebar / switches sub-panels.
+      // Without this the message handler stayed live for up to 60s and
+      // wrote chunks into orphaned DOM nodes (and saved abandoned chats).
+      if (opts.signal?.aborted) {
+        return reject(new DOMException('Aborted', 'AbortError'));
+      }
+
+      const _postAbort = () => {
+        try {
+          this._cloudPort?.postMessage({ type: 'abort', id });
+        } catch (_e) {
+          /* broker already disconnected */
+        }
+      };
+
+      let watchdog = null;
+      const cloudIdleTimeout = Math.max(SKILLBRIDGE_THRESHOLDS.CHAT_STREAM_TIMEOUT, 90_000);
+      const armWatchdog = () => {
+        clearTimeout(watchdog);
+        watchdog = setTimeout(() => {
+          _postAbort();
+          finish(reject, new Error('Stream timed out'));
+        }, cloudIdleTimeout);
+      };
+
+      const finish = (fn, value) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(watchdog);
+        this._cloudPending.delete(id);
+        opts.signal?.removeEventListener('abort', onAbort);
+        fn(value);
+      };
+
+      const onAbort = () => {
+        _postAbort();
+        finish(reject, new DOMException('Aborted', 'AbortError'));
+      };
+
+      if (opts.signal) opts.signal.addEventListener('abort', onAbort, { once: true });
+      this._cloudPending.set(id, {
+        chunk(text) {
+          armWatchdog();
+          fullText += text;
+          onChunk?.(text, fullText);
+        },
+        // The broker keepalives every 20s while a request is genuinely in
+        // flight (including while its sign-in overlay is open); without this
+        // the 90s idle watchdog kills a first-run sign-in mid-popup.
+        keepalive: () => armWatchdog(),
+        done: () => finish(resolve, fullText || 'No response'),
+        error: (message) => finish(reject, new Error(message || 'Cloud AI error')),
+      });
+      armWatchdog();
+      // The isolated broker owns the sign-in card and cannot read the
+      // extension UI's language state, so ship only the resolved labels.
+      const t = (map) => map[this.currentLang] || map[targetLang] || map.en;
+      const request = {
+        type: 'start',
+        id,
+        prompt,
+        model,
+        labels: {
+          title: t(ENGINE_LABELS.signInTitle),
+          body: t(ENGINE_LABELS.signInBody),
+          button: t(ENGINE_LABELS.signInButton),
+          cancel: t(ENGINE_LABELS.signInCancel),
+          error: t(ENGINE_LABELS.tutorSignInRequired),
+          disable: t(ENGINE_LABELS.signInDisable),
+          localHint: t(ENGINE_LABELS.signInLocalHint),
+          // Shown as the outcome of the "turn off" action, so the reply the
+          // user gets is about the choice they just made rather than the
+          // generic "sign-in required". Reuses the label the sidebar already
+          // shows for a disabled tutor, so the two agree.
+          off: t(ENGINE_LABELS.tutorOff),
+        },
+      };
+      const sendStart = (allowReconnect) => {
+        if (settled || opts.signal?.aborted) return;
+        try {
+          this._cloudPort.postMessage(request);
+        } catch (err) {
+          if (!allowReconnect) {
+            finish(reject, new Error(`Cloud AI connection failed: ${err.message}`));
+            return;
+          }
+          const deadPort = this._cloudPort;
+          this._cloudPort = null;
+          this.isReady = false;
+          try {
+            deadPort?.disconnect();
+          } catch (_e) {
+            /* already disconnected */
+          }
+          void this._ensureCloudBroker().then(
+            () => {
+              if (!settled && !opts.signal?.aborted) sendStart(false);
+            },
+            (connectErr) => finish(reject, new Error(`Cloud AI connection failed: ${connectErr.message}`)),
+          );
+        }
+      };
+      sendStart(true);
+    });
+  }
+
+  /**
+   * Post-edit one already-translated block.
+   *
+   * Deliberately NOT routed through `_getAiEngine()`. Refinement has its own
+   * setting and its own consent, and the decision about whether it may run at
+   * all — including the case where it follows a Tutor that is off — belongs to
+   * src/lib/refinement-policy.js, which the caller has already consulted.
+   * Re-deriving it here would give the feature two answers to one question.
+   *
+   * The engine is asserted rather than defaulted: an unrecognised value is a
+   * caller bug, and defaulting it into the cloud path would send course text
+   * to Puter on the strength of a typo.
+   */
+  async refineText(prompt, { engine, signal, targetLang = 'en' } = {}) {
+    if (engine !== 'cloud' && engine !== 'local') {
+      throw new Error(`refineText: refusing an unrecognised engine "${engine}"`);
+    }
+    if (engine === 'local') return this._localChatStream(prompt, null, { signal });
+    // Refinement is a copy-edit, not a conversation — see SKILLBRIDGE_MODELS.
+    return this._cloudChatStream(prompt, targetLang, null, { signal, model: SKILLBRIDGE_MODELS.REFINEMENT });
+  }
+
+  async chatStream(userMessage, targetLang, courseContext = '', onChunk, opts = {}) {
+    try {
+      const prompt = this._buildTutorPrompt({
+        userMessage,
+        targetLang,
+        courseContext,
+        isExamPage: opts.isExamPage,
+      });
 
       // Route to the selected AI engine (settings, chrome.storage.local):
       // 'cloud' (default) = Claude via the Puter bridge; 'local' = an
@@ -626,119 +813,7 @@ User: ${userMessage}`;
       if (engine === 'off') throw new Error('AI tutor is turned off in settings.');
       if (engine === 'local') return this._localChatStream(prompt, onChunk, opts);
 
-      if (!this.isReady || !this._cloudPort) await this._ensureCloudBroker();
-      if (!this.isReady || !this._cloudPort) throw new Error('Bridge not ready');
-
-      return new Promise((resolve, reject) => {
-        const id = crypto.randomUUID();
-        let fullText = '';
-        let settled = false;
-
-        // Honor an AbortSignal so callers can cancel the stream when the
-        // user navigates away / closes the sidebar / switches sub-panels.
-        // Without this the message handler stayed live for up to 60s and
-        // wrote chunks into orphaned DOM nodes (and saved abandoned chats).
-        if (opts.signal?.aborted) {
-          return reject(new DOMException('Aborted', 'AbortError'));
-        }
-
-        const _postAbort = () => {
-          try {
-            this._cloudPort?.postMessage({ type: 'abort', id });
-          } catch (_e) {
-            /* broker already disconnected */
-          }
-        };
-
-        let watchdog = null;
-        const cloudIdleTimeout = Math.max(SKILLBRIDGE_THRESHOLDS.CHAT_STREAM_TIMEOUT, 90_000);
-        const armWatchdog = () => {
-          clearTimeout(watchdog);
-          watchdog = setTimeout(() => {
-            _postAbort();
-            finish(reject, new Error('Stream timed out'));
-          }, cloudIdleTimeout);
-        };
-
-        const finish = (fn, value) => {
-          if (settled) return;
-          settled = true;
-          clearTimeout(watchdog);
-          this._cloudPending.delete(id);
-          opts.signal?.removeEventListener('abort', onAbort);
-          fn(value);
-        };
-
-        const onAbort = () => {
-          _postAbort();
-          finish(reject, new DOMException('Aborted', 'AbortError'));
-        };
-
-        if (opts.signal) opts.signal.addEventListener('abort', onAbort, { once: true });
-        this._cloudPending.set(id, {
-          chunk(text) {
-            armWatchdog();
-            fullText += text;
-            onChunk?.(text, fullText);
-          },
-          // The broker keepalives every 20s while a request is genuinely in
-          // flight (including while its sign-in overlay is open); without this
-          // the 90s idle watchdog kills a first-run sign-in mid-popup.
-          keepalive: () => armWatchdog(),
-          done: () => finish(resolve, fullText || 'No response'),
-          error: (message) => finish(reject, new Error(message || 'Cloud AI error')),
-        });
-        armWatchdog();
-        // The isolated broker owns the sign-in card and cannot read the
-        // extension UI's language state, so ship only the resolved labels.
-        const t = (map) => map[this.currentLang] || map[targetLang] || map.en;
-        const request = {
-          type: 'start',
-          id,
-          prompt,
-          model: SKILLBRIDGE_MODELS.CLAUDE,
-          labels: {
-            title: t(ENGINE_LABELS.signInTitle),
-            body: t(ENGINE_LABELS.signInBody),
-            button: t(ENGINE_LABELS.signInButton),
-            cancel: t(ENGINE_LABELS.signInCancel),
-            error: t(ENGINE_LABELS.tutorSignInRequired),
-            disable: t(ENGINE_LABELS.signInDisable),
-            localHint: t(ENGINE_LABELS.signInLocalHint),
-            // Shown as the outcome of the "turn off" action, so the reply the
-            // user gets is about the choice they just made rather than the
-            // generic "sign-in required". Reuses the label the sidebar already
-            // shows for a disabled tutor, so the two agree.
-            off: t(ENGINE_LABELS.tutorOff),
-          },
-        };
-        const sendStart = (allowReconnect) => {
-          if (settled || opts.signal?.aborted) return;
-          try {
-            this._cloudPort.postMessage(request);
-          } catch (err) {
-            if (!allowReconnect) {
-              finish(reject, new Error(`Cloud AI connection failed: ${err.message}`));
-              return;
-            }
-            const deadPort = this._cloudPort;
-            this._cloudPort = null;
-            this.isReady = false;
-            try {
-              deadPort?.disconnect();
-            } catch (_e) {
-              /* already disconnected */
-            }
-            void this._ensureCloudBroker().then(
-              () => {
-                if (!settled && !opts.signal?.aborted) sendStart(false);
-              },
-              (connectErr) => finish(reject, new Error(`Cloud AI connection failed: ${connectErr.message}`)),
-            );
-          }
-        };
-        sendStart(true);
-      });
+      return this._cloudChatStream(prompt, targetLang, onChunk, opts);
     } catch (err) {
       // Synchronous setup failures (most importantly `!this.isReady` — the Puter
       // bridge hasn't finished its handshake) must PROPAGATE, not resolve to a

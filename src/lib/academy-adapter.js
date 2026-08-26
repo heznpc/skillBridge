@@ -169,8 +169,14 @@ function isWithinAcademyChoice(node) {
 }
 
 if (typeof window !== 'undefined') {
+  // Must stay in step with the CommonJS exports below. content.js reaches
+  // this module through `window` and nothing else, so a name that exists only
+  // in module.exports is undefined in the browser while every unit test —
+  // which loads the CommonJS side — still passes.
   window._sbAcademy = {
     ACADEMY_HOST,
+    ACADEMY_ASSESSMENT_PATH_PATTERNS,
+    ACADEMY_ASSESSMENT_HEADING_PATTERNS,
     ACADEMY_EXAM_SKIP_SELECTORS,
     ASSESSMENT_SIGNAL,
     detectAcademyAssessment,

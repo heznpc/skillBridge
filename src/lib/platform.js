@@ -90,6 +90,10 @@ function isPlatformSupported(id) {
 //   - bridge                       — optional AI surface (trusted host + enabled build)
 //   - headerControls / keyboardShortcuts / readingAid / examDetection /
 //     youtubeSubtitles            — per-host feature toggles
+//   - localizedHost                — the site publishes its own official
+//                                    locales, so "translate the page" needs a
+//                                    policy (src/lib/academy-localization.js)
+//                                    instead of assuming English
 //
 // NOTE: this gates FEATURES, not translation *activation*. Whether a page
 // translates at all still flows through detectAITrainingContent() — claude.com
@@ -112,6 +116,7 @@ const _CAPS_NONE = Object.freeze({
   keyboardShortcuts: false,
   readingAid: false,
   examDetection: false,
+  localizedHost: false,
   youtubeSubtitles: false,
 });
 // True only when the manifest grants the PORTED localhost patterns. The E2E
@@ -153,6 +158,7 @@ const _CAPS_FULL = Object.freeze({
   keyboardShortcuts: true,
   readingAid: true,
   examDetection: true,
+  localizedHost: false,
   youtubeSubtitles: true,
 });
 // Other *.skilljar.com tenants (admitted only when detectAITrainingContent
@@ -168,6 +174,7 @@ const _CAPS_SKILLJAR_TENANT = Object.freeze({
   keyboardShortcuts: true,
   readingAid: true,
   examDetection: true,
+  localizedHost: false,
   youtubeSubtitles: true,
 });
 // claude.com tutorials: scoped translation + reading aid + an on-page language
@@ -186,25 +193,38 @@ const _CAPS_CLAUDE_TUTORIALS = Object.freeze({
   keyboardShortcuts: false,
   readingAid: true,
   examDetection: false,
+  localizedHost: false,
   youtubeSubtitles: false,
 });
 
-// academy.claude.com: translation + reading aid, and exam detection ON — but
-// served by the Academy adapter's ARIA signals, not the Skilljar selectors,
-// which match nothing here. `bridge` stays false until the tutor's exam-safe
-// switching is verified against this DOM; shipping the tutor before that
-// would put it on assessment pages with no working guard.
+// academy.claude.com: translation + reading aid, exam detection ON — served by
+// the Academy adapter's ARIA signals, not the Skilljar selectors, which match
+// nothing here — and the AI Tutor.
+//
+// `bridge` was held at false until the exam-safe switch was verified against
+// this DOM, because shipping the tutor onto assessment pages with no working
+// guard is the one failure this whole host must not have. It is on now:
+// tests/e2e/academy-lifecycle.spec.js walks lesson → quiz → lesson → quiz
+// through the real route controller and observer, tests/e2e/academy-tutor.spec.js
+// proves the guard reaches the model prompt and the answer choices do not, and
+// the background's transport boundary names this host in one place that both
+// port checks read.
+//
+// `trusted` stays FALSE, and that is not an oversight. It is the Skilljar
+// full-feature profile flag — header injection, the global keyboard listener,
+// the Skilljar selector set — none of which apply to a different application.
 const _CAPS_CLAUDE_ACADEMY = Object.freeze({
   platform: PLATFORM_IDS.CLAUDE_ACADEMY,
   trusted: false,
   contentScope: null,
   sidebar: true,
   fab: true,
-  bridge: false,
+  bridge: globalThis.__SKILLBRIDGE_AI_GATEWAY_ENABLED__ === true,
   headerControls: false,
   keyboardShortcuts: false,
   readingAid: true,
   examDetection: true,
+  localizedHost: true,
   youtubeSubtitles: false,
 });
 
@@ -321,6 +341,24 @@ const _AI_KEYWORDS = Object.freeze([
 // counted via `includes`. These get word-boundary checks below.
 const _SHORT_KEYWORDS = Object.freeze(new Set(['mcp', 'llm', 'rag']));
 
+/**
+ * Anthropic's own course hosts, which skip the keyword gate entirely.
+ *
+ * The gate exists to keep the extension off NON-AI Skilljar tenants — the
+ * Calendly and Atlassian academies that share `*.skilljar.com` with us. It was
+ * never meant to adjudicate Anthropic's own course platform, and running it there
+ * produces a worse failure than the one it prevents: a keyword count over
+ * title + h1 + breadcrumb + 500 chars of body is thin on an assessment page,
+ * whose visible copy is a question and four distractors. An Academy quiz can
+ * therefore score below the threshold while the lesson before it scored above,
+ * and the extension would work through a course and then go silent on exactly
+ * the page where its exam-safe behaviour matters most.
+ *
+ * academy.claude.com is Anthropic's course platform and the successor to the
+ * Skilljar tenant, so it belongs on the same footing as the tenant it replaces.
+ */
+const _FIRST_PARTY_COURSE_HOSTS = Object.freeze(new Set(['anthropic.skilljar.com', 'academy.claude.com']));
+
 const _AI_KEYWORD_THRESHOLD = 2;
 const _AI_INSPECT_BODY_CHARS = 500;
 // Sentinel for the anthropic-host fast path. Finite (not Infinity) so
@@ -370,13 +408,13 @@ function detectAITrainingContent(doc, loc) {
   loc = loc || (typeof location !== 'undefined' ? location : null);
   if (!doc || !loc) return { isAI: false, reason: 'no-document', hits: 0 };
 
-  // Fast path: anthropic.skilljar.com always qualifies — preserves
+  // Fast path: Anthropic's own course hosts always qualify — preserves
   // the v3.5.33 behavior verbatim for the primary audience.
   // Strip a trailing dot (FQDN form, occasionally emitted by intermediate
   // proxies) and a leading `www.` so common host variants don't drop to
   // the slow path. Browser-set `location.hostname` is already lowercased.
   const host = (loc.hostname || '').replace(/\.$/, '').replace(/^www\./, '');
-  if (host === 'anthropic.skilljar.com') {
+  if (_FIRST_PARTY_COURSE_HOSTS.has(host)) {
     return { isAI: true, reason: 'anthropic-host', hits: _FAST_PATH_HITS };
   }
 
@@ -423,6 +461,7 @@ if (typeof globalThis !== 'undefined' && typeof globalThis.module !== 'undefined
     PLATFORM_IDS,
     _AI_KEYWORDS,
     _SHORT_KEYWORDS,
+    _FIRST_PARTY_COURSE_HOSTS,
     _AI_KEYWORD_THRESHOLD,
     _AI_INSPECT_BODY_CHARS,
     _FAST_PATH_HITS,

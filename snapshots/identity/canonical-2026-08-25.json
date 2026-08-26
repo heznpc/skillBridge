@@ -2263,7 +2263,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287726",
               "path": "/claude-with-the-anthropic-api/287726",
               "order": 3
@@ -2285,7 +2285,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "296766",
               "path": "/claude-with-the-anthropic-api/296766",
               "order": 4
@@ -2307,7 +2307,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287725",
               "path": "/claude-with-the-anthropic-api/287725",
               "order": 5
@@ -2329,7 +2329,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287735",
               "path": "/claude-with-the-anthropic-api/287735",
               "order": 6
@@ -2351,7 +2351,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287733",
               "path": "/claude-with-the-anthropic-api/287733",
               "order": 8
@@ -2373,7 +2373,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287728",
               "path": "/claude-with-the-anthropic-api/287728",
               "order": 10
@@ -2395,7 +2395,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287734",
               "path": "/claude-with-the-anthropic-api/287734",
               "order": 12
@@ -2417,7 +2417,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287732",
               "path": "/claude-with-the-anthropic-api/287732",
               "order": 13
@@ -2439,7 +2439,7 @@
           "kind": "quiz",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "289117",
               "path": "/claude-with-the-anthropic-api/289117",
               "order": 15
@@ -2461,7 +2461,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287731",
               "path": "/claude-with-the-anthropic-api/287731",
               "order": 16
@@ -2483,7 +2483,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287736",
               "path": "/claude-with-the-anthropic-api/287736",
               "order": 17
@@ -2505,7 +2505,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287739",
               "path": "/claude-with-the-anthropic-api/287739",
               "order": 18
@@ -2527,7 +2527,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287743",
               "path": "/claude-with-the-anthropic-api/287743",
               "order": 19
@@ -2549,7 +2549,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287742",
               "path": "/claude-with-the-anthropic-api/287742",
               "order": 20
@@ -2571,7 +2571,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287737",
               "path": "/claude-with-the-anthropic-api/287737",
               "order": 21
@@ -2593,7 +2593,7 @@
           "kind": "quiz",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "289118",
               "path": "/claude-with-the-anthropic-api/289118",
               "order": 23
@@ -2615,7 +2615,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287745",
               "path": "/claude-with-the-anthropic-api/287745",
               "order": 24
@@ -2637,7 +2637,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287744",
               "path": "/claude-with-the-anthropic-api/287744",
               "order": 25
@@ -2659,7 +2659,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287740",
               "path": "/claude-with-the-anthropic-api/287740",
               "order": 26
@@ -2681,7 +2681,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287741",
               "path": "/claude-with-the-anthropic-api/287741",
               "order": 27
@@ -2703,7 +2703,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287746",
               "path": "/claude-with-the-anthropic-api/287746",
               "order": 28
@@ -2725,7 +2725,7 @@
           "kind": "quiz",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "289121",
               "path": "/claude-with-the-anthropic-api/289121",
               "order": 30
@@ -2747,7 +2747,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287747",
               "path": "/claude-with-the-anthropic-api/287747",
               "order": 31
@@ -2769,7 +2769,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287751",
               "path": "/claude-with-the-anthropic-api/287751",
               "order": 32
@@ -2791,7 +2791,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287756",
               "path": "/claude-with-the-anthropic-api/287756",
               "order": 33
@@ -2813,7 +2813,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287753",
               "path": "/claude-with-the-anthropic-api/287753",
               "order": 34
@@ -2835,7 +2835,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287757",
               "path": "/claude-with-the-anthropic-api/287757",
               "order": 35
@@ -2857,7 +2857,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287752",
               "path": "/claude-with-the-anthropic-api/287752",
               "order": 36
@@ -2879,7 +2879,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287750",
               "path": "/claude-with-the-anthropic-api/287750",
               "order": 37
@@ -2901,7 +2901,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287758",
               "path": "/claude-with-the-anthropic-api/287758",
               "order": 38
@@ -2923,7 +2923,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287749",
               "path": "/claude-with-the-anthropic-api/287749",
               "order": 39
@@ -2945,7 +2945,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "313160",
               "path": "/claude-with-the-anthropic-api/313160",
               "order": 40
@@ -2967,7 +2967,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287760",
               "path": "/claude-with-the-anthropic-api/287760",
               "order": 41
@@ -2989,7 +2989,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287755",
               "path": "/claude-with-the-anthropic-api/287755",
               "order": 42
@@ -3011,7 +3011,7 @@
           "kind": "quiz",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "289122",
               "path": "/claude-with-the-anthropic-api/289122",
               "order": 43
@@ -3033,7 +3033,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287763",
               "path": "/claude-with-the-anthropic-api/287763",
               "order": 44
@@ -3055,7 +3055,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287776",
               "path": "/claude-with-the-anthropic-api/287776",
               "order": 45
@@ -3077,7 +3077,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287759",
               "path": "/claude-with-the-anthropic-api/287759",
               "order": 46
@@ -3099,7 +3099,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287764",
               "path": "/claude-with-the-anthropic-api/287764",
               "order": 47
@@ -3121,7 +3121,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287761",
               "path": "/claude-with-the-anthropic-api/287761",
               "order": 48
@@ -3143,7 +3143,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287767",
               "path": "/claude-with-the-anthropic-api/287767",
               "order": 49
@@ -3165,7 +3165,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287766",
               "path": "/claude-with-the-anthropic-api/287766",
               "order": 50
@@ -3187,7 +3187,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287773",
               "path": "/claude-with-the-anthropic-api/287773",
               "order": 51
@@ -3209,7 +3209,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287778",
               "path": "/claude-with-the-anthropic-api/287778",
               "order": 52
@@ -3231,7 +3231,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287768",
               "path": "/claude-with-the-anthropic-api/287768",
               "order": 53
@@ -3253,7 +3253,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287771",
               "path": "/claude-with-the-anthropic-api/287771",
               "order": 54
@@ -3275,7 +3275,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287772",
               "path": "/claude-with-the-anthropic-api/287772",
               "order": 55
@@ -3297,7 +3297,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287770",
               "path": "/claude-with-the-anthropic-api/287770",
               "order": 56
@@ -3319,7 +3319,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287774",
               "path": "/claude-with-the-anthropic-api/287774",
               "order": 57
@@ -3341,7 +3341,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287777",
               "path": "/claude-with-the-anthropic-api/287777",
               "order": 58
@@ -3363,7 +3363,7 @@
           "kind": "quiz",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "289124",
               "path": "/claude-with-the-anthropic-api/289124",
               "order": 59
@@ -3385,7 +3385,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287780",
               "path": "/claude-with-the-anthropic-api/287780",
               "order": 60
@@ -3407,7 +3407,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287775",
               "path": "/claude-with-the-anthropic-api/287775",
               "order": 61
@@ -3429,7 +3429,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287785",
               "path": "/claude-with-the-anthropic-api/287785",
               "order": 62
@@ -3451,7 +3451,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287797",
               "path": "/claude-with-the-anthropic-api/287797",
               "order": 63
@@ -3473,7 +3473,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287781",
               "path": "/claude-with-the-anthropic-api/287781",
               "order": 64
@@ -3495,7 +3495,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287793",
               "path": "/claude-with-the-anthropic-api/287793",
               "order": 65
@@ -3517,7 +3517,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287782",
               "path": "/claude-with-the-anthropic-api/287782",
               "order": 66
@@ -3539,7 +3539,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287783",
               "path": "/claude-with-the-anthropic-api/287783",
               "order": 67
@@ -3561,7 +3561,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287784",
               "path": "/claude-with-the-anthropic-api/287784",
               "order": 68
@@ -3583,7 +3583,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287786",
               "path": "/claude-with-the-anthropic-api/287786",
               "order": 69
@@ -3605,7 +3605,7 @@
           "kind": "quiz",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "289126",
               "path": "/claude-with-the-anthropic-api/289126",
               "order": 71
@@ -3627,7 +3627,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287787",
               "path": "/claude-with-the-anthropic-api/287787",
               "order": 72
@@ -3649,7 +3649,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287788",
               "path": "/claude-with-the-anthropic-api/287788",
               "order": 73
@@ -3671,7 +3671,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287805",
               "path": "/claude-with-the-anthropic-api/287805",
               "order": 74
@@ -3693,7 +3693,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287792",
               "path": "/claude-with-the-anthropic-api/287792",
               "order": 75
@@ -3715,7 +3715,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287796",
               "path": "/claude-with-the-anthropic-api/287796",
               "order": 76
@@ -3737,7 +3737,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287804",
               "path": "/claude-with-the-anthropic-api/287804",
               "order": 77
@@ -3759,7 +3759,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287800",
               "path": "/claude-with-the-anthropic-api/287800",
               "order": 78
@@ -3781,7 +3781,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287801",
               "path": "/claude-with-the-anthropic-api/287801",
               "order": 79
@@ -3803,7 +3803,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287803",
               "path": "/claude-with-the-anthropic-api/287803",
               "order": 80
@@ -3825,7 +3825,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287798",
               "path": "/claude-with-the-anthropic-api/287798",
               "order": 81
@@ -3847,7 +3847,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287794",
               "path": "/claude-with-the-anthropic-api/287794",
               "order": 82
@@ -3869,7 +3869,7 @@
           "kind": "quiz",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "289130",
               "path": "/claude-with-the-anthropic-api/289130",
               "order": 83
@@ -3891,7 +3891,7 @@
           "kind": "assessment",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "290899",
               "path": "/claude-with-the-anthropic-api/290899",
               "order": 84
@@ -3929,7 +3929,7 @@
           "kind": "modular",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287818",
               "path": "/claude-with-the-anthropic-api/287818",
               "order": 1
@@ -3945,7 +3945,7 @@
           "kind": "video",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287722",
               "path": "/claude-with-the-anthropic-api/287722",
               "order": 2
@@ -3961,7 +3961,7 @@
           "kind": "video",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287727",
               "path": "/claude-with-the-anthropic-api/287727",
               "order": 7
@@ -3977,7 +3977,7 @@
           "kind": "video",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287724",
               "path": "/claude-with-the-anthropic-api/287724",
               "order": 9
@@ -3993,7 +3993,7 @@
           "kind": "quiz",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "297284",
               "path": "/claude-with-the-anthropic-api/297284",
               "order": 11
@@ -4009,7 +4009,7 @@
           "kind": "video",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287729",
               "path": "/claude-with-the-anthropic-api/287729",
               "order": 14
@@ -4025,7 +4025,7 @@
           "kind": "video",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287738",
               "path": "/claude-with-the-anthropic-api/287738",
               "order": 22
@@ -4041,7 +4041,7 @@
           "kind": "video",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287748",
               "path": "/claude-with-the-anthropic-api/287748",
               "order": 29
@@ -4057,7 +4057,7 @@
           "kind": "video",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287790",
               "path": "/claude-with-the-anthropic-api/287790",
               "order": 70
@@ -4073,7 +4073,7 @@
           "kind": "video",
           "aliases": {
             "skilljar": {
-              "course": "building-with-the-claude-api",
+              "course": "claude-with-the-anthropic-api",
               "numericId": "287802",
               "path": "/claude-with-the-anthropic-api/287802",
               "order": 85
@@ -5350,7 +5350,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "303332",
               "path": "/claude-in-amazon-bedrock/303332",
               "order": 2
@@ -5372,7 +5372,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276716",
               "path": "/claude-in-amazon-bedrock/276716",
               "order": 3
@@ -5394,7 +5394,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276719",
               "path": "/claude-in-amazon-bedrock/276719",
               "order": 4
@@ -5416,7 +5416,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276722",
               "path": "/claude-in-amazon-bedrock/276722",
               "order": 5
@@ -5438,7 +5438,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276726",
               "path": "/claude-in-amazon-bedrock/276726",
               "order": 7
@@ -5460,7 +5460,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276720",
               "path": "/claude-in-amazon-bedrock/276720",
               "order": 9
@@ -5482,7 +5482,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276721",
               "path": "/claude-in-amazon-bedrock/276721",
               "order": 10
@@ -5504,7 +5504,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276723",
               "path": "/claude-in-amazon-bedrock/276723",
               "order": 11
@@ -5526,7 +5526,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276724",
               "path": "/claude-in-amazon-bedrock/276724",
               "order": 12
@@ -5548,7 +5548,7 @@
           "kind": "quiz",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "289293",
               "path": "/claude-in-amazon-bedrock/289293",
               "order": 14
@@ -5570,7 +5570,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276731",
               "path": "/claude-in-amazon-bedrock/276731",
               "order": 15
@@ -5592,7 +5592,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276732",
               "path": "/claude-in-amazon-bedrock/276732",
               "order": 16
@@ -5614,7 +5614,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276733",
               "path": "/claude-in-amazon-bedrock/276733",
               "order": 17
@@ -5636,7 +5636,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276736",
               "path": "/claude-in-amazon-bedrock/276736",
               "order": 18
@@ -5658,7 +5658,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276738",
               "path": "/claude-in-amazon-bedrock/276738",
               "order": 19
@@ -5680,7 +5680,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276735",
               "path": "/claude-in-amazon-bedrock/276735",
               "order": 20
@@ -5702,7 +5702,7 @@
           "kind": "quiz",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "289297",
               "path": "/claude-in-amazon-bedrock/289297",
               "order": 22
@@ -5724,7 +5724,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276749",
               "path": "/claude-in-amazon-bedrock/276749",
               "order": 23
@@ -5746,7 +5746,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276743",
               "path": "/claude-in-amazon-bedrock/276743",
               "order": 24
@@ -5768,7 +5768,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276745",
               "path": "/claude-in-amazon-bedrock/276745",
               "order": 25
@@ -5790,7 +5790,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276744",
               "path": "/claude-in-amazon-bedrock/276744",
               "order": 26
@@ -5812,7 +5812,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276747",
               "path": "/claude-in-amazon-bedrock/276747",
               "order": 27
@@ -5834,7 +5834,7 @@
           "kind": "quiz",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "289298",
               "path": "/claude-in-amazon-bedrock/289298",
               "order": 29
@@ -5856,7 +5856,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276756",
               "path": "/claude-in-amazon-bedrock/276756",
               "order": 30
@@ -5878,7 +5878,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276757",
               "path": "/claude-in-amazon-bedrock/276757",
               "order": 31
@@ -5900,7 +5900,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276758",
               "path": "/claude-in-amazon-bedrock/276758",
               "order": 32
@@ -5922,7 +5922,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276764",
               "path": "/claude-in-amazon-bedrock/276764",
               "order": 33
@@ -5944,7 +5944,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276762",
               "path": "/claude-in-amazon-bedrock/276762",
               "order": 34
@@ -5966,7 +5966,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276760",
               "path": "/claude-in-amazon-bedrock/276760",
               "order": 35
@@ -5988,7 +5988,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276759",
               "path": "/claude-in-amazon-bedrock/276759",
               "order": 36
@@ -6010,7 +6010,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276761",
               "path": "/claude-in-amazon-bedrock/276761",
               "order": 37
@@ -6032,7 +6032,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276766",
               "path": "/claude-in-amazon-bedrock/276766",
               "order": 38
@@ -6054,7 +6054,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276765",
               "path": "/claude-in-amazon-bedrock/276765",
               "order": 39
@@ -6076,7 +6076,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276763",
               "path": "/claude-in-amazon-bedrock/276763",
               "order": 40
@@ -6098,7 +6098,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276767",
               "path": "/claude-in-amazon-bedrock/276767",
               "order": 41
@@ -6120,7 +6120,7 @@
           "kind": "quiz",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "289296",
               "path": "/claude-in-amazon-bedrock/289296",
               "order": 42
@@ -6142,7 +6142,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276780",
               "path": "/claude-in-amazon-bedrock/276780",
               "order": 43
@@ -6164,7 +6164,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276782",
               "path": "/claude-in-amazon-bedrock/276782",
               "order": 44
@@ -6186,7 +6186,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276777",
               "path": "/claude-in-amazon-bedrock/276777",
               "order": 45
@@ -6208,7 +6208,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276774",
               "path": "/claude-in-amazon-bedrock/276774",
               "order": 46
@@ -6230,7 +6230,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276781",
               "path": "/claude-in-amazon-bedrock/276781",
               "order": 47
@@ -6252,7 +6252,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276776",
               "path": "/claude-in-amazon-bedrock/276776",
               "order": 48
@@ -6274,7 +6274,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276779",
               "path": "/claude-in-amazon-bedrock/276779",
               "order": 49
@@ -6296,7 +6296,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276775",
               "path": "/claude-in-amazon-bedrock/276775",
               "order": 50
@@ -6318,7 +6318,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276778",
               "path": "/claude-in-amazon-bedrock/276778",
               "order": 51
@@ -6340,7 +6340,7 @@
           "kind": "quiz",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "289295",
               "path": "/claude-in-amazon-bedrock/289295",
               "order": 52
@@ -6362,7 +6362,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276788",
               "path": "/claude-in-amazon-bedrock/276788",
               "order": 53
@@ -6384,7 +6384,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276789",
               "path": "/claude-in-amazon-bedrock/276789",
               "order": 54
@@ -6406,7 +6406,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "308839",
               "path": "/claude-in-amazon-bedrock/308839",
               "order": 55
@@ -6428,7 +6428,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "308840",
               "path": "/claude-in-amazon-bedrock/308840",
               "order": 56
@@ -6450,7 +6450,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276786",
               "path": "/claude-in-amazon-bedrock/276786",
               "order": 57
@@ -6472,7 +6472,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276785",
               "path": "/claude-in-amazon-bedrock/276785",
               "order": 58
@@ -6494,7 +6494,7 @@
           "kind": "quiz",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "289300",
               "path": "/claude-in-amazon-bedrock/289300",
               "order": 60
@@ -6516,7 +6516,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276798",
               "path": "/claude-in-amazon-bedrock/276798",
               "order": 61
@@ -6538,7 +6538,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276793",
               "path": "/claude-in-amazon-bedrock/276793",
               "order": 62
@@ -6560,7 +6560,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276792",
               "path": "/claude-in-amazon-bedrock/276792",
               "order": 63
@@ -6582,7 +6582,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276800",
               "path": "/claude-in-amazon-bedrock/276800",
               "order": 64
@@ -6604,7 +6604,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276796",
               "path": "/claude-in-amazon-bedrock/276796",
               "order": 65
@@ -6626,7 +6626,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276802",
               "path": "/claude-in-amazon-bedrock/276802",
               "order": 66
@@ -6648,7 +6648,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276799",
               "path": "/claude-in-amazon-bedrock/276799",
               "order": 67
@@ -6670,7 +6670,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276797",
               "path": "/claude-in-amazon-bedrock/276797",
               "order": 68
@@ -6692,7 +6692,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276801",
               "path": "/claude-in-amazon-bedrock/276801",
               "order": 69
@@ -6714,7 +6714,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276795",
               "path": "/claude-in-amazon-bedrock/276795",
               "order": 70
@@ -6736,7 +6736,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276794",
               "path": "/claude-in-amazon-bedrock/276794",
               "order": 71
@@ -6758,7 +6758,7 @@
           "kind": "quiz",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "289299",
               "path": "/claude-in-amazon-bedrock/289299",
               "order": 72
@@ -6780,7 +6780,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276811",
               "path": "/claude-in-amazon-bedrock/276811",
               "order": 75
@@ -6802,7 +6802,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276806",
               "path": "/claude-in-amazon-bedrock/276806",
               "order": 76
@@ -6824,7 +6824,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276810",
               "path": "/claude-in-amazon-bedrock/276810",
               "order": 77
@@ -6846,7 +6846,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276812",
               "path": "/claude-in-amazon-bedrock/276812",
               "order": 78
@@ -6868,7 +6868,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276807",
               "path": "/claude-in-amazon-bedrock/276807",
               "order": 79
@@ -6890,7 +6890,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276805",
               "path": "/claude-in-amazon-bedrock/276805",
               "order": 80
@@ -6912,7 +6912,7 @@
           "kind": "lesson",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276808",
               "path": "/claude-in-amazon-bedrock/276808",
               "order": 81
@@ -6934,7 +6934,7 @@
           "kind": "assessment",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "290881",
               "path": "/claude-in-amazon-bedrock/290881",
               "order": 82
@@ -6972,7 +6972,7 @@
           "kind": "modular",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "241929",
               "path": "/claude-in-amazon-bedrock/241929",
               "order": 1
@@ -6988,7 +6988,7 @@
           "kind": "video",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276725",
               "path": "/claude-in-amazon-bedrock/276725",
               "order": 6
@@ -7004,7 +7004,7 @@
           "kind": "video",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276717",
               "path": "/claude-in-amazon-bedrock/276717",
               "order": 8
@@ -7020,7 +7020,7 @@
           "kind": "video",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276718",
               "path": "/claude-in-amazon-bedrock/276718",
               "order": 13
@@ -7036,7 +7036,7 @@
           "kind": "video",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276734",
               "path": "/claude-in-amazon-bedrock/276734",
               "order": 21
@@ -7052,7 +7052,7 @@
           "kind": "video",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276746",
               "path": "/claude-in-amazon-bedrock/276746",
               "order": 28
@@ -7068,7 +7068,7 @@
           "kind": "video",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276787",
               "path": "/claude-in-amazon-bedrock/276787",
               "order": 59
@@ -7084,7 +7084,7 @@
           "kind": "video",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276804",
               "path": "/claude-in-amazon-bedrock/276804",
               "order": 73
@@ -7100,7 +7100,7 @@
           "kind": "video",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276809",
               "path": "/claude-in-amazon-bedrock/276809",
               "order": 74
@@ -7116,7 +7116,7 @@
           "kind": "modular",
           "aliases": {
             "skilljar": {
-              "course": "claude-with-amazon-bedrock",
+              "course": "claude-in-amazon-bedrock",
               "numericId": "276827",
               "path": "/claude-in-amazon-bedrock/276827",
               "order": 83

@@ -460,21 +460,57 @@ function _sameCloudDocument(first, second) {
   return !!firstKey && firstKey === _cloudDocumentKey(second);
 }
 
-function _isPuterBrokerPort(port) {
-  if (
-    port?.sender?.id !== chrome.runtime.id ||
-    port?.sender?.frameId !== 0 ||
-    !Number.isInteger(port?.sender?.tab?.id) ||
-    !_isActiveCloudDocument(port) ||
-    !_cloudDocumentKey(port)
-  ) {
-    return false;
-  }
+// ────────────────────────────────────────────────────────────────────
+// Tutor transport trust boundary
+//
+// The hosts whose pages may speak to the Puter broker, and the ONE place the
+// rule lives. It used to be written out twice — once for the broker port, once
+// for the client port — with the host literal inline in both. Two copies of a
+// security boundary is one copy that gets updated, and the failure mode is not
+// a broken build: the tutor simply refuses to connect on the host somebody
+// forgot, or worse, accepts one somebody added to only the permissive half.
+//
+// academy.claude.com is here because it is Anthropic's own course platform and
+// the successor to the Skilljar tenant, and the manifest ships the broker
+// content script for it. Both halves of the boundary read this set, so a host
+// is either trusted for the whole transport or for none of it.
+// ────────────────────────────────────────────────────────────────────
+const _TUTOR_TRUSTED_HOSTS = new Set(['anthropic.skilljar.com', 'academy.claude.com']);
+
+// Host is not enough for Academy.
+//
+// The origin also serves the learner's account: /profile, /settings, the
+// catalog, the sign-in return. None of those is a lesson, none of them needs a
+// tutor, and all of them are places where a page-level compromise would be
+// most valuable to an attacker. The transport is therefore scoped to course
+// unit routes, which are the only pages the tutor has anything to say about.
+//
+// Skilljar keeps host-only matching: its tenant root is the course catalog and
+// its lesson paths are `/{course}/{numericId}` with no shared prefix to anchor
+// to, so narrowing it here would be a guess rather than a boundary.
+const _ACADEMY_TUTOR_PATH = /^\/(?:[a-z]{2}(?:-[A-Za-z]{2,4})?\/)?courses\/[^/]+\/[^/]+\/?$/;
+
+/** True when an Academy URL names a course unit rather than an account page. */
+function _isAcademyTutorPath(pathname) {
+  return _ACADEMY_TUTOR_PATH.test(String(pathname || ''));
+}
+
+/**
+ * True when `rawUrl` names a page allowed to carry the Tutor transport.
+ *
+ * The localhost branch cannot fire in a released build: it requires the PORTED
+ * localhost patterns in `host_permissions`, and the shipped manifest declares
+ * only the portless form, and only under `optional_host_permissions`, which
+ * `getManifest()` does not report. The E2E harness adds the ported patterns to
+ * a throwaway manifest copy so the real broker can run against a fixture.
+ */
+function _isTrustedTutorOrigin(rawUrl) {
   try {
-    const url = new URL(port.sender.url || '');
-    if (url.protocol === 'https:' && url.hostname === 'anthropic.skilljar.com') return true;
-    // Production never grants these patterns. The E2E harness adds them only
-    // to a temporary manifest so the actual broker can run against localhost.
+    const url = new URL(rawUrl || '');
+    if (url.protocol === 'https:' && _TUTOR_TRUSTED_HOSTS.has(url.hostname)) {
+      if (url.hostname === 'academy.claude.com') return _isAcademyTutorPath(url.pathname);
+      return true;
+    }
     const testHosts = chrome.runtime.getManifest().host_permissions || [];
     return (
       url.protocol === 'http:' &&
@@ -486,30 +522,27 @@ function _isPuterBrokerPort(port) {
   }
 }
 
+/** Every structural requirement a Tutor port must meet, whichever end it is. */
+function _isTutorPortShape(port) {
+  return (
+    port?.sender?.id === chrome.runtime.id &&
+    port?.sender?.frameId === 0 &&
+    Number.isInteger(port?.sender?.tab?.id) &&
+    _isActiveCloudDocument(port) &&
+    !!_cloudDocumentKey(port)
+  );
+}
+
+function _isPuterBrokerPort(port) {
+  if (!_isTutorPortShape(port)) return false;
+  // The broker's own document URL only. A broker never speaks for a tab it is
+  // not running in, so unlike the client below there is no tab-URL fallback.
+  return _isTrustedTutorOrigin(port.sender.url || '');
+}
+
 function _isAllowedCloudClient(port) {
-  if (
-    port?.sender?.id !== chrome.runtime.id ||
-    port?.sender?.frameId !== 0 ||
-    !Number.isInteger(port?.sender?.tab?.id) ||
-    !_isActiveCloudDocument(port) ||
-    !_cloudDocumentKey(port)
-  ) {
-    return false;
-  }
-  try {
-    const url = new URL(port.sender.url || port.sender.tab.url || '');
-    if (url.protocol === 'https:' && url.hostname === 'anthropic.skilljar.com') return true;
-    // Production never grants this pattern. The E2E helper adds it only to
-    // its temporary manifest so the real broker can run against localhost.
-    const testHosts = chrome.runtime.getManifest().host_permissions || [];
-    return (
-      url.protocol === 'http:' &&
-      (url.hostname === 'localhost' || url.hostname === '127.0.0.1') &&
-      testHosts.some((pattern) => pattern === 'http://localhost:*/*' || pattern === 'http://127.0.0.1:*/*')
-    );
-  } catch (_e) {
-    return false;
-  }
+  if (!_isTutorPortShape(port)) return false;
+  return _isTrustedTutorOrigin(port.sender.url || port.sender.tab.url || '');
 }
 
 function _failCloudTabActive(tabId, brokerPort, error) {

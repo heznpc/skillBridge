@@ -156,7 +156,13 @@
   // delegates to its own adapter.
   function detectExamPage() {
     const academy = window._sbAcademy;
-    if (sb.hostCaps?.platform === PLATFORM_IDS_ACADEMY && academy) {
+    if (sb.hostCaps?.platform === PLATFORM_IDS_ACADEMY) {
+      // Fail closed. Falling through to the Skilljar checks would not be a
+      // degraded answer on this DOM — reconnaissance measured it at zero
+      // assessments detected, so it is a confident WRONG answer, and the cost
+      // of that is exam content reaching a translator and a tutor. Treating
+      // every page as an assessment costs an untranslated lesson instead.
+      if (!academy) return true;
       return academy.detectAcademyAssessment(document, location).isAssessment;
     }
     const url = location.href;
@@ -176,7 +182,8 @@
    */
   function routeIsExamPage(loc) {
     const academy = window._sbAcademy;
-    if (sb.hostCaps?.platform === PLATFORM_IDS_ACADEMY && academy) {
+    if (sb.hostCaps?.platform === PLATFORM_IDS_ACADEMY) {
+      if (!academy) return true;
       return academy.ACADEMY_ASSESSMENT_PATH_PATTERNS.some((p) => p.test(`${loc.pathname}${loc.search || ''}`));
     }
     return EXAM_URL_PATTERNS.some((p) => p.test(loc.href || ''));
@@ -194,6 +201,13 @@
    * in those options left `sb.onExamDomSettled` undefined and the observer's
    * re-detect threw instead of running.
    */
+  // Locale is re-read on the same signal as exam state, for the same reason:
+  // the settled DOM is the first moment the new page can be asked anything.
+  function onDomSettled() {
+    sb.localization?.onDomSettled?.(document, location);
+    return onExamDomSettled();
+  }
+
   function onExamDomSettled() {
     if (!sb.hostCaps.examDetection) {
       isExamPage = assessmentLifecycle.override(false);
@@ -210,6 +224,9 @@
   // absent. A missing dependency here used to take the whole content script
   // down at load — every feature, not just exam safety — so this degrades to
   // the old inline behaviour instead of throwing.
+  // If the lifecycle script is missing the shim below takes over. On Academy
+  // its detectors already fail closed (see detectExamPage), so the degraded
+  // path protects rather than exposes.
   const assessmentLifecycle = window._sbAssessmentLifecycle?.createAssessmentLifecycle
     ? window._sbAssessmentLifecycle.createAssessmentLifecycle({
         routeIsAssessment: (loc) => routeIsExamPage(loc),
@@ -227,6 +244,7 @@
   const moduleRegistry = new Map();
   const REQUIRED_CONTENT_MODULES = [
     'gt-queue',
+    'refine-queue',
     'banners',
     'code-comments',
     'header-controls',
@@ -240,6 +258,8 @@
     'chat-subpanels',
     'chat-history',
     'chat-flashcards',
+    'byoa',
+    'lesson-store',
     'bookmarks',
     'resume',
     'dashboard',
@@ -449,7 +469,7 @@
     getExcludeSelector: () => EXCLUDE_SELECTOR,
     getTranslationScope: () => sb.translationScope,
     getHostCaps: () => sb.hostCaps,
-    onExamDomSettled: () => onExamDomSettled(),
+    onExamDomSettled: () => onDomSettled(),
     processOneElement: (el, lang) => sb._gt.processOneElement(el, lang),
     queueForGoogleTranslate: (elements, lang) => sb._gt.queueForGoogleTranslate(elements, lang),
     delays: SKILLBRIDGE_DELAYS,
@@ -477,6 +497,7 @@
       if (stored.darkMode) document.documentElement.classList.add('si18n-dark');
       commentTranslateEnabled = !!stored.commentTranslate;
       currentLang = stored.targetLanguage || 'en';
+      sb.localization.setTarget(currentLang);
       isExamPage = sb.hostCaps.examDetection
         ? assessmentLifecycle.init(document, location)
         : assessmentLifecycle.override(false);
@@ -657,6 +678,9 @@
 
     if (!opts.skipRestore) restoreOriginal();
     currentLang = newLang;
+    // Re-resolve before any dictionary or GT work: on a localized site the
+    // answer to "may we translate at all" changes with the target.
+    sb.localization.setTarget(newLang);
 
     try {
       if (newLang === 'en') {
@@ -759,7 +783,12 @@
     // gt-queue keeps such blocks on the structure-preserving AI path; this
     // guard is the last line of defense if one slips through (cache replay,
     // future routing regressions).
-    const INTERACTIVE = 'a, button, summary, [role="button"], [role="link"]';
+    // The selector is src/lib/interactive.js's — the same one gt-queue routes
+    // on and html-gt's integrity gate protects. It used to be a second literal
+    // written here, agreeing with gt-queue's only because someone typed the
+    // same string twice, and disagreeing with html-gt's outright.
+    const INTERACTIVE =
+      window._sbInteractive?.INTERACTIVE_SELECTOR || 'a, button, summary, [role="button"], [role="link"]';
     if (toBlank.some((node) => node.parentElement?.closest(INTERACTIVE))) return false;
     if (toBlank.length > 0 && target.parentElement?.closest(INTERACTIVE)) return false;
 
@@ -867,9 +896,56 @@
     keyboardShortcuts: true,
     readingAid: true,
     examDetection: true,
+    localizedHost: false,
     youtubeSubtitles: true,
   };
   sb.translationScope = sb.hostCaps.contentScope;
+
+  // ============================================================
+  // TRANSLATION POLICY FOR AN ALREADY-LOCALIZED SITE
+  // ============================================================
+  //
+  // Constructed HERE, at module scope, and deliberately before init(): it
+  // captures the page's own locale, and updateLangClass() later rewrites
+  // <html lang> to the SkillBridge target. Read after that point, every page
+  // would look like it was already in the target language.
+  //
+  // On hosts that do not ship their own locales the policy resolves to FULL
+  // and nothing downstream changes — see academy-localization.js.
+  sb.localization = window._sbAcademyLocalization?.createLocalizationPolicy
+    ? window._sbAcademyLocalization.createLocalizationPolicy({
+        localizedHost: sb.hostCaps.localizedHost === true,
+        doc: document,
+        loc: location,
+        onChange: (state) => {
+          if (state.mayTranslate) return;
+          // Picking a language and watching nothing happen is the failure this
+          // announces. The banner names the reason; the alternative is silent
+          // inaction the learner reads as a broken extension.
+          document.dispatchEvent(
+            new CustomEvent('skillbridge:localizationblocked', { detail: { reason: state.reason } }),
+          );
+        },
+      })
+    : {
+        // Degraded shim, matching the assessmentLifecycle fallback: a missing
+        // lib file must not take translation down on hosts that never needed
+        // a policy in the first place.
+        // On a localized host a missing policy module means we cannot tell
+        // official copy from residue, so nothing may be sent — the same
+        // fail-closed rule the policy itself applies when evidence is absent.
+        // Elsewhere there was never a policy to lose.
+        observedLocale: () => (sb.hostCaps.localizedHost === true ? '' : 'en'),
+        resolved: () =>
+          sb.hostCaps.localizedHost === true
+            ? { policy: 'fail-closed', reason: 'policy-module-missing', mayTranslate: false }
+            : { policy: 'full', reason: 'policy-module-missing', mayTranslate: true },
+        mayTranslate: () => sb.hostCaps.localizedHost !== true,
+        mayTranslateText: (looksEnglish) => sb.hostCaps.localizedHost !== true && !!looksEnglish,
+        setTarget: () => {},
+        onRouteChange: () => {},
+        onDomSettled: () => {},
+      };
 
   const routeController = window._sbContentLifecycle.createRouteController({
     getHref: () => location.href,
@@ -898,6 +974,10 @@
       isExamPage = assessmentLifecycle.onRouteChange(location);
     },
     onExamDomSettled,
+    redetectPageLocale: () => sb.localization.onRouteChange(location),
+    // The settled DOM is what the language control can be read from; the route
+    // change only marks the locale unresolved.
+    onLocaleDomSettled: () => sb.localization.onDomSettled?.(document, location),
     reapplyTranslations: () => {
       if (currentLang !== 'en' && translator && isReady) {
         setTimeout(() => sb._gt.applyStaticTranslations(currentLang), SKILLBRIDGE_DELAYS.LATE_CONTENT);

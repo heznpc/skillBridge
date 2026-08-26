@@ -24,9 +24,11 @@
   const _caps = (window._sb && window._sb.hostCaps) || null;
   if (_caps && _caps.readingAid === false) return;
 
-  // A Skilljar lesson page is a course slug + numeric lesson id (e.g.
-  // /claude-101/383389). On scoped hosts (claude.com tutorials) the lesson is
-  // identified by the presence of its content root instead.
+  // Fallback shape only: a Skilljar lesson page is a course slug + numeric
+  // lesson id (e.g. /claude-101/383389). Academy and Skilljar are both
+  // recognised properly by lesson-identity.js — see isLessonPage below. On
+  // scoped hosts (claude.com tutorials) the lesson is identified by the
+  // presence of its content root instead.
   const LESSON_PATH = /\/[^/]+\/\d+/;
   const _scope = _caps && _caps.contentScope;
 
@@ -51,6 +53,14 @@
   function isLessonPage() {
     // Scoped hosts: a lesson is present iff its content root is in the DOM.
     if (_scope) return !!document.querySelector(_scope);
+    // Academy lessons carry no numeric id — `/courses/<course>/<slug>` — so the
+    // Skilljar shape above matches none of them. parseLessonRef knows both
+    // shapes (and strips Academy's locale prefix), and is the same function
+    // that decides record identity, so "is this a lesson" and "which lesson is
+    // it" cannot disagree. The regex stays as the fallback for the case where
+    // the lib script failed to load.
+    const identity = window._sbLessonIdentity;
+    if (identity) return !!identity.parseLessonRef(location);
     return LESSON_PATH.test(location.pathname);
   }
 
