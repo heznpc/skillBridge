@@ -668,17 +668,45 @@
       "skilljar": "claude-code-101/469849",
       "academy": "claude-code-101/course-quiz"
     },
+    "claude-code-in-action/steering-long-sessions": {
+      "skilljar": "claude-code-in-action/486901",
+      "academy": "claude-code-in-action/steering-long-sessions"
+    },
+    "claude-code-in-action/a-claude-md-that-follows": {
+      "skilljar": "claude-code-in-action/486929",
+      "academy": "claude-code-in-action/a-claude-md-that-follows"
+    },
+    "claude-code-in-action/verification-skills": {
+      "skilljar": "claude-code-in-action/486930",
+      "academy": "claude-code-in-action/verification-skills"
+    },
+    "claude-code-in-action/permission-modes": {
+      "skilljar": "claude-code-in-action/486932",
+      "academy": "claude-code-in-action/permission-modes"
+    },
     "claude-code-in-action/hooks": {
       "skilljar": "claude-code-in-action/486933",
       "academy": "claude-code-in-action/hooks"
+    },
+    "claude-code-in-action/routines-and-headless": {
+      "skilljar": "claude-code-in-action/486935",
+      "academy": "claude-code-in-action/routines-and-headless"
     },
     "claude-code-in-action/github-actions-and-code-review": {
       "skilljar": "claude-code-in-action/486936",
       "academy": "claude-code-in-action/github-actions-and-code-review"
     },
+    "claude-code-in-action/trust-it-verifying-unsupervised-runs": {
+      "skilljar": "claude-code-in-action/486938",
+      "academy": "claude-code-in-action/trust-it-verifying-unsupervised-runs"
+    },
     "claude-code-in-action/plugins": {
       "skilljar": "claude-code-in-action/486939",
       "academy": "claude-code-in-action/plugins"
+    },
+    "claude-code-in-action/course-quiz": {
+      "skilljar": "claude-code-in-action/487234",
+      "academy": "claude-code-in-action/course-quiz"
     },
     "claude-platform-101/what-is-the-claude-platform": {
       "skilljar": "claude-platform-101/486250",
@@ -731,6 +759,10 @@
     "claude-platform-101/building-with-claude-code": {
       "skilljar": "claude-platform-101/486266",
       "academy": "claude-platform-101/building-with-claude-code"
+    },
+    "claude-platform-101/claude-platform-101-quiz": {
+      "skilljar": "claude-platform-101/486268",
+      "academy": "claude-platform-101/claude-platform-101-quiz"
     },
     "claude-with-amazon-bedrock/overview-of-claude-models": {
       "skilljar": "claude-in-amazon-bedrock/303332",
@@ -1024,6 +1056,306 @@
       "skilljar": "claude-in-amazon-bedrock/290881",
       "academy": "claude-with-amazon-bedrock/final-assessment-quiz"
     },
+    "claude-with-google-cloud-s-vertex-ai/accessing-the-api": {
+      "skilljar": "claude-with-google-vertex/289151",
+      "academy": "claude-with-google-cloud-s-vertex-ai/accessing-the-api"
+    },
+    "claude-with-google-cloud-s-vertex-ai/vertex-ai-setup": {
+      "skilljar": "claude-with-google-vertex/307525",
+      "academy": "claude-with-google-cloud-s-vertex-ai/vertex-ai-setup"
+    },
+    "claude-with-google-cloud-s-vertex-ai/making-a-request": {
+      "skilljar": "claude-with-google-vertex/289155",
+      "academy": "claude-with-google-cloud-s-vertex-ai/making-a-request"
+    },
+    "claude-with-google-cloud-s-vertex-ai/multi-turn-conversations": {
+      "skilljar": "claude-with-google-vertex/289156",
+      "academy": "claude-with-google-cloud-s-vertex-ai/multi-turn-conversations"
+    },
+    "claude-with-google-cloud-s-vertex-ai/system-prompts": {
+      "skilljar": "claude-with-google-vertex/289153",
+      "academy": "claude-with-google-cloud-s-vertex-ai/system-prompts"
+    },
+    "claude-with-google-cloud-s-vertex-ai/temperature": {
+      "skilljar": "claude-with-google-vertex/289154",
+      "academy": "claude-with-google-cloud-s-vertex-ai/temperature"
+    },
+    "claude-with-google-cloud-s-vertex-ai/response-streaming": {
+      "skilljar": "claude-with-google-vertex/289162",
+      "academy": "claude-with-google-cloud-s-vertex-ai/response-streaming"
+    },
+    "claude-with-google-cloud-s-vertex-ai/controlling-model-output": {
+      "skilljar": "claude-with-google-vertex/289160",
+      "academy": "claude-with-google-cloud-s-vertex-ai/controlling-model-output"
+    },
+    "claude-with-google-cloud-s-vertex-ai/structured-data": {
+      "skilljar": "claude-with-google-vertex/289158",
+      "academy": "claude-with-google-cloud-s-vertex-ai/structured-data"
+    },
+    "claude-with-google-cloud-s-vertex-ai/quiz-on-accessing-claude-with-the-api": {
+      "skilljar": "claude-with-google-vertex/289281",
+      "academy": "claude-with-google-cloud-s-vertex-ai/quiz-on-accessing-claude-with-the-api"
+    },
+    "claude-with-google-cloud-s-vertex-ai/prompt-evaluation": {
+      "skilljar": "claude-with-google-vertex/289159",
+      "academy": "claude-with-google-cloud-s-vertex-ai/prompt-evaluation"
+    },
+    "claude-with-google-cloud-s-vertex-ai/a-typical-eval-workflow": {
+      "skilljar": "claude-with-google-vertex/289161",
+      "academy": "claude-with-google-cloud-s-vertex-ai/a-typical-eval-workflow"
+    },
+    "claude-with-google-cloud-s-vertex-ai/generating-test-datasets": {
+      "skilljar": "claude-with-google-vertex/289163",
+      "academy": "claude-with-google-cloud-s-vertex-ai/generating-test-datasets"
+    },
+    "claude-with-google-cloud-s-vertex-ai/running-the-eval": {
+      "skilljar": "claude-with-google-vertex/289166",
+      "academy": "claude-with-google-cloud-s-vertex-ai/running-the-eval"
+    },
+    "claude-with-google-cloud-s-vertex-ai/model-based-grading": {
+      "skilljar": "claude-with-google-vertex/289168",
+      "academy": "claude-with-google-cloud-s-vertex-ai/model-based-grading"
+    },
+    "claude-with-google-cloud-s-vertex-ai/code-based-grading": {
+      "skilljar": "claude-with-google-vertex/289167",
+      "academy": "claude-with-google-cloud-s-vertex-ai/code-based-grading"
+    },
+    "claude-with-google-cloud-s-vertex-ai/quiz-on-prompt-evaluation": {
+      "skilljar": "claude-with-google-vertex/289279",
+      "academy": "claude-with-google-cloud-s-vertex-ai/quiz-on-prompt-evaluation"
+    },
+    "claude-with-google-cloud-s-vertex-ai/prompt-engineering": {
+      "skilljar": "claude-with-google-vertex/289169",
+      "academy": "claude-with-google-cloud-s-vertex-ai/prompt-engineering"
+    },
+    "claude-with-google-cloud-s-vertex-ai/being-clear-and-direct": {
+      "skilljar": "claude-with-google-vertex/289170",
+      "academy": "claude-with-google-cloud-s-vertex-ai/being-clear-and-direct"
+    },
+    "claude-with-google-cloud-s-vertex-ai/being-specific": {
+      "skilljar": "claude-with-google-vertex/289165",
+      "academy": "claude-with-google-cloud-s-vertex-ai/being-specific"
+    },
+    "claude-with-google-cloud-s-vertex-ai/structure-with-xml-tags": {
+      "skilljar": "claude-with-google-vertex/289171",
+      "academy": "claude-with-google-cloud-s-vertex-ai/structure-with-xml-tags"
+    },
+    "claude-with-google-cloud-s-vertex-ai/providing-examples": {
+      "skilljar": "claude-with-google-vertex/289177",
+      "academy": "claude-with-google-cloud-s-vertex-ai/providing-examples"
+    },
+    "claude-with-google-cloud-s-vertex-ai/quiz-on-prompt-engineering-techniques": {
+      "skilljar": "claude-with-google-vertex/289278",
+      "academy": "claude-with-google-cloud-s-vertex-ai/quiz-on-prompt-engineering-techniques"
+    },
+    "claude-with-google-cloud-s-vertex-ai/introducing-tool-use": {
+      "skilljar": "claude-with-google-vertex/289172",
+      "academy": "claude-with-google-cloud-s-vertex-ai/introducing-tool-use"
+    },
+    "claude-with-google-cloud-s-vertex-ai/project-overview": {
+      "skilljar": "claude-with-google-vertex/289175",
+      "academy": "claude-with-google-cloud-s-vertex-ai/project-overview"
+    },
+    "claude-with-google-cloud-s-vertex-ai/tool-functions": {
+      "skilljar": "claude-with-google-vertex/289176",
+      "academy": "claude-with-google-cloud-s-vertex-ai/tool-functions"
+    },
+    "claude-with-google-cloud-s-vertex-ai/tool-schemas": {
+      "skilljar": "claude-with-google-vertex/289174",
+      "academy": "claude-with-google-cloud-s-vertex-ai/tool-schemas"
+    },
+    "claude-with-google-cloud-s-vertex-ai/handling-message-blocks": {
+      "skilljar": "claude-with-google-vertex/289179",
+      "academy": "claude-with-google-cloud-s-vertex-ai/handling-message-blocks"
+    },
+    "claude-with-google-cloud-s-vertex-ai/sending-tool-results": {
+      "skilljar": "claude-with-google-vertex/289184",
+      "academy": "claude-with-google-cloud-s-vertex-ai/sending-tool-results"
+    },
+    "claude-with-google-cloud-s-vertex-ai/multi-turn-conversations-with-tools": {
+      "skilljar": "claude-with-google-vertex/289178",
+      "academy": "claude-with-google-cloud-s-vertex-ai/multi-turn-conversations-with-tools"
+    },
+    "claude-with-google-cloud-s-vertex-ai/implementing-multiple-turns": {
+      "skilljar": "claude-with-google-vertex/289182",
+      "academy": "claude-with-google-cloud-s-vertex-ai/implementing-multiple-turns"
+    },
+    "claude-with-google-cloud-s-vertex-ai/using-multiple-tools": {
+      "skilljar": "claude-with-google-vertex/289185",
+      "academy": "claude-with-google-cloud-s-vertex-ai/using-multiple-tools"
+    },
+    "claude-with-google-cloud-s-vertex-ai/the-batch-tool": {
+      "skilljar": "claude-with-google-vertex/289189",
+      "academy": "claude-with-google-cloud-s-vertex-ai/the-batch-tool"
+    },
+    "claude-with-google-cloud-s-vertex-ai/tools-for-structured-data": {
+      "skilljar": "claude-with-google-vertex/289181",
+      "academy": "claude-with-google-cloud-s-vertex-ai/tools-for-structured-data"
+    },
+    "claude-with-google-cloud-s-vertex-ai/the-text-edit-tool": {
+      "skilljar": "claude-with-google-vertex/289180",
+      "academy": "claude-with-google-cloud-s-vertex-ai/the-text-edit-tool"
+    },
+    "claude-with-google-cloud-s-vertex-ai/the-web-search-tool": {
+      "skilljar": "claude-with-google-vertex/289183",
+      "academy": "claude-with-google-cloud-s-vertex-ai/the-web-search-tool"
+    },
+    "claude-with-google-cloud-s-vertex-ai/quiz-on-tool-use-with-claude": {
+      "skilljar": "claude-with-google-vertex/289280",
+      "academy": "claude-with-google-cloud-s-vertex-ai/quiz-on-tool-use-with-claude"
+    },
+    "claude-with-google-cloud-s-vertex-ai/introducing-retrieval-augmented-generation": {
+      "skilljar": "claude-with-google-vertex/289191",
+      "academy": "claude-with-google-cloud-s-vertex-ai/introducing-retrieval-augmented-generation"
+    },
+    "claude-with-google-cloud-s-vertex-ai/text-chunking-strategies": {
+      "skilljar": "claude-with-google-vertex/289208",
+      "academy": "claude-with-google-cloud-s-vertex-ai/text-chunking-strategies"
+    },
+    "claude-with-google-cloud-s-vertex-ai/text-embeddings": {
+      "skilljar": "claude-with-google-vertex/289188",
+      "academy": "claude-with-google-cloud-s-vertex-ai/text-embeddings"
+    },
+    "claude-with-google-cloud-s-vertex-ai/the-full-rag-flow": {
+      "skilljar": "claude-with-google-vertex/289190",
+      "academy": "claude-with-google-cloud-s-vertex-ai/the-full-rag-flow"
+    },
+    "claude-with-google-cloud-s-vertex-ai/implementing-the-rag-flow": {
+      "skilljar": "claude-with-google-vertex/289186",
+      "academy": "claude-with-google-cloud-s-vertex-ai/implementing-the-rag-flow"
+    },
+    "claude-with-google-cloud-s-vertex-ai/bm25-lexical-search": {
+      "skilljar": "claude-with-google-vertex/289195",
+      "academy": "claude-with-google-cloud-s-vertex-ai/bm25-lexical-search"
+    },
+    "claude-with-google-cloud-s-vertex-ai/a-multi-index-rag-pipeline": {
+      "skilljar": "claude-with-google-vertex/289193",
+      "academy": "claude-with-google-cloud-s-vertex-ai/a-multi-index-rag-pipeline"
+    },
+    "claude-with-google-cloud-s-vertex-ai/reranking-results": {
+      "skilljar": "claude-with-google-vertex/289192",
+      "academy": "claude-with-google-cloud-s-vertex-ai/reranking-results"
+    },
+    "claude-with-google-cloud-s-vertex-ai/contextual-retrieval": {
+      "skilljar": "claude-with-google-vertex/289187",
+      "academy": "claude-with-google-cloud-s-vertex-ai/contextual-retrieval"
+    },
+    "claude-with-google-cloud-s-vertex-ai/quiz-on-retrieval-augmented-generation": {
+      "skilljar": "claude-with-google-vertex/289277",
+      "academy": "claude-with-google-cloud-s-vertex-ai/quiz-on-retrieval-augmented-generation"
+    },
+    "claude-with-google-cloud-s-vertex-ai/extended-thinking": {
+      "skilljar": "claude-with-google-vertex/289197",
+      "academy": "claude-with-google-cloud-s-vertex-ai/extended-thinking"
+    },
+    "claude-with-google-cloud-s-vertex-ai/image-support": {
+      "skilljar": "claude-with-google-vertex/289203",
+      "academy": "claude-with-google-cloud-s-vertex-ai/image-support"
+    },
+    "claude-with-google-cloud-s-vertex-ai/citations": {
+      "skilljar": "claude-with-google-vertex/289202",
+      "academy": "claude-with-google-cloud-s-vertex-ai/citations"
+    },
+    "claude-with-google-cloud-s-vertex-ai/prompt-caching": {
+      "skilljar": "claude-with-google-vertex/289196",
+      "academy": "claude-with-google-cloud-s-vertex-ai/prompt-caching"
+    },
+    "claude-with-google-cloud-s-vertex-ai/rules-of-prompt-caching": {
+      "skilljar": "claude-with-google-vertex/289194",
+      "academy": "claude-with-google-cloud-s-vertex-ai/rules-of-prompt-caching"
+    },
+    "claude-with-google-cloud-s-vertex-ai/prompt-caching-in-action": {
+      "skilljar": "claude-with-google-vertex/289200",
+      "academy": "claude-with-google-cloud-s-vertex-ai/prompt-caching-in-action"
+    },
+    "claude-with-google-cloud-s-vertex-ai/quiz-on-features-of-claude": {
+      "skilljar": "claude-with-google-vertex/289275",
+      "academy": "claude-with-google-cloud-s-vertex-ai/quiz-on-features-of-claude"
+    },
+    "claude-with-google-cloud-s-vertex-ai/introducing-mcp": {
+      "skilljar": "claude-with-google-vertex/289201",
+      "academy": "claude-with-google-cloud-s-vertex-ai/introducing-mcp"
+    },
+    "claude-with-google-cloud-s-vertex-ai/mcp-clients": {
+      "skilljar": "claude-with-google-vertex/289204",
+      "academy": "claude-with-google-cloud-s-vertex-ai/mcp-clients"
+    },
+    "claude-with-google-cloud-s-vertex-ai/project-setup": {
+      "skilljar": "claude-with-google-vertex/289199",
+      "academy": "claude-with-google-cloud-s-vertex-ai/project-setup"
+    },
+    "claude-with-google-cloud-s-vertex-ai/defining-tools-with-mcp": {
+      "skilljar": "claude-with-google-vertex/289235",
+      "academy": "claude-with-google-cloud-s-vertex-ai/defining-tools-with-mcp"
+    },
+    "claude-with-google-cloud-s-vertex-ai/the-server-inspector": {
+      "skilljar": "claude-with-google-vertex/289207",
+      "academy": "claude-with-google-cloud-s-vertex-ai/the-server-inspector"
+    },
+    "claude-with-google-cloud-s-vertex-ai/implementing-a-client": {
+      "skilljar": "claude-with-google-vertex/289206",
+      "academy": "claude-with-google-cloud-s-vertex-ai/implementing-a-client"
+    },
+    "claude-with-google-cloud-s-vertex-ai/defining-resources": {
+      "skilljar": "claude-with-google-vertex/289248",
+      "academy": "claude-with-google-cloud-s-vertex-ai/defining-resources"
+    },
+    "claude-with-google-cloud-s-vertex-ai/accessing-resources": {
+      "skilljar": "claude-with-google-vertex/289247",
+      "academy": "claude-with-google-cloud-s-vertex-ai/accessing-resources"
+    },
+    "claude-with-google-cloud-s-vertex-ai/defining-prompts": {
+      "skilljar": "claude-with-google-vertex/289249",
+      "academy": "claude-with-google-cloud-s-vertex-ai/defining-prompts"
+    },
+    "claude-with-google-cloud-s-vertex-ai/prompts-in-the-client": {
+      "skilljar": "claude-with-google-vertex/289209",
+      "academy": "claude-with-google-cloud-s-vertex-ai/prompts-in-the-client"
+    },
+    "claude-with-google-cloud-s-vertex-ai/mcp-review": {
+      "skilljar": "claude-with-google-vertex/289205",
+      "academy": "claude-with-google-cloud-s-vertex-ai/mcp-review"
+    },
+    "claude-with-google-cloud-s-vertex-ai/quiz-on-model-context-protocol": {
+      "skilljar": "claude-with-google-vertex/289276",
+      "academy": "claude-with-google-cloud-s-vertex-ai/quiz-on-model-context-protocol"
+    },
+    "claude-with-google-cloud-s-vertex-ai/agents-and-workflows": {
+      "skilljar": "claude-with-google-vertex/289244",
+      "academy": "claude-with-google-cloud-s-vertex-ai/agents-and-workflows"
+    },
+    "claude-with-google-cloud-s-vertex-ai/parallelization-workflows": {
+      "skilljar": "claude-with-google-vertex/289236",
+      "academy": "claude-with-google-cloud-s-vertex-ai/parallelization-workflows"
+    },
+    "claude-with-google-cloud-s-vertex-ai/chaining-workflows": {
+      "skilljar": "claude-with-google-vertex/289239",
+      "academy": "claude-with-google-cloud-s-vertex-ai/chaining-workflows"
+    },
+    "claude-with-google-cloud-s-vertex-ai/routing-workflows": {
+      "skilljar": "claude-with-google-vertex/289242",
+      "academy": "claude-with-google-cloud-s-vertex-ai/routing-workflows"
+    },
+    "claude-with-google-cloud-s-vertex-ai/agents-and-tools": {
+      "skilljar": "claude-with-google-vertex/289243",
+      "academy": "claude-with-google-cloud-s-vertex-ai/agents-and-tools"
+    },
+    "claude-with-google-cloud-s-vertex-ai/environment-inspection": {
+      "skilljar": "claude-with-google-vertex/289237",
+      "academy": "claude-with-google-cloud-s-vertex-ai/environment-inspection"
+    },
+    "claude-with-google-cloud-s-vertex-ai/workflows-vs-agents": {
+      "skilljar": "claude-with-google-vertex/289245",
+      "academy": "claude-with-google-cloud-s-vertex-ai/workflows-vs-agents"
+    },
+    "claude-with-google-cloud-s-vertex-ai/quiz-on-agents-and-workflows": {
+      "skilljar": "claude-with-google-vertex/289274",
+      "academy": "claude-with-google-cloud-s-vertex-ai/quiz-on-agents-and-workflows"
+    },
+    "claude-with-google-cloud-s-vertex-ai/final-assessment-quiz": {
+      "skilljar": "claude-with-google-vertex/290880",
+      "academy": "claude-with-google-cloud-s-vertex-ai/final-assessment-quiz"
+    },
     "introduction-to-agent-skills/what-are-skills": {
       "skilljar": "introduction-to-agent-skills/434525",
       "academy": "introduction-to-agent-skills/what-are-skills"
@@ -1246,12 +1578,9 @@
     }
   },
   "stats": {
-    "considered": 569,
-    "included": 308,
+    "considered": 494,
+    "included": 391,
     "droppedUnparseablePath": 0,
-    "collisions": 0,
-    "reusedId": 308,
-    "mintedId": 0,
-    "retired": 0
+    "collisions": 0
   }
 }

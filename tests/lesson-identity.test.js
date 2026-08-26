@@ -449,3 +449,106 @@ describe('partner Skilljar tenants', () => {
     expect(parseLessonRef('https://partner.skilljar.com/course/123')).toBeNull();
   });
 });
+
+describe('a record left unresolved is promoted when the table improves', () => {
+  // The reason unresolved records are never stamped as migrated. These two
+  // pairs did not exist in the shipped table until the matcher learned to pair
+  // courses on their unit titles and to treat a recasing as an exact match.
+  const RESLUGGED = {
+    skilljar: 'https://anthropic.skilljar.com/claude-with-google-vertex/289151',
+    academy: 'https://academy.claude.com/courses/claude-with-google-cloud-s-vertex-ai/accessing-the-api',
+    id: 'claude-with-google-cloud-s-vertex-ai/accessing-the-api',
+  };
+  const RECASED = {
+    skilljar: 'https://anthropic.skilljar.com/claude-code-in-action/486901',
+    academy: 'https://academy.claude.com/courses/claude-code-in-action/steering-long-sessions',
+    id: 'claude-code-in-action/steering-long-sessions',
+  };
+
+  /** The table as it was before this change: neither pair present. */
+  const oldTable = { schemaVersion: 1, lessons: { 'other/lesson': { skilljar: 'other/1', academy: 'other/lesson' } } };
+  const newTable = {
+    schemaVersion: 1,
+    lessons: {
+      'other/lesson': { skilljar: 'other/1', academy: 'other/lesson' },
+      [RESLUGGED.id]: {
+        skilljar: 'claude-with-google-vertex/289151',
+        academy: 'claude-with-google-cloud-s-vertex-ai/accessing-the-api',
+      },
+      [RECASED.id]: {
+        skilljar: 'claude-code-in-action/486901',
+        academy: 'claude-code-in-action/steering-long-sessions',
+      },
+    },
+  };
+
+  const legacyNotes = () => [
+    { url: RESLUGGED.skilljar, title: 'Accessing the API', text: 'a note from the Skilljar era', ts: 10 },
+    { url: RECASED.skilljar, title: 'Steering Long Sessions', text: 'another note', ts: 20 },
+    { url: 'https://anthropic.skilljar.com/other/1', title: 'Other', text: 'already linked', ts: 30 },
+  ];
+
+  test('the old table leaves them alone, with no completion stamp', () => {
+    const { records, changed } = migrateRecords(legacyNotes(), createIdentityResolver(oldTable), { now: 1 });
+    expect(records[0].id).toBeUndefined();
+    expect(records[0].provenance).toBeUndefined();
+    expect(records[1].id).toBeUndefined();
+    expect(changed).toBe(true); // the third one does link
+  });
+
+  test('the new table promotes them on the next load', () => {
+    const pass1 = migrateRecords(legacyNotes(), createIdentityResolver(oldTable), { now: 1 });
+    const pass2 = migrateRecords(pass1.records, createIdentityResolver(newTable), { now: 2 });
+
+    expect(pass2.changed).toBe(true);
+    expect(pass2.records[0].id).toBe(RESLUGGED.id);
+    expect(pass2.records[1].id).toBe(RECASED.id);
+  });
+
+  test('nothing is lost in the promotion', () => {
+    const before = legacyNotes();
+    const pass1 = migrateRecords(before, createIdentityResolver(oldTable), { now: 1 });
+    const { records } = migrateRecords(pass1.records, createIdentityResolver(newTable), { now: 2 });
+
+    expect(records).toHaveLength(before.length);
+    records.forEach((r, i) => {
+      expect(r.text).toBe(before[i].text);
+      expect(r.title).toBe(before[i].title);
+      expect(r.url).toBe(before[i].url);
+    });
+    // The URL it was written at is kept as history, not replaced.
+    expect(records[0].legacyUrls).toContain(RESLUGGED.skilljar);
+  });
+
+  test('promotion does not merge two records into one', () => {
+    // Migration links; it never collapses. Two notes on the same lesson stay
+    // two notes, and only an explicit save replaces one of them.
+    const twin = [
+      { url: RESLUGGED.skilljar, title: 'Accessing the API', text: 'from Skilljar', ts: 10 },
+      { url: RESLUGGED.academy, title: 'Accessing the API', text: 'from Academy', ts: 20 },
+    ];
+    const { records } = migrateRecords(twin, createIdentityResolver(newTable), { now: 1 });
+    expect(records).toHaveLength(2);
+    expect(records.map((r) => r.text)).toEqual(['from Skilljar', 'from Academy']);
+    expect(records.every((r) => r.id === RESLUGGED.id)).toBe(true);
+  });
+
+  test('the same lesson now resolves from either platform', () => {
+    const resolver = createIdentityResolver(newTable);
+    expect(resolver.resolve(RESLUGGED.skilljar).id).toBe(RESLUGGED.id);
+    expect(resolver.resolve(RESLUGGED.academy).id).toBe(RESLUGGED.id);
+    expect(resolver.resolve(RECASED.skilljar).id).toBe(RECASED.id);
+    expect(resolver.resolve(RECASED.academy).id).toBe(RECASED.id);
+  });
+
+  test('the shipped table really does carry these pairs', () => {
+    // Guards the fixtures above against drifting away from what ships.
+    const shippedTable = JSON.parse(
+      fs.readFileSync(path.join(__dirname, '..', 'src', 'shared', 'canonical-lessons.json'), 'utf8'),
+    );
+    const shipped = createIdentityResolver(shippedTable);
+    expect(shipped.validationErrors()).toEqual([]);
+    expect(shipped.resolve(RESLUGGED.skilljar).id).toBe(RESLUGGED.id);
+    expect(shipped.resolve(RECASED.skilljar).id).toBe(RECASED.id);
+  });
+});

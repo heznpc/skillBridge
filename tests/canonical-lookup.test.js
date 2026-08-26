@@ -158,6 +158,9 @@ describe('every shipped pair round-trips through the runtime resolver', () => {
 });
 
 describe('canonical ids are issued once and never reissued', () => {
+  // reusedId/mintedId/retired live on a non-enumerable `buildStats`, not in
+  // the serialized table: they describe the RUN, and persisting them would
+  // make an unchanged registry serialize differently on every rebuild.
   const report = (academyPath) => ({
     courses: [
       {
@@ -182,12 +185,12 @@ describe('canonical ids are issued once and never reissued', () => {
     // at a lesson the table no longer contains.
     const first = buildLookup(report('/courses/a-course/accessing-the-api'), null);
     const originalId = Object.keys(first.lessons)[0];
-    expect(first.stats.mintedId).toBe(1);
+    expect(first.buildStats.mintedId).toBe(1);
 
     const second = buildLookup(report('/courses/a-course/api-access'), first);
     expect(Object.keys(second.lessons)).toEqual([originalId]);
-    expect(second.stats.reusedId).toBe(1);
-    expect(second.stats.mintedId).toBe(0);
+    expect(second.buildStats.reusedId).toBe(1);
+    expect(second.buildStats.mintedId).toBe(0);
     // The alias moved to the new route; the identity did not.
     expect(second.lessons[originalId].academy).toBe('a-course/api-access');
   });
@@ -201,8 +204,8 @@ describe('canonical ids are issued once and never reissued', () => {
       aliases: { skilljar: { path: '/a-course/999999' }, academy: { path: '/courses/a-course/brand-new' } },
     });
     const second = buildLookup(withExtra, first);
-    expect(second.stats.mintedId).toBe(1);
-    expect(second.stats.reusedId).toBe(1);
+    expect(second.buildStats.mintedId).toBe(1);
+    expect(second.buildStats.reusedId).toBe(1);
   });
 
   test('an id the new report no longer covers is kept, not orphaned', () => {
@@ -212,7 +215,7 @@ describe('canonical ids are issued once and never reissued', () => {
     const originalId = Object.keys(first.lessons)[0];
     const second = buildLookup({ courses: [] }, first);
     expect(second.lessons[originalId]).toEqual(first.lessons[originalId]);
-    expect(second.stats.retired).toBe(1);
+    expect(second.buildStats.retired).toBe(1);
   });
 
   test('rebuilding from the same report is a fixed point', () => {

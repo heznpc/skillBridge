@@ -144,11 +144,22 @@ function matchCourseUnits(academyUnits, skilljarUnits) {
     if (candidates.length === 1 && !selfDuplicated) {
       const peer = candidates[0];
       usedSkilljar.add(peer);
+      // Case-folding equality counts as exact.
+      //
+      // Academy recased whole courses into sentence case in the move — "A
+      // CLAUDE.md That Follows" became "A CLAUDE.md that follows". Same words,
+      // same order, same punctuation; the only difference is a house style
+      // applied uniformly. All eight of the medium matches in the report are
+      // this and nothing else.
+      //
+      // Deliberately narrower than normalizeTitle(), which also folds
+      // punctuation, spacing and diacritics. Those can carry meaning, so a
+      // difference there stays MEDIUM and waits for corroboration.
+      const caseOnly = unit.title.toLowerCase() === peer.title.toLowerCase();
       matches.push({
         academy: unit,
         skilljar: peer,
-        // Exact string equality means normalization never had to intervene.
-        confidence: unit.title === peer.title ? CONFIDENCE.HIGH : CONFIDENCE.MEDIUM,
+        confidence: caseOnly ? CONFIDENCE.HIGH : CONFIDENCE.MEDIUM,
         ambiguity: null,
         candidates: null,
       });
@@ -294,6 +305,94 @@ function pairCourses(academyCourses, skilljarCourses) {
     pairs.push({ academy: a, skilljar: null, joinedOn: null });
   }
 
+  // Third pass: the units themselves.
+  //
+  // A course can lose BOTH its slug and its title — "Claude on Google Cloud"
+  // became "Claude with Google Cloud's Vertex AI" under a new slug — and 93
+  // lessons go unresolved with it, which was most of what stayed unmatched.
+  // Its unit titles survived, and those are observable on both platforms
+  // without trusting section, kind, or any name that changed.
+  //
+  // The pairing is MUTUAL. Each side has to be the other's dominant best:
+  // Skilljar X must be Academy A's clear winner, and A must be X's. A one-way
+  // check let whichever Academy course happened to come first in the array
+  // claim a Skilljar course outright, so a weaker claimant listed earlier beat
+  // a stronger one listed later — and since a paired course's lessons become
+  // high confidence, array order decided which canonical ids were minted. Ids
+  // are permanent, so that is not a mistake a later matcher can undo.
+  //
+  // Thresholds come from what the data looks like rather than from taste. The
+  // Vertex pair shares 75 titles at a Jaccard of 0.80; every other combination
+  // of unpaired courses shares at most 2 at 0.11. The gap is two orders of
+  // magnitude, so demanding substantial overlap AND clear separation from the
+  // runner-up on BOTH sides cannot reach the near misses:
+  //
+  //   - MIN_SHARED guards against a tiny course scoring 1.0 on two lessons.
+  //   - MIN_JACCARD guards against a large course incidentally containing a
+  //     small one's titles.
+  //   - DOMINANCE guards against two plausible candidates, where picking the
+  //     larger number would be a guess wearing a threshold's clothes.
+  const MIN_SHARED = 5;
+  const MIN_JACCARD = 0.5;
+  const DOMINANCE = 3;
+
+  const titleSet = (course) =>
+    new Set(
+      flattenUnits(course)
+        .map((u) => u.normalized)
+        .filter(Boolean),
+    );
+
+  const openAcademy = pairs.filter((p) => p.academy && !p.skilljar);
+  const openSkilljar = skilljarCourses.filter((c) => !claimedSkilljar.has(c));
+
+  // Score every remaining combination once, then read the matrix from both
+  // directions. Scoring inside the claiming loop is what made the result
+  // order-dependent.
+  const scores = new Map();
+  const academyTitles = new Map(openAcademy.map((p) => [p, titleSet(p.academy)]));
+  const skilljarTitles = new Map(openSkilljar.map((c) => [c, titleSet(c)]));
+  for (const pair of openAcademy) {
+    const mine = academyTitles.get(pair);
+    if (mine.size === 0) continue;
+    for (const candidate of openSkilljar) {
+      const theirs = skilljarTitles.get(candidate);
+      if (theirs.size === 0) continue;
+      let shared = 0;
+      for (const t of mine) if (theirs.has(t)) shared += 1;
+      if (shared === 0) continue;
+      scores.set(`${openAcademy.indexOf(pair)}:${openSkilljar.indexOf(candidate)}`, {
+        pair,
+        candidate,
+        shared,
+        jaccard: shared / (mine.size + theirs.size - shared),
+      });
+    }
+  }
+
+  /** The dominant best among `entries`, or null when nothing dominates. */
+  const dominantBest = (entries) => {
+    if (entries.length === 0) return null;
+    const sorted = [...entries].sort((x, y) => y.shared - x.shared);
+    const best = sorted[0];
+    const runnerUp = sorted[1];
+    if (best.shared < MIN_SHARED || best.jaccard < MIN_JACCARD) return null;
+    if (runnerUp && best.shared < runnerUp.shared * DOMINANCE) return null;
+    return best;
+  };
+
+  const all = [...scores.values()];
+  for (const pair of openAcademy) {
+    const bestForAcademy = dominantBest(all.filter((e) => e.pair === pair));
+    if (!bestForAcademy) continue;
+    const bestForSkilljar = dominantBest(all.filter((e) => e.candidate === bestForAcademy.candidate));
+    // Both sides must name each other. Either one hesitating is ambiguity.
+    if (!bestForSkilljar || bestForSkilljar.pair !== pair) continue;
+    claimedSkilljar.add(bestForAcademy.candidate);
+    pair.skilljar = bestForAcademy.candidate;
+    pair.joinedOn = 'units';
+  }
+
   for (const s of skilljarCourses) {
     if (!claimedSkilljar.has(s)) pairs.push({ academy: null, skilljar: s, joinedOn: null });
   }
@@ -362,6 +461,9 @@ function buildIdentityReport(academySnapshot, skilljarSnapshot) {
       academyOnly: courses.filter((c) => c.presentOn.join() === 'academy').length,
       skilljarOnly: courses.filter((c) => c.presentOn.join() === 'skilljar').length,
       joinedOnTitle: courses.filter((c) => c.joinedOn === 'title').length,
+      // Surfaced so a matcher that suddenly starts joining several courses on
+      // unit overlap shows up in the summary rather than only in the diff.
+      joinedOnUnits: courses.filter((c) => c.joinedOn === 'units').length,
       lessons: tally,
       // Anything below high needs eyes before it can drive a migration.
       needsReview: tally.medium + tally.low + tally.none + tally.skilljarOnly,

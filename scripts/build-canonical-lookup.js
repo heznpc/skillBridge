@@ -152,15 +152,29 @@ function buildLookup(report, previous) {
     stats.retired += 1;
   }
 
-  return {
+  const out = {
     schemaVersion: 1,
     // Named so a reader of the shipped file can find what produced it and what
     // was deliberately left out.
     note: 'High-confidence cross-platform lesson pairs only. Built by scripts/build-canonical-lookup.js from the identity report; anything below high confidence is absent on purpose and keeps URL identity.',
     source: report.sources || null,
     lessons,
-    stats,
+    // Counts that describe the TABLE, not the run that produced it.
+    //
+    // reusedId/mintedId/retired are build-event facts: rebuilding an unchanged
+    // registry turns 83 mints into 83 reuses, so persisting them would make
+    // the file depend on its own history and no --check could ever be
+    // idempotent. They are reported to the console instead.
+    stats: {
+      considered: stats.considered,
+      included: stats.included,
+      droppedUnparseablePath: stats.droppedUnparseablePath,
+      collisions: stats.collisions,
+    },
   };
+  // Attached, not serialized: main() reports these and the JSON stays stable.
+  Object.defineProperty(out, 'buildStats', { value: stats, enumerable: false });
+  return out;
 }
 
 function main() {
@@ -171,6 +185,9 @@ function main() {
   const previous = fs.existsSync(OUT_PATH) ? JSON.parse(fs.readFileSync(OUT_PATH, 'utf8')) : null;
   const table = buildLookup(report, previous);
   const serialized = `${JSON.stringify(table, null, 2)}\n`;
+  console.log(
+    `[canonical-lookup] ids: ${table.buildStats.reusedId} reused, ${table.buildStats.mintedId} minted, ${table.buildStats.retired} retained from a report that no longer covers them`,
+  );
 
   const check = process.argv.includes('--check');
   const existing = fs.existsSync(OUT_PATH) ? fs.readFileSync(OUT_PATH, 'utf8') : null;
