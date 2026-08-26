@@ -63,6 +63,13 @@ jobs:
 
       # Guards the CWS review surface: a privacy disclosure naming a service the
       # manifest can no longer reach, or a granted host no document discloses.
+      # Content scripts reach each other only through window globals, while the
+      # same libraries carry a CommonJS block for the tests. A name added to one
+      # and not the other is invisible to jest, eslint and the bundler, and
+      # throws only in the browser.
+      - name: Check window surfaces match what content scripts dereference
+        run: node scripts/check-window-surface.js
+
       - name: Check permission docs match manifest.json
         run: node scripts/check-permission-docs.js
 

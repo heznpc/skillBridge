@@ -230,3 +230,32 @@ describe('safety dependencies fail closed on Academy', () => {
     expect(verdict).toBe(true);
   });
 });
+
+describe('the window surface carries everything content.js reads', () => {
+  // content.js reaches this module through `window` only. A name exported to
+  // CommonJS but not to window is undefined in the browser while every test
+  // that loads the CommonJS side keeps passing — which is how
+  // ACADEMY_ASSESSMENT_PATH_PATTERNS came to throw on every Academy route
+  // change without a single red test.
+  function windowSurface() {
+    const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'academy-adapter.js'), 'utf8');
+    const fake = { module: { exports: {} } };
+    const win = {};
+    new Function('globalThis', 'window', src)(fake, win);
+    return { win: win._sbAcademy, mod: fake.module.exports };
+  }
+
+  test('every CommonJS export is also on window', () => {
+    const { win, mod } = windowSurface();
+    expect(win).toBeTruthy();
+    for (const key of Object.keys(mod)) expect(win).toHaveProperty(key);
+  });
+
+  test('the names content.js dereferences are present and usable', () => {
+    const { win } = windowSurface();
+    for (const key of ['ACADEMY_ASSESSMENT_PATH_PATTERNS', 'detectAcademyAssessment', 'isWithinAcademyChoice']) {
+      expect(win[key]).toBeDefined();
+    }
+    expect(win.ACADEMY_ASSESSMENT_PATH_PATTERNS.some((p) => p.test('/courses/c/quiz-on-x'))).toBe(true);
+  });
+});

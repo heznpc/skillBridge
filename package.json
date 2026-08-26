@@ -46,7 +46,8 @@
     "release:verify": "node scripts/release-pipeline.js --full",
     "capture:store": "shotkit",
     "promo:build": "npm run capture:store && node scripts/build-promo-media.js",
-    "capture:install": "playwright install chromium"
+    "capture:install": "playwright install chromium",
+    "check:window": "node scripts/check-window-surface.js"
   },
   "jest": {
     "testPathIgnorePatterns": [
