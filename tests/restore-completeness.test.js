@@ -207,3 +207,31 @@ describe('pruneDetachedEntries', () => {
     expect(sb.originalComments.size).toBeLessThanOrEqual(2);
   });
 });
+
+describe('the cap never costs a live element its original', () => {
+  test('live originals survive a prune that pushes past the cap', () => {
+    // #300 was an element still on screen with no record of its English, which
+    // every later restore then skipped. Trimming the map to a size ceiling by
+    // evicting live entries recreates exactly that, so the ceiling yields.
+    const sb = makeSb(4);
+    const prune = buildPrune(sb);
+    const live = [];
+    for (let i = 0; i < 10; i += 1) {
+      const el = document.createElement('p');
+      el.textContent = `block ${i}`;
+      document.body.appendChild(el);
+      sb.originalTexts.set(el, `original ${i}`);
+      live.push(el);
+    }
+    const detached = document.createElement('p');
+    sb.originalTexts.set(detached, 'original detached');
+
+    prune();
+
+    // The detached entry is what the sweep is for…
+    expect(sb.originalTexts.has(detached)).toBe(false);
+    // …and every live element keeps its original even well past the cap.
+    live.forEach((el, i) => expect(sb.originalTexts.get(el)).toBe(`original ${i}`));
+    expect(sb.originalTexts.size).toBeGreaterThan(4);
+  });
+});

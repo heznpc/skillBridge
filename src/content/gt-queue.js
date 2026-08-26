@@ -796,13 +796,24 @@
       if (live.length === 0) translatedTexts.delete(text);
       else if (live.length < entries.length) translatedTexts.set(text, live);
     }
-    if (originalTexts.size > cap) {
-      const excess = originalTexts.size - cap;
-      const iter = originalTexts.keys();
-      for (let i = 0; i < excess; i++) {
-        const key = iter.next().value;
-        originalTexts.delete(key);
-      }
+    // Deliberately NOT trimmed to the cap by evicting live entries.
+    //
+    // The detached sweep above is the reclaim. If the page is large enough
+    // that live originals alone exceed the cap, evicting them would recreate
+    // the exact defect #300 fixed: an element still on screen, still
+    // translated, with no record of its English, which every later
+    // restoreOriginal then skips.
+    //
+    // The invariant is "a live element never loses its original", and a
+    // memory ceiling is not a reason to break it. The overshoot is bounded by
+    // the page: one Map entry per translated element, cleared wholesale on the
+    // next restore. Surfaced once so an unexpectedly huge page is visible
+    // rather than silently costing memory.
+    if (originalTexts.size > cap && !sb._originalTextsOverCapWarned) {
+      sb._originalTextsOverCapWarned = true;
+      console.warn(
+        `[SkillBridge] ${originalTexts.size} live originals exceed the ${cap} cap; keeping them so restore stays complete.`,
+      );
     }
     if (translatedTexts.size > cap) {
       const excess = translatedTexts.size - cap;

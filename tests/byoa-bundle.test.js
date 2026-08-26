@@ -198,3 +198,49 @@ describe('what this feature must never do', () => {
     expect(src).toContain('const text = preview?.value');
   });
 });
+
+describe('the ceiling is spent in priority order', () => {
+  const QUESTION = 'Why does the retry loop back off exponentially instead of linearly here?';
+
+  test('a long selection and context never cost the question its ending', () => {
+    // The question was appended last and the whole bundle clipped from the
+    // tail, so exactly the part that cannot be reconstructed from the page was
+    // the first thing lost.
+    const { text } = buildContextBundle({
+      title: 'A lesson',
+      url: 'https://academy.claude.com/courses/c/a-lesson',
+      langName: 'Korean',
+      selection: 'S'.repeat(5000),
+      pageContext: 'C'.repeat(9000),
+      question: QUESTION,
+    });
+    expect(text).toContain(QUESTION);
+    expect(text.length).toBeLessThanOrEqual(BYOA_MAX_CHARS);
+  });
+
+  test('the page context is what yields, since the page can be shown instead', () => {
+    const { text } = buildContextBundle({
+      title: 'A lesson',
+      langName: 'Korean',
+      selection: 'S'.repeat(2000),
+      pageContext: 'C'.repeat(9000),
+      question: QUESTION,
+    });
+    expect(text).toContain(QUESTION);
+    expect(text).toContain('S'.repeat(100));
+    // Context present but cut down to what was left.
+    expect((text.match(/C/g) || []).length).toBeLessThan(9000);
+  });
+
+  test('the bundle still reads selection, context, question in that order', () => {
+    const { text } = buildContextBundle({
+      title: 'A lesson',
+      langName: 'Korean',
+      selection: 'SELECTED-TEXT',
+      pageContext: 'CONTEXT-TEXT',
+      question: QUESTION,
+    });
+    expect(text.indexOf('SELECTED-TEXT')).toBeLessThan(text.indexOf('CONTEXT-TEXT'));
+    expect(text.indexOf('CONTEXT-TEXT')).toBeLessThan(text.indexOf(QUESTION));
+  });
+});

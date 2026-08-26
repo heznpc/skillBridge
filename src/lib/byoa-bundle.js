@@ -125,26 +125,57 @@ function buildContextBundle({
   if (isExamPage) lines.push('', L.examNote);
   if (selectionWithheld) lines.push('', L.withheldNote);
 
-  // The learner's own selection comes BEFORE the page context: it is the part
-  // they pointed at, and if anything gets cut by the ceiling it should be the
-  // surrounding material rather than the thing they chose.
-  const clippedSelection = selection ? _clip(selection, BYOA_MAX_SELECTION_CHARS) : null;
-  if (clippedSelection?.text) {
-    if (clippedSelection.truncated) omissions.push(BYOA_OMISSION.TRUNCATED);
-    lines.push('', `${L.selected}:`, clippedSelection.text);
-  }
-
-  if (pageContext) lines.push('', `${L.context}:`, String(pageContext).trim());
-  if (question) lines.push('', `${L.question}: ${question.trim()}`);
-
-  const assembled = lines
+  // The ceiling is spent in priority order, not by assembling everything and
+  // cutting the tail.
+  //
+  // The question used to be appended last, so a long selection plus a long
+  // page context ate the budget and the clip took the END of what the learner
+  // actually asked. That is the one part of the bundle that cannot be
+  // reconstructed from the page, and losing its second half turns a specific
+  // question into a vague one.
+  //
+  // Order: fixed metadata, then the question, then the selection they pointed
+  // at, and the page context gets whatever is left — it is the most
+  // recoverable part, because the assistant can be shown the page.
+  const head = lines
     .join('\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
-  const clipped = _clip(assembled, BYOA_MAX_CHARS);
-  if (clipped.truncated && !omissions.includes(BYOA_OMISSION.TRUNCATED)) omissions.push(BYOA_OMISSION.TRUNCATED);
+  let spent = head.length;
 
-  return { text: clipped.text, omissions, length: clipped.text.length };
+  const questionBlock = question ? `\n\n${L.question}: ${question.trim()}` : '';
+  const clippedQuestion = questionBlock ? _clip(questionBlock, Math.max(0, BYOA_MAX_CHARS - spent)) : null;
+  if (clippedQuestion?.truncated) omissions.push(BYOA_OMISSION.TRUNCATED);
+  spent += clippedQuestion ? clippedQuestion.text.length : 0;
+
+  const selectionRoom = Math.min(BYOA_MAX_SELECTION_CHARS, Math.max(0, BYOA_MAX_CHARS - spent));
+  const clippedSelection = selection ? _clip(selection, selectionRoom) : null;
+  let selectionBlock = '';
+  if (clippedSelection?.text) {
+    if (clippedSelection.truncated && !omissions.includes(BYOA_OMISSION.TRUNCATED)) {
+      omissions.push(BYOA_OMISSION.TRUNCATED);
+    }
+    selectionBlock = `\n\n${L.selected}:\n${clippedSelection.text}`;
+    spent += selectionBlock.length;
+  }
+
+  let contextBlock = '';
+  if (pageContext) {
+    const room = Math.max(0, BYOA_MAX_CHARS - spent);
+    const clippedContext = _clip(`\n\n${L.context}:\n${String(pageContext).trim()}`, room);
+    if (clippedContext.truncated && !omissions.includes(BYOA_OMISSION.TRUNCATED)) {
+      omissions.push(BYOA_OMISSION.TRUNCATED);
+    }
+    contextBlock = clippedContext.text;
+  }
+
+  // Rendered in reading order — selection, context, question — while having
+  // been BUDGETED in priority order above.
+  const text = `${head}${selectionBlock}${contextBlock}${clippedQuestion ? clippedQuestion.text : ''}`
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
+  return { text, omissions, length: text.length };
 }
 
 /**
