@@ -309,15 +309,23 @@ function pairCourses(academyCourses, skilljarCourses) {
   //
   // A course can lose BOTH its slug and its title — "Claude on Google Cloud"
   // became "Claude with Google Cloud's Vertex AI" under a new slug — and 93
-  // lessons go unresolved with it, which is most of what is left unmatched.
+  // lessons go unresolved with it, which was most of what stayed unmatched.
   // Its unit titles survived, and those are observable on both platforms
   // without trusting section, kind, or any name that changed.
   //
-  // The thresholds are set by what the data actually looks like rather than by
-  // taste. That pair shares 75 titles at a Jaccard of 0.80; every other
-  // combination of unpaired courses shares at most 2 at 0.11. The gap is two
-  // orders of magnitude, so a rule that demands substantial overlap AND clear
-  // separation from the runner-up cannot reach the near misses:
+  // The pairing is MUTUAL. Each side has to be the other's dominant best:
+  // Skilljar X must be Academy A's clear winner, and A must be X's. A one-way
+  // check let whichever Academy course happened to come first in the array
+  // claim a Skilljar course outright, so a weaker claimant listed earlier beat
+  // a stronger one listed later — and since a paired course's lessons become
+  // high confidence, array order decided which canonical ids were minted. Ids
+  // are permanent, so that is not a mistake a later matcher can undo.
+  //
+  // Thresholds come from what the data looks like rather than from taste. The
+  // Vertex pair shares 75 titles at a Jaccard of 0.80; every other combination
+  // of unpaired courses shares at most 2 at 0.11. The gap is two orders of
+  // magnitude, so demanding substantial overlap AND clear separation from the
+  // runner-up on BOTH sides cannot reach the near misses:
   //
   //   - MIN_SHARED guards against a tiny course scoring 1.0 on two lessons.
   //   - MIN_JACCARD guards against a large course incidentally containing a
@@ -335,31 +343,53 @@ function pairCourses(academyCourses, skilljarCourses) {
         .filter(Boolean),
     );
 
-  for (const pair of pairs) {
-    if (!pair.academy || pair.skilljar) continue;
-    const mine = titleSet(pair.academy);
-    if (mine.size === 0) continue;
+  const openAcademy = pairs.filter((p) => p.academy && !p.skilljar);
+  const openSkilljar = skilljarCourses.filter((c) => !claimedSkilljar.has(c));
 
-    const scored = [];
-    for (const candidate of skilljarCourses) {
-      if (claimedSkilljar.has(candidate)) continue;
-      const theirs = titleSet(candidate);
+  // Score every remaining combination once, then read the matrix from both
+  // directions. Scoring inside the claiming loop is what made the result
+  // order-dependent.
+  const scores = new Map();
+  const academyTitles = new Map(openAcademy.map((p) => [p, titleSet(p.academy)]));
+  const skilljarTitles = new Map(openSkilljar.map((c) => [c, titleSet(c)]));
+  for (const pair of openAcademy) {
+    const mine = academyTitles.get(pair);
+    if (mine.size === 0) continue;
+    for (const candidate of openSkilljar) {
+      const theirs = skilljarTitles.get(candidate);
       if (theirs.size === 0) continue;
       let shared = 0;
       for (const t of mine) if (theirs.has(t)) shared += 1;
       if (shared === 0) continue;
-      scored.push({ candidate, shared, jaccard: shared / (mine.size + theirs.size - shared) });
+      scores.set(`${openAcademy.indexOf(pair)}:${openSkilljar.indexOf(candidate)}`, {
+        pair,
+        candidate,
+        shared,
+        jaccard: shared / (mine.size + theirs.size - shared),
+      });
     }
-    if (scored.length === 0) continue;
-    scored.sort((x, y) => y.shared - x.shared);
+  }
 
-    const best = scored[0];
-    const runnerUp = scored[1];
-    if (best.shared < MIN_SHARED || best.jaccard < MIN_JACCARD) continue;
-    if (runnerUp && best.shared < runnerUp.shared * DOMINANCE) continue;
+  /** The dominant best among `entries`, or null when nothing dominates. */
+  const dominantBest = (entries) => {
+    if (entries.length === 0) return null;
+    const sorted = [...entries].sort((x, y) => y.shared - x.shared);
+    const best = sorted[0];
+    const runnerUp = sorted[1];
+    if (best.shared < MIN_SHARED || best.jaccard < MIN_JACCARD) return null;
+    if (runnerUp && best.shared < runnerUp.shared * DOMINANCE) return null;
+    return best;
+  };
 
-    claimedSkilljar.add(best.candidate);
-    pair.skilljar = best.candidate;
+  const all = [...scores.values()];
+  for (const pair of openAcademy) {
+    const bestForAcademy = dominantBest(all.filter((e) => e.pair === pair));
+    if (!bestForAcademy) continue;
+    const bestForSkilljar = dominantBest(all.filter((e) => e.candidate === bestForAcademy.candidate));
+    // Both sides must name each other. Either one hesitating is ambiguity.
+    if (!bestForSkilljar || bestForSkilljar.pair !== pair) continue;
+    claimedSkilljar.add(bestForAcademy.candidate);
+    pair.skilljar = bestForAcademy.candidate;
     pair.joinedOn = 'units';
   }
 
@@ -431,6 +461,9 @@ function buildIdentityReport(academySnapshot, skilljarSnapshot) {
       academyOnly: courses.filter((c) => c.presentOn.join() === 'academy').length,
       skilljarOnly: courses.filter((c) => c.presentOn.join() === 'skilljar').length,
       joinedOnTitle: courses.filter((c) => c.joinedOn === 'title').length,
+      // Surfaced so a matcher that suddenly starts joining several courses on
+      // unit overlap shows up in the summary rather than only in the diff.
+      joinedOnUnits: courses.filter((c) => c.joinedOn === 'units').length,
       lessons: tally,
       // Anything below high needs eyes before it can drive a migration.
       needsReview: tally.medium + tally.low + tally.none + tally.skilljarOnly,

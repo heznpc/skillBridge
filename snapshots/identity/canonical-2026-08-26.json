@@ -10614,6 +10614,7 @@
     "academyOnly": 2,
     "skilljarOnly": 1,
     "joinedOnTitle": 2,
+    "joinedOnUnits": 1,
     "lessons": {
       "high": 391,
       "medium": 0,

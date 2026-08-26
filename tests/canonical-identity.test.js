@@ -308,6 +308,68 @@ describe('course pairing by shared unit titles', () => {
     expect(pairs.every((p) => p.joinedOn !== 'units')).toBe(true);
   });
 
+  test('a weaker Academy course listed first does not claim the match', () => {
+    // The hole this closes: pairing walked Academy courses in order and let
+    // the first one whose OWN numbers passed claim a Skilljar course outright.
+    // Here `weak` passes its own gate — 6 shared, Jaccard 0.75 — so it used to
+    // take X purely for being earlier in the array, while `strong` (8 shared,
+    // Jaccard 1.00) was left with nothing. A paired course's lessons become
+    // high confidence, so array order decided which canonical ids were minted,
+    // and ids are permanent.
+    //
+    // Reading X's own row settles it: 8 against 6 is not a dominant win, so
+    // NOTHING pairs. That is the intended answer rather than a shortfall —
+    // with these thresholds a competitor that clears its own gate is always
+    // within 3x of the leader, so competition on the Skilljar side always
+    // means the evidence is too close to act on.
+    const SHARED_8 = [...SHARED, 'Rate limits', 'Batch requests'];
+    const pairs = pairCourses(
+      [course('weak', 'Weak', SHARED, 'academy'), course('strong', 'Strong', SHARED_8, 'academy')],
+      [course('x', 'X', SHARED_8, 'skilljar')],
+    );
+    expect(pairs.filter((p) => p.joinedOn === 'units')).toHaveLength(0);
+    // Everything is reported, not silently dropped.
+    expect(pairs.filter((p) => p.academy && !p.skilljar)).toHaveLength(2);
+    expect(pairs.some((p) => p.skilljar?.slug === 'x' && !p.academy)).toBe(true);
+  });
+
+  test('reversing the Academy input order changes nothing', () => {
+    // Order independence is the property; the contested case above and an
+    // uncontested one both have to hold under it.
+    const SHARED_8 = [...SHARED, 'Rate limits', 'Batch requests'];
+    const summarise = (pairs) =>
+      pairs
+        .filter((p) => p.joinedOn === 'units')
+        .map((p) => `${p.academy.slug}->${p.skilljar.slug}`)
+        .sort();
+
+    const contested = [course('weak', 'Weak', SHARED, 'academy'), course('strong', 'Strong', SHARED_8, 'academy')];
+    const oneSkilljar = [course('x', 'X', SHARED_8, 'skilljar')];
+    expect(summarise(pairCourses([...contested].reverse(), oneSkilljar))).toEqual(
+      summarise(pairCourses(contested, oneSkilljar)),
+    );
+
+    const uncontested = [
+      course('unrelated', 'Unrelated', ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta'], 'academy'),
+      course('match', 'Match', SHARED_8, 'academy'),
+    ];
+    expect(summarise(pairCourses([...uncontested].reverse(), oneSkilljar))).toEqual(
+      summarise(pairCourses(uncontested, oneSkilljar)),
+    );
+    // The uncontested pair really does join, so the invariance above is not
+    // vacuously true over an empty result.
+    expect(summarise(pairCourses(uncontested, oneSkilljar))).toEqual(['match->x']);
+  });
+
+  test('two Academy courses claiming one Skilljar course leave all three unpaired', () => {
+    // Symmetry of the existing rule: ambiguity on either side is ambiguity.
+    const pairs = pairCourses(
+      [course('a', 'A', SHARED, 'academy'), course('b', 'B', SHARED, 'academy')],
+      [course('x', 'X', SHARED, 'skilljar')],
+    );
+    expect(pairs.every((p) => p.joinedOn !== 'units')).toBe(true);
+  });
+
   test('a tiny course cannot be paired on overlap alone', () => {
     // Two units in common out of two is a perfect ratio and no evidence.
     const pairs = pairCourses(
