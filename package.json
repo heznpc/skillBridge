@@ -53,7 +53,7 @@
     "testPathIgnorePatterns": [
       "/node_modules/",
       "/dist/",
-      "/.claude/worktrees/",
+      "<rootDir>/.claude/worktrees/",
       "/tests/e2e/"
     ],
     "modulePathIgnorePatterns": [
