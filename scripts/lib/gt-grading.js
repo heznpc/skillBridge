@@ -147,6 +147,13 @@ function needsSecondReview(records) {
  * n=67 per locale is ~1.5% resolution, and one number invites reading a
  * band as a point.
  *
+ * `total`, `measurable` and `graded` are all reported because they are three
+ * different denominators and a run in progress separates them widely: the
+ * Phase 1 set in hand is 123 usable rows out of 304, the rest rate-limited.
+ * A summary carrying only `total` lets a rate be taken over rows that were
+ * never translated, which reads as a quality result for work that never
+ * happened.
+ *
  * @param {object[]} records
  * @returns {object}
  */
@@ -154,13 +161,25 @@ function summarize(records) {
   const list = Array.isArray(records) ? records : [];
   const byGrade = Object.fromEntries(GRADES.map((g) => [g, 0]));
   let violations = 0;
+  let measurable = 0;
   for (const r of list) {
     if (GRADES.includes(r?.grade)) byGrade[r.grade] += 1;
+    // Derived from the candidate, the same way the harness derives it, rather
+    // than read from the record's own `measurable` flag: a record that predates
+    // that field would otherwise be counted as an absence.
+    if (typeof r?.gtCandidate === 'string' && r.gtCandidate.length > 0) measurable += 1;
     const v = r?.violations || {};
     if (v.protectedTerm || v.numberOrUnit || v.productName || v.meaning) violations += 1;
   }
+  const graded = GRADES.reduce((n, g) => n + byGrade[g], 0);
   return {
     total: list.length,
+    // Rows with a candidate to judge at all.
+    measurable,
+    // Rows GT never produced text for. Not failures — absences.
+    unusable: list.length - measurable,
+    // Rows a human has actually judged.
+    graded,
     byGrade,
     usable: byGrade.A + byGrade.B,
     curationCandidates: byGrade.C,
