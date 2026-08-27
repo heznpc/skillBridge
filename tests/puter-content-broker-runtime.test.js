@@ -166,6 +166,28 @@ function streamOf(...texts) {
   };
 }
 
+/**
+ * A stream shaped like the one the vendored SDK actually returns.
+ *
+ * dist/bundled/src/bridge/puter.js resolves `ai.chat` with an `async function*`
+ * that yields each parsed ndjson line VERBATIM — including the lines carrying
+ * an error or a usage limit instead of text — and between lines it is
+ * suspended inside `await`, not at a `yield`. Both matter. `streamOf` above is
+ * a copy of what the broker assumes it will be handed: every value has `text`,
+ * and `return()` always settles. Neither is true of the real thing, so the
+ * contract tests below use this instead.
+ */
+function sdkStream(lines, { stallAfter = Infinity } = {}) {
+  const never = new Promise(() => {});
+  return (async function* () {
+    for (let index = 0; index < lines.length; index += 1) {
+      if (index >= stallAfter) await never;
+      yield lines[index];
+    }
+    if (lines.length >= stallAfter) await never;
+  })();
+}
+
 function bootBroker({ stored = {}, chat, signIn, authenticateWithPuter, deferredGet = null } = {}) {
   const isolated = createIsolatedGlobal();
   const { isolatedGlobal } = isolated;
@@ -787,5 +809,121 @@ describe('Puter sign-in card — declining has a durable exit', () => {
 
     const error = broker.posted.find((message) => message.type === 'error' && message.id === 'second-cancel');
     expect(error.error).not.toBe('Tutor is off.');
+  });
+});
+
+// What `ai.chat` actually hands back, read off the vendored SDK rather than
+// assumed. Its ndjson generator yields whatever line the server sent: a text
+// line, an `{error: {...}}` line, or a `{metadata: {usage_limited: true}}`
+// line. And because it sits in `await` between lines, `return()` on a stalled
+// stream cannot settle until the response moves again — which is precisely
+// what the idle watchdog exists to handle.
+describe('Puter SDK stream contract', () => {
+  beforeEach(() => jest.clearAllMocks());
+  afterEach(() => jest.useRealTimers());
+
+  const startAndRun = async (chat, id = 'sdk') => {
+    const broker = bootBroker({ stored: { [TOKEN_KEY]: 'valid' }, chat });
+    await flushUntil(() => broker.posted.some((message) => message.type === 'ready'));
+    broker.listeners.message[0]({ type: 'start', id, prompt: 'question' });
+    return broker;
+  };
+
+  test('a text stream still streams', async () => {
+    // The shape the fix must not break, stated in the SDK's own terms.
+    const chat = jest.fn(async () => sdkStream([{ text: 'Hel' }, { text: 'lo' }]));
+    const broker = await startAndRun(chat);
+    await flushUntil(() => broker.posted.some((message) => message.type === 'done'));
+    expect(broker.posted.filter((m) => m.type === 'chunk').map((m) => m.text)).toEqual(['Hel', 'lo']);
+  });
+
+  test('a line with neither text nor an error is skipped, not treated as a failure', async () => {
+    // Trailing usage/finish metadata is normal and must not read as an error.
+    const chat = jest.fn(async () => sdkStream([{ text: 'hi' }, { usage: { tokens: 4 }, finish_reason: 'stop' }]));
+    const broker = await startAndRun(chat);
+    await flushUntil(() => broker.posted.some((message) => message.type === 'done'));
+    expect(broker.posted).not.toContainEqual(expect.objectContaining({ type: 'error' }));
+  });
+
+  test('an error line is reported as an error, not as an answer with no text', async () => {
+    // The line the SDK yields when a free account runs out. It has no `text`,
+    // so skipping it ended the stream with `done` and no chunks — which the
+    // Tutor client renders as the model having replied "No response".
+    const chat = jest.fn(async () =>
+      sdkStream([{ error: { code: 'insufficient_funds', message: 'Not enough funds' } }]),
+    );
+    const broker = await startAndRun(chat, 'funds');
+    await flushUntil(() => broker.posted.some((message) => message.type === 'error'));
+    expect(broker.posted).toContainEqual({ type: 'error', id: 'funds', error: 'Puter chat unavailable' });
+    expect(broker.posted).not.toContainEqual({ type: 'done', id: 'funds' });
+  });
+
+  test('a usage-limit line is reported too', async () => {
+    const chat = jest.fn(async () => sdkStream([{ metadata: { usage_limited: true } }]));
+    const broker = await startAndRun(chat, 'limit');
+    await flushUntil(() => broker.posted.some((message) => message.type === 'error'));
+    expect(broker.posted).toContainEqual({ type: 'error', id: 'limit', error: 'Puter chat unavailable' });
+  });
+
+  test('a token revoked mid-stream is reported as sign-in required', async () => {
+    // Revocation arriving as a line rather than a rejection is the one case
+    // the pre-call recovery path cannot see.
+    const chat = jest.fn(async () => sdkStream([{ text: 'partial' }, { error: { code: 'token_auth_failed' } }]));
+    const broker = await startAndRun(chat, 'revoked');
+    await flushUntil(() => broker.posted.some((message) => message.type === 'error'));
+    expect(broker.posted).toContainEqual({
+      type: 'error',
+      id: 'revoked',
+      error: 'Puter sign-in required — the AI tutor needs a free Puter session.',
+    });
+    expect(broker.posted).toContainEqual({ type: 'chunk', id: 'revoked', text: 'partial' });
+  });
+
+  test('an idle stream reports its own timeout instead of waiting on a return that cannot settle', async () => {
+    // The generator is suspended in `await`, so `return()` is queued behind a
+    // response that has stopped arriving. Awaiting it before reporting meant
+    // the watchdog fired, the keepalives stopped, and the reason never
+    // reached the client — which then had to wait out its own idle timeout.
+    jest.useFakeTimers();
+    const stream = sdkStream([], { stallAfter: 0 });
+    const chat = jest.fn(async () => stream);
+    const broker = bootBroker({ stored: { [TOKEN_KEY]: 'valid' }, chat });
+    await jest.advanceTimersByTimeAsync(0);
+    broker.listeners.message[0]({ type: 'start', id: 'stalled', prompt: 'question' });
+    await jest.advanceTimersByTimeAsync(0);
+    await jest.advanceTimersByTimeAsync(90_000);
+    expect(broker.posted).toContainEqual({ type: 'error', id: 'stalled', error: 'Puter stream timed out' });
+  });
+  test('an oversized response is cut off and reported, not streamed on', async () => {
+    // 200k chars is the cap, and the chunk that crosses it is dropped whole
+    // rather than truncated. The stream is stopped mid-flight, so this is the
+    // one cancellation that happens while the generator is suspended at a
+    // `yield` rather than inside `await`.
+    const big = 'x'.repeat(150_000);
+    const chat = jest.fn(async () => sdkStream([{ text: big }, { text: big }, { text: 'never' }]));
+    const broker = await startAndRun(chat, 'big');
+    await flushUntil(() => broker.posted.some((message) => message.type === 'error'));
+    expect(broker.posted).toContainEqual({
+      type: 'error',
+      id: 'big',
+      error: 'Response exceeds 200000 chars',
+    });
+    expect(broker.posted.filter((m) => m.type === 'chunk')).toHaveLength(1);
+    expect(broker.posted).not.toContainEqual({ type: 'done', id: 'big' });
+  });
+
+  test('a non-streaming answer is refused rather than delivered as an empty one', async () => {
+    // What the SDK resolves when the response is not ndjson: the completion
+    // object, with the toString/valueOf shims its transform adds. The broker
+    // requires a stream, and the boundary is pinned here so a change to that
+    // is a decision rather than an accident — an unrecognised success must
+    // still surface as a failure, never as a silent no-answer.
+    const completion = { index: 0, message: { role: 'assistant', content: 'whole answer' } };
+    completion.toString = () => completion.message.content;
+    const chat = jest.fn(async () => completion);
+    const broker = await startAndRun(chat, 'nonstream');
+    await flushUntil(() => broker.posted.some((message) => message.type === 'error'));
+    expect(broker.posted).toContainEqual({ type: 'error', id: 'nonstream', error: 'Puter chat unavailable' });
+    expect(broker.posted).not.toContainEqual({ type: 'done', id: 'nonstream' });
   });
 });

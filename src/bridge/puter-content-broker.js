@@ -105,6 +105,15 @@
       errorText(value),
     );
   };
+  /**
+   * A stream line that reports a failure rather than carrying output.
+   *
+   * Deliberately narrow: a line with usage or finish metadata and no text is
+   * ordinary and must keep being skipped. Only an explicit error, or the
+   * usage-limit flag the SDK itself acts on, ends the stream.
+   */
+  const isChatFailureChunk = (value) =>
+    !!value && typeof value === 'object' && (!!value.error || value.metadata?.usage_limited === true);
   const selectModel = (model) => (MODELS.has(model) ? model : 'claude-haiku-4-5');
   const isModelError = (value) =>
     /\b(model|invalid|deprecated|unsupported|not[ _-]?found|404)\b/i.test(errorText(value) || String(value));
@@ -424,18 +433,34 @@
       clearTimeout(this.watchdog);
       this.watchdog = setTimeout(() => void this.cancel('Puter stream timed out'), STREAM_IDLE_TIMEOUT_MS);
     }
+    /**
+     * Stop consuming upstream without waiting for it to agree.
+     *
+     * `ai.chat` resolves with an async generator that sits in `await` between
+     * ndjson lines, so `return()` is queued behind a response that may have
+     * stopped arriving — which is exactly the case the idle watchdog fires
+     * on. Awaiting it here meant the reason for the cancellation was never
+     * sent, and the client had to wait out its own idle timeout to learn
+     * anything had gone wrong.
+     */
+    releaseUpstream() {
+      const iterator = this.iterator;
+      this.iterator = null;
+      try {
+        void Promise.resolve(iterator?.return?.()).catch(() => {});
+      } catch (_e) {
+        /* best-effort upstream cancellation */
+      }
+    }
     async cancel(reason = '') {
       if (this.cancelled) return;
       this.cancelled = true;
       clearTimeout(this.watchdog);
       clearInterval(this.keepalive);
       active.delete(this.id);
-      try {
-        await this.iterator?.return?.();
-      } catch (_e) {
-        /* best-effort upstream cancellation */
-      }
+      // Reported first: see releaseUpstream.
       if (reason) send({ type: 'error', id: this.id, error: reason });
+      this.releaseUpstream();
       authWaiters.delete(this.id);
       if (authWaiters.size === 0) cancelAuthGate?.();
     }
@@ -443,6 +468,7 @@
       clearTimeout(this.watchdog);
       clearInterval(this.keepalive);
       active.delete(this.id);
+      this.releaseUpstream();
     }
   }
 
@@ -502,7 +528,7 @@
       if (!isStream(response)) throw new Error(SAFE_CHAT_ERROR);
       session.iterator = response[Symbol.asyncIterator]();
       if (session.cancelled) {
-        await session.iterator.return?.();
+        session.releaseUpstream();
         return;
       }
       showAuth(false);
@@ -510,6 +536,16 @@
         session.arm();
         const next = await session.iterator.next();
         if (next.done) break;
+        // The SDK yields each ndjson line exactly as the server sent it, so a
+        // failure arrives as a line with no `text` — `{error: {code:
+        // 'insufficient_funds'}}` when a free account runs out, a
+        // `usage_limited` metadata line when it is throttled, or a revoked
+        // token that was still valid when the request started. Skipping those
+        // as "no text" ended the stream with `done` and no chunks, which the
+        // Tutor renders as the model having answered "No response".
+        if (isChatFailureChunk(next.value)) {
+          throw new Error(isRevoked(next.value) ? SAFE_AUTH_ERROR : SAFE_CHAT_ERROR);
+        }
         const text = next.value?.text || next.value?.message?.content || '';
         if (typeof text !== 'string' || !text) continue;
         session.responseChars += text.length;
