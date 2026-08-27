@@ -14,6 +14,13 @@
  *
  *   node scripts/run-gt-title-experiment.js --locales ko,ja
  *   node scripts/run-gt-title-experiment.js --limit 10 --out run.json
+ *   node scripts/run-gt-title-experiment.js --resume snapshots/academy/gt-phase1-…json
+ *
+ * `--resume` re-requests only the rows an earlier run could not use, and
+ * carries the usable ones through untouched. The rate limit here opens in
+ * short, unpredictable windows — one run collected all 76 Korean titles and
+ * was throttled 29 rows into Japanese — so re-requesting what is already in
+ * hand spends the window on work that is already done.
  *
  * The candidates come from the SHIPPED code path — src/lib/protected-terms.js
  * is loaded as-is and the request is the same POST the service worker makes.
@@ -195,6 +202,19 @@ async function main() {
     path.join('snapshots', 'academy', `gt-phase1-${new Date().toISOString().slice(0, 10)}.json`),
   );
 
+  // Rows an earlier run already got. Keyed by locale + source so a partially
+  // collected locale can be finished rather than restarted.
+  const resumePath = argVal('--resume', null);
+  const carried = new Map();
+  if (resumePath) {
+    if (!fs.existsSync(resumePath)) throw new Error(`no run to resume at ${resumePath}`);
+    const prior = JSON.parse(fs.readFileSync(resumePath, 'utf8'));
+    for (const r of prior.records || []) {
+      if (r.resultKind === RESULT_KIND.OK) carried.set(`${r.locale}\u0000${r.source}`, r);
+    }
+    console.log(`resuming ${resumePath}: ${carried.size} usable rows carried, the rest re-requested`);
+  }
+
   const records = [];
   for (const locale of locales) {
     const pt = loadProtectedTerms(locale);
@@ -202,6 +222,13 @@ async function main() {
     let failures = 0;
     const kinds = Object.create(null);
     for (const source of titles.slice(0, limit)) {
+      const already = carried.get(`${locale}\u0000${source}`);
+      if (already) {
+        // Carried verbatim, including any grade a human already gave it.
+        records.push(already);
+        kinds.carried = (kinds.carried || 0) + 1;
+        continue;
+      }
       let result;
       try {
         result = await translateOnce(source, locale, pt);
