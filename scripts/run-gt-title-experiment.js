@@ -65,26 +65,79 @@ function loadProtectedTerms(locale) {
 }
 
 /**
+ * Why a row has no candidate.
+ *
+ * Kept separate because these are not the same finding and must not be read
+ * as one. A rate limit says nothing about translation quality; a malformed
+ * response says the endpoint changed; a failed unmask says OUR pipeline lost
+ * a protected term. Collapsing them — as an earlier version did by returning
+ * a bare null for both an empty translation and a failed unmask — means a
+ * re-run after the rate limit lifts still cannot tell a pipeline bug from a
+ * quiet endpoint.
+ */
+const RESULT_KIND = Object.freeze({
+  OK: 'ok',
+  RATE_LIMITED: 'rate-limited',
+  HTTP_ERROR: 'http-error',
+  NETWORK: 'network',
+  MALFORMED_RESPONSE: 'malformed-response',
+  EMPTY_TRANSLATION: 'empty-translation',
+  UNMASK_FAILED: 'unmask-failed',
+});
+
+/**
  * One translation through the shipped shape: mask, POST `q` in the body,
- * unmask. Returns null exactly where the extension returns null — an unmask
- * failure means the user keeps English, and recording that as an empty
- * candidate rather than dropping the row keeps the failure visible.
+ * unmask.
+ *
+ * Returns `{ kind, text, detail }` rather than a string-or-null so the caller
+ * can record WHY a row is unusable. Nothing here throws for an expected
+ * failure; only a caller bug should.
  */
 async function translateOnce(text, targetLang, pt) {
   const masked = pt.maskProtectedTerms(text.trim());
   const toSend = masked?.tokens.length ? masked.text : text.trim();
   const url = `${GT_ENDPOINT}?client=gtx&sl=en&tl=${targetLang}&dt=t`;
-  const resp = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-    body: new URLSearchParams({ q: toSend }).toString(),
-  });
-  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-  const data = await resp.json();
+
+  let resp;
+  try {
+    resp = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+      body: new URLSearchParams({ q: toSend }).toString(),
+    });
+  } catch (err) {
+    // DNS, TLS, offline — the request never got an answer at all.
+    return { kind: RESULT_KIND.NETWORK, text: null, detail: String(err?.message || err) };
+  }
+
+  if (resp.status === 429) {
+    // The endpoint is throttling this source IP. Called out by name because
+    // it is the one failure that means "come back later" rather than
+    // "something is wrong with the code".
+    return { kind: RESULT_KIND.RATE_LIMITED, text: null, detail: 'HTTP 429' };
+  }
+  if (!resp.ok) return { kind: RESULT_KIND.HTTP_ERROR, text: null, detail: `HTTP ${resp.status}` };
+
+  let data;
+  try {
+    data = await resp.json();
+  } catch (err) {
+    // A 200 that is not the JSON shape this endpoint documents — an interstitial,
+    // a consent wall, or a changed contract.
+    return { kind: RESULT_KIND.MALFORMED_RESPONSE, text: null, detail: String(err?.message || err) };
+  }
+
   const translated = (data?.[0] || []).map((seg) => seg?.[0] || '').join('');
-  if (!translated) return null;
-  if (!masked?.tokens.length) return translated;
-  return pt.unmaskProtectedTerms(translated, masked) ?? null;
+  if (!translated) return { kind: RESULT_KIND.EMPTY_TRANSLATION, text: null, detail: null };
+  if (!masked?.tokens.length) return { kind: RESULT_KIND.OK, text: translated, detail: null };
+
+  const unmasked = pt.unmaskProtectedTerms(translated, masked);
+  if (unmasked === null || unmasked === undefined) {
+    // OUR pipeline lost the round trip, not Google's. A quality run that
+    // counted this as an empty translation would blame the wrong component.
+    return { kind: RESULT_KIND.UNMASK_FAILED, text: null, detail: `${masked.tokens.length} tokens` };
+  }
+  return { kind: RESULT_KIND.OK, text: unmasked, detail: null };
 }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -107,15 +160,20 @@ async function main() {
     const pt = loadProtectedTerms(locale);
     const protectedTerms = pt.getProtectedTermList();
     let failures = 0;
+    const kinds = Object.create(null);
     for (const source of titles.slice(0, limit)) {
-      let candidate = null;
-      let error = null;
+      let result;
       try {
-        candidate = await translateOnce(source, locale, pt);
+        result = await translateOnce(source, locale, pt);
       } catch (err) {
-        error = String(err.message || err);
-        failures += 1;
+        // Only a bug in the harness itself reaches here.
+        result = { kind: 'harness-error', text: null, detail: String(err?.message || err) };
       }
+      const candidate = result.text;
+      const error =
+        result.kind === RESULT_KIND.OK ? null : `${result.kind}${result.detail ? `: ${result.detail}` : ''}`;
+      kinds[result.kind] = (kinds[result.kind] || 0) + 1;
+      if (result.kind !== RESULT_KIND.OK) failures += 1;
       // A request error is not a translation quality signal, and pretending
       // otherwise poisons the experiment: an empty candidate trivially
       // "loses" every protected term. Violations are only meaningful when
@@ -135,6 +193,9 @@ async function main() {
         grade: null,
         evaluatorConfidence: null,
         rationale: null,
+        // Recorded on every row, so a re-run can be filtered by cause without
+        // re-deriving it from a message string.
+        resultKind: result.kind,
         ...(error ? { error } : {}),
       });
       await sleep(REQUEST_GAP_MS);
@@ -142,7 +203,11 @@ async function main() {
     const flagged = records.filter(
       (r) => r.locale === locale && (r.violations.protectedTerm || r.violations.numberOrUnit),
     );
-    console.log(`  ${locale}: ${limit} titles, ${flagged.length} deterministic violations, ${failures} request errors`);
+    const breakdown = Object.entries(kinds)
+      .map(([k, n]) => `${k}=${n}`)
+      .join(' ');
+    console.log(`  ${locale}: ${limit} titles, ${flagged.length} deterministic violations, ${failures} unusable`);
+    console.log(`    ${breakdown}`);
   }
 
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
@@ -160,4 +225,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { translateOnce, loadProtectedTerms };
+module.exports = { translateOnce, loadProtectedTerms, RESULT_KIND };

@@ -247,7 +247,10 @@ stale against the next CWS candidate — fix these:
   - ❌ Location, financial/payment, and health information also stay **unchecked**.
   - With the local engine selected, Tutor text goes only to the user's own
     localhost server; with the Tutor off, no AI request is made at all.
-    Page translation never invokes Puter, Claude, or the Tutor model in any mode.
+    Baseline page translation never invokes Puter, Claude, or the Tutor model in
+    any mode. Optional Translation Refinement is a separate feature, off by
+    default and separately consented; when a user turns it on it does send
+    already-translated paragraphs to the selected model.
   Keep the three confirmations checked (transfer to a service provider to perform
   the requested feature is an approved use case, not a sale).
 - **Permission and site-access justifications** — paste from `STORE_LISTING.md`
