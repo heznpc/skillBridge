@@ -21,6 +21,7 @@ const {
   recheckCarriedRow,
   droppedCarriedKeys,
   duplicateTitles,
+  usableLocales,
   runExperiment,
 } = require('../scripts/run-gt-title-experiment');
 
@@ -216,6 +217,16 @@ describe('the input a resume is replayed against', () => {
   test('a repeated title is caught before it can become two identical output rows', () => {
     expect(duplicateTitles(['a', 'b', 'a'])).toEqual(['a']);
     expect(duplicateTitles(['a', 'b'])).toEqual([]);
+  });
+  test('a repeated locale is caught the same way a repeated title is', () => {
+    // `--locales ko,ko` would emit every ko row twice and count each of them
+    // twice in the locale's own tally.
+    expect(duplicateTitles(['ko', 'ja', 'ko'])).toEqual(['ko']);
+  });
+
+  test('an empty entry is not a locale', () => {
+    // A trailing comma in --locales would otherwise request `tl=`.
+    expect(usableLocales('ko, ,ja,')).toEqual(['ko', 'ja']);
   });
 });
 

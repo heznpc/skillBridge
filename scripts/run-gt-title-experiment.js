@@ -223,7 +223,20 @@ function rowKey(locale, source) {
   return `${locale}\u0000${source}`;
 }
 
-/** Titles that appear more than once, which would become duplicate rows. */
+/**
+ * The locales a `--locales` string actually names.
+ *
+ * Empty entries are dropped rather than requested: a trailing comma would
+ * otherwise send `tl=` and record the answer as a translation.
+ */
+function usableLocales(value) {
+  return String(value || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+/** Entries that appear more than once, which would become duplicate rows. */
 function duplicateTitles(titles) {
   const seen = new Set();
   const dupes = new Set();
@@ -450,7 +463,12 @@ async function main() {
   const allTitles = JSON.parse(fs.readFileSync(titlesPath, 'utf8'));
   const limit = Number(argVal('--limit', 0)) || allTitles.length;
   const titles = allTitles.slice(0, limit);
-  const locales = (argVal('--locales', '') || DEFAULT_LOCALES.join(',')).split(',').map((s) => s.trim());
+  const locales = usableLocales(argVal('--locales', '') || DEFAULT_LOCALES.join(','));
+  const repeatedLocales = duplicateTitles(locales);
+  if (repeatedLocales.length) {
+    throw new Error(`--locales repeats ${repeatedLocales.join(', ')}, which would emit every row twice`);
+  }
+  if (!locales.length) throw new Error('--locales named no locale');
   const outPath = argVal(
     '--out',
     path.join('snapshots', 'academy', `gt-phase1-${new Date().toISOString().slice(0, 10)}.json`),
@@ -535,6 +553,7 @@ module.exports = {
   RESUMABLE_SCHEMA_VERSIONS,
   rowKey,
   duplicateTitles,
+  usableLocales,
   carryableRows,
   readResumeRun,
   recheckCarriedRow,
