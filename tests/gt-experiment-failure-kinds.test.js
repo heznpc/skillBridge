@@ -8,6 +8,9 @@
  * failed unmask, so a run could not tell a pipeline bug from a quiet endpoint
  * — which matters because the experiment is currently blocked on HTTP 429 and
  * will be re-run, unchanged, whenever that lifts.
+ *
+ * What a re-run then carries forward is a separate concern with its own file:
+ * tests/gt-experiment-resume.test.js.
  */
 
 /* global describe, test, expect, beforeEach, afterEach */
@@ -179,55 +182,5 @@ describe('translateOnce failure classification', () => {
       expect(r.kind).not.toBe(RESULT_KIND.OK);
       expect(r.text).toBeNull();
     }
-  });
-});
-
-describe('resuming a throttled run', () => {
-  // The rate limit opens in short, unpredictable windows: one run collected
-  // all 76 Korean titles and was throttled 29 rows into Japanese. Re-requesting
-  // rows already in hand spends the next window on work that is already done,
-  // so a resume must carry usable rows through untouched and retry only the
-  // rest. These assert the selection rule the CLI implements.
-  const priorRun = {
-    records: [
-      { locale: 'ko', source: 'Making a request', gtCandidate: '요청하기', resultKind: 'ok', grade: 'A' },
-      { locale: 'ko', source: 'Temperature', gtCandidate: '', resultKind: 'rate-limited' },
-      { locale: 'ja', source: 'Making a request', gtCandidate: '', resultKind: 'rate-limited' },
-      { locale: 'ko', source: 'System prompts', gtCandidate: '', resultKind: 'unmask-failed' },
-    ],
-  };
-
-  /** The same key and filter the resume path uses. */
-  const carriedFrom = (run) => {
-    const m = new Map();
-    for (const r of run.records || []) {
-      if (r.resultKind === 'ok') m.set(`${r.locale}\u0000${r.source}`, r);
-    }
-    return m;
-  };
-
-  test('only usable rows are carried', () => {
-    const carried = carriedFrom(priorRun);
-    expect(carried.size).toBe(1);
-    expect(carried.has('ko\u0000Making a request')).toBe(true);
-  });
-
-  test('every unusable kind is retried, not just the rate-limited one', () => {
-    // An unmask failure is our own pipeline losing a term; leaving it carried
-    // would freeze a bug into the dataset.
-    const carried = carriedFrom(priorRun);
-    expect(carried.has('ko\u0000System prompts')).toBe(false);
-    expect(carried.has('ko\u0000Temperature')).toBe(false);
-  });
-
-  test('the same title in another locale is a different row', () => {
-    const carried = carriedFrom(priorRun);
-    expect(carried.has('ja\u0000Making a request')).toBe(false);
-  });
-
-  test('a carried row keeps a grade a human already gave it', () => {
-    // Resuming must not silently discard grading work done on the first pass.
-    const carried = carriedFrom(priorRun);
-    expect(carried.get('ko\u0000Making a request').grade).toBe('A');
   });
 });
