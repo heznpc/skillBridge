@@ -4,6 +4,11 @@
  * The isolated content-script manifest loads the bundled SDK path directly.
  * The E2E helper replaces that file in a temporary bundle so no account or
  * external AI request is needed.
+ *
+ * Shapes are copied from the vendored SDK, not from what the broker expects:
+ * ai.chat resolves an async generator over raw ndjson lines when streaming,
+ * and the transformed completion object otherwise. The SDK's own line-level
+ * failure shapes are covered in tests/puter-content-broker-runtime.test.js.
  */
 
 const PUTER_STREAM_STUB = `
@@ -60,18 +65,17 @@ const PUTER_STREAM_STUB = `
         const delay = Number(state.sb_e2e_chunk_delay);
         if (Number.isFinite(delay) && delay > 0) globalThis.__sbE2eChunkDelayMs = delay;
         if (opts && opts.stream) {
-          return {
-            [Symbol.asyncIterator]() {
-              let i = 0;
-              return {
-                async next() {
-                  await new Promise((r) => setTimeout(r, globalThis.__sbE2eChunkDelayMs || 150));
-                  if (i >= STREAM_CHUNKS.length) return { done: true };
-                  return { done: false, value: { text: STREAM_CHUNKS[i++] } };
-                },
-              };
-            },
-          };
+          // An async generator, because that is what the vendored SDK returns:
+          // dist/bundled/src/bridge/puter.js resolves ai.chat with
+          // \`async function*\` over the ndjson lines. A hand-written iterator
+          // is cancellable at any moment; a generator awaiting its next line is
+          // not, and the cancel spec should be exercising the harder one.
+          return (async function* () {
+            for (const text of STREAM_CHUNKS) {
+              await new Promise((r) => setTimeout(r, globalThis.__sbE2eChunkDelayMs || 150));
+              yield { text: text };
+            }
+          })();
         }
         // The Tutor uses stream=true; retain a harmless non-streaming response
         // for SDK compatibility.

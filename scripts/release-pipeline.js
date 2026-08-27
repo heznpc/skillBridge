@@ -324,6 +324,11 @@ function localQualityGates() {
   runNpm('Canonical lesson lookup check', 'check:canonical');
   runNpm('Live selector check', 'check:selectors');
   runNpm('Live course-map check', 'check:academy');
+  // Puter does not validate a model id: it forwards whatever it is given and
+  // lets the server refuse. A retired id is therefore not a build failure but
+  // a failed first question after a successful sign-in, which is the most
+  // expensive place to discover it.
+  runNpm('Live tutor-model check', 'check:models');
 }
 
 function preflight({ includeFullE2e, includeStoreCapture }) {

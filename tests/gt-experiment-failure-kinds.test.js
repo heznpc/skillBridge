@@ -8,6 +8,9 @@
  * failed unmask, so a run could not tell a pipeline bug from a quiet endpoint
  * — which matters because the experiment is currently blocked on HTTP 429 and
  * will be re-run, unchanged, whenever that lifts.
+ *
+ * What a re-run then carries forward is a separate concern with its own file:
+ * tests/gt-experiment-resume.test.js.
  */
 
 /* global describe, test, expect, beforeEach, afterEach */

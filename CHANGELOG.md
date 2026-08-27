@@ -36,6 +36,7 @@ repository but never shipped to users.
 - The Tutor's engine-preference read left a 1.5-second timer armed after every question, and its rejection had no listener — one unhandled promise rejection per message.
 - Recent lessons never recorded a visit on Academy at all: a lesson there is `/courses/<course>/<slug>` with no numeric id, and the check for "is this a lesson page" only knew the Skilljar shape. The reading-progress aid was blank on Academy for the same reason.
 - Highlighting an answer choice and pressing **Ask Tutor** sent that text to the Tutor. The quote path had no exam guard; it now refuses any selection that touches an answer choice, including a drag that spans the whole choice group.
+- A Tutor failure could arrive looking like an answer. Puter streams each line of a reply as it comes, and a failure — a free account out of credit, a usage limit, a sign-in that expired while the question was in flight — is a line carrying no text rather than an error. Those lines were skipped as nothing to show, so the reply finished empty and the chat rendered it as the model having said "No response". They now say what went wrong, and an expired session offers the sign-in card instead. A stream that simply stops now reports its own timeout too, rather than leaving the chat to sit out a second full idle period before saying anything.
 
 ## [4.0.0] - 2026-07-29
 

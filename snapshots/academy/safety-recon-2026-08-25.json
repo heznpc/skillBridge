@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "origin": "https://academy.claude.com",
+  "generatedAt": "2026-08-25T10:04:03.318Z",
+  "contract": {
+    "quizDistinguishableFromLesson": true,
+    "choicesIdentifiable": false,
+    "choicesExcludable": false,
+    "tutorExamSignalAvailable": "unknown",
+    "survivesSpaNavigation": "unknown",
+    "verdict": "partial"
+  },
+  "records": [
+    {
+      "observedAt": "2026-08-25T10:04:02.830Z",
+      "path": "/courses/building-with-the-claude-api/quiz-on-accessing-claude-with-the-api",
+      "pageKind": "quiz",
+      "pageKindSignals": [
+        "path",
+        "heading"
+      ],
+      "question": {
+        "count": 0,
+        "role": null
+      },
+      "choices": {
+        "count": 0,
+        "inputType": null,
+        "role": null,
+        "stableAttrs": [],
+        "excludable": false,
+        "excludabilitySignals": [],
+        "excludabilityReason": "no choice elements observed"
+      },
+      "controls": {
+        "submitPresent": false,
+        "submitRole": null
+      },
+      "state": "pre-submit",
+      "postSubmit": null,
+      "status": "partial",
+      "blocker": "authentication-required"
+    },
+    {
+      "observedAt": "2026-08-25T10:04:03.215Z",
+      "path": "/courses/building-with-the-claude-api/final-assessment",
+      "pageKind": "quiz",
+      "pageKindSignals": [
+        "path",
+        "heading"
+      ],
+      "question": {
+        "count": 0,
+        "role": null
+      },
+      "choices": {
+        "count": 0,
+        "inputType": null,
+        "role": null,
+        "stableAttrs": [],
+        "excludable": false,
+        "excludabilitySignals": [],
+        "excludabilityReason": "no choice elements observed"
+      },
+      "controls": {
+        "submitPresent": false,
+        "submitRole": null
+      },
+      "state": "pre-submit",
+      "postSubmit": null,
+      "status": "partial",
+      "blocker": "authentication-required"
+    },
+    {
+      "observedAt": "2026-08-25T10:04:03.301Z",
+      "path": "/courses/building-with-the-claude-api/making-a-request",
+      "pageKind": "lesson",
+      "pageKindSignals": [],
+      "question": {
+        "count": 0,
+        "role": null
+      },
+      "choices": {
+        "count": 0,
+        "inputType": null,
+        "role": null,
+        "stableAttrs": [],
+        "excludable": false,
+        "excludabilitySignals": [],
+        "excludabilityReason": "no choice elements observed"
+      },
+      "controls": {
+        "submitPresent": false,
+        "submitRole": null
+      },
+      "state": "pre-submit",
+      "postSubmit": null,
+      "status": "partial",
+      "blocker": "authentication-required"
+    }
+  ]
+}

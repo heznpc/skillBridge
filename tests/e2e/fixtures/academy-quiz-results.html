@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Claude Academy — How you did</title>
+  </head>
+  <body>
+    <!--
+      A Claude Academy quiz AFTER submission.
+
+      The live shape of this page is unknown and cannot be established without
+      submitting a real quiz on a real account, which SkillBridge will not do.
+      So this fixture is deliberately not a guess at the markup — it is the
+      WORST same-URL shape the guard has to survive:
+
+        - the heading no longer names a quiz ("How you did"),
+        - the answers are back on screen with correctness marks,
+        - a plain-prose summary repeats the correct answer outside any choice.
+
+      That leaves the route as the only signal in the detector's four that can
+      still fire, which is the property worth locking in: submission does not
+      change the URL, so protection cannot be re-rendered away.
+
+      The prose line is the part that would be missed if the guard leaned on
+      the choice roles alone. It is not withheld by choice exclusion — it is
+      withheld because the page is still an assessment, and on an assessment
+      the tutor is given the title and nothing else.
+
+      Choice and answer strings are nonsense on purpose: each appears in
+      exactly one place, so finding one in a translate request, in the cache,
+      or in a tutor prompt is unambiguous evidence of a leak.
+    -->
+    <div class="ds-app-shell">
+      <nav aria-label="Global"><span class="nav-text">Anthropic Academy</span></nav>
+      <nav aria-label="Breadcrumb"><span>Building with the Claude API</span></nav>
+    </div>
+
+    <main>
+      <h1 id="academy-results-title">How you did</h1>
+
+      <p id="academy-results-score">You scored 3 out of 4.</p>
+
+      <p id="academy-quiz-question">Which header carries the credential on a Claude API request?</p>
+
+      <div role="radiogroup" aria-labelledby="academy-quiz-question" id="academy-choices">
+        <div class="ds-c-1x9" role="radio" aria-checked="true" tabindex="0" id="academy-choice-a">
+          <span class="ds-c-2x0">Zebra-cipher-alpha carries the credential</span>
+          <span class="ds-c-3x1">Correct</span>
+        </div>
+        <div class="ds-c-1x9" role="radio" aria-checked="false" tabindex="-1" id="academy-choice-b">
+          <span class="ds-c-2x0">Marmalade-vector-bravo carries the credential</span>
+        </div>
+        <div class="ds-c-1x9" role="radio" aria-checked="false" tabindex="-1" id="academy-choice-c">
+          <span class="ds-c-2x0">Quartzite-harbor-charlie carries the credential</span>
+        </div>
+        <div class="ds-c-1x9" role="radio" aria-checked="false" tabindex="-1" id="academy-choice-d">
+          <span class="ds-c-2x0">Pelican-lantern-delta carries the credential</span>
+        </div>
+      </div>
+
+      <p id="academy-results-explanation">
+        Review: Ptarmigan-meridian-echo is the answer the graders were looking for.
+      </p>
+    </main>
+  </body>
+</html>

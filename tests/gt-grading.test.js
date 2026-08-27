@@ -206,6 +206,27 @@ describe('summarize', () => {
     expect(out.byGrade).toMatchObject({ A: 1, B: 1, C: 1, D: 1, F: 0 });
   });
 
+  test('rows GT never translated are named, so a rate is never taken over them', () => {
+    // The Phase 1 run in hand is 123 usable rows out of 304: the rest are
+    // rate-limited, ungraded, and unmeasurable. `total` counts every row it
+    // was handed, so a summary that reported only `total` would let a reader
+    // divide graded outcomes by rows that were never translated at all.
+    const out = summarize([
+      ok({ grade: 'A' }),
+      ok({ grade: 'B' }),
+      { ...ok(), gtCandidate: '', measurable: false, resultKind: 'rate-limited', grade: null },
+      { ...ok(), gtCandidate: '', measurable: false, resultKind: 'rate-limited', grade: null },
+    ]);
+    expect(out).toMatchObject({ total: 4, measurable: 2, unusable: 2, graded: 2, usable: 2 });
+  });
+
+  test('a measurable row nobody has graded yet is neither usable nor unusable', () => {
+    // Ungraded is the state most of the dataset is actually in, and it is not
+    // the same as failed.
+    const out = summarize([ok({ grade: 'A' }), { ...ok(), grade: null }]);
+    expect(out).toMatchObject({ total: 2, measurable: 2, unusable: 0, graded: 1, usable: 1, failures: 0 });
+  });
+
   test('counts a record with any violation', () => {
     const out = summarize([ok({ violations: { ...ok().violations, meaning: true } })]);
     expect(out.violations).toBe(1);

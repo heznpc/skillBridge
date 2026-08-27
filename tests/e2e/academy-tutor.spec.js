@@ -19,6 +19,7 @@
  *   3. On an Academy lesson the guard is absent, so it is a real signal rather
  *      than something always on.
  *   4. With the engine Off, nothing is asked at all.
+ *   5. And none of that is undone when the quiz becomes its own result page.
  *
  * tests/tutor-safety-contract.test.js owns the same contract across all three
  * engines at unit level. This one owns "and it survives the real transport".
@@ -31,6 +32,12 @@ const { registerStubs, startFixtureServer, stopFixtureServer } = require('./help
 
 const LESSON_PATH = '/academy/courses/building-with-the-claude-api/accessing-claude-with-the-api';
 const QUIZ_PATH = '/academy/courses/building-with-the-claude-api/quiz-on-accessing-claude-with-the-api';
+// The same assessment URL after a submission. Submitting is the one transition
+// this suite cannot rehearse — it needs a signed-in account and puts a real
+// attempt on a real record — so the fixture served here is not a guess at the
+// live markup but the worst same-URL shape the guard has to survive: the
+// heading no longer names a quiz, and the answers are back on screen, marked.
+const RESULTS_PATH = `${QUIZ_PATH}/results`;
 
 const EXAM_MARKER = 'CRITICAL: The user is on a certification exam page.';
 /** Nonsense on purpose — each string exists in exactly one place in the fixture. */
@@ -116,6 +123,34 @@ test.describe('SkillBridge — Academy tutor exam safety', () => {
     // The whole lesson body is withheld on an assessment page, not just the
     // choices — so the sentence they sit in is gone too.
     expect(prompt).not.toContain('carries the credential');
+  });
+
+  test('after submission, at the same URL, the guard is still on the prompt', async () => {
+    // Nothing in the result DOM says "assessment" any more: no quiz heading,
+    // and the choices carry correctness marks rather than an unanswered
+    // question. The URL is unchanged, which is the signal that a re-render
+    // cannot take away.
+    await gotoAcademy(RESULTS_PATH);
+    expect((await evalInContentWorld(extCtx.context, 'examState')).isExamPage).toBe(true);
+
+    const prompt = await askTutor('Why was my answer wrong?');
+    expect(prompt, 'the tutor must have been asked at all').toBeTruthy();
+    expect(prompt).toContain(EXAM_MARKER);
+  });
+
+  test('and the revealed answers do not reach the model either', async () => {
+    await gotoAcademy(RESULTS_PATH);
+    const prompt = await askTutor('Summarise this page for me.');
+    expect(prompt).toBeTruthy();
+    for (const fragment of CHOICE_FRAGMENTS) {
+      expect(prompt, `answer choice "${fragment}" must never reach the model`).not.toContain(fragment);
+    }
+    // The prose line is the one choice exclusion would not have caught: it is
+    // outside every radiogroup. It is withheld because the page is still an
+    // assessment and the whole body is given up, not because it looks like a
+    // choice — which is why the route signal is the thing being tested.
+    expect(prompt).not.toContain('Ptarmigan-meridian-echo');
+    expect(prompt).not.toContain('You scored 3 out of 4');
   });
 
   test('on an Academy lesson the guard is absent, so it means something when present', async () => {
