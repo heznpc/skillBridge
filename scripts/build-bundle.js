@@ -206,6 +206,20 @@ const PUTER_HOST_INDEXEDDB_INIT =
   'constructor(){this._cache=new n({dbName:"puter_cache"}),this._opscache=new n,this.modules_=[];';
 const PUTER_PRIVATE_CACHE_INIT =
   'constructor(){this._cache={flushall:()=>{}},this._opscache=this._cache,this.modules_=[];';
+// Removing this line is what makes the SDK loadable at all, not just tidier.
+//
+// A content script's ISOLATED world has NO custom-element registry —
+// `customElements` is null there while `HTMLElement` is still a function — and
+// the SDK guards this registration on the prototype only, so the guard passes
+// and the call throws. Everything after it in the SDK's init IIFE is then
+// lost, including its auth-state wiring, and the Tutor answers "Sorry, an
+// error occurred" with nothing on the wire.
+//
+// The consequence is worth stating because it costs debugging time otherwise:
+// loading the repo as an UNPACKED extension gives you the raw SDK with this
+// line intact, so the Cloud Tutor cannot work there. Only the bundled artifact
+// is a working Tutor build. Reproduce Tutor behaviour against `dist/bundled`,
+// and read a failure in an unpacked load as this, not as a product defect.
 const PUTER_CUSTOM_ELEMENT_REGISTRATION =
   'cn.__proto__===globalThis.HTMLElement&&customElements.define("puter-dialog",cn);';
 const PUTER_PREFIX_LOGGER_PROFILE_LOOKUP =
