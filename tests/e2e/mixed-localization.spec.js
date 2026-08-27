@@ -126,6 +126,13 @@ test.describe('SkillBridge — mixed-localization contract', () => {
   test('English residue on the localized page still gets translated', async () => {
     // The other half of the contract: gap-filling must keep working, or
     // "never re-translate" would be trivially satisfiable by doing nothing.
+    //
+    // Polled rather than read once. The request is issued by the translation
+    // pass started in the shared setup, so reading it synchronously assumes
+    // that pass has already reached the network — which it had locally and
+    // did not on a slower CI runner, failing with an empty request list.
+    // academy-lifecycle.spec.js waits the same way for the same reason.
+    await expect.poll(() => getGTRequests().join('\n'), { timeout: 10_000 }).toContain('Making a request');
     const sent = getGTRequests().join('\n');
     expect(sent).toContain('Making a request');
     const after = await evalInContentWorld(extCtx.context, 'localizedText');
