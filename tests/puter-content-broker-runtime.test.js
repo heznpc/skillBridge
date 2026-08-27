@@ -1019,5 +1019,9 @@ describe('Puter SDK error contract', () => {
     // Still open, still offering the same three actions.
     expect(broker.element('sign-in').disabled).toBe(false);
     expect(broker.posted).not.toContainEqual(expect.objectContaining({ type: 'auth-ui', visible: false }));
+    // Close the gate before leaving: the request is still in flight, and its
+    // 20s keepalive is a live interval that would outlive this test.
+    broker.click('cancel');
+    await flushUntil(() => broker.posted.some((m) => m.type === 'error' && m.id === 'closed'));
   });
 });
