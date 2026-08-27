@@ -21,7 +21,7 @@
 
 **Translate the free AI courses at [anthropic.skilljar.com](https://anthropic.skilljar.com/) into your language — instantly.**
 
-Break the language barrier on these free AI courses. <!-- LANG_COUNT_START -->32 languages<!-- LANG_COUNT_END --> supported. The CWS edition combines course-page translation with local flashcards, bookmarks, progress, reading, and export tools. It runs on `anthropic.skilljar.com`, detected Skilljar-hosted AI courses, and Claude tutorial pages at `claude.com/resources/tutorials`; non-AI Skilljar tenants are paused automatically.
+Break the language barrier on these free AI courses. <!-- LANG_COUNT_START -->32 languages<!-- LANG_COUNT_END --> supported. The CWS edition combines course-page translation with local flashcards, bookmarks, progress, reading, and export tools. It runs on `anthropic.skilljar.com`, detected Skilljar-hosted AI courses, Claude Academy course routes at `academy.claude.com/courses`, and Claude tutorial pages at `claude.com/resources/tutorials`; non-AI Skilljar tenants are paused automatically.
 
 > **Version boundary:** the Chrome Web Store still serves legacy v1.0.1, which
 > includes the Puter-backed Gemini/Claude path and YouTube host permission.
@@ -193,7 +193,8 @@ Also works in Brave, Arc, Opera, Vivaldi, and other Chromium-based browsers.
 > lookups, unused eager filesystem-socket/resource-access startup, and the SDK's
 > hidden automatic token reauthentication and persistent host-page caches. The
 > SDK runs in Chrome's isolated content-script world only on
-> `anthropic.skilljar.com`; Tutor network payloads use validated extension ports,
+> `anthropic.skilljar.com` and trusted `academy.claude.com` course routes; Tutor
+> network payloads use validated extension ports,
 > not page-world messaging. The visible Tutor remains in the shared page DOM, so
 > course-page scripts may observe keyboard events and rendered chat text.
 > SkillBridge persists the minimum Puter session fields in extension storage, not
@@ -234,7 +235,7 @@ Page text
        └─ Cache result locally for up to 30 days
 ```
 
-Text not covered by the packaged dictionary or local cache is sent to Google Translate when translation is requested. Paragraphs that mix prose with links/buttons are translated structure-preserving through Google Translate's HTML mode. Page translation does not invoke Puter, Claude, or the Tutor model. The optional cloud Tutor uses Claude through an isolated bundled Puter runtime only when you send a Tutor message; local and off Tutor modes are also available. See the [Privacy Policy](PRIVACY_POLICY.md) for the full data flow.
+Text not covered by the packaged dictionary or local cache is sent to Google Translate when translation is requested. Paragraphs that mix prose with links/buttons are translated structure-preserving through Google Translate's HTML mode. Baseline page translation does not invoke Puter, Claude, or the Tutor model. Optional Translation Refinement is separate, off by default and separately consented; when enabled it sends already-translated paragraphs and their English source to the model you selected for post-editing. The optional cloud Tutor uses Claude through an isolated bundled Puter runtime only when you send a Tutor message; local and off Tutor modes are also available. See the [Privacy Policy](PRIVACY_POLICY.md) for the full data flow.
 
 ## Architecture & engineering decisions
 

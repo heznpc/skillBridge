@@ -1,0 +1,5052 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-27T10:40:03.656Z",
+  "titleCount": 76,
+  "records": [
+    {
+      "source": "Accessing the API",
+      "locale": "ko",
+      "gtCandidate": "API에 액세스 중",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Getting an API key",
+      "locale": "ko",
+      "gtCandidate": "API 키 얻기",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Making a request",
+      "locale": "ko",
+      "gtCandidate": "요청하기",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Multi-Turn conversations",
+      "locale": "ko",
+      "gtCandidate": "다단계 대화",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "System prompts",
+      "locale": "ko",
+      "gtCandidate": "시스템 프롬프트",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Temperature",
+      "locale": "ko",
+      "gtCandidate": "온도",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Response streaming",
+      "locale": "ko",
+      "gtCandidate": "응답 스트리밍",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Structured data",
+      "locale": "ko",
+      "gtCandidate": "구조화된 데이터",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Quiz on accessing Claude with the API",
+      "locale": "ko",
+      "gtCandidate": "API로 Claude 액세스에 관한 퀴즈",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Prompt evaluation",
+      "locale": "ko",
+      "gtCandidate": "신속한 평가",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "A typical eval workflow",
+      "locale": "ko",
+      "gtCandidate": "일반적인 평가 워크플로우",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Generating test datasets",
+      "locale": "ko",
+      "gtCandidate": "테스트 데이터 세트 생성",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Running the eval",
+      "locale": "ko",
+      "gtCandidate": "평가 실행",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Model based grading",
+      "locale": "ko",
+      "gtCandidate": "모델 기반 등급",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Code based grading",
+      "locale": "ko",
+      "gtCandidate": "코드 기반 등급",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Quiz on prompt evaluation",
+      "locale": "ko",
+      "gtCandidate": "신속한 평가에 대한 퀴즈",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Prompt engineering",
+      "locale": "ko",
+      "gtCandidate": "신속한 엔지니어링",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Being clear and direct",
+      "locale": "ko",
+      "gtCandidate": "명확하고 직접적임",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Being specific",
+      "locale": "ko",
+      "gtCandidate": "구체적이다",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Structure with XML tags",
+      "locale": "ko",
+      "gtCandidate": "XML 태그가 있는 구조",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Providing examples",
+      "locale": "ko",
+      "gtCandidate": "예시 제공",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Quiz on prompt engineering techniques",
+      "locale": "ko",
+      "gtCandidate": "신속한 엔지니어링 기술에 대한 퀴즈",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Introducing tool use",
+      "locale": "ko",
+      "gtCandidate": "도구 사용 소개",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Project overview",
+      "locale": "ko",
+      "gtCandidate": "프로젝트 개요",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Tool functions",
+      "locale": "ko",
+      "gtCandidate": "도구 기능",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Tool schemas",
+      "locale": "ko",
+      "gtCandidate": "도구 스키마",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Handling message blocks",
+      "locale": "ko",
+      "gtCandidate": "메시지 블록 처리",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Sending tool results",
+      "locale": "ko",
+      "gtCandidate": "도구 결과 보내기",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Multi-turn conversations with tools",
+      "locale": "ko",
+      "gtCandidate": "도구를 사용한 다단계 대화",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Implementing multiple turns",
+      "locale": "ko",
+      "gtCandidate": "다중 회전 구현",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Using multiple tools",
+      "locale": "ko",
+      "gtCandidate": "여러 도구 사용",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Fine grained tool calling",
+      "locale": "ko",
+      "gtCandidate": "세밀한 도구 호출",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "The text edit tool",
+      "locale": "ko",
+      "gtCandidate": "텍스트 편집 도구",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "The web search tool",
+      "locale": "ko",
+      "gtCandidate": "웹 검색 도구",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Quiz on tool use with Claude",
+      "locale": "ko",
+      "gtCandidate": "Claude 도구 사용에 관한 퀴즈",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Introducing Retrieval Augmented Generation",
+      "locale": "ko",
+      "gtCandidate": "검색 증강 생성 소개",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Text chunking strategies",
+      "locale": "ko",
+      "gtCandidate": "텍스트 청킹 전략",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Text embeddings",
+      "locale": "ko",
+      "gtCandidate": "텍스트 임베딩",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "The full RAG flow",
+      "locale": "ko",
+      "gtCandidate": "전체 RAG 흐름",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Implementing the RAG flow",
+      "locale": "ko",
+      "gtCandidate": "RAG 흐름 구현",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "BM25 lexical search",
+      "locale": "ko",
+      "gtCandidate": "BM25 어휘 검색",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "A Multi-Index RAG pipeline",
+      "locale": "ko",
+      "gtCandidate": "다중 인덱스 RAG 파이프라인",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Extended thinking",
+      "locale": "ko",
+      "gtCandidate": "확장된 사고",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Image support",
+      "locale": "ko",
+      "gtCandidate": "이미지 지원",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "PDF support",
+      "locale": "ko",
+      "gtCandidate": "PDF 지원",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Citations",
+      "locale": "ko",
+      "gtCandidate": "인용",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Prompt caching",
+      "locale": "ko",
+      "gtCandidate": "프롬프트 캐싱",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Rules of prompt caching",
+      "locale": "ko",
+      "gtCandidate": "프롬프트 캐싱 규칙",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Prompt caching in action",
+      "locale": "ko",
+      "gtCandidate": "프롬프트 캐싱 실행 중",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Code execution and the Files API",
+      "locale": "ko",
+      "gtCandidate": "코드 실행 및 파일 API",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Quiz on features of Claude",
+      "locale": "ko",
+      "gtCandidate": "Claude의 기능에 대한 퀴즈",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Introducing MCP",
+      "locale": "ko",
+      "gtCandidate": "MCP 소개",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "MCP clients",
+      "locale": "ko",
+      "gtCandidate": "MCP 클라이언트",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Project setup",
+      "locale": "ko",
+      "gtCandidate": "프로젝트 설정",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Defining tools with MCP",
+      "locale": "ko",
+      "gtCandidate": "MCP로 도구 정의",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "The server inspector",
+      "locale": "ko",
+      "gtCandidate": "서버 검사관",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Implementing a client",
+      "locale": "ko",
+      "gtCandidate": "클라이언트 구현",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Defining resources",
+      "locale": "ko",
+      "gtCandidate": "자원 정의",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Accessing resources",
+      "locale": "ko",
+      "gtCandidate": "리소스에 액세스",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Defining prompts",
+      "locale": "ko",
+      "gtCandidate": "프롬프트 정의",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Prompts in the client",
+      "locale": "ko",
+      "gtCandidate": "클라이언트의 프롬프트",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Quiz on Model Context Protocol",
+      "locale": "ko",
+      "gtCandidate": "모델 컨텍스트 프로토콜에 대한 퀴즈",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Anthropic apps",
+      "locale": "ko",
+      "gtCandidate": "Anthropic 앱",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Claude Code setup",
+      "locale": "ko",
+      "gtCandidate": "Claude Code 설정",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Claude Code in action",
+      "locale": "ko",
+      "gtCandidate": "Claude Code 작동 중",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Enhancements with MCP servers",
+      "locale": "ko",
+      "gtCandidate": "MCP 서버의 향상된 기능",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Agents and workflows",
+      "locale": "ko",
+      "gtCandidate": "에이전트 및 워크플로",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Parallelization workflows",
+      "locale": "ko",
+      "gtCandidate": "병렬화 워크플로",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Chaining workflows",
+      "locale": "ko",
+      "gtCandidate": "워크플로 연결",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Routing workflows",
+      "locale": "ko",
+      "gtCandidate": "라우팅 워크플로",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Agents and tools",
+      "locale": "ko",
+      "gtCandidate": "에이전트 및 도구",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Environment inspection",
+      "locale": "ko",
+      "gtCandidate": "환경점검",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Workflows vs agents",
+      "locale": "ko",
+      "gtCandidate": "워크플로와 에이전트",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Quiz on Agents and Workflows",
+      "locale": "ko",
+      "gtCandidate": "에이전트 및 워크플로에 대한 퀴즈",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Final Assessment",
+      "locale": "ko",
+      "gtCandidate": "최종 평가",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Completion badge",
+      "locale": "ko",
+      "gtCandidate": "수료 뱃지",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Accessing the API",
+      "locale": "ja",
+      "gtCandidate": "API にアクセスする",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Getting an API key",
+      "locale": "ja",
+      "gtCandidate": "API キーの取得",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Making a request",
+      "locale": "ja",
+      "gtCandidate": "リクエストをする",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Multi-Turn conversations",
+      "locale": "ja",
+      "gtCandidate": "複数ターンの会話",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "System prompts",
+      "locale": "ja",
+      "gtCandidate": "システムプロンプト",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Temperature",
+      "locale": "ja",
+      "gtCandidate": "温度",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Response streaming",
+      "locale": "ja",
+      "gtCandidate": "応答ストリーミング",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Structured data",
+      "locale": "ja",
+      "gtCandidate": "構造化データ",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Quiz on accessing Claude with the API",
+      "locale": "ja",
+      "gtCandidate": "API で Claude にアクセスするためのクイズ",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Prompt evaluation",
+      "locale": "ja",
+      "gtCandidate": "迅速な評価",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "A typical eval workflow",
+      "locale": "ja",
+      "gtCandidate": "典型的な評価ワークフロー",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Generating test datasets",
+      "locale": "ja",
+      "gtCandidate": "テストデータセットの生成",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Running the eval",
+      "locale": "ja",
+      "gtCandidate": "評価の実行",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Model based grading",
+      "locale": "ja",
+      "gtCandidate": "モデルベースのグレーディング",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Code based grading",
+      "locale": "ja",
+      "gtCandidate": "コードベースのグレーディング",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Quiz on prompt evaluation",
+      "locale": "ja",
+      "gtCandidate": "即時評価に関するクイズ",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Prompt engineering",
+      "locale": "ja",
+      "gtCandidate": "迅速なエンジニアリング",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Being clear and direct",
+      "locale": "ja",
+      "gtCandidate": "明確かつ直接的であること",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Being specific",
+      "locale": "ja",
+      "gtCandidate": "具体的であること",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Structure with XML tags",
+      "locale": "ja",
+      "gtCandidate": "XMLタグによる構造",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Providing examples",
+      "locale": "ja",
+      "gtCandidate": "例の提供",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Quiz on prompt engineering techniques",
+      "locale": "ja",
+      "gtCandidate": "迅速なエンジニアリング技術に関するクイズ",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Introducing tool use",
+      "locale": "ja",
+      "gtCandidate": "ツールの使い方を紹介",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Project overview",
+      "locale": "ja",
+      "gtCandidate": "プロジェクト概要",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Tool functions",
+      "locale": "ja",
+      "gtCandidate": "ツールの機能",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Tool schemas",
+      "locale": "ja",
+      "gtCandidate": "ツールスキーマ",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Handling message blocks",
+      "locale": "ja",
+      "gtCandidate": "メッセージブロックの処理",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Sending tool results",
+      "locale": "ja",
+      "gtCandidate": "ツールの結果を送信する",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Multi-turn conversations with tools",
+      "locale": "ja",
+      "gtCandidate": "ツールを使用した複数ターンの会話",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Implementing multiple turns",
+      "locale": "ja",
+      "gtCandidate": "複数ターンの実装",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Using multiple tools",
+      "locale": "ja",
+      "gtCandidate": "複数のツールを使用する",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Fine grained tool calling",
+      "locale": "ja",
+      "gtCandidate": "きめ細かいツール呼び出し",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "The text edit tool",
+      "locale": "ja",
+      "gtCandidate": "テキスト編集ツール",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "The web search tool",
+      "locale": "ja",
+      "gtCandidate": "ウェブ検索ツール",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Quiz on tool use with Claude",
+      "locale": "ja",
+      "gtCandidate": "Claude によるツールの使い方に関するクイズ",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Introducing Retrieval Augmented Generation",
+      "locale": "ja",
+      "gtCandidate": "検索拡張生成の導入",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Text chunking strategies",
+      "locale": "ja",
+      "gtCandidate": "テキストのチャンク化戦略",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Text embeddings",
+      "locale": "ja",
+      "gtCandidate": "テキストの埋め込み",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "The full RAG flow",
+      "locale": "ja",
+      "gtCandidate": "完全な RAG フロー",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Implementing the RAG flow",
+      "locale": "ja",
+      "gtCandidate": "RAG フローの実装",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "BM25 lexical search",
+      "locale": "ja",
+      "gtCandidate": "BM25語彙検索",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "A Multi-Index RAG pipeline",
+      "locale": "ja",
+      "gtCandidate": "マルチインデックス RAG パイプライン",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Extended thinking",
+      "locale": "ja",
+      "gtCandidate": "拡張された思考",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Image support",
+      "locale": "ja",
+      "gtCandidate": "画像のサポート",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "PDF support",
+      "locale": "ja",
+      "gtCandidate": "PDF のサポート",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Citations",
+      "locale": "ja",
+      "gtCandidate": "引用",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Prompt caching",
+      "locale": "ja",
+      "gtCandidate": "即時キャッシュ",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": true,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "ok"
+    },
+    {
+      "source": "Rules of prompt caching",
+      "locale": "ja",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Prompt caching in action",
+      "locale": "ja",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Code execution and the Files API",
+      "locale": "ja",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Quiz on features of Claude",
+      "locale": "ja",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Introducing MCP",
+      "locale": "ja",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "MCP clients",
+      "locale": "ja",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Project setup",
+      "locale": "ja",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Defining tools with MCP",
+      "locale": "ja",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "The server inspector",
+      "locale": "ja",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Implementing a client",
+      "locale": "ja",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Defining resources",
+      "locale": "ja",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Accessing resources",
+      "locale": "ja",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Defining prompts",
+      "locale": "ja",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Prompts in the client",
+      "locale": "ja",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Quiz on Model Context Protocol",
+      "locale": "ja",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Anthropic apps",
+      "locale": "ja",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Claude Code setup",
+      "locale": "ja",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Claude Code in action",
+      "locale": "ja",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Enhancements with MCP servers",
+      "locale": "ja",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Agents and workflows",
+      "locale": "ja",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Parallelization workflows",
+      "locale": "ja",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Chaining workflows",
+      "locale": "ja",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Routing workflows",
+      "locale": "ja",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Agents and tools",
+      "locale": "ja",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Environment inspection",
+      "locale": "ja",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Workflows vs agents",
+      "locale": "ja",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Quiz on Agents and Workflows",
+      "locale": "ja",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Final Assessment",
+      "locale": "ja",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Completion badge",
+      "locale": "ja",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Accessing the API",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Getting an API key",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Making a request",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Multi-Turn conversations",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "System prompts",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Temperature",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Response streaming",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Structured data",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Quiz on accessing Claude with the API",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Prompt evaluation",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "A typical eval workflow",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Generating test datasets",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Running the eval",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Model based grading",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Code based grading",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Quiz on prompt evaluation",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Prompt engineering",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Being clear and direct",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Being specific",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Structure with XML tags",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Providing examples",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Quiz on prompt engineering techniques",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Introducing tool use",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Project overview",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Tool functions",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Tool schemas",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Handling message blocks",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Sending tool results",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Multi-turn conversations with tools",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Implementing multiple turns",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Using multiple tools",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Fine grained tool calling",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "The text edit tool",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "The web search tool",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Quiz on tool use with Claude",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Introducing Retrieval Augmented Generation",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Text chunking strategies",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Text embeddings",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "The full RAG flow",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Implementing the RAG flow",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "BM25 lexical search",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "A Multi-Index RAG pipeline",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Extended thinking",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Image support",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "PDF support",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Citations",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Prompt caching",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Rules of prompt caching",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Prompt caching in action",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Code execution and the Files API",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Quiz on features of Claude",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Introducing MCP",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "MCP clients",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Project setup",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Defining tools with MCP",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "The server inspector",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Implementing a client",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Defining resources",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Accessing resources",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Defining prompts",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Prompts in the client",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Quiz on Model Context Protocol",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Anthropic apps",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Claude Code setup",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Claude Code in action",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Enhancements with MCP servers",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Agents and workflows",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Parallelization workflows",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Chaining workflows",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Routing workflows",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Agents and tools",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Environment inspection",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Workflows vs agents",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Quiz on Agents and Workflows",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Final Assessment",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Completion badge",
+      "locale": "zh-CN",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Accessing the API",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Getting an API key",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Making a request",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Multi-Turn conversations",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "System prompts",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Temperature",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Response streaming",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Structured data",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Quiz on accessing Claude with the API",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Prompt evaluation",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "A typical eval workflow",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Generating test datasets",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Running the eval",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Model based grading",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Code based grading",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Quiz on prompt evaluation",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Prompt engineering",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Being clear and direct",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Being specific",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Structure with XML tags",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Providing examples",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Quiz on prompt engineering techniques",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Introducing tool use",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Project overview",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Tool functions",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Tool schemas",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Handling message blocks",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Sending tool results",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Multi-turn conversations with tools",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Implementing multiple turns",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Using multiple tools",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Fine grained tool calling",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "The text edit tool",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "The web search tool",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Quiz on tool use with Claude",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Introducing Retrieval Augmented Generation",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Text chunking strategies",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Text embeddings",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "The full RAG flow",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Implementing the RAG flow",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "BM25 lexical search",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "A Multi-Index RAG pipeline",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Extended thinking",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Image support",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "PDF support",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Citations",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Prompt caching",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Rules of prompt caching",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Prompt caching in action",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Code execution and the Files API",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Quiz on features of Claude",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Introducing MCP",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "MCP clients",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Project setup",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Defining tools with MCP",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "The server inspector",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Implementing a client",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Defining resources",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Accessing resources",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Defining prompts",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Prompts in the client",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Quiz on Model Context Protocol",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Anthropic apps",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Claude Code setup",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Claude Code in action",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Enhancements with MCP servers",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Agents and workflows",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Parallelization workflows",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Chaining workflows",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Routing workflows",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Agents and tools",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Environment inspection",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Workflows vs agents",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Quiz on Agents and Workflows",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Final Assessment",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    },
+    {
+      "source": "Completion badge",
+      "locale": "zh-TW",
+      "gtCandidate": "",
+      "violations": {
+        "protectedTerm": false,
+        "numberOrUnit": false,
+        "productName": false,
+        "meaning": false
+      },
+      "measurable": false,
+      "grade": null,
+      "evaluatorConfidence": null,
+      "rationale": null,
+      "resultKind": "rate-limited",
+      "error": "rate-limited: HTTP 429"
+    }
+  ]
+}
