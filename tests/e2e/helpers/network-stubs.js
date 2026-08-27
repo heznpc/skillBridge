@@ -33,6 +33,9 @@ const LOCALIZED_HTML = fs.readFileSync(path.join(FIXTURE_DIR, 'localized-lesson.
 // their own headers which Skilljar signal they deliberately lack.
 const ACADEMY_LESSON_HTML = fs.readFileSync(path.join(FIXTURE_DIR, 'academy-lesson.html'), 'utf8');
 const ACADEMY_QUIZ_HTML = fs.readFileSync(path.join(FIXTURE_DIR, 'academy-quiz.html'), 'utf8');
+// The same assessment URL after a submission. Its own header explains why it
+// is the worst same-URL shape rather than a guess at the live markup.
+const ACADEMY_RESULTS_HTML = fs.readFileSync(path.join(FIXTURE_DIR, 'academy-quiz-results.html'), 'utf8');
 
 // Kept exported for back-compat with anything that imported it; new tests
 // should use the path-aware server directly.
@@ -49,6 +52,9 @@ function fixtureForPath(reqPath) {
   // segment is named after its subject (`quiz-on-…`) exactly as the live site
   // names it — which is the shape the Skilljar URL patterns miss.
   if (/^\/academy\//.test(reqPath)) {
+    // `…/quiz-on-…/results` is still the assessment URL — a submission does
+    // not navigate — so it has to be checked before the quiz rule claims it.
+    if (/\/results(\/|$|\?)/.test(reqPath)) return ACADEMY_RESULTS_HTML;
     return /\/quiz(-[a-z0-9-]*)?(\/|$|\?)|\/[a-z0-9-]*assessment(\/|$|\?)/.test(reqPath)
       ? ACADEMY_QUIZ_HTML
       : ACADEMY_LESSON_HTML;
