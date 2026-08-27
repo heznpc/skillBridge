@@ -94,6 +94,35 @@ describe('translateOnce failure classification', () => {
     }
   });
 
+  test('a non-string translated field is malformed, not a translation', async () => {
+    // The gap a segment-is-an-array check leaves open. Each of these survives
+    // that check and then coerces through `seg[0] || ''` into something that
+    // reads like a translation — "[object Object]" and "42" would have been
+    // graded as real output.
+    for (const body of [[[[{}, 'source']]], [[[42, 'source']]], [[[null, 'source']]], [[[undefined, 'source']]]]) {
+      global.fetch = async () => jsonResponse(body);
+      const r = await translateOnce('x', 'ko', passthrough());
+      expect(r.kind).toBe(RESULT_KIND.MALFORMED_RESPONSE);
+      expect(r.text).toBeNull();
+    }
+  });
+
+  test('an object or number never coerces into a candidate', async () => {
+    // Stated as the property rather than the mechanism: whatever the field
+    // holds, nothing that is not a string may reach gtCandidate.
+    global.fetch = async () => jsonResponse([[[{}, 'source']]]);
+    const r = await translateOnce('x', 'ko', passthrough());
+    expect(r.text).not.toBe('[object Object]');
+    expect(r.kind).not.toBe(RESULT_KIND.OK);
+  });
+
+  test('an empty string is a well-formed response, not a malformed one', async () => {
+    // The boundary the string check must not overshoot.
+    global.fetch = async () => jsonResponse([[['', 'source']]]);
+    const r = await translateOnce('x', 'ko', passthrough());
+    expect(r.kind).toBe(RESULT_KIND.EMPTY_TRANSLATION);
+  });
+
   test('a wrong shape is never confused with an empty translation', async () => {
     global.fetch = async () => jsonResponse([]);
     const wrongShape = await translateOnce('x', 'ko', passthrough());

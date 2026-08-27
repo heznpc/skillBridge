@@ -193,7 +193,8 @@ Also works in Brave, Arc, Opera, Vivaldi, and other Chromium-based browsers.
 > lookups, unused eager filesystem-socket/resource-access startup, and the SDK's
 > hidden automatic token reauthentication and persistent host-page caches. The
 > SDK runs in Chrome's isolated content-script world only on
-> `anthropic.skilljar.com`; Tutor network payloads use validated extension ports,
+> `anthropic.skilljar.com` and trusted `academy.claude.com` course routes; Tutor
+> network payloads use validated extension ports,
 > not page-world messaging. The visible Tutor remains in the shared page DOM, so
 > course-page scripts may observe keyboard events and rendered chat text.
 > SkillBridge persists the minimum Puter session fields in extension storage, not

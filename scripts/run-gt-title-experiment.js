@@ -142,11 +142,30 @@ async function translateOnce(text, targetLang, pt) {
     };
   }
   const segments = data[0];
-  if (!segments.every((seg) => Array.isArray(seg))) {
-    return { kind: RESULT_KIND.MALFORMED_RESPONSE, text: null, detail: 'segment is not an array' };
+  // The translated field has to BE a string, not merely present.
+  //
+  // Checking the segment is an array is not enough: `[[[{}, 'source']]]` and
+  // `[[[42, 'source']]]` both survive that and then coerce, through
+  // `seg[0] || ''`, into "[object Object]" and "42" — recorded as a perfectly
+  // good translation. A contract drift that changes the field's TYPE is
+  // exactly the kind this check exists to catch, and it is the one shape that
+  // would otherwise enter the graded data as if it were real.
+  //
+  // An empty string stays legal: that is a well-formed response carrying no
+  // translation, which the caller reports as EMPTY_TRANSLATION below.
+  const badSegment = segments.findIndex((seg) => !Array.isArray(seg) || typeof seg[0] !== 'string');
+  if (badSegment !== -1) {
+    const seg = segments[badSegment];
+    return {
+      kind: RESULT_KIND.MALFORMED_RESPONSE,
+      text: null,
+      detail: Array.isArray(seg)
+        ? `segment ${badSegment} translated field is ${seg[0] === null ? 'null' : typeof seg[0]}`
+        : `segment ${badSegment} is not an array`,
+    };
   }
 
-  const translated = segments.map((seg) => seg[0] || '').join('');
+  const translated = segments.map((seg) => seg[0]).join('');
   // Only now, with the shape confirmed, does an empty string mean Google
   // returned nothing to translate.
   if (!translated) return { kind: RESULT_KIND.EMPTY_TRANSLATION, text: null, detail: null };

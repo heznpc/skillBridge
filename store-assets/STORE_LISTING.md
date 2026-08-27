@@ -61,7 +61,7 @@ Dark mode, right-to-left layout, keyboard shortcuts, responsive panels, language
 
 SUPPORTED COURSES
 
-All 23 currently-published courses/catalog entries on anthropic.skilljar.com are covered by the current compatibility map. Public learning and certification-information pages can translate; recognized proctored exam routes remain disabled.
+Supported Skilljar courses and Claude Academy course routes are covered by the current compatibility map: all 23 currently-published courses/catalog entries on anthropic.skilljar.com, and course pages on academy.claude.com, Anthropic's own course platform. Public learning and certification-information pages can translate; recognized proctored exam routes remain disabled.
 
 ━━━━━━━━━━━━━━━━━━━
 
@@ -94,7 +94,7 @@ Page translation (Google Translate + curated dictionaries) and the local learnin
 Third-party requests made by the CWS edition:
 
 • Google Translate — visible page text selected for translation and the requested language.
-• Puter — cloud Tutor sign-in/session handling, followed by the user's Tutor message and limited lesson context routed to Claude. The bundled SDK runs in an isolated content-script world and stores the accepted session token and Puter application identifier in extension storage; the CWS build disables automatic User/profile lookups. Puter returns the sign-in result to the HTTPS opener through browser window messaging, which the course page may be able to observe during sign-in. SkillBridge's operator receives none of this data.
+• Puter — cloud Tutor sign-in/session handling, followed by the user's Tutor message and limited lesson context routed to Claude, and, only when optional Translation Refinement is separately enabled and consented, already-translated paragraphs together with their English source routed to Claude for post-editing. The bundled SDK runs in an isolated content-script world and stores the accepted session token and Puter application identifier in extension storage; the CWS build disables automatic User/profile lookups. Puter returns the sign-in result to the HTTPS opener through browser window messaging, which the course page may be able to observe during sign-in. SkillBridge's operator receives none of this data.
 
 Settings, bookmarks, flashcard review state, recent lessons, and scroll positions are stored in `chrome.storage.local`. Original and translated text is cached separately in IndexedDB. Progress summaries are calculated locally from that state rather than separately stored or transmitted.
 
