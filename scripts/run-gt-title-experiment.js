@@ -127,7 +127,28 @@ async function translateOnce(text, targetLang, pt) {
     return { kind: RESULT_KIND.MALFORMED_RESPONSE, text: null, detail: String(err?.message || err) };
   }
 
-  const translated = (data?.[0] || []).map((seg) => seg?.[0] || '').join('');
+  // Valid JSON is not the same as the documented shape, and the difference
+  // decides who is at fault. This endpoint answers `[[[translated, source,
+  // …], …], …]`, so `{}`, `[]` and `[{}]` are all parseable and all wrong —
+  // reading them with `(data?.[0] || []).map(…)` would score the first two as
+  // an empty translation, blaming Google for a quiet response, and make the
+  // third throw somewhere the harness would record as its own bug. Neither is
+  // true: a wrong shape means the contract moved.
+  if (!Array.isArray(data) || !Array.isArray(data[0])) {
+    return {
+      kind: RESULT_KIND.MALFORMED_RESPONSE,
+      text: null,
+      detail: `unexpected shape: ${Array.isArray(data) ? `array[0]=${typeof data[0]}` : typeof data}`,
+    };
+  }
+  const segments = data[0];
+  if (!segments.every((seg) => Array.isArray(seg))) {
+    return { kind: RESULT_KIND.MALFORMED_RESPONSE, text: null, detail: 'segment is not an array' };
+  }
+
+  const translated = segments.map((seg) => seg[0] || '').join('');
+  // Only now, with the shape confirmed, does an empty string mean Google
+  // returned nothing to translate.
   if (!translated) return { kind: RESULT_KIND.EMPTY_TRANSLATION, text: null, detail: null };
   if (!masked?.tokens.length) return { kind: RESULT_KIND.OK, text: translated, detail: null };
 

@@ -80,6 +80,44 @@ describe('translateOnce failure classification', () => {
     expect(r.kind).toBe(RESULT_KIND.MALFORMED_RESPONSE);
   });
 
+  test('JSON that parses but has the wrong shape is malformed, not empty', async () => {
+    // The endpoint answers `[[[translated, source, …], …], …]`. Everything
+    // below parses cleanly and is still not that, so scoring any of them as an
+    // empty translation would blame Google for a contract change — and `[{}]`
+    // would previously have thrown inside the harness and been recorded as the
+    // harness's own bug.
+    for (const body of [{}, [], [{}], { 0: [['x']] }, [null], ['not-an-array']]) {
+      global.fetch = async () => jsonResponse(body);
+      const r = await translateOnce('x', 'ko', passthrough());
+      expect(r.kind).toBe(RESULT_KIND.MALFORMED_RESPONSE);
+      expect(r.text).toBeNull();
+    }
+  });
+
+  test('a wrong shape is never confused with an empty translation', async () => {
+    global.fetch = async () => jsonResponse([]);
+    const wrongShape = await translateOnce('x', 'ko', passthrough());
+    global.fetch = async () => jsonResponse([[['', '']]]);
+    const empty = await translateOnce('x', 'ko', passthrough());
+    expect(wrongShape.kind).toBe(RESULT_KIND.MALFORMED_RESPONSE);
+    expect(empty.kind).toBe(RESULT_KIND.EMPTY_TRANSLATION);
+    expect(wrongShape.kind).not.toBe(empty.kind);
+  });
+
+  test('a multi-segment response is still joined correctly', async () => {
+    // The shape check must not reject the legitimate multi-segment form.
+    global.fetch = async () =>
+      jsonResponse([
+        [
+          ['첫 번째 ', 'first '],
+          ['두 번째', 'second'],
+        ],
+      ]);
+    const r = await translateOnce('x', 'ko', passthrough());
+    expect(r.kind).toBe(RESULT_KIND.OK);
+    expect(r.text).toBe('첫 번째 두 번째');
+  });
+
   test('an empty translation and a failed unmask are told apart', async () => {
     // Both used to be a bare null. One blames Google, the other blames us.
     global.fetch = async () => jsonResponse([[['', '']]]);
