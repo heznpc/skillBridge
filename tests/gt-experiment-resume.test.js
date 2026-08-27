@@ -20,7 +20,7 @@ const {
   readResumeRun,
   recheckCarriedRow,
   droppedCarriedKeys,
-  duplicateTitles,
+  duplicateEntries,
   usableLocales,
   runExperiment,
 } = require('../scripts/run-gt-title-experiment');
@@ -130,6 +130,9 @@ describe('trusting a snapshot', () => {
   test('a file that is not a run at all is refused', () => {
     expect(() => carryableRows({ records: [okRow()] })).toThrow(/schemaVersion/);
     expect(() => carryableRows(null)).toThrow();
+    // A `records` that is not a list would otherwise throw from inside the
+    // loop, reporting a parse problem as a harness bug.
+    expect(() => carryableRows(priorRun(undefined, { records: { ko: [] } }))).toThrow(/not an array/);
   });
 
   test('reading a run records where it came from', () => {
@@ -215,13 +218,13 @@ describe('the input a resume is replayed against', () => {
   });
 
   test('a repeated title is caught before it can become two identical output rows', () => {
-    expect(duplicateTitles(['a', 'b', 'a'])).toEqual(['a']);
-    expect(duplicateTitles(['a', 'b'])).toEqual([]);
+    expect(duplicateEntries(['a', 'b', 'a'])).toEqual(['a']);
+    expect(duplicateEntries(['a', 'b'])).toEqual([]);
   });
   test('a repeated locale is caught the same way a repeated title is', () => {
     // `--locales ko,ko` would emit every ko row twice and count each of them
     // twice in the locale's own tally.
-    expect(duplicateTitles(['ko', 'ja', 'ko'])).toEqual(['ko']);
+    expect(duplicateEntries(['ko', 'ja', 'ko'])).toEqual(['ko']);
   });
 
   test('an empty entry is not a locale', () => {

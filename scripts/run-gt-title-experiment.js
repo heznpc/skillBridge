@@ -236,11 +236,17 @@ function usableLocales(value) {
     .filter(Boolean);
 }
 
-/** Entries that appear more than once, which would become duplicate rows. */
-function duplicateTitles(titles) {
+/**
+ * Entries that appear more than once.
+ *
+ * Used for both halves of a row's identity — the title set and the locale
+ * list — because a repeat in either emits the same row twice and counts it
+ * twice in every denominator derived from the run.
+ */
+function duplicateEntries(entries) {
   const seen = new Set();
   const dupes = new Set();
-  for (const t of titles) (seen.has(t) ? dupes : seen).add(t);
+  for (const entry of entries) (seen.has(entry) ? dupes : seen).add(entry);
   return [...dupes];
 }
 
@@ -258,6 +264,9 @@ function duplicateTitles(titles) {
  */
 function carryableRows(prior) {
   if (!prior || typeof prior !== 'object') throw new Error('resume file is not a run');
+  if (prior.records !== undefined && !Array.isArray(prior.records)) {
+    throw new Error(`resume file records is ${typeof prior.records}, not an array of rows`);
+  }
   if (!RESUMABLE_SCHEMA_VERSIONS.includes(prior.schemaVersion)) {
     throw new Error(
       `resume file schemaVersion ${JSON.stringify(prior.schemaVersion)} is not one this harness can read ` +
@@ -464,7 +473,7 @@ async function main() {
   const limit = Number(argVal('--limit', 0)) || allTitles.length;
   const titles = allTitles.slice(0, limit);
   const locales = usableLocales(argVal('--locales', '') || DEFAULT_LOCALES.join(','));
-  const repeatedLocales = duplicateTitles(locales);
+  const repeatedLocales = duplicateEntries(locales);
   if (repeatedLocales.length) {
     throw new Error(`--locales repeats ${repeatedLocales.join(', ')}, which would emit every row twice`);
   }
@@ -476,7 +485,7 @@ async function main() {
 
   // A repeated title would produce two identical output rows and count twice
   // in every denominator derived from the run.
-  const dupes = duplicateTitles(titles);
+  const dupes = duplicateEntries(titles);
   if (dupes.length) {
     throw new Error(`${titlesPath} repeats ${dupes.length} title(s): ${dupes.slice(0, 3).join(', ')}`);
   }
@@ -552,7 +561,7 @@ module.exports = {
   SCHEMA_VERSION,
   RESUMABLE_SCHEMA_VERSIONS,
   rowKey,
-  duplicateTitles,
+  duplicateEntries,
   usableLocales,
   carryableRows,
   readResumeRun,
