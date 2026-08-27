@@ -9,9 +9,10 @@
 const { test, expect } = require('@playwright/test');
 const { launchExtension, closeExtension, evalInContentWorld } = require('./helpers/extension');
 const { registerStubs, startFixtureServer, stopFixtureServer } = require('./helpers/network-stubs');
+const { SETTLE_MS } = require('./helpers/timeouts');
 
 async function waitForSkillBridge(context, page) {
-  const deadline = Date.now() + 15_000;
+  const deadline = Date.now() + SETTLE_MS;
   let snap = null;
   while (Date.now() < deadline) {
     snap = await evalInContentWorld(context, 'snapshot');
@@ -22,7 +23,7 @@ async function waitForSkillBridge(context, page) {
 }
 
 async function waitForPageTranslation(context, page) {
-  const deadline = Date.now() + 12_000;
+  const deadline = Date.now() + SETTLE_MS;
   let text = null;
   while (Date.now() < deadline) {
     text = await evalInContentWorld(context, 'pageText');
@@ -33,7 +34,7 @@ async function waitForPageTranslation(context, page) {
 }
 
 async function waitForWelcomeBanner(context, page) {
-  const deadline = Date.now() + 10_000;
+  const deadline = Date.now() + SETTLE_MS;
   let banner = null;
   while (Date.now() < deadline) {
     banner = await evalInContentWorld(context, 'welcomeBannerState');
