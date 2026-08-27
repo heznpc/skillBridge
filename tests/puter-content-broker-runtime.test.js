@@ -927,3 +927,97 @@ describe('Puter SDK stream contract', () => {
     expect(broker.posted).not.toContainEqual({ type: 'done', id: 'nonstream' });
   });
 });
+
+// The other half of the SDK contract: what a failure IS. The vendored driver
+// layer never rejects with an Error — a 401 or a `token_auth_failed` body
+// comes back as `{status: 401, message: 'Unauthorized'}`, anything else the
+// server refused comes back as the parsed body, and `auth.signIn` rejects with
+// its own `{error: 'auth_window_closed'}` when the popup is closed. The tests
+// above reach for `new Error(...)` with fields bolted on, which is a shape the
+// broker will never actually be handed.
+describe('Puter SDK error contract', () => {
+  beforeEach(() => jest.clearAllMocks());
+  afterEach(() => jest.useRealTimers());
+
+  /** Exactly what the SDK's load handler rejects with on a 401. */
+  const UNAUTHORIZED = { status: 401, message: 'Unauthorized' };
+  /** A refused driver call: `{success: false, error: {...}}`, rejected as-is. */
+  const refused = (code, message) => ({ success: false, error: { code, message } });
+
+  const bootWith = async (over) => {
+    const broker = bootBroker({ stored: { [TOKEN_KEY]: 'valid' }, ...over });
+    await flushUntil(() => broker.posted.some((message) => message.type === 'ready'));
+    return broker;
+  };
+
+  test("the SDK's own 401 rejection drives the re-login, not just an Error with a status", async () => {
+    const chat = jest
+      .fn()
+      .mockRejectedValueOnce(UNAUTHORIZED)
+      .mockResolvedValueOnce(sdkStream([{ text: 'again' }]));
+    const signIn = jest.fn(async () => ({ success: true, token: 'fresh', app_uid: 'app' }));
+    const broker = await bootWith({ chat, signIn });
+    broker.listeners.message[0]({ type: 'start', id: 'unauth', prompt: 'question' });
+    await flushUntil(() => broker.posted.some((m) => m.type === 'auth-ui' && m.visible));
+    broker.click('sign-in');
+    await flushUntil(() => broker.posted.some((m) => m.type === 'done' && m.id === 'unauth'));
+    expect(chat).toHaveBeenCalledTimes(2);
+    expect(broker.values.get(TOKEN_KEY)).toBe('fresh');
+  });
+
+  test('a refused body naming token_auth_failed is recognised as revocation', async () => {
+    const chat = jest
+      .fn()
+      .mockRejectedValueOnce(refused('token_auth_failed', 'token rejected'))
+      .mockResolvedValueOnce(sdkStream([{ text: 'again' }]));
+    const signIn = jest.fn(async () => ({ success: true, token: 'fresh' }));
+    const broker = await bootWith({ chat, signIn });
+    broker.listeners.message[0]({ type: 'start', id: 'stale', prompt: 'question' });
+    await flushUntil(() => broker.posted.some((m) => m.type === 'auth-ui' && m.visible));
+    broker.click('sign-in');
+    await flushUntil(() => broker.posted.some((m) => m.type === 'done' && m.id === 'stale'));
+    expect(signIn).toHaveBeenCalledTimes(1);
+  });
+
+  test('a refused body naming the model falls back instead of asking for a sign-in', async () => {
+    const chat = jest
+      .fn()
+      .mockRejectedValueOnce(refused('invalid_model', 'Model claude-sonnet-4-6 not found'))
+      .mockResolvedValueOnce(sdkStream([{ text: 'fallback' }]));
+    const signIn = jest.fn();
+    const broker = await bootWith({ chat, signIn });
+    broker.listeners.message[0]({ type: 'start', id: 'model', prompt: 'question', model: 'claude-sonnet-4-6' });
+    await flushUntil(() => broker.posted.some((m) => m.type === 'done' && m.id === 'model'));
+    expect(chat).toHaveBeenNthCalledWith(2, 'question', { model: 'claude-sonnet-4-5', stream: true });
+    expect(signIn).not.toHaveBeenCalled();
+  });
+
+  test('any other refusal is a chat failure, and does not start a sign-in loop', async () => {
+    const chat = jest.fn().mockRejectedValue(refused('internal_error', 'server said something specific'));
+    const signIn = jest.fn();
+    const broker = await bootWith({ chat, signIn });
+    broker.listeners.message[0]({ type: 'start', id: 'refused', prompt: 'question' });
+    await flushUntil(() => broker.posted.some((m) => m.type === 'error'));
+    expect(broker.posted).toContainEqual({ type: 'error', id: 'refused', error: 'Puter chat unavailable' });
+    expect(signIn).not.toHaveBeenCalled();
+    // The raw server message is not a public error string.
+    expect(JSON.stringify(broker.posted)).not.toContain('server said something specific');
+  });
+
+  test('closing the sign-in popup leaves the card up, and is not read as revocation', async () => {
+    // `auth.signIn` polls `window.closed` and rejects with this. Treating it as
+    // a revoked token would clear stored state and re-prompt in a loop.
+    const signIn = jest.fn(async () => {
+      throw { error: 'auth_window_closed', msg: 'Authentication window was closed by the user' };
+    });
+    const broker = bootBroker({ signIn });
+    await flushUntil(() => broker.posted.some((m) => m.type === 'ready'));
+    broker.listeners.message[0]({ type: 'start', id: 'closed', prompt: 'question' });
+    await flushUntil(() => broker.posted.some((m) => m.type === 'auth-ui' && m.visible));
+    broker.click('sign-in');
+    await flushUntil(() => broker.posted.some((m) => m.type === 'auth-failed'));
+    // Still open, still offering the same three actions.
+    expect(broker.element('sign-in').disabled).toBe(false);
+    expect(broker.posted).not.toContainEqual(expect.objectContaining({ type: 'auth-ui', visible: false }));
+  });
+});
