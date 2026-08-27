@@ -149,6 +149,26 @@ describe('pairing candidates to baselines', () => {
     expect(pairs[0].candidateKind).toBe(CANDIDATE_KIND.MODEL_ERROR);
   });
 
+  test('a baseline run from an unknown schema version is refused too', () => {
+    // The candidate file is checked; the baseline was not, so a run written by
+    // a future record shape would have been read field-by-field as if it were
+    // this one.
+    expect(() =>
+      pairRows({
+        baseline: baselineRun([baselineRow()], { schemaVersion: 99 }),
+        candidates: candidateRun([candidateRow()]),
+      }),
+    ).toThrow(/schemaVersion/);
+  });
+
+  test('the schema version the rows in hand were collected under is accepted', () => {
+    const { pairs } = pairRows({
+      baseline: baselineRun([baselineRow()], { schemaVersion: 1 }),
+      candidates: candidateRun([candidateRow()]),
+    });
+    expect(pairs).toHaveLength(1);
+  });
+
   test('a candidate run from an unknown schema version is refused', () => {
     expect(() =>
       pairRows({
@@ -251,6 +271,26 @@ describe('scoring one pair', () => {
       { protectedTerms: [], validate },
     );
     expect(same.outcome).toBe('neutral');
+  });
+
+  test('a grade outside the scale is refused rather than read as no change', () => {
+    // indexOf on an unknown grade returns -1 for both sides, which compares
+    // equal — so a typo would have been recorded as "the refinement changed
+    // nothing".
+    expect(() =>
+      scorePair(
+        {
+          locale: 'ko',
+          source: 'Making a request',
+          baseline: '요청하기',
+          refined: '요청 보내기',
+          candidateKind: CANDIDATE_KIND.OK,
+          baselineGrade: 'B',
+          refinedGrade: 'A+',
+        },
+        { protectedTerms: [], validate },
+      ),
+    ).toThrow(/grade/i);
   });
 
   test('a deterministic failure is a regression whatever the grades say', () => {

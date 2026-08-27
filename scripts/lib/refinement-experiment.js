@@ -31,7 +31,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { rowKey } = require('../run-gt-title-experiment');
+const { rowKey, RESUMABLE_SCHEMA_VERSIONS } = require('../run-gt-title-experiment');
 
 /** The candidate-file shape this module reads. */
 const REFINEMENT_SCHEMA_VERSION = 1;
@@ -99,6 +99,15 @@ function pairRows({ baseline, candidates }) {
     throw new Error(
       `candidate schemaVersion ${JSON.stringify(candidates.schemaVersion)} is not the one this harness reads ` +
         `(${REFINEMENT_SCHEMA_VERSION})`,
+    );
+  }
+  // Checked on both sides, for the same reason: a run written by a future
+  // record shape would otherwise be read field-by-field as if it were this
+  // one, and the rows that survived would be silently wrong.
+  if (!baseline || !RESUMABLE_SCHEMA_VERSIONS.includes(baseline.schemaVersion)) {
+    throw new Error(
+      `baseline schemaVersion ${JSON.stringify(baseline?.schemaVersion)} is not one this harness can read ` +
+        `(${RESUMABLE_SCHEMA_VERSIONS.join(', ')})`,
     );
   }
   const baseIndex = indexRows(baseline?.records, { label: 'baseline' });
@@ -178,6 +187,17 @@ function scorePair(pair, { protectedTerms = [], validate }) {
     targetLang: pair.locale,
     protectedTerms,
   });
+  for (const [field, grade] of [
+    ['baselineGrade', pair.baselineGrade],
+    ['refinedGrade', pair.refinedGrade],
+  ]) {
+    // A grade outside the scale would compare equal to another one outside it
+    // — indexOf returns -1 for both — and a typo would be recorded as "the
+    // refinement changed nothing".
+    if (grade != null && !GRADE_ORDER.includes(grade)) {
+      throw new Error(`${field} ${JSON.stringify(grade)} is not a grade (${GRADE_ORDER.join('/')})`);
+    }
+  }
   const semantic =
     pair.baselineGrade && pair.refinedGrade ? { baseline: pair.baselineGrade, refined: pair.refinedGrade } : null;
 
