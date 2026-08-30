@@ -34,6 +34,17 @@ playwright/.cache/
 # Store screenshots + promo tile ARE tracked deliverables (like the icons above)
 !store-assets/*.png
 
+# Product screenshots used by the GitHub Pages landing
+!site/public/images/*.png
+!docs/images/*.png
+
+# Astro landing build state
+site/dist/
+site/.astro/
+
+# Local landing QA artifacts
+.preview/
+
 # Generated store-listing copy (source of truth: store-assets/STORE_LISTING.md)
 store-assets/description.md
 

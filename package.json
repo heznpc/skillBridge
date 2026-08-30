@@ -33,7 +33,7 @@
     "cws:auth:verify": "node scripts/cws-auth.js --verify-only",
     "deploy:cws:draft": "gh workflow run cd.yml -f publish=false -f force=true",
     "build:plugin": "node scripts/build-plugin.js",
-    "docs": "node scripts/generate-docs.js",
+    "docs": "npm run docs:metadata && npm run landing:build",
     "lint": "eslint src/ tests/ scripts/",
     "lint:fix": "eslint src/ tests/ scripts/ --fix",
     "typecheck": "tsc --noEmit",
@@ -48,7 +48,11 @@
     "capture:store": "shotkit",
     "promo:build": "npm run capture:store && node scripts/build-promo-media.js",
     "capture:install": "playwright install chromium",
-    "check:window": "node scripts/check-window-surface.js"
+    "check:window": "node scripts/check-window-surface.js",
+    "landing:dev": "astro dev --root site",
+    "landing:build": "astro build --root site && node scripts/publish-landing.cjs",
+    "landing:verify": "astro build --root site",
+    "docs:metadata": "node scripts/generate-docs.js"
   },
   "jest": {
     "testPathIgnorePatterns": [
@@ -70,6 +74,7 @@
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.62.1",
     "@starter-series/shotkit": "^1.1.1",
+    "astro": "^7.2.1",
     "esbuild": "^0.28.2",
     "eslint": "^10.8.1",
     "eslint-config-prettier": "^10.1.8",

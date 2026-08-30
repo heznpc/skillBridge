@@ -1,0 +1,6 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import Landing from '../components/Landing.astro';
+import { copy } from '../i18n';
+---
+<SiteLayout title={copy.en.title} description={copy.en.description} locale="en"><Landing copy={copy.en} locale="en" /></SiteLayout>
