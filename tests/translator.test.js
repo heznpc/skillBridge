@@ -73,9 +73,71 @@ describe('SkilljarTranslator', () => {
   });
 
   describe('initialize', () => {
+    test('memoizes cache startup across concurrent callers and full initialization', async () => {
+      const t = new SkilljarTranslator();
+      let releaseOpen;
+      t._openDB = jest.fn(
+        () =>
+          new Promise((resolve) => {
+            releaseOpen = resolve;
+          }),
+      );
+      t._cleanupExpiredCache = jest.fn().mockResolvedValue(undefined);
+      t._checkStorageQuota = jest.fn().mockResolvedValue(undefined);
+      t._ensureCloudBroker = jest.fn().mockResolvedValue(undefined);
+
+      const first = t.initializeCache();
+      const second = t.initializeCache();
+      const full = t.initialize();
+
+      expect(second).toBe(first);
+      expect(t._openDB).toHaveBeenCalledTimes(1);
+      releaseOpen(true);
+      await expect(Promise.all([first, second, full])).resolves.toEqual([true, true, true]);
+      expect(t._openDB).toHaveBeenCalledTimes(1);
+      expect(t._cleanupExpiredCache).toHaveBeenCalledTimes(1);
+      expect(t._checkStorageQuota).toHaveBeenCalledTimes(1);
+      expect(t._ensureCloudBroker).toHaveBeenCalledTimes(1);
+    });
+
+    test('contains a cache startup failure but still attempts Tutor startup', async () => {
+      const t = new SkilljarTranslator();
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      t._openDB = jest.fn().mockResolvedValue(true);
+      t._cleanupExpiredCache = jest.fn().mockRejectedValue(new Error('cache transaction failed'));
+      t._checkStorageQuota = jest.fn().mockResolvedValue(undefined);
+      t._ensureCloudBroker = jest.fn().mockResolvedValue(undefined);
+
+      try {
+        const cacheInit = t.initializeCache();
+        await expect(cacheInit).resolves.toBe(false);
+        await expect(t.initialize()).resolves.toBe(false);
+        expect(t.initializeCache()).toBe(cacheInit);
+        expect(t._openDB).toHaveBeenCalledTimes(1);
+        expect(t._cleanupExpiredCache).toHaveBeenCalledTimes(1);
+        expect(t._checkStorageQuota).not.toHaveBeenCalled();
+        expect(t._ensureCloudBroker).toHaveBeenCalledTimes(1);
+      } finally {
+        errorSpy.mockRestore();
+      }
+    });
+
+    test('treats an unavailable database as cache failure without blocking Tutor', async () => {
+      const t = new SkilljarTranslator();
+      t._openDB = jest.fn().mockResolvedValue(false);
+      t._cleanupExpiredCache = jest.fn().mockResolvedValue(undefined);
+      t._checkStorageQuota = jest.fn().mockResolvedValue(undefined);
+      t._ensureCloudBroker = jest.fn().mockResolvedValue(undefined);
+
+      await expect(t.initialize()).resolves.toBe(false);
+      expect(t._cleanupExpiredCache).not.toHaveBeenCalled();
+      expect(t._checkStorageQuota).not.toHaveBeenCalled();
+      expect(t._ensureCloudBroker).toHaveBeenCalledTimes(1);
+    });
+
     test('opens the local cache but skips bridge setup when AI is disabled', async () => {
       const localOnly = new SkilljarTranslator({ aiEnabled: false });
-      localOnly._openDB = jest.fn().mockResolvedValue(undefined);
+      localOnly._openDB = jest.fn().mockResolvedValue(true);
       localOnly._cleanupExpiredCache = jest.fn().mockResolvedValue(undefined);
       localOnly._checkStorageQuota = jest.fn().mockResolvedValue(undefined);
       localOnly._connectCloudBrokerWithRetry = jest.fn();
@@ -83,6 +145,96 @@ describe('SkilljarTranslator', () => {
       await expect(localOnly.initialize()).resolves.toBe(true);
       expect(localOnly._openDB).toHaveBeenCalledTimes(1);
       expect(localOnly._connectCloudBrokerWithRetry).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Google Translate availability events', () => {
+    let originalDocument;
+    let originalCustomEvent;
+    let originalProtectedTerms;
+    let events;
+
+    beforeEach(() => {
+      originalDocument = global.document;
+      originalCustomEvent = global.CustomEvent;
+      originalProtectedTerms = global.window._protectedTerms;
+      events = [];
+      global.CustomEvent = class CustomEvent {
+        constructor(type, init = {}) {
+          this.type = type;
+          this.detail = init.detail;
+        }
+      };
+      global.document = { dispatchEvent: (event) => events.push(event) };
+      global.chrome.runtime.sendMessage = jest.fn();
+    });
+
+    afterEach(() => {
+      if (originalDocument === undefined) delete global.document;
+      else global.document = originalDocument;
+      if (originalCustomEvent === undefined) delete global.CustomEvent;
+      else global.CustomEvent = originalCustomEvent;
+      if (originalProtectedTerms === undefined) delete global.window._protectedTerms;
+      else global.window._protectedTerms = originalProtectedTerms;
+      delete global.chrome.runtime.sendMessage;
+    });
+
+    test('reports a failed single request once and clears it after recovery', async () => {
+      global.chrome.runtime.sendMessage
+        .mockResolvedValueOnce({ ok: false, error: 'offline' })
+        .mockRejectedValueOnce(new Error('still offline'))
+        .mockResolvedValueOnce({ ok: true, translated: '안녕하세요' });
+
+      await expect(translator.googleTranslate('Hello', 'ko')).resolves.toBeNull();
+      await expect(translator.googleTranslate('Hello again', 'ko')).resolves.toBeNull();
+      await expect(translator.googleTranslate('Hello', 'ko')).resolves.toBe('안녕하세요');
+
+      expect(events.map(({ type, detail }) => ({ type, detail }))).toEqual([
+        { type: 'skillbridge:translationunavailable', detail: { kind: 'single' } },
+        { type: 'skillbridge:translationavailable', detail: { kind: 'single' } },
+      ]);
+    });
+
+    test('reports malformed batch payloads and preserves the original fallback', async () => {
+      global.chrome.runtime.sendMessage
+        .mockResolvedValueOnce({ ok: true, translations: { unexpected: true } })
+        .mockResolvedValueOnce({ ok: true, translations: ['only one'] });
+
+      const originals = ['Hello', 'World'];
+      await expect(translator.googleTranslateBatch(originals, 'ko')).resolves.toEqual(originals);
+      await expect(translator.googleTranslateBatch(originals, 'ko')).resolves.toEqual(originals);
+      expect(events.map(({ type, detail }) => ({ type, detail }))).toEqual([
+        { type: 'skillbridge:translationunavailable', detail: { kind: 'batch' } },
+      ]);
+    });
+
+    test('reports a well-shaped batch as available', async () => {
+      global.chrome.runtime.sendMessage.mockResolvedValue({ ok: true, translations: ['안녕하세요', '세계'] });
+
+      await expect(translator.googleTranslateBatch(['Hello', 'World'], 'ko')).resolves.toEqual(['안녕하세요', '세계']);
+      expect(events.map(({ type, detail }) => ({ type, detail }))).toEqual([
+        { type: 'skillbridge:translationavailable', detail: { kind: 'batch' } },
+      ]);
+    });
+
+    test('does not report transport failure when protected-term unmasking fails', async () => {
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      global.window._protectedTerms = {
+        maskProtectedTerms: () => ({ text: '⟦0⟧ prompt', tokens: ['Claude'] }),
+        unmaskProtectedTerms: () => {
+          throw new Error('placeholder integrity failed');
+        },
+      };
+      global.chrome.runtime.sendMessage.mockResolvedValue({ ok: true, translated: '⟦0⟧ 프롬프트' });
+
+      try {
+        await expect(translator.googleTranslate('Claude prompt', 'ko')).resolves.toBeNull();
+        expect(events.map(({ type, detail }) => ({ type, detail }))).toEqual([
+          { type: 'skillbridge:translationavailable', detail: { kind: 'single' } },
+        ]);
+      } finally {
+        warnSpy.mockRestore();
+      }
     });
   });
 
@@ -507,10 +659,13 @@ describe('_openDB — inherited v1.0.1 cache is dropped, not migrated', () => {
 
   let openArgs;
   let request;
+  let warnSpy;
 
   beforeEach(() => {
+    jest.useFakeTimers();
+    warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     openArgs = null;
-    request = { onupgradeneeded: null, onsuccess: null, onerror: null };
+    request = { onupgradeneeded: null, onsuccess: null, onerror: null, onblocked: null };
     global.indexedDB = {
       open: (name, version) => {
         openArgs = { name, version };
@@ -520,6 +675,9 @@ describe('_openDB — inherited v1.0.1 cache is dropped, not migrated', () => {
   });
 
   afterEach(() => {
+    jest.clearAllTimers();
+    jest.useRealTimers();
+    warnSpy.mockRestore();
     global.indexedDB = { open: () => ({ onupgradeneeded: null, onsuccess: null, onerror: null }) };
   });
 
@@ -588,7 +746,7 @@ describe('_openDB — inherited v1.0.1 cache is dropped, not migrated', () => {
     const pending = t._openDB();
     const handle = { objectStoreNames: { contains: () => true } };
     request.onsuccess({ target: { result: handle } });
-    await expect(pending).resolves.toBeUndefined();
+    await expect(pending).resolves.toBe(true);
     expect(t._db).toBe(handle);
   });
 
@@ -596,7 +754,35 @@ describe('_openDB — inherited v1.0.1 cache is dropped, not migrated', () => {
     const t = new SkilljarTranslator();
     const pending = t._openDB();
     request.onerror();
-    await expect(pending).resolves.toBeUndefined();
+    await expect(pending).resolves.toBe(false);
+    expect(t._db).toBeNull();
+  });
+
+  test('a blocked upgrade settles immediately and closes a later stale handle', async () => {
+    const t = new SkilljarTranslator();
+    const pending = t._openDB();
+
+    request.onblocked();
+    await expect(pending).resolves.toBe(false);
+    expect(t._db).toBeNull();
+
+    const lateHandle = { close: jest.fn() };
+    request.onsuccess({ target: { result: lateHandle } });
+    expect(lateHandle.close).toHaveBeenCalledTimes(1);
+    expect(t._db).toBeNull();
+  });
+
+  test('a silent open times out and closes a later stale handle', async () => {
+    const t = new SkilljarTranslator();
+    const pending = t._openDB();
+
+    await jest.advanceTimersByTimeAsync(3000);
+    await expect(pending).resolves.toBe(false);
+    expect(t._db).toBeNull();
+
+    const lateHandle = { close: jest.fn() };
+    request.onsuccess({ target: { result: lateHandle } });
+    expect(lateHandle.close).toHaveBeenCalledTimes(1);
     expect(t._db).toBeNull();
   });
 });

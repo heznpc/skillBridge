@@ -24,6 +24,9 @@
  *   - `queueForGoogleTranslate(elements, targetLang, alreadyVisible)` — used by the SPA mutation observer and the online-recovery handler
  *   - `reset()` — clears queue/lock/offline-pending + bumps generation. Called from restoreOriginal.
  *   - `bumpGeneration()` — for switchLanguage to invalidate stale callbacks
+ *   - `resetOfflineCoverage()` — a new page starts at unknown and drops old-page work
+ *   - `beginOfflineCoverage()` — same page enters a new offline episode
+ *   - `reportRenderedOfflineCoverage()` — seed an idle offline episode from live translated elements
  *   - `get gtGeneration` — read-only view of the counter
  *   - `flushOfflinePending(currentLang)` — re-queue items deferred during an offline window
  *
@@ -46,6 +49,22 @@
   let gtProcessing = false;
   let gtGeneration = 0;
   let _offlinePendingItems = [];
+  // Cache coverage is cumulative only within one page + offline episode.
+  // Its epoch is deliberately independent from gtGeneration: reconnecting or
+  // navigating to another lesson in the same language must start at unknown
+  // without invalidating otherwise-valid translation work.
+  let _offlineCoverageEpoch = 0;
+  let _offlineCoverage = { generation: _offlineCoverageEpoch, hasCached: false, hasMissing: false };
+  // Only an offline-episode reset may retry the batch that was already in
+  // flight. Keep both ends of that exact transition: a page reset followed by
+  // an offline reset must not revive a still-connected old-page batch.
+  let _retryInFlightCoverageTransition = null;
+  // `translatedTexts` intentionally keeps its compact `{ el }` public shape.
+  // Page ownership lives separately so an offline event during SPA teardown
+  // cannot seed the new page's coverage from old-but-still-connected nodes.
+  let _coveragePageEpoch = 0;
+  const _renderedCoveragePage = new WeakMap();
+  const COVERAGE_CHANGED = Symbol('coverage-changed');
   // Element → the text WE last wrote into it, plus the generation we wrote it
   // in. `applyStaticTranslations` is not one-shot: it re-runs on a LATE_CONTENT
   // timer and on every SPA route change, re-scanning the whole page each time.
@@ -65,6 +84,89 @@
   // Observed-element → target lang. WeakMap so removed DOM nodes get GC'd
   // without explicit cleanup.
   const _lazyElements = new WeakMap();
+
+  function _emitOfflineCoverage() {
+    document.dispatchEvent(
+      new CustomEvent('skillbridge:offlinecoverage', {
+        detail: {
+          generation: _offlineCoverage.generation,
+          hasCached: _offlineCoverage.hasCached,
+          hasMissing: _offlineCoverage.hasMissing,
+        },
+      }),
+    );
+  }
+
+  function _startOfflineCoverageEpoch({ retryFrom = null } = {}) {
+    _offlineCoverageEpoch++;
+    _offlineCoverage = { generation: _offlineCoverageEpoch, hasCached: false, hasMissing: false };
+    _retryInFlightCoverageTransition = retryFrom === null ? null : { from: retryFrom, to: _offlineCoverageEpoch };
+    _emitOfflineCoverage();
+  }
+
+  function _resetOfflineCoverage() {
+    _coveragePageEpoch++;
+    // Anything already waiting belongs to the page we are leaving. The
+    // active batch lives outside this array and is rejected by its page/epoch
+    // checks when its current await settles.
+    gtTranslateQueue = [];
+    _offlinePendingItems = [];
+    _disconnectLazyObserver();
+    _startOfflineCoverageEpoch();
+  }
+
+  function _beginOfflineCoverage() {
+    const previousEpoch = _offlineCoverageEpoch;
+    _startOfflineCoverageEpoch({ retryFrom: previousEpoch });
+    return _reportRenderedOfflineCoverage();
+  }
+
+  function _reportRenderedOfflineCoverage() {
+    if (!sb.isOffline) return false;
+    for (const entries of sb.translatedTexts.values()) {
+      if (entries.some((entry) => entry.el?.parentNode && _renderedCoveragePage.get(entry.el) === _coveragePageEpoch)) {
+        _recordOfflineCoverage(gtGeneration, _offlineCoverage.generation, { hasCached: true });
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function _recordOfflineCoverage(
+    translationGeneration,
+    coverageGeneration,
+    { hasCached = false, hasMissing = false },
+  ) {
+    if (!sb.isOffline || translationGeneration !== gtGeneration || coverageGeneration !== _offlineCoverage.generation)
+      return;
+    const nextCached = _offlineCoverage.hasCached || hasCached;
+    const nextMissing = _offlineCoverage.hasMissing || hasMissing;
+    if (nextCached === _offlineCoverage.hasCached && nextMissing === _offlineCoverage.hasMissing) return;
+    _offlineCoverage = { generation: coverageGeneration, hasCached: nextCached, hasMissing: nextMissing };
+    _emitOfflineCoverage();
+  }
+
+  function _coverageChanged(generation) {
+    return generation !== _offlineCoverage.generation;
+  }
+
+  function _handleCoverageChange(batch, capturedCoverageGeneration) {
+    const transition = _retryInFlightCoverageTransition;
+    if (transition?.from === capturedCoverageGeneration && transition.to === _offlineCoverage.generation) {
+      _retryInFlightCoverageTransition = null;
+      _requeueBatchForCoverage(batch);
+    }
+  }
+
+  // A coverage reset does not invalidate translation work, so keep the same
+  // item objects (and therefore their original text/cache keys) and retry them
+  // at the front of the live processor. Reading the element again here would
+  // be wrong: a cache hit earlier in the batch may already have translated it.
+  function _requeueBatchForCoverage(batch) {
+    const live = batch.filter((item) => item.coveragePageEpoch === _coveragePageEpoch && item.el?.parentNode);
+    const remaining = SKILLBRIDGE_THRESHOLDS.GT_QUEUE_MAX - gtTranslateQueue.length;
+    if (remaining > 0) gtTranslateQueue.unshift(...live.slice(0, remaining));
+  }
 
   // ============================================================
   // SHARED HELPERS (moved from content.js: only callers were inside this section)
@@ -374,12 +476,13 @@
       // mistakenly see its gen match the new one. Capturing here freezes
       // the value with the callback that uses it.
       const observerGen = gtGeneration;
+      const observerPageEpoch = _coveragePageEpoch;
       // `obs` likewise captured so a stale callback's `unobserve` runs
       // against the observer the callback was attached to, not against
       // whatever `_lazyObserver` currently points at (could be a new one).
       const obs = new IntersectionObserver(
         (entries) => {
-          if (gtGeneration !== observerGen) return;
+          if (gtGeneration !== observerGen || _coveragePageEpoch !== observerPageEpoch) return;
           const candidates = [];
           let lang = targetLang;
           for (const entry of entries) {
@@ -447,6 +550,7 @@
           el,
           text,
           targetLang,
+          coveragePageEpoch: _coveragePageEpoch,
           hasInlineTags: _hasInlineTags(el),
           hasInteractive: _hasInteractiveEls(el),
         });
@@ -466,6 +570,7 @@
           el,
           text,
           targetLang,
+          coveragePageEpoch: _coveragePageEpoch,
           hasInlineTags: _hasInlineTags(el),
           hasInteractive: _hasInteractiveEls(el),
         };
@@ -476,7 +581,14 @@
     processGTQueue();
   }
 
-  function partitionAfterCacheLookup(batch, cacheResults, originalTexts, htmlQueue) {
+  function partitionAfterCacheLookup(
+    batch,
+    cacheResults,
+    originalTexts,
+    htmlQueue,
+    myGeneration,
+    myCoverageGeneration,
+  ) {
     const uncached = [];
     // Blocks with inline tags or interactive labels are "structured": they must
     // keep their markup. They always take the deterministic HTML-GT path; the
@@ -499,9 +611,13 @@
         const translated = window._protectedTerms.restoreProtectedTerms(cached);
         if (sb.safeReplaceText(item.el, translated) === false) continue;
         trackTranslatedElement(item.text, item.el);
+        _recordOfflineCoverage(myGeneration, myCoverageGeneration, { hasCached: true });
         continue;
       }
       uncached.push(item);
+      if (!isStructured(item) && item.el?.parentNode) {
+        _recordOfflineCoverage(myGeneration, myCoverageGeneration, { hasMissing: true });
+      }
     }
 
     const structured = uncached.filter(isStructured);
@@ -525,13 +641,21 @@
     return textToItems;
   }
 
-  async function applyGoogleTranslations(uniqueTexts, translations, textToItems, translator, targetLang) {
+  async function applyGoogleTranslations(
+    uniqueTexts,
+    translations,
+    textToItems,
+    translator,
+    targetLang,
+    myCoverageGeneration,
+  ) {
     for (let i = 0; i < uniqueTexts.length; i++) {
       let translated = translations[i];
       if (!translated || translated === uniqueTexts[i]) continue;
       translated = window._protectedTerms.restoreProtectedTerms(translated);
       const items = textToItems.get(uniqueTexts[i]);
       await translator._cacheTranslation(uniqueTexts[i], translated, targetLang);
+      if (_coverageChanged(myCoverageGeneration)) return COVERAGE_CHANGED;
       for (const item of items) {
         if (!item.el?.parentNode) continue;
         if (sb.safeReplaceText(item.el, translated) === false) continue;
@@ -543,9 +667,10 @@
         sb._refine?.enqueue({ el: item.el, source: item.text, baseline: translated, targetLang });
       }
     }
+    return true;
   }
 
-  async function translateGoogleItems(gtItems, targetLang, translator, myGeneration) {
+  async function translateGoogleItems(gtItems, targetLang, translator, myGeneration, myCoverageGeneration) {
     if (gtItems.length === 0) return true;
     if (sb.isOffline) {
       queueOfflineItems(gtItems);
@@ -557,9 +682,16 @@
     const translations = await translator.googleTranslateBatch(uniqueTexts, targetLang);
 
     if (gtGeneration !== myGeneration) return false;
+    if (_coverageChanged(myCoverageGeneration)) return COVERAGE_CHANGED;
 
-    await applyGoogleTranslations(uniqueTexts, translations, textToItems, translator, targetLang);
-    return true;
+    return applyGoogleTranslations(
+      uniqueTexts,
+      translations,
+      textToItems,
+      translator,
+      targetLang,
+      myCoverageGeneration,
+    );
   }
 
   // ==================== HTML-GT (structure-preserving, no AI) ====================
@@ -610,20 +742,16 @@
     return true;
   }
 
-  async function translateHtmlItems(htmlItems, targetLang, translator, myGeneration) {
+  async function translateHtmlItems(htmlItems, targetLang, translator, myGeneration, myCoverageGeneration) {
     if (!htmlItems || htmlItems.length === 0) return true;
-    // Offline: defer like plain items instead of dropping them. Returning
-    // early used to strand structured blocks untranslated even after the
-    // connection came back, while plain text resumed via the offline queue.
-    if (sb.isOffline) {
-      queueOfflineItems(htmlItems);
-      return true;
-    }
     // Dedup identical source blocks so repeated markup costs one GT call.
     const bySource = new Map();
     for (const item of htmlItems) {
       if (!item.el?.parentNode) continue;
-      const src = item.el.outerHTML;
+      // Retain the first source markup on the queue item. An epoch retry may
+      // happen after another source in this batch was already rendered.
+      const src = item.sourceHtml || item.el.outerHTML;
+      item.sourceHtml = src;
       if (!bySource.has(src)) bySource.set(src, []);
       bySource.get(src).push(item);
     }
@@ -652,14 +780,28 @@
     const uncached = [];
     for (const source of sources) {
       const cached = await translator.cachedLookup(_htmlCacheKey(source), targetLang);
-      if (cached) applyToItems(source, cached);
-      else uncached.push(source);
+      if (gtGeneration !== myGeneration) return false;
+      if (_coverageChanged(myCoverageGeneration)) return COVERAGE_CHANGED;
+      if (cached && applyToItems(source, cached)) {
+        _recordOfflineCoverage(myGeneration, myCoverageGeneration, { hasCached: true });
+      } else {
+        uncached.push(source);
+        _recordOfflineCoverage(myGeneration, myCoverageGeneration, { hasMissing: true });
+      }
     }
-    if (gtGeneration !== myGeneration) return false;
     if (uncached.length === 0) return true;
+
+    // Cache lookup must happen before the offline gate: cached structured
+    // markup is fully usable without a connection. Only sources that actually
+    // missed (or failed the integrity gate) wait for the online retry.
+    if (sb.isOffline) {
+      queueOfflineItems(uncached.flatMap((source) => bySource.get(source)));
+      return true;
+    }
 
     const translations = await translator.googleTranslateBatch(uncached, targetLang);
     if (gtGeneration !== myGeneration) return false;
+    if (_coverageChanged(myCoverageGeneration)) return COVERAGE_CHANGED;
 
     for (let i = 0; i < uncached.length; i++) {
       const translatedHtml = translations[i];
@@ -669,6 +811,7 @@
       // occupying a cache slot.
       if (applyToItems(uncached[i], translatedHtml)) {
         await translator._cacheTranslation(_htmlCacheKey(uncached[i]), translatedHtml, targetLang, { html: true });
+        if (_coverageChanged(myCoverageGeneration)) return COVERAGE_CHANGED;
       }
     }
     return true;
@@ -691,19 +834,54 @@
       while (gtTranslateQueue.length > 0) {
         if (gtGeneration !== myGeneration) return;
 
-        const batch = gtTranslateQueue.splice(0, SKILLBRIDGE_THRESHOLDS.GT_BATCH_SIZE);
+        const myCoverageGeneration = _offlineCoverage.generation;
+        const batch = gtTranslateQueue
+          .splice(0, SKILLBRIDGE_THRESHOLDS.GT_BATCH_SIZE)
+          .filter((item) => item.coveragePageEpoch === _coveragePageEpoch);
+        if (batch.length === 0) continue;
         const targetLang = batch[0].targetLang;
 
         const cacheResults = await Promise.all(batch.map((item) => translator.cachedLookup(item.text, targetLang)));
 
         if (gtGeneration !== myGeneration) return;
+        if (_coverageChanged(myCoverageGeneration)) {
+          _handleCoverageChange(batch, myCoverageGeneration);
+          continue;
+        }
 
         const htmlItems = [];
-        const gtItems = partitionAfterCacheLookup(batch, cacheResults, originalTexts, htmlItems);
-        const gtStillFresh = await translateGoogleItems(gtItems, targetLang, translator, myGeneration);
-        if (!gtStillFresh) return;
-        const htmlStillFresh = await translateHtmlItems(htmlItems, targetLang, translator, myGeneration);
-        if (!htmlStillFresh) return;
+        const gtItems = partitionAfterCacheLookup(
+          batch,
+          cacheResults,
+          originalTexts,
+          htmlItems,
+          myGeneration,
+          myCoverageGeneration,
+        );
+        const gtStatus = await translateGoogleItems(
+          gtItems,
+          targetLang,
+          translator,
+          myGeneration,
+          myCoverageGeneration,
+        );
+        if (gtStatus === false) return;
+        if (gtStatus === COVERAGE_CHANGED) {
+          _handleCoverageChange(batch, myCoverageGeneration);
+          continue;
+        }
+        const htmlStatus = await translateHtmlItems(
+          htmlItems,
+          targetLang,
+          translator,
+          myGeneration,
+          myCoverageGeneration,
+        );
+        if (htmlStatus === false) return;
+        if (htmlStatus === COVERAGE_CHANGED) {
+          _handleCoverageChange(batch, myCoverageGeneration);
+          continue;
+        }
 
         processedItems += batch.length;
         sb.updateTranslationProgress?.(80 + Math.round((processedItems / totalItems) * 15));
@@ -763,6 +941,7 @@
     // the live DOM, and consumers must read that current value rather than a
     // stale translated-text snapshot stored here.
     if (!entries.some((entry) => entry.el === el)) entries.push({ el });
+    _renderedCoveragePage.set(el, _coveragePageEpoch);
     markTranslated(el);
   }
 
@@ -856,11 +1035,13 @@
     gtProcessing = false;
     _offlinePendingItems = [];
     gtGeneration++;
+    _resetOfflineCoverage();
     _disconnectLazyObserver();
   }
 
   function bumpGeneration() {
     gtGeneration++;
+    _resetOfflineCoverage();
     _disconnectLazyObserver();
   }
 
@@ -881,7 +1062,9 @@
    */
   function flushOfflinePending(currentLang) {
     if (_offlinePendingItems.length === 0) return false;
-    const pending = _offlinePendingItems.filter((item) => item.el?.parentNode);
+    const pending = _offlinePendingItems.filter(
+      (item) => item.coveragePageEpoch === _coveragePageEpoch && item.el?.parentNode,
+    );
     _offlinePendingItems = [];
     if (pending.length > 0) {
       queueForGoogleTranslate(
@@ -903,6 +1086,11 @@
     pruneDetachedEntries,
     reset,
     bumpGeneration,
+    // A page reset drops old-page coverage work; an offline reset retries only
+    // the batch captured immediately before that exact epoch transition.
+    resetOfflineCoverage: _resetOfflineCoverage,
+    beginOfflineCoverage: _beginOfflineCoverage,
+    reportRenderedOfflineCoverage: _reportRenderedOfflineCoverage,
     flushOfflinePending,
     // Used by the optional post-editor (refine-queue.js) to re-mark a block it
     // rewrote, so the translation walk does not read the refined text as fresh

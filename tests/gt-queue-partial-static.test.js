@@ -14,7 +14,7 @@
  * this one happens WITHIN a single pass, before any mark exists.
  */
 
-/* global describe, test, expect, beforeEach */
+/* global describe, test, expect, beforeEach, afterEach, jest */
 
 const fs = require('fs');
 const path = require('path');
@@ -143,5 +143,336 @@ describe('translatedTexts — original text to live element index', () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(sb.translatedTexts.get('Translate this paragraph with Google')).toEqual([{ el }]);
+  });
+});
+
+describe('offline structured HTML cache coverage', () => {
+  beforeEach(() => {
+    window._geminiBlock = { hasInlineTags: () => true };
+    window._sbDomSafe = { sanitizeInlineHtml: (html) => html };
+    window._sbHtmlGt = {
+      checkTagIntegrity: () => true,
+      reconcileHtml: (el, translatedRoot) => {
+        el.innerHTML = translatedRoot.innerHTML;
+        return true;
+      },
+    };
+  });
+
+  afterEach(() => {
+    window._geminiBlock = { hasInlineTags: () => false };
+    delete window._sbDomSafe;
+    delete window._sbHtmlGt;
+  });
+
+  test('applies cached markup offline, reports mixed coverage, and defers only the miss', async () => {
+    document.body.innerHTML = [
+      '<p id="cached"><span>Cached lesson paragraph</span></p>',
+      '<p id="missing"><span>Missing lesson paragraph</span></p>',
+    ].join('');
+    const cachedEl = document.getElementById('cached');
+    const missingEl = document.getElementById('missing');
+    const cachedSource = cachedEl.outerHTML;
+    const missingSource = missingEl.outerHTML;
+    const cachedTranslation = '<p id="cached"><span>캐시된 레슨 문단</span></p>';
+    const missingTranslation = '<p id="missing"><span>새 레슨 문단</span></p>';
+    const googleTranslateBatch = jest.fn(async ([source]) =>
+      source === missingSource ? [missingTranslation] : [source],
+    );
+    const cachedLookup = jest.fn(async (key) => {
+      if (!key.startsWith('sb-html\u0001')) return null;
+      return key.endsWith(cachedSource) ? cachedTranslation : null;
+    });
+    const { sb } = loadModule({}, { cachedLookup, googleTranslateBatch });
+    const coverage = [];
+    const onCoverage = (event) => coverage.push(event.detail);
+    document.addEventListener('skillbridge:offlinecoverage', onCoverage);
+
+    try {
+      sb.isOffline = true;
+      sb._gt.queueForGoogleTranslate([cachedEl, missingEl], 'ko', true);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(cachedEl.textContent).toBe('캐시된 레슨 문단');
+      expect(missingEl.textContent).toBe('Missing lesson paragraph');
+      expect(googleTranslateBatch).not.toHaveBeenCalled();
+      expect(coverage).toEqual([
+        { generation: 0, hasCached: true, hasMissing: false },
+        { generation: 0, hasCached: true, hasMissing: true },
+      ]);
+
+      // Only the uncached source was placed in the retry list. If the cached
+      // item had also been deferred, this online flush would send both blocks.
+      sb.isOffline = false;
+      expect(sb._gt.flushOfflinePending('ko')).toBe(true);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(googleTranslateBatch).toHaveBeenCalledTimes(1);
+      expect(googleTranslateBatch).toHaveBeenCalledWith([missingSource], 'ko');
+      expect(missingEl.textContent).toBe('새 레슨 문단');
+      expect(coverage).toHaveLength(2);
+    } finally {
+      document.removeEventListener('skillbridge:offlinecoverage', onCoverage);
+    }
+  });
+
+  test('a generation bump clears cumulative coverage back to unknown', () => {
+    const { sb } = loadModule({});
+    const coverage = [];
+    const onCoverage = (event) => coverage.push(event.detail);
+    document.addEventListener('skillbridge:offlinecoverage', onCoverage);
+
+    try {
+      sb._gt.bumpGeneration();
+      expect(coverage).toEqual([{ generation: 1, hasCached: false, hasMissing: false }]);
+    } finally {
+      document.removeEventListener('skillbridge:offlinecoverage', onCoverage);
+    }
+  });
+
+  test('a new page or offline episode gets a fresh coverage epoch', () => {
+    const { sb } = loadModule({});
+    const coverage = [];
+    const onCoverage = (event) => coverage.push(event.detail);
+    document.addEventListener('skillbridge:offlinecoverage', onCoverage);
+
+    try {
+      sb._gt.resetOfflineCoverage();
+      sb._gt.resetOfflineCoverage();
+      expect(coverage).toEqual([
+        { generation: 1, hasCached: false, hasMissing: false },
+        { generation: 2, hasCached: false, hasMissing: false },
+      ]);
+    } finally {
+      document.removeEventListener('skillbridge:offlinecoverage', onCoverage);
+    }
+  });
+});
+
+describe('offline coverage epoch races', () => {
+  test('online to offline during a cache lookup reports the hit in the new episode', async () => {
+    document.body.innerHTML = '<p id="lesson">Same lesson paragraph already cached</p>';
+    const el = document.getElementById('lesson');
+    let releaseLookup;
+    const cachedLookup = jest
+      .fn()
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            releaseLookup = resolve;
+          }),
+      )
+      .mockResolvedValue('같은 레슨 캐시 번역');
+    const { sb } = loadModule({}, { cachedLookup });
+    const coverage = [];
+    const onCoverage = (event) => coverage.push(event.detail);
+    document.addEventListener('skillbridge:offlinecoverage', onCoverage);
+
+    try {
+      sb._gt.queueForGoogleTranslate([el], 'ko', true);
+      await Promise.resolve();
+      expect(releaseLookup).toEqual(expect.any(Function));
+
+      sb.isOffline = true;
+      expect(sb._gt.beginOfflineCoverage()).toBe(false);
+      releaseLookup('같은 레슨 캐시 번역');
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(cachedLookup).toHaveBeenCalledTimes(2);
+      expect(el.textContent).toBe('같은 레슨 캐시 번역');
+      expect(coverage).toEqual([
+        { generation: 1, hasCached: false, hasMissing: false },
+        { generation: 1, hasCached: true, hasMissing: false },
+      ]);
+    } finally {
+      document.removeEventListener('skillbridge:offlinecoverage', onCoverage);
+    }
+  });
+
+  test('an epoch retry keeps original cache keys after an earlier flat hit changed the DOM', async () => {
+    document.body.innerHTML = [
+      '<p id="hit">Cached source paragraph</p>',
+      '<p id="miss">Network source paragraph</p>',
+    ].join('');
+    const hitEl = document.getElementById('hit');
+    const missEl = document.getElementById('miss');
+    const cachedLookup = jest.fn(async (text) => (text === 'Cached source paragraph' ? '캐시 적중 문단' : null));
+    let releaseGoogle;
+    const googleTranslateBatch = jest.fn(
+      () =>
+        new Promise((resolve) => {
+          releaseGoogle = resolve;
+        }),
+    );
+    const { sb } = loadModule({}, { cachedLookup, googleTranslateBatch });
+    const coverage = [];
+    const onCoverage = (event) => coverage.push(event.detail);
+    document.addEventListener('skillbridge:offlinecoverage', onCoverage);
+
+    try {
+      sb._gt.queueForGoogleTranslate([hitEl, missEl], 'ko', true);
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(hitEl.textContent).toBe('캐시 적중 문단');
+      expect(releaseGoogle).toEqual(expect.any(Function));
+
+      sb.isOffline = true;
+      expect(sb._gt.beginOfflineCoverage()).toBe(true);
+      releaseGoogle(['네트워크 번역 문단']);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(cachedLookup.mock.calls.map(([text]) => text)).toEqual([
+        'Cached source paragraph',
+        'Network source paragraph',
+        'Cached source paragraph',
+        'Network source paragraph',
+      ]);
+      expect(hitEl.textContent).toBe('캐시 적중 문단');
+      expect(missEl.textContent).toBe('Network source paragraph');
+      expect(coverage).toEqual([
+        { generation: 1, hasCached: false, hasMissing: false },
+        { generation: 1, hasCached: true, hasMissing: false },
+        { generation: 1, hasCached: true, hasMissing: true },
+      ]);
+    } finally {
+      document.removeEventListener('skillbridge:offlinecoverage', onCoverage);
+    }
+  });
+
+  test('a page reset drops active and queued old work before a later offline reset', async () => {
+    const oldTexts = Array.from({ length: 11 }, (_, index) => `Old page paragraph ${index} waiting on cache`);
+    document.body.innerHTML = [
+      ...oldTexts.map((text, index) => `<p id="old-${index}">${text}</p>`),
+      '<p id="fresh">New page paragraph already cached</p>',
+    ].join('');
+    const oldElements = oldTexts.map((_, index) => document.getElementById(`old-${index}`));
+    const freshEl = document.getElementById('fresh');
+    let releaseOldLookup;
+    const cachedLookup = jest
+      .fn()
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            releaseOldLookup = resolve;
+          }),
+      )
+      .mockResolvedValue('새 페이지 캐시 번역');
+    const { sb } = loadModule({}, { cachedLookup });
+    const coverage = [];
+    const onCoverage = (event) => coverage.push(event.detail);
+    document.addEventListener('skillbridge:offlinecoverage', onCoverage);
+
+    try {
+      // The first page starts online and holds the processor inside its cache
+      // await. A same-language SPA reset happens before Skilljar replaces the
+      // old DOM, then the network goes offline. The later offline transition
+      // may retry new-page work, but must not revive the still-connected batch
+      // captured before the page reset.
+      sb._gt.queueForGoogleTranslate(oldElements, 'ko', true);
+      await Promise.resolve();
+      expect(releaseOldLookup).toEqual(expect.any(Function));
+
+      sb._gt.resetOfflineCoverage();
+      sb.isOffline = true;
+      expect(sb._gt.beginOfflineCoverage()).toBe(false);
+      sb._gt.queueForGoogleTranslate([freshEl], 'ko', true);
+      releaseOldLookup(null);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(cachedLookup.mock.calls.map(([text]) => text)).toEqual([
+        ...oldTexts.slice(0, 10),
+        'New page paragraph already cached',
+      ]);
+      for (let index = 0; index < oldElements.length; index++) {
+        expect(oldElements[index].textContent).toBe(oldTexts[index]);
+      }
+      expect(freshEl.textContent).toBe('새 페이지 캐시 번역');
+      expect(coverage).toEqual([
+        { generation: 1, hasCached: false, hasMissing: false },
+        { generation: 2, hasCached: false, hasMissing: false },
+        { generation: 2, hasCached: true, hasMissing: false },
+      ]);
+    } finally {
+      document.removeEventListener('skillbridge:offlinecoverage', onCoverage);
+    }
+  });
+
+  test('an idle offline episode is seeded from a live rendered translation', async () => {
+    document.body.innerHTML = [
+      '<p id="live">Rendered lesson paragraph</p>',
+      '<p id="detached">Detached translated paragraph</p>',
+    ].join('');
+    const liveEl = document.getElementById('live');
+    const detachedEl = document.getElementById('detached');
+    const cachedLookup = jest.fn(async (text) => `cached: ${text}`);
+    const { sb } = loadModule({}, { cachedLookup });
+
+    sb._gt.queueForGoogleTranslate([liveEl, detachedEl], 'ko', true);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    detachedEl.remove();
+
+    const coverage = [];
+    const onCoverage = (event) => coverage.push(event.detail);
+    document.addEventListener('skillbridge:offlinecoverage', onCoverage);
+
+    try {
+      expect(sb._gt.reportRenderedOfflineCoverage()).toBe(false);
+      sb.isOffline = true;
+      expect(sb._gt.beginOfflineCoverage()).toBe(true);
+      expect(sb._gt.reportRenderedOfflineCoverage()).toBe(true);
+
+      expect(coverage).toEqual([
+        { generation: 1, hasCached: false, hasMissing: false },
+        { generation: 1, hasCached: true, hasMissing: false },
+      ]);
+
+      liveEl.remove();
+      expect(sb._gt.reportRenderedOfflineCoverage()).toBe(false);
+      expect(coverage).toHaveLength(2);
+    } finally {
+      document.removeEventListener('skillbridge:offlinecoverage', onCoverage);
+    }
+  });
+
+  test('a stale lazy observer cannot enqueue old-page elements after a page reset', async () => {
+    document.body.innerHTML = '<p id="old-lazy">Old page paragraph below the viewport</p>';
+    const oldEl = document.getElementById('old-lazy');
+    let observerCallback;
+    const observer = {
+      observe: jest.fn(),
+      unobserve: jest.fn(),
+      disconnect: jest.fn(),
+    };
+    const OriginalIntersectionObserver = global.IntersectionObserver;
+    global.IntersectionObserver = jest.fn(function (callback) {
+      observerCallback = callback;
+      return observer;
+    });
+    window.IntersectionObserver = global.IntersectionObserver;
+
+    const cachedLookup = jest.fn(async () => '이전 페이지 캐시 번역');
+    const { sb } = loadModule({}, { cachedLookup });
+    sb.translatableSelector = 'p';
+    sb.excludeSelector = '.skillbridge-never-match';
+
+    try {
+      sb._gt.applyStaticTranslations('ko');
+      expect(observer.observe).toHaveBeenCalledWith(oldEl);
+      expect(observerCallback).toEqual(expect.any(Function));
+
+      sb._gt.resetOfflineCoverage();
+      expect(observer.disconnect).toHaveBeenCalledTimes(1);
+
+      observerCallback([{ isIntersecting: true, target: oldEl }]);
+      await Promise.resolve();
+
+      expect(observer.unobserve).not.toHaveBeenCalled();
+      expect(cachedLookup).not.toHaveBeenCalled();
+      expect(oldEl.textContent).toBe('Old page paragraph below the viewport');
+    } finally {
+      global.IntersectionObserver = OriginalIntersectionObserver;
+      window.IntersectionObserver = OriginalIntersectionObserver;
+    }
   });
 });

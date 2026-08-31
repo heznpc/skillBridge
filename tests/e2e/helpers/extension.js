@@ -100,6 +100,19 @@ function patchExtensionDir(extDir, { puterStub = true, extraHostPermissions = []
   for (const cs of manifest.content_scripts) {
     cs.matches.push('http://localhost:*/*', 'http://127.0.0.1:*/*');
   }
+  // A real cold network failure cannot serve the localhost fixture at all, so
+  // the offline-startup spec uses a temp-bundle-only preload. It runs before
+  // SkillBridge's production content bundle and makes `navigator.onLine`
+  // report false only for an explicit E2E query flag. Nothing is added to the
+  // checked-in extension manifest or shipped bundle.
+  const networkStatePreload = 'e2e-network-state.js';
+  fs.writeFileSync(
+    path.join(extDir, networkStatePreload),
+    "if (new URL(location.href).searchParams.get('__sb_e2e_offline') === '1') {\n" +
+      "  Object.defineProperty(window.navigator, 'onLine', { configurable: true, get: () => false });\n" +
+      '}\n',
+  );
+  manifest.content_scripts[0].js.unshift(networkStatePreload);
   // Also add localhost to host_permissions and web_accessible_resources so
   // chrome.runtime.getURL() / SW message routing keep working from the
   // fixture page.

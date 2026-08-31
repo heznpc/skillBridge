@@ -440,13 +440,17 @@ describe('offline behavior', () => {
     expect(trSrc).toContain('const engine = await this._getAiEngine();');
   });
 
-  test('structured HTML blocks are deferred offline, not dropped', () => {
+  test('structured HTML uses cache offline and defers only misses', () => {
     const fn = queueSrc.slice(
       queueSrc.indexOf('async function translateHtmlItems'),
       queueSrc.indexOf('async function processGTQueue'),
     );
-    expect(fn).toContain('queueOfflineItems(htmlItems);');
-    // The old early-return that silently abandoned them must be gone.
+    const cacheAt = fn.indexOf('translator.cachedLookup(_htmlCacheKey(source), targetLang)');
+    const offlineAt = fn.indexOf('if (sb.isOffline)');
+    expect(cacheAt).toBeGreaterThan(-1);
+    expect(offlineAt).toBeGreaterThan(cacheAt);
+    expect(fn).toContain('queueOfflineItems(uncached.flatMap((source) => bySource.get(source)));');
+    // The original early-return dropped cached and uncached blocks alike.
     expect(fn).not.toContain('if (sb.isOffline) return true;');
   });
 

@@ -114,7 +114,10 @@
 
   window.addEventListener('online', () => {
     isOffline = false;
-    window._sb.hideOfflineBanner?.();
+    // Browser reachability is not proof that Google Translate recovered.
+    // Keep a service-unavailable status until the translator reports an
+    // actual successful response.
+    window._sb.refreshOfflineBanner?.();
     // Retry deferred offline items first, then re-apply if needed.
     if (currentLang !== 'en' && translator && isReady) {
       const flushed = window._sb._gt?.flushOfflinePending?.(currentLang);
@@ -124,7 +127,24 @@
 
   window.addEventListener('offline', () => {
     isOffline = true;
-    if (currentLang !== 'en') window._sb.showOfflineBanner?.();
+    const gt = window._sb._gt;
+    // A new offline episode starts with a fresh epoch, then seeds coverage
+    // from translations already rendered on this page. Unlike an SPA reset,
+    // beginOfflineCoverage also retries a same-page cache lookup that was in
+    // flight when connectivity changed.
+    gt?.beginOfflineCoverage?.();
+    window._sb.showOfflineBanner?.();
+
+    // The idle path has no pending batch to finish the coverage calculation.
+    // Re-scan once so any newly visible English text is classified as a cache
+    // miss, while already-rendered local/cache results remain the seed above.
+    if (currentLang !== 'en' && translator && isReady) {
+      const offlineLang = currentLang;
+      setTimeout(() => {
+        if (!isOffline || currentLang !== offlineLang) return;
+        gt?.applyStaticTranslations?.(offlineLang);
+      }, 0);
+    }
   });
 
   // Lookup helper: returns map entry for given lang, falling back to 'en'
@@ -211,9 +231,14 @@
   function onExamDomSettled() {
     if (!sb.hostCaps.examDetection) {
       isExamPage = assessmentLifecycle.override(false);
-      return isExamPage;
+    } else {
+      isExamPage = assessmentLifecycle.onDomSettled(document, location);
     }
-    isExamPage = assessmentLifecycle.onDomSettled(document, location);
+
+    // Retention modules must wait for the DOM-backed verdict. In particular,
+    // quiz -> lesson SPA navigation keeps the provisional assessment state
+    // until this pass confirms that the lesson DOM has arrived.
+    document.dispatchEvent(new CustomEvent('skillbridge:assessmentstate', { detail: { isAssessment: isExamPage } }));
     return isExamPage;
   }
 
@@ -499,14 +524,16 @@
       commentTranslateEnabled = !!stored.commentTranslate;
       currentLang = stored.targetLanguage || 'en';
       sb.localization.setTarget(currentLang);
+      if (isOffline) window._sb.refreshOfflineBanner?.();
       isExamPage = sb.hostCaps.examDetection
         ? assessmentLifecycle.init(document, location)
         : assessmentLifecycle.override(false);
 
       translator = new SkilljarTranslator({ aiEnabled: sb.hostCaps.bridge !== false });
-      if (!translator.aiEnabled) {
-        await translator.initialize();
-      }
+      // IndexedDB must finish hydrating before the first translation pass.
+      // Full initialization (including the optional Tutor broker) remains
+      // fire-and-forget below so Tutor startup cannot hold up page rendering.
+      await translator.initializeCache();
 
       if (currentLang !== 'en') {
         await translator.loadStaticTranslations(currentLang);
@@ -551,11 +578,9 @@
         setTimeout(() => sb._gt.applyStaticTranslations(currentLang), SKILLBRIDGE_DELAYS.LATE_CONTENT);
       }
 
-      if (translator.aiEnabled) {
-        translator.initialize().catch((err) => {
-          console.warn('[SkillBridge] Bridge init failed (AI features unavailable):', err);
-        });
-      }
+      translator.initialize().catch((err) => {
+        console.warn('[SkillBridge] Translator init failed (AI features may be unavailable):', err);
+      });
 
       ensureSubtitleManager();
 
@@ -682,6 +707,7 @@
     // Re-resolve before any dictionary or GT work: on a localized site the
     // answer to "may we translate at all" changes with the target.
     sb.localization.setTarget(newLang);
+    window._sb.refreshOfflineBanner?.();
 
     try {
       if (newLang === 'en') {
@@ -948,6 +974,13 @@
         onDomSettled: () => {},
       };
 
+  // Translation coverage belongs to the served page, not an in-page anchor.
+  // The lifecycle controller intentionally reacts to hash changes so other
+  // surfaces can refresh, but resetting the coverage epoch there would discard
+  // valid same-page evidence and leave an already translated page at unknown.
+  const getTranslationRouteIdentity = () => `${location.origin}${location.pathname}${location.search}`;
+  let lastTranslationRouteIdentity = getTranslationRouteIdentity();
+
   const routeController = window._sbContentLifecycle.createRouteController({
     getHref: () => location.href,
     isCertificationHref: (href) => sb.hostCaps.examDetection && CERT_DISABLE_PATTERNS.some((p) => p.test(href)),
@@ -980,6 +1013,11 @@
     // change only marks the locale unresolved.
     onLocaleDomSettled: () => sb.localization.onDomSettled?.(document, location),
     reapplyTranslations: () => {
+      const nextTranslationRouteIdentity = getTranslationRouteIdentity();
+      if (nextTranslationRouteIdentity !== lastTranslationRouteIdentity) {
+        lastTranslationRouteIdentity = nextTranslationRouteIdentity;
+        sb._gt.resetOfflineCoverage?.();
+      }
       if (currentLang !== 'en' && translator && isReady) {
         setTimeout(() => sb._gt.applyStaticTranslations(currentLang), SKILLBRIDGE_DELAYS.LATE_CONTENT);
       }

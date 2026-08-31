@@ -104,9 +104,24 @@ Course headings, paragraphs, lists, navigation, cards, and supported code commen
 <em>Course lesson with full curriculum translated — UI elements preserved.</em>
 </div>
 
+### 📴 Warm-cache Offline Fallback
+
+If the connection drops after a supported course page has rendered,
+SkillBridge reuses matching translation results already stored in IndexedDB.
+This covers both plain text and structure-preserving HTML results. A persistent
+localized banner reports whether cache coverage is still being checked, fully
+covers the text encountered so far, covers only part of it, or has no matching
+translation. Uncached text remains in the original language and is retried when
+the connection returns. If Google Translate is unavailable while the browser
+is still online, the banner says so without disabling saved translations or
+local learning tools.
+
+Only translation results are cached. SkillBridge does not store the course
+page, lesson media, or a navigable lesson copy.
+
 ### 🧰 Local Learning Tools
 
-The CWS edition includes spaced-repetition flashcards, bookmarks, Continue/Recent links, a local progress dashboard, an in-lesson outline, reading progress, and PDF export. Learning-tool state stays in the browser.
+The CWS edition includes spaced-repetition flashcards, bookmarks, Continue/Recent links, a local progress dashboard, an in-lesson outline, reading progress, and PDF export. Learning-tool state stays in the browser. Recognized assessment and certification surfaces are excluded from Continue/Recent and scroll-position retention.
 
 On supported lesson surfaces that expose **Tools › Reports**, the v4.2.0
 source checkpoint also lets you select one translated passage and mark it
@@ -250,12 +265,18 @@ Page text
 
 Text not covered by the packaged dictionary or local cache is sent to Google Translate when translation is requested. Paragraphs that mix prose with links/buttons are translated structure-preserving through Google Translate's HTML mode. Baseline page translation does not invoke Puter, Claude, or the Tutor model. Optional Translation Refinement is separate, off by default and separately consented; when enabled it sends already-translated paragraphs and their English source to the model you selected for post-editing. The optional cloud Tutor uses Claude through an isolated bundled Puter runtime only when you send a Tutor message; local and off Tutor modes are also available. See the [Privacy Policy](PRIVACY_POLICY.md) for the full data flow.
 
+The translation cache is prepared before the first translation pass, without
+waiting for optional Tutor startup. While offline, both the plain-text and
+structured-HTML caches are checked before missing items are deferred for an
+online retry. This cache contains translation results only; it does not contain
+the course page or its media.
+
 ## Architecture & engineering decisions
 
 The interesting part of SkillBridge is the constraints, not the feature count. A few decisions worth calling out:
 
 **Why a multi-stage pipeline, not "just call an LLM."**
-Translating a course page on every navigation has to be fast and predictable. The curated dictionary fixes terms generic MT gets wrong ("Prompt" → "프롬프트", never "신속한") at zero latency, the IndexedDB cache makes revisits instant, Google Translate covers the remaining visible text, and protected-term restoration runs after machine translation. Local results come first; the network is used only for text that still needs translation.
+Translating a course page on every navigation has to be fast and predictable. The curated dictionary fixes terms generic MT gets wrong ("Prompt" → "프롬프트", never "신속한") at zero latency, the IndexedDB cache makes matching translation results on revisits instant, Google Translate covers the remaining visible text, and protected-term restoration runs after machine translation. Local results come first; the network is used only for text that still needs translation.
 
 **Reliability & safety are designed in, not bolted on.**
 
@@ -423,7 +444,11 @@ No. SkillBridge is an unofficial community project. It is not affiliated with, e
 - ~~Certification exam kill-switch~~ (shipped in v2.1.0)
 - ~~SPA navigation handling~~ (shipped in v2.1.0)
 - ~~New course support: Cowork, subagents, MCP Advanced Topics~~ (shipped in v2.1.0)
-- ~~Per-lesson term preview, PDF export, offline cache hardening~~ (shipped in v3.5.0)
+- ~~Per-lesson term preview and PDF export~~ (shipped in v3.5.0)
+- ~~Warm-cache reuse for plain and structured translations, with explicit
+  coverage status~~ (implemented after v4.2.0; unreleased)
+- ~~Assessment-safe Continue/Recent retention~~ (implemented after v4.2.0;
+  unreleased)
 - ~~Firefox AMO deployment pipeline~~ (shipped in v3.5.0)
 - Additional curated language dictionaries (community-driven)
 - Opt-in community translation review (v4.2.0 feedback remains local; no telemetry or auto-submission)

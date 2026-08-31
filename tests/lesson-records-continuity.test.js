@@ -156,7 +156,10 @@ function makeSb(location) {
  * whole point of these tests is to move between two real origins. `document`
  * stays the real jsdom document so the panels render for real.
  */
-function loadModule(file, { sb, location, chrome: chromeStub, windowExtras = {} }) {
+function loadModule(
+  file,
+  { sb, location, chrome: chromeStub, windowExtras = {}, document: documentObject = document },
+) {
   const fakeWindow = Object.assign(
     {
       _sb: sb,
@@ -181,7 +184,7 @@ function loadModule(file, { sb, location, chrome: chromeStub, windowExtras = {} 
     read('src', 'content', file),
   )(
     fakeWindow,
-    document,
+    documentObject,
     location,
     chromeStub,
     console,
@@ -403,5 +406,78 @@ describe('recent lessons across platforms', () => {
     loadModule('resume.js', { sb, location: catalog, chrome: chromeStub });
     await flush();
     expect(chromeStub._store.sb_recent).toBeUndefined();
+  });
+
+  test('an assessment verdict removes only the current provisional row', async () => {
+    const assessmentUrl = 'https://academy.claude.com/courses/claude-code-101/quiz-on-tools';
+    const historicalAssessmentUrl = 'https://academy.claude.com/courses/other-course/final-assessment';
+    const chromeStub = makeChrome({
+      sb_recent: [
+        { url: assessmentUrl, title: 'Provisional current row', scrollY: 0, ts: 2 },
+        { url: historicalAssessmentUrl, title: 'Unrelated historical row', scrollY: 0, ts: 1 },
+      ],
+    });
+    const here = new URL(assessmentUrl);
+    const sb = makeSb(here);
+    // Reproduce a late DOM detector: the route was provisionally recorded
+    // before the authoritative assessment verdict arrived.
+    sb.isExamPage = false;
+    const eventDocument = document.implementation.createHTMLDocument('Quiz');
+    loadModule('resume.js', { sb, location: here, chrome: chromeStub, document: eventDocument });
+    await flush();
+
+    sb.isExamPage = true;
+    eventDocument.dispatchEvent(new CustomEvent('skillbridge:assessmentstate', { detail: { isAssessment: true } }));
+    await flush();
+
+    expect(chromeStub._store.sb_recent.map((r) => r.url)).toEqual([historicalAssessmentUrl]);
+  });
+
+  test('an assessment or certification page is not retained on initial load', async () => {
+    for (const blockedState of [{ isExamPage: true }, { certDisabled: true }]) {
+      const blockedUrl = new URL(
+        blockedState.certDisabled
+          ? 'https://anthropic.skilljar.com/claude-certified-architect-foundations-access-request'
+          : 'https://academy.claude.com/courses/claude-code-101/quiz-on-tools',
+      );
+      const chromeStub = makeChrome({
+        sb_recent: [{ url: blockedUrl.href, title: 'Must be removed', scrollY: 0, ts: 1 }],
+      });
+      const sb = Object.assign(makeSb(blockedUrl), blockedState);
+      const eventDocument = document.implementation.createHTMLDocument('Blocked');
+
+      loadModule('resume.js', {
+        sb,
+        location: blockedUrl,
+        chrome: chromeStub,
+        document: eventDocument,
+      });
+      await flush();
+
+      expect(chromeStub._store.sb_recent).toEqual([]);
+    }
+  });
+
+  test('a settled lesson verdict records quiz-to-lesson SPA navigation', async () => {
+    const here = new URL('https://academy.claude.com/courses/claude-code-101/quiz-on-tools');
+    const chromeStub = makeChrome();
+    const sb = Object.assign(makeSb(here), { isExamPage: true });
+    const eventDocument = document.implementation.createHTMLDocument('Quiz');
+    loadModule('resume.js', { sb, location: here, chrome: chromeStub, document: eventDocument });
+    await flush();
+    expect(chromeStub._store.sb_recent).toBeUndefined();
+
+    here.href = PAIR.academy;
+    sb.isExamPage = false;
+    eventDocument.title = 'Lesson after quiz';
+    eventDocument.dispatchEvent(new CustomEvent('skillbridge:assessmentstate', { detail: { isAssessment: false } }));
+    await flush();
+
+    expect(chromeStub._store.sb_recent).toHaveLength(1);
+    expect(chromeStub._store.sb_recent[0]).toMatchObject({
+      url: PAIR.academy,
+      id: PAIR.id,
+      title: 'Lesson after quiz',
+    });
   });
 });

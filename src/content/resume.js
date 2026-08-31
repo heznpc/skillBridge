@@ -120,6 +120,11 @@
     return sb.identity.recordIdentity(r) === sb.identity.identityOf(location);
   }
 
+  /** Assessment and certification surfaces must never enter local recents. */
+  function retentionBlocked() {
+    return !!(sb.certDisabled || sb.isExamPage);
+  }
+
   let _saveQueue = Promise.resolve();
   function saveRecent() {
     const data = {};
@@ -163,7 +168,17 @@
     return LESSON_PATH.test(location.pathname);
   }
 
+  /** Remove only the row answering to the page currently being assessed. */
+  function removeCurrentVisit() {
+    const kept = recent.filter((r) => !isCurrent(r));
+    if (kept.length === recent.length) return;
+    recent = kept;
+    saveRecent();
+    renderList();
+  }
+
   function recordVisit() {
+    if (retentionBlocked()) return;
     if (!isLessonPage()) return;
     const url = location.href;
     const title = (document.title || '').trim() || document.querySelector('h1')?.textContent?.trim() || url;
@@ -202,6 +217,7 @@
     rafPending = true;
     requestAnimationFrame(() => {
       rafPending = false;
+      if (retentionBlocked()) return;
       if (!isLessonPage()) return;
       const entry = sb.identity ? sb.identity.find(recent, location) : recent.find((r) => r.url === location.href);
       if (!entry) return;
@@ -233,13 +249,34 @@
       if (document.visibilityState === 'hidden') flushScroll();
     });
     window.addEventListener('pagehide', flushScroll);
+    let lastSettledAssessmentState = !!sb.isExamPage;
+    document.addEventListener('skillbridge:assessmentstate', (event) => {
+      const nextAssessmentState = event?.detail?.isAssessment;
+      if (typeof nextAssessmentState !== 'boolean') return;
+      const wasAssessment = lastSettledAssessmentState;
+      lastSettledAssessmentState = nextAssessmentState;
+      if (nextAssessmentState) {
+        removeCurrentVisit();
+        return;
+      }
+      // A quiz -> lesson SPA transition is provisionally blocked until the
+      // lesson DOM settles. Record on that authoritative false verdict rather
+      // than waiting for another URL change that will never come.
+      const routeChangedBeforePoll = location.href !== lastSeenUrl;
+      if (routeChangedBeforePoll) lastSeenUrl = location.href;
+      if (wasAssessment || routeChangedBeforePoll) recordVisit();
+    });
     setInterval(() => {
       if (location.href === lastSeenUrl) return;
       lastSeenUrl = location.href;
-      recordVisit();
+      if (sb.certDisabled) removeCurrentVisit();
+      else recordVisit();
     }, 1000);
     // Load existing recents, then record this visit (no-op off lesson pages).
-    loadRecent(recordVisit);
+    loadRecent(() => {
+      if (retentionBlocked()) removeCurrentVisit();
+      else recordVisit();
+    });
   }
 
   // ============================================================

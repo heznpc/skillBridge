@@ -33,6 +33,8 @@ const SERVICE_WORKER_READY_TIMEOUT_MS = 20_000;
  *   - 'injectSidebar' — call `_sb.injectSidebar()`
  *   - 'toggleSidebar' — call `_sb.toggleSidebar()`
  *   - 'toggleHistoryPanel' — call `_sb._chat.toggleHistoryPanel()`
+ *   - 'toggleBookmarksPanel' — open/close the local bookmarks panel
+ *   - 'addCurrentBookmark' — click the panel's add-current-page control
  *   - 'closeSubPanel' — call `_sb._chat.closeSubPanel()`
  *   - 'pageText' — return `document.body.textContent` (snapshot the
  *     translated DOM without exposing _sb)
@@ -146,6 +148,19 @@ async function evalInContentWorld(context, op, arg) {
                 dispatchOnline: () => {
                   window.dispatchEvent(new window.Event('online'));
                   return { isOffline: !!window._sb?.isOffline };
+                },
+                offlineBannerState: () => {
+                  const banner = document.getElementById('si18n-offline-banner');
+                  const status = banner?.dataset?.status || null;
+                  return {
+                    present: !!banner,
+                    visible: !!banner?.classList.contains('visible'),
+                    text: banner?.textContent?.replace(/\s+/g, ' ').trim() || '',
+                    status,
+                    coverage: status,
+                    role: banner?.getAttribute('role') || null,
+                    ariaLive: banner?.getAttribute('aria-live') || null,
+                  };
                 },
                 // Deterministically reproduce the static-apply language-switch race:
                 // force the FIRST (slow) language's dictionary load to resolve AFTER
@@ -290,6 +305,31 @@ async function evalInContentWorld(context, op, arg) {
                   const requested = Array.isArray(keys) ? keys : ['targetLanguage', 'autoTranslate', 'welcomeShown'];
                   return await new Promise((resolve) => chrome.storage.local.get(requested, resolve));
                 },
+                recentState: async () => {
+                  const stored = await chrome.storage.local.get('sb_recent');
+                  return { records: Array.isArray(stored.sb_recent) ? stored.sb_recent : [] };
+                },
+                toggleBookmarksPanel: () => {
+                  window._sb._chat.toggleBookmarksPanel();
+                  return true;
+                },
+                addCurrentBookmark: () => {
+                  const root = window._sb._uiHost?.shadowRoot || document;
+                  const button = root.getElementById('si18n-bm-add');
+                  if (!button) return { error: 'bookmark add button not present' };
+                  button.click();
+                  return { ok: true };
+                },
+                bookmarkPanelState: () => {
+                  const root = window._sb._uiHost?.shadowRoot || document;
+                  const items = root.querySelectorAll('#si18n-bm-list .si18n-bm-item');
+                  return {
+                    count: items.length,
+                    titles: Array.from(items).map(
+                      (item) => item.querySelector('.si18n-bm-title')?.textContent?.trim() || '',
+                    ),
+                  };
+                },
                 // Suppress onboarding so it doesn't obscure other scenes: remove any
                 // banner already shown and mark it seen so the delayed one never fires.
                 suppressOnboarding: () => {
@@ -316,7 +356,48 @@ async function evalInContentWorld(context, op, arg) {
                   const root = window._sb._uiHost?.shadowRoot || document;
                   const title = root.querySelector('.si18n-history-title')?.textContent?.trim() || '';
                   const stats = root.querySelectorAll('.si18n-dash-stat').length;
-                  return { title, stats };
+                  const values = Array.from(root.querySelectorAll('.si18n-dash-num')).map(
+                    (el) => el.textContent?.trim() || '',
+                  );
+                  return { title, stats, values };
+                },
+                flashcardPanelState: () => {
+                  const root = window._sb._uiHost?.shadowRoot || document;
+                  const card = root.getElementById('si18n-fc-card');
+                  return {
+                    present: !!card,
+                    front: card?.querySelector('.si18n-flashcard-front')?.textContent?.trim() || '',
+                    back: card?.querySelector('.si18n-flashcard-back')?.textContent?.trim() || '',
+                    progress: root.querySelector('.si18n-flashcard-progress')?.textContent?.trim() || '',
+                  };
+                },
+                markFlashcardCorrect: () => {
+                  const root = window._sb._uiHost?.shadowRoot || document;
+                  const button = root.getElementById('si18n-fc-box-up');
+                  if (!button) return { error: 'flashcard correct button not present' };
+                  button.click();
+                  return { ok: true };
+                },
+                readingAidState: () => {
+                  const root = window._sb._uiHost?.shadowRoot || document;
+                  const bar = document.getElementById('si18n-reading-bar');
+                  const toggle = root.getElementById('si18n-toc-toggle');
+                  const panel = root.getElementById('si18n-toc-panel');
+                  return {
+                    barPresent: !!bar,
+                    progress: Number.parseFloat(bar?.style.width || '0'),
+                    tocPresent: !!toggle,
+                    tocVisible: !!toggle && window.getComputedStyle(toggle).display !== 'none',
+                    tocOpen: !!panel && !panel.hidden,
+                    outlineItems: panel?.querySelectorAll('.si18n-toc-item').length || 0,
+                  };
+                },
+                toggleReadingOutline: () => {
+                  const root = window._sb._uiHost?.shadowRoot || document;
+                  const toggle = root.getElementById('si18n-toc-toggle');
+                  if (!toggle) return { error: 'reading outline toggle not present' };
+                  toggle.click();
+                  return { ok: true };
                 },
                 toggleNotesPanel: () => {
                   window._sb._chat.toggleNotesPanel();
@@ -758,6 +839,37 @@ async function evalInContentWorld(context, op, arg) {
                 // timing dependency from assertions that are about the
                 // lifecycle, not about the debounce.
                 settleExamState: () => ({ isExamPage: !!window._sb?.onExamDomSettled?.() }),
+                // Localhost deliberately is not a production lesson identity.
+                // The E2E manifest grants it only as a test fixture, so opt this
+                // isolated page into one synthetic lesson shape when a resume
+                // test needs to exercise the real resume.js SPA listener.
+                useResumeFixtureIdentity: () => {
+                  const identity = window._sbLessonIdentity;
+                  if (!identity?.parseLessonRef) return { error: 'lesson identity missing' };
+                  if (!window.__sbE2eOriginalParseLessonRef) {
+                    window.__sbE2eOriginalParseLessonRef = identity.parseLessonRef;
+                  }
+                  const original = window.__sbE2eOriginalParseLessonRef;
+                  identity.parseLessonRef = (urlOrLoc) => {
+                    let parsed;
+                    try {
+                      parsed =
+                        urlOrLoc && typeof urlOrLoc === 'object' && urlOrLoc.href
+                          ? new URL(urlOrLoc.href)
+                          : new URL(String(urlOrLoc || ''), location.href);
+                    } catch (_err) {
+                      return original(urlOrLoc);
+                    }
+                    if (
+                      (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') &&
+                      parsed.pathname === '/lesson'
+                    ) {
+                      return { platform: 'skilljar', course: 'e2e', key: 'lesson', ref: 'e2e/lesson' };
+                    }
+                    return original(urlOrLoc);
+                  };
+                  return { ok: true };
+                },
                 // Every text run currently on the page that a translation
                 // request could carry, split into what may leave and what may
                 // not. The spec asserts on the second list being absent from

@@ -21,6 +21,7 @@ const constants = new Function(`${sharedSrc}\n${selectorsSrc}\n${constantsSrc}; 
   SKILLBRIDGE_MODEL_LABELS,
   SHORTCUT_LABELS, SHORTCUT_DESCRIPTIONS,
   EXAM_URL_PATTERNS, EXAM_SKIP_SELECTORS, EXAM_BANNER_LABELS, TUTOR_EXAM_LABELS,
+  OFFLINE_LABELS, TRANSLATION_UNAVAILABLE_LABELS,
   CERT_DISABLE_PATTERNS, FLASHCARD_COURSE_MAP, FLASHCARD_BOX,
   SKILLJAR_SELECTORS,
 };`)();
@@ -37,6 +38,8 @@ const {
   SHORTCUT_LABELS,
   SHORTCUT_DESCRIPTIONS,
   FLASHCARD_COURSE_MAP,
+  OFFLINE_LABELS,
+  TRANSLATION_UNAVAILABLE_LABELS,
 } = constants;
 
 describe('SKILLBRIDGE_MODELS', () => {
@@ -121,6 +124,27 @@ describe('UI Labels (i18n)', () => {
       for (const code of coreI18nCodes) {
         expect(map[code]).toBeDefined();
       }
+    }
+  });
+});
+
+describe('offline status labels', () => {
+  const curatedCodes = ['en', 'ko', 'id', 'it', 'ja', 'zh-CN', 'zh-TW', 'es', 'fr', 'de', 'pt-BR', 'ru', 'vi'];
+
+  test('defines every cache-coverage state in every curated locale', () => {
+    expect(Object.keys(OFFLINE_LABELS)).toEqual(['unknown', 'cacheOnly', 'partial', 'missOnly']);
+    for (const labels of Object.values(OFFLINE_LABELS)) {
+      for (const code of curatedCodes) {
+        expect(typeof labels[code]).toBe('string');
+        expect(labels[code].length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  test('defines the translation-service fallback in every curated locale', () => {
+    for (const code of curatedCodes) {
+      expect(typeof TRANSLATION_UNAVAILABLE_LABELS[code]).toBe('string');
+      expect(TRANSLATION_UNAVAILABLE_LABELS[code].length).toBeGreaterThan(0);
     }
   });
 });
