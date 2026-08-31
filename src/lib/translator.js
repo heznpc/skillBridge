@@ -9,6 +9,8 @@
  * Copyright respecting: translates on-the-fly only
  */
 
+const CACHE_DB_OPEN_TIMEOUT_MS = 3000;
+
 class SkilljarTranslator {
   constructor({ aiEnabled = true } = {}) {
     /** @type {Record<string, string>} Merged flat dictionary from JSON */
@@ -33,22 +35,71 @@ class SkilljarTranslator {
     this._cloudPending = new Map();
     /** @type {Promise<void>|null} Serializes broker startup/recovery. */
     this._cloudConnectPromise = null;
+    /** @type {Promise<boolean>|null} Opens and maintains the local cache once. */
+    this._cacheInitPromise = null;
+    /** @type {boolean|null} Last reported Google Translate transport state. */
+    this._translationAvailable = null;
   }
 
-  /** @returns {Promise<boolean>} true if initialization succeeded */
-  async initialize() {
-    try {
-      await this._openDB();
-      await this._cleanupExpiredCache();
-      await this._checkStorageQuota();
-      if (this.aiEnabled) {
-        await this._ensureCloudBroker();
-      }
-      return true;
-    } catch (err) {
-      console.error('[SkillBridge] Init failed:', err);
-      return false;
+  /**
+   * Open the translation cache and run its startup maintenance exactly once.
+   *
+   * Content translation can begin before the optional Tutor broker is ready,
+   * so cache startup has its own public promise. Keeping the original promise
+   * (rather than wrapping it in an `async` method) also means concurrent early
+   * callers and the later full initialize() call share the same work.
+   *
+   * Cache failures resolve false rather than rejecting: IndexedDB is an
+   * optimization, so a broken local store must not abort the whole content
+   * script or create an unhandled rejection during fire-and-forget startup.
+   *
+   * @returns {Promise<boolean>}
+   */
+  initializeCache() {
+    if (!this._cacheInitPromise) {
+      this._cacheInitPromise = (async () => {
+        try {
+          const opened = await this._openDB();
+          if (!opened) return false;
+          await this._cleanupExpiredCache();
+          await this._checkStorageQuota();
+          return true;
+        } catch (err) {
+          console.error('[SkillBridge] Cache init failed:', err);
+          return false;
+        }
+      })();
     }
+    return this._cacheInitPromise;
+  }
+
+  /**
+   * Initialize every enabled subsystem independently. Cache failure must not
+   * prevent Tutor startup; the returned boolean is true only when the cache
+   * and, when enabled, the Tutor broker both initialized successfully.
+   *
+   * @returns {Promise<boolean>}
+   */
+  async initialize() {
+    let cacheReady = false;
+    try {
+      cacheReady = await this.initializeCache();
+    } catch (err) {
+      // initializeCache currently contains its own failures, but keep the two
+      // subsystems independent even if a future implementation rejects.
+      console.error('[SkillBridge] Cache init failed:', err);
+    }
+
+    let tutorReady = true;
+    if (this.aiEnabled) {
+      try {
+        await this._ensureCloudBroker();
+      } catch (err) {
+        tutorReady = false;
+        console.error('[SkillBridge] Tutor init failed:', err);
+      }
+    }
+    return cacheReady && tutorReady;
   }
 
   /**
@@ -232,8 +283,35 @@ class SkilljarTranslator {
   // ==================== IndexedDB CACHE ====================
 
   _openDB() {
-    return new Promise((resolve, _reject) => {
-      const req = indexedDB.open('skillbridge-cache', CACHE_DB_VERSION);
+    return new Promise((resolve) => {
+      let req;
+      try {
+        req = indexedDB.open('skillbridge-cache', CACHE_DB_VERSION);
+      } catch (err) {
+        console.warn('[SkillBridge] IndexedDB open failed:', err);
+        resolve(false);
+        return;
+      }
+
+      let settled = false;
+      const closeLateHandle = (db) => {
+        try {
+          db?.close?.();
+        } catch (_) {
+          /* stale handles are best-effort cleanup */
+        }
+      };
+      const settle = (db = null) => {
+        if (settled) {
+          closeLateHandle(db);
+          return;
+        }
+        settled = true;
+        clearTimeout(timeout);
+        if (db) this._db = db;
+        resolve(!!db);
+      };
+
       req.onupgradeneeded = (e) => {
         const db = e.target.result;
         // Drop-on-upgrade for every schema below the current one, rather than
@@ -256,13 +334,24 @@ class SkilljarTranslator {
         }
       };
       req.onsuccess = (e) => {
-        this._db = e.target.result;
-        resolve();
+        settle(e.target.result);
       };
       req.onerror = () => {
+        if (settled) return;
         console.warn('[SkillBridge] IndexedDB open failed');
-        resolve(); // non-fatal
+        settle();
       };
+      req.onblocked = () => {
+        if (settled) return;
+        console.warn('[SkillBridge] IndexedDB upgrade blocked; continuing without cache');
+        settle();
+      };
+
+      const timeout = setTimeout(() => {
+        if (settled) return;
+        console.warn('[SkillBridge] IndexedDB open timed out; continuing without cache');
+        settle();
+      }, CACHE_DB_OPEN_TIMEOUT_MS);
     });
   }
 
@@ -396,6 +485,18 @@ class SkilljarTranslator {
     return true;
   }
 
+  _reportTranslationAvailability(available, kind) {
+    if (this._translationAvailable === available) return;
+    this._translationAvailable = available;
+    try {
+      if (typeof document === 'undefined' || typeof CustomEvent === 'undefined') return;
+      const eventName = available ? 'skillbridge:translationavailable' : 'skillbridge:translationunavailable';
+      document.dispatchEvent(new CustomEvent(eventName, { detail: { kind } }));
+    } catch (_) {
+      /* availability reporting must never change the translation fallback */
+    }
+  }
+
   // ==================== GOOGLE TRANSLATE ====================
 
   /**
@@ -418,13 +519,21 @@ class SkilljarTranslator {
         targetLang,
         sourceLang: 'en',
       });
-      if (response?.ok && response.translated) {
+      if (response?.ok && typeof response.translated === 'string' && response.translated) {
+        this._reportTranslationAvailability(true, 'single');
         if (!masked?.tokens.length) return response.translated;
-        return pt.unmaskProtectedTerms(response.translated, masked);
+        try {
+          return pt.unmaskProtectedTerms(response.translated, masked);
+        } catch (err) {
+          console.warn('[SkillBridge] Protected-term unmask failed:', err.message);
+          return null;
+        }
       }
+      this._reportTranslationAvailability(false, 'single');
       return null;
     } catch (err) {
       console.warn('[SkillBridge] Google Translate failed:', err.message);
+      this._reportTranslationAvailability(false, 'single');
       return null;
     }
   }
@@ -449,19 +558,31 @@ class SkilljarTranslator {
         targetLang,
         sourceLang: 'en',
       });
-      if (response?.ok && response.translations) {
+      if (response?.ok && Array.isArray(response.translations)) {
+        const wellShaped =
+          response.translations.length === texts.length &&
+          response.translations.every((translation) => typeof translation === 'string' && translation.length > 0);
+        this._reportTranslationAvailability(wellShaped, 'batch');
+        if (!wellShaped) return texts;
         if (!masks) return response.translations;
         return response.translations.map((translated, i) => {
           if (!masks[i].tokens.length) return translated;
           // Unmask failure → hand back the source. applyGoogleTranslations
           // skips entries equal to their source, so the block stays English
           // instead of rendering a placeholder or a mistranslated brand.
-          return pt.unmaskProtectedTerms(translated, masks[i]) ?? texts[i];
+          try {
+            return pt.unmaskProtectedTerms(translated, masks[i]) ?? texts[i];
+          } catch (err) {
+            console.warn('[SkillBridge] Protected-term batch unmask failed:', err.message);
+            return texts[i];
+          }
         });
       }
+      this._reportTranslationAvailability(false, 'batch');
       return texts; // return originals on failure
     } catch (err) {
       console.warn('[SkillBridge] Google Translate batch failed:', err.message);
+      this._reportTranslationAvailability(false, 'batch');
       return texts;
     }
   }

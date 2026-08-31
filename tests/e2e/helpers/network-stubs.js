@@ -64,6 +64,21 @@ function fixtureForPath(reqPath) {
   return LESSON_HTML;
 }
 
+function withOfflineCacheProbe(body, reqPath) {
+  const params = new URL(reqPath, 'http://localhost').searchParams;
+  if (params.get('__sb_e2e_cache_probe') !== '1') return body;
+
+  let probe = `
+      <p id="p-offline-structured">Read <a id="offline-doc-link" href="/docs">the documentation</a> carefully.</p>
+    `;
+  if (params.get('__sb_e2e_uncached') === '1') {
+    probe += `
+      <p id="p-offline-uncached">This paragraph has never been cached and must wait for the connection.</p>
+    `;
+  }
+  return body.replace('<main id="lesson-main">', `<main id="lesson-main">${probe}`);
+}
+
 /**
  * Start a tiny localhost HTTP server that serves the Skilljar fixture at
  * `/lesson`. Playwright's context.route().fulfill() doesn't trigger MV3
@@ -75,7 +90,8 @@ function fixtureForPath(reqPath) {
 function startFixtureServer() {
   return new Promise((resolve) => {
     const server = http.createServer((req, res) => {
-      const body = fixtureForPath(req.url || '/');
+      const reqPath = req.url || '/';
+      const body = withOfflineCacheProbe(fixtureForPath(reqPath), reqPath);
       res.writeHead(200, {
         'Content-Type': 'text/html; charset=utf-8',
         'Content-Security-Policy':
@@ -133,6 +149,8 @@ const GT_KO = {
   'Anthropic released Claude as a frontier model.': '앤스로픽은 클로드를 프런티어 모델로 출시했습니다.',
   '<p id="p-offline-structured">Read <a id="offline-doc-link" href="/docs">the documentation</a> carefully.</p>':
     '<p id="p-offline-structured"><a id="offline-doc-link" href="/docs">문서</a>를 주의 깊게 읽으세요.</p>',
+  'This paragraph has never been cached and must wait for the connection.':
+    '이 문단은 캐시된 적이 없으므로 연결을 기다려야 합니다.',
   // Code-comment fixture (tests/e2e/code-comments.spec.js). The Python
   // `# This is a Claude prompt example` comment gets translated by
   // translateCodeComments — the line's leading `# ` is preserved

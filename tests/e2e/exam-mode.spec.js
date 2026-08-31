@@ -61,6 +61,29 @@ test.describe('SkillBridge — exam-mode flow', () => {
     }
   }
 
+  async function replaceRecent(records) {
+    // Let the previous content world finish its pagehide flush before seeding.
+    // Otherwise that tab can race this write with its own stale in-memory list.
+    await page.goto('about:blank');
+    await page.waitForTimeout(100);
+    const [serviceWorker] = extCtx.context.serviceWorkers();
+    await serviceWorker.evaluate(async (next) => {
+      if (next.length === 0) await chrome.storage.local.remove('sb_recent');
+      else await chrome.storage.local.set({ sb_recent: next });
+    }, records);
+  }
+
+  async function waitForRecent(predicate) {
+    const deadline = Date.now() + 5_000;
+    let records = [];
+    while (Date.now() < deadline) {
+      ({ records } = await evalInContentWorld(extCtx.context, 'recentState'));
+      if (predicate(records)) return records;
+      await page.waitForTimeout(100);
+    }
+    return records;
+  }
+
   test.afterAll(async () => {
     if (extCtx) await closeExtension(extCtx);
     if (fixture) await stopFixtureServer(fixture.server);
@@ -205,5 +228,64 @@ test.describe('SkillBridge — exam-mode flow', () => {
     // …and skipped the answer at the chokepoint, leaving it English (no Hangul).
     expect(/[가-힯]/.test(text), `non-exam-URL late answer must stay English (got "${text}")`).toBe(false);
     expect(text).toBe('Introduction to Claude');
+  });
+
+  test('step E: a fresh quiz visit is never written to recent lessons', async () => {
+    await replaceRecent([]);
+    await gotoAndWait('/quiz');
+    await evalInContentWorld(extCtx.context, 'settleExamState');
+    // Prove a delayed poll/save cannot add the quiz after the immediate read.
+    await page.waitForTimeout(500);
+
+    const { records } = await evalInContentWorld(extCtx.context, 'recentState');
+    expect(records).toEqual([]);
+  });
+
+  test('step F: settled assessment removes only the current quiz row', async () => {
+    const currentQuiz = `${fixture.baseUrl}/quiz`;
+    const historicalQuiz = `${fixture.baseUrl}/quiz?attempt=older`;
+    await replaceRecent([
+      { url: currentQuiz, title: 'Current quiz — provisional', scrollY: 0, ts: 2 },
+      { url: historicalQuiz, title: 'Historical quiz row', scrollY: 0, ts: 1 },
+    ]);
+
+    // Load the seeded list on an ordinary fixture route, then reproduce the
+    // SPA transition that confirms the current route as an assessment.
+    await gotoAndWait('/lesson');
+    await page.waitForTimeout(500);
+    expect((await evalInContentWorld(extCtx.context, 'recentState')).records.map((r) => r.url)).toEqual([
+      currentQuiz,
+      historicalQuiz,
+    ]);
+    await evalInContentWorld(extCtx.context, 'replaceBodyAndPushState', {
+      path: '/quiz',
+      html: '<main id="lesson-main"><form class="quiz-form"><label class="answer-option">Choice</label></form></main>',
+    });
+    expect((await evalInContentWorld(extCtx.context, 'settleExamState')).isExamPage).toBe(true);
+
+    const records = await waitForRecent((rows) => rows.length === 1);
+    expect(records.map((r) => r.url)).toEqual([historicalQuiz]);
+  });
+
+  test('step G: settled quiz-to-lesson SPA transition records the lesson', async () => {
+    await replaceRecent([]);
+    await gotoAndWait('/quiz');
+    expect((await evalInContentWorld(extCtx.context, 'useResumeFixtureIdentity')).ok).toBe(true);
+
+    await evalInContentWorld(extCtx.context, 'replaceBodyAndPushState', {
+      path: '/lesson',
+      html: '<main id="lesson-main"><h1>Introduction to Claude</h1><p>A lesson after the quiz.</p></main>',
+    });
+    expect((await evalInContentWorld(extCtx.context, 'settleExamState')).isExamPage).toBe(false);
+
+    const records = await waitForRecent((rows) => rows.some((r) => r.url === `${fixture.baseUrl}/lesson`));
+    expect(records).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          url: `${fixture.baseUrl}/lesson`,
+          title: 'Anthropic Academy — Lesson Quiz',
+        }),
+      ]),
+    );
   });
 });

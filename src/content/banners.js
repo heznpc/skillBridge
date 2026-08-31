@@ -10,6 +10,8 @@
  * FLASHCARD_COURSE_SLUGS_SORTED resolution.
  */
 
+/* global TRANSLATION_UNAVAILABLE_LABELS */
+
 (function () {
   const sb = window._sb;
   if (!sb) {
@@ -23,6 +25,14 @@
   // history.pushState __sb_wrapped__ guard in content.js).
   if (sb.__bannersLoaded) return;
   sb.__bannersLoaded = true;
+
+  let offlineHideTimer = null;
+  let offlineCoverage = {
+    generation: -1,
+    hasCached: false,
+    hasMissing: false,
+  };
+  let translationUnavailable = false;
 
   // Build a transient banner element and animate it in. Used for the
   // five "small toast" cases below; translation progress is its own
@@ -45,22 +55,99 @@
     }
   }
 
-  function showOfflineBanner() {
-    showSimpleBanner({
-      id: 'si18n-offline-banner',
-      className: 'si18n-offline-banner',
-      role: 'status',
-      ariaLive: 'polite',
-      labels: OFFLINE_LABELS,
+  function getOfflineCoverageState() {
+    if (offlineCoverage.hasCached && offlineCoverage.hasMissing) return 'partial';
+    if (offlineCoverage.hasCached) return 'cacheOnly';
+    if (offlineCoverage.hasMissing) return 'missOnly';
+    return 'unknown';
+  }
+
+  function showPersistentStatusBanner(state, labels) {
+    if (offlineHideTimer) {
+      clearTimeout(offlineHideTimer);
+      offlineHideTimer = null;
+    }
+
+    let banner = document.getElementById('si18n-offline-banner');
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'si18n-offline-banner';
+      banner.className = 'si18n-offline-banner';
+      banner.setAttribute('role', 'status');
+      banner.setAttribute('aria-live', 'polite');
+      document.body.appendChild(banner);
+    }
+
+    banner.dataset.status = state;
+    banner.textContent = sb.t(labels);
+    requestAnimationFrame(() => {
+      if (banner.isConnected && !offlineHideTimer) banner.classList.add('visible');
     });
+  }
+
+  function showOfflineBanner() {
+    const coverageState = getOfflineCoverageState();
+    showPersistentStatusBanner(coverageState, OFFLINE_LABELS[coverageState]);
   }
 
   function hideOfflineBanner() {
     const banner = document.getElementById('si18n-offline-banner');
     if (!banner) return;
     banner.classList.remove('visible');
-    setTimeout(() => banner.remove(), 300);
+    if (offlineHideTimer) clearTimeout(offlineHideTimer);
+    offlineHideTimer = setTimeout(() => {
+      banner.remove();
+      offlineHideTimer = null;
+    }, 300);
   }
+
+  function refreshOfflineBanner() {
+    const offline = typeof sb.isOffline === 'boolean' ? sb.isOffline : navigator.onLine === false;
+    if (offline) showOfflineBanner();
+    else if (translationUnavailable) {
+      showPersistentStatusBanner('translationUnavailable', TRANSLATION_UNAVAILABLE_LABELS);
+    } else hideOfflineBanner();
+  }
+
+  document.addEventListener('skillbridge:offlinecoverage', (event) => {
+    const detail = event?.detail;
+    if (!detail || typeof detail !== 'object') return;
+
+    const generation = Number.isSafeInteger(detail.generation) ? detail.generation : offlineCoverage.generation;
+    if (generation < offlineCoverage.generation) return;
+
+    if (generation > offlineCoverage.generation) {
+      offlineCoverage = {
+        generation,
+        hasCached: detail.hasCached === true,
+        hasMissing: detail.hasMissing === true,
+      };
+    } else {
+      offlineCoverage.hasCached ||= detail.hasCached === true;
+      offlineCoverage.hasMissing ||= detail.hasMissing === true;
+    }
+
+    refreshOfflineBanner();
+  });
+
+  document.addEventListener('skillbridge:translationunavailable', () => {
+    translationUnavailable = true;
+    refreshOfflineBanner();
+  });
+
+  document.addEventListener('skillbridge:translationavailable', () => {
+    translationUnavailable = false;
+    refreshOfflineBanner();
+  });
+
+  // content.js owns the live `isOffline` state; these listeners make the
+  // banner independently reliable at startup and keep online teardown
+  // idempotent if content.js also calls the public helpers.
+  window.addEventListener('offline', refreshOfflineBanner);
+  // Browser connectivity returning does not prove the translation backend is
+  // healthy. Keep a service-failure message until a successful GT response
+  // emits `skillbridge:translationavailable`.
+  window.addEventListener('online', refreshOfflineBanner);
 
   // No auto-dismiss: refresh is the only recovery, so keep the alert visible.
   window.addEventListener('skillbridge:bridgeunavailable', () => {
@@ -166,9 +253,15 @@
 
   sb.showOfflineBanner = showOfflineBanner;
   sb.hideOfflineBanner = hideOfflineBanner;
+  sb.refreshOfflineBanner = refreshOfflineBanner;
   sb.showExamBanner = showExamBanner;
   sb.showTranslationProgress = showTranslationProgress;
   sb.updateTranslationProgress = updateTranslationProgress;
   sb.hideTranslationProgress = hideTranslationProgress;
   sb.registerModule?.('banners');
+
+  // The browser can already be offline before content scripts are injected.
+  // Do not wait for a later `offline` event, and do not hide the status just
+  // because the selected language is English.
+  refreshOfflineBanner();
 })();

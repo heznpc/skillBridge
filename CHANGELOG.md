@@ -13,6 +13,34 @@ repository but never shipped to users.
 
 ## [Unreleased]
 
+### Added
+
+- A persistent localized translation-status banner now appears even when the
+  browser starts offline or English is selected. It distinguishes cache
+  checking, cache-only coverage, partial coverage and a complete cache miss;
+  an online translation-service failure uses a separate message that keeps
+  saved translations and local tools available without claiming the browser is
+  offline.
+
+### Changed
+
+- IndexedDB cache initialization now completes before the first translation
+  pass and remains independent of optional Tutor-broker startup. Existing
+  translation rows are therefore ready for the current rendered page's first
+  pass instead of becoming available only after Tutor initialization finishes.
+
+### Fixed
+
+- Offline translation passes now check both plain-text rows and the separate
+  integrity-checked structured-HTML cache before deferring misses. Cached
+  translations are reused, while uncached text stays in the original language
+  and waits for the online retry; this stores translation results, not course
+  pages or media.
+- Recognized course assessments and certification surfaces no longer enter
+  Continue/Recent or receive scroll-position updates. A visit recorded before
+  the DOM-backed assessment verdict is removed, while a settled
+  assessment-to-lesson transition resumes normal lesson recording.
+
 ## [4.2.0] - 2026-08-31
 
 This is a GitHub source checkpoint. Chrome Web Store publication remains
