@@ -1,6 +1,6 @@
 /**
  * Self-test for `scripts/check-dict-coverage.js`. The script enforces the
- * "48h × 11 languages" terminology SLA, so a silent regression in the
+ * "48h × every premium language" terminology SLA, so a silent regression in the
  * script itself (e.g. checks accidentally short-circuiting) would void
  * that whole defense.
  *
@@ -140,7 +140,7 @@ describe('check-dict-coverage.js — fault injection', () => {
   });
 
   test('Check 6 does NOT flag a catalog entry that is passthrough in every dict', () => {
-    // "Claude 101" is value==key in all 12 dicts by design (proper noun). The
+    // "Claude 101" is value==key in every dict by design (proper noun). The
     // check must treat uniform passthrough as correct, not partial translation.
     const r = run({});
     expect(r.code).toBe(0);

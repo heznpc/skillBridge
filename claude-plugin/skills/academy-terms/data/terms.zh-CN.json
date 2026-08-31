@@ -5,7 +5,7 @@
     "sourceVersion": "4.2.0",
     "sourceLastUpdated": "2026-07-28",
     "generatedFrom": "src/data/zh-CN.json",
-    "termCount": 1006
+    "termCount": 1026
   },
   "protected": {
     "Claude Code": [
@@ -18,21 +18,11 @@
     "Anthropic": [
       "安特罗皮克"
     ],
-    "Anthropic Academy": [
-      "Anthropic Academy"
-    ],
-    "Skills": [
-      "Skills"
-    ],
-    "SKILL.md": [
-      "SKILL.md"
-    ],
-    "CLAUDE.md": [
-      "CLAUDE.md"
-    ],
-    "YAML": [
-      "YAML"
-    ]
+    "Anthropic Academy": [],
+    "Skills": [],
+    "SKILL.md": [],
+    "CLAUDE.md": [],
+    "YAML": []
   },
   "terms": {
     "Anthropic courses": "Anthropic 课程",
@@ -949,6 +939,26 @@
     "Server-side tool integration": "服务端工具集成",
     "Deploying Anthropic Apps": "部署 Anthropic 应用",
     "Best practices for production": "生产环境最佳实践",
+    "What is the Claude Developer Platform?": "Claude Developer Platform 是什么？",
+    "Your first API call": "您的第一次 API 调用",
+    "Choosing the right model": "选择合适的模型",
+    "The agent loop explained": "智能体循环详解",
+    "What is tool use?": "什么是工具使用？",
+    "What is thinking?": "什么是思考功能？",
+    "Skills": "Skills",
+    "MCP": "MCP",
+    "Context management": "上下文管理",
+    "What are managed agents?": "什么是 Managed Agents？",
+    "Building your first managed agent": "构建您的第一个 Managed Agent",
+    "Building with Claude Code": "使用 Claude Code 构建",
+    "Claude Platform 101 Quiz": "Claude Platform 101 测验",
+    "Teaching your Agent": "教导您的智能体",
+    "Extending your Agent": "扩展您的智能体",
+    "Managed Agents": "Managed Agents",
+    "Data and Privacy": "数据与隐私",
+    "Who this is for": "适合人群",
+    "Recommended prerequisites": "推荐的预备知识",
+    "Course sections": "课程章节",
     "Adapting AI concepts for the classroom": "将AI概念应用于课堂",
     "Teaching strategies for AI literacy": "AI素养的教学策略",
     "Lesson planning with AI tools": "利用AI工具进行课程规划",

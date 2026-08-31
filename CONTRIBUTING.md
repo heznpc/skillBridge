@@ -171,7 +171,7 @@ skillbridge/
 Each language has a JSON file (`src/data/{lang}.json`) organized into sections:
 
 ```
-src/data/ko.json (Korean example — 1,100+ entries; 12 premium locales, key-parity enforced)
+src/data/ko.json (Korean example — 1,100+ entries; 13 premium locales, key-parity enforced)
 ├── _meta          → version info (don't edit)
 ├── ui             → navigation: "Next", "Previous", "Courses"
 ├── catalog        → course titles and descriptions (incl. Cowork, subagents, MCP Advanced)
@@ -240,14 +240,16 @@ The `_protected` section maps **correct English** → **known GT mistranslations
 
 Want to promote a standard language (GT-only) to premium? Create `src/data/{langCode}.json`:
 
-1. Copy `src/data/ko.json` as a template
-2. Translate all entries into your language
-3. Adapt the `_protected` section — GT mistakes specific to your language, **following [docs/TRANSLATION_RULES.md](docs/TRANSLATION_RULES.md) §2** (apply the prose-collision test to every wrong-form so you don't corrupt real prose)
-4. Add the language code to `PREMIUM_LANGUAGES` in `src/lib/constants.js`
-5. Test on actual Anthropic Academy pages
-6. Submit a PR — native speaker review is required
+1. Use an existing dictionary as the structural template, preserving every English key and section.
+2. Curate every value from the English source; do not fill the file from bulk machine-translation output.
+3. Adapt `_meta` and the conservative `_protected` section, applying the prose-collision test from [docs/TRANSLATION_RULES.md](docs/TRANSLATION_RULES.md) §2.
+4. Move the language from `AVAILABLE_LANGUAGES` into `PREMIUM_LANGUAGES` and localize every premium UI label map in `src/lib/constants.js`.
+5. Update selector and translator tests, then regenerate the companion plugin and documentation with `npm run build:plugin` and `npm run docs:metadata`.
+6. Run `npm run validate`, `npm run glossary`, `npm run check:i18n`, `npm run check:locales`, and `npm run check:dict-coverage`.
+7. Build the extension and verify the language selector plus at least one dictionary hit in a real browser.
+8. Submit a PR explaining the language-selection evidence and remaining native-review status.
 
-You don't need to translate everything at once. **Even 100 entries is a great start** — especially if they cover the `ui`, `common`, and `_protected` sections.
+A partial dictionary can still be submitted as review material, but it remains Standard until it reaches full key parity and the end-to-end Premium checks above pass.
 
 #### Validating Your Translations Locally
 
@@ -282,8 +284,8 @@ Static Dictionary → IndexedDB Cache → Google Translate → local result cach
 Key constants in `constants.js` (v2.1.0+):
 - **`CERT_DISABLE_PATTERNS`** — URL patterns for proctored certification exams. Extension fully disables on match.
 - **`EXAM_URL_PATTERNS`** — URL patterns for course quizzes. Triggers exam mode (answer protection) but extension stays active.
-- **`ONBOARDING_LABELS`** / **`EXAMPLE_QUESTIONS`** — First-visit onboarding UI strings (7 languages).
-- **`A11Y_LABELS`** — Localized aria-labels for FAB, sidebar, dark toggle (7 languages).
+- **`ONBOARDING_LABELS`** / **`EXAMPLE_QUESTIONS`** — First-visit onboarding UI strings for every Premium locale.
+- **`A11Y_LABELS`** — Localized aria-labels for FAB, sidebar, and dark toggle in every Premium locale.
 - **`DEFAULT_PROTECTED_TERMS`** — Fallback list of terms to keep in English (Cowork, Dispatch, Computer Use, Subagent, etc.).
 
 Areas that need work:

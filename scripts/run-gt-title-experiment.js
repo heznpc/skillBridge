@@ -60,7 +60,7 @@ const path = require('path');
 const { detectViolations } = require('./lib/gt-grading');
 
 const GT_ENDPOINT = 'https://translate.googleapis.com/translate_a/single';
-const DEFAULT_LOCALES = ['ko', 'ja', 'zh-CN', 'zh-TW', 'es', 'fr', 'de', 'it', 'pt-BR', 'ru', 'vi', 'id'];
+const DEFAULT_LOCALES = ['ko', 'ja', 'zh-CN', 'zh-TW', 'es', 'fr', 'de', 'it', 'pt-BR', 'ru', 'vi', 'id', 'nl'];
 const REQUEST_GAP_MS = 400;
 
 function argVal(flag, fallback) {

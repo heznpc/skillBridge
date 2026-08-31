@@ -19,7 +19,11 @@ const fs = require('fs');
 const path = require('path');
 
 const DATA_DIR = path.join(__dirname, '..', 'src', 'data');
-const LANGUAGES = ['ko', 'ja', 'zh-CN', 'es', 'fr', 'de'];
+const LANGUAGES = fs
+  .readdirSync(DATA_DIR)
+  .filter((file) => file.endsWith('.json'))
+  .map((file) => path.basename(file, '.json'))
+  .sort();
 const REFERENCE_LANG = 'ko'; // Reference language (most complete)
 
 function loadJSON(lang) {
@@ -36,7 +40,7 @@ function loadJSON(lang) {
 function flattenDict(data) {
   const flat = {};
   for (const [section, entries] of Object.entries(data)) {
-    if (section === '_meta') continue;
+    if (section === '_meta' || section === '_protected') continue;
     if (typeof entries === 'object') {
       for (const [key, value] of Object.entries(entries)) {
         flat[`${section}.${key}`] = value;
@@ -49,7 +53,7 @@ function flattenDict(data) {
 function getSectionKeys(data) {
   const keys = {};
   for (const [section, entries] of Object.entries(data)) {
-    if (section === '_meta') continue;
+    if (section === '_meta' || section === '_protected') continue;
     if (typeof entries === 'object') {
       keys[section] = Object.keys(entries);
     }
@@ -123,7 +127,7 @@ function audit() {
     if (!allData[lang]) continue;
     const flat = flattenDict(allData[lang]);
     for (const [key, value] of Object.entries(flat)) {
-      if (!value || value.trim() === '') {
+      if (typeof value === 'string' && value.trim() === '') {
         console.log(`  ⚠️  ${lang}: Empty value for "${key.substring(0, 60)}"`);
         emptyCount++;
       }
@@ -142,7 +146,7 @@ function audit() {
   for (const lang of LANGUAGES) {
     if (!allData[lang]) continue;
     for (const [section, entries] of Object.entries(allData[lang])) {
-      if (section === '_meta') continue;
+      if (section === '_meta' || section === '_protected') continue;
       if (typeof entries !== 'object') continue;
       for (const [key, value] of Object.entries(entries)) {
         if (key !== key.trim()) {
@@ -166,7 +170,7 @@ function audit() {
     if (!allData[lang]) continue;
     const allKeys = {};
     for (const [section, entries] of Object.entries(allData[lang])) {
-      if (section === '_meta') continue;
+      if (section === '_meta' || section === '_protected') continue;
       if (typeof entries !== 'object') continue;
       for (const key of Object.keys(entries)) {
         if (allKeys[key]) {

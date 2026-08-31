@@ -17,7 +17,7 @@ The bundled `academy-terms` skill instructs Claude to:
 - **Translate / explain** Anthropic Academy and Claude course terms (Claude
   Code, MCP, agent skills, subagents, the Claude API, extended thinking, cloud
   deployment, AI Fluency, …) using the curated dictionary instead of ad-hoc
-  machine translation, across 12 languages.
+  machine translation, across 13 languages.
 - **Keep brand and API terms untranslated** — `Claude`, `Anthropic`,
   `SKILL.md`, `frontmatter`, `subagent`, `Cowork`, and friends stay in English,
   with known bad renderings actively rejected.
@@ -27,7 +27,7 @@ The bundled `academy-terms` skill instructs Claude to:
 
 ## Languages
 
-`de`, `es`, `fr`, `id`, `it`, `ja`, `ko`, `pt-BR`, `ru`, `vi`, `zh-CN`, `zh-TW`
+`de`, `es`, `fr`, `id`, `it`, `ja`, `ko`, `nl`, `pt-BR`, `ru`, `vi`, `zh-CN`, `zh-TW`
 (~1000 curated term pairs each, plus the shared protected-term guardrails).
 
 ## Structure
@@ -40,7 +40,7 @@ claude-plugin/
     data/
       index.json                    # generation manifest
       courses.json                  # derived course catalog
-      terms.<lang>.json             # per-language dictionary (11 files)
+      terms.<lang>.json             # per-language dictionary (13 files)
 ```
 
 ## The data is generated, not hand-written

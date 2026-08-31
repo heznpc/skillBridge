@@ -5,31 +5,21 @@
     "sourceVersion": "4.2.0",
     "sourceLastUpdated": "2026-07-28",
     "generatedFrom": "src/data/it.json",
-    "termCount": 1006
+    "termCount": 1026
   },
   "protected": {
     "Claude Code": [
       "Codice Claude",
       "Codice Claudio"
     ],
-    "Claude": [
-      "Claude"
-    ],
-    "Anthropic": [
-      "Anthropic"
-    ],
+    "Claude": [],
+    "Anthropic": [],
     "Anthropic Academy": [
       "Accademia Antropica"
     ],
-    "SKILL.md": [
-      "SKILL.md"
-    ],
-    "CLAUDE.md": [
-      "CLAUDE.md"
-    ],
-    "YAML": [
-      "YAML"
-    ]
+    "SKILL.md": [],
+    "CLAUDE.md": [],
+    "YAML": []
   },
   "terms": {
     "Anthropic courses": "Corsi di Anthropic",
@@ -946,6 +936,26 @@
     "Server-side tool integration": "Integrazione degli strumenti lato server",
     "Deploying Anthropic Apps": "Distribuzione delle app Anthropic",
     "Best practices for production": "Migliori pratiche per la produzione",
+    "What is the Claude Developer Platform?": "Cos'è la Claude Developer Platform?",
+    "Your first API call": "La tua prima chiamata API",
+    "Choosing the right model": "Scegliere il modello giusto",
+    "The agent loop explained": "Il loop dell’agente spiegato",
+    "What is tool use?": "Cos'è l'uso degli strumenti?",
+    "What is thinking?": "Cos'è il ragionamento (thinking)?",
+    "Skills": "Skills",
+    "MCP": "MCP",
+    "Context management": "Gestione del contesto",
+    "What are managed agents?": "Cosa sono i Managed Agents?",
+    "Building your first managed agent": "Costruire il tuo primo Managed Agent",
+    "Building with Claude Code": "Costruire con Claude Code",
+    "Claude Platform 101 Quiz": "Quiz di Claude Platform 101",
+    "Teaching your Agent": "Insegnare al tuo agente",
+    "Extending your Agent": "Estendere il tuo agente",
+    "Managed Agents": "Managed Agents",
+    "Data and Privacy": "Dati e privacy",
+    "Who this is for": "A chi è rivolto",
+    "Recommended prerequisites": "Prerequisiti consigliati",
+    "Course sections": "Sezioni del corso",
     "Adapting AI concepts for the classroom": "Adattare i concetti di intelligenza artificiale per la classe",
     "Teaching strategies for AI literacy": "Strategie didattiche per l’alfabetizzazione sull’intelligenza artificiale",
     "Lesson planning with AI tools": "Pianificazione delle lezioni con strumenti AI",

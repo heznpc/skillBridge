@@ -5,7 +5,7 @@
     "sourceVersion": "4.2.0",
     "sourceLastUpdated": "2026-07-28",
     "generatedFrom": "src/data/id.json",
-    "termCount": 1006
+    "termCount": 1026
   },
   "protected": {
     "Claude Code": [
@@ -14,12 +14,8 @@
     "Anthropic Academy": [
       "Akademi Anthropic"
     ],
-    "Managed Agents": [
-      "Managed Agents"
-    ],
-    "Computer Use": [
-      "Computer Use"
-    ]
+    "Managed Agents": [],
+    "Computer Use": []
   },
   "terms": {
     "Anthropic courses": "Kursus Anthropic",
@@ -936,6 +932,26 @@
     "Server-side tool integration": "Integrasi alat sisi server",
     "Deploying Anthropic Apps": "Men-deploy Aplikasi Anthropic",
     "Best practices for production": "Praktik terbaik untuk produksi",
+    "What is the Claude Developer Platform?": "Apa itu Claude Developer Platform?",
+    "Your first API call": "Panggilan API pertama Anda",
+    "Choosing the right model": "Memilih model yang tepat",
+    "The agent loop explained": "Penjelasan tentang agent loop",
+    "What is tool use?": "Apa itu penggunaan alat?",
+    "What is thinking?": "Apa itu pemikiran?",
+    "Skills": "Skills",
+    "MCP": "MCP",
+    "Context management": "Mengelola konteks",
+    "What are managed agents?": "Apa itu Managed Agents?",
+    "Building your first managed agent": "Membangun managed agent pertama Anda",
+    "Building with Claude Code": "Membangun dengan Claude Code",
+    "Claude Platform 101 Quiz": "Kuis Claude Platform 101",
+    "Teaching your Agent": "Mengajari Agen Anda",
+    "Extending your Agent": "Memperluas Agen Anda",
+    "Managed Agents": "Managed Agents",
+    "Data and Privacy": "Data dan Privasi",
+    "Who this is for": "Untuk siapa kursus ini",
+    "Recommended prerequisites": "Prasyarat yang disarankan",
+    "Course sections": "Bagian kursus",
     "Adapting AI concepts for the classroom": "Menyesuaikan konsep AI untuk ruang kelas",
     "Teaching strategies for AI literacy": "Strategi pengajaran untuk literasi AI",
     "Lesson planning with AI tools": "Perencanaan pelajaran dengan alat AI",

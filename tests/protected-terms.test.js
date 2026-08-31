@@ -324,6 +324,12 @@ describe('no corruption of correct CJK prose (real shipped dictionaries)', () =>
       'Pasang kait pada dinding itu', // hook/hanger (breaks if hook -> kait)
       'kami menjalin kerja sama yang erat', // collaboration (breaks if Cowork -> kerja sama)
     ],
+    nl: [
+      'deze vaardigheden zijn belangrijk', // skills (breaks if Skills -> vaardigheden)
+      'we werken samen aan het project', // collaboration (breaks if Cowork -> samenwerken)
+      'er zit een haak aan de muur', // hook (breaks if hook -> haak)
+      'dit is uitsluitend voor persoonlijk gebruik', // personal (breaks if Personal -> persoonlijk)
+    ],
   };
 
   for (const [lang, sentences] of Object.entries(cases)) {

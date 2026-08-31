@@ -5,33 +5,19 @@
     "sourceVersion": "4.2.0",
     "sourceLastUpdated": "2026-07-28",
     "generatedFrom": "src/data/pt-BR.json",
-    "termCount": 1006
+    "termCount": 1026
   },
   "protected": {
     "Claude Code": [
       "Código Claude"
     ],
-    "Claude": [
-      "Claude"
-    ],
-    "Anthropic": [
-      "Anthropic"
-    ],
-    "Anthropic Academy": [
-      "Anthropic Academy"
-    ],
-    "SKILL.md": [
-      "SKILL.md"
-    ],
-    "CLAUDE.md": [
-      "CLAUDE.md"
-    ],
-    "YAML": [
-      "YAML"
-    ],
-    "Cowork": [
-      "Cowork"
-    ]
+    "Claude": [],
+    "Anthropic": [],
+    "Anthropic Academy": [],
+    "SKILL.md": [],
+    "CLAUDE.md": [],
+    "YAML": [],
+    "Cowork": []
   },
   "terms": {
     "Anthropic courses": "Cursos da Anthropic",
@@ -948,6 +934,26 @@
     "Server-side tool integration": "Integração de ferramentas do lado do servidor",
     "Deploying Anthropic Apps": "Implantando aplicações da Anthropic",
     "Best practices for production": "Melhores práticas para produção",
+    "What is the Claude Developer Platform?": "O que é a Claude Developer Platform?",
+    "Your first API call": "Sua primeira chamada de API",
+    "Choosing the right model": "Escolhendo o modelo certo",
+    "The agent loop explained": "O loop do agente explicado",
+    "What is tool use?": "O que é uso de ferramentas?",
+    "What is thinking?": "O que é o pensamento (thinking)?",
+    "Skills": "Skills",
+    "MCP": "MCP",
+    "Context management": "Gerenciamento de contexto",
+    "What are managed agents?": "O que são Managed Agents?",
+    "Building your first managed agent": "Construindo seu primeiro Managed Agent",
+    "Building with Claude Code": "Construindo com Claude Code",
+    "Claude Platform 101 Quiz": "Questionário de Claude Platform 101",
+    "Teaching your Agent": "Ensinando seu agente",
+    "Extending your Agent": "Estendendo seu agente",
+    "Managed Agents": "Managed Agents",
+    "Data and Privacy": "Dados e privacidade",
+    "Who this is for": "Para quem é este curso",
+    "Recommended prerequisites": "Pré-requisitos recomendados",
+    "Course sections": "Seções do curso",
     "Adapting AI concepts for the classroom": "Adaptando conceitos de AI para a sala de aula",
     "Teaching strategies for AI literacy": "Estratégias de ensino para alfabetização em AI",
     "Lesson planning with AI tools": "Planejamento de aulas com ferramentas de AI",

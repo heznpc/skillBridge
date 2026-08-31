@@ -56,10 +56,11 @@ describe('SkilljarTranslator', () => {
       expect(translator.premiumLanguages).toContain('zh-CN');
     });
 
-    test('has all 12 premium languages (Indonesian added v3.5.41)', () => {
-      expect(translator.premiumLanguages).toHaveLength(12);
+    test('has all 13 premium languages after the Dutch promotion', () => {
+      expect(translator.premiumLanguages).toHaveLength(13);
       expect(translator.premiumLanguages).toContain('it');
       expect(translator.premiumLanguages).toContain('id');
+      expect(translator.premiumLanguages).toContain('nl');
     });
 
     test('supportedLanguages includes 30+ languages', () => {
@@ -322,10 +323,12 @@ describe('SkilljarTranslator', () => {
 
   describe('loadStaticTranslations', () => {
     let originalFetch;
+    let originalGetURL;
     let warnSpy;
 
     beforeEach(() => {
       originalFetch = global.fetch;
+      originalGetURL = global.chrome.runtime.getURL;
       translator.staticDict = { Hello: '안녕하세요' };
       translator._lowerDict = { hello: '안녕하세요' };
       translator._protectedTerms = { Claude: ['클로드'] };
@@ -333,8 +336,23 @@ describe('SkilljarTranslator', () => {
 
     afterEach(() => {
       global.fetch = originalFetch;
+      global.chrome.runtime.getURL = originalGetURL;
       warnSpy?.mockRestore();
       warnSpy = null;
+    });
+
+    test('loads the packaged Dutch premium dictionary', async () => {
+      global.chrome.runtime.getURL = jest.fn((assetPath) => `/${assetPath}`);
+      global.fetch = jest.fn(async () => ({
+        ok: true,
+        json: async () => ({ core: { Hello: 'Hallo' } }),
+      }));
+
+      await translator.loadStaticTranslations('nl');
+
+      expect(global.chrome.runtime.getURL).toHaveBeenCalledWith('src/data/nl.json');
+      expect(global.fetch).toHaveBeenCalledWith('/src/data/nl.json');
+      expect(translator.staticLookup('Hello')).toBe('Hallo');
     });
 
     test('clears all static dictionary state when a language file is missing', async () => {
@@ -439,12 +457,13 @@ describe('SkilljarTranslator', () => {
   });
 
   describe('premium language configuration', () => {
-    test('isPremium returns true for premium languages (Italian promoted v3.5.34)', () => {
+    test('premium membership includes Dutch and excludes a Standard language', () => {
       expect(translator.premiumLanguages.includes('ko')).toBe(true);
       expect(translator.premiumLanguages.includes('pt-BR')).toBe(true);
       expect(translator.premiumLanguages.includes('it')).toBe(true);
+      expect(translator.premiumLanguages.includes('nl')).toBe(true);
       // Sanity: a still-Standard language should remain non-premium
-      expect(translator.premiumLanguages.includes('nl')).toBe(false);
+      expect(translator.premiumLanguages.includes('pl')).toBe(false);
     });
   });
 });

@@ -140,9 +140,9 @@ try {
 
 // English + every premium-dictionary language. Derived from PREMIUM_LANGUAGE_CODES
 // so it self-updates when a premium locale is added — the previous hand-coded list
-// was en+10 and silently missed the it/id UI labels. Falls back to the full 12 if
-// the constant can't be loaded.
-const PREMIUM_FALLBACK = ['ko', 'ja', 'zh-CN', 'zh-TW', 'es', 'fr', 'it', 'de', 'pt-BR', 'ru', 'vi', 'id'];
+// was en+10 and silently missed the it/id UI labels. Falls back to the current
+// full set if the constant can't be loaded.
+const PREMIUM_FALLBACK = ['ko', 'ja', 'zh-CN', 'zh-TW', 'es', 'fr', 'it', 'de', 'pt-BR', 'ru', 'vi', 'id', 'nl'];
 const premiumCodes =
   Array.isArray(dicts.PREMIUM_LANGUAGE_CODES) && dicts.PREMIUM_LANGUAGE_CODES.length
     ? dicts.PREMIUM_LANGUAGE_CODES
@@ -160,7 +160,7 @@ function looksLikeLangMap(obj) {
 
 function checkLangCoverage(label, dict) {
   const missing = [...expectedLangs].filter((l) => !(l in dict));
-  if (missing.length) log.warn(`${label}: missing language(s) ${missing.join(', ')}`);
+  if (missing.length) log.fail(`${label}: missing language(s) ${missing.join(', ')}`);
 }
 
 function checkLangOuter(name, dict) {

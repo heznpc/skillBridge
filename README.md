@@ -310,6 +310,7 @@ Translating a course page on every navigation has to be fast and predictable. Th
 | 🇪🇸 Español (Spanish)              | `es`    | 1,100+ entries                                                     |
 | 🇫🇷 Français (French)              | `fr`    | 1,100+ entries                                                     |
 | 🇮🇹 Italiano (Italian)             | `it`    | 1,100+ entries (re-translated from English; native review welcome) |
+| 🇳🇱 Nederlands (Dutch)             | `nl`    | 1,100+ entries (native review welcome)                             |
 | 🇩🇪 Deutsch (German)               | `de`    | 1,100+ entries                                                     |
 | 🇧🇷 Português (Brazilian)          | `pt-BR` | 1,100+ entries                                                     |
 | 🇷🇺 Русский (Russian)              | `ru`    | 1,100+ entries                                                     |
@@ -318,7 +319,7 @@ Translating a course page on every navigation has to be fast and predictable. Th
 
 ### Standard — Google Translate
 
-🇵🇹 Português (PT) · 🇳🇱 Nederlands · 🇵🇱 Polski · 🇺🇦 Українська · 🇨🇿 Čeština · 🇸🇪 Svenska · 🇩🇰 Dansk · 🇫🇮 Suomi · 🇳🇴 Norsk · 🇹🇷 Türkçe · 🇸🇦 العربية · 🇮🇳 हिन्दी · 🇹🇭 ภาษาไทย · 🇲🇾 Bahasa Melayu · 🇵🇭 Filipino · 🇧🇩 বাংলা · 🇮🇱 עברית · 🇷🇴 Română · 🇭🇺 Magyar · 🇬🇷 Ελληνικά
+🇵🇹 Português (PT) · 🇵🇱 Polski · 🇺🇦 Українська · 🇨🇿 Čeština · 🇸🇪 Svenska · 🇩🇰 Dansk · 🇫🇮 Suomi · 🇳🇴 Norsk · 🇹🇷 Türkçe · 🇸🇦 العربية · 🇮🇳 हिन्दी · 🇹🇭 ภาษาไทย · 🇲🇾 Bahasa Melayu · 🇵🇭 Filipino · 🇧🇩 বাংলা · 🇮🇱 עברית · 🇷🇴 Română · 🇭🇺 Magyar · 🇬🇷 Ελληνικά
 
 > Want to add your language as Premium? Contribute a curated dictionary — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -327,7 +328,7 @@ Translating a course page on every navigation has to be fast and predictable. Th
 New Academy content is covered by a standing pipeline, not by hand-checking:
 a CI watcher polls the live catalog twice a day and **fails loudly + opens an
 issue** the moment a course appears that the dictionaries don't cover; the
-course gets wired into all 12 premium dictionaries; structural CI gates
+course gets wired into all 13 premium dictionaries; structural CI gates
 (`check:i18n`, `check:dict-coverage`, `check:locales`) and a real-dictionary
 regression suite guard every merge after that. Proven turnaround: on
 **2026-06-10** the watcher flagged the brand-new _Claude Platform 101_ course
@@ -350,6 +351,7 @@ review is the final layer:
 | Español | `es` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
 | Français | `fr` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
 | Italiano | `it` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
+| Nederlands | `nl` | 1129 | 2026-09-01 | 2026-09-01 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
 | Deutsch | `de` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
 | Português (BR) | `pt-BR` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
 | Русский | `ru` | 1129 | 2026-07-28 | 2026-07-28 | 🙋 [recruiting](https://github.com/heznpc/skillBridge/issues/202) |
@@ -386,7 +388,7 @@ See our full [Privacy Policy](PRIVACY_POLICY.md).
 | -------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | Page Translation     | Google Translate API                                                                                              |
 | Protected Terms      | Auto-correction of GT brand/product term errors per language (Claude, Cowork, Computer Use, Agent Skills, etc.)   |
-| Curated Dictionaries | Hand-tuned JSON (1,100+ × 12 languages)                                                                           |
+| Curated Dictionaries | Hand-tuned JSON (1,100+ × 13 languages)                                                                           |
 | Translation Cache    | IndexedDB                                                                                                         |
 | Local Learning Tools | `chrome.storage.local` + IndexedDB                                                                                |
 | AI Tutor             | Claude Sonnet 4.6, with an automatic Sonnet 4.5 fallback, via isolated bundled Puter runtime (free Puter sign-in) |

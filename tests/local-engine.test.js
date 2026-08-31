@@ -136,7 +136,7 @@ describe('_checkLocalEngine (local reachability probe)', () => {
 // So the reachability GET structurally cannot observe the block the tutor's
 // POST will hit. Before this, the popup rendered "Connected to local server"
 // and the first question failed with an untranslated English error, while the
-// 13-language OLLAMA_ORIGINS guidance behind `status: 'cors'` was unreachable
+// localized OLLAMA_ORIGINS guidance behind `status: 'cors'` was unreachable
 // for a default install. The probe now matches the chat request's shape.
 describe('_checkLocalEngine — origin block is detected at probe time, not first chat', () => {
   const OK_MODELS = { data: [{ id: 'gemma3:4b' }] };

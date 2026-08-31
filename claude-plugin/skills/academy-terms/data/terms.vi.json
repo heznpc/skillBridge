@@ -5,30 +5,18 @@
     "sourceVersion": "4.2.0",
     "sourceLastUpdated": "2026-07-28",
     "generatedFrom": "src/data/vi.json",
-    "termCount": 1006
+    "termCount": 1026
   },
   "protected": {
-    "Claude Code": [
-      "Claude Code"
-    ],
-    "Claude": [
-      "Claude"
-    ],
+    "Claude Code": [],
+    "Claude": [],
     "Anthropic": [
       "Ăn-thrô-pích"
     ],
-    "Anthropic Academy": [
-      "Anthropic Academy"
-    ],
-    "SKILL.md": [
-      "SKILL.md"
-    ],
-    "CLAUDE.md": [
-      "CLAUDE.md"
-    ],
-    "YAML": [
-      "YAML"
-    ]
+    "Anthropic Academy": [],
+    "SKILL.md": [],
+    "CLAUDE.md": [],
+    "YAML": []
   },
   "terms": {
     "Anthropic courses": "Khóa học Anthropic",
@@ -945,6 +933,26 @@
     "Server-side tool integration": "Tích hợp công cụ phía máy chủ",
     "Deploying Anthropic Apps": "Triển khai ứng dụng Anthropic",
     "Best practices for production": "Phương pháp tốt nhất cho sản xuất",
+    "What is the Claude Developer Platform?": "Claude Developer Platform là gì?",
+    "Your first API call": "Lệnh gọi API đầu tiên của bạn",
+    "Choosing the right model": "Chọn mô hình phù hợp",
+    "The agent loop explained": "Giải thích vòng lặp tác tử",
+    "What is tool use?": "Sử dụng công cụ là gì?",
+    "What is thinking?": "Chế độ suy nghĩ (thinking) là gì?",
+    "Skills": "Skills",
+    "MCP": "MCP",
+    "Context management": "Quản lý ngữ cảnh",
+    "What are managed agents?": "Managed Agents là gì?",
+    "Building your first managed agent": "Xây dựng Managed Agent đầu tiên của bạn",
+    "Building with Claude Code": "Xây dựng với Claude Code",
+    "Claude Platform 101 Quiz": "Bài kiểm tra Claude Platform 101",
+    "Teaching your Agent": "Huấn luyện tác tử của bạn",
+    "Extending your Agent": "Mở rộng tác tử của bạn",
+    "Managed Agents": "Managed Agents",
+    "Data and Privacy": "Dữ liệu và quyền riêng tư",
+    "Who this is for": "Dành cho ai",
+    "Recommended prerequisites": "Kiến thức nền tảng được khuyến nghị",
+    "Course sections": "Các phần của khóa học",
     "Adapting AI concepts for the classroom": "Điều chỉnh khái niệm AI cho lớp học",
     "Teaching strategies for AI literacy": "Chiến lược giảng dạy về hiểu biết AI",
     "Lesson planning with AI tools": "Lập kế hoạch bài giảng với công cụ AI",

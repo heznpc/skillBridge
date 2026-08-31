@@ -5,30 +5,18 @@
     "sourceVersion": "4.2.0",
     "sourceLastUpdated": "2026-07-28",
     "generatedFrom": "src/data/de.json",
-    "termCount": 1006
+    "termCount": 1026
   },
   "protected": {
     "Claude Code": [
       "Claude-Code"
     ],
-    "Claude": [
-      "Claude"
-    ],
-    "Anthropic": [
-      "Anthropic"
-    ],
-    "Anthropic Academy": [
-      "Anthropic Academy"
-    ],
-    "SKILL.md": [
-      "SKILL.md"
-    ],
-    "CLAUDE.md": [
-      "CLAUDE.md"
-    ],
-    "YAML": [
-      "YAML"
-    ],
+    "Claude": [],
+    "Anthropic": [],
+    "Anthropic Academy": [],
+    "SKILL.md": [],
+    "CLAUDE.md": [],
+    "YAML": [],
     "Cowork": [
       "Koarbeit"
     ]
@@ -948,6 +936,26 @@
     "Server-side tool integration": "Serverseitige Werkzeugintegration",
     "Deploying Anthropic Apps": "Anthropic-Anwendungen bereitstellen",
     "Best practices for production": "Best Practices für die Produktion",
+    "What is the Claude Developer Platform?": "Was ist die Claude Developer Platform?",
+    "Your first API call": "Ihr erster API-Aufruf",
+    "Choosing the right model": "Das richtige Modell wählen",
+    "The agent loop explained": "Die Agenten-Schleife erklärt",
+    "What is tool use?": "Was ist Tool-Nutzung?",
+    "What is thinking?": "Was ist Thinking?",
+    "Skills": "Skills",
+    "MCP": "MCP",
+    "Context management": "Kontext-Verwaltung",
+    "What are managed agents?": "Was sind Managed Agents?",
+    "Building your first managed agent": "Ihren ersten Managed Agent erstellen",
+    "Building with Claude Code": "Mit Claude Code entwickeln",
+    "Claude Platform 101 Quiz": "Claude Platform 101 Quiz",
+    "Teaching your Agent": "Ihrem Agenten beibringen",
+    "Extending your Agent": "Ihren Agenten erweitern",
+    "Managed Agents": "Managed Agents",
+    "Data and Privacy": "Daten und Datenschutz",
+    "Who this is for": "Für wen dieser Kurs ist",
+    "Recommended prerequisites": "Empfohlene Vorkenntnisse",
+    "Course sections": "Kursabschnitte",
     "Adapting AI concepts for the classroom": "KI-Konzepte für den Unterricht anpassen",
     "Teaching strategies for AI literacy": "Lehrstrategien für KI-Kompetenz",
     "Lesson planning with AI tools": "Unterrichtsplanung mit KI-Werkzeugen",

@@ -5,7 +5,7 @@
     "sourceVersion": "4.2.0",
     "sourceLastUpdated": "2026-07-28",
     "generatedFrom": "src/data/ko.json",
-    "termCount": 1006
+    "termCount": 1026
   },
   "protected": {
     "Claude Code": [
@@ -27,28 +27,16 @@
       "앤트로픽",
       "안트로픽"
     ],
-    "Enterprise > Personal > Project > Plugins": [
-      "Enterprise > Personal > Project > Plugins"
-    ],
-    "Enterprise → Personal → Project → Plugins": [
-      "Enterprise → Personal → Project → Plugins"
-    ],
-    "Plugin": [
-      "Plugin"
-    ],
-    "Plugins": [
-      "Plugins"
-    ],
-    "Skills": [
-      "Skills"
-    ],
+    "Enterprise > Personal > Project > Plugins": [],
+    "Enterprise → Personal → Project → Plugins": [],
+    "Plugin": [],
+    "Plugins": [],
+    "Skills": [],
     "SKILL.md": [
       "스킬.md",
       "기술.md"
     ],
-    "frontmatter": [
-      "frontmatter"
-    ],
+    "frontmatter": [],
     "CLAUDE.md": [
       "클로드.md"
     ],
@@ -58,9 +46,7 @@
     "Cowork": [
       "코워크"
     ],
-    "Dispatch": [
-      "Dispatch"
-    ],
+    "Dispatch": [],
     "Computer Use": [
       "컴퓨터 유즈"
     ]
@@ -980,6 +966,26 @@
     "Server-side tool integration": "서버 측 도구 통합",
     "Deploying Anthropic Apps": "Anthropic 앱 배포",
     "Best practices for production": "프로덕션 모범 사례",
+    "What is the Claude Developer Platform?": "Claude Developer Platform이란 무엇인가요?",
+    "Your first API call": "첫 번째 API 호출",
+    "Choosing the right model": "알맞은 모델 선택하기",
+    "The agent loop explained": "에이전트 루프 이해하기",
+    "What is tool use?": "도구 사용이란 무엇인가요?",
+    "What is thinking?": "사고 기능이란 무엇인가요?",
+    "Skills": "Skills",
+    "MCP": "MCP",
+    "Context management": "컨텍스트 관리",
+    "What are managed agents?": "Managed Agents란 무엇인가요?",
+    "Building your first managed agent": "첫 번째 Managed Agent 만들기",
+    "Building with Claude Code": "Claude Code로 빌드하기",
+    "Claude Platform 101 Quiz": "Claude Platform 101 퀴즈",
+    "Teaching your Agent": "에이전트 가르치기",
+    "Extending your Agent": "에이전트 확장하기",
+    "Managed Agents": "Managed Agents",
+    "Data and Privacy": "데이터 및 개인정보",
+    "Who this is for": "추천 대상",
+    "Recommended prerequisites": "권장 선수 지식",
+    "Course sections": "과정 구성",
     "Adapting AI concepts for the classroom": "교실에 맞는 AI 개념 적용",
     "Teaching strategies for AI literacy": "AI 리터러시를 위한 교수 전략",
     "Lesson planning with AI tools": "AI 도구를 활용한 수업 계획",

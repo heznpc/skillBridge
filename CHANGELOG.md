@@ -15,6 +15,10 @@ repository but never shipped to users.
 
 ### Added
 
+- Dutch (`nl`) is now the thirteenth Premium locale, with a full 1,129-entry
+  curated course dictionary, localized extension UI, companion-plugin data,
+  and end-to-end selector/static-hit coverage. Native review remains openly
+  marked as recruiting.
 - A persistent localized translation-status banner now appears even when the
   browser starts offline or English is selected. It distinguishes cache
   checking, cache-only coverage, partial coverage and a complete cache miss;
@@ -31,6 +35,11 @@ repository but never shipped to users.
 
 ### Fixed
 
+- Changing the popup language now re-renders the optional translation-refinement
+  controls instead of leaving that section in the previously selected language.
+- Companion-plugin generation now includes the Claude Platform 101 terminology
+  block and removes canonical keep-English markers from the list of forbidden
+  mistranslations.
 - Offline translation passes now check both plain-text rows and the separate
   integrity-checked structured-HTML cache before deferring misses. Cached
   translations are reused, while uncached text stays in the original language
