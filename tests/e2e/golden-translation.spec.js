@@ -42,7 +42,14 @@
 const { test, expect } = require('@playwright/test');
 const { SETTLE_MS } = require('./helpers/timeouts');
 const { launchExtension, closeExtension, evalInContentWorld } = require('./helpers/extension');
-const { registerStubs, startFixtureServer, stopFixtureServer } = require('./helpers/network-stubs');
+const {
+  registerStubs,
+  startFixtureServer,
+  stopFixtureServer,
+  getGTRequests,
+  resetGTRequestCount,
+} = require('./helpers/network-stubs');
+const dutchDictionary = require('../../src/data/nl.json');
 
 test.describe('SkillBridge — golden translation flow', () => {
   /** @type {Awaited<ReturnType<typeof launchExtension>>} */
@@ -180,5 +187,32 @@ test.describe('SkillBridge — golden translation flow', () => {
     expect(after.gtGeneration).toBeGreaterThan(before.gtGeneration);
     expect(pt.h1).toBe('Introduction to Claude');
     expect(pt.p1).toContain('prompt engineering');
+  });
+
+  test('step E: Dutch uses its curated dictionary before the GT fallback', async () => {
+    const source = 'Anthropic courses';
+    const expected = dutchDictionary.catalog[source];
+    expect(expected).toBeTruthy();
+    expect(expected).not.toBe(source);
+    resetGTRequestCount();
+
+    await evalInContentWorld(extCtx.context, 'switchLanguage', 'nl');
+
+    const deadline = Date.now() + SETTLE_MS;
+    while (Date.now() < deadline) {
+      const currentPageText = await evalInContentWorld(extCtx.context, 'pageText');
+      if (currentPageText.brandHeading === expected) break;
+      await page.waitForTimeout(200);
+    }
+    // Wait past both the initial fire-and-forget GT batch and the 1.5s late-
+    // content rescan: a static hit must remain stable, not merely win a short
+    // race before a later fallback overwrites it.
+    await page.waitForTimeout(2200);
+    const pageText = await evalInContentWorld(extCtx.context, 'pageText');
+
+    const snap = await evalInContentWorld(extCtx.context, 'snapshot');
+    expect(snap.currentLang).toBe('nl');
+    expect(pageText.brandHeading).toBe(expected);
+    expect(getGTRequests().some((body) => body.includes(source) || body.includes(expected))).toBe(false);
   });
 });

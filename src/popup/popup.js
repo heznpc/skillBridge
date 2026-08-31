@@ -106,7 +106,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     sidebarBtn.textContent = _POPUP_AI_GATEWAY_ENABLED ? t(POPUP_LABELS.openSidebar) : t(MENU_LABELS.tools);
     document.getElementById('auto-translate-label').textContent = t(POPUP_LABELS.autoTranslate);
     if (commentLabel) commentLabel.textContent = t(COMMENT_TRANSLATE_LABELS);
-    if (_POPUP_AI_GATEWAY_ENABLED) renderEngineLabels();
+    if (_POPUP_AI_GATEWAY_ENABLED) {
+      renderEngineLabels();
+      renderRefineLabels();
+    }
   }
 
   renderPopupLabels();

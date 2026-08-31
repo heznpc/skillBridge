@@ -228,7 +228,7 @@ async function main() {
       ...liveSlugs.map((s) => `- ${knownSlugs.has(s) ? '✅' : '🆕'} \`${s}\``),
       '',
       '### Required follow-up (48h terminology SLA)\n',
-      '1. Add a section for each new course to all 12 premium-language dictionaries in `src/data/`.',
+      '1. Add a section for each new course to every premium-language dictionary in `src/data/`.',
       '2. Map the slug(s) into `FLASHCARD_COURSE_MAP` in `src/lib/constants.js`.',
       '3. Update `store-assets/STORE_LISTING.md` if the supported-course count or list is stale.',
       '4. `npm run check:dict-coverage` and `npm run check:academy` must pass before the issue closes.',

@@ -10,6 +10,7 @@
 const { test, expect } = require('@playwright/test');
 const { launchExtension, closeExtension } = require('./helpers/extension');
 const { registerStubs } = require('./helpers/network-stubs');
+const dutchDictionary = require('../../src/data/nl.json');
 
 test.describe('SkillBridge — bundled action popup', () => {
   /** @type {Awaited<ReturnType<typeof launchExtension>>} */
@@ -43,7 +44,7 @@ test.describe('SkillBridge — bundled action popup', () => {
       route.fulfill({
         status: 200,
         contentType: 'text/html',
-        body: '<!doctype html><html><body><main><h1>Course lesson</h1></main></body></html>',
+        body: '<!doctype html><html><body><main><h1>Anthropic courses</h1></main></body></html>',
       }),
     );
     const lessonPage = await extCtx.context.newPage();
@@ -64,6 +65,8 @@ test.describe('SkillBridge — bundled action popup', () => {
     await expect(popup.locator('#lang-select option')).toHaveCount(33);
     await expect(popup.locator('#lang-select optgroup').nth(0)).toHaveAttribute('label', '★ Curated terminology');
     await expect(popup.locator('#lang-select optgroup').nth(1)).toHaveAttribute('label', 'Google Translate');
+    await expect(popup.locator('#lang-select optgroup').nth(0).locator('option[value="nl"]')).toHaveCount(1);
+    await expect(popup.locator('#lang-select optgroup').nth(1).locator('option[value="nl"]')).toHaveCount(0);
 
     // v4 A5/A4: the tutor engine selector ships (cloud/local/off). Choosing
     // "local" reveals the on-device config and persists the pref.
@@ -83,19 +86,32 @@ test.describe('SkillBridge — bundled action popup', () => {
     await popup.locator('#engine-select').selectOption('cloud');
     await expect(popup.locator('#local-config')).toBeHidden();
 
-    await popup.locator('#lang-select').selectOption('ko');
+    await popup.locator('#lang-select').selectOption('nl');
     await expect
       .poll(async () =>
         extCtx.context
           .serviceWorkers()[0]
           .evaluate(async () => (await chrome.storage.local.get('targetLanguage')).targetLanguage),
       )
-      .toBe('ko');
+      .toBe('nl');
+    await expect(popup.locator('#refine-label')).toHaveText('Vertaling verfijnen (optioneel)');
+    await expect(popup.locator('#refine-opt-off')).toHaveText('Uit');
+    await expect(popup.locator('#refine-hint')).toContainText('Google Translate geeft de pagina');
+    await expect(lessonPage.locator('h1')).toHaveText(dutchDictionary.catalog['Anthropic courses']);
+
+    // A newly opened lesson must honor the persisted nl + autoTranslate state
+    // without an internal switchLanguage test hook or another popup action.
+    const coldStartPage = await extCtx.context.newPage();
+    await coldStartPage.goto('https://anthropic.skilljar.com/e2e-popup-cold-start', {
+      waitUntil: 'domcontentloaded',
+    });
+    await expect(coldStartPage.locator('h1')).toHaveText(dutchDictionary.catalog['Anthropic courses']);
 
     expect(pageErrors).toEqual([]);
     expect(consoleErrors).toEqual([]);
     expect(failedExtensionRequests).toEqual([]);
     await popup.close();
+    await coldStartPage.close();
     await lessonPage.close();
   });
 
@@ -136,8 +152,9 @@ test.describe('SkillBridge — bundled action popup', () => {
     });
     await expect(popup.locator('#main-content')).toBeVisible();
     await expect(popup.locator('#not-skilljar')).toBeHidden();
-    // Korean-context popup: the button reads "AI 튜터 사이드바 열기".
-    await expect(popup.locator('#sidebar-btn')).toContainText(/Tutor|튜터/i);
+    // The Dutch choice persisted by the first popup instance also re-renders
+    // this fresh popup when Chrome withholds the tab URL.
+    await expect(popup.locator('#sidebar-btn')).toContainText('Zijbalk van AI Tutor openen');
 
     expect(pageErrors).toEqual([]);
     expect(consoleErrors).toEqual([]);

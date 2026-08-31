@@ -32,6 +32,10 @@ export const buildInfo = {
       "label": "Italiano"
     },
     {
+      "code": "nl",
+      "label": "Nederlands"
+    },
+    {
       "code": "de",
       "label": "Deutsch"
     },
@@ -58,10 +62,6 @@ export const buildInfo = {
     {
       "code": "pt",
       "label": "Português (PT)"
-    },
-    {
-      "code": "nl",
-      "label": "Nederlands"
     },
     {
       "code": "pl",

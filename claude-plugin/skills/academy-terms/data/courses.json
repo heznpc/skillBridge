@@ -1,7 +1,7 @@
 {
   "_meta": {
     "source": "FLASHCARD_COURSE_MAP in src/lib/constants.js",
-    "courseCount": 16,
+    "courseCount": 17,
     "languages": [
       "de",
       "es",
@@ -10,6 +10,7 @@
       "it",
       "ja",
       "ko",
+      "nl",
       "pt-BR",
       "ru",
       "vi",
@@ -102,6 +103,15 @@
       "slugs": [
         "claude-api",
         "claude-with-the-anthropic-api"
+      ]
+    },
+    {
+      "block": "claudePlatform",
+      "title": "Claude Platform 101",
+      "slugs": [
+        "certification-faq",
+        "claude-certified-architect-foundations-certification",
+        "claude-platform-101"
       ]
     },
     {

@@ -5,7 +5,7 @@
     "sourceVersion": "4.2.0",
     "sourceLastUpdated": "2026-07-28",
     "generatedFrom": "src/data/ja.json",
-    "termCount": 1006
+    "termCount": 1026
   },
   "protected": {
     "Claude Code": [
@@ -17,24 +17,14 @@
     "Anthropic": [
       "アンスロピック"
     ],
-    "Anthropic Academy": [
-      "Anthropic Academy"
-    ],
-    "Skills": [
-      "Skills"
-    ],
-    "SKILL.md": [
-      "SKILL.md"
-    ],
+    "Anthropic Academy": [],
+    "Skills": [],
+    "SKILL.md": [],
     "frontmatter": [
       "フロントマター"
     ],
-    "CLAUDE.md": [
-      "CLAUDE.md"
-    ],
-    "YAML": [
-      "YAML"
-    ],
+    "CLAUDE.md": [],
+    "YAML": [],
     "Cowork": [
       "コワーク"
     ],
@@ -957,6 +947,26 @@
     "Server-side tool integration": "サーバーサイドツール統合",
     "Deploying Anthropic Apps": "Anthropicアプリのデプロイ",
     "Best practices for production": "本番環境のベストプラクティス",
+    "What is the Claude Developer Platform?": "Claude Developer Platformとは何ですか?",
+    "Your first API call": "初めてのAPI呼び出し",
+    "Choosing the right model": "適切なモデルの選択",
+    "The agent loop explained": "エージェントループの解説",
+    "What is tool use?": "ツール使用とは何ですか?",
+    "What is thinking?": "思考機能とは何ですか?",
+    "Skills": "Skills",
+    "MCP": "MCP",
+    "Context management": "コンテキスト管理",
+    "What are managed agents?": "Managed Agentsとは何ですか?",
+    "Building your first managed agent": "初めてのManaged Agentの構築",
+    "Building with Claude Code": "Claude Codeで構築する",
+    "Claude Platform 101 Quiz": "Claude Platform 101クイズ",
+    "Teaching your Agent": "エージェントに教える",
+    "Extending your Agent": "エージェントを拡張する",
+    "Managed Agents": "Managed Agents",
+    "Data and Privacy": "データとプライバシー",
+    "Who this is for": "対象者",
+    "Recommended prerequisites": "推奨される前提知識",
+    "Course sections": "コースセクション",
     "Adapting AI concepts for the classroom": "教室に合わせたAI概念の適用",
     "Teaching strategies for AI literacy": "AIリテラシーのための教育戦略",
     "Lesson planning with AI tools": "AIツールを活用した授業計画",

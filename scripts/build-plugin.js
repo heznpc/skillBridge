@@ -5,7 +5,7 @@
  * Derives the bundled terminology data for the `skillbridge-academy-terms`
  * Claude Code plugin from the canonical extension assets:
  *
- *   - src/data/*.json        — the 11 curated language dictionaries
+ *   - src/data/*.json        — the curated language dictionaries
  *                              (course-content term pairs + _protected guardrails)
  *   - src/lib/constants.js   — FLASHCARD_COURSE_MAP (course-slug -> content blocks)
  *
@@ -51,6 +51,7 @@ const TERM_BLOCKS = [
   'mcpAdvanced',
   'aiCapabilities',
   'claudeAPI',
+  'claudePlatform',
   'aiFluencyEdu',
   'aiFluencyStudent',
   'aiFluencyNonprofit',
@@ -71,6 +72,7 @@ const BLOCK_TITLES = {
   mcpAdvanced: 'Model Context Protocol: Advanced Topics',
   aiCapabilities: 'AI Capabilities and Limitations',
   claudeAPI: 'Building with the Claude API',
+  claudePlatform: 'Claude Platform 101',
   aiFluencyEdu: 'AI Fluency for Educators',
   aiFluencyStudent: 'AI Fluency for Students',
   aiFluencyNonprofit: 'AI Fluency for Nonprofits',
@@ -132,6 +134,13 @@ function buildLangDict(data) {
     }
   }
 
+  const protectedTerms = Object.fromEntries(
+    Object.entries(data._protected || {}).map(([canonical, wrongForms]) => [
+      canonical,
+      Array.isArray(wrongForms) ? wrongForms.filter((form) => form !== canonical) : wrongForms,
+    ]),
+  );
+
   return {
     _meta: {
       lang: data._meta.lang,
@@ -142,8 +151,11 @@ function buildLangDict(data) {
       termCount: Object.keys(terms).length,
     },
     // Canonical brand / API terms that must NEVER be translated, with the
-    // known bad renderings to actively reject. Preserved verbatim.
-    protected: data._protected || {},
+    // known bad renderings to actively reject. The extension dictionaries
+    // may include the canonical form itself as a safe keep-English marker;
+    // omit that no-op form here because the plugin interprets every array
+    // member as a rendering it must never output.
+    protected: protectedTerms,
     // EN term -> correct localized rendering.
     terms,
   };

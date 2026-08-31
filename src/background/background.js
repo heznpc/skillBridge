@@ -729,7 +729,7 @@ async function _checkLocalEngine(baseUrl) {
       // sends, so a default-configured Ollama answers 200 here and 403 there.
       // Probing with the GET alone therefore reported "connected" to every
       // install that had not set OLLAMA_ORIGINS and pushed the failure into
-      // the user's first tutor question — where the 13-language guidance
+      // the user's first tutor question — where the localized guidance
       // behind `status: 'cors'` never ran, leaving only an untranslated
       // English error. So re-probe using the POST's shape. The body is
       // deliberately invalid: an allowed origin fails request validation with

@@ -5,7 +5,7 @@
     "sourceVersion": "4.2.0",
     "sourceLastUpdated": "2026-07-28",
     "generatedFrom": "src/data/ru.json",
-    "termCount": 1006
+    "termCount": 1026
   },
   "protected": {
     "Claude Code": [
@@ -20,15 +20,9 @@
     "Anthropic Academy": [
       "Антропик Академия"
     ],
-    "SKILL.md": [
-      "SKILL.md"
-    ],
-    "CLAUDE.md": [
-      "CLAUDE.md"
-    ],
-    "YAML": [
-      "YAML"
-    ],
+    "SKILL.md": [],
+    "CLAUDE.md": [],
+    "YAML": [],
     "Cowork": [
       "Коворк"
     ]
@@ -948,6 +942,26 @@
     "Server-side tool integration": "Серверная интеграция инструментов",
     "Deploying Anthropic Apps": "Развёртывание приложений Anthropic",
     "Best practices for production": "Лучшие практики для продакшена",
+    "What is the Claude Developer Platform?": "Что такое Claude Developer Platform?",
+    "Your first API call": "Ваш первый вызов API",
+    "Choosing the right model": "Выбор подходящей модели",
+    "The agent loop explained": "Как устроен цикл агента",
+    "What is tool use?": "Что такое использование инструментов?",
+    "What is thinking?": "Что такое режим размышления?",
+    "Skills": "Навыки",
+    "MCP": "MCP",
+    "Context management": "Управление контекстом",
+    "What are managed agents?": "Что такое Managed Agents?",
+    "Building your first managed agent": "Создание вашего первого Managed Agent",
+    "Building with Claude Code": "Разработка с Claude Code",
+    "Claude Platform 101 Quiz": "Тест по Claude Platform 101",
+    "Teaching your Agent": "Обучение вашего агента",
+    "Extending your Agent": "Расширение вашего агента",
+    "Managed Agents": "Managed Agents",
+    "Data and Privacy": "Данные и конфиденциальность",
+    "Who this is for": "Для кого этот курс",
+    "Recommended prerequisites": "Рекомендуемые предварительные знания",
+    "Course sections": "Разделы курса",
     "Adapting AI concepts for the classroom": "Адаптация концепций AI для учебного класса",
     "Teaching strategies for AI literacy": "Стратегии обучения AI-грамотности",
     "Lesson planning with AI tools": "Планирование уроков с инструментами AI",
