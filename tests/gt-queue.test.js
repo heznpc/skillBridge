@@ -227,8 +227,9 @@ describe('processOneElement re-processing guard', () => {
 
   test('every successful static path records what it wrote', () => {
     // Both static exits — whole-element replace and per-text-node replace —
-    // must mark, or the un-marked one keeps leaking into GT.
-    expect(processOne.match(/markTranslated\(el\)/g)).toHaveLength(2);
+    // must join the original→element index as well as mark the output. The
+    // feedback resolver needs the same provenance for static and GT results.
+    expect(processOne.match(/trackTranslatedElement\(fullText, el\)/g)).toHaveLength(2);
   });
 
   test('the GT apply path marks too, so Latin-script locales stop re-translating', () => {

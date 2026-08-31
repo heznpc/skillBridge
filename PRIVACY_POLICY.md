@@ -6,7 +6,7 @@
 
 As of August 31, 2026, the Chrome Web Store still publishes **SkillBridge v1.0.1**. That legacy version includes a bundled Puter client used for Gemini translation review and the Claude-powered AI Tutor, and it declares YouTube host access.
 
-The repository's **v4.1.1 release is a GitHub source checkpoint, not a Chrome Web Store submission**. Chrome Web Store publication remains paused, and the final submission version and dashboard upload will be decided only after the current code-development phase is finished. The unpublished source build keeps the AI Tutor, runs its bundled Puter client in Chrome's isolated content-script world on the trusted course host, removes YouTube host access, and adds an on-device tutor option:
+The repository's **v4.2.0 release is a GitHub source checkpoint, not a Chrome Web Store submission**. Chrome Web Store publication remains paused, and the final submission version and dashboard upload will be decided only after the current code-development phase is finished. The unpublished source build keeps the AI Tutor, runs its bundled Puter client in Chrome's isolated content-script world on the trusted course host, removes YouTube host access, adds an on-device tutor option, and adds local-only translation feedback to Tools › Reports:
 
 - **AI Tutor (cloud, default):** included in the unpublished source build. Tutor questions go through the bundled Puter client to Claude, and the user signs in to Puter (free) when they first use it. Translation and the local study tools need no account.
 - **AI Tutor (local/on-device, optional):** the user can instead point the Tutor at a local OpenAI-compatible server they run themselves (for example Ollama). In that mode Tutor text goes only to that local server — see "Local AI Engine" below.
@@ -62,7 +62,7 @@ The local cache and Tutor history are not sent to the SkillBridge operator. A ne
 | `*.youtube.com`            | Legacy YouTube access described above                |
 | `translate.googleapis.com` | Send requested course text to Google Translate       |
 
-## Unpublished Source Build: v4.1.1 (Not Yet a CWS Submission)
+## Unpublished Source Build: v4.2.0 (Not Yet a CWS Submission)
 
 ### Packaged Source-Build Boundary
 
@@ -73,7 +73,7 @@ The unpublished source build includes an AI Tutor using Claude — Sonnet 4.6, f
 - **Preferences and interface state (`chrome.storage.local`)** — selected language, dark mode, auto-translate, onboarding state, and related display settings.
 - **Learning-tool state (`chrome.storage.local`)** — flashcard review state, bookmarks, recent lessons, and scroll positions.
 - **Lesson notes (`chrome.storage.local`, `sb_notes`)** — note text, lesson title and URL, timestamp, and lesson-identity provenance used for Skilljar↔Academy continuity. Notes stay local, are limited to the newest 200 records, and can be edited or deleted in place.
-- **Term-report queue (`chrome.storage.local`, `sb_term_reports`)** — the text flagged as wrong, an optional correction, lesson title and URL, selected language, and timestamp. Reports stay local, are limited to the newest 200 records, and are never submitted automatically; export creates a client-side JSON download only when the user requests it.
+- **Translation-feedback and term-report queue (`chrome.storage.local`, `sb_term_reports`)** — current records contain `reportSchemaVersion`, `capture` (`selection` or `manual`), `signal` (`positive` or `negative`), `originalText` (null for a manual report), `translatedText`, `selectedText`, the backward-compatible `wrongText` alias, `correction`, lesson `url` and `title`, selected `lang`, and timestamp `ts`. When a lesson has a verified Skilljar↔Academy match, a record can additionally contain canonical `id` and `provenance` (`schemaVersion`, `matchedBy`, `platform`, `migratedAt`); migrated rows can retain `legacyUrls`. Legacy records are upgraded additively, so their existing fields are not discarded. The queue stays local, is limited to the newest 200 records, and is never submitted automatically; export creates a client-side JSON download only when the user requests it.
 - **Translation cache (IndexedDB)** — original text, translated text, target language, and a timestamp are cached in `skillbridge-cache` for up to 30 days. This does not depend on the `storage` extension permission.
 - **AI Tutor chat history (IndexedDB)** — your question, the tutor's answer, the language, the lesson heading, a timestamp, and the lesson URL are stored on your device so the sidebar can show past conversations. This never leaves your device except as the tutor request itself (to Puter, or to your own local server when the on-device engine is selected).
 - **Puter session (`chrome.storage.local`)** — after a successful cloud Tutor sign-in, the accepted session token and application identifier are stored in extension storage so the session can resume. They are not stored in the course site's local storage.
@@ -81,6 +81,18 @@ The unpublished source build includes an AI Tutor using Claude — Sonnet 4.6, f
 - **Curated dictionaries** — packaged with the extension.
 
 SkillBridge does not send this locally stored state to its operator or to a third-party analytics service. It can be removed through the browser's extension or site-data controls.
+
+### Translation Feedback (Local, No Automatic Submission)
+
+On a non-English translated page, selecting text inside one reliably tracked
+translated block can expose helpful and needs-work actions. Helpful feedback is
+saved immediately to `sb_term_reports`; needs-work feedback opens Tools ›
+Reports with the original text, current translation and selected text prefilled,
+where the user may add a correction before saving. Feedback actions are not
+offered for English or untranslated text, selections spanning multiple blocks,
+or exam answer choices. Saving, listing, deleting and exporting these records
+does not contact SkillBridge, GitHub, an analytics service, Puter, Claude or the
+user's local Tutor server.
 
 ### Data Sent to Third-Party Services by the Unpublished Source Build
 
@@ -99,14 +111,14 @@ The unpublished source build does not transmit course text to YouTube. Auto-subt
 - The operator does not receive your name, email address, Puter session token, Puter application identifier, or payment information. The isolated Tutor broker handles only the authentication/session data described above for the cloud Tutor.
 - No browsing history outside the pages where the extension is configured to run
 - No analytics, telemetry, advertising identifier, or marketing profile
-- Recent-lesson URLs/titles, timestamps, scroll positions, bookmarks, lesson notes, term reports, flashcard review activity, and Tutor history are handled locally but are not sent to the operator or an analytics service.
+- Recent-lesson URLs/titles, timestamps, scroll positions, bookmarks, lesson notes, translation feedback and manual term reports, flashcard review activity, and Tutor history are handled locally but are not sent to the operator or an analytics service.
 - No AI Tutor conversation is sent to the operator. Tutor chats are kept **on your device** (see "Data Stored Locally"); only the active Tutor request is sent to Puter/Claude or the local server selected by the user.
 
 ### Unpublished Source-Build Permissions
 
 | Permission or site access                                 | Purpose                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `storage`                                                 | Save preferences, Tutor engine settings, flashcard review state, bookmarks, lesson notes, term reports, recent lessons, scroll positions, and the accepted Puter session token/application identifier in `chrome.storage.local`                                                                                                                                                                                                                                                                                                                                                                       |
+| `storage`                                                 | Save preferences, Tutor engine settings, flashcard review state, bookmarks, lesson notes, translation feedback and manual term reports, recent lessons, scroll positions, and the accepted Puter session token/application identifier in `chrome.storage.local`                                                                                                                                                                                                                                                                                                                                                      |
 | `alarms`                                                  | Run periodic translation-cache cleanup                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `*.skilljar.com`                                          | Translate supported AI-course pages hosted on Skilljar                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `claude.com/resources/tutorials` (content-script match)   | Translate Claude tutorial pages                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
@@ -150,7 +162,7 @@ The unpublished source build lets the user run the AI Tutor against a local Open
 
 - **Translation cache:** up to 30 days, unless the user clears it sooner.
 - **Preferences and learning-tool state:** retained locally until the user clears extension or site data.
-- **Lesson notes and term reports:** retained locally until the user deletes them or clears extension data, with each collection capped at 200 records. Exporting reports creates a local JSON download and does not submit them.
+- **Lesson notes, translation feedback and manual term reports:** retained locally until the user deletes them or clears extension data, with the notes collection and shared feedback/report queue each capped at 200 records. Exporting the queue creates a local JSON download and does not submit it.
 - **Tutor history:** retained locally until the user clears extension or site data; older entries can be pruned if browser storage is exhausted.
 - **Puter session:** the token and application identifier remain in `chrome.storage.local` until Puter resets the session, SkillBridge clears a rejected session, or the user clears the extension's data.
 - **Third-party processing:** Google, Puter, and any local server selected by the user control their own logs and retention under their respective policies or configuration.
@@ -161,7 +173,7 @@ SkillBridge handles user data only to provide or improve its disclosed, user-fac
 
 ### Data Security
 
-Requests to Google, Puter, and Claude use HTTPS. A user-selected local Tutor server may use HTTP on `localhost` or `127.0.0.1`; that loopback traffic stays on the user's device. Locally retained preferences, lesson activity, notes, term reports, cached translations, and Tutor history use browser-managed storage and are not separately encrypted by SkillBridge, so access to the user's unlocked browser profile may also permit access to that local data.
+Requests to Google, Puter, and Claude use HTTPS. A user-selected local Tutor server may use HTTP on `localhost` or `127.0.0.1`; that loopback traffic stays on the user's device. Locally retained preferences, lesson activity, notes, translation feedback and manual term reports, cached translations, and Tutor history use browser-managed storage and are not separately encrypted by SkillBridge, so access to the user's unlocked browser profile may also permit access to that local data.
 
 ## Raw Source and Developer Builds
 

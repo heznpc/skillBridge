@@ -26,19 +26,32 @@ global.EXAM_SKIP_SELECTORS = ['.answer'];
 global.SKILLBRIDGE_THRESHOLDS = { GT_QUEUE_MAX: 100, GT_BATCH_SIZE: 10 };
 global.SKILLBRIDGE_DELAYS = { GT_BATCH_GAP: 0, LATE_CONTENT: 0 };
 window._geminiBlock = { hasInlineTags: () => false };
-window._protectedTerms = { buildProtectedTermsMap: () => {} };
+window._protectedTerms = {
+  buildProtectedTermsMap: () => {},
+  restoreProtectedTerms: (text) => text,
+};
 
 /**
  * @param {Record<string,string>} dict — exact-match static dictionary
+ * @param {object} [translatorOverrides]
  * @returns {{ processOneElement: Function, sb: object }}
  */
-function loadModule(dict) {
+function loadModule(dict, translatorOverrides = {}) {
   const sb = {
     isExamPage: false,
+    isOffline: false,
     hostCaps: { examDetection: false },
     originalTexts: new Map(),
     translatedTexts: new Map(),
-    translator: { staticLookup: (text) => dict[text] || null },
+    originalComments: new Map(),
+    mapSizeCap: 100,
+    translator: {
+      staticLookup: (text) => dict[text] || null,
+      cachedLookup: async () => null,
+      googleTranslateBatch: async (texts) => texts.map((text) => `translated: ${text}`),
+      _cacheTranslation: async () => {},
+      ...translatorOverrides,
+    },
     safeReplaceText: (el, text) => {
       el.textContent = text;
       return true;
@@ -81,13 +94,14 @@ describe('processOneElement — partial static match routed to Google Translate'
   });
 
   test('still applies static matches when the whole block is covered', () => {
-    const { processOneElement } = loadModule({
+    const { processOneElement, sb } = loadModule({
       'Anthropic courses': 'Anthropic 과정',
       'are taught by the research team here': '는 여기 연구 팀이 가르칩니다',
     });
     const el = setup();
     expect(processOneElement(el, 'ko')).toBe('static');
     expect(el.textContent).toBe('Anthropic 과정 는 여기 연구 팀이 가르칩니다');
+    expect(sb.translatedTexts.get('Anthropic courses are taught by the research team here')).toEqual([{ el }]);
   });
 
   test('short blocks keep their partial static output instead of routing to GT', () => {
@@ -98,5 +112,36 @@ describe('processOneElement — partial static match routed to Google Translate'
     const el = document.getElementById('s');
     expect(processOneElement(el, 'ko')).toBe('static');
     expect(el.textContent).toBe('다음 xyz');
+  });
+});
+
+describe('translatedTexts — original text to live element index', () => {
+  test('a whole-element static translation is indexed once across repeated scans', () => {
+    document.body.innerHTML = '<p id="whole">Translate this heading</p>';
+    const el = document.getElementById('whole');
+    const { processOneElement, sb } = loadModule({ 'Translate this heading': '이 제목 번역' });
+
+    expect(processOneElement(el, 'ko')).toBe('static');
+    expect(processOneElement(el, 'ko')).toBeNull();
+
+    const entries = sb.translatedTexts.get('Translate this heading');
+    expect(entries).toEqual([{ el }]);
+    expect(Object.keys(entries[0])).toEqual(['el']);
+
+    // Refinement rewrites the same element later. The index intentionally
+    // holds no translated-text snapshot, so feedback reads the settled DOM.
+    el.textContent = '이 제목을 더 자연스럽게 번역';
+    expect(entries[0].el.textContent).toBe('이 제목을 더 자연스럽게 번역');
+  });
+
+  test('duplicate GT queue entries keep one reference for the element', async () => {
+    document.body.innerHTML = '<p id="gt">Translate this paragraph with Google</p>';
+    const el = document.getElementById('gt');
+    const { sb } = loadModule({});
+
+    sb._gt.queueForGoogleTranslate([el, el], 'ko', true);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(sb.translatedTexts.get('Translate this paragraph with Google')).toEqual([{ el }]);
   });
 });

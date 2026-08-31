@@ -4,7 +4,7 @@
 
 # SkillBridge — AI Course Translator
 
-> **Source checkpoint:** <!-- VERSION_START -->v4.1.1<!-- VERSION_END --> —
+> **Source checkpoint:** <!-- VERSION_START -->v4.2.0<!-- VERSION_END --> —
 > released on GitHub only, not designated for Chrome Web Store upload. The live
 > CWS version remains v1.0.1; final packaging and dashboard work are deferred
 > until the current development cycle is complete.
@@ -108,6 +108,13 @@ Course headings, paragraphs, lists, navigation, cards, and supported code commen
 
 The CWS edition includes spaced-repetition flashcards, bookmarks, Continue/Recent links, a local progress dashboard, an in-lesson outline, reading progress, and PDF export. Learning-tool state stays in the browser.
 
+On supported lesson surfaces that expose **Tools › Reports**, the v4.2.0
+source checkpoint also lets you select one translated passage and mark it
+helpful or needing work. Helpful feedback is saved locally at once; needs-work
+feedback opens Reports with the English source, translation and selection
+prefilled, plus an optional correction. The queue is local-only: there is no
+telemetry, server submission or automatic GitHub issue.
+
 > **AI Tutor & accounts:** the current source build includes the AI Tutor (Claude Sonnet 4.6, falling back to Sonnet 4.5) through an isolated bundled Puter runtime. The tutor uses a **free Puter sign-in** — no API key and no SkillBridge account. Page translation and the local learning tools need no account at all; only the optional cloud tutor prompts for sign-in. The transport contract is regression-tested; the latest source checkpoint's live signed-in round trip remains a final CWS gate.
 
 ### 🎬 Auto-Subtitles
@@ -162,14 +169,14 @@ Generic translation tools often **mistranslate brand names and technical terms**
 
 ## Installation
 
-> **Status: live CWS v1.0.1; source v4.1.1 is a GitHub-only checkpoint.**
+> **Status: live CWS v1.0.1; source v4.2.0 is a GitHub-only checkpoint.**
 > The Chrome Web Store listing is available in all locales **except the United
 > States**, where it was removed on 2026-05-12 over a trademark issue with the
 > old icon (since redesigned on `main`). The published store build is v1.0.1;
 > the earlier `v3.5.x` candidates predate the current CWS changes and are not reused.
-> `v4.1.1` records the current source boundary, including the bundled AI Tutor,
-> local on-device Tutor, Academy support, local Notes and Reports, and exam-safe
-> translation refinements. Its permission scope is machine-verified against the
+> `v4.2.0` records the current source boundary, including the bundled AI Tutor,
+> local on-device Tutor, Academy support, local Notes, local translation
+> feedback in Reports, and exam-safe translation refinements. Its permission scope is machine-verified against the
 > manifest on every push (`npm run check:permission-docs`). Publication remains
 > paused; CWS assets and dashboard fields will be regenerated only after ongoing
 > development is complete — see `store-assets/RELEASE_CHECKLIST.md`.
@@ -336,10 +343,11 @@ These claims describe the current unpublished source build, not live legacy v1.0
 - **No SkillBridge servers** — we do not operate any servers; uncached page text is sent directly to Google Translate when translation is requested
 - **No SkillBridge account, ever** — translation and the local learning tools need no account, email, password, or API key. The optional AI Tutor uses a **free Puter sign-in** (its own account, no API key); nothing is shared with SkillBridge
 - **Local learning state** — original/translated text is cached in IndexedDB;
-  preferences, flashcard review state, bookmarks, notes, term reports, recent
-  lessons, and scroll positions use `chrome.storage.local`; reports are exported
-  only as a user-requested local JSON download, and progress summaries are
-  calculated locally
+  preferences, flashcard review state, bookmarks, notes, translation feedback
+  and manual term reports, recent lessons, and scroll positions use
+  `chrome.storage.local`; feedback and reports are exported only as a
+  user-requested local JSON download, and progress summaries are calculated
+  locally
 - **The AI Tutor is user-invoked** — page translation uses the disclosed Google Translate path but never calls Puter, Claude, or the Tutor model; only a cloud Tutor message reaches Claude through Puter, while local and off Tutor modes remain available
 - **Open source** — every line of code is auditable right here
 
@@ -391,7 +399,15 @@ Premium languages have a hand-curated dictionary (1,100+ entries) that catches A
 <details>
 <summary><strong>The translation looks wrong. How do I report it?</strong></summary>
 
-Open an <a href="https://github.com/heznpc/skillbridge/issues">issue</a> with the original English text, the bad translation, and your suggested correction. Or even better — submit a PR directly to the dictionary JSON file for your language.
+In the v4.2.0 source build, on a supported lesson surface with **Tools ›
+Reports**, select text inside one translated passage and choose the needs-work
+action. SkillBridge opens Reports with the source, translation and selection
+prefilled; you can add a correction and save it to the local queue. The helpful
+action also writes only to that queue. English, untranslated or multi-block
+selections and exam answer choices do not expose feedback actions. Nothing is
+submitted automatically: export the local JSON if you choose to share it, open a
+<a href="https://github.com/heznpc/skillbridge/issues">GitHub issue</a>, or edit
+the dictionary directly.
 </details>
 
 <details>
@@ -410,7 +426,7 @@ No. SkillBridge is an unofficial community project. It is not affiliated with, e
 - ~~Per-lesson term preview, PDF export, offline cache hardening~~ (shipped in v3.5.0)
 - ~~Firefox AMO deployment pipeline~~ (shipped in v3.5.0)
 - Additional curated language dictionaries (community-driven)
-- Translation quality analytics and community review
+- Opt-in community translation review (v4.2.0 feedback remains local; no telemetry or auto-submission)
 - Multi-LMS platform support beyond Skilljar
 
 ## Disclaimer

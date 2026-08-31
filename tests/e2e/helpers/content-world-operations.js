@@ -407,6 +407,37 @@ async function evalInContentWorld(context, op, arg) {
                     correction: el.querySelector('.si18n-note-preview')?.textContent?.trim() || '',
                   }));
                 },
+                readReportDetails: () => {
+                  const root = window._sb._uiHost?.shadowRoot || document;
+                  const items = root.querySelectorAll('#si18n-report-list .si18n-bm-item');
+                  return Array.from(items).map((el) => ({
+                    selectedText: el.querySelector('.si18n-bm-title')?.textContent?.trim() || '',
+                    correction: el.querySelector('.si18n-note-preview')?.textContent?.trim() || '',
+                    signal: el.dataset.reportSignal || '',
+                    capture: el.dataset.reportCapture || '',
+                    original: el.querySelector('[data-report-field="source"]')?.textContent?.trim() || '',
+                    translation: el.querySelector('[data-report-field="translation"]')?.textContent?.trim() || '',
+                  }));
+                },
+                readReportCompose: () => {
+                  const root = window._sb._uiHost?.shadowRoot || document;
+                  return {
+                    open: !!root.getElementById('si18n-report-save'),
+                    originalText: root.getElementById('si18n-report-original')?.value || '',
+                    translatedText: root.getElementById('si18n-report-translation')?.value || '',
+                    selectedText: root.getElementById('si18n-report-wrong')?.value || '',
+                    correction: root.getElementById('si18n-report-correction')?.value || '',
+                  };
+                },
+                saveFeedbackCorrection: (correction) => {
+                  const root = window._sb._uiHost?.shadowRoot || document;
+                  const correctionInput = root.getElementById('si18n-report-correction');
+                  const saveBtn = root.getElementById('si18n-report-save');
+                  if (!correctionInput || !saveBtn) return { error: 'feedback compose not open' };
+                  correctionInput.value = correction || '';
+                  saveBtn.click();
+                  return { ok: true };
+                },
                 removeReportAt: (i) => {
                   const root = window._sb._uiHost?.shadowRoot || document;
                   const btns = root.querySelectorAll('#si18n-report-list .si18n-bm-remove');
@@ -421,6 +452,39 @@ async function evalInContentWorld(context, op, arg) {
                   if (!btn) return { error: 'report-export button not present' };
                   btn.click();
                   return { ok: true };
+                },
+                selectTranslatedText: async (selector) => {
+                  const el = document.querySelector(selector);
+                  if (!el) return { error: `no element for ${selector}` };
+                  const range = document.createRange();
+                  range.selectNodeContents(el);
+                  const selection = window.getSelection();
+                  selection.removeAllRanges();
+                  selection.addRange(range);
+                  el.dispatchEvent(new window.MouseEvent('mouseup', { bubbles: true, cancelable: true }));
+                  await new Promise((resolve) => setTimeout(resolve, 250));
+                  const toolbar = document.querySelector('.si18n-selection-toolbar');
+                  return {
+                    selectedText: selection.toString().trim(),
+                    visible: !!toolbar?.classList.contains('visible'),
+                    askTutor: !!toolbar?.querySelector('.si18n-ask-tutor-btn:not([hidden])'),
+                    helpful: !!toolbar?.querySelector('.si18n-feedback-positive:not([hidden])'),
+                    needsWork: !!toolbar?.querySelector('.si18n-feedback-negative:not([hidden])'),
+                  };
+                },
+                clickTranslationFeedback: async (signal) => {
+                  const selector = signal === 'positive' ? '.si18n-feedback-positive' : '.si18n-feedback-negative';
+                  const button = document.querySelector(selector);
+                  if (!button || button.hidden) return { error: `feedback button unavailable: ${signal}` };
+                  button.click();
+                  await new Promise((resolve) => setTimeout(resolve, 250));
+                  const toolbar = document.querySelector('.si18n-selection-toolbar');
+                  return {
+                    ok: true,
+                    status: toolbar?.querySelector('.si18n-selection-status')?.textContent?.trim() || '',
+                    reportsPanelOpen: !!window._sb._chat?.state?.reportsPanelOpen,
+                    sidebarVisible: !!window._sb.sidebarVisible,
+                  };
                 },
                 toggleHistoryPanel: () => {
                   window._sb._chat.toggleHistoryPanel();

@@ -13,6 +13,26 @@ repository but never shipped to users.
 
 ## [Unreleased]
 
+## [4.2.0] - 2026-08-31
+
+This is a GitHub source checkpoint. Chrome Web Store publication remains
+deferred; `1.0.1` is still the published build.
+
+### Added
+
+- On supported lesson surfaces that expose **Tools › Reports**, selecting
+  one reliably tracked translated passage now offers local-only helpful or
+  needs-work feedback. Helpful feedback is saved immediately; needs-work
+  feedback opens Reports with the source, translation and selection prefilled
+  plus an optional correction.
+
+### Changed
+
+- The existing `sb_term_reports` queue now uses a versioned additive record
+  shape for manual reports and selection feedback. Legacy `wrongText` rows are
+  preserved, the newest-200 cap and manual list/delete/export flow remain, and
+  nothing is submitted automatically or sent to telemetry.
+
 ## [4.1.1] - 2026-08-31
 
 This is a GitHub source checkpoint. Chrome Web Store publication remains

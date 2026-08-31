@@ -15,6 +15,7 @@
     '#si18n-term-preview',
     '#si18n-exam-banner',
     '#si18n-reading-bar',
+    '.si18n-selection-toolbar',
     '.si18n-ask-tutor-btn',
   ];
 

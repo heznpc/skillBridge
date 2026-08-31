@@ -162,7 +162,8 @@ const _CAPS_FULL = Object.freeze({
   youtubeSubtitles: true,
 });
 // Other *.skilljar.com tenants (admitted only when detectAITrainingContent
-// passes): translation + header controls + reading aid, but no tutor bridge/FAB.
+// passes): translation + header controls + reading aid, but no sidebar/Reports,
+// tutor bridge, or FAB.
 const _CAPS_SKILLJAR_TENANT = Object.freeze({
   platform: PLATFORM_IDS.SKILLJAR,
   trusted: false,

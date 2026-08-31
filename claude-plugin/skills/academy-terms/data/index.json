@@ -1,7 +1,7 @@
 {
   "plugin": "skillbridge-academy-terms",
   "generatedBy": "scripts/build-plugin.js",
-  "sourceVersion": "4.1.1",
+  "sourceVersion": "4.2.0",
   "languages": [
     "de",
     "es",

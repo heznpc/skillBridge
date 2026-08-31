@@ -1,7 +1,7 @@
 # Archived / frozen SkillBridge v4.0.0 promotion kit — do not use
 
 > **Frozen archive. Do not publish or upload this v4.0.0 copy, media, hashes, or
-> dashboard fields.** Source v4.1.1 is a GitHub-only checkpoint, not a CWS
+> dashboard fields.** Source v4.2.0 is a GitHub-only checkpoint, not a CWS
 > submission candidate. Assign the final CWS version and regenerate its promo
 > assets, copy, evidence, and dashboard fields only after the ongoing
 > code-development phase is complete.

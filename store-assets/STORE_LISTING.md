@@ -1,7 +1,7 @@
 # Archived / frozen CWS v4.0.0 store-listing draft — do not use
 
 > **Frozen archive. Do not paste or upload this v4.0.0 copy or its dashboard
-> fields.** Source v4.1.1 is a GitHub-only checkpoint, not a CWS submission
+> fields.** Source v4.2.0 is a GitHub-only checkpoint, not a CWS submission
 > candidate. Assign the final CWS version and regenerate the listing, assets,
 > evidence, and dashboard fields only after the ongoing code-development phase
 > is complete.

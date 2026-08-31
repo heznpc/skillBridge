@@ -1,0 +1,203 @@
+/* ============================================================
+   Text selection toolbar — Ask Tutor + translation feedback
+   ============================================================ */
+
+.si18n-selection-toolbar {
+  position: fixed;
+  z-index: 2147483646;
+  display: flex;
+  align-items: stretch;
+  min-height: 34px;
+  padding: 3px;
+  overflow: hidden;
+  color: #292524;
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(120, 113, 108, 0.25);
+  border-radius: 10px;
+  box-shadow:
+    0 8px 24px rgba(28, 25, 23, 0.16),
+    0 2px 6px rgba(28, 25, 23, 0.1);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  opacity: 0;
+  transform: translateY(4px) scale(0.98);
+  transform-origin: top center;
+  pointer-events: none;
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+}
+
+.si18n-selection-toolbar.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.si18n-selection-toolbar[hidden] {
+  display: none !important;
+}
+
+.si18n-selection-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 32px;
+  min-height: 28px;
+  margin: 0;
+  padding: 5px 8px;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.si18n-selection-action[hidden],
+.si18n-selection-status[hidden] {
+  display: none;
+}
+
+.si18n-selection-action:not([hidden]) ~ .si18n-selection-action:not([hidden]) {
+  border-left: 1px solid rgba(120, 113, 108, 0.18);
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.si18n-selection-action:hover {
+  background: #f5f5f4;
+}
+
+.si18n-selection-action:focus-visible {
+  outline: 2px solid var(--si18n-primary, #d97757);
+  outline-offset: -2px;
+}
+
+.si18n-ask-tutor-btn {
+  color: #fff;
+  background: var(--si18n-primary, #d97757);
+}
+
+.si18n-ask-tutor-btn:hover {
+  background: var(--si18n-primary-hover, #c96a52);
+}
+
+.si18n-feedback-positive {
+  color: #15803d;
+}
+
+.si18n-feedback-negative {
+  color: #b45309;
+}
+
+.si18n-selection-action svg {
+  flex: 0 0 auto;
+}
+
+.si18n-selection-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 3px 9px;
+  color: #166534;
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.si18n-dark .si18n-selection-toolbar {
+  color: #f5f5f4;
+  background: rgba(41, 37, 36, 0.98);
+  border-color: rgba(214, 211, 209, 0.22);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.36),
+    0 2px 6px rgba(0, 0, 0, 0.28);
+}
+
+.si18n-dark .si18n-selection-action:hover {
+  background: #44403c;
+}
+
+.si18n-dark .si18n-feedback-positive,
+.si18n-dark .si18n-selection-status {
+  color: #86efac;
+}
+
+.si18n-dark .si18n-feedback-negative {
+  color: #fbbf24;
+}
+
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-selection-action:not([hidden]) ~ .si18n-selection-action:not([hidden]) {
+  border-right: 1px solid rgba(120, 113, 108, 0.18);
+  border-left: 0;
+  border-radius: 7px 0 0 7px;
+}
+
+@media (max-width: 480px) {
+  .si18n-selection-toolbar {
+    max-width: calc(100vw - 16px);
+  }
+
+  .si18n-selection-action {
+    padding-inline: 7px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .si18n-selection-toolbar {
+    transition: none;
+  }
+}
+
+/* Reports integration. Manual term reports retain their compact legacy row;
+   selection feedback adds a small signal chip and the source/translation
+   evidence needed to make an exported correction actionable. */
+.si18n-report-compose-label {
+  margin: 0 2px -4px;
+  color: var(--si18n-text-secondary, #78716c);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.si18n-report-item {
+  align-items: flex-start;
+}
+
+.si18n-report-signal {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-top: 5px;
+  padding: 2px 6px;
+  color: #92400e;
+  background: #fffbeb;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.si18n-report-signal[data-signal='positive'] {
+  color: #166534;
+  background: #f0fdf4;
+}
+
+.si18n-report-evidence {
+  -webkit-line-clamp: 1;
+}
+
+html.si18n-dark .si18n-report-signal {
+  color: #fcd34d;
+  background: rgba(146, 64, 14, 0.28);
+}
+
+html.si18n-dark .si18n-report-signal[data-signal='positive'] {
+  color: #86efac;
+  background: rgba(22, 101, 52, 0.28);
+}

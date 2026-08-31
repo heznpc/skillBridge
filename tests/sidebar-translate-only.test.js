@@ -26,6 +26,7 @@ const fs = require('fs');
 const path = require('path');
 
 const SIDEBAR_SRC = fs.readFileSync(path.join(__dirname, '..', 'src', 'content', 'sidebar-chat.js'), 'utf8');
+const TEXT_SELECTION_SRC = fs.readFileSync(path.join(__dirname, '..', 'src', 'content', 'text-selection.js'), 'utf8');
 const SHORTCUTS_SRC = fs.readFileSync(path.join(__dirname, '..', 'src', 'content', 'keyboard-shortcuts.js'), 'utf8');
 
 /** Pull one `  function name() { ... }` block out of an IIFE source file. */
@@ -175,8 +176,10 @@ describe('bridge flag is read consistently across the surface', () => {
     expect(SHORTCUTS_SRC).toContain("sb.hostCaps?.bridge === false ? [] : [{ key: '/'");
   });
 
-  test('the Ask-Tutor selection button is only wired where the bridge exists', () => {
-    expect(SIDEBAR_SRC).toContain('if (sb.hostCaps?.bridge !== false) sb.initAskTutorButton?.();');
+  test('selection feedback is wired whenever the local sidebar exists while Ask Tutor stays bridge-gated', () => {
+    expect(SIDEBAR_SRC).toContain('sb.initAskTutorButton?.();');
+    expect(SIDEBAR_SRC).not.toContain('if (sb.hostCaps?.bridge !== false) sb.initAskTutorButton?.();');
+    expect(TEXT_SELECTION_SRC).toContain('const canAskTutor = sb.hostCaps?.bridge !== false;');
   });
 
   test('event binding routes to the language panel instead of the chat', () => {
