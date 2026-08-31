@@ -13,6 +13,25 @@ repository but never shipped to users.
 
 ## [Unreleased]
 
+## [4.1.1] - 2026-08-31
+
+This is a GitHub source checkpoint. Chrome Web Store publication remains
+deferred; `1.0.1` is still the published build.
+
+### Fixed
+
+- Academy course units, including locale-prefixed routes, can now open the
+  Local Tutor stream instead of being disconnected by the background worker.
+- Local Tutor and local translation refinement now use distinct extension
+  ports, so tightening Tutor access does not break refinement on supported
+  Skilljar tenants or the legacy Claude tutorial surface.
+
+### Security
+
+- Cloud and Local Tutor ports now share the same exact-host, course-route,
+  active-document and top-frame checks. The broader local-refinement surface is
+  isolated behind its own explicitly gated port.
+
 ## [4.1.0] - 2026-08-31
 
 This is a GitHub source checkpoint. Chrome Web Store publication remains

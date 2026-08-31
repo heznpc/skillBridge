@@ -67,9 +67,16 @@ describe('tutor engine routing', () => {
   });
 
   test('local engine uses the SW proxy Port and honors AbortSignal', () => {
-    expect(trSrc).toContain("chrome.runtime.connect({ name: 'sb-local-chat' })");
-    expect(bgSrc).toContain("if (port.name !== 'sb-local-chat') return;");
+    expect(trSrc).toContain("opts.purpose === 'refinement' ? 'sb-local-refinement' : 'sb-local-chat'");
+    expect(bgSrc).toContain("port.name === 'sb-local-chat'");
+    expect(bgSrc).toContain("port.name === 'sb-local-refinement'");
     expect(trSrc).toContain("opts.signal.addEventListener('abort', onAbort, { once: true });");
+  });
+
+  test('local refinement uses its own Port instead of widening Local Tutor', () => {
+    const refine = trSrc.slice(trSrc.indexOf('async refineText('), trSrc.indexOf('async chatStream('));
+    expect(refine).toContain("purpose: 'refinement'");
+    expect(bgSrc).toContain('function _isLocalRefinementPort(port)');
   });
 
   test('SW proxy posts an OpenAI-shaped body and handles 403 (Ollama origins)', () => {
@@ -512,22 +519,33 @@ describe('local chat port gating (source contract)', () => {
   test('the port is validated before any stream starts', () => {
     // Ordering matters: validation has to run before `started` is latched or a
     // rejected port could still kick off one stream.
-    const handler = bgSrc.slice(bgSrc.indexOf("if (port.name !== 'sb-local-chat') return;"));
-    const gateAt = handler.indexOf('_isLocalChatPort(port)');
+    const handler = bgSrc.slice(bgSrc.indexOf('const localPortGate ='));
+    const gateAt = handler.indexOf('if (!localPortGate(port))');
     const startedAt = handler.indexOf('let started = false;');
     expect(gateAt).toBeGreaterThan(-1);
     expect(gateAt).toBeLessThan(startedAt);
     expect(handler.slice(gateAt, gateAt + 120)).toContain('port.disconnect()');
   });
 
-  test('the gate checks sender identity, top frame, and tab', () => {
+  test('the gate reuses the shared Tutor shape and origin boundary', () => {
     const fn = bgSrc.slice(
       bgSrc.indexOf('function _isLocalChatPort'),
+      bgSrc.indexOf('function _isLocalRefinementOrigin'),
+    );
+    expect(fn).toContain('_isTutorPortShape(port)');
+    expect(fn).toContain('_isTrustedTutorOrigin(');
+    expect(fn).not.toContain("endsWith('.skilljar.com')");
+    expect(fn).not.toContain("url.hostname === 'claude.com'");
+  });
+
+  test('the wider refinement surfaces live behind a distinct gate', () => {
+    const fn = bgSrc.slice(
+      bgSrc.indexOf('function _isLocalRefinementOrigin'),
       bgSrc.indexOf('async function _streamLocalChat'),
     );
-    expect(fn).toContain('port?.sender?.id !== chrome.runtime.id');
-    expect(fn).toContain('port?.sender?.frameId !== 0');
-    expect(fn).toContain('Number.isInteger(port?.sender?.tab?.id)');
+    expect(fn).toContain("endsWith('.skilljar.com')");
+    expect(fn).toContain("url.hostname === 'claude.com'");
+    expect(fn).toContain('function _isLocalRefinementPort(port)');
   });
 
   test('the invalid-URL reply goes through the guarded send, like every other reply', () => {

@@ -70,20 +70,11 @@ function registerTempDir(dir) {
 }
 
 /**
- * Launch a fresh persistent Chromium context with the extension loaded.
- *
- * `userDataDir` is a per-launch temp directory so successive runs don't
- * accumulate IndexedDB state from previous tests (each persistent context
- * needs its own dir; sharing causes "Failed to lock" errors).
- *
- * @returns {Promise<{context: import('@playwright/test').BrowserContext, extensionId: string, userDataDir: string}>}
- */
-/**
  * Copy `dist/bundled/` to a fresh temp dir and patch its manifest's
  * content_scripts.matches to also include http://localhost:*. Returns the
  * patched dir path.
  */
-function makePatchedExtension({ puterStub = true } = {}) {
+function makePatchedExtension({ puterStub = true, extraHostPermissions = [] } = {}) {
   if (!extensionBundleReady()) {
     buildBundleForE2E();
   }
@@ -100,10 +91,10 @@ function makePatchedExtension({ puterStub = true } = {}) {
     fs.cpSync(EXTENSION_SRC, extDir, { recursive: true });
   }
 
-  return patchExtensionDir(extDir, { puterStub });
+  return patchExtensionDir(extDir, { puterStub, extraHostPermissions });
 }
 
-function patchExtensionDir(extDir, { puterStub = true } = {}) {
+function patchExtensionDir(extDir, { puterStub = true, extraHostPermissions = [] } = {}) {
   const manifestPath = path.join(extDir, 'manifest.json');
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
   for (const cs of manifest.content_scripts) {
@@ -117,6 +108,7 @@ function patchExtensionDir(extDir, { puterStub = true } = {}) {
   // chrome.scripting.executeScript silently refuses to inject without a
   // host_permissions entry that covers the active tab's port.
   manifest.host_permissions.push('http://localhost:*/*', 'http://127.0.0.1:*/*');
+  manifest.host_permissions.push(...extraHostPermissions);
   // Tests rely on chrome.scripting (manual injection diagnostics) being
   // available; the production manifest doesn't need it but adding it for
   // E2E doesn't affect runtime behaviour of the content scripts we test.
@@ -138,10 +130,24 @@ function patchExtensionDir(extDir, { puterStub = true } = {}) {
   return extDir;
 }
 
-async function launchExtension({ puterStub = true } = {}) {
+/**
+ * Launch a fresh persistent Chromium context with the extension loaded.
+ *
+ * `userDataDir` is a per-launch temp directory so successive runs don't
+ * accumulate IndexedDB state from previous tests (each persistent context
+ * needs its own dir; sharing causes "Failed to lock" errors).
+ *
+ * `extraHostPermissions` is test-only and lets a spec programmatically inject
+ * a minimal caller on a production content-script host without changing the
+ * shipped manifest.
+ *
+ * @param {{puterStub?: boolean, extraHostPermissions?: string[]}} options
+ * @returns {Promise<{context: import('@playwright/test').BrowserContext, extensionId: string, userDataDir: string}>}
+ */
+async function launchExtension({ puterStub = true, extraHostPermissions = [] } = {}) {
   let lastError = null;
   for (let attempt = 1; attempt <= 3; attempt++) {
-    const extensionPath = makePatchedExtension({ puterStub });
+    const extensionPath = makePatchedExtension({ puterStub, extraHostPermissions });
     const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skillbridge-e2e-'));
     registerTempDir(userDataDir);
     let context = null;
