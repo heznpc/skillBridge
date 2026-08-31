@@ -18,6 +18,7 @@
   sb._chat = sb._chat || {};
   sb._chat.state = sb._chat.state || {
     savedChatHTML: null,
+    savedChatDraft: null,
     historyPanelOpen: false,
     flashcardPanelOpen: false,
     bookmarksPanelOpen: false,
@@ -28,6 +29,7 @@
     byoaPanelOpen: false,
   };
   const _state = sb._chat.state;
+  if (!Object.hasOwn(_state, 'savedChatDraft')) _state.savedChatDraft = null;
   const SUB_PANEL_FLAGS = {
     history: 'historyPanelOpen',
     flashcard: 'flashcardPanelOpen',
@@ -70,6 +72,7 @@
 
     sb.cancelActiveStream?.();
     _state.savedChatHTML = basePanel.innerHTML;
+    _state.savedChatDraft = basePanel.querySelector('#si18n-chat-input')?.value ?? null;
     resetSubPanelFlags();
     _state[flag] = true;
     basePanel.replaceChildren();
@@ -84,6 +87,9 @@
     sb.cancelActiveStream?.();
     basePanel.innerHTML = _state.savedChatHTML;
     _state.savedChatHTML = null;
+    const restoredInput = basePanel.querySelector('#si18n-chat-input');
+    if (restoredInput && _state.savedChatDraft !== null) restoredInput.value = _state.savedChatDraft;
+    _state.savedChatDraft = null;
     resetSubPanelFlags();
     sb._chat.restoreChatPanelEvents?.();
     sb.updateLocalizedLabels?.();

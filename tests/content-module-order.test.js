@@ -31,6 +31,10 @@ describe('content module load order', () => {
     expect(indexOf('src/content/chat-message-dom.js')).toBeLessThan(indexOf('src/content/sidebar-chat.js'));
   });
 
+  test('loads the Tutor conversation model before the history UI', () => {
+    expect(indexOf('src/lib/tutor-conversations.js')).toBeLessThan(indexOf('src/content/chat-history.js'));
+  });
+
   test('loads reports and selection actions after their dependencies and before sidebar initialization', () => {
     expect(indexOf('src/content/chat-subpanels.js')).toBeLessThan(indexOf('src/content/term-reports.js'));
     expect(indexOf('src/content/lesson-store.js')).toBeLessThan(indexOf('src/content/term-reports.js'));

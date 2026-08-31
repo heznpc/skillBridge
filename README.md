@@ -132,6 +132,12 @@ telemetry, server submission or automatic GitHub issue.
 
 > **AI Tutor & accounts:** the current source build includes the AI Tutor (Claude Sonnet 4.6, falling back to Sonnet 4.5) through an isolated bundled Puter runtime. The tutor uses a **free Puter sign-in** — no API key and no SkillBridge account. Page translation and the local learning tools need no account at all; only the optional cloud tutor prompts for sign-in. The transport contract is regression-tested; the latest source checkpoint's live signed-in round trip remains a final CWS gate.
 
+Tutor history groups consecutive questions into titled, per-lesson
+conversations. You can start fresh, browse every turn, delete one conversation,
+clear all history, or export a local JSON copy. Saved turns are not added to a
+later cloud or local Tutor request; only the active question and the disclosed
+lesson context are sent.
+
 ### 🎬 Auto-Subtitles
 
 Course videos automatically activate translated subtitles when you play them — no manual toggle needed.

@@ -69,6 +69,7 @@ function buildSidebarHTML({ bridge }) {
     REPORT_LABELS: { openReports: named('openReports') },
     BYOA_LABELS: { openByoa: named('openByoa') },
     RESUME_LABELS: { openRecent: named('openRecent') },
+    HISTORY_LABELS: { newConversation: named('newConversation') },
     CHAT_PLACEHOLDERS: named('chatPlaceholder'),
     SEND_LABELS: named('send'),
     CHOOSE_LANGUAGE_LABEL: named('chooseLanguage'),
@@ -85,6 +86,7 @@ function buildSidebarHTML({ bridge }) {
   const body = [
     extractFunction(SIDEBAR_SRC, 'getSidebarHTML'),
     extractFunction(SIDEBAR_SRC, 'langPanelHTML'),
+    extractFunction(SIDEBAR_SRC, 'initialChatMessagesHTML'),
     extractFunction(SIDEBAR_SRC, 'chatPanelHTML'),
     'return getSidebarHTML();',
   ].join('\n');
@@ -110,6 +112,8 @@ describe('sidebar surface when the host has no AI bridge', () => {
     // explanation.
     expect(html).not.toContain('si18n-chat-input');
     expect(html).not.toContain('si18n-chat-send');
+    expect(html).not.toContain('si18n-new-chat');
+    expect(html).not.toContain('si18n-history-btn');
   });
 
   test('the header title drops "Tutor" where there is no tutor', () => {

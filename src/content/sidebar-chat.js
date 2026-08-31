@@ -131,6 +131,13 @@
           </svg>
         </button>
         <span class="si18n-header-title">${translateOnly ? 'SkillBridge' : 'SkillBridge Tutor'}</span>
+        ${
+          translateOnly
+            ? ''
+            : `<button class="si18n-new-chat" id="si18n-new-chat" title="${sb.t(HISTORY_LABELS.newConversation)}" aria-label="${sb.t(HISTORY_LABELS.newConversation)}">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/><path d="M4 4h6"/></svg>
+        </button>`
+        }
         <button class="si18n-close" id="si18n-close" aria-label="${sb.t(A11Y_LABELS.closeSidebar)}">&times;</button>
       </div>
 
@@ -181,19 +188,25 @@
     `;
   }
 
+  function initialChatMessagesHTML() {
+    return `
+      <div class="si18n-chat-msg si18n-chat-bot">
+        <div class="si18n-chat-avatar">AI</div>
+        <div class="si18n-chat-bubble">
+          ${getTutorGreeting()}
+        </div>
+      </div>
+      <div class="si18n-example-questions" id="si18n-example-questions">
+        ${getExampleQuestionsHTML()}
+      </div>
+    `;
+  }
+
   function chatPanelHTML() {
     return `
       <div class="si18n-panel si18n-panel-chat" id="si18n-panel-chat">
         <div class="si18n-chat-messages" id="si18n-chat-messages" role="log" aria-live="polite">
-          <div class="si18n-chat-msg si18n-chat-bot">
-            <div class="si18n-chat-avatar">AI</div>
-            <div class="si18n-chat-bubble">
-              ${getTutorGreeting()}
-            </div>
-          </div>
-          <div class="si18n-example-questions" id="si18n-example-questions">
-            ${getExampleQuestionsHTML()}
-          </div>
+          ${initialChatMessagesHTML()}
         </div>
         <div class="si18n-chat-input-wrap">
           <textarea id="si18n-chat-input" class="si18n-chat-input"
@@ -235,6 +248,7 @@
       toolsMenu.hidden = true;
       toolsBtn?.setAttribute('aria-expanded', 'false');
     });
+    sb.$id('si18n-new-chat')?.addEventListener('click', () => sb._chat.startNewConversation?.());
     sb.$id('si18n-history-btn')?.addEventListener('click', () => sb._chat.toggleHistoryPanel?.());
     sb.$id('si18n-fc-btn')?.addEventListener('click', () => sb._chat.toggleFlashcardPanel?.());
     sb.$id('si18n-pdf-btn')?.addEventListener('click', () => sb.exportLessonPDF?.());
@@ -313,6 +327,24 @@
     }
   }
 
+  /**
+   * Return the live Tutor surface to an empty conversation without discarding
+   * an unsent draft. The history module owns the active conversation id; this
+   * function owns only the DOM reset so route changes, delete, clear, and the
+   * explicit New action all converge on the same rendered state.
+   */
+  function resetConversationUI(options = {}) {
+    const messages = sb.$id('si18n-chat-messages');
+    if (!messages) return false;
+    messages.innerHTML = initialChatMessagesHTML();
+    bindExampleQuestions();
+    if (sb.isExamPage && !messages.querySelector('.si18n-exam-warning')) {
+      sb._chat.dom.appendExamWarning(messages);
+    }
+    if (options.focus !== false && sb.sidebarVisible) sb.$id('si18n-chat-input')?.focus();
+    return true;
+  }
+
   function updateLocalizedLabels() {
     const headerLangSelect = sb.$id('si18n-header-lang-select');
     if (headerLangSelect) headerLangSelect.value = sb.currentLang;
@@ -320,6 +352,12 @@
     if (sidebarLangSelect) sidebarLangSelect.value = sb.currentLang;
     const sidebarLangLabel = sb.$('.si18n-lang-panel-label');
     if (sidebarLangLabel) sidebarLangLabel.textContent = sb.t(CHOOSE_LANGUAGE_LABEL);
+    const newChatButton = sb.$id('si18n-new-chat');
+    if (newChatButton) {
+      const label = sb.t(HISTORY_LABELS.newConversation);
+      newChatButton.title = label;
+      newChatButton.setAttribute('aria-label', label);
+    }
 
     const messagesEl = sb.$id('si18n-chat-messages');
     if (messagesEl) {
@@ -480,6 +518,11 @@
     const quotedText = quoteEl?.textContent?.replace('\u00d7', '').trim() || '';
     if (quoteEl) quoteEl.remove();
 
+    // Capture the local conversation/lesson boundary before the async stream.
+    // A language change or SPA navigation while tokens arrive must not file
+    // the completed turn under whatever page happens to be live later.
+    const requestLang = sb.currentLang;
+    const historyTurn = sb._chat.beginConversationTurn?.(text);
     chatDom.appendUserMessage(messages, text, quotedText);
     input.value = '';
     input.placeholder = sb.t(CHAT_PLACEHOLDERS);
@@ -505,7 +548,7 @@
       let lastStreamedText = '';
       await sb.translator.chatStream(
         fullQuestion,
-        sb.currentLang,
+        requestLang,
         context,
         (chunk, fullText) => {
           if (signal.aborted) return; // user cancelled mid-stream
@@ -525,7 +568,7 @@
       if (bubble && !signal.aborted) {
         chatDom.finishStreamingBubble(bubble);
         const answerText = lastStreamedText?.trim() || bubble.textContent?.trim() || '';
-        if (answerText) sb._chat.saveConversation?.(text, answerText, sb.currentLang);
+        if (answerText) sb._chat.saveConversation?.(text, answerText, requestLang, historyTurn);
       }
     } catch (err) {
       // AbortError is expected when the user navigates away mid-stream.
@@ -651,5 +694,6 @@
   // keyboard-shortcuts.js's call-site reads through that namespace handle.
   sb.cancelActiveStream = cancelActiveStream;
   sb._chat.restoreChatPanelEvents = restoreChatPanelEvents;
+  sb._chat.resetConversationUI = resetConversationUI;
   sb.registerModule?.('sidebar-chat');
 })();
