@@ -549,7 +549,8 @@ class SkilljarTranslator {
     return new Promise((resolve, reject) => {
       let port;
       try {
-        port = chrome.runtime.connect({ name: 'sb-local-chat' });
+        const portName = opts.purpose === 'refinement' ? 'sb-local-refinement' : 'sb-local-chat';
+        port = chrome.runtime.connect({ name: portName });
       } catch (err) {
         reject(new Error(`Local AI engine unavailable: ${err.message}`));
         return;
@@ -791,7 +792,7 @@ User: ${userMessage}`;
     if (engine !== 'cloud' && engine !== 'local') {
       throw new Error(`refineText: refusing an unrecognised engine "${engine}"`);
     }
-    if (engine === 'local') return this._localChatStream(prompt, null, { signal });
+    if (engine === 'local') return this._localChatStream(prompt, null, { signal, purpose: 'refinement' });
     // Refinement is a copy-edit, not a conversation — see SKILLBRIDGE_MODELS.
     return this._cloudChatStream(prompt, targetLang, null, { signal, model: SKILLBRIDGE_MODELS.REFINEMENT });
   }

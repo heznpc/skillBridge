@@ -808,30 +808,33 @@ function _allowedLocalBase(baseUrl) {
  * @returns {boolean}
  */
 function _isLocalChatPort(port) {
-  if (port?.sender?.id !== chrome.runtime.id) return false;
-  if (port?.sender?.frameId !== 0) return false;
-  if (!Number.isInteger(port?.sender?.tab?.id)) return false;
-  let url;
+  if (!_isTutorPortShape(port)) return false;
+  return _isTrustedTutorOrigin(port.sender.url || port.sender.tab.url || '');
+}
+
+/**
+ * Local refinement deliberately has a wider page surface than Tutor.
+ *
+ * Translation/refinement can run on any Skilljar tenant and on the legacy
+ * Claude tutorial pages even though those surfaces do not get a Tutor bridge.
+ * Keeping this policy on a distinct Port prevents that wider refinement grant
+ * from silently widening the Tutor transport again.
+ */
+function _isLocalRefinementOrigin(rawUrl) {
+  if (_isTrustedTutorOrigin(rawUrl)) return true;
   try {
-    url = new URL(port.sender.url || '');
+    const url = new URL(rawUrl || '');
+    if (url.protocol !== 'https:') return false;
+    if (url.hostname === 'skilljar.com' || url.hostname.endsWith('.skilljar.com')) return true;
+    return url.hostname === 'claude.com' && url.pathname.startsWith('/resources/tutorials/');
   } catch (_e) {
     return false;
   }
-  // Exactly the surfaces `content_scripts` injects into — narrower would break
-  // a real install, wider would accept a frame we never run in.
-  if (url.protocol === 'https:') {
-    if (url.hostname === 'skilljar.com' || url.hostname.endsWith('.skilljar.com')) return true;
-    if (url.hostname === 'claude.com' && url.pathname.startsWith('/resources/tutorials/')) return true;
-    return false;
-  }
-  // The E2E harness patches localhost into a temporary manifest so the real
-  // broker can run against the fixture server; production never grants these.
-  const testHosts = chrome.runtime.getManifest().host_permissions || [];
-  return (
-    url.protocol === 'http:' &&
-    (url.hostname === 'localhost' || url.hostname === '127.0.0.1') &&
-    testHosts.some((pattern) => pattern === 'http://localhost:*/*' || pattern === 'http://127.0.0.1:*/*')
-  );
+}
+
+function _isLocalRefinementPort(port) {
+  if (!_isTutorPortShape(port)) return false;
+  return _isLocalRefinementOrigin(port.sender.url || port.sender.tab.url || '');
 }
 
 async function _streamLocalChat(port, req) {
@@ -962,8 +965,14 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onConnect) {
       _registerCloudClient(port);
       return;
     }
-    if (port.name !== 'sb-local-chat') return;
-    if (!_isLocalChatPort(port)) {
+    const localPortGate =
+      port.name === 'sb-local-chat'
+        ? _isLocalChatPort
+        : port.name === 'sb-local-refinement'
+          ? _isLocalRefinementPort
+          : null;
+    if (!localPortGate) return;
+    if (!localPortGate(port)) {
       port.disconnect();
       return;
     }

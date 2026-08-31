@@ -43,7 +43,7 @@ const fns = new Function(
     registerAlarms, _gtFetchDedup, _inflightGT, _gtKey,
     _isPuterBrokerPort, _isAllowedCloudClient, _registerCloudBroker, _registerCloudClient,
     _cloudBrokers, _cloudClients, _cloudActive,
-    _isTrustedTutorOrigin,
+    _isTrustedTutorOrigin, _isLocalChatPort, _isLocalRefinementPort,
   };
 `,
 )(
@@ -63,6 +63,8 @@ const {
   _gtKey,
   _isPuterBrokerPort,
   _isAllowedCloudClient,
+  _isLocalChatPort,
+  _isLocalRefinementPort,
   _registerCloudBroker,
   _registerCloudClient,
   _cloudBrokers,
@@ -871,5 +873,58 @@ describe('Tutor transport origin scope', () => {
 
   test('http is refused even on a course path', () => {
     expect(_isTrustedTutorOrigin('http://academy.claude.com/courses/a/b')).toBe(false);
+  });
+});
+
+describe('Local Tutor transport uses the shared origin boundary', () => {
+  test.each([
+    'https://academy.claude.com/courses/a-course/a-lesson',
+    'https://academy.claude.com/ko/courses/a-course/a-lesson',
+    'https://anthropic.skilljar.com/a-course/287726',
+  ])('allows a trusted active top-frame document: %s', (url) => {
+    expect(_isLocalChatPort(brokerPort({ name: 'sb-local-chat', url }))).toBe(true);
+  });
+
+  test.each([
+    'https://academy.claude.com/',
+    'https://academy.claude.com/profile',
+    'https://academy.claude.com/settings',
+    'https://academy.claude.com/courses/a-course',
+    'https://other.skilljar.com/a-course/287726',
+    'https://claude.com/resources/tutorials/example',
+    'https://academy.claude.com.evil.test/courses/a/b',
+    'http://academy.claude.com/courses/a/b',
+  ])('rejects a surface outside the shared Tutor boundary: %s', (url) => {
+    expect(_isLocalChatPort(brokerPort({ name: 'sb-local-chat', url }))).toBe(false);
+  });
+
+  test('keeps the shared structural checks', () => {
+    const url = 'https://academy.claude.com/courses/a/b';
+    expect(_isLocalChatPort(brokerPort({ name: 'sb-local-chat', url, frameId: 1 }))).toBe(false);
+    expect(_isLocalChatPort(brokerPort({ name: 'sb-local-chat', url, id: 'attacker-extension' }))).toBe(false);
+    expect(_isLocalChatPort(brokerPort({ name: 'sb-local-chat', url, documentLifecycle: 'prerender' }))).toBe(false);
+    expect(_isLocalChatPort(brokerPort({ name: 'sb-local-chat', url, documentId: null }))).toBe(false);
+  });
+});
+
+describe('Local refinement keeps its explicitly wider surface', () => {
+  test.each([
+    ['https://other.skilljar.com/a-course/287726', false],
+    ['https://skilljar.com/a-course/287726', false],
+    ['https://claude.com/resources/tutorials/example', false],
+    ['https://academy.claude.com/courses/a-course/a-lesson', true],
+  ])('allows a refinement document without widening Tutor: %s', (url, tutorAllowed) => {
+    const port = brokerPort({ name: 'sb-local-refinement', url });
+    expect(_isLocalRefinementPort(port)).toBe(true);
+    expect(_isLocalChatPort(port)).toBe(tutorAllowed);
+  });
+
+  test.each([
+    'https://academy.claude.com/profile',
+    'https://evil.example/resources/tutorials/example',
+    'https://claude.com.evil.test/resources/tutorials/example',
+    'http://other.skilljar.com/a-course/287726',
+  ])('rejects a page outside the local-refinement surface: %s', (url) => {
+    expect(_isLocalRefinementPort(brokerPort({ name: 'sb-local-refinement', url }))).toBe(false);
   });
 });

@@ -4,7 +4,7 @@
 
 # SkillBridge — AI Course Translator
 
-> **Source checkpoint:** <!-- VERSION_START -->v4.1.0<!-- VERSION_END --> —
+> **Source checkpoint:** <!-- VERSION_START -->v4.1.1<!-- VERSION_END --> —
 > released on GitHub only, not designated for Chrome Web Store upload. The live
 > CWS version remains v1.0.1; final packaging and dashboard work are deferred
 > until the current development cycle is complete.
@@ -162,12 +162,12 @@ Generic translation tools often **mistranslate brand names and technical terms**
 
 ## Installation
 
-> **Status: live CWS v1.0.1; source v4.1.0 is a GitHub-only checkpoint.**
+> **Status: live CWS v1.0.1; source v4.1.1 is a GitHub-only checkpoint.**
 > The Chrome Web Store listing is available in all locales **except the United
 > States**, where it was removed on 2026-05-12 over a trademark issue with the
 > old icon (since redesigned on `main`). The published store build is v1.0.1;
 > the earlier `v3.5.x` candidates predate the current CWS changes and are not reused.
-> `v4.1.0` records the current source boundary, including the bundled AI Tutor,
+> `v4.1.1` records the current source boundary, including the bundled AI Tutor,
 > local on-device Tutor, Academy support, local Notes and Reports, and exam-safe
 > translation refinements. Its permission scope is machine-verified against the
 > manifest on every push (`npm run check:permission-docs`). Publication remains

@@ -1,7 +1,7 @@
 # Archived / frozen CWS v4.0.0 draft — do not upload
 
 > **Frozen archive. Do not upload or reuse this v4.0.0 bundle, copy, assets,
-> hashes, or dashboard fields.** Source v4.1.0 is a GitHub-only checkpoint, not
+> hashes, or dashboard fields.** Source v4.1.1 is a GitHub-only checkpoint, not
 > a CWS submission candidate. Assign the final CWS version and regenerate its
 > artifact, assets, copy, evidence, and dashboard fields only after the ongoing
 > code-development phase is complete.
@@ -20,7 +20,7 @@
 
 CWS listing status:
 - Published: **v1.0.1** (uploaded 2026-03-10)
-- GitHub source checkpoint: **v4.1.0** — GitHub-only; not a CWS candidate
+- GitHub source checkpoint: **v4.1.1** — GitHub-only; not a CWS candidate
 - Archived local candidate: **v4.0.0** — frozen; do not upload or reuse
 - Final CWS candidate: **unassigned** until ongoing code development is complete
 - Archived v4.0.0 release identity: **assigned** — the existing `v3.5.41` tag

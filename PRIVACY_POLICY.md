@@ -6,7 +6,7 @@
 
 As of August 31, 2026, the Chrome Web Store still publishes **SkillBridge v1.0.1**. That legacy version includes a bundled Puter client used for Gemini translation review and the Claude-powered AI Tutor, and it declares YouTube host access.
 
-The repository's **v4.1.0 release is a GitHub source checkpoint, not a Chrome Web Store submission**. Chrome Web Store publication remains paused, and the final submission version and dashboard upload will be decided only after the current code-development phase is finished. The unpublished source build keeps the AI Tutor, runs its bundled Puter client in Chrome's isolated content-script world on the trusted course host, removes YouTube host access, and adds an on-device tutor option:
+The repository's **v4.1.1 release is a GitHub source checkpoint, not a Chrome Web Store submission**. Chrome Web Store publication remains paused, and the final submission version and dashboard upload will be decided only after the current code-development phase is finished. The unpublished source build keeps the AI Tutor, runs its bundled Puter client in Chrome's isolated content-script world on the trusted course host, removes YouTube host access, and adds an on-device tutor option:
 
 - **AI Tutor (cloud, default):** included in the unpublished source build. Tutor questions go through the bundled Puter client to Claude, and the user signs in to Puter (free) when they first use it. Translation and the local study tools need no account.
 - **AI Tutor (local/on-device, optional):** the user can instead point the Tutor at a local OpenAI-compatible server they run themselves (for example Ollama). In that mode Tutor text goes only to that local server — see "Local AI Engine" below.
@@ -62,7 +62,7 @@ The local cache and Tutor history are not sent to the SkillBridge operator. A ne
 | `*.youtube.com`            | Legacy YouTube access described above                |
 | `translate.googleapis.com` | Send requested course text to Google Translate       |
 
-## Unpublished Source Build: v4.1.0 (Not Yet a CWS Submission)
+## Unpublished Source Build: v4.1.1 (Not Yet a CWS Submission)
 
 ### Packaged Source-Build Boundary
 

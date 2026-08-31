@@ -26,6 +26,7 @@
  */
 
 const { test, expect } = require('@playwright/test');
+const http = require('http');
 const { SETTLE_MS } = require('./helpers/timeouts');
 const { launchExtension, closeExtension, evalInContentWorld } = require('./helpers/extension');
 const { registerStubs, startFixtureServer, stopFixtureServer } = require('./helpers/network-stubs');
@@ -47,6 +48,37 @@ const CHOICE_FRAGMENTS = [
   'Quartzite-harbor-charlie',
   'Pelican-lantern-delta',
 ];
+
+function startLocalTutorStub() {
+  return new Promise((resolve) => {
+    const requests = [];
+    const server = http.createServer((req, res) => {
+      if (req.method !== 'POST' || req.url !== '/v1/chat/completions') {
+        res.writeHead(404).end();
+        return;
+      }
+      let body = '';
+      req.setEncoding('utf8');
+      req.on('data', (chunk) => {
+        body += chunk;
+      });
+      req.on('end', () => {
+        requests.push(JSON.parse(body));
+        res.writeHead(200, {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          Connection: 'keep-alive',
+        });
+        res.write('data: {"choices":[{"delta":{"content":"ACADEMY"}}]}\n\n');
+        res.end('data: [DONE]\n\n');
+      });
+    });
+    server.listen(0, '127.0.0.1', () => {
+      const { port } = server.address();
+      resolve({ server, requests, baseUrl: `http://127.0.0.1:${port}/v1` });
+    });
+  });
+}
 
 test.describe('SkillBridge — Academy tutor exam safety', () => {
   /** @type {Awaited<ReturnType<typeof launchExtension>>} */
@@ -193,4 +225,91 @@ test.describe('SkillBridge — Academy tutor exam safety', () => {
 
     await evalInContentWorld(extCtx.context, 'setTutorEngine', 'cloud');
   });
+});
+
+test.describe('SkillBridge — Academy Local Tutor transport', () => {
+  /** @type {Awaited<ReturnType<typeof launchExtension>>} */
+  let extCtx;
+  /** @type {Awaited<ReturnType<typeof startLocalTutorStub>>} */
+  let localTutor;
+
+  test.beforeAll(async () => {
+    localTutor = await startLocalTutorStub();
+    // Programmatic injection below needs a host permission in the throwaway
+    // test manifest. Production reaches this URL through its declarative
+    // content script; the extra grant exists only so this spec can execute the
+    // smallest possible Port caller in that isolated world.
+    extCtx = await launchExtension({ extraHostPermissions: ['https://academy.claude.com/*'] });
+    await extCtx.context.route('https://academy.claude.com/**', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'text/html',
+        body: '<!doctype html><html><body><main><h1>Academy course unit</h1></main></body></html>',
+      }),
+    );
+  });
+
+  test.afterAll(async () => {
+    await closeExtension(extCtx);
+    await stopFixtureServer(localTutor.server);
+  });
+
+  for (const [label, path] of [
+    ['course unit', '/courses/building-with-the-claude-api/accessing-claude-with-the-api'],
+    ['locale-prefixed course unit', '/ko/courses/building-with-the-claude-api/accessing-claude-with-the-api'],
+  ]) {
+    test(`streams Local Tutor output on an Academy ${label}`, async () => {
+      const page = await extCtx.context.newPage();
+      await page.goto(`https://academy.claude.com${path}`, { waitUntil: 'domcontentloaded' });
+
+      const sw = extCtx.context.serviceWorkers()[0];
+      const result = await sw.evaluate(
+        async ({ baseUrl, expectedUrl }) => {
+          const tabs = await chrome.tabs.query({});
+          const tab = tabs.find((candidate) => candidate.url === expectedUrl);
+          if (!tab?.id) return { error: 'academy tab not found' };
+          const [injected] = await chrome.scripting.executeScript({
+            target: { tabId: tab.id },
+            world: 'ISOLATED',
+            args: [baseUrl],
+            func: (localBaseUrl) =>
+              new Promise((resolve) => {
+                const port = chrome.runtime.connect({ name: 'sb-local-chat' });
+                let full = '';
+                let chunks = 0;
+                const timer = setTimeout(() => resolve({ error: 'timeout', full, chunks }), 10000);
+                port.onDisconnect.addListener(() => {
+                  clearTimeout(timer);
+                  resolve({ error: 'disconnected', full, chunks });
+                });
+                port.onMessage.addListener((msg) => {
+                  if (msg.type === 'chunk') {
+                    chunks += 1;
+                    full += msg.delta;
+                  } else if (msg.type === 'done') {
+                    clearTimeout(timer);
+                    resolve({ full, chunks });
+                  } else if (msg.type === 'error') {
+                    clearTimeout(timer);
+                    resolve({ error: msg.error, full, chunks });
+                  }
+                });
+                port.postMessage({
+                  type: 'start',
+                  baseUrl: localBaseUrl,
+                  model: 'fixture-model',
+                  messages: [{ role: 'user', content: 'Reply from the Academy Local Tutor fixture.' }],
+                });
+              }),
+          });
+          return injected.result;
+        },
+        { baseUrl: localTutor.baseUrl, expectedUrl: `https://academy.claude.com${path}` },
+      );
+
+      expect(result).toEqual({ full: 'ACADEMY', chunks: 1 });
+      expect(localTutor.requests.at(-1)).toMatchObject({ model: 'fixture-model', stream: true });
+      await page.close();
+    });
+  }
 });
