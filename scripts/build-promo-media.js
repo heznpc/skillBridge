@@ -167,7 +167,7 @@ const manifest = {
     runtime: 'dist/bundled',
     captureEnvironment: 'neutral deterministic fixture; not the live Skilljar UI',
   },
-  claimGuard: 'Do not claim the release is live until the CWS listing shows v4.0.0.',
+  claimGuard: `Do not claim the release is live until the CWS listing shows v${version}.`,
   supportedClaims: [
     'Translates supported AI-course lessons into 32 interface languages.',
     'Provides local learning tools including progress and flashcards.',

@@ -6,6 +6,8 @@ const { title, description, locale } = Astro.props;
 const base = import.meta.env.BASE_URL;
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site);
 const previewImageUrl = new URL(`${base}images/lesson-translated.png`, Astro.site);
+const englishUrl = new URL(base, Astro.site);
+const koreanUrl = new URL(`${base}ko/`, Astro.site);
 ---
 <!doctype html>
 <html lang={locale}>
@@ -19,8 +21,12 @@ const previewImageUrl = new URL(`${base}images/lesson-translated.png`, Astro.sit
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonicalUrl} />
     <meta property="og:image" content={previewImageUrl} />
+    <meta property="og:locale" content={locale === 'ko' ? 'ko_KR' : 'en_US'} />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="canonical" href={canonicalUrl} />
+    <link rel="alternate" hreflang="en" href={englishUrl} />
+    <link rel="alternate" hreflang="ko" href={koreanUrl} />
+    <link rel="alternate" hreflang="x-default" href={englishUrl} />
     <link rel="icon" type="image/png" href={`${base}images/icon128.png`} />
     <title>{title}</title>
   </head>

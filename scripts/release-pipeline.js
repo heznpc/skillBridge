@@ -310,6 +310,7 @@ function smoke() {
 }
 
 function localQualityGates() {
+  runNpm('Release version identity check', 'check:version');
   runNpm('Lint', 'lint');
   runNpm('Format check', 'format:check');
   run('Unit tests', NPM, ['test', '--', '--runInBand']);

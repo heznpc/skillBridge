@@ -1,10 +1,17 @@
-# SkillBridge v4.0.0 Promotion Kit
+# Archived / frozen SkillBridge v4.0.0 promotion kit — do not use
 
-Status: **release candidate — not yet live in the Chrome Web Store**
+> **Frozen archive. Do not publish or upload this v4.0.0 copy, media, hashes, or
+> dashboard fields.** Source v4.1.0 is a GitHub-only checkpoint, not a CWS
+> submission candidate. Assign the final CWS version and regenerate its promo
+> assets, copy, evidence, and dashboard fields only after the ongoing
+> code-development phase is complete.
 
-This kit is derived from the same `dist/bundled` artifact used for the CWS
-candidate — the v4.0.0 build, which ships the AI Tutor. Until the public listing itself shows v4.0.0, do not use
-“available now”, “released”, or equivalent launch-complete wording.
+Status: **frozen historical v4.0.0 draft — not live; do not publish**
+
+This historical kit was derived from the same `dist/bundled` artifact used for
+the archived CWS candidate — the v4.0.0 build, which ships the AI Tutor. The
+instructions and copy below are retained as evidence only and must not be used
+for a current launch.
 
 ## Runtime and capture boundary
 
@@ -46,7 +53,7 @@ technical terminology intact.
 | AI Tutor ships in CWS | `src/shared/build-config.js` (gateway pinned on), `src/bridge/puter.js`, `tests/build-bundle.test.js` | `03-sidebar-tutor.png`, `promo-media-manifest.json` source record |
 | Optional on-device engine | `src/background/background.js` (`sb-local-chat` port), `src/popup/popup.js` engine selector, `tests/local-engine.test.js` | popup engine selector |
 
-## Pre-launch copy
+## Archived pre-launch copy — do not use
 
 ### Korean
 
@@ -71,7 +78,7 @@ instead run fully on-device against your own local server, or be turned off.
 
 Final listing review is still pending.
 
-## Launch-line lock
+## Archived launch-line lock — do not use
 
 Use this sentence only after the CWS listing visibly reports v4.0.0:
 

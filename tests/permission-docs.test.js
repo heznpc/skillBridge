@@ -45,7 +45,7 @@ const privacyMd = (rows = ROWS, extraProse = '') => `# Privacy
 
 ## Next Chrome Web Store Candidate (Unpublished)
 
-### Candidate Permissions
+### Unpublished Source-Build Permissions
 | Permission or site access | Purpose |
 |---|---|
 ${rows.map(([a, b]) => `| ${a} | ${b} |`).join('\n')}
@@ -58,7 +58,7 @@ ${extraProse}
 
 const privacyHtml = (rows = ROWS) => `<h1>Privacy</h1>
   <h2>Next Chrome Web Store Candidate (Unpublished)</h2>
-  <h3>Candidate Permissions</h3>
+  <h3>Unpublished Source-Build Permissions</h3>
   <table>
     <tr><th>Permission or site access</th><th>Purpose</th></tr>
 ${rows.map(([a, b]) => `    <tr><td>${a.replace(/`([^`]+)`/g, '<code>$1</code>')}</td><td>${b}</td></tr>`).join('\n')}
@@ -140,7 +140,7 @@ describe('check-permission-docs', () => {
     const rows = [...ROWS, ['`bookmarks`', 'Read the user bookmark tree']];
     const problems = findPermissionDocMismatches(inputs({ privacyMd: privacyMd(rows) }));
     expect(problems).toEqual([
-      'PRIVACY_POLICY.md "Candidate Permissions": discloses `bookmarks`, which the manifest does not request',
+      'PRIVACY_POLICY.md "Unpublished Source-Build Permissions": discloses `bookmarks`, which the manifest does not request',
     ]);
   });
 
@@ -153,7 +153,7 @@ describe('check-permission-docs', () => {
     const rows = ROWS.filter(([cell]) => cell !== DROPPED_CELL);
     const problems = findPermissionDocMismatches(inputs({ privacyHtml: privacyHtml(rows) }));
     expect(problems).toEqual([
-      'docs/privacy.html "Candidate Permissions": manifest declares `translate.googleapis.com` but no entry discloses it',
+      'docs/privacy.html "Unpublished Source-Build Permissions": manifest declares `translate.googleapis.com` but no entry discloses it',
     ]);
   });
 
@@ -209,7 +209,7 @@ describe('check-permission-docs', () => {
   test('a section the parser cannot find fails instead of passing vacuously', () => {
     const problems = findPermissionDocMismatches(inputs({ privacyMd: '# Privacy\n\nNo candidate section here.\n' }));
     expect(problems).toEqual([
-      'PRIVACY_POLICY.md "Candidate Permissions": section not found — the gate cannot verify what it cannot locate',
+      'PRIVACY_POLICY.md "Unpublished Source-Build Permissions": section not found — the gate cannot verify what it cannot locate',
     ]);
   });
 

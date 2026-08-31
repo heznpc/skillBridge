@@ -6,7 +6,7 @@
   "publicIdentity": "Heznpc",
   "source": {
     "path": "store-assets/demo.webm",
-    "sha256": "858788c87c95a9338de68cde1f725deb346bb9e6f7e37ba73fd2e7ef4ae8a581",
+    "sha256": "4c8cbb7864c16834d767ba35a8295bf514e0b6920d7f15da8ef18f854431d402",
     "runtime": "dist/bundled",
     "captureEnvironment": "neutral deterministic fixture; not the live Skilljar UI"
   },
@@ -21,45 +21,45 @@
   "thumbnails": [
     {
       "path": "store-assets/promo-video-thumbnail-1280x720.png",
-      "sha256": "bcb9addf88d5426668a4d9e456ead2a2c4710293840ee17362d04e8ea59f6436",
+      "sha256": "7710243b96a6d5165e8f204dedfbf79fce0ec5341ec8ee9a5a5373de64f1f4cd",
       "codec": "png",
       "width": 1280,
       "height": 720,
       "fps": "25/1",
       "durationSeconds": 0,
-      "bytes": 137184
+      "bytes": 465110
     },
     {
       "path": "store-assets/promo-short-thumbnail-1080x1920.png",
-      "sha256": "0a705625fbc41206b356711821fb9ff14b6bf271b0e3f18be861f3fbc9aed80a",
+      "sha256": "a39bd5ea41bb59cc793da4995626051d8e4e63a6ef194c1cb469558dc3a485ef",
       "codec": "png",
       "width": 1080,
       "height": 1920,
       "fps": "25/1",
       "durationSeconds": 0,
-      "bytes": 169158
+      "bytes": 803001
     }
   ],
   "assets": [
     {
       "path": "store-assets/skillbridge-v4.0.0-demo-landscape.mp4",
-      "sha256": "0a1257b0ebdbe79246b31759aaaac1195275dd4e34f2f9de2ab6b0c7ecad04b7",
+      "sha256": "6ba9daacb50d0f1632a32b894dede9a91a6b7fc00eb91bae2b831c066e38280c",
       "codec": "h264",
       "width": 1280,
       "height": 720,
       "fps": "25/1",
-      "durationSeconds": 11.76,
-      "bytes": 656928
+      "durationSeconds": 20.76,
+      "bytes": 562257
     },
     {
       "path": "store-assets/skillbridge-v4.0.0-demo-short.mp4",
-      "sha256": "169e3222ca07478ff3f26499c65c6dcac1e5902a534b7ed8c5be57ce728151c8",
+      "sha256": "6f2d874f5672d515741c574fa486a0a2cf8559614076e33e19593eb5ada4f0fa",
       "codec": "h264",
       "width": 1080,
       "height": 1920,
       "fps": "25/1",
-      "durationSeconds": 11.76,
-      "bytes": 557085
+      "durationSeconds": 20.76,
+      "bytes": 601907
     }
   ]
 }

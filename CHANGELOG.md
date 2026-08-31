@@ -13,30 +13,85 @@ repository but never shipped to users.
 
 ## [Unreleased]
 
+## [4.1.0] - 2026-08-31
+
+This is a GitHub source checkpoint. Chrome Web Store publication remains
+deferred; `1.0.1` is still the published build.
+
 ### Added
 
-- SkillBridge now runs on **academy.claude.com**, Anthropic's own course platform and the successor to the Skilljar tenant. Lesson pages translate as before. Assessment pages are recognised from the live page — route, heading, and the ARIA radiogroup — because none of the Skilljar exam signals exist there, and their answer choices are excluded from translation, from the translation cache, and from anything sent to the AI Tutor.
-- **Cross-platform continuity for notes, bookmarks, recent lessons and resume positions.** A lesson has completely different URLs on Skilljar and Academy, and two courses were even re-slugged in the move, so records written on one platform were invisible on the other. They now resolve through a shipped table of high-confidence lesson pairs: a note taken on Skilljar opens on Academy, and a bookmark opens on whichever platform you are actually browsing. A scroll position does NOT carry across: the two sites lay the same lesson out differently, so an offset from one is an arbitrary point in the other. Positions are kept per platform under one shared identity, and a lesson opened for the first time on a platform starts at the top. Only pairs the identity report was confident about are linked — the lessons it flagged for review stay keyed by URL, exactly as before, rather than being merged on a guess, and they carry no completion stamp so a later, better table can still claim them. Existing records are migrated in place, keeping their original URL and gaining a provenance stamp; nothing is merged, reordered or dropped, and the migration is reversible.
-- **The AI Tutor now works on academy.claude.com.** Its transport is admitted on Anthropic's two course hosts and nowhere else, checked by exact hostname in one place that both ends of the port handshake read — it used to be written out twice with the host inline in each. On an Academy assessment the Tutor is told not to answer, and the lesson body that holds the answer choices is withheld from its context; both are verified against the prompt the model actually receives, not against the page.
-- **Ask another assistant (Tools ▸ Ask another assistant).** For learners who already pay for Claude, ChatGPT or Gemini, or whose workplace forbids a third AI service: SkillBridge assembles the lesson context and your question into one bounded prompt, shows it, and copies it. Opening an assistant opens a blank chat — SkillBridge sends nothing on your behalf, drives no other service's interface, and puts nothing in a URL. A consumer chat login is never treated as an API key. On a quiz the prompt asks the assistant not to answer, the lesson body is withheld, and a selection that touches an answer choice is refused and reported rather than silently dropped. Available even where the built-in Tutor is not.
-- **Optional translation refinement (off by default).** A language model can post-edit the Google Translate output where machine translation gets terminology wrong. Google Translate still renders the page first, always — refinement edits a paragraph already on screen and never delays it. A correction is discarded unless every protected term, number, URL, code span, link target and HTML tag survives it unchanged, and unless it is written in the target language. Those checks bound how an edit can go wrong; they do not verify that its meaning matches, so a refinement is an optional experiment rather than a guaranteed improvement. It has its own setting (Off / Cloud / Local / Same as AI Tutor) and its own consent checkbox, separate from the AI Tutor's: the Tutor sends what you type, this would send paragraphs you are reading. "Same as AI Tutor" resolves to nothing when the Tutor is off. Accepted results are cached under their own key; the translation cache and the curated dictionaries are never written to by this feature.
-- A translation policy for a site that publishes its own locales. Academy ships seven, and every non-English one is partial, so "translate the page" is no longer a safe default: where the English residue can be told apart from the official copy by script (ko/ja/zh) only the residue is sent, and where it cannot (es/fr) nothing is sent at all rather than re-translating Anthropic's own published text. A banner says so, so the choice does not read as a broken extension.
+- **Notes** stores one editable, local-only note per lesson. **Reports** keeps an
+  append-only local queue of suspected term errors and exports it as JSON;
+  nothing is submitted automatically.
+- **academy.claude.com support** covers lessons, mixed official localization,
+  reading progress, local study tools and assessment-safe routing. Same-URL
+  post-submit behavior is pinned by regression fixtures; this checkpoint does
+  not claim an authenticated live post-submit DOM capture.
+- **Cross-platform continuity** maps only high-confidence Skilljar/Academy
+  lesson pairs for notes, bookmarks and recents. Original URLs and provenance
+  are retained, unresolved lessons remain URL-keyed, and scroll positions stay
+  platform-specific because the two layouts do not share meaningful offsets.
+- The Academy Tutor transport uses the same bounded host and quiz-safety
+  contract as Skilljar. Its prompt/transport behavior is regression-tested, but
+  this checkpoint does not claim a final signed-in live Puter round trip.
+- **Ask another assistant** builds a bounded lesson prompt for the learner to
+  inspect and copy into Claude, ChatGPT or Gemini. SkillBridge neither sends it
+  nor drives those sites, and quiz choices and answer-bearing context remain
+  excluded.
+- **Optional translation refinement** can post-edit an already-rendered Google
+  translation after separate consent. Protected terms, numbers, URLs, code,
+  links and HTML structure must survive, accepted results use a separate cache,
+  and the feature remains off by default. The experiment tooling is present,
+  but no refinement quality verdict is claimed for this checkpoint.
+- Academy's partial official locales follow a residue-only policy: detectable
+  English residue is translated for Korean, Japanese and Chinese, while
+  Spanish and French official copy is left untouched when residue cannot be
+  separated safely.
 
 ### Changed
 
-- The Tutor's exam guard is now built in one place and handed to whichever engine runs, so Cloud, Local and Off share a single safety contract — the engine setting is a privacy choice and must not also be a safety choice. Turning the Tutor off makes no model call by any route.
-- The Tutor prompt no longer tells the model the learner is on `anthropic.skilljar.com`, which stopped being true for anyone on Academy.
+- Tutor exam state and context are now built once for Cloud, Local and Off;
+  choosing an engine changes transport, not the safety policy, and Off makes no
+  model call.
+- The GT title experiment now classifies failures, records provenance and safely
+  resumes partial runs. The usable Korean/Japanese evidence supports retaining
+  the curated terminology layer; it does not establish a refinement result.
+- Release evidence gained local CWS token mint/verification, manifest-to-bundle
+  completeness checks, permission-document parity, remote-hosted-code scanning,
+  supported Tutor-model checks and resumable experiment snapshots. These are
+  readiness gates, not evidence that this version was uploaded to the CWS.
 
 ### Fixed
 
-- Exam-safe state could stay off on a page nobody was translating. The DOM observer skipped mutations entirely when the target language was English, and the exam re-detection lived inside the pass it skipped — so a quiz that rendered after page load left the Tutor unguarded for anyone reading in English. Safety re-detection is now independent of translation and runs on any structural change, in any language.
-- **Issue #300**: a heading could stay translated after switching back to English. `restoreOriginal` rewrites the elements it recorded an original for, and the cleanup pass deleted an element's record the instant it had no parent — which is what a collapsible block does every time it closes. The same node came back still translated and with no record of its English, so every later restore skipped it. Detached is not dead: records are now kept until the map is actually under pressure, and dead ones are evicted before live ones.
-- One definition of "interactive". The routing check, the replacement guard and the HTML integrity gate each had their own, and the gate's was the narrowest — tag names only. A control built from an ARIA role (`<div role="button">`, which is how Academy builds them) was therefore routed onto the structure-preserving path and then invisible to the gate that path relies on, so Google Translate could drop it and the gate would pass. All three now read the same list, and element identity includes the role.
-- The bundled Chrome Web Store artifact could omit a file the manifest declared web-accessible. The runtime would fetch it, get a 404, and fall back quietly — so a feature could ship silently disabled while every test against the source tree passed. Declaring a resource and not shipping it is now a build failure.
-- The Tutor's engine-preference read left a 1.5-second timer armed after every question, and its rejection had no listener — one unhandled promise rejection per message.
-- Recent lessons never recorded a visit on Academy at all: a lesson there is `/courses/<course>/<slug>` with no numeric id, and the check for "is this a lesson page" only knew the Skilljar shape. The reading-progress aid was blank on Academy for the same reason.
-- Highlighting an answer choice and pressing **Ask Tutor** sent that text to the Tutor. The quote path had no exam guard; it now refuses any selection that touches an answer choice, including a drag that spans the whole choice group.
-- A Tutor failure could arrive looking like an answer. Puter streams each line of a reply as it comes, and a failure — a free account out of credit, a usage limit, a sign-in that expired while the question was in flight — is a line carrying no text rather than an error. Those lines were skipped as nothing to show, so the reply finished empty and the chat rendered it as the model having said "No response". They now say what went wrong, and an expired session offers the sign-in card instead. A stream that simply stops now reports its own timeout too, rather than leaving the chat to sit out a second full idle period before saying anything.
+- GT requests now have real timeouts, never re-send partial target-language
+  output as source, and preserve protected terms/placeholders. Structure-aware
+  HTML translations use a separate integrity-checked cache instead of being
+  fetched again on every visit.
+- Mutation overflow triggers a rescan instead of dropping nodes, and routing,
+  replacement and integrity checks share one definition of interactive
+  elements, including ARIA roles.
+- The legacy translation cache is cleared on schema upgrade so polluted rows
+  from the published build cannot survive. Returning to English also preserves
+  originals for temporarily detached/collapsed nodes (**#300**).
+- Academy recents and reading progress now recognize slug-based lesson routes;
+  matched lessons share identity while scroll offsets remain per platform.
+- Local AI reachability uses a chat-shaped probe, and its SSE reader keeps a
+  final frame even when an OpenAI-compatible server omits the trailing newline.
+- Puter stream failures are rendered as failures instead of empty model
+  answers; expired sessions offer sign-in again, idle streams time out, and the
+  engine-preference timer is cleaned up after each question.
+
+### Security
+
+- Assessment state is recomputed on structural changes even when translation is
+  off or the target is English. Answer choices are excluded from translation,
+  caches, Tutor/BYOA context and selected quotes.
+- Cloud Tutor ports are admitted only from the exact supported course hosts.
+  Local AI URLs are restricted to credential-free `http://localhost` or
+  `http://127.0.0.1`, and the local-chat port validates its extension sender,
+  top frame, tab and supported surface.
+- Dependency patches, permission/document parity and bundle checks strengthen
+  the release boundary without changing the published-store state.
 
 ## [4.0.0] - 2026-07-29
 
@@ -777,7 +832,7 @@ Total: +24 tests against code paths that had zero coverage.
 
 ## [1.0.1] - 2026-03-10
 
-The version published to the Chrome Web Store, and — until v4.0.0 is uploaded —
+The version published to the Chrome Web Store, and — until a CWS replacement is published —
 the only build any user is running. It carries the bundled Puter client (Gemini
 translation review plus the Claude AI Tutor), `storage`/`activeTab`/`tabs`, and
 `https://*.youtube.com/*` host access.

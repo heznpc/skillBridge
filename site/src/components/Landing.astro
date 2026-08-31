@@ -1,12 +1,13 @@
 ---
-import type { Copy, Locale } from '../i18n';
+import type { Locale } from '../i18n';
 import { localePath } from '../i18n';
 import { buildInfo } from '../data/build-info';
 
-interface Props { copy: Copy; locale: Locale; }
-const { copy, locale } = Astro.props;
+interface Props { locale: Locale; }
+const { locale } = Astro.props;
 const base = import.meta.env.BASE_URL;
 const storeUrl = 'https://chromewebstore.google.com/detail/skillbridge-for-anthropic/oancfldkbnajdadgekkjpdnhepjjcdln';
+const releaseUrl = `https://github.com/heznpc/skillBridge/releases/tag/v${buildInfo.version}`;
 const privacyUrl = `${base}privacy.html`;
 
 const ui = locale === 'ko'
@@ -14,50 +15,53 @@ const ui = locale === 'ko'
       navFlow: '사용 흐름', navContext: '문맥 안에서', install: 'CWS — 기존 v1.0.1',
       eyebrow: '지원 강의 안에서 시작됩니다', title: '강의를 떠나지 않고, 언어만 바꾸세요.',
       lead: 'SkillBridge는 지원되는 AI Academy 수업의 탐색·본문·학습 도구가 있는 원래 화면 안에서 필요한 언어를 더합니다.',
-      versionNotice: `이 페이지는 아직 배포되지 않은 소스 후보 v${buildInfo.version}을 설명합니다. Chrome 웹 스토어에서는 기존 v1.0.1이 설치되며, 새 버전 공개는 검증이 끝날 때까지 중단된 상태입니다.`,
+      versionNotice: `GitHub 소스 릴리즈 v${buildInfo.version}의 현재 상태입니다. Chrome 웹 스토어 제출본은 아니며, 스토어에서는 기존 v1.0.1이 설치됩니다. 후속 CWS 버전과 대시보드 업로드는 코드 개발이 끝난 뒤 확정합니다. 미국에서는 현재 CWS 목록을 이용할 수 없어 GitHub 수동 설치 경로를 사용해야 합니다.`,
+      validationNotice: '자동 브라우저 픽스처는 Academy 라우팅과 Tutor 전송 경로를 검사하지만, 인증된 Academy 제출 후 화면과 로그인된 Puter의 최종 실사용 왕복 검증은 아직 주장하지 않습니다. 두 항목 모두 CWS 최종 게이트로 남아 있습니다.',
       launch: '사용 흐름 보기', flowTitle: '강의를 읽는 방식은 그대로입니다.',
       flowLead: '바뀌는 것은 언어뿐입니다. 탐색, 핵심 용어, 멈춘 지점, 복습 도구는 수업 맥락 안에 남습니다.',
       stepOpen: '지원 강의를 엽니다', stepOpenBody: '평소처럼 AI Academy 수업을 엽니다. 별도의 작업 공간이나 복사·붙여넣기 화면은 필요하지 않습니다.',
       stepChoose: '지구본 메뉴에서 언어를 고릅니다', stepChooseBody: '선택하는 즉시 현재 수업의 읽을 수 있는 텍스트가 같은 위치에서 바뀝니다.',
       stepStay: '이해가 필요한 순간에도 수업 안에 머뭅니다', stepStayBody: 'Tutor, 플래시카드, 북마크는 옆으로 열립니다. 읽던 문단을 잃지 않습니다.',
-      demoLabel: '라이브 전환 데모', demoHint: '언어를 선택해 보세요', course: 'AI Academy · Tool use', lesson: 'Lesson 02', local: '브라우저 내 전환',
-      original: '원문', translated: '선택 언어', contextEyebrow: '문맥은 그대로', contextTitle: '번역은 다른 탭으로 가지 않습니다.',
+      demoLabel: '라이브 전환 데모', local: '브라우저 내 전환',
+      contextEyebrow: '문맥은 그대로', contextTitle: '번역은 다른 탭으로 가지 않습니다.',
       contextBody: '강의 목록과 본문, 복습 도구가 같은 흐름 안에 남아 있어 읽기를 멈추고 다시 찾을 필요가 없습니다.',
       contextNote: 'Tutor와 복습 도구는 현재 문단 옆에서 열립니다.',
       finalTitle: '강의가 이해되는 언어로, 바로 읽기 시작하세요.', finalBody: '계정 없이 번역을 켜고, 필요한 순간에만 학습 도구를 사용하세요.',
-      source: 'GitHub에서 소스 보기', footer: '독립 커뮤니티 프로젝트. Anthropic 또는 Skilljar와 제휴·후원·승인 관계가 아닙니다.',
+      source: `GitHub v${buildInfo.version} 릴리즈 보기`, footer: '독립 커뮤니티 프로젝트. Anthropic 또는 Skilljar와 제휴·후원·승인 관계가 아닙니다.',
       privacy: '개인정보 처리방침', sourceLabel: 'GitHub', license: 'MIT 라이선스',
-      translatedAt: '현재 언어로 전환됨', keepTerms: '전문 용어 유지', flowTag: '강의 흐름 유지', languages: '개 언어',
+      flowAria: '제품 사용 흐름', settingsAria: 'SkillBridge 확장 프로그램 설정',
+      flowTag: '강의 흐름 유지', languages: '개 언어',
       lessonAlt: 'SkillBridge 번역이 켜진 AI Academy 강의', contextAlt: 'SkillBridge 조작 화면이 보이는 번역된 AI Academy 강의',
     }
   : {
       navFlow: 'The flow', navContext: 'In context', install: 'CWS — legacy v1.0.1',
       eyebrow: 'It starts inside a supported course', title: 'Change the language, not the way you learn.',
       lead: 'SkillBridge adds the language you need to the original AI Academy screen, where navigation, lesson text, and study tools already live.',
-      versionNotice: `This page describes the unpublished v${buildInfo.version} source candidate. The Chrome Web Store still installs legacy v1.0.1; publication remains paused while the replacement is verified.`,
+      versionNotice: `This page reflects the GitHub v${buildInfo.version} source release. It is not a Chrome Web Store submission; the store still installs legacy v1.0.1. The next CWS version and dashboard upload remain deferred until code development is complete. The listing is currently unavailable in the United States, where GitHub manual installation is the available path.`,
+      validationNotice: 'Automated browser fixtures cover Academy routing and the Tutor transport, but this release does not claim an authenticated post-submit Academy capture or a final signed-in Puter round trip. Both remain final CWS gates.',
       launch: 'See the flow', flowTitle: 'The lesson stays where it is.',
       flowLead: 'Only the language changes. Navigation, protected terminology, your place in the course, and review tools remain in the lesson context.',
       stepOpen: 'Open a supported lesson', stepOpenBody: 'Start in AI Academy as usual. There is no second workspace and no copy-paste translation loop.',
       stepChoose: 'Choose a language from the globe menu', stepChooseBody: 'The readable text on the current lesson changes in place as soon as you choose a language.',
       stepStay: 'Stay in the lesson when you need help', stepStayBody: 'Tutor, flashcards, and bookmarks open beside the course. The paragraph you were reading remains visible.',
-      demoLabel: 'Live switch demo', demoHint: 'Choose a language', course: 'AI Academy · Tool use', lesson: 'Lesson 02', local: 'In-browser switch',
-      original: 'Original', translated: 'Selected language', contextEyebrow: 'Context remains', contextTitle: 'Translation does not send you to another tab.',
+      demoLabel: 'Live switch demo', local: 'In-browser switch',
+      contextEyebrow: 'Context remains', contextTitle: 'Translation does not send you to another tab.',
       contextBody: 'The course list, lesson body, and review tools stay in one path, so you do not have to stop reading to find your way back.',
       contextNote: 'Tutor and review tools open beside the paragraph you are reading.',
       finalTitle: 'Open the lesson. Read it in the language that works for you.', finalBody: 'Turn translation on without an account, then use study tools only when you need them.',
-      source: 'View source on GitHub', footer: 'Independent community project. Not affiliated with, sponsored by, or endorsed by Anthropic or Skilljar.',
+      source: `View GitHub release v${buildInfo.version}`, footer: 'Independent community project. Not affiliated with, sponsored by, or endorsed by Anthropic or Skilljar.',
       privacy: 'Privacy', sourceLabel: 'GitHub', license: 'MIT license',
-      translatedAt: 'Switched for this lesson', keepTerms: 'Terms preserved', flowTag: 'Lesson flow retained', languages: 'languages',
+      flowAria: 'Product flow', settingsAria: 'SkillBridge extension settings',
+      flowTag: 'Lesson flow retained', languages: 'languages',
       lessonAlt: 'AI Academy lesson with SkillBridge translation enabled', contextAlt: 'A translated AI Academy lesson with SkillBridge controls',
     };
 
-const initialLanguage = locale === 'ko' ? 'ko' : 'en';
 const demoText = locale === 'ko'
   ? {
-      language: '\uBC88\uC5ED \uC5B8\uC5B4', auto: '\uC774 \uAC15\uC758 \uC790\uB3D9 \uBC88\uC5ED', comments: '\uB313\uAE00\uB3C4 \uBC88\uC5ED', openSidebar: '\uC0AC\uC774\uB4DC\uBC14 \uC5F4\uAE30', learningTools: '\uD559\uC2B5 \uB3C4\uAD6C', askPassage: '\uD604\uC7AC \uBB38\uB2E8\uC5D0 \uC9C8\uBB38\uD558\uAE30', recentLessons: '\uCD5C\uADFC \uAC15\uC758', bookmarks: '\uBD81\uB9C8\uD06C', notes: '\uB178\uD2B8', reports: '\uC6A9\uC5B4 \uB9AC\uD3EC\uD2B8', flashcards: '\uD50C\uB798\uC2DC\uCE74\uB4DC', exportPdf: 'PDF \uB0B4\uBCF4\uB0B4\uAE30', closeSidebar: '\uC0AC\uC774\uB4DC\uBC14 \uB2EB\uAE30', tutorGreeting: '\uAC15\uC758 \uB0B4\uC6A9\uC744 \uB5A0\uB098\uC9C0 \uC54A\uACE0 \uC9C8\uBB38\uD574 \uBCF4\uC138\uC694.', send: '\uBCF4\uB0B4\uAE30', currentLesson: '\uD604\uC7AC \uAC15\uC758\uC5D0 \uBC88\uC5ED\uC774 \uCF1C\uC838 \uC788\uC2B5\uB2C8\uB2E4.'
+      language: '\uBC88\uC5ED \uC5B8\uC5B4', auto: '\uC774 \uAC15\uC758 \uC790\uB3D9 \uBC88\uC5ED', comments: '\uB313\uAE00\uB3C4 \uBC88\uC5ED', openSidebar: '\uC0AC\uC774\uB4DC\uBC14 \uC5F4\uAE30', learningTools: '\uD559\uC2B5 \uB3C4\uAD6C', askPassage: '\uD604\uC7AC \uBB38\uB2E8\uC5D0 \uC9C8\uBB38\uD558\uAE30', recentLessons: '\uCD5C\uADFC \uAC15\uC758', bookmarks: '\uBD81\uB9C8\uD06C', notes: '\uB178\uD2B8', reports: '\uC6A9\uC5B4 \uB9AC\uD3EC\uD2B8', flashcards: '\uD50C\uB798\uC2DC\uCE74\uB4DC', exportPdf: 'PDF \uB0B4\uBCF4\uB0B4\uAE30', closeSidebar: '\uC0AC\uC774\uB4DC\uBC14 \uB2EB\uAE30', tutorGreeting: '\uAC15\uC758 \uB0B4\uC6A9\uC744 \uB5A0\uB098\uC9C0 \uC54A\uACE0 \uC9C8\uBB38\uD574 \uBCF4\uC138\uC694.', send: '\uBCF4\uB0B4\uAE30', currentLesson: '\uD604\uC7AC \uAC15\uC758\uC5D0 \uBC88\uC5ED\uC774 \uCF1C\uC838 \uC788\uC2B5\uB2C8\uB2E4.', chatPreview: '\uC778\uD130\uB799\uD2F0\uBE0C \uBBF8\uB9AC\uBCF4\uAE30\uC785\uB2C8\uB2E4. \uC774 \uB370\uBAA8\uC5D0\uC11C\uB294 \uBA54\uC2DC\uC9C0\uB97C \uC804\uC1A1\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.', chatReady: '\uC9C8\uBB38 \uD750\uB984 \uBBF8\uB9AC\uBCF4\uAE30\uAC00 \uD45C\uC2DC\uB410\uC2B5\uB2C8\uB2E4. \uC678\uBD80\uB85C \uC804\uC1A1\uB41C \uB0B4\uC6A9\uC740 \uC5C6\uC2B5\uB2C8\uB2E4.'
     }
   : {
-      language: 'Translate to', auto: 'Auto-translate this lesson', comments: 'Translate comments', openSidebar: 'Open SkillBridge sidebar', learningTools: 'Learning tools', askPassage: 'Ask about this passage', recentLessons: 'Recent lessons', bookmarks: 'Bookmarks', notes: 'Notes', reports: 'Term reports', flashcards: 'Flashcards', exportPdf: 'Export PDF', closeSidebar: 'Close sidebar', tutorGreeting: 'Ask about the lesson without leaving the page.', send: 'Send', currentLesson: 'Translation is enabled for this lesson.'
+      language: 'Translate to', auto: 'Auto-translate this lesson', comments: 'Translate comments', openSidebar: 'Open SkillBridge sidebar', learningTools: 'Learning tools', askPassage: 'Ask about this passage', recentLessons: 'Recent lessons', bookmarks: 'Bookmarks', notes: 'Notes', reports: 'Term reports', flashcards: 'Flashcards', exportPdf: 'Export PDF', closeSidebar: 'Close sidebar', tutorGreeting: 'Ask about the lesson without leaving the page.', send: 'Send', currentLesson: 'Translation is enabled for this lesson.', chatPreview: 'Interactive preview. This demo does not send messages.', chatReady: 'The question-flow preview is shown. Nothing was sent outside this page.'
     };
 ---
 <header class="flow-header shell">
@@ -84,7 +88,7 @@ const demoText = locale === 'ko'
     <div class="opening-copy">
       <h1 id="opening-title">{ui.title}</h1>
       <p>{ui.lead}</p>
-      <p class="version-notice"><strong>{locale === 'ko' ? '버전 안내' : 'Version notice'}</strong> {ui.versionNotice}</p>
+      <p class="version-notice"><strong>{locale === 'ko' ? '버전 안내' : 'Version notice'}</strong> {ui.versionNotice}<span class="validation-boundary"><b>{locale === 'ko' ? '검증 경계' : 'Validation boundary'}</b> {ui.validationNotice}</span></p>
       <a class="anchor-link" href="#flow"><span>↓</span>{ui.launch}</a>
     </div>
     <div class="opening-meta"><span>{buildInfo.languageCount}{locale === 'ko' ? '' : ' '}{ui.languages}</span><span>{ui.local}</span></div>
@@ -94,7 +98,7 @@ const demoText = locale === 'ko'
     <div class="journey-header shell"><div><p class="section-kicker">02 / {ui.demoLabel}</p><h2 id="journey-title">{ui.flowTitle}</h2></div><p>{ui.flowLead}</p></div>
 
   <div class="journey-stage shell">
-    <aside class="journey-rail" aria-label="Product flow">
+    <aside class="journey-rail" aria-label={ui.flowAria}>
       <button class="rail-item active" type="button" data-flow-step="popup" aria-current="step"><span>01</span><p>{ui.stepOpen}</p></button>
       <button class="rail-item" type="button" data-flow-step="language"><span>02</span><p>{ui.stepChoose}</p></button>
       <button class="rail-item" type="button" data-flow-step="sidebar"><span>03</span><p>{ui.stepStay}</p></button>
@@ -102,20 +106,25 @@ const demoText = locale === 'ko'
     <div class="extension-demo" data-extension-demo data-locale={locale}>
       <figure class="extension-capture">
         <img src={`${base}images/lesson-translated.png`} alt={ui.lessonAlt} />
+        <div class="translation-preview" data-translation-preview aria-live="polite">
+          <small data-preview-label>{locale === 'ko' ? '데모 강의 발췌 · 한국어' : 'Demo lesson excerpt · English'}</small>
+          <strong data-preview-title lang={locale}>{locale === 'ko' ? '도구 사용은 명확한 계약에서 시작됩니다.' : 'Tool use begins with a clear contract.'}</strong>
+          <p data-preview-body lang={locale}>{locale === 'ko' ? '모델이 도구를 안정적으로 선택하고 호출하려면 도구 설명과 명시적인 입력 형식이 모두 필요합니다.' : 'A model needs both a tool description and an explicit input shape before it can choose and call that tool reliably.'}</p>
+        </div>
         <figcaption><span class="capture-dot"></span>{ui.local}</figcaption>
       </figure>
-      <aside class="extension-popup" aria-label="SkillBridge extension settings">
+      <aside class="extension-popup" aria-label={ui.settingsAria}>
         <div class="extension-popup-head"><img src={`${base}images/icon128.png`} alt="" width="26" height="26" /><div><strong>SkillBridge</strong><small>AI Course Translator</small></div></div>
-        <label class="extension-field"><span>{demoText.language}</span><select data-popup-language><option value="en">English</option><option value="ko" selected={locale === 'ko'}>Korean</option><option value="ja">Japanese</option><option value="es">Spanish</option></select></label>
+        <label class="extension-field"><span>{demoText.language}</span><select data-popup-language><option value="en">{locale === 'ko' ? '영어' : 'English'}</option><option value="ko" selected={locale === 'ko'}>{locale === 'ko' ? '한국어' : 'Korean'}</option><option value="ja">{locale === 'ko' ? '일본어' : 'Japanese'}</option><option value="es">{locale === 'ko' ? '스페인어' : 'Spanish'}</option></select></label>
         <label class="extension-toggle"><input type="checkbox" data-auto-translate checked /><span>{demoText.auto}</span></label>
         <label class="extension-toggle"><input type="checkbox" data-comment-translate /><span>{demoText.comments}</span></label>
-        <button class="extension-sidebar-button" type="button" data-sidebar-toggle aria-expanded="false">{demoText.openSidebar}</button>
-        <p class="extension-status" data-extension-status>{demoText.currentLesson}</p>
+        <button class="extension-sidebar-button" type="button" data-sidebar-toggle aria-controls={`demo-sidebar-${locale}`} aria-expanded="false">{demoText.openSidebar}</button>
+        <p class="extension-status" data-extension-status aria-live="polite">{demoText.currentLesson}</p>
       </aside>
-      <aside class="extension-sidebar" data-extension-sidebar hidden aria-label="SkillBridge Tutor">
-        <div class="extension-sidebar-head"><strong>SkillBridge Tutor</strong><button type="button" data-tools-toggle aria-expanded="false" aria-label={demoText.learningTools}>...</button><button type="button" data-sidebar-close aria-label={demoText.closeSidebar}>x</button></div>
-        <div class="extension-chat"><div class="extension-chat-message"><span>AI</span><p>{demoText.tutorGreeting}</p></div><div class="extension-example-questions"><button type="button">{demoText.askPassage}</button></div><div class="extension-chat-input"><textarea rows="1" placeholder={demoText.askPassage}></textarea><button type="button">{demoText.send}</button></div></div>
-        <div class="extension-tools-menu" data-tools-menu hidden><button type="button">{demoText.recentLessons}</button><button type="button">{demoText.bookmarks}</button><button type="button">{demoText.notes}</button><button type="button">{demoText.reports}</button><button type="button">{demoText.flashcards}</button><button type="button">{demoText.exportPdf}</button></div>
+      <aside class="extension-sidebar" id={`demo-sidebar-${locale}`} data-extension-sidebar hidden aria-label="SkillBridge Tutor">
+        <div class="extension-sidebar-head"><strong>SkillBridge Tutor</strong><button type="button" data-tools-toggle aria-controls={`demo-tools-${locale}`} aria-expanded="false" aria-label={demoText.learningTools}><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button><button type="button" data-sidebar-close aria-label={demoText.closeSidebar}><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+        <div class="extension-chat"><div class="extension-chat-message"><span>AI</span><p data-tutor-message>{demoText.tutorGreeting}</p></div><div class="extension-example-questions"><button type="button" data-demo-question>{demoText.askPassage}</button></div><div class="extension-chat-input"><textarea rows="1" data-chat-input aria-label={demoText.askPassage} placeholder={demoText.askPassage}></textarea><button type="button" data-chat-send>{demoText.send}</button></div><small class="extension-demo-disclosure" data-chat-feedback aria-live="polite">{demoText.chatPreview}</small></div>
+        <div class="extension-tools-menu" id={`demo-tools-${locale}`} data-tools-menu hidden aria-label={demoText.learningTools}><button type="button" data-tool-preview="recent" aria-pressed="false">{demoText.recentLessons}</button><button type="button" data-tool-preview="bookmarks" aria-pressed="false">{demoText.bookmarks}</button><button type="button" data-tool-preview="notes" aria-pressed="false">{demoText.notes}</button><button type="button" data-tool-preview="reports" aria-pressed="false">{demoText.reports}</button><button type="button" data-tool-preview="flashcards" aria-pressed="false">{demoText.flashcards}</button><button type="button" data-tool-preview="pdf" aria-pressed="false">{demoText.exportPdf}</button></div>
       </aside>
     </div>
   </div>
@@ -128,106 +137,11 @@ const demoText = locale === 'ko'
     <figure class="context-image shell"><img src={`${base}images/lesson-translated.png`} alt={ui.contextAlt} /><figcaption><img src={`${base}images/icon128.png`} alt="" width="30" height="30" /><div><strong>{ui.stepStay}</strong><p>{ui.contextNote}</p></div></figcaption></figure>
   </section>
 
-  <section class="finish shell"><div class="finish-line"><span>04</span><i></i><small>{ui.flowTag}</small></div><div class="finish-copy"><h2>{ui.finalTitle}</h2><p>{ui.finalBody}</p></div><div class="finish-actions"><a class="install-button" href={storeUrl}>{ui.install}</a><a class="source-link" href="https://github.com/heznpc/skillbridge">{ui.source}</a></div></section>
+  <section class="finish shell"><div class="finish-line"><span>04</span><i></i><small>{ui.flowTag}</small></div><div class="finish-copy"><h2>{ui.finalTitle}</h2><p>{ui.finalBody}</p></div><div class="finish-actions"><a class="install-button" href={storeUrl}>{ui.install}</a><a class="source-link" href={releaseUrl}>{ui.source}</a></div></section>
 </main>
 
-<footer class="flow-footer shell"><a class="mark" href={localePath('en', base)}><img src={`${base}images/icon128.png`} alt="" width="28" height="28" /><span>SkillBridge</span></a><p>{ui.footer}</p><nav><a href={privacyUrl}>{ui.privacy}</a><a href="https://github.com/heznpc/skillbridge">{ui.sourceLabel}</a><a href="https://github.com/heznpc/skillbridge/blob/main/LICENSE">{ui.license}</a></nav></footer>
+<footer class="flow-footer shell"><a class="mark" href={localePath('en', base)}><img src={`${base}images/icon128.png`} alt="" width="28" height="28" /><span>SkillBridge</span></a><p>{ui.footer}</p><nav><a href={privacyUrl}>{ui.privacy}</a><a href="https://github.com/heznpc/skillBridge">{ui.sourceLabel}</a><a href="https://github.com/heznpc/skillBridge/blob/main/LICENSE">{ui.license}</a></nav></footer>
 
-<script>
-  const lessons = {
-    intro: {
-      number: '01',
-      en: { title: 'Every lesson has a starting context.', body: 'SkillBridge begins on the course you already opened. Lesson navigation, learning progress, and the original page remain where you expect them.', term: 'course context', answer: 'The starting point is the existing course page. SkillBridge adds language support without creating a separate reading workspace.' },
-      ko: { title: '모든 강의에는 이미 시작 맥락이 있습니다.', body: 'SkillBridge는 이미 열어 둔 강의에서 시작합니다. 강의 탐색과 학습 진도, 원래 페이지는 익숙한 위치에 그대로 남습니다.', term: 'course context', answer: '시작점은 이미 열어 둔 강의 페이지입니다. SkillBridge는 별도 읽기 공간을 만들지 않고 언어 지원만 더합니다.' },
-      ja: { title: 'すべてのレッスンには既存の文脈があります。', body: 'SkillBridge はすでに開いているコース内で始まります。ナビゲーションと学習の進捗、元のページはそのまま残ります。', term: 'course context', answer: '開始点は既存のコースページです。別の読書スペースを作らず、言語サポートだけを追加します。' },
-      es: { title: 'Cada lección ya tiene un contexto de inicio.', body: 'SkillBridge comienza dentro del curso que ya abriste. La navegación, el progreso y la página original permanecen en su lugar.', term: 'course context', answer: 'El punto de inicio es la página existente del curso. SkillBridge añade idioma sin crear otro espacio de lectura.' },
-    },
-    tools: {
-      number: '02',
-      en: { title: 'Tool use begins with a clear contract.', body: 'When a model receives a task, it needs both a capability and the rules for using it. This boundary is what makes tool calls reliable.', term: 'tool calls', answer: 'A clear contract says what a tool can do and which rules it must follow. That makes the result more predictable.' },
-      ko: { title: '도구 사용은 명확한 계약에서 시작됩니다.', body: '모델이 작업을 받을 때는 기능뿐 아니라 그 기능을 사용하는 규칙도 함께 필요합니다. 이 경계가 도구 호출을 신뢰할 수 있게 만듭니다.', term: 'tool calls', answer: '명확한 계약은 도구가 할 수 있는 일과 따라야 할 규칙을 함께 정합니다. 그래서 결과를 더 예측할 수 있습니다.' },
-      ja: { title: 'ツールの利用は明確な契約から始まります。', body: 'モデルがタスクを受け取るときは、機能だけでなくその使い方のルールも必要です。この境界がツール呼び出しの信頼性を支えます。', term: 'tool calls', answer: '明確な契約は、ツールができることと守るルールを決めます。そのため結果を予測しやすくなります。' },
-      es: { title: 'El uso de herramientas empieza con un contrato claro.', body: 'Cuando un modelo recibe una tarea, necesita tanto una capacidad como las reglas para usarla. Ese límite hace que las llamadas a herramientas sean confiables.', term: 'tool calls', answer: 'Un contrato claro define lo que una herramienta puede hacer y las reglas que debe seguir. Así el resultado es más predecible.' },
-    },
-    guardrails: {
-      number: '03',
-      en: { title: 'Guardrails protect the learning boundary.', body: 'On assessment pages, SkillBridge skips answer choices and disables itself on recognized proctored routes. Language support should not change the rules of an evaluation.', term: 'assessment boundary', answer: 'The boundary is deliberate: lesson text can be translated, but answer choices and recognized proctored environments are left alone.' },
-      ko: { title: '가드레일은 학습의 경계를 지킵니다.', body: '평가 페이지에서는 답안 선택지를 번역하지 않고, 감독형으로 인식한 경로에서는 확장 프로그램을 비활성화합니다. 언어 지원이 평가 규칙을 바꾸면 안 됩니다.', term: 'assessment boundary', answer: '이 경계는 의도적입니다. 강의 본문은 번역하되, 답안 선택지와 인식된 감독형 환경은 건드리지 않습니다.' },
-      ja: { title: 'ガードレールは学習の境界を守ります。', body: '評価ページでは選択肢を翻訳せず、認識された監督ルートでは拡張機能を無効にします。言語サポートが評価のルールを変えるべきではありません。', term: 'assessment boundary', answer: 'これは意図した境界です。レッスン本文は翻訳できますが、選択肢と監督された環境には触れません。' },
-      es: { title: 'Los límites protegen la evaluación.', body: 'En las páginas de evaluación, SkillBridge omite las opciones de respuesta y se desactiva en rutas supervisadas reconocidas. El idioma no debe cambiar las reglas de una evaluación.', term: 'assessment boundary', answer: 'El límite es intencional: el texto de la lección se puede traducir, pero las opciones y los entornos supervisados no se modifican.' },
-    },
-    practice: {
-      number: '04',
-      en: { title: 'Return to the idea when you are ready.', body: 'Save a flashcard, bookmark the lesson, and come back to the same point later. Study tools should extend the course instead of replacing it.', term: 'learning loop', answer: 'The learning loop is simple: read, save what matters, then return to the same lesson context when you are ready.' },
-      ko: { title: '준비되었을 때 다시 같은 생각으로 돌아옵니다.', body: '플래시카드를 저장하고 강의를 북마크한 뒤, 나중에 같은 지점으로 돌아오세요. 학습 도구는 강의를 대체하는 대신 확장해야 합니다.', term: 'learning loop', answer: '학습 흐름은 단순합니다. 읽고, 중요한 내용을 저장한 뒤, 준비되었을 때 같은 강의 맥락으로 돌아옵니다.' },
-      ja: { title: '準備ができたら、また同じ考えに戻れます。', body: 'フラッシュカードを保存し、レッスンをブックマークして、後で同じ場所に戻りましょう。学習ツールはコースを置き換えるのではなく拡張します。', term: 'learning loop', answer: '学習の流れはシンプルです。読み、大切な内容を保存し、準備ができたら同じレッスンの文脈に戻ります。' },
-      es: { title: 'Vuelve a la idea cuando estés listo.', body: 'Guarda una tarjeta, marca la lección y vuelve al mismo punto más tarde. Las herramientas de estudio deben ampliar el curso, no reemplazarlo.', term: 'learning loop', answer: 'El ciclo es simple: lee, guarda lo importante y vuelve al mismo contexto cuando estés listo.' },
-    },
-  };
-
-  const languageLabels = { en: 'English', ko: '한국어', ja: '日本語', es: 'Español' };
-  document.querySelectorAll('[data-course-demo]').forEach((demo) => {
-    const languageButtons = demo.querySelectorAll('[data-lang]');
-    const stepButtons = demo.querySelectorAll('[data-step]');
-    const languageLabel = demo.querySelector('[data-demo-language]');
-    const title = demo.querySelector('[data-demo-title]');
-    const body = demo.querySelector('[data-demo-body]');
-    const term = demo.querySelector('[data-demo-term]');
-    const status = demo.querySelector('[data-demo-status]');
-    const progress = demo.querySelector('[data-demo-progress]');
-    const tutorToggle = demo.querySelector('[data-tutor-toggle]');
-    const tutorPanel = demo.querySelector('[data-tutor-panel]');
-    const tutorClose = demo.querySelector('[data-tutor-close]');
-    const tutorContext = demo.querySelector('[data-tutor-context]');
-    const tutorPrompt = demo.querySelector('[data-tutor-prompt]');
-    const tutorAnswer = demo.querySelector('[data-tutor-answer]');
-    const tutorToggleLabel = demo.querySelector('[data-tutor-toggle-label]');
-    const locale = demo.dataset.locale || 'en';
-    let activeLanguage = demo.dataset.initialLanguage || 'en';
-    let activeStep = 'tools';
-    const isKorean = locale === 'ko';
-
-    const closeTutor = () => {
-      tutorPanel.hidden = true;
-      tutorToggle.setAttribute('aria-expanded', 'false');
-      tutorToggleLabel.textContent = isKorean ? 'Tutor 열기' : 'Open Tutor';
-    };
-    const setStep = (step) => {
-      activeStep = step;
-      const lesson = lessons[step][activeLanguage];
-      languageLabel.textContent = languageLabels[activeLanguage];
-      title.textContent = lesson.title;
-      body.textContent = lesson.body;
-      term.textContent = lesson.term;
-      status.textContent = activeLanguage === 'en' ? (isKorean ? '원문 수업' : 'Original lesson') : (isKorean ? '이 수업에서 번역됨' : 'Translated in this lesson');
-      progress.textContent = lessons[step].number + ' / 04';
-      tutorContext.textContent = isKorean ? '현재 보이는 문단의 맥락을 바탕으로 질문해 보세요.' : 'Ask about the paragraph currently visible in this lesson.';
-      tutorAnswer.textContent = lesson.answer;
-      tutorAnswer.hidden = true;
-      stepButtons.forEach((button) => {
-        const isActive = button.dataset.step === step;
-        button.classList.toggle('active', isActive);
-        button.setAttribute('aria-current', isActive ? 'step' : 'false');
-      });
-      closeTutor();
-    };
-    languageButtons.forEach((button) => button.addEventListener('click', () => {
-      activeLanguage = button.dataset.lang;
-      languageButtons.forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
-      setStep(activeStep);
-    }));
-    stepButtons.forEach((button) => button.addEventListener('click', () => setStep(button.dataset.step)));
-    tutorToggle.addEventListener('click', () => {
-      const isOpen = tutorToggle.getAttribute('aria-expanded') === 'true';
-      tutorPanel.hidden = isOpen;
-      tutorToggle.setAttribute('aria-expanded', String(!isOpen));
-      tutorToggleLabel.textContent = isOpen ? (isKorean ? 'Tutor 열기' : 'Open Tutor') : (isKorean ? 'Tutor 닫기' : 'Close Tutor');
-    });
-    tutorClose.addEventListener('click', closeTutor);
-    tutorPrompt.addEventListener('click', () => { tutorAnswer.hidden = false; });
-    setStep(activeStep);
-  });
-</script>
 <script>
   document.querySelectorAll('[data-extension-demo]').forEach((demo) => {
     const sidebar = demo.querySelector('[data-extension-sidebar]');
@@ -237,9 +151,64 @@ const demoText = locale === 'ko'
     const toolsMenu = demo.querySelector('[data-tools-menu]');
     const language = demo.querySelector('[data-popup-language]');
     const autoTranslate = demo.querySelector('[data-auto-translate]');
+    const commentTranslate = demo.querySelector('[data-comment-translate]');
     const status = demo.querySelector('[data-extension-status]');
+    const demoQuestion = demo.querySelector('[data-demo-question]');
+    const chatInput = demo.querySelector('[data-chat-input]');
+    const chatSend = demo.querySelector('[data-chat-send]');
+    const chatFeedback = demo.querySelector('[data-chat-feedback]');
+    const tutorMessage = demo.querySelector('[data-tutor-message]');
+    const toolButtons = toolsMenu?.querySelectorAll('[data-tool-preview]') || [];
+    const previewLabel = demo.querySelector('[data-preview-label]');
+    const previewTitle = demo.querySelector('[data-preview-title]');
+    const previewBody = demo.querySelector('[data-preview-body]');
     const rail = demo.closest('.journey-stage')?.querySelectorAll('[data-flow-step]') || [];
     const isKorean = demo.dataset.locale === 'ko';
+
+    const translationSamples = {
+      en: {
+        name: 'English', koName: '영어', title: 'Tool use begins with a clear contract.',
+        body: 'A model needs both a tool description and an explicit input shape before it can choose and call that tool reliably.'
+      },
+      ko: {
+        name: 'Korean', koName: '한국어', title: '도구 사용은 명확한 계약에서 시작됩니다.',
+        body: '모델이 도구를 안정적으로 선택하고 호출하려면 도구 설명과 명시적인 입력 형식이 모두 필요합니다.'
+      },
+      ja: {
+        name: 'Japanese', koName: '일본어', title: 'ツールの利用は明確な契約から始まります。',
+        body: 'モデルがツールを確実に選択して呼び出すには、ツールの説明と明示的な入力形式の両方が必要です。'
+      },
+      es: {
+        name: 'Spanish', koName: '스페인어', title: 'El uso de herramientas comienza con un contrato claro.',
+        body: 'Un modelo necesita la descripción de la herramienta y un formato de entrada explícito para elegirla y utilizarla de forma fiable.'
+      }
+    };
+    const toolPreviews = isKorean
+      ? {
+          recent: '최근 강의 미리보기: 마지막으로 읽던 도구 사용 강의로 돌아갑니다.',
+          bookmarks: '북마크 미리보기: 저장한 문단을 현재 강의 맥락에서 다시 엽니다.',
+          notes: '노트 미리보기: 현재 문단 옆에 개인 학습 메모를 표시합니다.',
+          reports: '용어 리포트 미리보기: 이번 강의의 핵심 용어를 한곳에 모읍니다.',
+          flashcards: '플래시카드 미리보기: 현재 강의의 핵심 개념으로 복습 카드를 만듭니다.',
+          pdf: 'PDF 내보내기 미리보기: 번역된 강의의 인쇄용 구성을 준비합니다.'
+        }
+      : {
+          recent: 'Recent lessons preview: return to the tool-use lesson where you stopped reading.',
+          bookmarks: 'Bookmarks preview: reopen a saved passage in its lesson context.',
+          notes: 'Notes preview: show your study note beside the current passage.',
+          reports: 'Term reports preview: collect the key terms from this lesson in one place.',
+          flashcards: 'Flashcards preview: turn the lesson’s key concepts into review cards.',
+          pdf: 'Export PDF preview: prepare a printable version of the translated lesson.'
+        };
+
+    const updateTranslationPreview = (code) => {
+      const sample = translationSamples[code] || translationSamples.en;
+      previewLabel.textContent = `${isKorean ? '데모 강의 발췌' : 'Demo lesson excerpt'} · ${isKorean ? sample.koName : sample.name}`;
+      previewTitle.textContent = sample.title;
+      previewBody.textContent = sample.body;
+      previewTitle.lang = code;
+      previewBody.lang = code;
+    };
 
     const setRail = (step) => {
       rail.forEach((button) => {
@@ -249,7 +218,7 @@ const demoText = locale === 'ko'
       });
     };
 
-    const setSidebar = (open) => {
+    const setSidebar = (open, moveFocus = false) => {
       if (!open && toolsMenu) {
         toolsMenu.hidden = true;
         toolsToggle?.setAttribute('aria-expanded', 'false');
@@ -258,10 +227,11 @@ const demoText = locale === 'ko'
       sidebarToggle.setAttribute('aria-expanded', String(open));
       demo.dataset.mode = open ? 'sidebar' : 'popup';
       setRail(open ? 'sidebar' : 'popup');
+      if (moveFocus) (open ? sidebarClose : sidebarToggle).focus();
     };
 
-    sidebarToggle.addEventListener('click', () => setSidebar(sidebar.hidden));
-    sidebarClose.addEventListener('click', () => setSidebar(false));
+    sidebarToggle.addEventListener('click', () => setSidebar(sidebar.hidden, true));
+    sidebarClose.addEventListener('click', () => setSidebar(false, true));
     toolsToggle?.addEventListener('click', () => {
       if (!toolsMenu) return;
       const open = toolsMenu.hidden;
@@ -271,10 +241,11 @@ const demoText = locale === 'ko'
 
     language.addEventListener('change', () => {
       const label = language.options[language.selectedIndex].text;
+      updateTranslationPreview(language.value);
       demo.dataset.mode = 'language';
       setRail('language');
       status.textContent = isKorean
-        ? `${label}(으)로 설정했습니다. 현재 강의에 번역이 적용됩니다.`
+        ? `번역 언어를 ${label}로 설정했습니다. 현재 강의에 번역이 적용됩니다.`
         : `Language set to ${label}. Translation applies on the current lesson.`;
     });
 
@@ -284,10 +255,44 @@ const demoText = locale === 'ko'
         : (isKorean ? '현재 강의의 자동 번역을 일시 중지했습니다.' : 'Automatic translation is paused for this lesson.');
     });
 
+    commentTranslate.addEventListener('change', () => {
+      status.textContent = commentTranslate.checked
+        ? (isKorean ? '현재 강의에서 댓글 번역을 켰습니다.' : 'Comment translation is enabled for this lesson.')
+        : (isKorean ? '현재 강의에서 댓글 번역을 껐습니다.' : 'Comment translation is disabled for this lesson.');
+    });
+
+    const showChatPreview = () => {
+      if (!chatInput.value.trim()) chatInput.value = demoQuestion.textContent.trim();
+      chatFeedback.textContent = isKorean
+        ? '질문 흐름 미리보기가 표시됐습니다. 외부로 전송된 내용은 없습니다.'
+        : 'The question-flow preview is shown. Nothing was sent outside this page.';
+    };
+    toolButtons.forEach((button) => button.addEventListener('click', () => {
+      toolButtons.forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
+      tutorMessage.textContent = toolPreviews[button.dataset.toolPreview];
+      chatFeedback.textContent = isKorean
+        ? '학습 도구 미리보기입니다. 이 데모에서는 데이터를 열거나 저장하지 않습니다.'
+        : 'Learning-tool preview. This demo does not open or store data.';
+      toolsMenu.hidden = true;
+      toolsToggle.setAttribute('aria-expanded', 'false');
+      toolsToggle.focus();
+    }));
+    demoQuestion.addEventListener('click', () => {
+      chatInput.value = demoQuestion.textContent.trim();
+      chatInput.focus();
+    });
+    chatSend.addEventListener('click', showChatPreview);
+    chatInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        showChatPreview();
+      }
+    });
+
     rail.forEach((button) => button.addEventListener('click', () => {
       const step = button.dataset.flowStep;
       if (step === 'sidebar') {
-        setSidebar(true);
+        setSidebar(true, true);
       } else {
         setSidebar(false);
         demo.dataset.mode = step;
@@ -295,5 +300,18 @@ const demoText = locale === 'ko'
         if (step === 'language') language.focus();
       }
     }));
+
+    demo.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      if (!toolsMenu.hidden) {
+        toolsMenu.hidden = true;
+        toolsToggle.setAttribute('aria-expanded', 'false');
+        toolsToggle.focus();
+      } else if (!sidebar.hidden) {
+        setSidebar(false, true);
+      }
+    });
+
+    updateTranslationPreview(language.value);
   });
 </script>
