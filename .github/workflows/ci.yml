@@ -112,6 +112,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build GitHub Pages landing
+        run: npm run landing:verify
+
       - name: Build Firefox artifact
         run: npm run build:firefox
 

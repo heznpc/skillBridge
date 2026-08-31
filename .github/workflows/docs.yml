@@ -8,9 +8,14 @@ on:
   pull_request:
     paths:
       - 'manifest.json'
+      - 'package.json'
+      - 'package-lock.json'
       - 'src/lib/constants.js'
       - 'README.md'
-      - 'docs/index.html'
+      - 'scripts/generate-docs.js'
+      - 'scripts/publish-landing.cjs'
+      - 'site/**'
+      - 'docs/**'
       - 'src/data/**'
   workflow_dispatch:
 
@@ -25,11 +30,13 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
         with:
           node-version-file: '.nvmrc'
-      - run: node scripts/generate-docs.js
+      - run: npm ci
+      - run: npm run docs
       - name: Verify generated docs are committed
         run: |
-          if ! git diff --quiet; then
-            echo "::error::Generated docs are stale. Run 'npm run docs' and commit README.md / docs/index.html / src/data/* before merging."
+          if [ -n "$(git status --porcelain --untracked-files=all)" ]; then
+            echo "::error::Generated docs are stale. Run 'npm run docs' and commit the generated README / docs / metadata changes before merging."
             git --no-pager diff --stat
+            git status --short
             exit 1
           fi
