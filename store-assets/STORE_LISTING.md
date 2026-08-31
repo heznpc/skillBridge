@@ -1,9 +1,16 @@
-# Chrome Web Store — Store Listing (v4.0.0 candidate)
+# Archived / frozen CWS v4.0.0 store-listing draft — do not use
 
-This copy describes only the bundled Chrome Web Store package. It must stay in
-sync with the uploaded ZIP, the CWS Privacy tab, and `PRIVACY_POLICY.md`.
+> **Frozen archive. Do not paste or upload this v4.0.0 copy or its dashboard
+> fields.** Source v4.1.0 is a GitHub-only checkpoint, not a CWS submission
+> candidate. Assign the final CWS version and regenerate the listing, assets,
+> evidence, and dashboard fields only after the ongoing code-development phase
+> is complete.
 
-## What's New — paste into the CWS "What's new" field after version assignment
+This historical copy describes only the archived v4.0.0 bundled Chrome Web
+Store package. It was required to stay in sync with the uploaded ZIP, the CWS
+Privacy tab, and `PRIVACY_POLICY.md`; it is not current submission copy.
+
+## Archived What's New draft — do not paste into CWS
 
 **Baseline: v1.0.1, not the 3.5.x candidates.** Every installed user is on
 v1.0.1 (uploaded 2026-03-10) — the 2.x/3.x versions were tagged in the

@@ -200,7 +200,7 @@ indexHtml = replaceGeneratedMeta(
 indexHtml = replaceGeneratedMeta(
   indexHtml,
   'og-description',
-  `SkillBridge source manifest v${version}; unreleased CWS candidate with translation, local study tools, and exam safeguards.`,
+  `SkillBridge source checkpoint v${version}; not yet a CWS submission, with translation, local study tools, and exam safeguards.`,
 );
 
 fs.writeFileSync(indexPath, indexHtml, 'utf8');

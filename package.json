@@ -1,6 +1,6 @@
 {
   "name": "skillbridge",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "private": true,
   "scripts": {
     "prepare": "git config core.hooksPath .githooks 2>/dev/null || true",
@@ -17,6 +17,7 @@
     "build:firefox": "node scripts/build-firefox.js",
     "build:firefox:zip": "npm run build:firefox && cd dist/firefox && rm -f ../../store-assets/skillbridge-firefox.zip && zip -r ../../store-assets/skillbridge-firefox.zip . -x '*.DS_Store'",
     "check:selectors": "node scripts/check-selectors.js",
+    "check:version": "node scripts/check-version-sync.js",
     "check:models": "node scripts/check-tutor-models.js",
     "check:dicts": "node scripts/check-dicts.js",
     "check:sync": "node scripts/check-bg-sync.js",

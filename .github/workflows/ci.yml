@@ -24,6 +24,9 @@ jobs:
       - name: Validate manifest.json
         run: node -e "JSON.parse(require('fs').readFileSync('manifest.json','utf8')); console.log('✓ manifest.json is valid')"
 
+      - name: Check release version identity
+        run: node scripts/check-version-sync.js
+
       - name: Validate language JSON files
         run: |
           status=0

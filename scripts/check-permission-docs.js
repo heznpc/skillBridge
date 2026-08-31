@@ -13,8 +13,8 @@
  *
  * Three structured surfaces are compared for SET EQUALITY against the manifest,
  * so both directions fail loudly:
- *   1. `### Candidate Permissions` table in PRIVACY_POLICY.md
- *   2. `<h3>Candidate Permissions</h3>` table in docs/privacy.html
+ *   1. `### Unpublished Source-Build Permissions` table in PRIVACY_POLICY.md
+ *   2. `<h3>Unpublished Source-Build Permissions</h3>` table in docs/privacy.html
  *   3. `## Permission Justifications` headings in store-assets/STORE_LISTING.md
  *
  * The legacy v1.0.1 sections are deliberately excluded: they describe a
@@ -129,7 +129,7 @@ function tokensFromCells(cells) {
 }
 
 function privacyMdTokens(text) {
-  const section = sliceSection(text, /^### Candidate Permissions$/m, /^#{2,3} /m);
+  const section = sliceSection(text, /^### Unpublished Source-Build Permissions$/m, /^#{2,3} /m);
   if (section === null) return null;
   const rows = section.split('\n').filter((line) => line.startsWith('|') && !/^\|[\s-]+\|/.test(line));
   const firstCells = rows
@@ -139,7 +139,7 @@ function privacyMdTokens(text) {
 }
 
 function privacyHtmlTokens(text) {
-  const section = sliceSection(text, /<h3>Candidate Permissions<\/h3>/, /<h[23][ >]/);
+  const section = sliceSection(text, /<h3>Unpublished Source-Build Permissions<\/h3>/, /<h[23][ >]/);
   if (section === null) return null;
   const rows = section.match(/<tr>[\s\S]*?<\/tr>/g) || [];
   const firstCells = rows.map((row) => (row.match(/<td>[\s\S]*?<\/td>/) || [''])[0]);
@@ -180,8 +180,8 @@ function findPermissionDocMismatches({ manifest, privacyMd, privacyHtml, storeLi
   const expected = manifestTokens(manifest);
 
   const surfaces = [
-    ['PRIVACY_POLICY.md "Candidate Permissions"', privacyMdTokens(privacyMd)],
-    ['docs/privacy.html "Candidate Permissions"', privacyHtmlTokens(privacyHtml)],
+    ['PRIVACY_POLICY.md "Unpublished Source-Build Permissions"', privacyMdTokens(privacyMd)],
+    ['docs/privacy.html "Unpublished Source-Build Permissions"', privacyHtmlTokens(privacyHtml)],
     ['STORE_LISTING.md "Permission Justifications"', storeListingTokens(storeListing)],
   ];
 
