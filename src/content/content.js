@@ -261,6 +261,7 @@
     'byoa',
     'lesson-store',
     'bookmarks',
+    'term-reports',
     'resume',
     'dashboard',
     'reading-aid',

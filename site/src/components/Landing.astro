@@ -21,7 +21,7 @@ const ui = locale === 'ko'
       flowLead: '바뀌는 것은 언어뿐입니다. 탐색, 핵심 용어, 멈춘 지점, 복습 도구는 수업 맥락 안에 남습니다.',
       stepOpen: '지원 강의를 엽니다', stepOpenBody: '평소처럼 AI Academy 수업을 엽니다. 별도의 작업 공간이나 복사·붙여넣기 화면은 필요하지 않습니다.',
       stepChoose: '지구본 메뉴에서 언어를 고릅니다', stepChooseBody: '선택하는 즉시 현재 수업의 읽을 수 있는 텍스트가 같은 위치에서 바뀝니다.',
-      stepStay: '이해가 필요한 순간에도 수업 안에 머뭅니다', stepStayBody: 'Tutor, 플래시카드, 북마크는 옆으로 열립니다. 읽던 문단을 잃지 않습니다.',
+      stepStay: '이해가 필요한 순간에도 수업 안에 머뭅니다', stepStayBody: 'Tutor와 로컬 복습 도구는 옆으로 열립니다. 읽던 문단을 잃지 않습니다.',
       demoLabel: '라이브 전환 데모', local: '브라우저 내 전환',
       contextEyebrow: '문맥은 그대로', contextTitle: '번역은 다른 탭으로 가지 않습니다.',
       contextBody: '강의 목록과 본문, 복습 도구가 같은 흐름 안에 남아 있어 읽기를 멈추고 다시 찾을 필요가 없습니다.',
@@ -43,7 +43,7 @@ const ui = locale === 'ko'
       flowLead: 'Only the language changes. Navigation, protected terminology, your place in the course, and review tools remain in the lesson context.',
       stepOpen: 'Open a supported lesson', stepOpenBody: 'Start in AI Academy as usual. There is no second workspace and no copy-paste translation loop.',
       stepChoose: 'Choose a language from the globe menu', stepChooseBody: 'The readable text on the current lesson changes in place as soon as you choose a language.',
-      stepStay: 'Stay in the lesson when you need help', stepStayBody: 'Tutor, flashcards, and bookmarks open beside the course. The paragraph you were reading remains visible.',
+      stepStay: 'Stay in the lesson when you need help', stepStayBody: 'Tutor and local review tools open beside the course. The paragraph you were reading remains visible.',
       demoLabel: 'Live switch demo', local: 'In-browser switch',
       contextEyebrow: 'Context remains', contextTitle: 'Translation does not send you to another tab.',
       contextBody: 'The course list, lesson body, and review tools stay in one path, so you do not have to stop reading to find your way back.',
@@ -58,10 +58,10 @@ const ui = locale === 'ko'
 
 const demoText = locale === 'ko'
   ? {
-      language: '\uBC88\uC5ED \uC5B8\uC5B4', auto: '\uC774 \uAC15\uC758 \uC790\uB3D9 \uBC88\uC5ED', comments: '\uB313\uAE00\uB3C4 \uBC88\uC5ED', openSidebar: '\uC0AC\uC774\uB4DC\uBC14 \uC5F4\uAE30', learningTools: '\uD559\uC2B5 \uB3C4\uAD6C', askPassage: '\uD604\uC7AC \uBB38\uB2E8\uC5D0 \uC9C8\uBB38\uD558\uAE30', recentLessons: '\uCD5C\uADFC \uAC15\uC758', bookmarks: '\uBD81\uB9C8\uD06C', notes: '\uB178\uD2B8', reports: '\uC6A9\uC5B4 \uB9AC\uD3EC\uD2B8', flashcards: '\uD50C\uB798\uC2DC\uCE74\uB4DC', exportPdf: 'PDF \uB0B4\uBCF4\uB0B4\uAE30', closeSidebar: '\uC0AC\uC774\uB4DC\uBC14 \uB2EB\uAE30', tutorGreeting: '\uAC15\uC758 \uB0B4\uC6A9\uC744 \uB5A0\uB098\uC9C0 \uC54A\uACE0 \uC9C8\uBB38\uD574 \uBCF4\uC138\uC694.', send: '\uBCF4\uB0B4\uAE30', currentLesson: '\uD604\uC7AC \uAC15\uC758\uC5D0 \uBC88\uC5ED\uC774 \uCF1C\uC838 \uC788\uC2B5\uB2C8\uB2E4.', chatPreview: '\uC778\uD130\uB799\uD2F0\uBE0C \uBBF8\uB9AC\uBCF4\uAE30\uC785\uB2C8\uB2E4. \uC774 \uB370\uBAA8\uC5D0\uC11C\uB294 \uBA54\uC2DC\uC9C0\uB97C \uC804\uC1A1\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.', chatReady: '\uC9C8\uBB38 \uD750\uB984 \uBBF8\uB9AC\uBCF4\uAE30\uAC00 \uD45C\uC2DC\uB410\uC2B5\uB2C8\uB2E4. \uC678\uBD80\uB85C \uC804\uC1A1\uB41C \uB0B4\uC6A9\uC740 \uC5C6\uC2B5\uB2C8\uB2E4.'
+      language: '\uBC88\uC5ED \uC5B8\uC5B4', auto: '\uC774 \uAC15\uC758 \uC790\uB3D9 \uBC88\uC5ED', comments: '\uB313\uAE00\uB3C4 \uBC88\uC5ED', openSidebar: '\uC0AC\uC774\uB4DC\uBC14 \uC5F4\uAE30', learningTools: '\uD559\uC2B5 \uB3C4\uAD6C', askPassage: '\uD604\uC7AC \uBB38\uB2E8\uC5D0 \uC9C8\uBB38\uD558\uAE30', recentLessons: '\uCD5C\uADFC \uAC15\uC758', bookmarks: '\uBD81\uB9C8\uD06C', notes: '\uB178\uD2B8', reports: '\uB9AC\uD3EC\uD2B8', flashcards: '\uD50C\uB798\uC2DC\uCE74\uB4DC', exportPdf: 'PDF \uB0B4\uBCF4\uB0B4\uAE30', closeSidebar: '\uC0AC\uC774\uB4DC\uBC14 \uB2EB\uAE30', tutorGreeting: '\uAC15\uC758 \uB0B4\uC6A9\uC744 \uB5A0\uB098\uC9C0 \uC54A\uACE0 \uC9C8\uBB38\uD574 \uBCF4\uC138\uC694.', send: '\uBCF4\uB0B4\uAE30', currentLesson: '\uD604\uC7AC \uAC15\uC758\uC5D0 \uBC88\uC5ED\uC774 \uCF1C\uC838 \uC788\uC2B5\uB2C8\uB2E4.', chatPreview: '\uC778\uD130\uB799\uD2F0\uBE0C \uBBF8\uB9AC\uBCF4\uAE30\uC785\uB2C8\uB2E4. \uC774 \uB370\uBAA8\uC5D0\uC11C\uB294 \uBA54\uC2DC\uC9C0\uB97C \uC804\uC1A1\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.', chatReady: '\uC9C8\uBB38 \uD750\uB984 \uBBF8\uB9AC\uBCF4\uAE30\uAC00 \uD45C\uC2DC\uB410\uC2B5\uB2C8\uB2E4. \uC678\uBD80\uB85C \uC804\uC1A1\uB41C \uB0B4\uC6A9\uC740 \uC5C6\uC2B5\uB2C8\uB2E4.'
     }
   : {
-      language: 'Translate to', auto: 'Auto-translate this lesson', comments: 'Translate comments', openSidebar: 'Open SkillBridge sidebar', learningTools: 'Learning tools', askPassage: 'Ask about this passage', recentLessons: 'Recent lessons', bookmarks: 'Bookmarks', notes: 'Notes', reports: 'Term reports', flashcards: 'Flashcards', exportPdf: 'Export PDF', closeSidebar: 'Close sidebar', tutorGreeting: 'Ask about the lesson without leaving the page.', send: 'Send', currentLesson: 'Translation is enabled for this lesson.', chatPreview: 'Interactive preview. This demo does not send messages.', chatReady: 'The question-flow preview is shown. Nothing was sent outside this page.'
+      language: 'Translate to', auto: 'Auto-translate this lesson', comments: 'Translate comments', openSidebar: 'Open SkillBridge sidebar', learningTools: 'Learning tools', askPassage: 'Ask about this passage', recentLessons: 'Recent lessons', bookmarks: 'Bookmarks', notes: 'Notes', reports: 'Reports', flashcards: 'Flashcards', exportPdf: 'Export PDF', closeSidebar: 'Close sidebar', tutorGreeting: 'Ask about the lesson without leaving the page.', send: 'Send', currentLesson: 'Translation is enabled for this lesson.', chatPreview: 'Interactive preview. This demo does not send messages.', chatReady: 'The question-flow preview is shown. Nothing was sent outside this page.'
     };
 ---
 <header class="flow-header shell">
@@ -188,7 +188,7 @@ const demoText = locale === 'ko'
           recent: '최근 강의 미리보기: 마지막으로 읽던 도구 사용 강의로 돌아갑니다.',
           bookmarks: '북마크 미리보기: 저장한 문단을 현재 강의 맥락에서 다시 엽니다.',
           notes: '노트 미리보기: 현재 문단 옆에 개인 학습 메모를 표시합니다.',
-          reports: '용어 리포트 미리보기: 이번 강의의 핵심 용어를 한곳에 모읍니다.',
+          reports: '리포트 미리보기: 선택한 번역의 원문·번역·피드백을 로컬 큐에서 검토합니다.',
           flashcards: '플래시카드 미리보기: 현재 강의의 핵심 개념으로 복습 카드를 만듭니다.',
           pdf: 'PDF 내보내기 미리보기: 번역된 강의의 인쇄용 구성을 준비합니다.'
         }
@@ -196,7 +196,7 @@ const demoText = locale === 'ko'
           recent: 'Recent lessons preview: return to the tool-use lesson where you stopped reading.',
           bookmarks: 'Bookmarks preview: reopen a saved passage in its lesson context.',
           notes: 'Notes preview: show your study note beside the current passage.',
-          reports: 'Term reports preview: collect the key terms from this lesson in one place.',
+          reports: 'Reports preview: review a selected passage’s source, translation and feedback in the local queue.',
           flashcards: 'Flashcards preview: turn the lesson’s key concepts into review cards.',
           pdf: 'Export PDF preview: prepare a printable version of the translated lesson.'
         };

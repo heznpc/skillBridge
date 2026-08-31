@@ -105,8 +105,9 @@
     if (!root) return;
     root.appendChild(sidebar);
     setTimeout(bindSidebarEvents, SKILLBRIDGE_DELAYS.SIDEBAR_BIND);
-    // Ask-Tutor feeds the chat — only wire it where the tutor bridge exists.
-    if (sb.hostCaps?.bridge !== false) sb.initAskTutorButton?.();
+    // The selection toolbar also owns local translation feedback, which works
+    // on bridge-free hosts; it hides only the Ask Tutor action there.
+    sb.initAskTutorButton?.();
   }
 
   function getTutorGreeting() {
@@ -330,8 +331,23 @@
       if (chatInput) chatInput.placeholder = sb.t(CHAT_PLACEHOLDERS);
       const sendBtn = sb.$id('si18n-chat-send');
       if (sendBtn) sendBtn.textContent = sb.t(SEND_LABELS);
-      const askLabel = sb.$('.si18n-ask-tutor-label');
-      if (askLabel) askLabel.textContent = sb.t(ASK_TUTOR_LABELS);
+    }
+
+    const askLabel = sb.$('.si18n-ask-tutor-label');
+    if (askLabel) askLabel.textContent = sb.t(ASK_TUTOR_LABELS);
+    const feedbackToolbar = sb.$('.si18n-selection-toolbar');
+    if (feedbackToolbar) feedbackToolbar.setAttribute('aria-label', sb.t(REPORT_LABELS.feedbackToolbar));
+    const helpful = sb.$('.si18n-feedback-positive');
+    if (helpful) {
+      const label = sb.t(REPORT_LABELS.helpful);
+      helpful.title = label;
+      helpful.setAttribute('aria-label', label);
+    }
+    const needsWork = sb.$('.si18n-feedback-negative');
+    if (needsWork) {
+      const label = sb.t(REPORT_LABELS.needsWork);
+      needsWork.title = label;
+      needsWork.setAttribute('aria-label', label);
     }
 
     // The sidebar chrome is built once and was previously not re-localized, so

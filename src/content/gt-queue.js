@@ -247,7 +247,7 @@
     const elementMatch = translator.staticLookup(fullText);
     if (elementMatch) {
       if (sb.safeReplaceText(el, elementMatch) !== false) {
-        markTranslated(el);
+        trackTranslatedElement(fullText, el);
         return 'static';
       }
       // Guard refused the collapse (block carries link/button labels) — fall
@@ -284,7 +284,7 @@
 
     if (pendingWrites.length > 0) {
       for (const [node, nodeMatch] of pendingWrites) node.textContent = nodeMatch;
-      markTranslated(el);
+      trackTranslatedElement(fullText, el);
       return 'static';
     }
     return null;
@@ -754,7 +754,15 @@
   function trackTranslatedElement(originalText, el) {
     const translatedTexts = sb.translatedTexts;
     if (!translatedTexts.has(originalText)) translatedTexts.set(originalText, []);
-    translatedTexts.get(originalText).push({ el });
+    const entries = translatedTexts.get(originalText);
+    // Every translation entry path can meet the same element more than once:
+    // duplicate GT queue items, a late-content rescan, or a cache result racing
+    // a second enqueue. This map is an original-text → live-element index, so a
+    // duplicate reference adds no information and makes feedback resolution
+    // ambiguous. Keep only the element reference — a later refinement changes
+    // the live DOM, and consumers must read that current value rather than a
+    // stale translated-text snapshot stored here.
+    if (!entries.some((entry) => entry.el === el)) entries.push({ el });
     markTranslated(el);
   }
 

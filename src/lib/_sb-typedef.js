@@ -19,6 +19,78 @@
  */
 
 /**
+ * The translation index intentionally retains only the live element. Optional
+ * refinement can rewrite that element after the baseline lands, so consumers
+ * read its current text instead of a stored translation snapshot.
+ * @typedef {Object} TranslatedElementReference
+ * @property {Element} el
+ */
+
+/** @typedef {'selection'|'manual'} TranslationFeedbackCapture */
+/** @typedef {'positive'|'negative'} TranslationFeedbackSignal */
+
+/**
+ * @typedef {Object} TranslationFeedbackPair
+ * @property {string} originalText
+ * @property {string} translatedText
+ * @property {string} selectedText
+ */
+
+/**
+ * @typedef {Object} ResolvedTranslationSelection
+ * @property {Element} element
+ * @property {string} originalText
+ * @property {string} translatedText
+ * @property {string} selectedText
+ */
+
+/**
+ * @typedef {Object} TranslationFeedbackInput
+ * @property {TranslationFeedbackCapture} capture
+ * @property {TranslationFeedbackSignal} signal
+ * @property {string|null} originalText
+ * @property {string} translatedText
+ * @property {string=} selectedText
+ * @property {string=} correction
+ * @property {string=} wrongText — optional legacy-alias override
+ * @property {string=} lang
+ * @property {string=} url
+ * @property {string=} title
+ * @property {number=} ts
+ */
+
+/**
+ * @typedef {Object} TranslationFeedbackReport
+ * @property {number} reportSchemaVersion
+ * @property {TranslationFeedbackCapture} capture
+ * @property {TranslationFeedbackSignal} signal
+ * @property {string|null} originalText
+ * @property {string} translatedText
+ * @property {string} selectedText
+ * @property {string} correction
+ * @property {string} wrongText — backward-compatible alias for `selectedText`
+ * @property {string=} lang
+ * @property {string=} url
+ * @property {string=} title
+ * @property {number=} ts
+ */
+
+/**
+ * @typedef {Object} NormalizedTranslationFeedbackReports
+ * @property {TranslationFeedbackReport[]} records
+ * @property {boolean} changed
+ */
+
+/**
+ * Public helper mounted at `window._sbTranslationFeedback`.
+ * @typedef {Object} TranslationFeedbackApi
+ * @property {number} REPORT_SCHEMA_VERSION
+ * @property {(range: Range, originalTexts: Map<Element, string>, translatedTexts: Map<string, TranslatedElementReference[]>) => ResolvedTranslationSelection|null} resolveSelection
+ * @property {(raw: unknown) => NormalizedTranslationFeedbackReports} normalizeReports
+ * @property {(input: TranslationFeedbackInput) => TranslationFeedbackReport|null} makeFeedbackReport
+ */
+
+/**
  * @typedef {Object} SbState
  * @property {string} currentLang — active target language ISO code
  * @property {boolean} sidebarVisible
@@ -27,7 +99,7 @@
  * @property {boolean} certDisabled — true on certification/exam surfaces
  * @property {boolean} hasSubtitleManager
  * @property {Map<HTMLElement, string>} originalTexts
- * @property {Map<HTMLElement, string>} translatedTexts
+ * @property {Map<string, TranslatedElementReference[]>} translatedTexts — original text → live translated elements
  * @property {Map<HTMLElement, string>} originalComments
  * @property {number} gtGeneration — bumped each switchLanguage; use to drop stale GT results
  * @property {boolean} isOffline
@@ -98,6 +170,8 @@
  * @property {?(text: string) => string} sanitizeHtml
  * @property {?(text: string) => string} formatResponse
  * @property {?() => { courses: number, lessons: number, flashcards: number, mastered: number, bookmarks: number, recent: number }} collectDashboardStats
+ * @property {?(pair: TranslationFeedbackPair, signal: TranslationFeedbackSignal, correction?: string) => Promise<TranslationFeedbackReport|false>} recordTranslationFeedback
+ * @property {?(pair: TranslationFeedbackPair) => Promise<boolean>} composeTranslationFeedback
  */
 
 /**

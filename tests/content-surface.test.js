@@ -32,7 +32,7 @@ describe('content surface teardown helpers', () => {
     document.body.innerHTML = `
       <div id="skillbridge-root"></div>
       <div id="si18n-header-lang"></div>
-      <button class="si18n-ask-tutor-btn"></button>
+      <div class="si18n-selection-toolbar"><button class="si18n-ask-tutor-btn"></button></div>
       <button id="si18n-toc-toggle"></button>
       <main id="lesson-content"></main>
     `;
@@ -46,7 +46,7 @@ describe('content surface teardown helpers', () => {
 
     expect(document.getElementById('skillbridge-root')).toBeNull();
     expect(document.getElementById('si18n-header-lang')).toBeNull();
-    expect(document.querySelector('.si18n-ask-tutor-btn')).toBeNull();
+    expect(document.querySelector('.si18n-selection-toolbar')).toBeNull();
     expect(document.getElementById('si18n-toc-toggle')).not.toBeNull();
     expect(document.getElementById('lesson-content')).not.toBeNull();
     expect(sb._uiHost).toBeNull();

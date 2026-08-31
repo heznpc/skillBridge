@@ -102,11 +102,11 @@
       declares YouTube host access.
     </p>
     <p>
-      The repository's <strong>v4.1.1 release is a GitHub source checkpoint, not a Chrome Web Store submission</strong>.
+      The repository's <strong>v4.2.0 release is a GitHub source checkpoint, not a Chrome Web Store submission</strong>.
       Chrome Web Store publication remains paused, and the final submission version and dashboard upload will be
       decided only after the current code-development phase is finished. The unpublished source build keeps the AI
       Tutor, runs its bundled Puter client in Chrome's isolated content-script world on the trusted course host, removes
-      YouTube host access, and adds an on-device tutor option:
+      YouTube host access, adds an on-device tutor option, and adds local-only translation feedback to Tools › Reports:
     </p>
     <ul>
       <li>
@@ -263,7 +263,7 @@
       </tr>
     </table>
 
-    <h2>Unpublished Source Build: v4.1.1 (Not Yet a CWS Submission)</h2>
+    <h2>Unpublished Source Build: v4.2.0 (Not Yet a CWS Submission)</h2>
     <h3>Packaged Source-Build Boundary</h3>
     <p>
       The unpublished source build includes an AI Tutor using Claude — Sonnet 4.6, falling back to Sonnet 4.5 if that model is
@@ -305,10 +305,20 @@
         limited to the newest 200 records, and can be edited or deleted in place.
       </li>
       <li>
-        <strong>Term-report queue (<code>chrome.storage.local</code>, <code>sb_term_reports</code>)</strong> — the text
-        flagged as wrong, an optional correction, lesson title and URL, selected language, and timestamp. Reports stay
-        local, are limited to the newest 200 records, and are never submitted automatically; export creates a
-        client-side JSON download only when the user requests it.
+        <strong
+          >Translation-feedback and term-report queue (<code>chrome.storage.local</code>,
+          <code>sb_term_reports</code>)</strong
+        > — current records contain <code>reportSchemaVersion</code>, <code>capture</code> (<code>selection</code> or
+        <code>manual</code>), <code>signal</code> (<code>positive</code> or <code>negative</code>),
+        <code>originalText</code> (null for a manual report), <code>translatedText</code>, <code>selectedText</code>,
+        <code>correction</code>, lesson <code>url</code> and <code>title</code>, selected <code>lang</code>, and timestamp
+        <code>ts</code>, plus the backward-compatible <code>wrongText</code> alias. When a lesson has a verified
+        Skilljar↔Academy match, a record can additionally contain canonical <code>id</code> and
+        <code>provenance</code> (<code>schemaVersion</code>, <code>matchedBy</code>, <code>platform</code>,
+        <code>migratedAt</code>); migrated rows can retain <code>legacyUrls</code>. Legacy records are upgraded
+        additively, so their existing fields are not discarded. The queue stays local, is limited to the newest 200
+        records, and is never submitted automatically; export creates a client-side JSON download only when the user
+        requests it.
       </li>
       <li>
         <strong>Translation cache (IndexedDB)</strong> — original text, translated text, target language, and a
@@ -335,6 +345,16 @@
     <p>
       SkillBridge does not send this locally stored state to its operator or to a third-party analytics service. It can
       be removed through the browser's extension or site-data controls.
+    </p>
+
+    <h3>Translation Feedback (Local, No Automatic Submission)</h3>
+    <p>
+      On a non-English translated page, selecting text inside one reliably tracked translated block can expose helpful
+      and needs-work actions. Helpful feedback is saved immediately to <code>sb_term_reports</code>; needs-work feedback
+      opens Tools › Reports with the original text, current translation and selected text prefilled, where the user may
+      add a correction before saving. Feedback actions are not offered for English or untranslated text, selections
+      spanning multiple blocks, or exam answer choices. Saving, listing, deleting and exporting these records does not
+      contact SkillBridge, GitHub, an analytics service, Puter, Claude or the user's local Tutor server.
     </p>
 
     <h3>Data Sent to Third-Party Services by the Unpublished Source Build</h3>
@@ -412,8 +432,9 @@
       <li>No browsing history outside the pages where the extension is configured to run</li>
       <li>No analytics, telemetry, advertising identifier, or marketing profile</li>
       <li>
-        Recent-lesson URLs/titles, timestamps, scroll positions, bookmarks, lesson notes, term reports, flashcard review
-        activity, and Tutor history are handled locally but are not sent to the operator or an analytics service.
+        Recent-lesson URLs/titles, timestamps, scroll positions, bookmarks, lesson notes, translation feedback and manual
+        term reports, flashcard review activity, and Tutor history are handled locally but are not sent to the operator or
+        an analytics service.
       </li>
       <li>
         No AI Tutor conversation is sent to the operator. Tutor chats are kept <strong>on your device</strong> (see
@@ -431,8 +452,8 @@
       <tr>
         <td><code>storage</code></td>
         <td>
-          Save preferences, Tutor engine settings, flashcard review state, bookmarks, lesson notes, term reports, recent
-          lessons, scroll positions, and the accepted Puter session token/application identifier in
+          Save preferences, Tutor engine settings, flashcard review state, bookmarks, lesson notes, translation feedback
+          and manual term reports, recent lessons, scroll positions, and the accepted Puter session token/application identifier in
           <code>chrome.storage.local</code>
         </td>
       </tr>
@@ -538,9 +559,9 @@
         data.
       </li>
       <li>
-        <strong>Lesson notes and term reports:</strong> retained locally until the user deletes them or clears extension
-        data, with each collection capped at 200 records. Exporting reports creates a local JSON download and does not
-        submit them.
+        <strong>Lesson notes, translation feedback and manual term reports:</strong> retained locally until the user
+        deletes them or clears extension data, with the notes collection and shared feedback/report queue each capped at
+        200 records. Exporting the queue creates a local JSON download and does not submit it.
       </li>
       <li>
         <strong>Tutor history:</strong> retained locally until the user clears extension or site data; older entries can
@@ -571,7 +592,7 @@
     <p>
       Requests to Google, Puter, and Claude use HTTPS. A user-selected local Tutor server may use HTTP on
       <code>localhost</code> or <code>127.0.0.1</code>; that loopback traffic stays on the user's device. Locally
-      retained preferences, lesson activity, notes, term reports, cached translations, and Tutor history use
+      retained preferences, lesson activity, notes, translation feedback and manual term reports, cached translations, and Tutor history use
       browser-managed storage and are not separately encrypted by SkillBridge, so access to the user's unlocked browser
       profile may also permit access to that local data.
     </p>
