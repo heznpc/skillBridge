@@ -68,8 +68,10 @@ test.describe('SkillBridge — tutor offline guard', () => {
 
   test('offline state still allows the selected localhost Tutor engine', async () => {
     let localCalls = 0;
+    const localRequests = [];
     await extCtx.context.route('http://localhost:11434/v1/chat/completions', async (route) => {
       localCalls++;
+      localRequests.push(JSON.parse(route.request().postData() || '{}'));
       await route.fulfill({
         status: 200,
         headers: { 'Content-Type': 'text/event-stream' },
@@ -105,6 +107,39 @@ test.describe('SkillBridge — tutor offline guard', () => {
     expect(localCalls).toBe(1);
     expect(log.some((message) => message.role === 'bot' && message.text.includes('LOCAL_OFFLINE_OK'))).toBe(true);
     expect(log.filter((message) => message.alert).length).toBe(priorAlerts);
+
+    const completedLocalReplies = log.filter(
+      (message) => message.role === 'bot' && message.text.includes('LOCAL_OFFLINE_OK'),
+    ).length;
+    expect(await evalInContentWorld(extCtx.context, 'sendChat', 'Local follow-up only.')).toMatchObject({ ok: true });
+    const followUpDeadline = Date.now() + 8_000;
+    let followUpCompleted = false;
+    while (Date.now() < followUpDeadline) {
+      log = await evalInContentWorld(extCtx.context, 'readChatLog');
+      const replies = log.filter(
+        (message) => message.role === 'bot' && message.text.includes('LOCAL_OFFLINE_OK'),
+      ).length;
+      if (localCalls === 2 && replies > completedLocalReplies) {
+        followUpCompleted = true;
+        break;
+      }
+      await page.waitForTimeout(100);
+    }
+    expect(followUpCompleted).toBe(true);
+    expect(localCalls).toBe(2);
+    const followUpPayload = JSON.stringify(localRequests[1]);
+    expect(followUpPayload).toContain('Local follow-up only.');
+    expect(followUpPayload).not.toContain('Use the local engine while offline.');
+    expect(followUpPayload).not.toContain('LOCAL_OFFLINE_OK');
+
+    const conversations = await evalInContentWorld(extCtx.context, 'readTutorHistoryRows');
+    const localConversation = conversations.find((conversation) =>
+      conversation.turns.some((turn) => turn.question === 'Use the local engine while offline.'),
+    );
+    expect(localConversation?.turns).toEqual([
+      expect.objectContaining({ question: 'Use the local engine while offline.', answer: 'LOCAL_OFFLINE_OK' }),
+      expect.objectContaining({ question: 'Local follow-up only.', answer: 'LOCAL_OFFLINE_OK' }),
+    ]);
 
     await serviceWorker.evaluate(async () => chrome.storage.local.set({ sb_ai_engine: 'cloud' }));
     await evalInContentWorld(extCtx.context, 'dispatchOnline');

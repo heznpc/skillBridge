@@ -40,6 +40,7 @@
         "src/lib/refinement-policy.js",
         "src/lib/refinement-validator.js",
         "src/lib/lesson-identity.js",
+        "src/lib/tutor-conversations.js",
         "src/lib/selectors.js",
         "src/shared/runtime-constants.js",
         "src/lib/constants.js",

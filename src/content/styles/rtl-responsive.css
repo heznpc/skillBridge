@@ -105,6 +105,10 @@ body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-history-item {
   text-align: right;
 }
 
+body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-history-item-current {
+  box-shadow: inset -3px 0 0 var(--si18n-accent, #d97757);
+}
+
 body:is(.si18n-lang-ar, .si18n-lang-he) .si18n-history-header {
   direction: rtl;
 }

@@ -472,20 +472,34 @@ html.si18n-dark .si18n-history-item {
   background: #1a1a1a !important;
   border-color: rgba(255, 255, 255, 0.06) !important;
 }
-html.si18n-dark .si18n-history-item:hover {
+html.si18n-dark .si18n-history-item:hover,
+html.si18n-dark .si18n-history-item:focus-within {
   background: #222 !important;
 }
-html.si18n-dark .si18n-history-item-q {
+html.si18n-dark .si18n-history-item-q,
+html.si18n-dark .si18n-history-item-title {
   color: #dedede !important;
 }
-html.si18n-dark .si18n-history-item-time {
+html.si18n-dark .si18n-history-item-time,
+html.si18n-dark .si18n-history-item-turns {
   color: #999 !important;
+}
+html.si18n-dark .si18n-history-delete {
+  color: #999 !important;
+}
+html.si18n-dark .si18n-history-delete:hover {
+  color: #fca5a5 !important;
+  background: rgba(248, 113, 113, 0.12) !important;
 }
 html.si18n-dark .si18n-history-empty,
 html.si18n-dark .si18n-history-loading {
   color: #999 !important;
 }
 html.si18n-dark .si18n-history-detail-meta {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+html.si18n-dark .si18n-history-detail-nav,
+html.si18n-dark .si18n-history-detail-turn + .si18n-history-detail-turn {
   border-color: rgba(255, 255, 255, 0.08) !important;
 }
 html.si18n-dark .si18n-detail-lesson {

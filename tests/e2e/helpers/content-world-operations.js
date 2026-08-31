@@ -113,6 +113,8 @@ async function evalInContentWorld(context, op, arg) {
                         toggleDashboardPanel: typeof sb._chat.toggleDashboardPanel,
                         toggleFlashcardPanel: typeof sb._chat.toggleFlashcardPanel,
                         saveConversation: typeof sb._chat.saveConversation,
+                        startNewConversation: typeof sb._chat.startNewConversation,
+                        getConversations: typeof sb._chat.getConversations,
                         state: sb._chat.state && {
                           savedChatHTML: sb._chat.state.savedChatHTML,
                           historyPanelOpen: sb._chat.state.historyPanelOpen,
@@ -1008,6 +1010,35 @@ async function evalInContentWorld(context, op, arg) {
                     persistedTokenMatches: persisted.sb_puter_auth_token === expectedToken,
                   };
                 },
+                seedLegacyTutorHistory: async (rows) => {
+                  const records = Array.isArray(rows) ? rows : [];
+                  const db = await new Promise((resolve, reject) => {
+                    const request = indexedDB.open('skillbridge-tutor', 1);
+                    request.onupgradeneeded = (event) => {
+                      const opened = event.target.result;
+                      if (!opened.objectStoreNames.contains('conversations')) {
+                        const store = opened.createObjectStore('conversations', {
+                          keyPath: 'id',
+                          autoIncrement: true,
+                        });
+                        store.createIndex('timestamp', 'timestamp');
+                        store.createIndex('chapter', 'chapter');
+                      }
+                    };
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                  });
+                  await new Promise((resolve, reject) => {
+                    const tx = db.transaction('conversations', 'readwrite');
+                    const store = tx.objectStore('conversations');
+                    for (const row of records) store.add(row);
+                    tx.oncomplete = resolve;
+                    tx.onerror = () => reject(tx.error);
+                    tx.onabort = () => reject(tx.error);
+                  });
+                  db.close();
+                  return { ok: true, count: records.length };
+                },
                 // Simulate the user typing in the chat input + clicking send.
                 // This exercises the full sidebar-chat.sendChatMessage path:
                 //   input.value = text → click handler → translator.chatStream
@@ -1064,6 +1095,18 @@ async function evalInContentWorld(context, op, arg) {
                   window._sb.cancelActiveStream();
                   return { ok: true };
                 },
+                startNewConversation: () => {
+                  const button = window._sb.$id('si18n-new-chat');
+                  if (!button) return { error: 'new conversation button not present' };
+                  button.click();
+                  return { ok: true };
+                },
+                pushTutorLesson: ({ path, title }) => {
+                  const heading = document.querySelector('h1');
+                  if (heading && title) heading.textContent = title;
+                  history.pushState({}, '', path);
+                  return { url: location.href, title: heading?.textContent?.trim() || '' };
+                },
                 // Read history-panel list items after toggleHistoryPanel +
                 // loadHistoryList have run. Each `.si18n-history-item` has a
                 // `data-id` matching the IndexedDB primary key, a preview of
@@ -1071,11 +1114,27 @@ async function evalInContentWorld(context, op, arg) {
                 // asserts both expected questions appear, proving the
                 // saveConversation → IDB → loadHistoryList round-trip works.
                 readHistoryList: () => {
-                  const items = (window._sb._uiHost?.shadowRoot || document).querySelectorAll('.si18n-history-item');
+                  const root = window._sb._uiHost?.shadowRoot || document;
+                  const items = root.querySelectorAll('.si18n-history-item');
                   return Array.from(items).map((el) => ({
                     id: el.dataset.id,
                     question: el.querySelector('.si18n-history-item-q')?.textContent.trim() || '',
+                    title: el.querySelector('.si18n-history-item-title')?.textContent.trim() || '',
+                    turns: el.querySelector('.si18n-history-item-turns')?.textContent.trim() || '',
+                    current: el.classList.contains('si18n-history-item-current'),
+                    deleteLabel: el.querySelector('.si18n-history-delete')?.getAttribute('aria-label') || '',
                   }));
+                },
+                readHistoryPanel: () => {
+                  const root = window._sb._uiHost?.shadowRoot || document;
+                  return {
+                    groups: Array.from(root.querySelectorAll('.si18n-history-chapter')).map(
+                      (el) => el.textContent?.trim() || '',
+                    ),
+                    empty: root.querySelector('.si18n-history-empty')?.textContent?.trim() || '',
+                    exportPresent: !!root.getElementById('si18n-history-export'),
+                    clearPresent: !!root.getElementById('si18n-history-clear'),
+                  };
                 },
                 // Click a history list item by its data-id, opening the detail
                 // view. Returns the rendered detail HTML so the test can
@@ -1084,8 +1143,39 @@ async function evalInContentWorld(context, op, arg) {
                 openHistoryDetail: (id) => {
                   const item = window._sb.$(`.si18n-history-item[data-id="${id}"]`);
                   if (!item) return { error: 'no item with id=' + id };
-                  item.click();
+                  item.querySelector('.si18n-history-open')?.click();
                   return { ok: true };
+                },
+                closeHistoryDetail: () => {
+                  const detail = window._sb.$('.si18n-history-detail');
+                  const back = window._sb.$id('si18n-history-back');
+                  if (!back) return { error: 'history detail back button not present' };
+                  if (!detail) return { error: 'history detail not present' };
+                  back.click();
+                  return { ok: true };
+                },
+                deleteHistoryConversation: (id) => {
+                  const item = window._sb.$(`.si18n-history-item[data-id="${id}"]`);
+                  const button = item?.querySelector('.si18n-history-delete');
+                  if (!button) return { error: 'history delete button not present for id=' + id };
+                  button.click();
+                  return { ok: true };
+                },
+                clickHistoryExport: () => {
+                  const button = window._sb.$id('si18n-history-export');
+                  if (!button) return { error: 'history export button not present' };
+                  button.click();
+                  return { ok: true };
+                },
+                clickHistoryClear: () => {
+                  const button = window._sb.$id('si18n-history-clear');
+                  if (!button) return { error: 'history clear button not present' };
+                  button.click();
+                  return { ok: true };
+                },
+                readTutorHistoryRows: async () => {
+                  const conversations = await window._sb._chat.getConversations(Number.MAX_SAFE_INTEGER);
+                  return conversations;
                 },
                 // Read the detail-view content after openHistoryDetail.
                 readHistoryDetail: () => {
@@ -1095,6 +1185,14 @@ async function evalInContentWorld(context, op, arg) {
                     present: true,
                     userText: detail.querySelector('.si18n-chat-user .si18n-chat-bubble')?.textContent.trim() || '',
                     botText: detail.querySelector('.si18n-chat-bot .si18n-chat-bubble')?.textContent.trim() || '',
+                    title: detail.querySelector('.si18n-history-title')?.textContent.trim() || '',
+                    userTexts: Array.from(detail.querySelectorAll('.si18n-chat-user .si18n-chat-bubble')).map(
+                      (el) => el.textContent?.trim() || '',
+                    ),
+                    botTexts: Array.from(detail.querySelectorAll('.si18n-chat-bot .si18n-chat-bubble')).map(
+                      (el) => el.textContent?.trim() || '',
+                    ),
+                    deleteLabel: detail.querySelector('.si18n-history-delete')?.getAttribute('aria-label') || '',
                   };
                 },
                 // Read every chat bubble currently in the messages area.

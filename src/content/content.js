@@ -994,7 +994,14 @@
       injectHostSurfaces();
       runActivationCallbacks();
     },
-    cancelActiveStream: () => window._sb.cancelActiveStream?.(),
+    cancelActiveStream: () => {
+      window._sb.cancelActiveStream?.();
+      // Tutor conversations are lesson-scoped. The history module compares
+      // durable lesson identity (and ignores hash-only movement) before it
+      // resets the live chat, so a Skilljar/Academy SPA transition cannot
+      // quietly append the next lesson to the previous conversation.
+      window._sb._chat?.handleRouteChange?.();
+    },
     reenableAfterCertificationSurface,
     ensureObserver: () => domTranslationObserver.observe(),
     ensureSubtitleManager,

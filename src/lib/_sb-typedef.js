@@ -167,8 +167,15 @@
  * @property {?(name: string, html: string|(() => string), onMount?: (panel: HTMLElement) => void) => HTMLElement|null} openSubPanel
  * @property {?() => void} closeSubPanel
  * @property {?() => void} restoreChatPanelEvents
+ * @property {?(options?: { focus?: boolean }) => boolean} resetConversationUI
  * @property {?(text: string) => string} sanitizeHtml
  * @property {?(text: string) => string} formatResponse
+ * @property {?(question: string) => Object} beginConversationTurn
+ * @property {?(question: string, answer: string, lang: string, captured?: Object) => Promise<number|null>} saveConversation
+ * @property {?(options?: { focus?: boolean }) => void} startNewConversation
+ * @property {?() => void} handleRouteChange
+ * @property {?() => void} toggleHistoryPanel
+ * @property {?(limit?: number) => Promise<Object[]>} getConversations
  * @property {?() => { courses: number, lessons: number, flashcards: number, mastered: number, bookmarks: number, recent: number }} collectDashboardStats
  * @property {?(pair: TranslationFeedbackPair, signal: TranslationFeedbackSignal, correction?: string) => Promise<TranslationFeedbackReport|false>} recordTranslationFeedback
  * @property {?(pair: TranslationFeedbackPair) => Promise<boolean>} composeTranslationFeedback
@@ -177,6 +184,7 @@
 /**
  * @typedef {Object} ChatPanelState
  * @property {string|null} savedChatHTML
+ * @property {string|null} savedChatDraft
  * @property {boolean} historyPanelOpen
  * @property {boolean} flashcardPanelOpen
  * @property {boolean} bookmarksPanelOpen

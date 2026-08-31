@@ -1,69 +1,68 @@
 /**
- * SkillBridge — Chat history IDB persistence E2E.
+ * Tutor conversation lifecycle E2E.
  *
- * The v3.5.6 → v3.5.12 hotfix train fixed IDB resilience in two separate
- * places (v3.5.6 history quota retry, v3.5.9 prune+retry cascade). The
- * unit tests cover each helper in isolation, but only an end-to-end test
- * proves the full pipeline:
- *
- *   sidebar-chat.sendChatMessage   (writes initial bubble)
- *     → translator.chatStream      (streams the reply)
- *     → saveConversation(q, a, lang) — fires AFTER stream completes
- *     → openHistoryDb().add(entry) — writes to IDB
- *   later:
- *     → toggleHistoryPanel
- *     → loadHistoryList() — reads from IDB via cursor
- *     → re-renders the saved conversations
- *     → openHistoryDetail(id) — reads single record by primary key
- *
- * A regression anywhere along that chain produces data loss visible to
- * the user (saved conversation disappears, history panel shows empty,
- * detail view doesn't open). Until now: zero automated coverage.
- *
- * Spec steps:
- *   A. Send chat 1, wait for tutor reply to complete (saveConversation
- *      fires in the `if (answerText)` branch of sendChatMessage's finally).
- *   B. Send chat 2 — verifies multiple-entry handling, not just one.
- *   C. Open history panel, wait for loadHistoryList to render.
- *   D. Assert both questions appear in the list (round-trip works).
- *   E. Click first item, assert detail view shows the saved Q + A
- *      (per-record IDB read works).
+ * Proves the full rendered path over the real MV3 extension: published v1
+ * rows remain readable, consecutive turns group into one conversation, New
+ * and SPA lesson changes create boundaries, detail/list navigation works,
+ * individual delete and clear commit to IDB, and export downloads only local
+ * grouped history.
  */
-
 const { test, expect } = require('@playwright/test');
 const { launchExtension, closeExtension, evalInContentWorld } = require('./helpers/extension');
 const { registerStubs, startFixtureServer, stopFixtureServer } = require('./helpers/network-stubs');
 
-test.describe('SkillBridge — chat history IDB persistence', () => {
+test.describe('SkillBridge — Tutor conversation lifecycle', () => {
   /** @type {Awaited<ReturnType<typeof launchExtension>>} */
   let extCtx;
   /** @type {import('@playwright/test').Page} */
   let page;
   /** @type {{server: import('http').Server, baseUrl: string}} */
   let fixture;
+  const pageErrors = [];
+  const consoleErrors = [];
 
   test.beforeAll(async () => {
     fixture = await startFixtureServer();
     extCtx = await launchExtension();
     await registerStubs(extCtx.context);
     page = await extCtx.context.newPage();
-    page.on('pageerror', (err) => console.log('[page:pageerror]', err.message));
-    page.on('console', (msg) => {
-      if (msg.type() === 'error') console.log('[page:error]', msg.text());
+    page.on('pageerror', (err) => {
+      pageErrors.push(err.message);
+      console.log('[page:pageerror]', err.message);
     });
-
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') {
+        consoleErrors.push(msg.text());
+        console.log('[page:error]', msg.text());
+      }
+    });
     await page.goto(`${fixture.baseUrl}/lesson`);
 
-    // Wait for namespace + bridge ready.
     const deadline = Date.now() + 20_000;
     while (Date.now() < deadline) {
       const snap = await evalInContentWorld(extCtx.context, 'snapshot');
       const bridge = await evalInContentWorld(extCtx.context, 'bridgeReady');
-      if (snap?.init && snap?.sb && snap?.methods?.chat && bridge?.isReady) break;
+      if (snap?.init && snap?.sb && snap?.methods?.chat?.startNewConversation === 'function' && bridge?.isReady) {
+        break;
+      }
       await page.waitForTimeout(250);
     }
-    const bridge = await evalInContentWorld(extCtx.context, 'bridgeReady');
-    if (!bridge?.isReady) throw new Error('Bridge did not become ready in 20s');
+    expect((await evalInContentWorld(extCtx.context, 'bridgeReady'))?.isReady).toBe(true);
+    await evalInContentWorld(extCtx.context, 'suppressOnboarding');
+
+    // Exact row shape written by published v1 builds: no conversationId,
+    // lessonKey, title, or schema version. It must survive as one conversation.
+    const legacy = await evalInContentWorld(extCtx.context, 'seedLegacyTutorHistory', [
+      {
+        question: 'Legacy stored question',
+        answer: 'Legacy stored answer',
+        lang: 'en',
+        chapter: 'Legacy lesson',
+        timestamp: Date.now() - 60_000,
+        url: `${fixture.baseUrl}/legacy-lesson?source=old#part`,
+      },
+    ]);
+    expect(legacy).toMatchObject({ ok: true, count: 1 });
 
     await evalInContentWorld(extCtx.context, 'injectSidebar');
     await evalInContentWorld(extCtx.context, 'toggleSidebar');
@@ -74,74 +73,158 @@ test.describe('SkillBridge — chat history IDB persistence', () => {
     if (fixture) await stopFixtureServer(fixture.server);
   });
 
-  // Reusable helper: send a chat, wait for the bot bubble to fully render
-  // (stream end → saveConversation fires).
   async function sendAndWait(text) {
-    const send = await evalInContentWorld(extCtx.context, 'sendChat', text);
-    expect(send?.ok).toBe(true);
-    // The stub paces chunks at 150ms × 3 = ~450ms; plus message round-
-    // trips. Poll for the final chunk text "주는 입력입니다" to land in
-    // the latest bot bubble.
-    const deadline = Date.now() + 8_000;
+    expect(await evalInContentWorld(extCtx.context, 'sendChat', text)).toMatchObject({ ok: true });
+    const deadline = Date.now() + 10_000;
     while (Date.now() < deadline) {
       const log = await evalInContentWorld(extCtx.context, 'readChatLog');
-      const lastBot = log.filter((m) => m.role === 'bot').slice(-1)[0];
-      if (lastBot?.text?.includes('주는 입력입니다')) {
-        // saveConversation is invoked SYNCHRONOUSLY after the stream ends
-        // but the IDB add is async — give it a frame to land.
-        await page.waitForTimeout(150);
-        return;
-      }
-      await page.waitForTimeout(120);
+      const lastBot = log.filter((message) => message.role === 'bot').at(-1);
+      if (lastBot?.text?.includes('주는 입력입니다')) return;
+      await page.waitForTimeout(100);
     }
-    throw new Error(`Chat reply did not complete for "${text}"`);
+    throw new Error(`Tutor reply did not complete for "${text}"`);
   }
 
-  test('two chats sent → both appear in history panel → detail view round-trips IDB', async () => {
-    await sendAndWait('What is a prompt?');
-    await sendAndWait('How does chain-of-thought work?');
-
-    // Open the history panel. loadHistoryList kicks off a cursor read
-    // immediately on toggle.
-    await evalInContentWorld(extCtx.context, 'toggleHistoryPanel');
-
-    // Poll until both saved entries land in the panel.
+  async function waitForHistoryCount(count) {
     const deadline = Date.now() + 8_000;
     let items = [];
     while (Date.now() < deadline) {
       items = await evalInContentWorld(extCtx.context, 'readHistoryList');
-      if (items.length >= 2) break;
-      await page.waitForTimeout(150);
-    }
-
-    expect(items.length, 'history panel should list both saved chats').toBeGreaterThanOrEqual(2);
-
-    // Newest-first ordering (cursor opens with `'prev'` in chat-history.js).
-    // The most-recently-sent question lands first.
-    const questions = items.map((i) => i.question);
-    expect(questions.some((q) => q.includes('chain-of-thought'))).toBe(true);
-    expect(questions.some((q) => q.includes('What is a prompt'))).toBe(true);
-
-    // Open the detail view for the FIRST item. This exercises a different
-    // IDB code path: `tx.objectStore(HISTORY_STORE).get(Number(id))` — a
-    // single-record read by primary key, not a cursor.
-    const firstId = items[0].id;
-    expect(firstId, 'history item should have a data-id (IDB primary key)').toBeTruthy();
-    const click = await evalInContentWorld(extCtx.context, 'openHistoryDetail', firstId);
-    expect(click?.ok).toBe(true);
-
-    // Detail view renders the saved Q + A in two stacked bubbles.
-    const deadline2 = Date.now() + 3_000;
-    let detail = { present: false };
-    while (Date.now() < deadline2) {
-      detail = await evalInContentWorld(extCtx.context, 'readHistoryDetail');
-      if (detail?.present) break;
+      if (items.length === count) return items;
       await page.waitForTimeout(100);
     }
-    expect(detail.present, 'detail view should render after click').toBe(true);
-    // The first item is the most-recent chat — "chain-of-thought" question.
-    expect(detail.userText).toContain('chain-of-thought');
-    // The bot text is the streamed Korean reply, fully accumulated.
-    expect(detail.botText).toContain('주는 입력입니다');
+    throw new Error(`Expected ${count} history conversations, found ${items.length}`);
+  }
+
+  test('manages grouped conversations per lesson from migration through export and clear', async () => {
+    await sendAndWait('What is a prompt?');
+    await sendAndWait('How does chain-of-thought work?');
+    const cloudPrompt = (await evalInContentWorld(extCtx.context, 'lastTutorPrompt')).prompt;
+    expect(cloudPrompt).toContain('How does chain-of-thought work?');
+    expect(cloudPrompt).not.toContain('What is a prompt?');
+    expect(cloudPrompt).not.toContain('주는 입력입니다');
+    await evalInContentWorld(extCtx.context, 'toggleHistoryPanel');
+
+    let items = await waitForHistoryCount(2);
+    const firstConversation = items.find((item) => item.title === 'What is a prompt?');
+    const legacyConversation = items.find((item) => item.title === 'Legacy stored question');
+    expect(firstConversation?.turns).toContain('2');
+    expect(firstConversation?.current).toBe(true);
+    expect(firstConversation?.deleteLabel).toContain('What is a prompt?');
+    expect(legacyConversation?.id).toMatch(/^legacy:/);
+
+    const panel = await evalInContentWorld(extCtx.context, 'readHistoryPanel');
+    expect(panel.groups).toEqual(expect.arrayContaining(['Introduction to Claude', 'Legacy lesson']));
+    expect(panel).toMatchObject({ exportPresent: true, clearPresent: true });
+
+    expect(await evalInContentWorld(extCtx.context, 'openHistoryDetail', firstConversation.id)).toMatchObject({
+      ok: true,
+    });
+    let detail = { present: false };
+    const detailDeadline = Date.now() + 3_000;
+    while (Date.now() < detailDeadline) {
+      detail = await evalInContentWorld(extCtx.context, 'readHistoryDetail');
+      if (detail.present) break;
+      await page.waitForTimeout(50);
+    }
+    expect(detail.userTexts).toEqual(['What is a prompt?', 'How does chain-of-thought work?']);
+    expect(detail.botTexts).toHaveLength(2);
+    expect(detail.botTexts.every((text) => text.includes('주는 입력입니다'))).toBe(true);
+    expect(detail.deleteLabel).toContain('What is a prompt?');
+    await page.screenshot({ path: '/tmp/skillbridge-conversation-detail-desktop.png' });
+
+    expect(await evalInContentWorld(extCtx.context, 'closeHistoryDetail')).toMatchObject({ ok: true });
+    items = await waitForHistoryCount(2);
+    expect(items.map((item) => item.id)).toContain(firstConversation.id);
+
+    // New is a real user-facing header action. It must restore the chat from
+    // any learning-tool subpanel, not only History, before resetting it.
+    await evalInContentWorld(extCtx.context, 'closeSubPanel');
+    await evalInContentWorld(extCtx.context, 'toggleDashboardPanel');
+    expect((await evalInContentWorld(extCtx.context, 'snapshot')).methods.chat.state.dashboardPanelOpen).toBe(true);
+    expect(await evalInContentWorld(extCtx.context, 'startNewConversation')).toMatchObject({ ok: true });
+    expect((await evalInContentWorld(extCtx.context, 'snapshot')).methods.chat.state.dashboardPanelOpen).toBe(false);
+    let chat = await evalInContentWorld(extCtx.context, 'readChatLog');
+    expect(chat.filter((message) => message.role === 'user')).toHaveLength(0);
+    await sendAndWait('Start fresh here');
+    await evalInContentWorld(extCtx.context, 'toggleHistoryPanel');
+    items = await waitForHistoryCount(3);
+    expect(items.find((item) => item.title === 'Start fresh here')?.turns).toContain('1');
+
+    // A same-tab SPA lesson change is another automatic boundary. With the
+    // sidebar hidden, it must reset the transcript without stealing page focus.
+    await evalInContentWorld(extCtx.context, 'closeSubPanel');
+    await evalInContentWorld(extCtx.context, 'toggleSidebar');
+    await page.evaluate(() => {
+      const heading = document.querySelector('h1');
+      heading.tabIndex = -1;
+      heading.focus();
+    });
+    expect(
+      await evalInContentWorld(extCtx.context, 'pushTutorLesson', {
+        path: '/lesson-two',
+        title: 'Second Lesson',
+      }),
+    ).toMatchObject({ title: 'Second Lesson' });
+    await page.waitForTimeout(250);
+    expect(
+      await page.evaluate(() => ({
+        documentElement: document.activeElement?.tagName || '',
+        shadowElement: document.getElementById('skillbridge-root')?.shadowRoot?.activeElement?.id || '',
+      })),
+    ).toEqual({ documentElement: 'H1', shadowElement: '' });
+    await evalInContentWorld(extCtx.context, 'toggleSidebar');
+    chat = await evalInContentWorld(extCtx.context, 'readChatLog');
+    expect(chat.filter((message) => message.role === 'user')).toHaveLength(0);
+    await sendAndWait('Question on lesson two');
+    await evalInContentWorld(extCtx.context, 'toggleHistoryPanel');
+    items = await waitForHistoryCount(4);
+    expect((await evalInContentWorld(extCtx.context, 'readHistoryPanel')).groups).toContain('Second Lesson');
+
+    await evalInContentWorld(extCtx.context, 'suppressOnboarding');
+    await page.screenshot({ path: '/tmp/skillbridge-conversation-list-desktop.png' });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.waitForTimeout(150);
+    const mobileLayout = await evalInContentWorld(extCtx.context, 'uiLayoutProbe');
+    expect(mobileLayout.overflowX).toBeLessThanOrEqual(1);
+    expect(mobileLayout.sidebar.left).toBeGreaterThanOrEqual(0);
+    expect(mobileLayout.sidebar.right).toBeLessThanOrEqual(390);
+    await page.screenshot({ path: '/tmp/skillbridge-conversation-list-mobile.png' });
+    await page.setViewportSize({ width: 1280, height: 720 });
+
+    const [download] = await Promise.all([
+      page.waitForEvent('download'),
+      evalInContentWorld(extCtx.context, 'clickHistoryExport'),
+    ]);
+    expect(download.suggestedFilename()).toMatch(/^skillbridge-tutor-history-\d{4}-\d{2}-\d{2}\.json$/);
+    const stream = await download.createReadStream();
+    let json = '';
+    for await (const chunk of stream) json += chunk.toString();
+    const exported = JSON.parse(json);
+    expect(exported.schemaVersion).toBe(2);
+    expect(exported.conversations).toHaveLength(4);
+    expect(exported.conversations.find((conversation) => conversation.id === firstConversation.id)?.turns).toHaveLength(
+      2,
+    );
+    expect(exported.conversations.every((conversation) => !Object.hasOwn(conversation, 'prompt'))).toBe(true);
+    expect(
+      exported.conversations.flatMap((conversation) => conversation.turns).every((turn) => !turn.courseContext),
+    ).toBe(true);
+
+    const fresh = items.find((item) => item.title === 'Start fresh here');
+    page.once('dialog', (dialog) => dialog.accept());
+    expect(await evalInContentWorld(extCtx.context, 'deleteHistoryConversation', fresh.id)).toMatchObject({ ok: true });
+    items = await waitForHistoryCount(3);
+    expect(items.map((item) => item.title)).not.toContain('Start fresh here');
+    expect(items.map((item) => item.title)).toContain('Legacy stored question');
+
+    page.once('dialog', (dialog) => dialog.accept());
+    expect(await evalInContentWorld(extCtx.context, 'clickHistoryClear')).toMatchObject({ ok: true });
+    items = await waitForHistoryCount(0);
+    expect(items).toEqual([]);
+    expect((await evalInContentWorld(extCtx.context, 'readHistoryPanel')).empty).toBeTruthy();
+    expect(await evalInContentWorld(extCtx.context, 'readTutorHistoryRows')).toEqual([]);
+    expect(pageErrors).toEqual([]);
+    expect(consoleErrors).toEqual([]);
   });
 });
