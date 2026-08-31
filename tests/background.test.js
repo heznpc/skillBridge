@@ -909,16 +909,14 @@ describe('Local Tutor transport uses the shared origin boundary', () => {
 
 describe('Local refinement keeps its explicitly wider surface', () => {
   test.each([
-    'https://other.skilljar.com/a-course/287726',
-    'https://skilljar.com/a-course/287726',
-    'https://claude.com/resources/tutorials/example',
-    'https://academy.claude.com/courses/a-course/a-lesson',
-  ])('allows a refinement document without widening Tutor: %s', (url) => {
+    ['https://other.skilljar.com/a-course/287726', false],
+    ['https://skilljar.com/a-course/287726', false],
+    ['https://claude.com/resources/tutorials/example', false],
+    ['https://academy.claude.com/courses/a-course/a-lesson', true],
+  ])('allows a refinement document without widening Tutor: %s', (url, tutorAllowed) => {
     const port = brokerPort({ name: 'sb-local-refinement', url });
     expect(_isLocalRefinementPort(port)).toBe(true);
-    if (url.includes('other.skilljar.com') || url.includes('claude.com/resources')) {
-      expect(_isLocalChatPort(port)).toBe(false);
-    }
+    expect(_isLocalChatPort(port)).toBe(tutorAllowed);
   });
 
   test.each([
