@@ -1,6 +1,13 @@
-# Release Checklist — CWS v4.0.0
+# Archived / frozen CWS v4.0.0 draft — do not upload
 
-> Refreshed 2026-07-30 for the v4.0.0 CWS build. The upload artifact keeps
+> **Frozen archive. Do not upload or reuse this v4.0.0 bundle, copy, assets,
+> hashes, or dashboard fields.** Source v4.1.0 is a GitHub-only checkpoint, not
+> a CWS submission candidate. Assign the final CWS version and regenerate its
+> artifact, assets, copy, evidence, and dashboard fields only after the ongoing
+> code-development phase is complete.
+
+> Historical record: refreshed 2026-07-30 for the v4.0.0 CWS build. The upload
+> artifact keeps
 > translation and local learning tools AND ships the AI Tutor: the AI gateway is
 > pinned ON and the bundled Puter client runs in Chrome's ISOLATED content-script
 > world on the trusted course host, connected through validated extension ports;
@@ -8,23 +15,28 @@
 > not shipped. Tutor requests happen only after the user signs in to Puter (free). An
 > optional on-device engine (a user-run OpenAI-compatible server on localhost)
 > is selectable in the popup. This is the source of truth for the next dashboard
-> upload.
+> upload **as it was documented at that time**; it is retained only as historical
+> evidence and is no longer a current upload source of truth.
 
 CWS listing status:
 - Published: **v1.0.1** (uploaded 2026-03-10)
-- Local candidate: **v4.0.0**
-- Release identity: **assigned** — the existing `v3.5.41` tag remains immutable
+- GitHub source checkpoint: **v4.1.0** — GitHub-only; not a CWS candidate
+- Archived local candidate: **v4.0.0** — frozen; do not upload or reuse
+- Final CWS candidate: **unassigned** until ongoing code development is complete
+- Archived v4.0.0 release identity: **assigned** — the existing `v3.5.41` tag
+  remains immutable
   and is not reused for this v4.0.0 CWS change set
 - Many PRs have landed since the published version — none have reached users yet
 - `npm run check:cws-drift` intentionally fails until the dashboard is updated
 
-The remaining publish steps cross trust boundaries the automation cannot cross
-(dashboard fields, external permission confirmation, and the publication toggle).
-Do not treat this checklist as code-side green until `npm run release:verify`
-passes in the release checkout. Regenerate the upload artifact immediately before
-dashboard upload.
+After code development is complete, the remaining publish steps will cross
+trust boundaries the automation cannot cross (dashboard fields, external
+permission confirmation, and the publication toggle).
+Do not treat this archived checklist as code-side green. Create a fresh checklist,
+run `npm run release:verify` in the final release checkout, and regenerate the
+upload artifact immediately before dashboard upload.
 
-## Code-side state
+## Archived v4.0.0 code-side state
 
 - ✅ Final ZIP release identity is `4.0.0` across `manifest.json`,
   `package.json`, versioned dictionary metadata, and `CHANGELOG.md`.

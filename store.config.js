@@ -26,6 +26,7 @@
 const fs = require('fs');
 const http = require('http');
 const path = require('path');
+const { version } = require('./package.json');
 
 const { evalInContentWorld, makePatchedExtension } = require('./tests/e2e/helpers/extension');
 const { registerStubs, GT_KO, buildGTResponse, translateLikeGoogle } = require('./tests/e2e/helpers/network-stubs');
@@ -272,7 +273,7 @@ module.exports = {
       width,
       height,
       replacements: {
-        EYEBROW: 'v4.0.0 · AI COURSE TRANSLATOR',
+        EYEBROW: `v${version} · AI COURSE TRANSLATOR`,
         HEADLINE: 'Learn in your language.\nKeep technical terms intact.',
         BODY: '32 languages · local study tools · exam-safe translation',
         CTA: 'Built for supported AI courses',

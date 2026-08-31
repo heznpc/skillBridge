@@ -4,9 +4,10 @@
 
 # SkillBridge — AI Course Translator
 
-> **Source manifest:** <!-- VERSION_START -->v4.0.0<!-- VERSION_END --> —
-> unreleased CWS candidate. The existing `v3.5.41` tag predates this change
-> set and is not reused.
+> **Source checkpoint:** <!-- VERSION_START -->v4.1.0<!-- VERSION_END --> —
+> released on GitHub only, not designated for Chrome Web Store upload. The live
+> CWS version remains v1.0.1; final packaging and dashboard work are deferred
+> until the current development cycle is complete.
 
 > Available in multiple languages at the [project landing page](https://heznpc.github.io/skillBridge/).
 
@@ -25,9 +26,13 @@ Break the language barrier on these free AI courses. <!-- LANG_COUNT_START -->32
 
 > **Version boundary:** the Chrome Web Store still serves legacy v1.0.1, which
 > includes the Puter-backed Gemini/Claude path and YouTube host permission.
-> Unless explicitly labeled legacy, references below to the “CWS edition” mean
-> the next privacy-focused candidate. Publication of that candidate is paused;
-> see the [version-split Privacy Policy](PRIVACY_POLICY.md).
+> References below to the “CWS edition” describe the intended package boundary,
+> not an assigned upload candidate. Publication is paused, and the final CWS
+> version will be assigned after ongoing development; see the
+> [version-split Privacy Policy](PRIVACY_POLICY.md).
+> Automated browser fixtures cover Academy routing and the Tutor transport, but
+> this checkpoint does not claim an authenticated live Academy post-submit DOM
+> capture or a final signed-in Puter round trip; both remain final CWS gates.
 
 [Install](#installation) · [Features](#features) · [Report Bug](https://github.com/heznpc/skillbridge/issues) · [Request Feature](https://github.com/heznpc/skillbridge/issues) · [Contributing](CONTRIBUTING.md)
 
@@ -103,7 +108,7 @@ Course headings, paragraphs, lists, navigation, cards, and supported code commen
 
 The CWS edition includes spaced-repetition flashcards, bookmarks, Continue/Recent links, a local progress dashboard, an in-lesson outline, reading progress, and PDF export. Learning-tool state stays in the browser.
 
-> **AI Tutor & accounts:** the v4 CWS candidate includes the AI Tutor (Claude Sonnet 4.6, falling back to Sonnet 4.5) through an isolated bundled Puter runtime. The tutor uses a **free Puter sign-in** — no API key and no SkillBridge account. Page translation and the local learning tools need no account at all; only the optional cloud tutor prompts for sign-in.
+> **AI Tutor & accounts:** the current source build includes the AI Tutor (Claude Sonnet 4.6, falling back to Sonnet 4.5) through an isolated bundled Puter runtime. The tutor uses a **free Puter sign-in** — no API key and no SkillBridge account. Page translation and the local learning tools need no account at all; only the optional cloud tutor prompts for sign-in. The transport contract is regression-tested; the latest source checkpoint's live signed-in round trip remains a final CWS gate.
 
 ### 🎬 Auto-Subtitles
 
@@ -157,16 +162,17 @@ Generic translation tools often **mistranslate brand names and technical terms**
 
 ## Installation
 
-> **Status: live as v1.0.1; v4.0.0 is the next CWS release candidate.**
+> **Status: live CWS v1.0.1; source v4.1.0 is a GitHub-only checkpoint.**
 > The Chrome Web Store listing is available in all locales **except the United
 > States**, where it was removed on 2026-05-12 over a trademark issue with the
 > old icon (since redesigned on `main`). The published store build is v1.0.1;
 > the earlier `v3.5.x` candidates predate the current CWS changes and are not reused.
-> `v4.0.0` contains the unreleased candidate: it restores the bundled AI tutor,
-> adds a local on-device tutor engine, and translates inline-mixed blocks as HTML.
-> Its permission scope is finalized and machine-verified against the manifest on
-> every push (`npm run check:permission-docs`). Publication remains paused
-> pending the CWS dashboard upload — see `store-assets/RELEASE_CHECKLIST.md`.
+> `v4.1.0` records the current source boundary, including the bundled AI Tutor,
+> local on-device Tutor, Academy support, local Notes and Reports, and exam-safe
+> translation refinements. Its permission scope is machine-verified against the
+> manifest on every push (`npm run check:permission-docs`). Publication remains
+> paused; CWS assets and dashboard fields will be regenerated only after ongoing
+> development is complete — see `store-assets/RELEASE_CHECKLIST.md`.
 
 ### Chrome / Edge / Chromium browsers
 
@@ -321,17 +327,19 @@ review is the final layer:
 ~1–2 hours, needs no coding, and gets you credited here. See
 [#202](https://github.com/heznpc/skillBridge/issues/202).
 
-## Privacy & Security — Next CWS Candidate
+## Privacy & Security — Unpublished Source Build
 
-These claims describe the unpublished candidate, not live legacy v1.0.1:
+These claims describe the current unpublished source build, not live legacy v1.0.1:
 
 - **No operator analytics** — zero analytics, tracking, or telemetry; requested
   page text is still processed by Google Translate as disclosed
 - **No SkillBridge servers** — we do not operate any servers; uncached page text is sent directly to Google Translate when translation is requested
 - **No SkillBridge account, ever** — translation and the local learning tools need no account, email, password, or API key. The optional AI Tutor uses a **free Puter sign-in** (its own account, no API key); nothing is shared with SkillBridge
 - **Local learning state** — original/translated text is cached in IndexedDB;
-  preferences, flashcard review state, bookmarks, recent lessons, and scroll
-  positions use `chrome.storage.local`; progress summaries are calculated locally
+  preferences, flashcard review state, bookmarks, notes, term reports, recent
+  lessons, and scroll positions use `chrome.storage.local`; reports are exported
+  only as a user-requested local JSON download, and progress summaries are
+  calculated locally
 - **The AI Tutor is user-invoked** — page translation uses the disclosed Google Translate path but never calls Puter, Claude, or the Tutor model; only a cloud Tutor message reaches Claude through Puter, while local and off Tutor modes remain available
 - **Open source** — every line of code is auditable right here
 
@@ -371,7 +379,7 @@ Yes! SkillBridge supports **Chrome**, **Firefox**, and **Edge** (plus Brave, Arc
 <details>
 <summary><strong>Do I need an API key or account?</strong></summary>
 
-Translation and the local learning tools need no account, email, password, user API key, or human-check. The optional cloud Tutor is included in the CWS candidate and requires a separate free Puter sign-in; the local Tutor engine and off mode do not. SkillBridge's operator never receives the Puter session token or account details. See the version notice above for the currently published legacy v1.0.1 boundary.
+Translation and the local learning tools need no account, email, password, user API key, or human-check. The optional cloud Tutor is included in the current source build and requires a separate free Puter sign-in; the local Tutor engine and off mode do not. SkillBridge's operator never receives the Puter session token or account details. See the version notice above for the currently published legacy v1.0.1 boundary.
 </details>
 
 <details>
