@@ -13,10 +13,10 @@ const { spawnSync } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { createBrowserLaunchEnv } = require('./lib/browser-launch-env');
 
 const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const npxCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
-const workers = process.env.E2E_WORKERS || '1';
 const tempPrefix = 'skillbridge-e2e-';
 const tempExtPrefix = 'skillbridge-e2e-ext-';
 // This runner validates every CWS runtime surface, including the bundled Tutor,
@@ -101,19 +101,22 @@ function verifyBatchCoverage() {
 
 function run(cmd, args, options = {}) {
   const started = Date.now();
-  const result = spawnSync(cmd, args, { stdio: 'inherit', timeout: options.timeoutMs });
+  const result = (options.spawn || spawnSync)(cmd, args, {
+    stdio: 'inherit',
+    timeout: options.timeoutMs,
+    env: options.env,
+  });
   const seconds = ((Date.now() - started) / 1000).toFixed(1);
   if (result.error) {
-    console.error(`${cmd} failed after ${seconds}s: ${result.error.message}`);
-    process.exit(1);
+    throw new Error(`${cmd} failed after ${seconds}s: ${result.error.message}`);
   }
   if (result.signal) {
-    console.error(`${cmd} failed after ${seconds}s with signal ${result.signal}`);
-    process.exit(1);
+    throw new Error(`${cmd} failed after ${seconds}s with signal ${result.signal}`);
   }
   if (result.status !== 0) {
-    console.error(`Command failed after ${seconds}s: ${cmd} ${args.join(' ')} (status=${result.status})`);
-    process.exit(result.status || 1);
+    const error = new Error(`Command failed after ${seconds}s: ${cmd} ${args.join(' ')} (status=${result.status})`);
+    error.exitCode = result.status || 1;
+    throw error;
   }
 }
 
@@ -128,25 +131,53 @@ function cleanupE2ETempState() {
   }
 }
 
-cleanupE2ETempState();
-verifyBatchCoverage();
-run(npmCmd, ['run', 'build:bundle']);
-for (let i = 0; i < batches.length; i++) {
-  cleanupE2ETempState();
-  console.log(`\n=== E2E batch ${i + 1}/${batches.length} ===`);
-  run(
-    npxCmd,
-    [
-      'playwright',
-      'test',
-      ...batches[i],
-      `--workers=${workers}`,
-      '--reporter=line',
-      '--max-failures=1',
-      '--output',
-      `test-results/e2e-batch-${i + 1}`,
-    ],
-    { timeoutMs: 360_000 },
-  );
-  cleanupE2ETempState();
+function main({
+  argv = process.argv.slice(2),
+  baseEnv = process.env,
+  spawn = spawnSync,
+  cleanup = cleanupE2ETempState,
+  verify = verifyBatchCoverage,
+  logger = console,
+} = {}) {
+  const headed = argv.includes('--headed');
+  const workers = baseEnv.E2E_WORKERS || '1';
+  const browserEnv = createBrowserLaunchEnv(baseEnv, { headed });
+  const selectedBatches = argv.includes('--first-user')
+    ? [['tests/e2e/first-user-flow.spec.js', 'tests/e2e/popup.spec.js']]
+    : batches;
+
+  cleanup();
+  verify();
+  run(npmCmd, ['run', 'build:bundle'], { spawn, env: browserEnv });
+  for (let i = 0; i < selectedBatches.length; i++) {
+    cleanup();
+    logger.log(`\n=== E2E batch ${i + 1}/${selectedBatches.length} ===`);
+    run(
+      npxCmd,
+      [
+        'playwright',
+        'test',
+        ...selectedBatches[i],
+        `--workers=${workers}`,
+        '--reporter=line',
+        '--max-failures=1',
+        '--output',
+        `test-results/e2e-batch-${i + 1}`,
+      ],
+      { timeoutMs: 360_000, env: browserEnv, spawn },
+    );
+    cleanup();
+  }
+  return 0;
 }
+
+if (require.main === module) {
+  try {
+    process.exitCode = main();
+  } catch (err) {
+    console.error(err.message);
+    process.exitCode = err.exitCode || 1;
+  }
+}
+
+module.exports = { batches, main, run, verifyBatchCoverage };

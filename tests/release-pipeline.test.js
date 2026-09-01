@@ -10,6 +10,7 @@ const os = require('os');
 const path = require('path');
 const {
   assertMatchingFileLists,
+  buildCommandEnv,
   main,
   parseZipFileEntries,
   verifyZipMatchesBundle,
@@ -79,6 +80,15 @@ describe('release upload ZIP verification', () => {
 });
 
 describe('release pipeline orchestration', () => {
+  test('quiet browser commands override leaked headed and inspector state', () => {
+    expect(
+      buildCommandEnv(
+        { quietBrowser: true, env: { KEEP: 'child' } },
+        { E2E_HEADED: '1', PWDEBUG: '1', PWTEST_INSPECTOR: '1', KEEP: 'parent' },
+      ),
+    ).toEqual({ E2E_HEADED: '0', PWDEBUG: '0', KEEP: 'child' });
+  });
+
   test('smoke mode runs only the production build and first-user browser path', () => {
     const operations = fakeOperations();
     const logger = fakeLogger();
@@ -96,7 +106,7 @@ describe('release pipeline orchestration', () => {
       'First-user and action-popup smoke E2E',
       expect.any(String),
       ['playwright', 'test', 'tests/e2e/first-user-flow.spec.js', 'tests/e2e/popup.spec.js'],
-      { timeoutMs: 180_000 },
+      { timeoutMs: 180_000, quietBrowser: true },
     );
     expect(operations.runNpm).toHaveBeenCalledTimes(1);
     expect(operations.runNode).not.toHaveBeenCalled();
@@ -145,6 +155,7 @@ describe('release pipeline orchestration', () => {
       ]),
     );
     expect(npmScripts.at(-1)).toBe('test:e2e');
+    expect(npmScripts).not.toContain('capture:store:headed');
     expect(operations.runNode).toHaveBeenCalledWith(
       'Regenerate promo video derivatives',
       'scripts/build-promo-media.js',

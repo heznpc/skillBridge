@@ -146,9 +146,8 @@ jobs:
           retention-days: 14
 
   e2e:
-    # Playwright E2E. Loads the actual built extension into headed Chromium
-    # under xvfb so MV3 content scripts inject reliably (the new chromium
-    # headless mode in --load-extension still has flake we'd rather avoid).
+    # Playwright E2E. Loads the actual built extension into Chromium's current
+    # headless mode, so the job does not need a virtual desktop.
     # Catches the class of cross-module wiring bug that unit tests miss
     # (see tests/e2e/golden-translation.spec.js header for the rationale).
     runs-on: ubuntu-latest
@@ -174,10 +173,8 @@ jobs:
           restore-keys: |
             playwright-${{ runner.os }}-
 
-      - name: Install xvfb (always) + Playwright Chromium (conditional)
+      - name: Install Playwright Chromium (conditional)
         run: |
-          sudo apt-get update
-          sudo apt-get install -y xvfb
           if [ "${{ steps.playwright-cache.outputs.cache-hit }}" != "true" ]; then
             npx playwright install --with-deps chromium
           else
@@ -185,7 +182,7 @@ jobs:
             npx playwright install-deps chromium
           fi
 
-      - name: Run E2E suite under xvfb
+      - name: Run E2E suite
         # The translation performance budgets are wall-clock measurements of a
         # real Chromium boot plus a full async chain, so on a shared runner they
         # measure the runner as much as the extension — performance-budget.spec
@@ -198,7 +195,7 @@ jobs:
         env:
           SB_E2E_VISIBLE_TRANSLATION_BUDGET_MS: '25000'
           SB_E2E_LAZY_SCROLL_TRANSLATION_BUDGET_MS: '20000'
-        run: xvfb-run -a npm run test:e2e
+        run: npm run test:e2e
 
       - name: Upload Playwright report on failure
         if: failure()

@@ -17,8 +17,8 @@ on:
         description: 'Record the demo screencast (webm)'
         type: boolean
         default: true
-      headless:
-        description: 'Run headless instead of under xvfb (experimental)'
+      headed:
+        description: 'Open Chromium under xvfb for visual capture debugging'
         type: boolean
         default: false
 
@@ -29,9 +29,9 @@ jobs:
   capture:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
           cache: 'npm'
@@ -43,22 +43,26 @@ jobs:
       # Same key scheme as ci.yml's e2e job.
       - name: Cache Playwright browsers
         id: playwright-cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             playwright-${{ runner.os }}-
 
-      - name: Install xvfb (always) + Playwright Chromium (conditional)
+      - name: Install Playwright Chromium (conditional)
         run: |
-          sudo apt-get update
-          sudo apt-get install -y xvfb
           if [ "${{ steps.playwright-cache.outputs.cache-hit }}" != "true" ]; then
             npx playwright install --with-deps chromium
           else
             npx playwright install-deps chromium
           fi
+
+      - name: Install xvfb for headed capture
+        if: ${{ inputs.headed }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb
 
       # Inputs flow via env (never interpolated into the script) — workflow-
       # injection-safe per GitHub's guidance.
@@ -66,22 +70,22 @@ jobs:
         env:
           SCENE: ${{ inputs.scene }}
           VIDEO: ${{ inputs.video }}
-          HEADLESS: ${{ inputs.headless }}
+          HEADED: ${{ inputs.headed }}
         run: |
           ARGS=()
           if [ -n "$SCENE" ]; then ARGS+=(--scene "$SCENE"); fi
           if [ "$VIDEO" != "true" ]; then ARGS+=(--no-video); fi
-          if [ "$HEADLESS" = "true" ]; then
-            HEADED=0 npx shotkit --json "${ARGS[@]}" | tee shotkit-result.json
+          if [ "$HEADED" = "true" ]; then
+            xvfb-run -a node scripts/run-shotkit.js --headed --json "${ARGS[@]}" | tee shotkit-result.json
           else
-            xvfb-run -a npx shotkit --json "${ARGS[@]}" | tee shotkit-result.json
+            node scripts/run-shotkit.js --json "${ARGS[@]}" | tee shotkit-result.json
           fi
           { echo "### shotkit assets"
             node -e "const r=require('./shotkit-result.json'); console.log(r.produced.map(p=>'- \`'+p.split('/').pop()+'\`').join('\n'))"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload assets
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: store-assets
           path: |

@@ -1,6 +1,6 @@
 # Testing & Debugging Guide
 
-This guide covers how to run tests, debug the extension, and troubleshoot common issues. Unless a section says "raw developer build," browser tests target `dist/bundled`, the no-AI Chrome Web Store package.
+This guide covers how to run tests, debug the extension, and troubleshoot common issues. Unless a section says "raw developer build," browser tests target `dist/bundled`, the CWS-shaped production package with the bundled, user-invoked Tutor gateway.
 
 ---
 
@@ -72,25 +72,26 @@ tests/protected-terms.test.js → re-implements logic (legacy pattern)
 
 ### Tested end-to-end (Playwright, in CI)
 
-A Playwright E2E suite loads the built extension into headed Chromium (xvfb in
-CI — see the `e2e` job in `.github/workflows/ci.yml`) and exercises the
-integrated CWS flows: page load → translate → restore, popup startup, SPA
+A Playwright E2E suite loads the built extension into Chromium's current
+headless mode and exercises the integrated CWS flows: page load → translate →
+restore, popup startup, SPA
 navigation, lazy translation, IndexedDB cache, protected-term restoration,
 local learning tools, exam-mode safety, code-comment translation, PDF-export
-sanitization, and the no-RHC/no-AI package boundary. Specs live in
+sanitization, the remote-hosted-code package boundary, and bundled Tutor
+transport. Specs live in
 `tests/e2e/` (`npm run test:e2e`).
+
+The default runner never opens browser windows, even if `E2E_HEADED` or
+`PWDEBUG` was left in the parent shell. Use `npm run test:e2e:headed` only when
+visually debugging a browser flow. Store capture follows the same rule:
+`npm run capture:store` is quiet, while `npm run capture:store:headed` is the
+explicit visual-debug command.
 
 ### Thin coverage / known gaps
 
 - Unit-level coverage of `content.js` DOM helpers and `background.js` internals
   beyond what the E2E suite exercises
 - Real YouTube iframe caption activation (E2E can't drive the embedded player)
-- **Archived AI regression references** — `tutor-chat`, `tutor-offline`,
-  `chat-history`, and `stream-cancel` remain in `tests/e2e/` as historical
-  regression references, but `run-e2e` no longer executes them and the current
-  helper loads only `dist/bundled`. They are not a runnable developer suite.
-  Reactivating them requires a separate remote-free developer harness; until
-  then, they provide no release evidence for either the CWS or raw AI path.
 - Visual / dark-mode QA, mobile layout, long-session memory — manual only
 
 ---

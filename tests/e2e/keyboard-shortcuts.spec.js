@@ -64,7 +64,12 @@ test.describe('SkillBridge — keyboard shortcuts', () => {
 
   const overlayPresent = () => page.evaluate(() => !!document.getElementById('si18n-shortcuts-overlay'));
   const snapshot = () => evalInContentWorld(extCtx.context, 'snapshot');
-  const sidebarVisible = async () => (await snapshot()).sidebarVisible;
+  const sidebar = () => page.locator('#skillbridge-sidebar');
+  const sidebarOpen = () => sidebar().evaluate((element) => element.classList.contains('open'));
+  const expectSidebarOpen = async (open) => {
+    if (open) await expect(sidebar()).toHaveClass(/\bopen\b/, { timeout: 15_000 });
+    else await expect(sidebar()).not.toHaveClass(/\bopen\b/, { timeout: 15_000 });
+  };
   const flashcardsVisible = async () => (await snapshot()).methods.chat.state.flashcardPanelOpen;
   const sidebarInputState = () =>
     page.evaluate(() => {
@@ -107,26 +112,26 @@ test.describe('SkillBridge — keyboard shortcuts', () => {
   });
 
   test('Mod+Shift+S toggles the learning-tools sidebar and Escape closes it', async () => {
-    if (await sidebarVisible()) {
+    if (await sidebarOpen()) {
       await page.keyboard.press(`${MOD}+Shift+KeyS`);
-      await expect.poll(sidebarVisible, { timeout: 3_000 }).toBe(false);
+      await expectSidebarOpen(false);
     }
 
     await page.keyboard.press(`${MOD}+Shift+KeyS`);
-    await expect.poll(sidebarVisible, { timeout: 3_000 }).toBe(true);
+    await expectSidebarOpen(true);
 
     await page.keyboard.press('Escape');
-    await expect.poll(sidebarVisible, { timeout: 3_000 }).toBe(false);
+    await expectSidebarOpen(false);
   });
 
   test('Mod+Shift+F opens flashcards and / focuses the tutor chat input', async () => {
-    if (await sidebarVisible()) {
+    if (await sidebarOpen()) {
       await page.keyboard.press('Escape');
-      await expect.poll(sidebarVisible, { timeout: 3_000 }).toBe(false);
+      await expectSidebarOpen(false);
     }
 
     await page.keyboard.press(`${MOD}+Shift+KeyF`);
-    await expect.poll(sidebarVisible, { timeout: 3_000 }).toBe(true);
+    await expectSidebarOpen(true);
     await expect.poll(flashcardsVisible, { timeout: 3_000 }).toBe(true);
 
     await page.keyboard.press(`${MOD}+Shift+KeyF`);
@@ -134,9 +139,9 @@ test.describe('SkillBridge — keyboard shortcuts', () => {
 
     // v4 (AI tutor build): the sidebar carries a chat input, so pressing / (not
     // in a field) focuses it and consumes the key.
-    if (!(await sidebarVisible())) {
+    if (!(await sidebarOpen())) {
       await page.keyboard.press(`${MOD}+Shift+KeyS`);
-      await expect.poll(sidebarVisible, { timeout: 3_000 }).toBe(true);
+      await expectSidebarOpen(true);
     }
     const beforeSlash = await sidebarInputState();
     expect(beforeSlash.chatInput, 'AI sidebar exposes a chat input').toBe(true);

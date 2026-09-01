@@ -12,6 +12,7 @@ const { spawnSync } = require('child_process');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+const { createBrowserLaunchEnv } = require('./lib/browser-launch-env');
 
 const ROOT = path.resolve(__dirname, '..');
 const NPM = process.platform === 'win32' ? 'npm.cmd' : 'npm';
@@ -31,6 +32,11 @@ if (!Object.values(MODES).some(Boolean)) {
   MODES.preflight = true;
 }
 
+function buildCommandEnv(options = {}, baseEnv = process.env) {
+  const env = { ...baseEnv, ...options.env };
+  return options.quietBrowser ? createBrowserLaunchEnv(env) : env;
+}
+
 function run(label, command, commandArgs, options = {}) {
   const started = Date.now();
   console.log(`\n==> ${label}`);
@@ -38,7 +44,7 @@ function run(label, command, commandArgs, options = {}) {
   const result = spawnSync(command, commandArgs, {
     cwd: ROOT,
     stdio: 'inherit',
-    env: { ...process.env, ...options.env },
+    env: buildCommandEnv(options),
     timeout: options.timeoutMs,
   });
   const seconds = ((Date.now() - started) / 1000).toFixed(1);
@@ -305,7 +311,7 @@ function smoke(operations = DEFAULT_OPERATIONS) {
     'First-user and action-popup smoke E2E',
     NPX,
     ['playwright', 'test', 'tests/e2e/first-user-flow.spec.js', 'tests/e2e/popup.spec.js'],
-    { timeoutMs: 180_000 },
+    { timeoutMs: 180_000, quietBrowser: true },
   );
 }
 
@@ -386,6 +392,7 @@ if (require.main === module) process.exitCode = main();
 module.exports = {
   DEFAULT_OPERATIONS,
   assertMatchingFileLists,
+  buildCommandEnv,
   listBundleFiles,
   localQualityGates,
   main,

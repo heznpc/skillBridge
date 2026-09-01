@@ -3,11 +3,9 @@
  *
  * Why this looks different from typical web-app Playwright configs:
  *   1. Browser launch goes through `chromium.launchPersistentContext` (not
- *      `browser.newContext`) so we can pass `--load-extension`. Headless
- *      Chrome historically couldn't load extensions; the new "headless=new"
- *      mode supports it, and we set `headless: false` here to be safe
- *      because some older runners (and earlier Playwright versions) still
- *      fail silently with --load-extension under the old headless flag.
+ *      `browser.newContext`) so we can pass `--load-extension`. The Playwright
+ *      Chromium channel uses the current headless implementation, which
+ *      supports extensions without opening a desktop window.
  *   2. `workers: process.env.CI ? 2 : 1` — `launchExtension` builds a
  *      fresh per-launch temp dir for the user data + patched-manifest
  *      copy, so parallel workers are safe (no shared mutable state).
