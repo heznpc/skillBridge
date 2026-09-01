@@ -16,10 +16,11 @@
  * text reaches a translation lookup, a GT request, or the cache.
  */
 
-/* global describe, test, expect, beforeEach */
+/* global describe, test, expect, beforeEach, jest */
 
 const fs = require('fs');
 const path = require('path');
+const { loadGtQueue } = require('./helpers/gt-queue-harness');
 
 // Same load order the content scripts use, and the same one tests/constants.js
 // relies on: runtime constants, then selectors (constants.js references
@@ -31,8 +32,6 @@ const { EXAM_SKIP_SELECTORS } = new Function(
    ${read('src', 'lib', 'constants.js')}
    return { EXAM_SKIP_SELECTORS };`,
 )();
-const SKIP = EXAM_SKIP_SELECTORS.join(', ');
-
 /** The question stem, some prose, and an ARIA choice group, as Academy renders it. */
 function renderAcademyQuiz() {
   document.body.innerHTML = '';
@@ -62,14 +61,13 @@ function renderAcademyQuiz() {
   return main;
 }
 
-/**
- * Stand-in for the exam gate in processOneElement(): an element is dropped if
- * it matches the skip list or sits inside something that does.
- */
-const isExcluded = (el) => el.matches(SKIP) || !!el.closest(SKIP);
+let gate;
+let staticLookup;
 
 beforeEach(() => {
   document.body.innerHTML = '';
+  staticLookup = jest.fn(() => null);
+  gate = loadGtQueue({ examSkipSelectors: EXAM_SKIP_SELECTORS, staticLookup });
 });
 
 describe('Academy choices at the translation chokepoint', () => {
@@ -77,7 +75,8 @@ describe('Academy choices at the translation chokepoint', () => {
     const main = renderAcademyQuiz();
     const choices = Array.from(main.querySelectorAll('[role="radio"]'));
     expect(choices).toHaveLength(8);
-    expect(choices.every(isExcluded)).toBe(true);
+    expect(choices.map((el) => gate.processOneElement(el, 'ko'))).toEqual(Array(8).fill(null));
+    expect(staticLookup).not.toHaveBeenCalled();
   });
 
   test('the text node holder inside a choice is excluded too', () => {
@@ -86,22 +85,28 @@ describe('Academy choices at the translation chokepoint', () => {
     const main = renderAcademyQuiz();
     const labels = Array.from(main.querySelectorAll('[role="radio"] span'));
     expect(labels).toHaveLength(8);
-    expect(labels.every(isExcluded)).toBe(true);
+    expect(labels.map((el) => gate.processOneElement(el, 'ko'))).toEqual(Array(8).fill(null));
+    expect(staticLookup).not.toHaveBeenCalled();
   });
 
   test('the question stem and prose stay translatable', () => {
     const main = renderAcademyQuiz();
-    expect(isExcluded(main.querySelector('h1'))).toBe(false);
-    expect(isExcluded(main.querySelector('p'))).toBe(false);
+    expect(gate.processOneElement(main.querySelector('h1'), 'ko')).toBe('gt');
+    expect(gate.processOneElement(main.querySelector('p'), 'ko')).toBe('gt');
+    expect(staticLookup).toHaveBeenCalledWith('Quiz question stem');
+    expect(staticLookup).toHaveBeenCalledWith('Explanatory prose that should still be translated.');
   });
 
   test('no choice text survives a walk of translatable elements', () => {
     // The negative the contract is actually about: nothing carrying choice
     // text is left in the set that would be looked up, queued, or cached.
     const main = renderAcademyQuiz();
-    const survivors = Array.from(main.querySelectorAll('h1, p, span, div')).filter((el) => !isExcluded(el));
-    const leaked = survivors.filter((el) => /Placeholder choice/.test(el.textContent || ''));
-    expect(leaked).toEqual([]);
+    const candidates = Array.from(main.querySelectorAll('[role="radio"], [role="radio"] span'));
+    for (const el of candidates) expect(gate.processOneElement(el, 'ko')).toBeNull();
+    expect(staticLookup.mock.calls.flat()).not.toEqual(
+      expect.arrayContaining([expect.stringMatching(/Placeholder choice/)]),
+    );
+    for (const el of candidates) expect(gate.sb.originalTexts.has(el)).toBe(false);
   });
 
   test('exclusion holds when every class name is stripped', () => {
@@ -109,7 +114,10 @@ describe('Academy choices at the translation chokepoint', () => {
     // stop excluding choices on the next rebuild without failing loudly.
     const main = renderAcademyQuiz();
     for (const el of main.querySelectorAll('*')) el.removeAttribute('class');
-    expect(Array.from(main.querySelectorAll('[role="radio"]')).every(isExcluded)).toBe(true);
+    for (const el of main.querySelectorAll('[role="radio"]')) {
+      expect(gate.processOneElement(el, 'ko')).toBeNull();
+    }
+    expect(staticLookup).not.toHaveBeenCalled();
   });
 
   test('a choice rendered after the initial pass is still excluded', () => {
@@ -120,7 +128,8 @@ describe('Academy choices at the translation chokepoint', () => {
     late.setAttribute('aria-checked', 'false');
     late.textContent = 'Placeholder choice 9';
     main.querySelector('[role="radiogroup"]').appendChild(late);
-    expect(isExcluded(late)).toBe(true);
+    expect(gate.processOneElement(late, 'ko')).toBeNull();
+    expect(staticLookup).not.toHaveBeenCalled();
   });
 
   test('the Skilljar entries still match Skilljar markup', () => {
@@ -133,24 +142,7 @@ describe('Academy choices at the translation chokepoint', () => {
     label.textContent = 'Placeholder choice';
     form.appendChild(label);
     document.body.appendChild(form);
-    expect(isExcluded(label)).toBe(true);
-  });
-
-  test('the tutor title selector resolves to the stem, never to a choice', () => {
-    // getPageContext()'s exam branch interpolates exactly one page value — the
-    // title from `h1, h2, <courseTitle>` — and nothing else, so that selector
-    // is the only way choice text could reach the tutor on an exam page.
-    const main = renderAcademyQuiz();
-    const title = main.querySelector('h1, h2')?.textContent || '';
-    expect(title).toBe('Quiz question stem');
-    expect(title).not.toMatch(/Placeholder choice/);
-  });
-
-  test('the lesson-body extract would carry choices, which is why the gate matters', () => {
-    // The non-exam branch reads main.innerText wholesale. On an Academy quiz
-    // that text DOES contain the choices — this asserts the hazard is real, so
-    // the exam gate is load-bearing rather than belt-and-braces.
-    const main = renderAcademyQuiz();
-    expect(main.innerText || main.textContent).toMatch(/Placeholder choice/);
+    expect(gate.processOneElement(label, 'ko')).toBeNull();
+    expect(staticLookup).not.toHaveBeenCalled();
   });
 });

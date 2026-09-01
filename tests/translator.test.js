@@ -482,51 +482,65 @@ describe('Language JSON files', () => {
     expect(files.length).toBeGreaterThan(0);
   });
 
-  for (const file of files) {
-    describe(file, () => {
-      let data;
+  const languageFiles = files.map((file) => {
+    try {
+      return { file, data: JSON.parse(fs.readFileSync(path.join(dataDir, file), 'utf8')), error: null };
+    } catch (error) {
+      return { file, data: null, error: error.message };
+    }
+  });
 
-      beforeEach(() => {
-        data = JSON.parse(fs.readFileSync(path.join(dataDir, file), 'utf8'));
-      });
+  test('all language files contain valid JSON objects', () => {
+    const invalid = languageFiles
+      .filter(({ data, error }) => error || !data || typeof data !== 'object' || Array.isArray(data))
+      .map(({ file, error }) => ({ file, error: error || 'top-level value must be an object' }));
 
-      test('is valid JSON', () => {
-        expect(data).toBeDefined();
-        expect(typeof data).toBe('object');
-      });
+    expect(invalid).toEqual([]);
+  });
 
-      test('has _meta section', () => {
-        expect(data._meta).toBeDefined();
-        expect(data._meta.lang).toBeDefined();
-      });
+  test('all language files identify their locale in _meta', () => {
+    const invalid = languageFiles
+      .filter(({ data }) => data)
+      .filter(({ data }) => !data._meta || typeof data._meta.lang !== 'string' || !data._meta.lang.trim())
+      .map(({ file }) => file);
 
-      test('has _protected section', () => {
-        expect(data._protected).toBeDefined();
-        expect(typeof data._protected).toBe('object');
-      });
+    expect(invalid).toEqual([]);
+  });
 
-      test('_protected values are arrays', () => {
-        for (const [_key, value] of Object.entries(data._protected)) {
-          expect(Array.isArray(value)).toBe(true);
-          // Each array should have at least one entry
-          expect(value.length).toBeGreaterThan(0);
+  test('all language files have non-empty, array-shaped protected terms', () => {
+    const invalid = languageFiles
+      .filter(({ data }) => data)
+      .flatMap(({ file, data }) => {
+        if (!data._protected || typeof data._protected !== 'object' || Array.isArray(data._protected)) {
+          return [{ file, term: null, reason: '_protected must be an object' }];
         }
+        if (Object.keys(data._protected).length === 0) {
+          return [{ file, term: null, reason: '_protected must not be empty' }];
+        }
+        return Object.entries(data._protected)
+          .filter(([_term, forms]) => !Array.isArray(forms) || forms.length === 0)
+          .map(([term]) => ({ file, term, reason: 'forms must be a non-empty array' }));
       });
 
-      test('no empty string values in dict entries', () => {
-        let emptyCount = 0;
-        const check = (obj) => {
-          for (const [k, v] of Object.entries(obj)) {
-            if (k === '_meta' || k === '_protected') continue;
-            if (typeof v === 'string' && v === '') emptyCount++;
-            else if (typeof v === 'object' && v !== null && !Array.isArray(v)) check(v);
-          }
-        };
-        check(data);
-        expect(emptyCount).toBe(0);
-      });
-    });
-  }
+    expect(invalid).toEqual([]);
+  });
+
+  test('all dictionary entries contain non-empty strings', () => {
+    const invalid = [];
+    const check = (file, obj, prefix = '') => {
+      for (const [key, value] of Object.entries(obj)) {
+        if (key === '_meta' || key === '_protected') continue;
+        const entry = prefix ? `${prefix}.${key}` : key;
+        if (typeof value === 'string' && value.trim() === '') invalid.push({ file, entry });
+        else if (typeof value === 'object' && value !== null && !Array.isArray(value)) check(file, value, entry);
+      }
+    };
+
+    for (const { file, data } of languageFiles) {
+      if (data) check(file, data);
+    }
+    expect(invalid).toEqual([]);
+  });
 
   // ── _isValidTranslation (cache-poisoning guard, added in v3.5.7) ──
   // Lock in the exact rejection rules so a future tweak to the regex /

@@ -16,10 +16,9 @@
 
 /* global describe, test, expect, beforeEach, afterEach, jest */
 
-const fs = require('fs');
-const path = require('path');
+const { readProductionSource } = require('./helpers/production-source');
 
-const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'content', 'gt-queue.js'), 'utf8');
+const src = readProductionSource('src', 'content', 'gt-queue.js');
 
 // Globals the IIFE reads as bare identifiers (normally from constants.js).
 global.EXAM_SKIP_SELECTORS = ['.answer'];

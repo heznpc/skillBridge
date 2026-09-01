@@ -194,6 +194,24 @@ beforeEach(() => {
 });
 
 describe('translation feedback report schema', () => {
+  test('renders a legacy wrongText row through the real Reports reader', async () => {
+    const harness = makeHarness({
+      initial: {
+        sb_term_reports: [{ wrongText: 'legacy translation', correction: '', ts: 1 }],
+      },
+    });
+    await flush();
+
+    harness.sb._chat.toggleReportsPanel();
+    await flush();
+
+    expect(document.querySelector('.si18n-report-item .si18n-bm-title').textContent).toBe('legacy translation');
+    expect(harness.store.sb_term_reports[0]).toMatchObject({
+      selectedText: 'legacy translation',
+      wrongText: 'legacy translation',
+    });
+  });
+
   test('normalizes legacy reports additively without inventing the original text', () => {
     const { fakeWindow } = makeHarness();
     const legacy = {

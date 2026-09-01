@@ -1,30 +1,67 @@
 /**
- * Unit tests for the Firefox manifest builder script.
+ * Integration tests for the Firefox manifest builder script.
  *
  * Validates that the build-firefox.js script correctly transforms
  * the Chrome manifest into a Firefox-compatible manifest.
  */
 
-/* global describe, test, expect, beforeAll */
+/* global describe, test, expect, beforeAll, afterAll */
 
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
-const { execSync } = require('child_process');
+const { execSync, spawnSync } = require('child_process');
 
 const ROOT = path.join(__dirname, '..');
-const DIST_DIR = path.join(ROOT, 'dist', 'firefox');
+const TEST_OUTPUT_ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'skillbridge-firefox-test-'));
+const DIST_DIR = path.join(TEST_OUTPUT_ROOT, 'firefox');
+const REJECTED_OUTPUT_DIR = path.join(ROOT, `.firefox-output-probe-${process.pid}`);
+const EXTERNAL_OUTPUT_ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'build-firefox-external-'));
+const ESCAPING_OUTPUT_LINK = path.join(TEST_OUTPUT_ROOT, 'escape');
+const EXTERNAL_SENTINEL = path.join(EXTERNAL_OUTPUT_ROOT, 'sentinel.txt');
+fs.writeFileSync(EXTERNAL_SENTINEL, 'keep');
+fs.symlinkSync(EXTERNAL_OUTPUT_ROOT, ESCAPING_OUTPUT_LINK, process.platform === 'win32' ? 'junction' : 'dir');
 
 // ── Read the Chrome source manifest for comparison ─────────────
 const chromeManifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'manifest.json'), 'utf8'));
 
 // ── Run the build script before tests ──────────────────────────
 beforeAll(() => {
-  execSync('node scripts/build-firefox.js', { cwd: ROOT, encoding: 'utf8' });
+  execSync(`node scripts/build-firefox.js --out-dir ${JSON.stringify(DIST_DIR)}`, {
+    cwd: ROOT,
+    encoding: 'utf8',
+  });
+});
+
+afterAll(() => {
+  fs.rmSync(TEST_OUTPUT_ROOT, { recursive: true, force: true });
+  fs.rmSync(REJECTED_OUTPUT_DIR, { recursive: true, force: true });
+  fs.rmSync(EXTERNAL_OUTPUT_ROOT, { recursive: true, force: true });
 });
 
 // ── Tests ──────────────────────────────────────────────────────
 
 describe('Firefox build output', () => {
+  test('refuses a destructive custom output path outside dist or the system temp directory', () => {
+    const result = spawnSync(process.execPath, ['scripts/build-firefox.js', '--out-dir', REJECTED_OUTPUT_DIR], {
+      cwd: ROOT,
+      encoding: 'utf8',
+    });
+    expect(result.status).not.toBe(0);
+    expect(`${result.stdout}${result.stderr}`).toContain('--out-dir must be inside repository dist');
+    expect(fs.existsSync(REJECTED_OUTPUT_DIR)).toBe(false);
+  });
+
+  test('refuses an allowed-looking output symlink that resolves outside its temporary root', () => {
+    const result = spawnSync(process.execPath, ['scripts/build-firefox.js', '--out-dir', ESCAPING_OUTPUT_LINK], {
+      cwd: ROOT,
+      encoding: 'utf8',
+    });
+    expect(result.status).not.toBe(0);
+    expect(`${result.stdout}${result.stderr}`).toContain('possible symlink escape');
+    expect(fs.readFileSync(EXTERNAL_SENTINEL, 'utf8')).toBe('keep');
+  });
+
   test('creates dist/firefox directory', () => {
     expect(fs.existsSync(DIST_DIR)).toBe(true);
   });

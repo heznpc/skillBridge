@@ -78,8 +78,8 @@ function mask(secret) {
   return s.length <= 12 ? '*'.repeat(s.length) : `${s.slice(0, 6)}…${s.slice(-4)} (${s.length} chars)`;
 }
 
-async function postForm(url, form) {
-  const res = await fetch(url, {
+async function postForm(url, form, fetchImpl = fetch) {
+  const res = await fetchImpl(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams(form).toString(),
@@ -133,8 +133,8 @@ function captureCode() {
  * cannot see the item means the OAuth client is fine and the ACCOUNT lacks
  * access to this listing — a distinct failure worth naming separately.
  */
-async function verify(clientId, clientSecret, refreshToken) {
-  const refreshed = await postForm(TOKEN_URL, {
+async function verify(clientId, clientSecret, refreshToken, { post = postForm, fetchImpl = fetch, fail = die } = {}) {
+  const refreshed = await post(TOKEN_URL, {
     client_id: clientId,
     client_secret: clientSecret,
     refresh_token: refreshToken,
@@ -149,16 +149,22 @@ async function verify(clientId, clientSecret, refreshToken) {
         : code === 'invalid_client'
           ? 'CWS_CLIENT_ID / CWS_CLIENT_SECRET do not match the OAuth client. Re-copy them from Cloud Console.'
           : 'Check that the Chrome Web Store API is enabled on the project.';
-    die(`token refresh failed: HTTP ${refreshed.status} ${code || ''} — ${detail}`, hint);
+    return fail(`token refresh failed: HTTP ${refreshed.status} ${code || ''} — ${detail}`, hint);
   }
 
-  const accessToken = refreshed.json.access_token;
-  const item = await fetch(ITEM_URL(EXTENSION_ID), {
+  const accessToken = refreshed.json?.access_token;
+  if (!accessToken) {
+    return fail(
+      'token refresh succeeded but Google returned no access_token.',
+      'Check that the OAuth token endpoint returned the expected JSON response.',
+    );
+  }
+  const item = await fetchImpl(ITEM_URL(EXTENSION_ID), {
     headers: { Authorization: `Bearer ${accessToken}`, 'x-goog-api-version': '2' },
   });
   const itemText = await item.text();
   if (!item.ok) {
-    die(
+    return fail(
       `listing read failed: HTTP ${item.status} — ${itemText.slice(0, 300)}`,
       item.status === 403 || item.status === 404
         ? `The token works but this account cannot see item ${EXTENSION_ID}. Authorize with the Google account that owns the SkillBridge listing (or that is a publisher-group member).`
@@ -168,14 +174,39 @@ async function verify(clientId, clientSecret, refreshToken) {
   return { accessToken, item: itemText };
 }
 
-function saveSecrets(clientId, clientSecret, refreshToken) {
+function saveSecrets(clientId, clientSecret, refreshToken, run = execFileSync, logger = console) {
   const set = (name, value) => {
-    execFileSync('gh', ['secret', 'set', name], { input: value, stdio: ['pipe', 'inherit', 'inherit'] });
-    console.log(`  stored ${name}`);
+    run('gh', ['secret', 'set', name], { input: value, stdio: ['pipe', 'inherit', 'inherit'] });
+    logger.log(`  stored ${name}`);
   };
   set('CWS_CLIENT_ID', clientId);
   set('CWS_CLIENT_SECRET', clientSecret);
   set('CWS_REFRESH_TOKEN', refreshToken);
+}
+
+async function exchangeAuthorizationCode(clientId, clientSecret, code, redirect, { post = postForm, fail = die } = {}) {
+  const exchanged = await post(TOKEN_URL, {
+    client_id: clientId,
+    client_secret: clientSecret,
+    code: String(code),
+    grant_type: 'authorization_code',
+    redirect_uri: redirect,
+  });
+  if (!exchanged.ok) {
+    return fail(
+      `code exchange failed: HTTP ${exchanged.status} ${exchanged.json?.error || ''} — ` +
+        `${exchanged.json?.error_description || exchanged.text.slice(0, 200)}`,
+      'Authorization codes are single-use and short-lived. Re-run to get a fresh one.',
+    );
+  }
+  const refreshToken = exchanged.json?.refresh_token;
+  if (!refreshToken) {
+    return fail(
+      'Google returned no refresh_token.',
+      'This happens when the account already granted consent. Re-run — this script sends prompt=consent — or revoke the app at https://myaccount.google.com/permissions and retry.',
+    );
+  }
+  return refreshToken;
 }
 
 async function main() {
@@ -224,27 +255,7 @@ async function main() {
     console.log('  authorization code received');
   }
 
-  const exchanged = await postForm(TOKEN_URL, {
-    client_id: clientId,
-    client_secret: clientSecret,
-    code: String(code),
-    grant_type: 'authorization_code',
-    redirect_uri: redirect,
-  });
-  if (!exchanged.ok) {
-    die(
-      `code exchange failed: HTTP ${exchanged.status} ${exchanged.json?.error || ''} — ` +
-        `${exchanged.json?.error_description || exchanged.text.slice(0, 200)}`,
-      'Authorization codes are single-use and short-lived. Re-run to get a fresh one.',
-    );
-  }
-  const refreshToken = exchanged.json.refresh_token;
-  if (!refreshToken) {
-    die(
-      'Google returned no refresh_token.',
-      'This happens when the account already granted consent. Re-run — this script sends prompt=consent — or revoke the app at https://myaccount.google.com/permissions and retry.',
-    );
-  }
+  const refreshToken = await exchangeAuthorizationCode(clientId, clientSecret, code, redirect);
 
   await verify(clientId, clientSecret, refreshToken);
 
@@ -260,4 +271,16 @@ async function main() {
   }
 }
 
-main().catch((err) => die(err.stack || err.message));
+if (require.main === module) main().catch((err) => die(err.stack || err.message));
+
+module.exports = {
+  EXTENSION_ID,
+  ITEM_URL,
+  TOKEN_URL,
+  exchangeAuthorizationCode,
+  main,
+  mask,
+  postForm,
+  saveSecrets,
+  verify,
+};

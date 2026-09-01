@@ -1,4 +1,8 @@
 /**
+ * @jest-environment jsdom
+ */
+
+/**
  * Unit tests for selectors.js structural integrity.
  *
  * Validates that all Skilljar DOM selectors are properly defined,
@@ -70,25 +74,28 @@ describe('SKILLJAR_SELECTORS', () => {
       'aiFeedback',
     ];
 
-    for (const key of REQUIRED_KEYS) {
-      test(`has "${key}" selector`, () => {
-        expect(SKILLJAR_SELECTORS[key]).toBeDefined();
-        expect(typeof SKILLJAR_SELECTORS[key]).toBe('string');
-      });
-    }
+    test('contains the complete required selector registry', () => {
+      const missing = REQUIRED_KEYS.filter((key) => typeof SKILLJAR_SELECTORS[key] !== 'string');
+
+      // Keep all missing keys in one failure so the assertion remains diagnostic
+      // without inflating one registry invariant into dozens of Jest cases.
+      expect(missing).toEqual([]);
+    });
   });
 
   describe('CSS selector syntax', () => {
-    test('selectors use valid CSS prefixes (., #, or tag name)', () => {
-      for (const [_key, value] of Object.entries(SKILLJAR_SELECTORS)) {
-        // Each comma-separated selector should start with #, ., or a letter (tag name),
-        // or contain attribute selectors ([...)
-        const parts = value.split(',').map((s) => s.trim());
-        for (const part of parts) {
-          const valid = /^[.#a-zA-Z[]/.test(part);
-          expect(valid).toBe(true);
+    test('every selector is accepted by the browser selector parser', () => {
+      const invalid = [];
+
+      for (const [key, value] of Object.entries(SKILLJAR_SELECTORS)) {
+        try {
+          document.querySelector(value);
+        } catch (error) {
+          invalid.push({ key, value, error: error.message });
         }
       }
+
+      expect(invalid).toEqual([]);
     });
 
     test('no selector has leading/trailing whitespace', () => {

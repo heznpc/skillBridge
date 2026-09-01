@@ -39,6 +39,11 @@ for (const filePath of targetFiles) {
     errors++;
     continue;
   }
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    console.log(`ERROR ${file}: Top-level JSON value must be an object`);
+    errors++;
+    continue;
+  }
 
   // 2. _meta section
   if (!data._meta) {
@@ -64,7 +69,7 @@ for (const filePath of targetFiles) {
     if (section === '_meta') continue;
     if (section === '_protected') {
       // _protected values must be arrays of strings
-      if (typeof entries !== 'object' || Array.isArray(entries)) {
+      if (typeof entries !== 'object' || entries === null || Array.isArray(entries)) {
         console.log(`ERROR ${file}: _protected must be an object`);
         errors++;
         continue;

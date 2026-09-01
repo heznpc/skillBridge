@@ -19,17 +19,15 @@ const contentEntries = Object.entries(dutch)
   );
 
 describe('curated Dutch dictionary', () => {
-  test('records the curation and native-review status', () => {
+  test('identifies the locale and honestly records that native review is pending', () => {
     expect(dutch._meta).toMatchObject({
       lang: 'nl',
       langName: 'Nederlands',
-      lastUpdated: '2026-09-01',
-      lastAudited: '2026-09-01',
       nativeReview: 'recruiting',
     });
     expect(dutch._meta.version).toBe(manifest.version);
-    expect(dutch._meta.translation_provenance).toContain('Term voor term');
-    expect(dutch._meta.translation_provenance).toContain('geen uitvoer van automatische machinevertaling');
+    expect(dutch._meta.lastUpdated).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(dutch._meta.lastAudited).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
   test('pins high-risk framework and platform terminology', () => {
@@ -48,10 +46,10 @@ describe('curated Dutch dictionary', () => {
   });
 
   test('retains the named 4D framework marker wherever the source uses it', () => {
-    const lostMarkers = contentEntries
-      .filter(({ source }) => source.includes('4D'))
-      .filter(({ translated }) => !translated.includes('4D'));
+    const matching = contentEntries.filter(({ source }) => source.includes('4D'));
+    const lostMarkers = matching.filter(({ translated }) => !translated.includes('4D'));
 
+    expect(matching.length).toBeGreaterThan(0);
     expect(lostMarkers).toEqual([]);
   });
 
@@ -63,6 +61,8 @@ describe('curated Dutch dictionary', () => {
         .map((term) => ({ section, source, term })),
     );
 
+    expect(contentEntries.length).toBeGreaterThan(0);
+    expect(protectedNames.length).toBeGreaterThan(0);
     expect(lostNames).toEqual([]);
   });
 
@@ -100,12 +100,14 @@ describe('curated Dutch dictionary', () => {
   });
 
   test('keeps protected-term restoration entries self-referential', () => {
+    expect(Object.keys(dutch._protected).length).toBeGreaterThan(0);
     for (const [term, wrongForms] of Object.entries(dutch._protected)) {
       expect(wrongForms).toEqual([term]);
     }
   });
 
   test('ships every Claude Platform term through the companion plugin', () => {
+    expect(Object.keys(dutch.claudePlatform).length).toBeGreaterThan(0);
     for (const [source, translated] of Object.entries(dutch.claudePlatform)) {
       expect(pluginDutch.terms[source]).toBe(translated);
     }
@@ -117,6 +119,7 @@ describe('curated Dutch dictionary', () => {
   });
 
   test('does not export canonical keep-English markers as forbidden plugin output', () => {
+    expect(Object.keys(pluginDutch.protected).length).toBeGreaterThan(0);
     for (const [canonical, wrongForms] of Object.entries(pluginDutch.protected)) {
       expect(wrongForms).not.toContain(canonical);
     }

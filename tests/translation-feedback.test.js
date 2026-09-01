@@ -180,20 +180,6 @@ describe('makeFeedbackReport', () => {
     });
   });
 
-  test('projects selectedText into wrongText for the v4.1 Reports reader', () => {
-    const report = makeFeedbackReport({
-      capture: 'selection',
-      signal: 'negative',
-      originalText: 'Send the request.',
-      translatedText: '요청을 보내세요.',
-      selectedText: '요청',
-    });
-    const renderV41Rows = (rows) => rows.map((row) => row.wrongText);
-
-    expect(report.selectedText).toBe('요청');
-    expect(renderV41Rows([report])).toEqual(['요청']);
-  });
-
   test('keeps an explicit legacy wrongText without replacing canonical selectedText', () => {
     const report = makeFeedbackReport({
       capture: 'selection',

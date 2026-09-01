@@ -357,6 +357,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   // Google Translate: batch (with rate limiting + exponential backoff)
   if (msg.type === 'GOOGLE_TRANSLATE_BATCH') {
     const { texts, targetLang, sourceLang } = msg;
+    if (!Array.isArray(texts) || texts.some((text) => typeof text !== 'string')) {
+      sendResponse({ ok: false, error: 'Invalid translation batch' });
+      return true;
+    }
     const sl = sourceLang || 'en';
     const tl = gtLangCode(targetLang);
 

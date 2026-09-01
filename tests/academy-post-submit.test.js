@@ -25,10 +25,11 @@
  * visible, because the run was signed out.
  */
 
-/* global describe, test, expect, beforeEach */
+/* global describe, test, expect, beforeEach, jest */
 
 const fs = require('fs');
 const path = require('path');
+const { loadGtQueue } = require('./helpers/gt-queue-harness');
 
 function load(file) {
   const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', file), 'utf8');
@@ -267,18 +268,20 @@ describe('where the same-URL guarantee stops', () => {
 });
 
 describe('the translation chokepoint on a result page', () => {
-  /** Stand-in for the exam gate in processOneElement(). */
-  const isExcluded = (el) => el.matches(EXAM_SKIP_SELECTORS.join(', ')) || !!el.closest(EXAM_SKIP_SELECTORS.join(', '));
-
   test('no revealed answer text reaches a translation lookup', () => {
     // Nothing choice-shaped may be walked, so nothing choice-shaped is sent to
     // Google Translate or written to the cache under its source text. This is
     // the chokepoint, not the adapter, because the adapter being right is not
     // the same as the cache staying clean.
     render(RESULTS.answersRevealed);
-    const survivors = Array.from(document.querySelectorAll('main *')).filter((el) => !isExcluded(el));
-    const leaked = survivors.filter((el) => /Zebra-cipher-alpha|Correct|Incorrect/.test(el.textContent || ''));
-    expect(leaked).toEqual([]);
+    const staticLookup = jest.fn(() => null);
+    const gate = loadGtQueue({ examSkipSelectors: EXAM_SKIP_SELECTORS, staticLookup });
+    const answers = Array.from(document.querySelectorAll('[role="radio"], [role="radio"] *'));
+    for (const el of answers) expect(gate.processOneElement(el, 'ko')).toBeNull();
+    expect(staticLookup.mock.calls.flat()).not.toEqual(
+      expect.arrayContaining([expect.stringMatching(/Zebra-cipher-alpha|Correct|Incorrect/)]),
+    );
+    for (const el of answers) expect(gate.sb.originalTexts.has(el)).toBe(false);
   });
 
   test('the marked-correct answer is excluded exactly like an unanswered one', () => {
@@ -287,6 +290,9 @@ describe('the translation chokepoint on a result page', () => {
     // translatable at the moment it became worth withholding.
     render(RESULTS.answersRevealed);
     const checked = document.querySelector('[role="radio"][aria-checked="true"]');
-    expect(isExcluded(checked)).toBe(true);
+    const staticLookup = jest.fn(() => null);
+    const gate = loadGtQueue({ examSkipSelectors: EXAM_SKIP_SELECTORS, staticLookup });
+    expect(gate.processOneElement(checked, 'ko')).toBeNull();
+    expect(staticLookup).not.toHaveBeenCalled();
   });
 });

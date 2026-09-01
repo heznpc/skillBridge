@@ -12,7 +12,7 @@
  *   3. Removes `minimum_chrome_version` (Chrome-only field)
  *
  * Usage:
- *   node scripts/build-firefox.js
+ *   node scripts/build-firefox.js [--out-dir <directory>]
  *
  * Output:
  *   dist/firefox/  — full extension copy with Firefox-compatible manifest
@@ -22,9 +22,15 @@ const fs = require('fs');
 const path = require('path');
 const { writeCwsSafePuter } = require('./build-bundle');
 const { assertNoRemoteHostedCode } = require('./check-rhc');
+const { assertSafeBuildOutput } = require('./lib/safe-build-output');
 
 const ROOT = path.resolve(__dirname, '..');
-const DIST_DIR = path.join(ROOT, 'dist', 'firefox');
+const outputArgIndex = process.argv.indexOf('--out-dir');
+if (outputArgIndex !== -1 && !process.argv[outputArgIndex + 1]) {
+  throw new Error('--out-dir requires a directory path');
+}
+const DIST_DIR =
+  outputArgIndex === -1 ? path.join(ROOT, 'dist', 'firefox') : path.resolve(process.argv[outputArgIndex + 1]);
 
 // ── Read Chrome manifest ──────────────────────────────────────
 
@@ -61,6 +67,8 @@ for (const contentScript of firefoxManifest.content_scripts || []) {
 }
 
 // ── Write Firefox manifest ───────────────────────────────────
+
+assertSafeBuildOutput(DIST_DIR, { repoRoot: ROOT });
 
 // Clean previous build to prevent recursive nesting
 if (fs.existsSync(DIST_DIR)) {
@@ -105,7 +113,7 @@ fs.copyFileSync(path.join(ROOT, 'THIRD_PARTY_NOTICES.md'), path.join(DIST_DIR, '
 fs.writeFileSync(path.join(DIST_DIR, 'manifest.json'), JSON.stringify(firefoxManifest, null, 2) + '\n');
 assertNoRemoteHostedCode(DIST_DIR);
 
-console.log('Firefox build complete: dist/firefox/');
+console.log(`Firefox build complete: ${DIST_DIR}`);
 console.log('Remote-hosted-code check: clean');
 console.log('');
 console.log('Firefox manifest differences:');

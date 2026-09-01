@@ -16,13 +16,18 @@
  *
  * Exit code 1 on hard mismatches; warnings are non-fatal.
  *
- * Usage: node scripts/check-i18n-keys.js
+ * Usage: node scripts/check-i18n-keys.js [--root <repository-root>]
  */
 
 const fs = require('fs');
 const path = require('path');
 
-const ROOT = path.resolve(__dirname, '..');
+const rootFlag = process.argv.indexOf('--root');
+if (rootFlag !== -1 && !process.argv[rootFlag + 1]) {
+  console.error('Missing value for --root');
+  process.exit(2);
+}
+const ROOT = path.resolve(rootFlag === -1 ? path.resolve(__dirname, '..') : process.argv[rootFlag + 1]);
 const LOCALES_DIR = path.join(ROOT, '_locales');
 const CONSTANTS_FILE = path.join(ROOT, 'src', 'lib', 'constants.js');
 const EXT_DESCRIPTION_MAX_CHARS = 132;
@@ -50,8 +55,14 @@ const baselinePath = path.join(LOCALES_DIR, baselineLocale, 'messages.json');
 if (!fs.existsSync(baselinePath)) {
   log.fail(`Baseline locale missing: ${baselineLocale}/messages.json`);
 } else {
-  const baseline = JSON.parse(fs.readFileSync(baselinePath, 'utf8'));
-  const baselineKeys = new Set(Object.keys(baseline));
+  let baseline;
+  try {
+    baseline = JSON.parse(fs.readFileSync(baselinePath, 'utf8'));
+  } catch (error) {
+    log.fail(`Invalid JSON in ${baselineLocale}/messages.json: ${error.message}`);
+  }
+
+  const baselineKeys = new Set(Object.keys(baseline || {}));
   const locales = fs.readdirSync(LOCALES_DIR).filter((d) => fs.statSync(path.join(LOCALES_DIR, d)).isDirectory());
 
   function checkExtensionDescription(lang, data) {
@@ -66,9 +77,9 @@ if (!fs.existsSync(baselinePath)) {
     }
   }
 
-  checkExtensionDescription(baselineLocale, baseline);
+  if (baseline) checkExtensionDescription(baselineLocale, baseline);
 
-  for (const lang of locales) {
+  for (const lang of baseline ? locales : []) {
     if (lang === baselineLocale) continue;
     const file = path.join(LOCALES_DIR, lang, 'messages.json');
     if (!fs.existsSync(file)) {

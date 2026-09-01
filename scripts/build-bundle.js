@@ -2,11 +2,19 @@ const esbuild = require('esbuild');
 const fs = require('fs');
 const path = require('path');
 const { assertNoRemoteHostedCode } = require('./check-rhc');
+const { assertSafeBuildOutput } = require('./lib/safe-build-output');
 
 const ROOT = path.resolve(__dirname, '..');
-const DIST = path.join(ROOT, 'dist', 'bundled');
+const outputArgIndex = process.argv.indexOf('--out-dir');
+if (outputArgIndex !== -1 && !process.argv[outputArgIndex + 1]) {
+  throw new Error('--out-dir requires a directory path');
+}
+const DIST =
+  outputArgIndex === -1 ? path.join(ROOT, 'dist', 'bundled') : path.resolve(process.argv[outputArgIndex + 1]);
 
 async function build() {
+  assertSafeBuildOutput(DIST, { repoRoot: ROOT });
+
   // Clean
   fs.rmSync(DIST, { recursive: true, force: true });
   fs.mkdirSync(DIST, { recursive: true });

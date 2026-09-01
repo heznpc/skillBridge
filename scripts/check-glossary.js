@@ -7,14 +7,24 @@
  * human-curated static dictionary entries — so this checker focuses on
  * structural issues and cross-language coverage.
  *
- * Usage: node scripts/check-glossary.js
+ * Usage: node scripts/check-glossary.js [--data-dir <directory>]
  * Exit code 1 on errors, 0 on success (warnings are non-fatal).
  */
 
 const fs = require('fs');
 const path = require('path');
 
-const DATA_DIR = path.join(__dirname, '..', 'src', 'data');
+const dataDirFlag = process.argv.indexOf('--data-dir');
+if (dataDirFlag !== -1 && !process.argv[dataDirFlag + 1]) {
+  console.error('Missing value for --data-dir');
+  process.exit(2);
+}
+const DATA_DIR = path.resolve(
+  dataDirFlag === -1 ? path.join(__dirname, '..', 'src', 'data') : process.argv[dataDirFlag + 1],
+);
+
+let errors = 0;
+let warnings = 0;
 
 // ==================== LOAD ALL LANGUAGE FILES ====================
 
@@ -26,13 +36,18 @@ if (files.length === 0) {
 
 const languages = {};
 for (const file of files) {
-  const data = JSON.parse(fs.readFileSync(path.join(DATA_DIR, file), 'utf8'));
-  const lang = data._meta?.lang || file.replace('.json', '');
-  languages[lang] = data;
+  try {
+    const data = JSON.parse(fs.readFileSync(path.join(DATA_DIR, file), 'utf8'));
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+      throw new TypeError('top-level JSON value must be an object');
+    }
+    const lang = data._meta?.lang || file.replace('.json', '');
+    languages[lang] = data;
+  } catch (error) {
+    console.error(`ERROR [${file}] Failed to load dictionary: ${error.message}`);
+    errors++;
+  }
 }
-
-let errors = 0;
-let warnings = 0;
 
 // ==================== CHECK 1: _protected Section Structure ====================
 

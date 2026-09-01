@@ -5,6 +5,7 @@
   "scripts": {
     "prepare": "git config core.hooksPath .githooks 2>/dev/null || true",
     "test": "jest --verbose",
+    "test:ci": "jest --runInBand --coverage --coverageReporters=text-summary --coverageReporters=json-summary",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:e2e": "node scripts/run-e2e.js",
@@ -69,7 +70,81 @@
       "src/**/*.js",
       "scripts/**/*.js",
       "!src/bridge/puter.js"
-    ]
+    ],
+    "coverageThreshold": {
+      "./scripts/lib/**/*.js": {
+        "statements": 90,
+        "branches": 75,
+        "functions": 90,
+        "lines": 90
+      },
+      "./scripts/check-rhc.js": {
+        "statements": 85,
+        "branches": 65,
+        "functions": 95,
+        "lines": 85
+      },
+      "./src/lib/dom-safe.js": {
+        "statements": 90,
+        "branches": 75,
+        "functions": 90,
+        "lines": 90
+      },
+      "./src/content/html-gt.js": {
+        "statements": 85,
+        "branches": 65,
+        "functions": 90,
+        "lines": 90
+      },
+      "./src/background/background.js": {
+        "statements": 50,
+        "branches": 45,
+        "functions": 60,
+        "lines": 50
+      },
+      "./src/content/chat-flashcards.js": {
+        "statements": 80,
+        "branches": 70,
+        "functions": 75,
+        "lines": 80
+      },
+      "./src/content/content-lifecycle.js": {
+        "statements": 80,
+        "branches": 55,
+        "functions": 70,
+        "lines": 80
+      },
+      "./src/content/content-messages.js": {
+        "statements": 85,
+        "branches": 75,
+        "functions": 85,
+        "lines": 85
+      },
+      "./src/content/gt-queue.js": {
+        "statements": 70,
+        "branches": 60,
+        "functions": 85,
+        "lines": 80
+      },
+      "./src/popup/popup.js": {
+        "statements": 60,
+        "branches": 40,
+        "functions": 40,
+        "lines": 65
+      },
+      "./src/lib/translation-feedback.js": {
+        "statements": 85,
+        "branches": 80,
+        "functions": 95,
+        "lines": 90
+      },
+      "./src/lib/tutor-conversations.js": {
+        "statements": 80,
+        "branches": 65,
+        "functions": 90,
+        "lines": 85
+      }
+    }
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -79,6 +154,7 @@
     "esbuild": "^0.28.2",
     "eslint": "^10.9.1",
     "eslint-config-prettier": "^10.1.8",
+    "istanbul-lib-instrument": "^6.0.3",
     "jest": "^30.5.0",
     "jest-environment-jsdom": "^30.5.0",
     "prettier": "^3.9.6",

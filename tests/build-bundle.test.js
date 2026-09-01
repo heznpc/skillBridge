@@ -1,19 +1,27 @@
 /**
- * Unit tests for the bundled Chrome Web Store artifact builder.
+ * Integration tests for the bundled Chrome Web Store artifact builder.
  *
  * The CWS upload path should contain only extension runtime resources. Repo
  * marketing screenshots live under assets/screenshots for README/store copy,
  * but they do not belong in dist/bundled or the upload zip.
  */
 
-/* global describe, test, expect, beforeAll */
+/* global describe, test, expect, beforeAll, afterAll */
 
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
-const { execSync } = require('child_process');
+const { execSync, spawnSync } = require('child_process');
 
 const ROOT = path.join(__dirname, '..');
-const DIST_DIR = path.join(ROOT, 'dist', 'bundled');
+const TEST_OUTPUT_ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'skillbridge-bundle-test-'));
+const DIST_DIR = path.join(TEST_OUTPUT_ROOT, 'bundled');
+const REJECTED_OUTPUT_DIR = path.join(ROOT, `.build-output-probe-${process.pid}`);
+const EXTERNAL_OUTPUT_ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'build-bundle-external-'));
+const ESCAPING_OUTPUT_LINK = path.join(TEST_OUTPUT_ROOT, 'escape');
+const EXTERNAL_SENTINEL = path.join(EXTERNAL_OUTPUT_ROOT, 'sentinel.txt');
+fs.writeFileSync(EXTERNAL_SENTINEL, 'keep');
+fs.symlinkSync(EXTERNAL_OUTPUT_ROOT, ESCAPING_OUTPUT_LINK, process.platform === 'win32' ? 'junction' : 'dir');
 
 function localHtmlReferences(html) {
   return Array.from(html.matchAll(/<(?:script|link|img)\b[^>]*?\b(?:src|href)=["']([^"']+)["'][^>]*>/gi))
@@ -22,10 +30,40 @@ function localHtmlReferences(html) {
 }
 
 beforeAll(() => {
-  execSync('node scripts/build-bundle.js', { cwd: ROOT, encoding: 'utf8' });
+  execSync(`node scripts/build-bundle.js --out-dir ${JSON.stringify(DIST_DIR)}`, {
+    cwd: ROOT,
+    encoding: 'utf8',
+  });
+});
+
+afterAll(() => {
+  fs.rmSync(TEST_OUTPUT_ROOT, { recursive: true, force: true });
+  fs.rmSync(REJECTED_OUTPUT_DIR, { recursive: true, force: true });
+  fs.rmSync(EXTERNAL_OUTPUT_ROOT, { recursive: true, force: true });
 });
 
 describe('bundled artifact shape', () => {
+  test('refuses a destructive custom output path outside dist or the system temp directory', () => {
+    const result = spawnSync(process.execPath, ['scripts/build-bundle.js', '--out-dir', REJECTED_OUTPUT_DIR], {
+      cwd: ROOT,
+      encoding: 'utf8',
+    });
+    expect(result.status).not.toBe(0);
+    expect(`${result.stdout}${result.stderr}`).toContain('--out-dir must be inside repository dist');
+    expect(fs.existsSync(REJECTED_OUTPUT_DIR)).toBe(false);
+  });
+
+  test('refuses an allowed-looking output whose existing ancestor escapes through a symlink', () => {
+    const result = spawnSync(
+      process.execPath,
+      ['scripts/build-bundle.js', '--out-dir', path.join(ESCAPING_OUTPUT_LINK, 'nested')],
+      { cwd: ROOT, encoding: 'utf8' },
+    );
+    expect(result.status).not.toBe(0);
+    expect(`${result.stdout}${result.stderr}`).toContain('possible symlink escape');
+    expect(fs.readFileSync(EXTERNAL_SENTINEL, 'utf8')).toBe('keep');
+  });
+
   test('keeps the generic ZIP command on the CWS-safe bundle path', () => {
     const scripts = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).scripts;
     expect(scripts['build:zip']).toBe('npm run build:bundle:zip');

@@ -86,9 +86,9 @@ function readLocalVersion() {
 // (`/en-US/...`) — we want the final listing page either way.
 const MAX_REDIRECTS = 5;
 
-function fetchListing(url, hop = 0) {
+function fetchListing(url, hop = 0, get = https.get) {
   return new Promise((resolve, reject) => {
-    const req = https.get(
+    const req = get(
       url,
       {
         headers: {
@@ -108,7 +108,7 @@ function fetchListing(url, hop = 0) {
             return;
           }
           const next = new URL(res.headers.location, url).toString();
-          fetchListing(next, hop + 1).then(resolve, reject);
+          fetchListing(next, hop + 1, get).then(resolve, reject);
           return;
         }
         if (res.statusCode !== 200) {
@@ -196,28 +196,34 @@ function compareVersions(local, published) {
   return { totalPatchDrift, sameMajor, sameMinor };
 }
 
-function ageDays(updatedString) {
+function ageDays(updatedString, now = Date.now()) {
   if (!updatedString) return null;
   const t = Date.parse(updatedString);
   if (Number.isNaN(t)) return null;
-  return Math.round((Date.now() - t) / (24 * 60 * 60 * 1000));
+  return Math.round((now - t) / (24 * 60 * 60 * 1000));
 }
 
-async function main() {
-  const opts = parseArgs(process.argv);
-  const local = readLocalVersion();
+async function main({
+  argv = process.argv,
+  readVersion = readLocalVersion,
+  fetch = fetchListing,
+  logger = console,
+  now = Date.now(),
+} = {}) {
+  const opts = parseArgs(argv);
+  const local = readVersion();
 
   let html;
   try {
-    html = await fetchListing(CWS_LISTING_URL);
+    html = await fetch(CWS_LISTING_URL);
   } catch (err) {
     const msg = `[check-cws-drift] CWS listing unreachable (${err.message}). Skipping drift check. Local version: ${local}.`;
     if (opts.json) {
-      console.log(JSON.stringify({ status: 'soft-fail', reason: err.message, localVersion: local }));
+      logger.log(JSON.stringify({ status: 'soft-fail', reason: err.message, localVersion: local }));
     } else {
-      console.warn(msg);
+      logger.warn(msg);
     }
-    process.exit(0);
+    return 0;
   }
 
   const published = extractPublishedVersion(html);
@@ -227,15 +233,15 @@ async function main() {
     const msg =
       '[check-cws-drift] Could not extract published version from CWS listing (page format may have changed). Skipping.';
     if (opts.json) {
-      console.log(JSON.stringify({ status: 'soft-fail', reason: 'parser-miss', localVersion: local }));
+      logger.log(JSON.stringify({ status: 'soft-fail', reason: 'parser-miss', localVersion: local }));
     } else {
-      console.warn(msg);
+      logger.warn(msg);
     }
-    process.exit(0);
+    return 0;
   }
 
   const cmp = compareVersions(local, published);
-  const age = ageDays(updated);
+  const age = ageDays(updated, now);
   const drifted = cmp.totalPatchDrift > opts.maxPatch || (age !== null && age > opts.maxAgeDays);
 
   const report = {
@@ -252,27 +258,44 @@ async function main() {
   };
 
   if (opts.json) {
-    console.log(JSON.stringify(report, null, 2));
+    logger.log(JSON.stringify(report, null, 2));
   } else {
-    console.log(`[check-cws-drift] ${drifted ? 'DRIFT' : 'OK'}`);
-    console.log(`  local manifest version : ${local}`);
-    console.log(`  published CWS version  : ${published}`);
-    console.log(`  published last updated : ${updated || '(unknown)'}${age !== null ? ` (${age} days ago)` : ''}`);
-    console.log(`  patch-drift score      : ${cmp.totalPatchDrift} (threshold: ${opts.maxPatch})`);
-    console.log(`  age threshold          : ${opts.maxAgeDays} days`);
-    console.log(`  listing URL            : ${CWS_LISTING_URL}`);
+    logger.log(`[check-cws-drift] ${drifted ? 'DRIFT' : 'OK'}`);
+    logger.log(`  local manifest version : ${local}`);
+    logger.log(`  published CWS version  : ${published}`);
+    logger.log(`  published last updated : ${updated || '(unknown)'}${age !== null ? ` (${age} days ago)` : ''}`);
+    logger.log(`  patch-drift score      : ${cmp.totalPatchDrift} (threshold: ${opts.maxPatch})`);
+    logger.log(`  age threshold          : ${opts.maxAgeDays} days`);
+    logger.log(`  listing URL            : ${CWS_LISTING_URL}`);
     if (drifted) {
-      console.log('');
-      console.log('  → Published listing is materially behind local code.');
-      console.log('  → Build a release zip and upload it via the CWS developer dashboard.');
-      console.log('  → store-assets/RELEASE_CHECKLIST.md has the upload step-by-step.');
+      logger.log('');
+      logger.log('  → Published listing is materially behind local code.');
+      logger.log('  → Build a release zip and upload it via the CWS developer dashboard.');
+      logger.log('  → store-assets/RELEASE_CHECKLIST.md has the upload step-by-step.');
     }
   }
 
-  process.exit(drifted ? 1 : 0);
+  return drifted ? 1 : 0;
 }
 
-main().catch((err) => {
-  console.error('[check-cws-drift] unexpected error:', err);
-  process.exit(0); // soft-fail by design
-});
+async function runCli() {
+  try {
+    process.exitCode = await main();
+  } catch (err) {
+    console.error('[check-cws-drift] unexpected error:', err);
+    process.exitCode = 0; // soft-fail by design
+  }
+}
+
+if (require.main === module) void runCli();
+
+module.exports = {
+  ageDays,
+  compareVersions,
+  extractLastUpdated,
+  extractPublishedVersion,
+  fetchListing,
+  main,
+  parseArgs,
+  runCli,
+};

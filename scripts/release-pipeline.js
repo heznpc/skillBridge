@@ -299,9 +299,9 @@ function verifyArtifacts() {
   );
 }
 
-function smoke() {
-  runNpm('Build production extension bundle', 'build:bundle');
-  run(
+function smoke(operations = DEFAULT_OPERATIONS) {
+  operations.runNpm('Build production extension bundle', 'build:bundle');
+  operations.run(
     'First-user and action-popup smoke E2E',
     NPX,
     ['playwright', 'test', 'tests/e2e/first-user-flow.spec.js', 'tests/e2e/popup.spec.js'],
@@ -309,74 +309,88 @@ function smoke() {
   );
 }
 
-function localQualityGates() {
-  runNpm('Release version identity check', 'check:version');
-  runNpm('Lint', 'lint');
-  runNpm('Format check', 'format:check');
-  run('Unit tests', NPM, ['test', '--', '--runInBand']);
-  runNpm('Validate translation JSON', 'validate');
-  runNpm('Glossary quality check', 'glossary');
-  runNpm('i18n key parity', 'check:i18n');
-  runNpm('Locale contamination check', 'check:locales');
-  runNpm('Dictionary coverage check', 'check:dict-coverage');
-  runNpm('Background/content sync check', 'check:sync');
-  runNpm('Dictionary freshness check', 'check:dicts');
-  runNpm('Generated plugin check', 'check:plugin');
-  runNpm('Canonical lesson lookup check', 'check:canonical');
-  runNpm('Live selector check', 'check:selectors');
-  runNpm('Live course-map check', 'check:academy');
+function localQualityGates(operations = DEFAULT_OPERATIONS) {
+  operations.runNpm('Release version identity check', 'check:version');
+  operations.runNpm('Lint', 'lint');
+  operations.runNpm('Format check', 'format:check');
+  operations.runNpm('Unit tests with coverage gates', 'test:ci');
+  operations.runNpm('Validate translation JSON', 'validate');
+  operations.runNpm('Glossary quality check', 'glossary');
+  operations.runNpm('i18n key parity', 'check:i18n');
+  operations.runNpm('Locale contamination check', 'check:locales');
+  operations.runNpm('Dictionary coverage check', 'check:dict-coverage');
+  operations.runNpm('Background/content sync check', 'check:sync');
+  operations.runNpm('Dictionary freshness check', 'check:dicts');
+  operations.runNpm('Generated plugin check', 'check:plugin');
+  operations.runNpm('Canonical lesson lookup check', 'check:canonical');
+  operations.runNpm('Live selector check', 'check:selectors');
+  operations.runNpm('Live course-map check', 'check:academy');
   // Puter does not validate a model id: it forwards whatever it is given and
   // lets the server refuse. A retired id is therefore not a build failure but
   // a failed first question after a successful sign-in, which is the most
   // expensive place to discover it.
-  runNpm('Live tutor-model check', 'check:models');
+  operations.runNpm('Live tutor-model check', 'check:models');
 }
 
-function preflight({ includeFullE2e, includeStoreCapture }) {
-  localQualityGates();
-  smoke();
-  runNpm('Build Firefox artifact', 'build:firefox');
+function preflight({ includeFullE2e, includeStoreCapture }, operations = DEFAULT_OPERATIONS, logger = console) {
+  localQualityGates(operations);
+  smoke(operations);
+  operations.runNpm('Build Firefox artifact', 'build:firefox');
   if (includeStoreCapture) {
-    runNpm('Regenerate store assets from the production bundle', 'capture:store');
-    runNode('Regenerate promo video derivatives', 'scripts/build-promo-media.js');
+    operations.runNpm('Regenerate store assets from the production bundle', 'capture:store');
+    operations.runNode('Regenerate promo video derivatives', 'scripts/build-promo-media.js');
   } else {
-    console.log('\n==> Verify store description is generated from the current listing source');
-    verifyStoreDescriptionSync();
-    console.log('✓ store description matches STORE_LISTING.md');
+    logger.log('\n==> Verify store description is generated from the current listing source');
+    operations.verifyStoreDescriptionSync();
+    logger.log('✓ store description matches STORE_LISTING.md');
   }
-  runNpm('Build bundled upload zip', 'build:bundle:zip');
-  verifyArtifacts();
+  operations.runNpm('Build bundled upload zip', 'build:bundle:zip');
+  operations.verifyArtifacts();
   if (includeFullE2e) {
-    runNpm('Full E2E suite', 'test:e2e');
+    operations.runNpm('Full E2E suite', 'test:e2e');
   } else {
-    console.log('\nFull E2E suite is reserved for npm run release:verify.');
-    console.log('Preflight covers upload-readiness plus first-user and action-popup paths.');
+    logger.log('\nFull E2E suite is reserved for npm run release:verify.');
+    logger.log('Preflight covers upload-readiness plus first-user and action-popup paths.');
   }
 }
 
-function main() {
+const DEFAULT_OPERATIONS = {
+  run,
+  runNpm,
+  runNode,
+  verifyArtifacts,
+  verifyStoreDescriptionSync,
+};
+
+function main({ modes = MODES, operations = DEFAULT_OPERATIONS, logger = console } = {}) {
   try {
-    if (MODES.smoke) {
-      smoke();
-    } else if (MODES.postUpload) {
-      runNode('Post-upload CWS drift check', 'scripts/check-cws-drift.js', ['--json']);
-    } else if (MODES.full) {
-      preflight({ includeFullE2e: true, includeStoreCapture: true });
+    if (modes.smoke) {
+      smoke(operations);
+    } else if (modes.postUpload) {
+      operations.runNode('Post-upload CWS drift check', 'scripts/check-cws-drift.js', ['--json']);
+    } else if (modes.full) {
+      preflight({ includeFullE2e: true, includeStoreCapture: true }, operations, logger);
     } else {
-      preflight({ includeFullE2e: false, includeStoreCapture: false });
+      preflight({ includeFullE2e: false, includeStoreCapture: false }, operations, logger);
     }
-    console.log('\nRelease pipeline finished successfully.');
+    logger.log('\nRelease pipeline finished successfully.');
+    return 0;
   } catch (err) {
-    console.error(`\nRelease pipeline stopped: ${err.message}`);
-    process.exit(1);
+    logger.error(`\nRelease pipeline stopped: ${err.message}`);
+    return 1;
   }
 }
 
-if (require.main === module) main();
+if (require.main === module) process.exitCode = main();
 
 module.exports = {
+  DEFAULT_OPERATIONS,
   assertMatchingFileLists,
   listBundleFiles,
+  localQualityGates,
+  main,
   parseZipFileEntries,
+  preflight,
+  smoke,
   verifyZipMatchesBundle,
 };

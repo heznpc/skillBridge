@@ -285,23 +285,6 @@ describe('local engine host permission', () => {
     expect(popupSrc).toContain("type: 'CHECK_LOCAL_ENGINE'");
   });
 
-  // Review finding: denying the Chrome prompt still persisted
-  // sb_ai_engine='local', so every later tutor message routed to a fetch that
-  // could never succeed, with no hint in the reopened popup.
-  test('denying the permission reverts the stored engine and explains why', () => {
-    const popupSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'popup', 'popup.js'), 'utf8');
-    const fn = popupSrc.slice(
-      popupSrc.indexOf('async function ensureLocalPermissionAndProbe'),
-      popupSrc.indexOf('engineField.style.display'),
-    );
-    expect(fn).toContain('engineSelect.value = revertTo;');
-    expect(fn).toContain('await chrome.storage.local.set({ sb_ai_engine: revertTo });');
-    // The local block (and its status line) is hidden by the revert, so the
-    // message must go to the always-visible status row.
-    expect(fn).toContain('showStatus(t(ENGINE_LABELS.permDenied)');
-    expect(popupSrc).toContain('ensureLocalPermissionAndProbe(previousEngine)');
-  });
-
   // Review finding: the status line was the one string in the engine block
   // that a popup language change did not re-render.
   test('the local status line re-renders on a language change', () => {

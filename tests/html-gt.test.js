@@ -7,12 +7,13 @@
  * mangle/reorder behavior the pipeline must survive, not hand-invented strings.
  */
 
-/* global describe, test, expect, window, document */
+/* global describe, test, expect, window, document, jest */
 
 require('../src/content/html-gt.js');
 // dom-safe provides the inline sanitizer that runs on GT output before the
 // integrity gate — the two must agree on which tags survive.
 require('../src/lib/dom-safe.js');
+const { loadGtQueue } = require('./helpers/gt-queue-harness');
 const { checkTagIntegrity, reconcileHtml } = window._sbHtmlGt;
 
 function el(html) {
@@ -178,28 +179,49 @@ describe('sanitizer keeps the tags the integrity gate tracks', () => {
     expect(out).toMatch(/class="cta"/);
   });
 
-  // Mirrors _applyHtmlTranslation: sanitize, then re-wrap in a container of
-  // the original tag (the inline sanitizer strips the block wrapper itself).
-  function applyLikePipeline(originalEl, translatedHtml) {
-    // Mirrors gt-queue._applyHtmlTranslation: parse into an INERT document so
-    // no image source can fetch before the integrity gate runs.
-    const container = document.implementation.createHTMLDocument('').createElement(originalEl.tagName);
+  function sanitizedTemplate(tagName, translatedHtml) {
+    const container = document.implementation.createHTMLDocument('').createElement(tagName);
     container.innerHTML = sanitizeInlineHtml(translatedHtml);
     let root = container;
-    if (container.children.length === 1 && container.firstElementChild.tagName === originalEl.tagName) {
+    if (container.children.length === 1 && container.firstElementChild.tagName === tagName) {
       root = container.firstElementChild;
     }
     return root;
   }
 
-  test('a sanitized block still passes the integrity gate end to end', () => {
+  test('the production GT queue sanitizes and reconciles a structured block end to end', async () => {
     const orig = el('<p>Use the <img src="/i/gear.png" alt="gear"> settings <button id="go">button</button>.</p>');
+    document.body.appendChild(orig);
+    orig.querySelector('img').__identity = 'original-image';
+    orig.querySelector('button').__identity = 'original-button';
     const translated = '<p><img src="/i/gear.png" alt="gear"> 설정 <button id="go">버튼</button>을 사용하세요.</p>';
-    const rootEl = applyLikePipeline(orig, translated);
-    expect(checkTagIntegrity(orig, rootEl)).toBe(true);
-    expect(reconcileHtml(orig, rootEl)).toBe(true);
-    expect(orig.querySelector('img')).toBeTruthy();
+    const cacheWrite = jest.fn().mockResolvedValue(undefined);
+    const { sb } = loadGtQueue({
+      examSkipSelectors: ['[role="radio"]'],
+      isExamPage: false,
+      sbOverrides: {
+        translator: {
+          staticLookup: () => null,
+          cachedLookup: async () => null,
+          googleTranslateBatch: async () => [translated],
+          _cacheTranslation: cacheWrite,
+        },
+      },
+      windowOverrides: {
+        _geminiBlock: { hasInlineTags: () => true },
+        _sbDomSafe: window._sbDomSafe,
+        _sbHtmlGt: window._sbHtmlGt,
+      },
+    });
+
+    sb._gt.queueForGoogleTranslate([orig], 'ko', true);
+    for (let i = 0; i < 20 && cacheWrite.mock.calls.length === 0; i++) await Promise.resolve();
+
+    expect(cacheWrite).toHaveBeenCalledTimes(1);
+    expect(orig.querySelector('img').__identity).toBe('original-image');
+    expect(orig.querySelector('button').__identity).toBe('original-button');
     expect(orig.querySelector('button').textContent).toBe('버튼');
+    expect(orig.textContent.replace(/\s+/g, ' ').trim()).toBe('설정 버튼을 사용하세요.');
   });
 
   test('regression: before the fix the sanitizer dropped these and the gate failed', () => {
@@ -225,7 +247,7 @@ describe('sanitizer keeps the tags the integrity gate tracks', () => {
     // lost it, and the elementKey multisets never matched again.
     const dataSrc = 'data:image/png;base64,iVBORw0KGgo=';
     const orig = el(`<p>See <img src="${dataSrc}"> the diagram.</p>`);
-    const rootEl = applyLikePipeline(orig, `<p>다이어그램 <img src="${dataSrc}">을 보세요.</p>`);
+    const rootEl = sanitizedTemplate(orig.tagName, `<p>다이어그램 <img src="${dataSrc}">을 보세요.</p>`);
     expect(checkTagIntegrity(orig, rootEl)).toBe(true);
 
     const kept = sanitizeInlineHtml(`<img src="${dataSrc}"><img src="blob:https://a.example/x">`);

@@ -8,8 +8,10 @@
 
 const fs = require('fs');
 const path = require('path');
+const { readProductionSource } = require('./helpers/production-source');
 
 const runtimeMessageListeners = [];
+const runtimeConnectListeners = [];
 
 // Minimal chrome mock for background.js
 global.chrome = {
@@ -21,9 +23,10 @@ global.chrome = {
 };
 global.chrome.runtime.onInstalled = { addListener: () => {} };
 global.chrome.runtime.onMessage = { addListener: (fn) => runtimeMessageListeners.push(fn) };
+global.chrome.runtime.onConnect = { addListener: (fn) => runtimeConnectListeners.push(fn) };
 
 const sharedSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'shared', 'runtime-constants.js'), 'utf8');
-const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'background', 'background.js'), 'utf8');
+const src = readProductionSource('src', 'background', 'background.js');
 const originalSetTimeout = setTimeout;
 const originalClearTimeout = clearTimeout;
 let timerDelegate = (...args) => originalSetTimeout(...args);
@@ -554,6 +557,98 @@ describe('runtime message dispatch — GOOGLE_TRANSLATE rate-limit path', () => 
   });
 });
 
+describe('runtime message dispatch — GOOGLE_TRANSLATE_BATCH', () => {
+  let originalAcquire;
+  let originalFetch;
+
+  const dispatchBatch = (texts) => {
+    const listener = runtimeMessageListeners[runtimeMessageListeners.length - 1];
+    expect(typeof listener).toBe('function');
+    return new Promise((resolve) => {
+      const keepAlive = listener(
+        { type: 'GOOGLE_TRANSLATE_BATCH', texts, targetLang: 'ko', sourceLang: 'en' },
+        { id: 'test' },
+        resolve,
+      );
+      expect(keepAlive).toBe(true);
+    });
+  };
+
+  beforeEach(() => {
+    originalAcquire = _rateLimiter.acquire;
+    originalFetch = global.fetch;
+    _inflightGT.clear();
+    _rateLimiter.acquire = jest.fn().mockResolvedValue(true);
+  });
+
+  afterEach(() => {
+    _rateLimiter.acquire = originalAcquire;
+    global.fetch = originalFetch;
+    _inflightGT.clear();
+  });
+
+  test('deduplicates repeated text before acquiring a slot or fetching', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => [[['안녕하세요', 'Hello']]],
+    });
+
+    await expect(dispatchBatch(['Hello', 'Hello', 'Hello'])).resolves.toEqual({
+      ok: true,
+      translations: ['안녕하세요', '안녕하세요', '안녕하세요'],
+    });
+    expect(_rateLimiter.acquire).toHaveBeenCalledTimes(1);
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  test('returns null without fetching when rate-limit acquisition times out', async () => {
+    _rateLimiter.acquire = jest.fn().mockResolvedValue(false);
+    global.fetch = jest.fn();
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    try {
+      await expect(dispatchBatch(['Hello'])).resolves.toEqual({ ok: true, translations: [null] });
+      expect(_rateLimiter.acquire).toHaveBeenCalledTimes(1);
+      expect(global.fetch).not.toHaveBeenCalled();
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  test('keeps successful results and maps an individual fetch failure to null', async () => {
+    global.fetch = jest.fn((_url, opts) => {
+      const text = new URLSearchParams(opts.body).get('q');
+      if (text === 'broken') return Promise.resolve({ ok: false, status: 400 });
+      return Promise.resolve({ ok: true, status: 200, json: async () => [[['성공', text]]] });
+    });
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    try {
+      await expect(dispatchBatch(['working', 'broken'])).resolves.toEqual({
+        ok: true,
+        translations: ['성공', null],
+      });
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  test('rejects malformed texts payloads before acquiring or fetching', async () => {
+    global.fetch = jest.fn();
+
+    for (const texts of [null, 'Hello', ['valid', { text: 'not a string' }]]) {
+      await expect(dispatchBatch(texts)).resolves.toEqual({
+        ok: false,
+        error: 'Invalid translation batch',
+      });
+    }
+    expect(_rateLimiter.acquire).not.toHaveBeenCalled();
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+});
+
 // Review finding: lesson text was sent in the Google Translate URL's `q=`
 // query string. CWS guidance is to keep user data out of URLs, and since v4
 // sends whole HTML blocks the query also overruns practical URL length
@@ -633,6 +728,103 @@ function brokerPort({
   };
   return port;
 }
+
+function connectRuntimePort(port) {
+  const listener = runtimeConnectListeners[runtimeConnectListeners.length - 1];
+  expect(typeof listener).toBe('function');
+  listener(port);
+}
+
+function connectReadyCloudPair() {
+  const url = 'https://anthropic.skilljar.com/lesson';
+  const broker = brokerPort({ name: 'sb-puter-content', url });
+  const client = brokerPort({ name: 'sb-cloud-chat-client', url });
+  connectRuntimePort(broker);
+  broker.emitMessage({ type: 'ready' });
+  connectRuntimePort(client);
+  client.posted.length = 0;
+  client.postMessage.mockClear();
+  return { broker, client, url };
+}
+
+describe('runtime port dispatch — cloud Tutor request validation', () => {
+  beforeEach(() => {
+    _cloudBrokers.clear();
+    _cloudClients.clear();
+    _cloudActive.clear();
+  });
+
+  test('drops an overlong request id without relaying or reserving it', () => {
+    const { broker, client } = connectReadyCloudPair();
+
+    client.emitMessage({
+      type: 'start',
+      id: 'x'.repeat(129),
+      prompt: 'hello',
+      model: 'claude-sonnet-4-6',
+    });
+
+    expect(broker.postMessage).not.toHaveBeenCalled();
+    expect(client.postMessage).not.toHaveBeenCalled();
+    expect(_cloudActive.size).toBe(0);
+  });
+
+  test('rejects a duplicate active id without replacing its owner or relaying twice', () => {
+    const { broker, client: first, url } = connectReadyCloudPair();
+    const second = brokerPort({ name: 'sb-cloud-chat-client', url });
+    connectRuntimePort(second);
+    second.posted.length = 0;
+    second.postMessage.mockClear();
+
+    first.emitMessage({ type: 'start', id: 'duplicate', prompt: 'first', model: 'claude-sonnet-4-6' });
+    second.emitMessage({ type: 'start', id: 'duplicate', prompt: 'second', model: 'claude-sonnet-4-6' });
+
+    expect(broker.postMessage).toHaveBeenCalledTimes(1);
+    expect(broker.posted).toContainEqual({
+      type: 'start',
+      id: 'duplicate',
+      prompt: 'first',
+      model: 'claude-sonnet-4-6',
+      labels: undefined,
+    });
+    expect(second.posted).toEqual([{ type: 'error', id: 'duplicate', error: 'Invalid cloud Tutor request' }]);
+    expect(_cloudActive.get('7:duplicate')).toBe(first);
+  });
+
+  test('rejects empty and oversized prompts and an unallowed model', () => {
+    const { broker, client } = connectReadyCloudPair();
+    const invalidRequests = [
+      { id: 'empty', prompt: '', model: 'claude-sonnet-4-6' },
+      { id: 'oversized', prompt: 'x'.repeat(200_001), model: 'claude-sonnet-4-6' },
+      { id: 'model', prompt: 'hello', model: 'claude-not-allowed' },
+    ];
+
+    for (const request of invalidRequests) client.emitMessage({ type: 'start', ...request });
+
+    expect(broker.postMessage).not.toHaveBeenCalled();
+    expect(client.posted).toEqual(
+      invalidRequests.map(({ id }) => ({
+        type: 'error',
+        id,
+        error: 'Invalid cloud Tutor request',
+      })),
+    );
+    expect(_cloudActive.size).toBe(0);
+  });
+
+  test('clears the reservation and errors when posting to the broker throws', () => {
+    const { broker, client } = connectReadyCloudPair();
+    broker.postMessage = jest.fn(() => {
+      throw new Error('disconnected');
+    });
+
+    client.emitMessage({ type: 'start', id: 'post-failure', prompt: 'hello', model: 'claude-sonnet-4-6' });
+
+    expect(broker.postMessage).toHaveBeenCalledTimes(1);
+    expect(client.posted).toEqual([{ type: 'error', id: 'post-failure', error: 'Puter broker is unavailable' }]);
+    expect(_cloudActive.has('7:post-failure')).toBe(false);
+  });
+});
 
 describe('isolated cloud broker replacement', () => {
   beforeEach(() => {
