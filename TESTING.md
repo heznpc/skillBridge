@@ -87,6 +87,21 @@ visually debugging a browser flow. Store capture follows the same rule:
 `npm run capture:store` is quiet, while `npm run capture:store:headed` is the
 explicit visual-debug command.
 
+The real Ollama round trip has a dedicated self-contained runner:
+
+```bash
+npm run test:e2e:ollama
+```
+
+It requires the `ollama` executable but does not require a server to be running.
+The runner starts an isolated server on a temporary port with the extension
+Origin enabled, reuses an installed chat model when possible, prepares a small
+test model when none is available, runs the packaged extension through the
+popup probe and streaming Port, and stops only the server process it created.
+Use `-- --model <name>` to require another model or `-- --no-pull` to forbid a
+model download. The normal `npm run test:e2e` keeps this live spec conditional
+so contributors without Ollama can run the rest of the browser suite.
+
 ### Thin coverage / known gaps
 
 - Unit-level coverage of `content.js` DOM helpers and `background.js` internals

@@ -41,6 +41,8 @@ describe('Shotkit launcher', () => {
     expect(scripts['test:e2e']).toBe('node scripts/run-e2e.js');
     expect(scripts['test:e2e:headed']).toBe('node scripts/run-e2e.js --headed');
     expect(scripts['test:e2e:first-user']).toBe('node scripts/run-e2e.js --first-user');
+    expect(scripts['test:e2e:ollama']).toBe('node scripts/run-ollama-e2e.js');
+    expect(scripts['test:e2e:ollama:headed']).toBe('node scripts/run-ollama-e2e.js --headed');
   });
 
   test('resolves the installed CLI', () => {

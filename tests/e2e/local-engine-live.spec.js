@@ -34,19 +34,30 @@ const { test, expect, chromium } = require('@playwright/test');
 
 const ROOT = path.join(__dirname, '..', '..');
 const BUNDLE = path.join(ROOT, 'dist', 'bundled');
-const OLLAMA = 'http://localhost:11434/v1';
-const MODEL = 'gemma3:4b';
+const OLLAMA = process.env.SB_OLLAMA_BASE_URL || 'http://localhost:11434/v1';
+const MODEL = process.env.SB_OLLAMA_MODEL || 'gemma3:4b';
 
-function ollamaReachable() {
+function ollamaModels() {
   return new Promise((resolve) => {
-    const req = http.get('http://localhost:11434/v1/models', (res) => {
-      res.resume();
-      resolve(res.statusCode === 200);
+    const req = http.get(`${OLLAMA}/models`, (res) => {
+      let body = '';
+      res.setEncoding('utf8');
+      res.on('data', (chunk) => {
+        body += chunk;
+      });
+      res.on('end', () => {
+        if (res.statusCode !== 200) return resolve(null);
+        try {
+          return resolve(JSON.parse(body).data?.map((model) => model.id) || []);
+        } catch (_err) {
+          return resolve(null);
+        }
+      });
     });
-    req.on('error', () => resolve(false));
+    req.on('error', () => resolve(null));
     req.setTimeout(3000, () => {
       req.destroy();
-      resolve(false);
+      resolve(null);
     });
   });
 }
@@ -59,11 +70,12 @@ function ollamaReachable() {
 function chatOriginStatus() {
   return new Promise((resolve) => {
     const body = '{}';
+    const chatUrl = new URL(`${OLLAMA}/chat/completions`);
     const req = http.request(
       {
-        host: 'localhost',
-        port: 11434,
-        path: '/v1/chat/completions',
+        host: chatUrl.hostname,
+        port: chatUrl.port,
+        path: chatUrl.pathname,
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -108,9 +120,11 @@ test.describe('SkillBridge — LIVE local engine (real Ollama)', () => {
   let extensionId;
   let extDir;
   let userDataDir;
+  let availableModels;
 
   test.beforeAll(async () => {
-    test.skip(!(await ollamaReachable()), 'Ollama not reachable on localhost:11434');
+    availableModels = await ollamaModels();
+    test.skip(!availableModels, `Ollama not reachable at ${OLLAMA}`);
     test.skip(
       (await chatOriginStatus()) === 403,
       'Ollama is reachable but rejects the chrome-extension origin, so the tutor cannot stream and ' +
@@ -164,14 +178,24 @@ test.describe('SkillBridge — LIVE local engine (real Ollama)', () => {
 
     const sw = context.serviceWorkers()[0];
     const manifest = await sw.evaluate(() => chrome.runtime.getManifest());
+    // The automated harness owns a temporary port and tells this spec which
+    // model it prepared. Seed the same settings a returning user would have so
+    // the popup probe and the later tutor stream exercise one configuration.
+    await sw.evaluate(
+      async ({ baseUrl, model }) => {
+        await chrome.storage.local.set({ sb_local_base: baseUrl, sb_local_model: model });
+      },
+      { baseUrl: OLLAMA, model: MODEL },
+    );
     await popup.goto(`chrome-extension://${extensionId}/${manifest.action.default_popup}`, {
       waitUntil: 'domcontentloaded',
     });
 
     await expect(popup.locator('#engine-field')).toBeVisible();
-    // Point the model at what this machine actually has, then select local.
     await popup.locator('#engine-select').selectOption('local');
     await expect(popup.locator('#local-config')).toBeVisible();
+    await expect(popup.locator('#local-base-input')).toHaveValue(OLLAMA);
+    await expect(popup.locator('#local-model-input')).toHaveValue(MODEL);
 
     // The probe classifies reachability against the REAL server. Under the
     // shipped `http://localhost/*` grant, the SW fetch to :11434 must succeed.
@@ -188,6 +212,10 @@ test.describe('SkillBridge — LIVE local engine (real Ollama)', () => {
   });
 
   test('the tutor Port streams real tokens from Ollama end to end', async () => {
+    test.skip(
+      !availableModels.includes(MODEL),
+      `Ollama is reachable but ${MODEL} is not installed. Run npm run test:e2e:ollama to prepare it automatically.`,
+    );
     // Drive the exact SW Port path translator._localChatStream uses, against
     // the real model — and from the context that actually uses it. The port is
     // gated to the surfaces `content_scripts` inject into (_isLocalChatPort in
@@ -237,7 +265,7 @@ test.describe('SkillBridge — LIVE local engine (real Ollama)', () => {
                 type: 'start',
                 baseUrl,
                 model: modelName,
-                messages: [{ role: 'user', content: 'Reply with exactly the word: BRIDGE' }],
+                messages: [{ role: 'user', content: 'Reply with one short word.' }],
               });
             }),
         });
@@ -248,9 +276,10 @@ test.describe('SkillBridge — LIVE local engine (real Ollama)', () => {
 
     expect(result.error).toBeUndefined();
     expect(result.chunks).toBeGreaterThan(0);
-    expect(result.full.length).toBeGreaterThan(0);
-    // The model was asked to say BRIDGE — a loose check that real content flowed.
-    expect(result.full.toUpperCase()).toContain('BRIDGE');
+    // This is a transport test, not a model-quality evaluation. Any non-empty
+    // generated text proves the packaged extension carried a real stream from
+    // Ollama through the service worker Port and back to the lesson context.
+    expect(result.full.trim().length).toBeGreaterThan(0);
 
     await lesson.close();
   });

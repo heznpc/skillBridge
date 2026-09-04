@@ -11,6 +11,8 @@
     "test:e2e": "node scripts/run-e2e.js",
     "test:e2e:headed": "node scripts/run-e2e.js --headed",
     "test:e2e:first-user": "node scripts/run-e2e.js --first-user",
+    "test:e2e:ollama": "node scripts/run-ollama-e2e.js",
+    "test:e2e:ollama:headed": "node scripts/run-ollama-e2e.js --headed",
     "e2e:install": "playwright install chromium",
     "glossary": "node scripts/check-glossary.js",
     "validate": "node scripts/validate-translations.js",
