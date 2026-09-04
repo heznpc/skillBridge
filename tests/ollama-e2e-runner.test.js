@@ -1,11 +1,16 @@
 /* global describe, test, expect */
 
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 const {
   DEFAULT_MODEL,
+  acquireOllamaLock,
   chooseModel,
   installedModelNames,
   modelIsInstalled,
   parseArgs,
+  waitForServer,
 } = require('../scripts/run-ollama-e2e');
 
 describe('Ollama E2E runner arguments', () => {
@@ -54,5 +59,52 @@ describe('Ollama E2E model selection', () => {
     expect(modelIsInstalled(['qwen3:latest'], 'qwen3')).toBe(true);
     expect(modelIsInstalled(['qwen3:0.6b'], 'qwen3:0.6b')).toBe(true);
     expect(modelIsInstalled(['gemma3:4b'], 'qwen3')).toBe(false);
+  });
+});
+
+describe('Ollama E2E server diagnostics', () => {
+  test('reports a server signal immediately instead of waiting for readiness timeout', async () => {
+    await expect(
+      waitForServer('http://localhost:9', { exitCode: null, signalCode: 'SIGTERM' }, 30_000),
+    ).rejects.toThrow(/signal=SIGTERM/);
+  });
+
+  test('serializes concurrent live runs and releases the lock for the waiter', async () => {
+    const parent = fs.mkdtempSync(path.join(os.tmpdir(), 'skillbridge-ollama-lock-test-'));
+    const lockPath = path.join(parent, 'live.lock');
+    const logger = { log: () => {} };
+    let secondAcquired = false;
+
+    try {
+      const releaseFirst = await acquireOllamaLock({ lockPath, logger, timeoutMs: 5_000 });
+      const second = acquireOllamaLock({ lockPath, logger, timeoutMs: 5_000 }).then((release) => {
+        secondAcquired = true;
+        return release;
+      });
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(secondAcquired).toBe(false);
+      releaseFirst();
+      const releaseSecond = await second;
+      expect(secondAcquired).toBe(true);
+      releaseSecond();
+      expect(fs.existsSync(lockPath)).toBe(false);
+    } finally {
+      fs.rmSync(parent, { recursive: true, force: true });
+    }
+  });
+
+  test('reclaims a stale lock left before its owner record was written', async () => {
+    const parent = fs.mkdtempSync(path.join(os.tmpdir(), 'skillbridge-ollama-stale-lock-test-'));
+    const lockPath = path.join(parent, 'live.lock');
+    fs.mkdirSync(lockPath);
+    fs.utimesSync(lockPath, new Date(0), new Date(0));
+
+    try {
+      const release = await acquireOllamaLock({ lockPath, logger: { log: () => {} }, timeoutMs: 5_000 });
+      release();
+      expect(fs.existsSync(lockPath)).toBe(false);
+    } finally {
+      fs.rmSync(parent, { recursive: true, force: true });
+    }
   });
 });

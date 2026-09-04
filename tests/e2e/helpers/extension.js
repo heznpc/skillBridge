@@ -26,12 +26,19 @@ const { evalInContentWorld } = require('./content-world-operations');
 const { PUTER_STREAM_STUB } = require('./puter-stream-stub');
 
 const ROOT = path.join(__dirname, '..', '..', '..');
-const EXTENSION_SRC = path.join(ROOT, 'dist', 'bundled');
+const EXTENSION_SRC = process.env.SB_EXTENSION_BUNDLE
+  ? path.resolve(process.env.SB_EXTENSION_BUNDLE)
+  : path.join(ROOT, 'dist', 'bundled');
 const TEMP_DIRS = new Set();
 const SERVICE_WORKER_READY_TIMEOUT_MS = 20_000;
+const RUN_ID = (process.env.SB_E2E_RUN_ID || String(process.pid)).replace(/[^a-zA-Z0-9_-]/g, '-');
+const EXTENSION_TEMP_PREFIX = `skillbridge-e2e-ext-${RUN_ID}-`;
+const PROFILE_TEMP_PREFIX = `skillbridge-e2e-${RUN_ID}-`;
 
 function buildBundleForE2E() {
-  execFileSync(process.execPath, [path.join(ROOT, 'scripts', 'build-bundle.js')], {
+  const args = [path.join(ROOT, 'scripts', 'build-bundle.js')];
+  if (process.env.SB_EXTENSION_BUNDLE) args.push('--out-dir', EXTENSION_SRC);
+  execFileSync(process.execPath, args, {
     cwd: ROOT,
     stdio: 'inherit',
   });
@@ -79,14 +86,14 @@ function makePatchedExtension({ puterStub = true, extraHostPermissions = [] } = 
     buildBundleForE2E();
   }
 
-  let extDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skillbridge-e2e-ext-'));
+  let extDir = fs.mkdtempSync(path.join(os.tmpdir(), EXTENSION_TEMP_PREFIX));
   registerTempDir(extDir);
   try {
     fs.cpSync(EXTENSION_SRC, extDir, { recursive: true });
   } catch (_err) {
     removeRegisteredTempDir(extDir);
     buildBundleForE2E();
-    extDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skillbridge-e2e-ext-'));
+    extDir = fs.mkdtempSync(path.join(os.tmpdir(), EXTENSION_TEMP_PREFIX));
     registerTempDir(extDir);
     fs.cpSync(EXTENSION_SRC, extDir, { recursive: true });
   }
@@ -161,7 +168,7 @@ async function launchExtension({ puterStub = true, extraHostPermissions = [] } =
   let lastError = null;
   for (let attempt = 1; attempt <= 3; attempt++) {
     const extensionPath = makePatchedExtension({ puterStub, extraHostPermissions });
-    const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skillbridge-e2e-'));
+    const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), PROFILE_TEMP_PREFIX));
     registerTempDir(userDataDir);
     let context = null;
 

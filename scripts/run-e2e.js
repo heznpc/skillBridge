@@ -17,8 +17,6 @@ const { createBrowserLaunchEnv } = require('./lib/browser-launch-env');
 
 const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const npxCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
-const tempPrefix = 'skillbridge-e2e-';
-const tempExtPrefix = 'skillbridge-e2e-ext-';
 // This runner validates every CWS runtime surface, including the bundled Tutor,
 // local-engine permission flow, streaming cancellation, and chat history.
 const batches = [
@@ -120,7 +118,14 @@ function run(cmd, args, options = {}) {
   }
 }
 
-function cleanupE2ETempState() {
+function createRunId(pid = process.pid, now = Date.now()) {
+  return `${pid}-${now.toString(36)}`;
+}
+
+function cleanupE2ETempState(runId) {
+  if (!runId || !/^[a-zA-Z0-9_-]+$/.test(runId)) throw new Error('A safe E2E run id is required for cleanup');
+  const tempPrefix = `skillbridge-e2e-${runId}-`;
+  const tempExtPrefix = `skillbridge-e2e-ext-${runId}-`;
   for (const name of fs.readdirSync(os.tmpdir())) {
     if (!name.startsWith(tempPrefix) && !name.startsWith(tempExtPrefix)) continue;
     try {
@@ -138,37 +143,45 @@ function main({
   cleanup = cleanupE2ETempState,
   verify = verifyBatchCoverage,
   logger = console,
+  runId = createRunId(),
 } = {}) {
   const headed = argv.includes('--headed');
   const workers = baseEnv.E2E_WORKERS || '1';
   const browserEnv = createBrowserLaunchEnv(baseEnv, { headed });
+  browserEnv.SB_E2E_RUN_ID = runId;
+  const buildDir = fs.mkdtempSync(path.join(os.tmpdir(), `skillbridge-e2e-build-${runId}-`));
+  browserEnv.SB_EXTENSION_BUNDLE = buildDir;
   const selectedBatches = argv.includes('--first-user')
     ? [['tests/e2e/first-user-flow.spec.js', 'tests/e2e/popup.spec.js']]
     : batches;
 
-  cleanup();
-  verify();
-  run(npmCmd, ['run', 'build:bundle'], { spawn, env: browserEnv });
-  for (let i = 0; i < selectedBatches.length; i++) {
-    cleanup();
-    logger.log(`\n=== E2E batch ${i + 1}/${selectedBatches.length} ===`);
-    run(
-      npxCmd,
-      [
-        'playwright',
-        'test',
-        ...selectedBatches[i],
-        `--workers=${workers}`,
-        '--reporter=line',
-        '--max-failures=1',
-        '--output',
-        `test-results/e2e-batch-${i + 1}`,
-      ],
-      { timeoutMs: 360_000, env: browserEnv, spawn },
-    );
-    cleanup();
+  try {
+    cleanup(runId);
+    verify();
+    run(npmCmd, ['run', 'build:bundle', '--', '--out-dir', buildDir], { spawn, env: browserEnv });
+    for (let i = 0; i < selectedBatches.length; i++) {
+      cleanup(runId);
+      logger.log(`\n=== E2E batch ${i + 1}/${selectedBatches.length} ===`);
+      run(
+        npxCmd,
+        [
+          'playwright',
+          'test',
+          ...selectedBatches[i],
+          `--workers=${workers}`,
+          '--reporter=line',
+          '--max-failures=1',
+          '--output',
+          `test-results/e2e-${runId}-batch-${i + 1}`,
+        ],
+        { timeoutMs: 360_000, env: browserEnv, spawn },
+      );
+      cleanup(runId);
+    }
+    return 0;
+  } finally {
+    fs.rmSync(buildDir, { recursive: true, force: true });
   }
-  return 0;
 }
 
 if (require.main === module) {
@@ -180,4 +193,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { batches, main, run, verifyBatchCoverage };
+module.exports = { batches, cleanupE2ETempState, createRunId, main, run, verifyBatchCoverage };

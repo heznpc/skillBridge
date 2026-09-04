@@ -33,7 +33,9 @@ const http = require('http');
 const { test, expect, chromium } = require('@playwright/test');
 
 const ROOT = path.join(__dirname, '..', '..');
-const BUNDLE = path.join(ROOT, 'dist', 'bundled');
+const BUNDLE = process.env.SB_EXTENSION_BUNDLE
+  ? path.resolve(process.env.SB_EXTENSION_BUNDLE)
+  : path.join(ROOT, 'dist', 'bundled');
 const OLLAMA = process.env.SB_OLLAMA_BASE_URL || 'http://localhost:11434/v1';
 const MODEL = process.env.SB_OLLAMA_MODEL || 'gemma3:4b';
 

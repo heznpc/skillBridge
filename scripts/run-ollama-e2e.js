@@ -11,14 +11,18 @@
  */
 
 const { spawn, spawnSync } = require('child_process');
+const fs = require('fs');
 const http = require('http');
 const net = require('net');
+const os = require('os');
 const path = require('path');
 const { createBrowserLaunchEnv } = require('./lib/browser-launch-env');
 
 const ROOT = path.join(__dirname, '..');
 const DEFAULT_MODEL = 'smollm2:135m-instruct-q2_K';
 const SERVER_READY_TIMEOUT_MS = 30_000;
+const LOCK_WAIT_TIMEOUT_MS = 180_000;
+const LOCK_OWNER_WRITE_GRACE_MS = 2_000;
 const CHAT_MODEL_EXCLUSIONS = /(?:^|[-_:])(embed|embedding|nomic|bge|mxbai|snowflake|minilm)(?:[-_:]|$)/i;
 const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const npxCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
@@ -101,11 +105,80 @@ function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function processIsAlive(pid) {
+  if (!Number.isInteger(pid) || pid <= 0) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (err) {
+    return err?.code === 'EPERM';
+  }
+}
+
+async function acquireOllamaLock({
+  lockPath = path.join(os.tmpdir(), 'skillbridge-ollama-e2e.lock'),
+  timeoutMs = LOCK_WAIT_TIMEOUT_MS,
+  logger = console,
+} = {}) {
+  const deadline = Date.now() + timeoutMs;
+  const token = `${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const ownerPath = path.join(lockPath, 'owner.json');
+  let announcedWait = false;
+
+  while (Date.now() < deadline) {
+    try {
+      fs.mkdirSync(lockPath);
+      fs.writeFileSync(ownerPath, JSON.stringify({ pid: process.pid, token }));
+      return () => {
+        try {
+          const owner = JSON.parse(fs.readFileSync(ownerPath, 'utf8'));
+          if (owner.token === token) fs.rmSync(lockPath, { recursive: true, force: true });
+        } catch (_err) {
+          // Another process may already have reclaimed a stale lock.
+        }
+      };
+    } catch (err) {
+      if (err?.code !== 'EEXIST') throw err;
+    }
+
+    let owner = null;
+    try {
+      owner = JSON.parse(fs.readFileSync(ownerPath, 'utf8'));
+    } catch (_err) {
+      // The winning process may be between mkdir and writing owner.json.
+    }
+    if (owner && !processIsAlive(owner.pid)) {
+      fs.rmSync(lockPath, { recursive: true, force: true });
+      continue;
+    }
+    if (!owner) {
+      try {
+        if (Date.now() - fs.statSync(lockPath).mtimeMs > LOCK_OWNER_WRITE_GRACE_MS) {
+          fs.rmSync(lockPath, { recursive: true, force: true });
+          continue;
+        }
+      } catch (err) {
+        if (err?.code === 'ENOENT') continue;
+        throw err;
+      }
+    }
+    if (!announcedWait) {
+      logger.log('[ollama-e2e] Waiting for another live Ollama test to release the model/GPU lock.');
+      announcedWait = true;
+    }
+    await delay(250);
+  }
+  throw new Error(`Timed out waiting ${timeoutMs}ms for the live Ollama test lock.`);
+}
+
 async function waitForServer(apiRoot, child, timeoutMs = SERVER_READY_TIMEOUT_MS) {
   const deadline = Date.now() + timeoutMs;
   let lastError = null;
   while (Date.now() < deadline) {
-    if (child.exitCode !== null) throw new Error(`Ollama exited before becoming ready (status=${child.exitCode})`);
+    if (child.exitCode !== null || child.signalCode !== null) {
+      const reason = child.exitCode !== null ? `status=${child.exitCode}` : `signal=${child.signalCode}`;
+      throw new Error(`Ollama exited before becoming ready (${reason})`);
+    }
     try {
       return await requestJson(`${apiRoot}/api/tags`);
     } catch (err) {
@@ -154,6 +227,7 @@ async function main({
     throw new Error('Ollama is not installed or is not available on PATH.');
   }
   if (binaryCheck.error) throw binaryCheck.error;
+  if (binaryCheck.status !== 0) throw new Error(`ollama --version failed with status ${binaryCheck.status}`);
 
   const port = await allocatePort();
   const apiRoot = `http://localhost:${port}`;
@@ -181,9 +255,18 @@ async function main({
   process.once('SIGINT', stopForSignal);
   process.once('SIGTERM', stopForSignal);
 
+  let serverReady = false;
+  let buildDir = null;
+  let releaseLock = null;
   try {
     logger.log(`[ollama-e2e] Starting isolated Ollama on ${apiRoot}`);
     let tags = await waitForServer(apiRoot, server);
+    serverReady = true;
+    // Separate ports and build directories prevent I/O collisions, but two
+    // Ollama daemons loading the same model concurrently can still contend on
+    // the shared model store/GPU and leave one stream waiting until timeout.
+    releaseLock = await acquireOllamaLock({ logger });
+    tags = await requestJson(`${apiRoot}/api/tags`);
     let installed = installedModelNames(tags);
     const model = chooseModel(installed, options.requestedModel || baseEnv.SB_OLLAMA_MODEL || null);
 
@@ -200,15 +283,27 @@ async function main({
       logger.log(`[ollama-e2e] Reusing installed model ${model}`);
     }
 
+    const testRunId = `ollama-${process.pid}-${Date.now().toString(36)}`;
+    buildDir = fs.mkdtempSync(path.join(os.tmpdir(), `skillbridge-ollama-build-${testRunId}-`));
     const testEnv = {
       ...createBrowserLaunchEnv(baseEnv, { headed: options.headed }),
       SB_OLLAMA_BASE_URL: `${apiRoot}/v1`,
       SB_OLLAMA_MODEL: model,
+      SB_E2E_RUN_ID: testRunId,
+      SB_EXTENSION_BUNDLE: buildDir,
     };
-    runChecked(npmCmd, ['run', 'build:bundle'], { env: testEnv, spawnCommand });
+    runChecked(npmCmd, ['run', 'build:bundle', '--', '--out-dir', buildDir], { env: testEnv, spawnCommand });
     runChecked(
       npxCmd,
-      ['playwright', 'test', 'tests/e2e/local-engine-live.spec.js', '--workers=1', '--reporter=line'],
+      [
+        'playwright',
+        'test',
+        'tests/e2e/local-engine-live.spec.js',
+        '--workers=1',
+        '--reporter=line',
+        '--output',
+        `test-results/${testEnv.SB_E2E_RUN_ID}`,
+      ],
       {
         env: testEnv,
         spawnCommand,
@@ -217,12 +312,19 @@ async function main({
     logger.log(`[ollama-e2e] Real extension round trip passed with ${model}.`);
     return 0;
   } catch (err) {
-    if (serverLog.length) err.message += `\nOllama log tail:\n${serverLog.join('')}`;
+    // Startup failures need the daemon log. Later failures already have a
+    // focused model/build/Playwright error, where a normal Ollama info log is
+    // noise unless the caller explicitly asks for it.
+    if (serverLog.length && (!serverReady || baseEnv.SB_OLLAMA_DEBUG === '1')) {
+      err.message += `\nOllama log tail:\n${serverLog.join('')}`;
+    }
     throw err;
   } finally {
     process.removeListener('SIGINT', stopForSignal);
     process.removeListener('SIGTERM', stopForSignal);
     await stopServer(server);
+    if (buildDir) fs.rmSync(buildDir, { recursive: true, force: true });
+    releaseLock?.();
   }
 }
 
@@ -235,6 +337,7 @@ if (require.main === module) {
 
 module.exports = {
   DEFAULT_MODEL,
+  acquireOllamaLock,
   chooseModel,
   installedModelNames,
   main,
