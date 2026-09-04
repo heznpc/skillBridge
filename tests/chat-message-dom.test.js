@@ -4,10 +4,9 @@
 
 /* global describe, test, expect, beforeEach, jest */
 
-const fs = require('fs');
-const path = require('path');
+const { readProductionSource } = require('./helpers/production-source');
 
-const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'content', 'chat-message-dom.js'), 'utf8');
+const source = readProductionSource('src', 'content', 'chat-message-dom.js');
 const labels = {
   offline: { en: 'You are offline' },
   loading: { en: 'Loading response' },
@@ -103,6 +102,18 @@ describe('chat message DOM helpers', () => {
     expect(bubble.classList.contains('si18n-streaming-cursor')).toBe(false);
     expect(bubble.querySelector('button').getAttribute('title')).toBe('Retry response');
     expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+
+  test('renders a deterministic failure without a retry control', () => {
+    const bubble = document.createElement('div');
+    bubble.className = 'si18n-streaming-cursor';
+
+    window._sb._chat.dom.renderFinalError(bubble, 'Local AI server is unavailable');
+
+    expect(bubble.getAttribute('role')).toBe('alert');
+    expect(bubble.classList.contains('si18n-streaming-cursor')).toBe(false);
+    expect(bubble.textContent).toBe('Local AI server is unavailable');
+    expect(bubble.querySelector('.si18n-retry-btn')).toBeNull();
   });
 
   test('marks an exam warning bubble', () => {

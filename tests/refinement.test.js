@@ -20,15 +20,11 @@
 
 /* global describe, test, expect */
 
-const fs = require('fs');
-const path = require('path');
-
-const ROOT = path.join(__dirname, '..');
-const read = (...p) => fs.readFileSync(path.join(ROOT, ...p), 'utf8');
+const { readProductionSource } = require('./helpers/production-source');
 
 function loadLib(file) {
   const fake = { module: { exports: {} } };
-  new Function('globalThis', read('src', 'lib', file))(fake);
+  new Function('globalThis', readProductionSource('src', 'lib', file))(fake);
   return fake.module.exports;
 }
 
@@ -289,64 +285,5 @@ describe('a refinement may only land if nothing load-bearing changed', () => {
     expect(r.violations).toEqual(
       expect.arrayContaining([REFINE_VIOLATION.PROTECTED_TERM, REFINE_VIOLATION.NUMBER, REFINE_VIOLATION.URL]),
     );
-  });
-});
-
-describe('the runtime honours all of the above', () => {
-  const src = read('src', 'content', 'refine-queue.js');
-
-  test('the baseline is enqueued only AFTER it is written to the page', () => {
-    // The order in gt-queue.js is the property: replace, track, then enqueue.
-    // A refinement that gated first paint would be a worse page for everyone
-    // who never gets one.
-    const gt = read('src', 'content', 'gt-queue.js');
-    const apply = gt.indexOf('sb.safeReplaceText(item.el, translated)');
-    const enqueue = gt.indexOf('sb._refine?.enqueue');
-    expect(apply).toBeGreaterThan(-1);
-    expect(enqueue).toBeGreaterThan(apply);
-  });
-
-  test('a rejected refinement is dropped, and the baseline stays', () => {
-    expect(src).toContain('if (!verdict.ok) {');
-    // The rejection path returns; nothing after it writes to the element.
-    const rejection = src.slice(src.indexOf('if (!verdict.ok) {'));
-    expect(rejection.slice(0, rejection.indexOf('}')).replace(/\s/g, '')).toContain('return');
-  });
-
-  test('a transport failure is a non-event', () => {
-    expect(src).toMatch(/stats\.failed \+= 1;\s*\n\s*return;/);
-  });
-
-  test('the translation memory is never written by refinement', () => {
-    // Refinements live in their own store. Sharing the GT cache would let a
-    // rejected or later-disabled refinement degrade the thing that makes a
-    // revisit instant.
-    expect(src).toContain("const STORAGE_CACHE = 'sb_refine_cache'");
-    expect(src).not.toContain('_cacheTranslation');
-    expect(src).not.toMatch(/loadStaticTranslations|staticDict\s*=/);
-  });
-
-  test('settings are read fresh per drain, and an unreadable read fails closed', () => {
-    expect(src).toContain('await chrome.storage.local.get([STORAGE_MODE, STORAGE_CONSENT');
-    expect(src).toContain("reason: 'settings-unreadable'");
-  });
-
-  test('the engine is never re-derived here — the policy owns that decision', () => {
-    expect(src).not.toContain('_getAiEngine');
-    expect(src).toContain('policy.resolveRefinementEngine');
-  });
-
-  test('refineText refuses an engine it does not recognise', () => {
-    // Defaulting a typo into the cloud path would send course text to Puter.
-    const translator = read('src', 'lib', 'translator.js');
-    expect(translator).toContain("if (engine !== 'cloud' && engine !== 'local') {");
-    expect(translator).toContain('refusing an unrecognised engine');
-  });
-
-  test('the post-editor does not inherit the Tutor prompt', () => {
-    const translator = read('src', 'lib', 'translator.js');
-    const refine = translator.slice(translator.indexOf('async refineText('), translator.indexOf('async chatStream('));
-    expect(refine).not.toContain('_buildTutorPrompt');
-    expect(refine).not.toContain('courseContext');
   });
 });

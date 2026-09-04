@@ -557,6 +557,43 @@ describe('runtime message dispatch — GOOGLE_TRANSLATE rate-limit path', () => 
   });
 });
 
+describe('runtime message dispatch — CHECK_LOCAL_ENGINE', () => {
+  let originalFetch;
+
+  beforeEach(() => {
+    originalFetch = global.fetch;
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+  });
+
+  test('the registered handler runs both probes and returns the classified result', async () => {
+    global.fetch = jest.fn(async (url) =>
+      url.endsWith('/models')
+        ? { ok: true, status: 200, json: async () => ({ data: [{ id: 'fixture-model' }] }) }
+        : { ok: false, status: 400 },
+    );
+    const listener = runtimeMessageListeners[runtimeMessageListeners.length - 1];
+    const response = new Promise((resolve) => {
+      const keepAlive = listener(
+        { type: 'CHECK_LOCAL_ENGINE', baseUrl: 'http://localhost:11434/v1' },
+        { id: 'test' },
+        resolve,
+      );
+      expect(keepAlive).toBe(true);
+    });
+
+    await expect(response).resolves.toEqual({ ok: true, status: 'ok', models: ['fixture-model'] });
+    expect(global.fetch).toHaveBeenNthCalledWith(1, 'http://localhost:11434/v1/models', { method: 'GET' });
+    expect(global.fetch).toHaveBeenNthCalledWith(
+      2,
+      'http://localhost:11434/v1/chat/completions',
+      expect.objectContaining({ method: 'POST', body: '{}' }),
+    );
+  });
+});
+
 describe('runtime message dispatch — GOOGLE_TRANSLATE_BATCH', () => {
   let originalAcquire;
   let originalFetch;
@@ -1118,5 +1155,64 @@ describe('Local refinement keeps its explicitly wider surface', () => {
     'http://other.skilljar.com/a-course/287726',
   ])('rejects a page outside the local-refinement surface: %s', (url) => {
     expect(_isLocalRefinementPort(brokerPort({ name: 'sb-local-refinement', url }))).toBe(false);
+  });
+});
+
+describe('Local Tutor runtime Port dispatch', () => {
+  let originalFetch;
+
+  beforeEach(() => {
+    originalFetch = global.fetch;
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+  });
+
+  test('disconnects an untrusted Port before it can start a localhost request', () => {
+    global.fetch = jest.fn();
+    const port = brokerPort({
+      name: 'sb-local-chat',
+      url: 'https://academy.claude.com/profile',
+    });
+
+    connectRuntimePort(port);
+    port.emitMessage({ type: 'start', baseUrl: 'http://localhost:11434/v1', prompt: 'should not leave' });
+
+    expect(port.disconnected).toBe(true);
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  test('ignores non-start messages and allows exactly one stream per trusted Port', async () => {
+    global.fetch = jest.fn(async () => ({
+      ok: true,
+      status: 200,
+      body: {
+        getReader: () => ({
+          read: jest.fn().mockResolvedValue({ value: undefined, done: true }),
+          cancel: jest.fn().mockResolvedValue(undefined),
+        }),
+      },
+    }));
+    const port = brokerPort({
+      name: 'sb-local-chat',
+      url: 'https://academy.claude.com/courses/a-course/a-lesson',
+    });
+    connectRuntimePort(port);
+
+    port.emitMessage({ type: 'chunk', prompt: 'ignored' });
+    port.emitMessage({ type: 'start', baseUrl: 'http://localhost:11434/v1', model: 'first', prompt: 'hello' });
+    port.emitMessage({ type: 'start', baseUrl: 'http://localhost:11434/v1', model: 'second', prompt: 'duplicate' });
+    for (let i = 0; i < 8; i++) await Promise.resolve();
+
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    const [url, init] = global.fetch.mock.calls[0];
+    expect(url).toBe('http://localhost:11434/v1/chat/completions');
+    expect(JSON.parse(init.body)).toEqual({
+      model: 'first',
+      stream: true,
+      messages: [{ role: 'user', content: 'hello' }],
+    });
+    expect(port.posted).toEqual([{ type: 'done' }]);
   });
 });

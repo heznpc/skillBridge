@@ -471,9 +471,16 @@
       // the source of a batch-load E2E flake where neither the offline notice
       // nor the reply ever appeared.
       const read = chrome.storage.local.get('sb_ai_engine');
-      const timeout = new Promise((resolve) => setTimeout(() => resolve(null), 1500));
-      const result = await Promise.race([read, timeout]);
-      return result?.sb_ai_engine || 'cloud';
+      let timer;
+      const timeout = new Promise((resolve) => {
+        timer = setTimeout(() => resolve(null), 1500);
+      });
+      try {
+        const result = await Promise.race([read, timeout]);
+        return result?.sb_ai_engine || 'cloud';
+      } finally {
+        clearTimeout(timer);
+      }
     } catch {
       return 'cloud';
     }

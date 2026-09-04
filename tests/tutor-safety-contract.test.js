@@ -23,6 +23,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { readProductionSource } = require('./helpers/production-source');
 
 const ROOT = path.join(__dirname, '..');
 const read = (...p) => fs.readFileSync(path.join(ROOT, ...p), 'utf8');
@@ -80,7 +81,7 @@ function makeTranslator({ engine, storage = {} } = {}) {
     `${read('src', 'shared', 'runtime-constants.js')}
      ${read('src', 'lib', 'selectors.js')}
      ${read('src', 'lib', 'constants.js')}
-     ${read('src', 'lib', 'translator.js')}
+     ${readProductionSource('src', 'lib', 'translator.js')}
      return SkilljarTranslator;`,
   );
   const Translator = factory(...Object.values(globals));

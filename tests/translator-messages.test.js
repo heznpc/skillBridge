@@ -6,6 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { readProductionSource } = require('./helpers/production-source');
 
 const ports = [];
 function makePort() {
@@ -70,7 +71,7 @@ global.crypto = { randomUUID: () => 'request-uuid' };
 const sharedSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'shared', 'runtime-constants.js'), 'utf8');
 const selectorsSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'selectors.js'), 'utf8');
 const constantsSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'constants.js'), 'utf8');
-const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'translator.js'), 'utf8');
+const src = readProductionSource('src', 'lib', 'translator.js');
 const SkilljarTranslator = eval(
   `(function() { ${sharedSrc}; ${selectorsSrc}; ${constantsSrc}; ${src}; return SkilljarTranslator; })()`,
 );
@@ -218,43 +219,5 @@ describe('extension-only cloud Tutor broker', () => {
     ports[0].emitMessage({ type: 'auth-ui', visible: true });
     ports[0].emitMessage({ type: 'auth-ui', visible: false });
     expect(elements.has('__skillbridge_puter_frame__')).toBe(false);
-  });
-});
-
-// ============================================================
-// BRAND-TERM MASKING WIRING (source contract)
-// ============================================================
-//
-// The masking itself is behaviourally tested in protected-terms.test.js; these
-// assertions pin that the GT senders actually route through it. Sending an
-// unmasked payload is the exact defect this fixes, and it is invisible in any
-// output-shape assertion — the request simply carries the brand name again.
-describe('Google Translate senders mask protected terms', () => {
-  const fs = require('fs');
-  const path = require('path');
-  const trSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'translator.js'), 'utf8');
-  const single = trSrc.slice(trSrc.indexOf('async googleTranslate('), trSrc.indexOf('async googleTranslateBatch('));
-  const batch = trSrc.slice(trSrc.indexOf('async googleTranslateBatch('));
-
-  // The whole mask object is passed, not just `mask.tokens`: unmasking also
-  // needs the delimiter counts the SOURCE contributed, so it can tell our
-  // leaked placeholder from a lesson's own ⟦ ⟧ notation.
-  test('single-text sender masks before send and unmasks after', () => {
-    expect(single).toContain('pt.maskProtectedTerms(text.trim())');
-    expect(single).toContain('text: masked?.tokens.length ? masked.text : text.trim()');
-    expect(single).toContain('pt.unmaskProtectedTerms(response.translated, masked)');
-  });
-
-  test('batch sender masks per text and unmasks positionally', () => {
-    expect(batch).toContain('trimmed.map((t) => pt.maskProtectedTerms(t))');
-    expect(batch).toContain('masks.map((m, i) => (m.tokens.length ? m.text : trimmed[i]))');
-    expect(batch).toContain('pt.unmaskProtectedTerms(translated, masks[i]) ?? texts[i]');
-  });
-
-  test('batch falls back to the source text when unmasking fails', () => {
-    // applyGoogleTranslations skips entries equal to their source, so the
-    // block stays English rather than rendering a placeholder or a mangled
-    // brand — the failure mode this whole change exists to prevent.
-    expect(batch).toContain('?? texts[i]');
   });
 });

@@ -641,8 +641,8 @@ class SkilljarTranslator {
     // RESOLVES instead. That is intentional: it only chooses an offline
     // explanation and transmits nothing, so it fails toward the default engine.
     // This function is the authoritative gate; keep the reject here even if the
-    // two are ever refactored together. `tests/local-engine.test.js` locks the
-    // asymmetry.
+    // two are ever refactored together. `tests/translator.test.js` and
+    // `tests/local-engine.test.js` lock the two sides of this asymmetry.
     const read = chrome.storage.local.get('sb_ai_engine');
     // The timer is cleared in `finally`, which matters twice: an uncleared
     // 1.5s timeout is left armed by every single chat message, and when it

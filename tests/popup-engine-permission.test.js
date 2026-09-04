@@ -23,7 +23,7 @@ const constants = new Function(
    };`,
 )();
 
-function createChrome(initial = {}) {
+function createChrome(initial = {}, { permissionGranted = false, probeResult = { status: 'ok' } } = {}) {
   const store = { targetLanguage: 'en', autoTranslate: false, ...initial };
   const get = jest.fn((keys, callback) => {
     const names = Array.isArray(keys) ? keys : [keys];
@@ -47,10 +47,10 @@ function createChrome(initial = {}) {
       },
       runtime: {
         lastError: null,
-        sendMessage: jest.fn().mockResolvedValue({ status: 'ok' }),
+        sendMessage: jest.fn().mockResolvedValue(probeResult),
       },
       storage: { local: { get, set } },
-      permissions: { request: jest.fn().mockResolvedValue(false) },
+      permissions: { request: jest.fn().mockResolvedValue(permissionGranted) },
     },
     store,
   };
@@ -68,7 +68,7 @@ function loadPopup(chrome) {
   document.dispatchEvent(new document.defaultView.Event('DOMContentLoaded'));
 }
 
-describe('popup local-engine permission denial', () => {
+describe('popup local-engine permission flow', () => {
   beforeEach(() => {
     Object.defineProperty(globalThis, '__SKILLBRIDGE_AI_GATEWAY_ENABLED__', {
       configurable: true,
@@ -105,5 +105,33 @@ describe('popup local-engine permission denial', () => {
     expect(document.getElementById('status').textContent).toBe(constants.ENGINE_LABELS.permDenied.en);
     expect(document.getElementById('status').className).toBe('status error');
     expect(chrome.runtime.sendMessage).not.toHaveBeenCalled();
+  });
+
+  test('a granted selection probes the engine and re-renders its live status after a language change', async () => {
+    const { chrome, store } = createChrome(
+      { sb_ai_engine: 'cloud' },
+      { permissionGranted: true, probeResult: { status: 'ok', models: ['fixture-model'] } },
+    );
+    loadPopup(chrome);
+    await settlePopup();
+
+    const engine = document.getElementById('engine-select');
+    engine.value = 'local';
+    engine.dispatchEvent(new document.defaultView.Event('change'));
+    await settlePopup();
+
+    expect(chrome.permissions.request).toHaveBeenCalledWith({
+      origins: ['http://localhost/*', 'http://127.0.0.1/*'],
+    });
+    expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({ type: 'CHECK_LOCAL_ENGINE', baseUrl: undefined });
+    expect(store.sb_ai_engine).toBe('local');
+    expect(document.getElementById('local-status').textContent).toBe(constants.ENGINE_LABELS.statusOk.en);
+
+    const language = document.getElementById('lang-select');
+    language.value = 'ko';
+    language.dispatchEvent(new document.defaultView.Event('change'));
+    await settlePopup();
+
+    expect(document.getElementById('local-status').textContent).toBe(constants.ENGINE_LABELS.statusOk.ko);
   });
 });

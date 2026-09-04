@@ -143,6 +143,116 @@ describe('translatedTexts — original text to live element index', () => {
 
     expect(sb.translatedTexts.get('Translate this paragraph with Google')).toEqual([{ el }]);
   });
+
+  test('enqueues optional refinement only after the baseline is visible', async () => {
+    document.body.innerHTML = '<p id="gt">Translate this paragraph with Google</p>';
+    const el = document.getElementById('gt');
+    const { sb } = loadModule(
+      {},
+      { googleTranslateBatch: jest.fn(async () => ['Google 번역 기준선이 먼저 표시됩니다']) },
+    );
+    sb._refine = {
+      enqueue: jest.fn(({ el: queuedEl, baseline }) => {
+        expect(queuedEl.textContent).toBe('Google 번역 기준선이 먼저 표시됩니다');
+        expect(baseline).toBe('Google 번역 기준선이 먼저 표시됩니다');
+      }),
+    };
+
+    sb._gt.queueForGoogleTranslate([el], 'ko', true);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(sb._refine.enqueue).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('structured routing and re-processing guards', () => {
+  function installHtmlRuntime({ allow = true } = {}) {
+    const checkTagIntegrity = jest.fn(() => allow);
+    const reconcileHtml = jest.fn((el, translatedRoot) => {
+      const children = Array.from(translatedRoot.childNodes);
+      el.replaceChildren(...children.map((node) => document.adoptNode(node)));
+      return true;
+    });
+    window._sbDomSafe = { sanitizeInlineHtml: (html) => html };
+    window._sbHtmlGt = { checkTagIntegrity, reconcileHtml };
+    window._sbInteractive = { INTERACTIVE_SELECTOR: 'a, button, summary, [role="button"]' };
+    return { checkTagIntegrity, reconcileHtml };
+  }
+
+  afterEach(() => {
+    window._geminiBlock = { hasInlineTags: () => false };
+    delete window._sbDomSafe;
+    delete window._sbHtmlGt;
+    delete window._sbInteractive;
+  });
+
+  test.each([
+    ['direct inline tag', '<p id="structured">Read the <a href="/docs">documentation here</a></p>', true],
+    [
+      'nested interactive descendant',
+      '<p id="structured"><span>Read the documentation <a href="/docs">here</a></span></p>',
+      false,
+    ],
+  ])('routes a %s through HTML reconciliation without flattening it', async (_label, markup, hasInlineTags) => {
+    document.body.innerHTML = markup;
+    const el = document.getElementById('structured');
+    window._geminiBlock = { hasInlineTags: () => hasInlineTags };
+    const { checkTagIntegrity, reconcileHtml } = installHtmlRuntime();
+    const googleTranslateBatch = jest.fn(async ([html]) => [html.replace('Read the', '다음을 읽으세요:')]);
+    const { sb } = loadModule({}, { googleTranslateBatch });
+    sb.safeReplaceText = jest.fn();
+
+    sb._gt.queueForGoogleTranslate([el], 'ko', true);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(googleTranslateBatch).toHaveBeenCalledTimes(1);
+    expect(googleTranslateBatch.mock.calls[0][0][0]).toContain('<a href="/docs">');
+    expect(checkTagIntegrity).toHaveBeenCalledTimes(1);
+    expect(reconcileHtml).toHaveBeenCalledTimes(1);
+    expect(sb.safeReplaceText).not.toHaveBeenCalled();
+    expect(el.querySelector('a')?.getAttribute('href')).toBe('/docs');
+    expect(el.textContent).toContain('다음을 읽으세요:');
+  });
+
+  test('an integrity-gate rejection leaves the live structured block untouched and uncached', async () => {
+    document.body.innerHTML = '<p id="structured">Read <a href="/safe">safe docs</a></p>';
+    const el = document.getElementById('structured');
+    const originalHtml = el.outerHTML;
+    window._geminiBlock = { hasInlineTags: () => true };
+    const { reconcileHtml } = installHtmlRuntime({ allow: false });
+    const cacheTranslation = jest.fn();
+    const { sb } = loadModule(
+      {},
+      {
+        googleTranslateBatch: jest.fn(async () => ['<p id="structured">위험 <a href="javascript:bad">링크</a></p>']),
+        _cacheTranslation: cacheTranslation,
+      },
+    );
+
+    sb._gt.queueForGoogleTranslate([el], 'ko', true);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(reconcileHtml).not.toHaveBeenCalled();
+    expect(cacheTranslation).not.toHaveBeenCalled();
+    expect(el.outerHTML).toBe(originalHtml);
+  });
+
+  test('a Latin-script GT result is skipped on the same generation and reconsidered after a generation bump', async () => {
+    document.body.innerHTML = '<p id="latin">Translate this paragraph with Google</p>';
+    const el = document.getElementById('latin');
+    const { processOneElement, sb } = loadModule(
+      {},
+      { googleTranslateBatch: jest.fn(async () => ['Texto traducido todavía latino']) },
+    );
+
+    sb._gt.queueForGoogleTranslate([el], 'es', true);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(el.textContent).toBe('Texto traducido todavía latino');
+    expect(processOneElement(el, 'es')).toBeNull();
+    sb._gt.bumpGeneration();
+    expect(processOneElement(el, 'es')).toBe('gt');
+  });
 });
 
 describe('offline structured HTML cache coverage', () => {

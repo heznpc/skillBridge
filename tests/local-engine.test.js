@@ -1,17 +1,16 @@
 /**
  * Unit tests for the local AI engine (v4 A5) — the OpenAI-compatible SSE parser
- * and the tutor engine routing. The parser is exercised with real Ollama
- * `/v1/chat/completions` stream frames; the routing is asserted against the
- * live source (the streaming Port itself is integration-only).
+ * and the service-worker relay. The parser is exercised with real Ollama
+ * `/v1/chat/completions` stream frames; relay tests execute the production
+ * functions with observable Port and fetch boundaries.
  */
 
-/* global describe, test, expect */
+/* global describe, test, expect, jest, AbortSignal */
 
 const fs = require('fs');
 const path = require('path');
 
 const bgSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'background', 'background.js'), 'utf8');
-const trSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'translator.js'), 'utf8');
 
 const parserMatch = bgSrc.match(/function _parseSseDelta\(line\)\s*\{[\s\S]*?\n\}/);
 if (!parserMatch) throw new Error('Could not extract _parseSseDelta from background.js');
@@ -26,6 +25,29 @@ const allowedLocalBase = new Function(`${baseMatch[0]}\nreturn _allowedLocalBase
 // fetch is injected so the reachability probe can be exercised against fakes.
 const makeCheck = (fakeFetch) =>
   new Function('fetch', `${baseMatch[0]}\n${checkMatch[0]}\nreturn _checkLocalEngine;`)(fakeFetch);
+
+const streamMatch = bgSrc.match(/async function _streamLocalChat\(port, req\)\s*\{[\s\S]*?\n\}/);
+if (!streamMatch) throw new Error('Could not extract _streamLocalChat from background.js');
+
+/** Build the real relay with its platform collaborators injected. */
+const makeStream = (fakeFetch) =>
+  new Function(
+    'fetch',
+    'TextDecoder',
+    'AbortController',
+    `${baseMatch[0]}\n${parserMatch[0]}\n${streamMatch[0]}\nreturn _streamLocalChat;`,
+  )(fakeFetch, TextDecoder, AbortController);
+
+function makeStreamPort({ postMessage } = {}) {
+  const disconnectListeners = [];
+  const port = {
+    posted: [],
+    postMessage: postMessage || ((message) => port.posted.push(message)),
+    onDisconnect: { addListener: (listener) => disconnectListeners.push(listener) },
+    emitDisconnect: () => disconnectListeners.forEach((listener) => listener()),
+  };
+  return port;
+}
 
 describe('_parseSseDelta (local OpenAI-compatible SSE)', () => {
   test('token delta line → { delta }', () => {
@@ -48,41 +70,6 @@ describe('_parseSseDelta (local OpenAI-compatible SSE)', () => {
 
   test('malformed JSON → null (never throws)', () => {
     expect(_parseSseDelta('data: {broken')).toBeNull();
-  });
-});
-
-describe('tutor engine routing', () => {
-  test('chatStream branches on the selected engine before the Puter path', () => {
-    expect(trSrc).toContain('const engine = await this._getAiEngine();');
-    expect(trSrc).toContain("if (engine === 'off') throw new Error('AI tutor is turned off in settings.');");
-    expect(trSrc).toContain("if (engine === 'local') return this._localChatStream(prompt, onChunk, opts);");
-  });
-
-  test('engine defaults to cloud when unset, and the pref read is time-bounded', () => {
-    // The storage read is raced against a timeout so a stalled chrome.storage
-    // IPC can never gate the tutor (source of a batch-load E2E flake where the
-    // offline notice/chat reply never appeared).
-    expect(trSrc).toContain("return result?.sb_ai_engine || 'cloud';");
-    expect(trSrc).toMatch(/Promise\.race\(\[read, timeout\]\)/);
-  });
-
-  test('local engine uses the SW proxy Port and honors AbortSignal', () => {
-    expect(trSrc).toContain("opts.purpose === 'refinement' ? 'sb-local-refinement' : 'sb-local-chat'");
-    expect(bgSrc).toContain("port.name === 'sb-local-chat'");
-    expect(bgSrc).toContain("port.name === 'sb-local-refinement'");
-    expect(trSrc).toContain("opts.signal.addEventListener('abort', onAbort, { once: true });");
-  });
-
-  test('local refinement uses its own Port instead of widening Local Tutor', () => {
-    const refine = trSrc.slice(trSrc.indexOf('async refineText('), trSrc.indexOf('async chatStream('));
-    expect(refine).toContain("purpose: 'refinement'");
-    expect(bgSrc).toContain('function _isLocalRefinementPort(port)');
-  });
-
-  test('SW proxy posts an OpenAI-shaped body and handles 403 (Ollama origins)', () => {
-    expect(bgSrc).toContain('/chat/completions');
-    expect(bgSrc).toContain('stream: true,');
-    expect(bgSrc).toContain('OLLAMA_ORIGINS');
   });
 });
 
@@ -120,10 +107,6 @@ describe('_checkLocalEngine (local reachability probe)', () => {
     const r = await check('http://localhost:9/v1');
     expect(r.ok).toBe(false);
     expect(r.status).toBe('unreachable');
-  });
-
-  test('SW registers the CHECK_LOCAL_ENGINE handler', () => {
-    expect(bgSrc).toContain("msg.type === 'CHECK_LOCAL_ENGINE'");
   });
 });
 
@@ -207,69 +190,85 @@ describe('_checkLocalEngine — origin block is detected at probe time, not firs
   });
 });
 
-// Review findings: the SW proxy never cancelled the upstream request on port
-// disconnect (Ollama kept generating server-side) and a postMessage on the
-// dead port threw inside the catch → unhandled rejection in the worker.
-describe('local stream cancellation + dead-port safety (source contract)', () => {
-  test('the fetch is abortable and the disconnect aborts it', () => {
-    expect(bgSrc).toContain('const controller = new AbortController();');
-    expect(bgSrc).toContain('signal: controller.signal,');
-    // onDisconnect must abort, not just flip a flag.
-    const localStream = bgSrc.slice(
-      bgSrc.indexOf('async function _streamLocalChat'),
-      bgSrc.indexOf('chrome.runtime.onConnect'),
+// Review findings: the SW proxy once left Ollama generating after the Port
+// disappeared, and posting the resulting error to that dead Port could reject
+// the service worker handler. Exercise those timing windows directly.
+describe('_streamLocalChat — cancellation and dead-port safety', () => {
+  test('a disconnect aborts an in-flight fetch without posting a server error', async () => {
+    let fetchSignal;
+    const fakeFetch = jest.fn(
+      (_url, init) =>
+        new Promise((_resolve, reject) => {
+          fetchSignal = init.signal;
+          init.signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')));
+        }),
     );
-    const disconnectBlock = localStream.slice(localStream.indexOf('port.onDisconnect.addListener'));
-    expect(disconnectBlock.slice(0, 260)).toContain('controller.abort()');
+    const port = makeStreamPort();
+    const pending = makeStream(fakeFetch)(port, { baseUrl: 'http://localhost:11434/v1' });
+    await Promise.resolve();
+
+    port.emitDisconnect();
+    await expect(pending).resolves.toBeUndefined();
+
+    expect(fetchSignal.aborted).toBe(true);
+    expect(port.posted).toEqual([]);
   });
 
-  test('the reader/body is cancelled so the local server stops generating', () => {
-    expect(bgSrc).toContain('await reader.cancel()');
-    expect(bgSrc).toContain('await resp.body?.cancel()');
+  test('a disconnect while fetch resolves cancels the unopened response body', async () => {
+    let releaseResponse;
+    const cancel = jest.fn().mockResolvedValue(undefined);
+    const fakeFetch = jest.fn(
+      () =>
+        new Promise((resolve) => {
+          releaseResponse = () => resolve({ ok: true, status: 200, body: { cancel } });
+        }),
+    );
+    const port = makeStreamPort();
+    const pending = makeStream(fakeFetch)(port, { baseUrl: 'http://localhost:11434/v1' });
+    await Promise.resolve();
+
+    port.emitDisconnect();
+    releaseResponse();
+    await pending;
+
+    expect(cancel).toHaveBeenCalledTimes(1);
+    expect(port.posted).toEqual([]);
   });
 
-  test('every reply goes through a guarded send (never a raw postMessage in the relay)', () => {
-    const fn = bgSrc.slice(bgSrc.indexOf('async function _streamLocalChat'), bgSrc.indexOf('chrome.runtime.onConnect'));
-    expect(fn).toContain('const send = (msg) =>');
-    // Exactly one port.postMessage in the whole function: the one inside the
-    // guarded `send` helper. Any other is an unguarded call that would throw
-    // on a disconnected port.
-    expect(fn.match(/\bport\.postMessage\(/g)).toHaveLength(1);
-    const sendHelper = fn.slice(fn.indexOf('const send = (msg) =>'), fn.indexOf('port.onDisconnect'));
-    expect(sendHelper).toContain('port.postMessage(msg);');
-    expect(sendHelper).toContain('if (aborted) return;');
+  test('a disconnect during reader.read cancels the active reader', async () => {
+    let releaseRead;
+    const cancel = jest.fn().mockResolvedValue(undefined);
+    const reader = {
+      read: jest.fn(
+        () =>
+          new Promise((resolve) => {
+            releaseRead = resolve;
+          }),
+      ),
+      cancel,
+    };
+    const fakeFetch = jest.fn(async () => ({ ok: true, status: 200, body: { getReader: () => reader } }));
+    const port = makeStreamPort();
+    const pending = makeStream(fakeFetch)(port, { baseUrl: 'http://localhost:11434/v1' });
+    for (let i = 0; i < 4; i++) await Promise.resolve();
+
+    port.emitDisconnect();
+    releaseRead({ value: undefined, done: true });
+    await pending;
+
+    expect(cancel).toHaveBeenCalledTimes(1);
+    expect(port.posted).toEqual([]);
   });
 
-  test('an abort is not reported as a server failure', () => {
-    expect(bgSrc).toContain("if (aborted || err?.name === 'AbortError') return;");
-  });
+  test('a postMessage throw is contained instead of rejecting the relay', async () => {
+    const postMessage = jest.fn(() => {
+      throw new Error('disconnected port');
+    });
+    const port = makeStreamPort({ postMessage });
+    const fakeFetch = jest.fn(async () => ({ ok: false, status: 500 }));
 
-  test('the port handler guards against a second start and handles rejections', () => {
-    expect(bgSrc).toContain('void _streamLocalChat(port, req).catch(');
-    expect(bgSrc).toMatch(/if \(!req \|\| req\.type !== 'start' \|\| started\) return;/);
-  });
-});
-
-// Review finding: the local path had no timeout at all, so a stalled local
-// server left the sidebar spinner running forever with send disabled.
-describe('local stream watchdog', () => {
-  test('a generous first-token window covers a cold model load', () => {
-    const constantsSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'constants.js'), 'utf8');
-    const m = constantsSrc.match(/LOCAL_FIRST_TOKEN_TIMEOUT:\s*(\d+)/);
-    expect(m).toBeTruthy();
-    // Must exceed the measured gemma3:4b cold load (10.7s) by a wide margin.
-    expect(Number(m[1])).toBeGreaterThanOrEqual(60000);
-  });
-
-  test('the watchdog is armed before the request and re-armed on every chunk', () => {
-    expect(trSrc).toContain('armWatchdog(SKILLBRIDGE_THRESHOLDS.LOCAL_FIRST_TOKEN_TIMEOUT);');
-    expect(trSrc).toContain('armWatchdog(SKILLBRIDGE_THRESHOLDS.CHAT_STREAM_TIMEOUT);');
-    expect(trSrc).toContain("finish(reject, new Error('Local AI stream timed out'))");
-  });
-
-  test('settling clears the watchdog', () => {
-    const fn = trSrc.slice(trSrc.indexOf('async _localChatStream'), trSrc.indexOf('async chatStream'));
-    expect(fn).toContain('if (watchdog) clearTimeout(watchdog);');
+    await expect(makeStream(fakeFetch)(port, { baseUrl: 'http://localhost:11434/v1' })).resolves.toBeUndefined();
+    expect(postMessage).toHaveBeenCalledWith({ type: 'error', error: 'Local AI server returned HTTP 500' });
   });
 });
 
@@ -277,24 +276,6 @@ describe('local engine host permission', () => {
   test('manifest declares optional localhost host permission', () => {
     const manifest = require('../manifest.json');
     expect(manifest.optional_host_permissions).toContain('http://localhost/*');
-  });
-
-  test('popup requests the optional permission before probing', () => {
-    const popupSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'popup', 'popup.js'), 'utf8');
-    expect(popupSrc).toContain('chrome.permissions.request({ origins: LOCALHOST_ORIGINS })');
-    expect(popupSrc).toContain("type: 'CHECK_LOCAL_ENGINE'");
-  });
-
-  // Review finding: the status line was the one string in the engine block
-  // that a popup language change did not re-render.
-  test('the local status line re-renders on a language change', () => {
-    const popupSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'popup', 'popup.js'), 'utf8');
-    expect(popupSrc).toContain('localStatusMap = map || null;');
-    const fn = popupSrc.slice(popupSrc.indexOf('function renderEngineLabels'), popupSrc.indexOf('const localStatus'));
-    expect(fn).toContain('if (localStatusMap && statusEl) statusEl.textContent = t(localStatusMap);');
-    // Declared before renderPopupLabels' first call — otherwise the popup
-    // boots into a TDZ ReferenceError.
-    expect(popupSrc.indexOf('let localStatusMap')).toBeLessThan(popupSrc.indexOf('renderPopupLabels();'));
   });
 });
 
@@ -304,32 +285,6 @@ describe('local engine host permission', () => {
 // states must explain themselves instead.
 describe('tutor error surfacing for deterministic engine states', () => {
   const sidebarSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'content', 'sidebar-chat.js'), 'utf8');
-  const domSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'content', 'chat-message-dom.js'), 'utf8');
-
-  test('a non-retryable renderer exists and is exported', () => {
-    expect(domSrc).toContain('function renderFinalError(bubble, message)');
-    expect(domSrc).toMatch(/dom = \{[\s\S]*renderFinalError,/);
-    // It must NOT attach a retry control.
-    const fn = domSrc.slice(
-      domSrc.indexOf('function renderFinalError'),
-      domSrc.indexOf('function renderRetryableError'),
-    );
-    expect(fn).not.toContain('si18n-retry-btn');
-  });
-
-  test('the sidebar routes off / sign-in / local-unreachable to the final renderer', () => {
-    expect(sidebarSrc).toContain('const finalMessage = _finalErrorMessage(err);');
-    expect(sidebarSrc).toContain('chatDom.renderFinalError(bubble, finalMessage);');
-    const mapper = sidebarSrc.slice(
-      sidebarSrc.indexOf('function _finalErrorMessage'),
-      sidebarSrc.indexOf('async function sendChatMessage'),
-    );
-    expect(mapper).toContain('ENGINE_LABELS.tutorOff');
-    expect(mapper).toContain('ENGINE_LABELS.tutorSignInRequired');
-    expect(mapper).toContain('ENGINE_LABELS.tutorLocalUnreachable');
-    // Transient failures keep the retry affordance.
-    expect(mapper).toContain('return null;');
-  });
 
   // Behavioral: run the REAL mapper against the REAL error strings the three
   // engines throw, with the label maps stubbed to their own names.
@@ -365,83 +320,43 @@ describe('tutor error surfacing for deterministic engine states', () => {
   ])('keeps the retry affordance for the transient failure %j', (message) => {
     expect(makeMapper()(new Error(message))).toBeNull();
   });
-
-  test('the thrown strings the mapper keys on still exist in the sources', () => {
-    expect(trSrc).toContain("throw new Error('AI tutor is turned off in settings.')");
-    const brokerSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'bridge', 'puter-content-broker.js'), 'utf8');
-    expect(brokerSrc).toContain('Puter sign-in required');
-    expect(bgSrc).toContain('Cannot reach local AI server');
-    expect(trSrc).toContain('Local AI engine unavailable');
-  });
 });
 
-// Review findings: the offline guard blocked the LOCAL engine (which talks to
-// this machine and needs no internet), and structured HTML blocks were dropped
-// offline instead of being deferred like plain text.
-describe('offline behavior', () => {
+describe('offline engine lookup fails open without weakening the send gate', () => {
   const sidebarSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'content', 'sidebar-chat.js'), 'utf8');
-  const queueSrc = fs.readFileSync(path.join(__dirname, '..', 'src', 'content', 'gt-queue.js'), 'utf8');
+  const currentEngineMatch = sidebarSrc.match(/async function _currentEngine\(\)\s*\{[\s\S]*?\n {2}\}/);
+  if (!currentEngineMatch) throw new Error('Could not extract _currentEngine from sidebar-chat.js');
 
-  test('the chat offline guard exempts the local engine', () => {
-    expect(sidebarSrc).toContain("const offlineBlocks = sb.isOffline && (await _currentEngine()) !== 'local';");
-    expect(sidebarSrc).toContain('if (offlineBlocks) {');
-    expect(sidebarSrc).toContain('async function _currentEngine()');
-    expect(sidebarSrc).toContain("return result?.sb_ai_engine || 'cloud';");
-  });
-
-  // `translator._getAiEngine()` and `sidebar._currentEngine()` are otherwise
-  // identical — same storage key, same 1500 ms race, same final fallback line.
-  // They differ in ONE word: the translator's timeout rejects, the sidebar's
-  // resolves. That asymmetry is the privacy boundary. Someone tidying the two
-  // into a shared helper, or "fixing the inconsistency", would either make the
-  // send path default into the cloud against a stored 'local'/'off' preference
-  // (fail open, the serious direction) or make a stalled read swallow the
-  // offline notice entirely. Neither shows up in any behavioural test, so pin
-  // the shapes.
-  test('only the send-path gate fails closed; the offline-notice helper does not', () => {
-    const trSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'translator.js'), 'utf8');
-    const gate = trSource.slice(trSource.indexOf('async _getAiEngine()'), trSource.indexOf('async _localChatStream('));
-    expect(gate).toMatch(/new Promise\(\(_resolve, reject\) =>/);
-    expect(gate).toContain('Tutor engine preference read timed out');
-    // No swallowing try/catch around the race — a rejected read must propagate.
-    expect(gate).not.toMatch(/catch\s*\(/);
-
-    const helper = sidebarSrc.slice(
-      // From the doc comment, not the signature — the rationale lives above it.
-      sidebarSrc.indexOf("// Selected tutor engine ('cloud' | 'local' | 'off'); defaults to cloud."),
-      sidebarSrc.indexOf('function _finalErrorMessage('),
+  const makeCurrentEngine = (storageGet, setTimer = setTimeout, clearTimer = clearTimeout) =>
+    new Function('chrome', 'setTimeout', 'clearTimeout', `${currentEngineMatch[0]}\nreturn _currentEngine;`)(
+      { storage: { local: { get: storageGet } } },
+      setTimer,
+      clearTimer,
     );
-    expect(helper).toMatch(/new Promise\(\(resolve\) => setTimeout\(\(\) => resolve\(null\)/);
-    expect(helper).not.toContain('reject');
-    // And it must say why, so the next reader does not "align" them.
-    expect(helper).toContain('DELIBERATELY NOT');
-  });
 
-  test('the send path re-reads the preference through the fail-closed gate', () => {
-    // This is what makes the sidebar helper safe to fail open: it is not the
-    // last word on where the prompt goes.
-    expect(trSrc).toContain('const engine = await this._getAiEngine();');
-  });
-
-  test('structured HTML uses cache offline and defers only misses', () => {
-    const fn = queueSrc.slice(
-      queueSrc.indexOf('async function translateHtmlItems'),
-      queueSrc.indexOf('async function processGTQueue'),
+  test('returns the stored local engine and clears the losing timeout', async () => {
+    const clearTimer = jest.fn();
+    const currentEngine = makeCurrentEngine(
+      jest.fn().mockResolvedValue({ sb_ai_engine: 'local' }),
+      jest.fn(() => 77),
+      clearTimer,
     );
-    const cacheAt = fn.indexOf('translator.cachedLookup(_htmlCacheKey(source), targetLang)');
-    const offlineAt = fn.indexOf('if (sb.isOffline)');
-    expect(cacheAt).toBeGreaterThan(-1);
-    expect(offlineAt).toBeGreaterThan(cacheAt);
-    expect(fn).toContain('queueOfflineItems(uncached.flatMap((source) => bySource.get(source)));');
-    // The original early-return dropped cached and uncached blocks alike.
-    expect(fn).not.toContain('if (sb.isOffline) return true;');
+    await expect(currentEngine()).resolves.toBe('local');
+    expect(clearTimer).toHaveBeenCalledWith(77);
   });
 
-  test('the offline flush re-queues by element, so deferred blocks get re-classified', () => {
-    expect(queueSrc).toContain('function flushOfflinePending(');
-    const fn = queueSrc.slice(queueSrc.indexOf('function flushOfflinePending('), queueSrc.indexOf('sb._gt = {'));
-    expect(fn).toContain('queueForGoogleTranslate(');
-    expect(fn).toContain('pending.map((item) => item.el)');
+  test('falls back to cloud only for offline-message selection when storage rejects or stalls', async () => {
+    const rejected = makeCurrentEngine(jest.fn().mockRejectedValue(new Error('storage unavailable')));
+    await expect(rejected()).resolves.toBe('cloud');
+
+    const stalled = makeCurrentEngine(
+      jest.fn(() => new Promise(() => {})),
+      (callback) => {
+        callback();
+        return 1;
+      },
+    );
+    await expect(stalled()).resolves.toBe('cloud');
   });
 });
 
@@ -502,46 +417,6 @@ describe('_allowedLocalBase', () => {
   });
 });
 
-describe('local chat port gating (source contract)', () => {
-  test('the port is validated before any stream starts', () => {
-    // Ordering matters: validation has to run before `started` is latched or a
-    // rejected port could still kick off one stream.
-    const handler = bgSrc.slice(bgSrc.indexOf('const localPortGate ='));
-    const gateAt = handler.indexOf('if (!localPortGate(port))');
-    const startedAt = handler.indexOf('let started = false;');
-    expect(gateAt).toBeGreaterThan(-1);
-    expect(gateAt).toBeLessThan(startedAt);
-    expect(handler.slice(gateAt, gateAt + 120)).toContain('port.disconnect()');
-  });
-
-  test('the gate reuses the shared Tutor shape and origin boundary', () => {
-    const fn = bgSrc.slice(
-      bgSrc.indexOf('function _isLocalChatPort'),
-      bgSrc.indexOf('function _isLocalRefinementOrigin'),
-    );
-    expect(fn).toContain('_isTutorPortShape(port)');
-    expect(fn).toContain('_isTrustedTutorOrigin(');
-    expect(fn).not.toContain("endsWith('.skilljar.com')");
-    expect(fn).not.toContain("url.hostname === 'claude.com'");
-  });
-
-  test('the wider refinement surfaces live behind a distinct gate', () => {
-    const fn = bgSrc.slice(
-      bgSrc.indexOf('function _isLocalRefinementOrigin'),
-      bgSrc.indexOf('async function _streamLocalChat'),
-    );
-    expect(fn).toContain("endsWith('.skilljar.com')");
-    expect(fn).toContain("url.hostname === 'claude.com'");
-    expect(fn).toContain('function _isLocalRefinementPort(port)');
-  });
-
-  test('the invalid-URL reply goes through the guarded send, like every other reply', () => {
-    const fn = bgSrc.slice(bgSrc.indexOf('async function _streamLocalChat'), bgSrc.indexOf('chrome.runtime.onConnect'));
-    expect(fn.match(/\bport\.postMessage\(/g)).toHaveLength(1);
-    expect(fn).toContain("send({ type: 'error', error: 'Local AI server URL must be");
-  });
-});
-
 // ============================================================
 // SSE STREAM LOOP
 // ============================================================
@@ -550,19 +425,6 @@ describe('local chat port gating (source contract)', () => {
 // that feeds it. That loop owns the buffering, and the buffering is where the
 // last frame used to be lost.
 describe('_streamLocalChat — frame buffering', () => {
-  const streamMatch = bgSrc.match(/async function _streamLocalChat\(port, req\)\s*\{[\s\S]*?\n\}/);
-  if (!streamMatch) throw new Error('Could not extract _streamLocalChat from background.js');
-  const parseMatch = bgSrc.match(/function _parseSseDelta\(line\)\s*\{[\s\S]*?\n\}/);
-
-  /** Build the real function with its collaborators injected. */
-  const makeStream = (fakeFetch) =>
-    new Function(
-      'fetch',
-      'TextDecoder',
-      'AbortController',
-      `${baseMatch[0]}\n${parseMatch[0]}\n${streamMatch[0]}\nreturn _streamLocalChat;`,
-    )(fakeFetch, TextDecoder, AbortController);
-
   /** A fetch whose body yields exactly the given string chunks. */
   const fetchYielding = (chunks) => async () => ({
     ok: true,
@@ -596,6 +458,46 @@ describe('_streamLocalChat — frame buffering', () => {
       .filter((m) => m.type === 'chunk')
       .map((m) => m.delta)
       .join('');
+
+  test('posts an OpenAI-compatible streaming request to the normalized local endpoint', async () => {
+    let request;
+    const fakeFetch = async (url, init) => {
+      request = { url, init };
+      return fetchYielding([])();
+    };
+    const port = makeStreamPort();
+
+    await makeStream(fakeFetch)(port, {
+      baseUrl: 'http://localhost:11434/v1///',
+      model: 'fixture-model',
+      messages: [{ role: 'user', content: 'hello' }],
+    });
+
+    expect(request.url).toBe('http://localhost:11434/v1/chat/completions');
+    expect(request.init.method).toBe('POST');
+    expect(request.init.headers).toEqual({ 'Content-Type': 'application/json' });
+    expect(JSON.parse(request.init.body)).toEqual({
+      model: 'fixture-model',
+      stream: true,
+      messages: [{ role: 'user', content: 'hello' }],
+    });
+    expect(request.init.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  test('rejects a remote base URL before fetch and reports the reason through the Port', async () => {
+    const fakeFetch = jest.fn();
+    const port = makeStreamPort();
+
+    await makeStream(fakeFetch)(port, { baseUrl: 'https://remote.example/v1' });
+
+    expect(fakeFetch).not.toHaveBeenCalled();
+    expect(port.posted).toEqual([
+      {
+        type: 'error',
+        error: 'Local AI server URL must be http://localhost or http://127.0.0.1',
+      },
+    ]);
+  });
 
   test('a well-behaved stream ending in [DONE] delivers every token once', async () => {
     const msgs = await collect([

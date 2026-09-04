@@ -19,15 +19,11 @@
 
 /* global describe, test, expect, beforeEach */
 
-const fs = require('fs');
-const path = require('path');
-
-const ROOT = path.join(__dirname, '..');
-const read = (...p) => fs.readFileSync(path.join(ROOT, ...p), 'utf8');
+const { readProductionSource } = require('./helpers/production-source');
 
 function loadLib(file) {
   const fake = { module: { exports: {} } };
-  new Function('globalThis', read('src', 'lib', file))(fake);
+  new Function('globalThis', readProductionSource('src', 'lib', file))(fake);
   return fake.module.exports;
 }
 const policyLib = loadLib('refinement-policy.js');
@@ -107,7 +103,7 @@ function setup({ mode = 'off', consented = false, tutorEngine = 'cloud', reply =
     _skillbridgeLog: { createLogger: () => ({ debug() {}, info() {}, warn() {}, error() {} }) },
   };
 
-  new Function('window', 'document', 'chrome', 'console', read('src', 'content', 'refine-queue.js'))(
+  new Function('window', 'document', 'chrome', 'console', readProductionSource('src', 'content', 'refine-queue.js'))(
     fakeWindow,
     document,
     chrome,
